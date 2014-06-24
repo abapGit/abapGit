@@ -1,13 +1,13 @@
 REPORT zdk8lahvp089.
 
-TYPES: t_type    TYPE c LENGTH 6,
-       t_bitbyte TYPE c LENGTH 8,
-       t_adler32 TYPE x LENGTH 4,
-       t_sha1    TYPE x LENGTH 20.
+TYPES: t_type     TYPE c LENGTH 6,
+       t_bitbyte  TYPE c LENGTH 8,
+       t_adler32  TYPE x LENGTH 4,
+       t_sha1     TYPE x LENGTH 20,
+       t_unixtime TYPE c LENGTH 16.
 
 TYPES: BEGIN OF st_node,
          chmod     TYPE string,
-         directory TYPE abap_bool,
          name      TYPE string,
          sha1      TYPE t_sha1,
        END OF st_node.
@@ -40,10 +40,113 @@ CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_ref_d  TYPE t_type VALUE 'ref_d',             "#EC NOTEXT
            gc_blob   TYPE t_type VALUE 'blob'.              "#EC NOTEXT
 
+CONSTANTS: gc_chmod_file TYPE c LENGTH 6 VALUE '100644',
+           gc_chmod_dir  TYPE c LENGTH 5 VALUE '40000'.
+
 ******************
 
 START-OF-SELECTION.
   PERFORM run.
+
+*----------------------------------------------------------------------*
+*       CLASS CX_LOCAL_EXCEPTION DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcx_exception DEFINITION INHERITING FROM cx_static_check FINAL.
+
+  PUBLIC SECTION.
+    DATA mv_text TYPE string.
+    METHODS constructor IMPORTING iv_text TYPE string.
+
+ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS CX_LOCAL_EXCEPTION IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcx_exception IMPLEMENTATION.
+
+  METHOD constructor.
+    super->constructor( ).
+*    BREAK-POINT.
+    mv_text = iv_text.
+  ENDMETHOD.                    "CONSTRUCTOR
+
+ENDCLASS.                    "lcx_exception IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_time DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_time DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS get RETURNING value(rv_time) TYPE t_unixtime
+                      RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS: c_epoch TYPE datum VALUE '19700101'.
+
+ENDCLASS.                    "lcl_time DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_time IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_time IMPLEMENTATION.
+
+  METHOD get.
+
+    DATA: lv_i       TYPE i,
+          lv_tz      TYPE tznzone,
+          lv_utcdiff TYPE tznutcdiff,
+          lv_utcsign TYPE tznutcsign.
+
+
+    lv_i = sy-datum - c_epoch.
+    lv_i = lv_i * 86400.
+    lv_i = lv_i + sy-uzeit.
+
+    CALL FUNCTION 'TZON_GET_OS_TIMEZONE'
+      IMPORTING
+        ef_timezone = lv_tz.
+
+    CALL FUNCTION 'TZON_GET_OFFSET'
+      EXPORTING
+        if_timezone      = lv_tz
+        if_local_date    = sy-datum
+        if_local_time    = sy-uzeit
+      IMPORTING
+        ef_utcdiff       = lv_utcdiff
+        ef_utcsign       = lv_utcsign
+      EXCEPTIONS
+        conversion_error = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Timezone error'.                       "#EC NOTEXT
+    ENDIF.
+
+    CASE lv_utcsign.
+      WHEN '+'.
+        lv_i = lv_i - lv_utcdiff.
+      WHEN '-'.
+        lv_i = lv_i + lv_utcdiff.
+    ENDCASE.
+
+    rv_time = lv_i.
+    CONDENSE rv_time.
+    rv_time+11 = lv_utcsign.
+    rv_time+12 = lv_utcdiff.
+
+  ENDMETHOD.                    "get
+
+ENDCLASS.                    "lcl_time IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_convert DEFINITION
@@ -66,7 +169,8 @@ CLASS lcl_convert DEFINITION FINAL.
                                          RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS xstring_to_int IMPORTING iv_xstring TYPE xstring
-                                 RETURNING value(rv_i) TYPE i.
+                                 RETURNING value(rv_i) TYPE i
+                                 RAISING lcx_exception.
 
     CLASS-METHODS int_to_xstring IMPORTING iv_i TYPE i
                                            iv_length TYPE i
@@ -135,7 +239,9 @@ CLASS lcl_convert IMPLEMENTATION.
         WHEN 'F'.
           rv_i = rv_i + 15.
         WHEN OTHERS.
-          BREAK-POINT.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Unexpected character'.             "#EC NOTEXT
       ENDCASE.
       lv_string = lv_string+1.
     ENDWHILE.
@@ -161,7 +267,6 @@ CLASS lcl_convert IMPLEMENTATION.
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
-* todo?
     ENDTRY.
 
   ENDMETHOD.                    "xstring_to_string_utf8
@@ -181,7 +286,6 @@ CLASS lcl_convert IMPLEMENTATION.
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
-* todo?
     ENDTRY.
 
   ENDMETHOD.                    "string_to_xstring_utf8
@@ -232,10 +336,12 @@ CLASS lcl_hash DEFINITION FINAL.
 
     CLASS-METHODS sha1 IMPORTING iv_type TYPE t_type
                                  iv_data TYPE xstring
-                       RETURNING value(rv_sha1) TYPE t_sha1.
+                       RETURNING value(rv_sha1) TYPE t_sha1
+                       RAISING lcx_exception.
 
     CLASS-METHODS sha1_raw IMPORTING iv_data TYPE xstring
-                       RETURNING value(rv_sha1) TYPE t_sha1.
+                       RETURNING value(rv_sha1) TYPE t_sha1
+                       RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
 
@@ -294,7 +400,9 @@ CLASS lcl_hash IMPLEMENTATION.
         internal_error = 3
         OTHERS         = 4.
     IF sy-subrc <> 0.
-      BREAK-POINT.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Error while calculating SHA1'.         "#EC NOTEXT
     ENDIF.
 
     rv_sha1 = lv_hash.
@@ -337,24 +445,35 @@ CLASS lcl_pack DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS decode IMPORTING iv_data TYPE xstring
-                         RETURNING value(rt_objects) TYPE tt_objects.
+                         RETURNING value(rt_objects) TYPE tt_objects
+                         RAISING lcx_exception.
 
     CLASS-METHODS decode_tree IMPORTING iv_data TYPE xstring
-                         RETURNING value(rt_nodes) TYPE tt_nodes.
+                         RETURNING value(rt_nodes) TYPE tt_nodes
+                         RAISING lcx_exception.
 
-    CLASS-METHODS decode_deltas CHANGING ct_objects TYPE tt_objects.
+    CLASS-METHODS decode_deltas CHANGING ct_objects TYPE tt_objects
+                         RAISING lcx_exception.
 
     CLASS-METHODS decode_commit IMPORTING iv_data TYPE xstring
-                         RETURNING value(rs_commit) TYPE st_commit.
+                         RETURNING value(rs_commit) TYPE st_commit
+                         RAISING lcx_exception.
 
     CLASS-METHODS encode IMPORTING it_objects TYPE tt_objects
-                         RETURNING value(rv_data) TYPE xstring.
+                         RETURNING value(rv_data) TYPE xstring
+                         RAISING lcx_exception.
 
     CLASS-METHODS sanity_checks IMPORTING it_objects TYPE tt_objects
-                         RETURNING value(rt_latest) TYPE tt_latest.
+                         RETURNING value(rt_latest) TYPE tt_latest
+                         RAISING lcx_exception.
 
-    CLASS-METHODS latest IMPORTING it_objects TYPE tt_objects
-                         RETURNING value(rt_latest) TYPE tt_latest.
+    CLASS-METHODS latest_commit IMPORTING it_objects TYPE tt_objects
+                             RETURNING value(rs_object) TYPE st_object
+                             RAISING lcx_exception.
+
+    CLASS-METHODS latest_objects IMPORTING it_objects TYPE tt_objects
+                         RETURNING value(rt_latest) TYPE tt_latest
+                         RAISING lcx_exception.
 
     CLASS-METHODS: encode_tree IMPORTING it_nodes TYPE tt_nodes
                          RETURNING value(rv_data) TYPE xstring.
@@ -362,7 +481,9 @@ CLASS lcl_pack DEFINITION FINAL.
     CLASS-METHODS: encode_commit IMPORTING is_commit TYPE st_commit
                          RETURNING value(rv_data) TYPE xstring.
 
+
   PRIVATE SECTION.
+
     CONSTANTS: c_debug_pack TYPE abap_bool VALUE abap_false,
                c_pack_start TYPE x LENGTH 4 VALUE '5041434B',
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
@@ -370,20 +491,24 @@ CLASS lcl_pack DEFINITION FINAL.
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
 
     CLASS-METHODS type_and_length IMPORTING is_object TYPE st_object
-                                  RETURNING value(rv_xstring) TYPE xstring.
+                                  RETURNING value(rv_xstring) TYPE xstring
+                                  RAISING lcx_exception.
 
     CLASS-METHODS delta IMPORTING is_object TYPE st_object
-                        CHANGING ct_objects TYPE tt_objects.
+                        CHANGING ct_objects TYPE tt_objects
+                        RAISING lcx_exception.
 
     CLASS-METHODS delta_header CHANGING cv_delta TYPE xstring.
 
     CLASS-METHODS get_type IMPORTING iv_x TYPE x
-                           RETURNING value(rv_type) TYPE t_type.
+                           RETURNING value(rv_type) TYPE t_type
+                           RAISING lcx_exception.
 
     CLASS-METHODS walk IMPORTING it_objects TYPE tt_objects
                                  iv_sha1 TYPE t_sha1
                                  iv_path TYPE string
-                       CHANGING ct_latest TYPE tt_latest.
+                       CHANGING ct_latest TYPE tt_latest
+                       RAISING lcx_exception.
 
     CLASS-METHODS get_length EXPORTING ev_length TYPE i
                              CHANGING cv_data TYPE xstring.
@@ -418,8 +543,9 @@ CLASS lcl_pack IMPLEMENTATION.
       WHEN gc_ref_d.
         lv_type = '111'.
       WHEN OTHERS.
-* todo?
-        BREAK-POINT.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Unexpected object type while encoding pack'. "#EC NOTEXT
     ENDCASE.
 
     lv_x4 = xstrlen( is_object-data ).
@@ -434,8 +560,10 @@ CLASS lcl_pack IMPLEMENTATION.
       CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
       CONCATENATE lv_result '0' lv_bits+21(7) INTO lv_result.
     ELSE.
-* todo, this can be done easier with some shifting
-      BREAK-POINT.
+* use shifting?
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Todo, encoding length'.                "#EC NOTEXT
     ENDIF.
 
 * convert bit string to xstring
@@ -558,20 +686,21 @@ CLASS lcl_pack IMPLEMENTATION.
 
     READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = gc_tree.
     IF sy-subrc <> 0.
-      WRITE: / 'Tree', iv_sha1, 'not found'.                "#EC NOTEXT
-      BREAK-POINT.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Walk, tree not found'.                 "#EC NOTEXT
     ENDIF.
 
     lt_nodes = lcl_pack=>decode_tree( <ls_tree>-data ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
 *      WRITE: / <ls_node>-sha1, <ls_node>-directory, <ls_node>-name.
-      IF <ls_node>-directory = abap_false.
+      IF <ls_node>-chmod = gc_chmod_file.
         READ TABLE it_objects ASSIGNING <ls_blob> WITH KEY sha1 = <ls_node>-sha1 type = gc_blob.
         IF sy-subrc <> 0.
-          BREAK-POINT.
-          CONTINUE.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Walk, blob not found'.             "#EC NOTEXT
         ENDIF.
 
         CLEAR ls_latest.
@@ -582,7 +711,7 @@ CLASS lcl_pack IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE directory = abap_true.
+    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_dir.
       CONCATENATE iv_path <ls_node>-name '/' INTO lv_path.
       walk( EXPORTING it_objects = it_objects
                       iv_sha1 = <ls_node>-sha1
@@ -592,11 +721,27 @@ CLASS lcl_pack IMPLEMENTATION.
 
   ENDMETHOD.                    "walk
 
-  METHOD latest.
+  METHOD latest_objects.
 
-    DATA: ls_commit  TYPE st_commit,
-          lv_sha1    TYPE t_sha1,
-          lt_commits TYPE tt_objects.
+    DATA: ls_commit TYPE st_commit,
+          ls_object TYPE st_object.
+
+
+    ls_object = latest_commit( it_objects ).
+    ls_commit = lcl_pack=>decode_commit( ls_object-data ).
+
+    walk( EXPORTING it_objects = it_objects
+                    iv_sha1 = ls_commit-tree
+                    iv_path = '/'
+          CHANGING ct_latest = rt_latest ).
+
+  ENDMETHOD.                    "latest
+
+  METHOD latest_commit.
+
+    DATA: lt_commits TYPE tt_objects,
+          ls_commit  TYPE st_commit,
+          lv_sha1    TYPE t_sha1.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
@@ -628,18 +773,14 @@ CLASS lcl_pack IMPLEMENTATION.
 
     READ TABLE lt_commits ASSIGNING <ls_object> WITH KEY sha1 = lv_sha1.
     IF sy-subrc <> 0.
-      BREAK-POINT.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Latest, commit not found'.             "#EC NOTEXT
     ENDIF.
 
-    ls_commit = lcl_pack=>decode_commit( <ls_object>-data ).
+    rs_object = <ls_object>.
 
-    walk( EXPORTING it_objects = it_objects
-                    iv_sha1 = ls_commit-tree
-                    iv_path = '/'
-          CHANGING ct_latest = rt_latest ).
-
-  ENDMETHOD.                    "latest
+  ENDMETHOD.                    "latest_commit
 
   METHOD sanity_checks.
 
@@ -676,7 +817,7 @@ CLASS lcl_pack IMPLEMENTATION.
     LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_tree.
 * check that blobs in trees exists
       lt_nodes = lcl_pack=>decode_tree( <ls_object>-data ).
-      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE directory = abap_false.
+      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_file.
         READ TABLE it_objects WITH KEY sha1 = <ls_node>-sha1 type = gc_blob
           TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
@@ -685,7 +826,7 @@ CLASS lcl_pack IMPLEMENTATION.
       ENDLOOP.
 
 * check that directories/trees in trees exists
-      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE directory = abap_true.
+      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_dir.
         READ TABLE it_objects WITH KEY sha1 = <ls_node>-sha1 type = gc_tree
           TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
@@ -715,8 +856,9 @@ CLASS lcl_pack IMPLEMENTATION.
       WHEN '111'.
         rv_type = gc_ref_d.
       WHEN OTHERS.
-* todo?
-        BREAK-POINT.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Todo, unknown type'.                 "#EC NOTEXT
     ENDCASE.
 
   ENDMETHOD.                    "get_type
@@ -778,8 +920,9 @@ CLASS lcl_pack IMPLEMENTATION.
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
         OR rs_commit-tree IS INITIAL.
-* multiple parents? not supported
-      BREAK-POINT.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'multiple parents? not supported'.      "#EC NOTEXT
     ENDIF.
 
   ENDMETHOD.                    "decode_commit
@@ -842,9 +985,9 @@ CLASS lcl_pack IMPLEMENTATION.
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      BREAK-POINT.
-      WRITE: / 'Base not found'.                            "#EC NOTEXT
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Base not found'.                       "#EC NOTEXT
     ELSE.
       lv_base = <ls_object>-data.
     ENDIF.
@@ -967,11 +1110,12 @@ CLASS lcl_pack IMPLEMENTATION.
 
         CLEAR ls_node.
         ls_node-chmod = lv_chmod.
-        IF ls_node-chmod(1) = '4'.
-          ls_node-directory = abap_true.
-        ELSE.
-          ls_node-directory = abap_false.
+        IF ls_node-chmod <> gc_chmod_dir AND ls_node-chmod <> gc_chmod_file.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Unknown chmod'.                    "#EC NOTEXT
         ENDIF.
+
         ls_node-name = lv_name.
         ls_node-sha1 = iv_data+lv_offset(lc_sha_length).
         APPEND ls_node TO rt_nodes.
@@ -1009,15 +1153,17 @@ CLASS lcl_pack IMPLEMENTATION.
 
 * header
     IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
-      BREAK-POINT.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Unexpected pack header'.               "#EC NOTEXT
     ENDIF.
     lv_data = lv_data+4.
 
 * version
     IF lv_data(4) <> c_version.
-      BREAK-POINT.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Version not supported'.                "#EC NOTEXT
     ENDIF.
     lv_data = lv_data+4.
 
@@ -1043,9 +1189,9 @@ CLASS lcl_pack IMPLEMENTATION.
 * strip header, '789C', CMF + FLG
       lv_zlib = lv_data(2).
       IF lv_zlib <> c_zlib AND lv_zlib <> c_zlib_hmm.
-        BREAK-POINT.
-        WRITE: / 'Unexpected zlib header'.                  "#EC NOTEXT
-        RETURN.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Unexpected zlib header'.             "#EC NOTEXT
       ENDIF.
       lv_data = lv_data+2.
 
@@ -1060,8 +1206,9 @@ CLASS lcl_pack IMPLEMENTATION.
             raw_out_len = lv_decompress_len ).
 
         IF lv_expected <> lv_decompress_len.
-          BREAK-POINT.
-          RETURN.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Decompression falied'.             "#EC NOTEXT
         ENDIF.
 
         cl_abap_gzip=>compress_binary(
@@ -1072,9 +1219,9 @@ CLASS lcl_pack IMPLEMENTATION.
             gzip_out_len   = lv_compressed_len ).
 
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
-          BREAK-POINT.
-          WRITE: / 'Compressed data doesnt match'.          "#EC NOTEXT
-          RETURN.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Compressed data doesnt match'.     "#EC NOTEXT
         ENDIF.
 
         lv_data = lv_data+lv_compressed_len.
@@ -1105,9 +1252,9 @@ CLASS lcl_pack IMPLEMENTATION.
         ENDDO.
 
         IF lv_compressed_len IS INITIAL.
-          BREAK-POINT.
-          WRITE: / 'Decompression falied :o/'.              "#EC NOTEXT
-          RETURN.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Decompression falied :o/'.         "#EC NOTEXT
         ENDIF.
 
         lv_data = lv_data+lv_compressed_len.
@@ -1120,9 +1267,9 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_data = lv_data+1.
         ENDIF.
         IF lv_data(4) <> lv_adler32.
-          WRITE: / 'Wrong checksum'.                        "#EC NOTEXT
-          BREAK-POINT.
-          RETURN.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Wrong Adler checksum'.             "#EC NOTEXT
         ENDIF.
 
         lv_data = lv_data+4. " skip adler checksum
@@ -1151,7 +1298,9 @@ CLASS lcl_pack IMPLEMENTATION.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
     IF lv_sha1 <> lv_data.
-      BREAK-POINT.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'SHA1 at end of pack doesnt match'.     "#EC NOTEXT
     ENDIF.
 
   ENDMETHOD.                    "decode
@@ -1208,15 +1357,28 @@ ENDCLASS.                    "lcl_pack IMPLEMENTATION
 CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
+* from GitHub to SAP
     CLASS-METHODS upload_pack IMPORTING iv_repo TYPE string
-                              RETURNING value(rv_pack) TYPE xstring.
+                              RETURNING value(rv_pack) TYPE xstring
+                              RAISING lcx_exception.
+
+* from SAP to GitHub
+    CLASS-METHODS receive_pack IMPORTING iv_repo TYPE string
+                                         iv_pack TYPE xstring
+                               RAISING lcx_exception.
 
   PRIVATE SECTION.
     CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_false.
 
-    CLASS-METHODS pkt IMPORTING iv_string TYPE string CHANGING cv_pkt TYPE string.
-    CLASS-METHODS parse EXPORTING ev_pack TYPE xstring CHANGING cv_data TYPE xstring.
-    CLASS-METHODS length_utf8_hex IMPORTING iv_data TYPE xstring RETURNING value(rv_len) TYPE i.
+    CLASS-METHODS pkt IMPORTING iv_string TYPE string
+                      CHANGING cv_pkt TYPE string
+                      RAISING lcx_exception.
+
+    CLASS-METHODS parse EXPORTING ev_pack TYPE xstring
+                        CHANGING cv_data TYPE xstring.
+
+    CLASS-METHODS length_utf8_hex IMPORTING iv_data TYPE xstring
+                      RETURNING value(rv_len) TYPE i.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -1226,6 +1388,17 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_transport IMPLEMENTATION.
+
+  METHOD receive_pack.
+
+    IF NOT iv_repo CP '*Foobar*'.
+      BREAK-POINT.
+      RETURN.
+    ENDIF.
+
+* todo
+
+  ENDMETHOD.                    "receive_pack
 
   METHOD length_utf8_hex.
 
@@ -1335,15 +1508,13 @@ CLASS lcl_transport IMPLEMENTATION.
     li_client->send( ).
     li_client->receive( ).
 
-*    DATA: lt_fields      TYPE tihttpnvp.
-*    li_client->response->get_header_fields( CHANGING fields = lt_fields ).
-*    BREAK-POINT.
-
     li_client->response->get_status(
       IMPORTING
         code   = lv_code ).
-    IF c_debug_http = abap_true.
-      WRITE: / 'HTTP_STATUS_CODE = ', lv_code.
+    IF lv_code <> 200.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'HTTP error code'.                      "#EC NOTEXT
     ENDIF.
     lv_data = li_client->response->get_cdata( ).
 
@@ -1355,16 +1526,10 @@ CLASS lcl_transport IMPLEMENTATION.
     ENDLOOP.
 
     IF strlen( lv_hash ) <> 40.
-      WRITE: / 'Branch not found'.                          "#EC NOTEXT
-      BREAK-POINT.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Branch not found'.                     "#EC NOTEXT
     ENDIF.
-
-*  lv_data = lo_client->response->get_cdata( ).
-*  SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
-*  LOOP AT lt_result INTO lv_data.
-*    WRITE: / lv_data.
-*  ENDLOOP.
 
 *--------------------------------------------------------------------
 
@@ -1397,8 +1562,10 @@ CLASS lcl_transport IMPLEMENTATION.
     li_client->response->get_status(
       IMPORTING
         code   = lv_code ).
-    IF c_debug_http = abap_true.
-      WRITE: / 'HTTP_STATUS_CODE = ', lv_code.
+    IF lv_code <> 200.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'HTTP error code'.                      "#EC NOTEXT
     ENDIF.
 
     lv_xstring = li_client->response->get_data( ).
@@ -1416,8 +1583,9 @@ CLASS lcl_transport IMPLEMENTATION.
     lv_len = strlen( iv_string ).
 
     IF lv_len >= 255.
-* todo
-      BREAK-POINT.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'PKT, todo'.                            "#EC NOTEXT
     ENDIF.
 
     lv_x = lv_len + 4.
@@ -1456,34 +1624,119 @@ FORM run.
 *  DATA: lv_repo TYPE string VALUE '/mrmrs/colors'.                 " 100%
 *  DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
 
-  DATA: lv_pack    TYPE xstring,
-        lt_latest  TYPE tt_latest,
-        lt_objects TYPE tt_objects.
+  DATA: lv_pack      TYPE xstring,
+        lt_latest    TYPE tt_latest,
+        ls_object    TYPE st_object,
+        lx_exception TYPE REF TO lcx_exception,
+        lt_objects   TYPE tt_objects.
 
   FIELD-SYMBOLS: <ls_latest> LIKE LINE OF lt_latest.
 
 
-  lv_pack = lcl_transport=>upload_pack( lv_repo ).
+  TRY.
+      lv_pack = lcl_transport=>upload_pack( lv_repo ).
 
-  IF lv_pack IS INITIAL.
-    RETURN.
-  ENDIF.
+      IF lv_pack IS INITIAL.
+        RETURN.
+      ENDIF.
 
-  lt_objects = lcl_pack=>decode( lv_pack ).
+      lt_objects = lcl_pack=>decode( lv_pack ).
 
-  PERFORM output_summary USING lt_objects.
+      PERFORM output_summary USING lt_objects.
 
-  lcl_pack=>decode_deltas( CHANGING ct_objects = lt_objects ).
+      lcl_pack=>decode_deltas( CHANGING ct_objects = lt_objects ).
 
-  lcl_pack=>sanity_checks( lt_objects ).
+*      PERFORM output_objects USING lt_objects.
 
-  lt_latest = lcl_pack=>latest( lt_objects ).
+      lcl_pack=>sanity_checks( lt_objects ).
 
-  LOOP AT lt_latest ASSIGNING <ls_latest>.
-    WRITE: / <ls_latest>-path, 40 <ls_latest>-filename.
-  ENDLOOP.
+      lt_latest = lcl_pack=>latest_objects( lt_objects ).
+
+      LOOP AT lt_latest ASSIGNING <ls_latest>.
+        WRITE: / <ls_latest>-path, 40 <ls_latest>-filename.
+      ENDLOOP.
+
+      ls_object = lcl_pack=>latest_commit( lt_objects ).
+      PERFORM receive USING ls_object lv_repo.
+
+    CATCH lcx_exception INTO lx_exception.
+      WRITE: / 'Error:', lx_exception->mv_text.             "#EC NOTEXT
+  ENDTRY.
 
 ENDFORM.                    "run
+
+*&---------------------------------------------------------------------*
+*&      Form  download
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->PS_PARENT  text
+*----------------------------------------------------------------------*
+FORM receive USING ps_parent TYPE st_object
+                   pv_repo TYPE string
+            RAISING lcx_exception.
+
+  DATA: ls_commit  TYPE st_commit,
+        lt_nodes   TYPE tt_nodes,
+        ls_node    LIKE LINE OF lt_nodes,
+        lt_objects TYPE tt_objects,
+        ls_object  LIKE LINE OF lt_objects,
+        lv_blob    TYPE xstring,
+        lv_pack    TYPE xstring,
+        lv_tree    TYPE xstring,
+        lv_time    TYPE t_unixtime,
+        lv_commit  TYPE xstring.
+
+
+  lv_time = lcl_time=>get( ).
+
+* blob
+  lv_blob = lcl_convert=>string_to_xstring_utf8( 'this is the readme' ). "#EC NOTEXT
+
+* tree
+  CLEAR ls_node.
+  ls_node-chmod = gc_chmod_file.
+  ls_node-name = 'README.md'.
+  ls_node-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_blob ).
+  APPEND ls_node TO lt_nodes.
+  lv_tree = lcl_pack=>encode_tree( lt_nodes ).
+
+* commit
+  CLEAR ls_commit.
+  ls_commit-tree      = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
+  ls_commit-parent    = ps_parent-sha1.
+  CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
+    INTO ls_commit-author SEPARATED BY space.               "#EC NOTEXT
+  CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
+    INTO ls_commit-committer SEPARATED BY space.            "#EC NOTEXT
+  ls_commit-body      = 'first post'.                       "#EC NOTEXT
+  lv_commit = lcl_pack=>encode_commit( ls_commit ).
+
+
+  CLEAR ls_object.
+  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit ).
+  ls_object-type = gc_commit.
+  ls_object-data = lv_commit.
+  APPEND ls_object TO lt_objects.
+  CLEAR ls_object.
+  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
+  ls_object-type = gc_tree.
+  ls_object-data = lv_tree.
+  APPEND ls_object TO lt_objects.
+  CLEAR ls_object.
+  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_blob ).
+  ls_object-type = gc_blob.
+  ls_object-data = lv_blob.
+  APPEND ls_object TO lt_objects.
+
+  lv_pack = lcl_pack=>encode( lt_objects ).
+
+  BREAK-POINT.
+
+  lcl_transport=>receive_pack( iv_repo = pv_repo
+                               iv_pack = lv_pack ).
+
+ENDFORM.                    "download
 
 *&---------------------------------------------------------------------*
 *&      Form  show_utf8
@@ -1574,20 +1827,23 @@ ENDFORM.                    " OUTPUT_XSTRING
 CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    METHODS repository_larshp_foobar FOR TESTING.
-    METHODS repository_larshp_mousechase FOR TESTING.
-    METHODS repository_larshp_dicing FOR TESTING.
+    METHODS repository_larshp_foobar FOR TESTING RAISING lcx_exception.
+    METHODS repository_larshp_mousechase FOR TESTING RAISING lcx_exception.
+    METHODS repository_larshp_dicing FOR TESTING RAISING lcx_exception.
 
-    METHODS encode_decode_tree FOR TESTING.
-    METHODS encode_decode_commit FOR TESTING.
-    METHODS encode_decode_pack_short FOR TESTING.
-    METHODS encode_decode_pack_long FOR TESTING.
+    METHODS encode_decode_tree FOR TESTING RAISING lcx_exception.
+    METHODS encode_decode_commit FOR TESTING RAISING lcx_exception.
+    METHODS encode_decode_pack_short FOR TESTING RAISING lcx_exception.
+    METHODS encode_decode_pack_long FOR TESTING RAISING lcx_exception.
+    METHODS encode_decode_pack_multiple FOR TESTING RAISING lcx_exception.
 
-    METHODS convert_int FOR TESTING.
+    METHODS convert_int FOR TESTING RAISING lcx_exception.
 
     CLASS-METHODS latest IMPORTING iv_repo TYPE string
-                         RETURNING value(rt_latest) TYPE tt_latest.
-    CLASS-METHODS compare IMPORTING iv_repo TYPE string.
+                         RETURNING value(rt_latest) TYPE tt_latest
+                         RAISING lcx_exception.
+    CLASS-METHODS compare IMPORTING iv_repo TYPE string
+                          RAISING lcx_exception.
     CLASS-METHODS http_fetch IMPORTING iv_url TYPE string
                              RETURNING value(rv_data) TYPE xstring.
 
@@ -1616,6 +1872,63 @@ CLASS lcl_abap_unit IMPLEMENTATION.
         act = lv_i ).
 
   ENDMETHOD.                    "convert_int
+
+  METHOD encode_decode_pack_multiple.
+
+    DATA: lt_objects TYPE tt_objects,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_nodes   TYPE tt_nodes,
+          ls_node    LIKE LINE OF lt_nodes,
+          ls_commit  TYPE st_commit,
+          lt_result  TYPE tt_objects,
+          lv_data    TYPE xstring.
+
+
+* blob
+    lv_data = '123456789ABCDEF545794254754554'.
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_data ).
+    ls_object-type = gc_blob.
+    ls_object-data = lv_data.
+    APPEND ls_object TO lt_objects.
+
+* commit
+    CLEAR ls_commit.
+    ls_commit-tree      = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    ls_commit-parent    = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    ls_commit-author    = 'John Foobar'.
+    ls_commit-committer = 'John Foobar'.
+    ls_commit-body      = 'body'.
+    lv_data = lcl_pack=>encode_commit( ls_commit ).
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_data ).
+    ls_object-type = gc_commit.
+    ls_object-data = lv_data.
+    APPEND ls_object TO lt_objects.
+
+* tree
+    CLEAR ls_node.
+    ls_node-chmod     = '12456'.
+    ls_node-name      = 'foobar.abap'.
+    ls_node-sha1      = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    APPEND ls_node TO lt_nodes.
+    lv_data = lcl_pack=>encode_tree( lt_nodes ).
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_data ).
+    ls_object-type = gc_tree.
+    ls_object-data = lv_data.
+    APPEND ls_object TO lt_objects.
+
+
+    CLEAR lv_data.
+    lv_data = lcl_pack=>encode( lt_objects ).
+    lt_result = lcl_pack=>decode( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = lt_objects
+        act = lt_result ).
+
+  ENDMETHOD.                    "encode_decode_pack_multiple
 
   METHOD encode_decode_pack_short.
 
@@ -1683,8 +1996,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
           lt_result TYPE tt_nodes.
 
     CLEAR ls_node.
-    ls_node-chmod = '100644'.
-    ls_node-directory = abap_false.
+    ls_node-chmod = gc_chmod_file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
     APPEND ls_node TO lt_nodes.
@@ -1783,7 +2095,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     lv_pack = lcl_transport=>upload_pack( iv_repo ).
     lt_objects = lcl_pack=>decode( lv_pack ).
     lcl_pack=>decode_deltas( CHANGING ct_objects = lt_objects ).
-    rt_latest = lcl_pack=>latest( lt_objects ).
+    rt_latest = lcl_pack=>latest_objects( lt_objects ).
 
   ENDMETHOD.                    "latest
 
@@ -1808,22 +2120,64 @@ ENDCLASS.                    "test IMPLEMENTATION
 *----------------------------------------------------------------------*
 *      -->P_LT_COMMITS  text
 *----------------------------------------------------------------------*
-FORM output_objects USING pt_objects TYPE tt_objects.
+FORM output_objects USING pt_objects TYPE tt_objects
+                  RAISING lcx_exception.
 
   FIELD-SYMBOLS: <ls_object> LIKE LINE OF pt_objects.
 
 
   LOOP AT pt_objects ASSIGNING <ls_object>.
+
+    WRITE: / 'SHA1:', <ls_object>-sha1, <ls_object>-type.
+
     CASE <ls_object>-type.
       WHEN gc_commit.
         PERFORM output_commit USING <ls_object>.
+      WHEN gc_tree.
+        PERFORM output_tree USING <ls_object>.
+      WHEN gc_blob.
+        PERFORM output_blob USING <ls_object>.
       WHEN OTHERS.
-        BREAK-POINT.
-        WRITE: / 'todo'.                                    "#EC NOTEXT
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Output, unknown type'.               "#EC NOTEXT
     ENDCASE.
+
+    WRITE: /.
   ENDLOOP.
 
 ENDFORM.                    " OUTPUT_OBJECTS
+
+*&---------------------------------------------------------------------*
+*&      Form  output_tree
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM output_tree USING ps_object TYPE st_object
+               RAISING lcx_exception.
+
+  DATA: lt_nodes TYPE tt_nodes.
+
+  FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
+
+
+  lt_nodes = lcl_pack=>decode_tree( ps_object-data ).
+  LOOP AT lt_nodes ASSIGNING <ls_node>.
+    WRITE: / <ls_node>-chmod, <ls_node>-sha1, <ls_node>-name.
+  ENDLOOP.
+
+ENDFORM.                    "output_tree
+
+*&---------------------------------------------------------------------*
+*&      Form  output_blob
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM output_blob USING ps_object TYPE st_object.
+
+  WRITE: / ps_object-data.
+
+ENDFORM.                    "output_blob
 
 *&---------------------------------------------------------------------*
 *&      Form  OUTPUT_COMMIT
@@ -1832,19 +2186,18 @@ ENDFORM.                    " OUTPUT_OBJECTS
 *----------------------------------------------------------------------*
 *      -->P_<LS_COMMIT>  text
 *----------------------------------------------------------------------*
-FORM output_commit USING ps_object TYPE st_object.
+FORM output_commit USING ps_object TYPE st_object
+                   RAISING lcx_exception.
 
   DATA: ls_commit TYPE st_commit.
 
 
-  WRITE: / 'SHA1:', ps_object-sha1.
-
   ls_commit = lcl_pack=>decode_commit( ps_object-data ).
 
-  WRITE: / 'tree', ls_commit-tree.                          "#EC NOTEXT
-  WRITE: / 'parent', ls_commit-parent.                      "#EC NOTEXT
-  WRITE: / 'author', ls_commit-author.                      "#EC NOTEXT
-  WRITE: / 'committer', ls_commit-committer.                "#EC NOTEXT
-  WRITE: / ls_commit-body.
+  WRITE: / 'tree', 20 ls_commit-tree.                       "#EC NOTEXT
+  WRITE: / 'parent', 20 ls_commit-parent.                   "#EC NOTEXT
+  WRITE: / 'author', 20 ls_commit-author.                   "#EC NOTEXT
+  WRITE: / 'committer', 20 ls_commit-committer.             "#EC NOTEXT
+  WRITE: /20 ls_commit-body.
 
 ENDFORM.                    " OUTPUT_COMMIT
