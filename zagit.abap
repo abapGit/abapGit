@@ -1,4 +1,4 @@
-REPORT zdk8lahvp089.
+REPORT zabapgit.
 
 TYPES: t_type     TYPE c LENGTH 6,
        t_bitbyte  TYPE c LENGTH 8,
@@ -467,11 +467,12 @@ CLASS lcl_pack DEFINITION FINAL.
                          RETURNING value(rt_latest) TYPE tt_latest
                          RAISING lcx_exception.
 
-    CLASS-METHODS latest_commit IMPORTING it_objects TYPE tt_objects
-                             RETURNING value(rs_object) TYPE st_object
-                             RAISING lcx_exception.
+*    CLASS-METHODS latest_commit IMPORTING it_objects TYPE tt_objects
+*                             RETURNING value(rs_object) TYPE st_object
+*                             RAISING lcx_exception.
 
-    CLASS-METHODS latest_objects IMPORTING it_objects TYPE tt_objects
+    CLASS-METHODS latest_objects IMPORTING iv_branch TYPE t_sha1
+                                           it_objects TYPE tt_objects
                          RETURNING value(rt_latest) TYPE tt_latest
                          RAISING lcx_exception.
 
@@ -485,7 +486,7 @@ CLASS lcl_pack DEFINITION FINAL.
   PRIVATE SECTION.
 
     CONSTANTS: c_debug_pack TYPE abap_bool VALUE abap_false,
-               c_pack_start TYPE x LENGTH 4 VALUE '5041434B',
+               c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
                c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
@@ -727,7 +728,12 @@ CLASS lcl_pack IMPLEMENTATION.
           ls_object TYPE st_object.
 
 
-    ls_object = latest_commit( it_objects ).
+    READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = gc_commit.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Commit/branch not found'.              "#EC NOTEXT
+    ENDIF.
     ls_commit = lcl_pack=>decode_commit( ls_object-data ).
 
     walk( EXPORTING it_objects = it_objects
@@ -736,51 +742,6 @@ CLASS lcl_pack IMPLEMENTATION.
           CHANGING ct_latest = rt_latest ).
 
   ENDMETHOD.                    "latest
-
-  METHOD latest_commit.
-
-    DATA: lt_commits TYPE tt_objects,
-          ls_commit  TYPE st_commit,
-          lv_sha1    TYPE t_sha1.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
-
-
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_commit.
-      APPEND <ls_object> TO lt_commits.
-    ENDLOOP.
-
-* find first commit
-    LOOP AT lt_commits ASSIGNING <ls_object>.
-      ls_commit = lcl_pack=>decode_commit( <ls_object>-data ).
-      IF ls_commit-parent IS INITIAL.
-        lv_sha1 = <ls_object>-sha1.
-        EXIT. " current loop.
-      ENDIF.
-    ENDLOOP.
-
-* todo, there must be faster/easier way to do this
-* todo, assumes no branching
-    DO lines( lt_commits ) TIMES.
-      LOOP AT lt_commits ASSIGNING <ls_object>.
-        ls_commit = lcl_pack=>decode_commit( <ls_object>-data ).
-        IF ls_commit-parent = lv_sha1.
-          lv_sha1 = <ls_object>-sha1.
-          EXIT. " current loop
-        ENDIF.
-      ENDLOOP.
-    ENDDO.
-
-    READ TABLE lt_commits ASSIGNING <ls_object> WITH KEY sha1 = lv_sha1.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = 'Latest, commit not found'.             "#EC NOTEXT
-    ENDIF.
-
-    rs_object = <ls_object>.
-
-  ENDMETHOD.                    "latest_commit
 
   METHOD sanity_checks.
 
@@ -1359,26 +1320,49 @@ CLASS lcl_transport DEFINITION FINAL.
   PUBLIC SECTION.
 * from GitHub to SAP
     CLASS-METHODS upload_pack IMPORTING iv_repo TYPE string
-                              RETURNING value(rv_pack) TYPE xstring
+                              EXPORTING ev_pack TYPE xstring
+                                        ev_branch TYPE t_sha1
                               RAISING lcx_exception.
 
 * from SAP to GitHub
     CLASS-METHODS receive_pack IMPORTING iv_repo TYPE string
+                                         iv_commit TYPE t_sha1
                                          iv_pack TYPE xstring
                                RAISING lcx_exception.
 
   PRIVATE SECTION.
-    CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_false.
+    CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_true,
+               c_cap_list   TYPE string VALUE 'side-band-64k no-progress',
+               c_dot_git    TYPE c LENGTH 4 VALUE '.git'.
 
-    CLASS-METHODS pkt IMPORTING iv_string TYPE string
-                      CHANGING cv_pkt TYPE string
+    CLASS-METHODS pkt_string
+                      IMPORTING iv_string TYPE string
+                      RETURNING value(rv_pkt) TYPE string
                       RAISING lcx_exception.
 
-    CLASS-METHODS parse EXPORTING ev_pack TYPE xstring
-                        CHANGING cv_data TYPE xstring.
+    CLASS-METHODS pkt_xstring
+                      IMPORTING iv_xstring TYPE xstring
+                      RETURNING value(rv_pkt) TYPE xstring
+                      RAISING lcx_exception.
 
-    CLASS-METHODS length_utf8_hex IMPORTING iv_data TYPE xstring
+    CLASS-METHODS parse
+                      EXPORTING ev_pack TYPE xstring
+                      CHANGING cv_data TYPE xstring.
+
+    CLASS-METHODS length_utf8_hex
+                      IMPORTING iv_data TYPE xstring
                       RETURNING value(rv_len) TYPE i.
+
+    CLASS-METHODS ref_discovery
+                      IMPORTING iv_repo TYPE string
+                                iv_service TYPE string
+                      EXPORTING ei_client TYPE REF TO if_http_client
+                                ev_branch TYPE t_sha1
+                      RAISING lcx_exception.
+
+    CLASS-METHODS check_http_200
+                      IMPORTING if_client TYPE REF TO if_http_client
+                      RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -1389,14 +1373,161 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_transport IMPLEMENTATION.
 
+  METHOD pkt_xstring.
+
+    DATA: lv_x2      TYPE x LENGTH 2,
+          lv_xstring TYPE xstring,
+          lv_string  TYPE string.
+
+
+    lv_x2 = xstrlen( iv_xstring ).
+    lv_string = lv_x2.
+    lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
+
+    CONCATENATE lv_xstring iv_xstring INTO rv_pkt IN BYTE MODE.
+
+  ENDMETHOD.                    "pkt_xstring
+
+  METHOD check_http_200.
+
+    DATA: lv_code TYPE i.
+
+
+    if_client->response->get_status(
+      IMPORTING
+        code   = lv_code ).
+    IF lv_code <> 200.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'HTTP error code'.                      "#EC NOTEXT
+    ENDIF.
+
+  ENDMETHOD.                    "http_200
+
+  METHOD ref_discovery.
+
+    DATA: lv_hash   TYPE c LENGTH 40,
+          lt_result TYPE TABLE OF string,
+          lv_data   TYPE string.
+
+
+    cl_http_client=>create_by_url(
+      EXPORTING
+        url    = 'https://github.com'                       "#EC NOTEXT
+      IMPORTING
+        client = ei_client ).
+
+    ei_client->request->set_cdata( '' ).
+    ei_client->request->set_header_field(
+        name  = '~request_method'
+        value = 'GET' ).
+    ei_client->request->set_header_field(
+        name  = '~request_uri'
+        value = iv_repo && '/info/refs?service=git-' && iv_service && '-pack' ).
+    ei_client->send( ).
+    ei_client->receive( ).
+
+    check_http_200( ei_client ).
+
+    lv_data = ei_client->response->get_cdata( ).
+
+    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
+    LOOP AT lt_result INTO lv_data.
+      IF lv_data CP '*refs/heads/master*'.
+        lv_hash = lv_data+4.
+      ENDIF.
+    ENDLOOP.
+
+    TRANSLATE lv_hash TO UPPER CASE.
+    IF strlen( lv_hash ) <> 40.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Branch not found'.                     "#EC NOTEXT
+    ENDIF.
+
+    ev_branch = lv_hash.
+
+  ENDMETHOD.                    "ref_discovery
+
   METHOD receive_pack.
+
+    DATA: li_client  TYPE REF TO if_http_client,
+          lv_cmd_pkt TYPE string,
+          lv_line    TYPE string,
+          lv_x       TYPE x,
+          lv_pack    TYPE xstring,
+          lv_tmp     TYPE xstring,
+          lv_xstring TYPE xstring,
+          lv_code    TYPE i,
+          lv_buffer  TYPE string,
+          lv_branch  TYPE t_sha1,
+          lv_repo    TYPE string.
+
 
     IF NOT iv_repo CP '*Foobar*'.
       BREAK-POINT.
       RETURN.
     ENDIF.
 
-* todo
+    CONCATENATE iv_repo c_dot_git INTO lv_repo.             "#EC NOTEXT
+
+    ref_discovery(
+      EXPORTING
+        iv_repo    = lv_repo
+        iv_service = 'receive'
+      IMPORTING
+        ei_client  = li_client
+        ev_branch = lv_branch ).
+
+****************************
+
+    li_client->request->set_header_field(
+        name  = '~request_method'
+        value = 'POST' ).
+    li_client->request->set_header_field(
+        name  = '~request_uri'
+        value = lv_repo && '/git-receive-pack' ).
+    li_client->request->set_header_field(
+        name  = 'Content-Type'
+        value = 'Content-Type: application/x-git-receive-pack-request' ). "#EC NOTEXT
+
+* todo, test report-status capability
+
+    lv_line = lv_branch &&
+              ` ` &&
+              iv_commit &&
+              ` ` &&
+              'refs/heads/master' &&
+*              ` ` &&
+*              c_cap_list &&
+              cl_abap_char_utilities=>newline.              "#EC NOTEXT
+    lv_cmd_pkt = pkt_string( lv_line ).
+
+    lv_buffer = lv_cmd_pkt
+             && '0000'
+             && cl_abap_char_utilities=>newline.
+    lv_tmp = lcl_convert=>string_to_xstring_utf8( lv_buffer ).
+
+*    lv_x = '01'.
+*    CONCATENATE lv_x iv_pack INTO lv_pack IN BYTE MODE. " band
+*    lv_xstring = pkt_xstring( lv_pack ).
+break-point.
+    CONCATENATE lv_tmp iv_pack INTO lv_xstring IN BYTE MODE.
+
+    li_client->request->set_data( lv_xstring ).
+    li_client->send( ).
+    li_client->receive( ).
+    li_client->response->get_status(
+      IMPORTING
+        code   = lv_code ).
+
+    lv_xstring = li_client->response->get_data( ).
+    li_client->close( ).
+
+* todo, try calling parse to check xstring
+    BREAK-POINT.
+
+* expect "000Aunpack ok"
 
   ENDMETHOD.                    "receive_pack
 
@@ -1477,59 +1608,23 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: lv_code        TYPE i,
-          li_client      TYPE REF TO if_http_client,
-          lt_result      TYPE TABLE OF string,
+    DATA: li_client      TYPE REF TO if_http_client,
           lv_buffer      TYPE string,
-          lv_hash        TYPE c LENGTH 40,
           lv_xstring     TYPE xstring,
           lv_line        TYPE string,
           lv_repo        TYPE string,
-          lv_pkt         TYPE string,
-          lv_data        TYPE string.
+          lv_pkt         TYPE string.
 
 
-    CONCATENATE iv_repo '.git' INTO lv_repo.                "#EC NOTEXT
+    CONCATENATE iv_repo c_dot_git INTO lv_repo.             "#EC NOTEXT
 
-    cl_http_client=>create_by_url(
+    ref_discovery(
       EXPORTING
-        url    = 'https://github.com'                       "#EC NOTEXT
+        iv_repo    = lv_repo
+        iv_service = 'upload'
       IMPORTING
-        client = li_client ).
-
-    lv_buffer = ''.
-    li_client->request->set_cdata( lv_buffer ).
-    li_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'GET' ).
-    li_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_repo && '/info/refs?service=git-upload-pack' ).
-    li_client->send( ).
-    li_client->receive( ).
-
-    li_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-    IF lv_code <> 200.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = 'HTTP error code'.                      "#EC NOTEXT
-    ENDIF.
-    lv_data = li_client->response->get_cdata( ).
-
-    SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
-    LOOP AT lt_result INTO lv_data.
-      IF lv_data CP '*refs/heads/master*'.
-        lv_hash = lv_data+4.
-      ENDIF.
-    ENDLOOP.
-
-    IF strlen( lv_hash ) <> 40.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = 'Branch not found'.                     "#EC NOTEXT
-    ENDIF.
+        ei_client  = li_client
+        ev_branch  = ev_branch ).
 
 *--------------------------------------------------------------------
 
@@ -1545,12 +1640,11 @@ CLASS lcl_transport IMPLEMENTATION.
 
     lv_line = 'want' &&
               ` ` &&
-              lv_hash &&
+              ev_branch &&
               ` ` &&
-              'side-band-64k no-progress'
+              c_cap_list
               && cl_abap_char_utilities=>newline.           "#EC NOTEXT
-    pkt( EXPORTING iv_string = lv_line
-         CHANGING cv_pkt = lv_pkt ).
+    lv_pkt = pkt_string( lv_line ).
 
     lv_buffer = lv_pkt
              && '0000'
@@ -1559,29 +1653,24 @@ CLASS lcl_transport IMPLEMENTATION.
     li_client->request->set_cdata( lv_buffer ).
     li_client->send( ).
     li_client->receive( ).
-    li_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-    IF lv_code <> 200.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = 'HTTP error code'.                      "#EC NOTEXT
-    ENDIF.
-
+    check_http_200( li_client ).
     lv_xstring = li_client->response->get_data( ).
+    li_client->close( ).
 
-    parse( IMPORTING ev_pack = rv_pack
+    parse( IMPORTING ev_pack = ev_pack
            CHANGING cv_data = lv_xstring ).
 
-  ENDMETHOD.                    "uplaod_pack
+  ENDMETHOD.                    "upload_pack
 
-  METHOD pkt.
+  METHOD pkt_string.
 
     DATA: lv_x   TYPE x,
           lv_len TYPE i.
 
+
     lv_len = strlen( iv_string ).
 
+* todo, use int_to_xstring
     IF lv_len >= 255.
       RAISE EXCEPTION TYPE lcx_exception
         EXPORTING
@@ -1590,7 +1679,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     lv_x = lv_len + 4.
 
-    cv_pkt = cv_pkt && '00' && lv_x && iv_string.
+    rv_pkt = rv_pkt && '00' && lv_x && iv_string.
 
   ENDMETHOD.                    "pkt
 
@@ -1625,6 +1714,7 @@ FORM run.
 *  DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
 
   DATA: lv_pack      TYPE xstring,
+        lv_branch    TYPE t_sha1,
         lt_latest    TYPE tt_latest,
         ls_object    TYPE st_object,
         lx_exception TYPE REF TO lcx_exception,
@@ -1634,7 +1724,9 @@ FORM run.
 
 
   TRY.
-      lv_pack = lcl_transport=>upload_pack( lv_repo ).
+      lcl_transport=>upload_pack( EXPORTING iv_repo = lv_repo
+                                  IMPORTING ev_pack = lv_pack
+                                            ev_branch = lv_branch ).
 
       IF lv_pack IS INITIAL.
         RETURN.
@@ -1650,13 +1742,19 @@ FORM run.
 
       lcl_pack=>sanity_checks( lt_objects ).
 
-      lt_latest = lcl_pack=>latest_objects( lt_objects ).
+      lt_latest = lcl_pack=>latest_objects( iv_branch = lv_branch
+                                            it_objects = lt_objects ).
 
       LOOP AT lt_latest ASSIGNING <ls_latest>.
         WRITE: / <ls_latest>-path, 40 <ls_latest>-filename.
       ENDLOOP.
 
-      ls_object = lcl_pack=>latest_commit( lt_objects ).
+      READ TABLE lt_objects INTO ls_object WITH KEY sha1 = lv_branch type = gc_commit.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Commit not found'.                   "#EC NOTEXT
+      ENDIF.
       PERFORM receive USING ls_object lv_repo.
 
     CATCH lcx_exception INTO lx_exception.
@@ -1731,10 +1829,9 @@ FORM receive USING ps_parent TYPE st_object
 
   lv_pack = lcl_pack=>encode( lt_objects ).
 
-  BREAK-POINT.
-
-  lcl_transport=>receive_pack( iv_repo = pv_repo
-                               iv_pack = lv_pack ).
+  lcl_transport=>receive_pack( iv_repo   = pv_repo
+                               iv_commit = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit )
+                               iv_pack   = lv_pack ).
 
 ENDFORM.                    "download
 
@@ -2090,12 +2187,17 @@ CLASS lcl_abap_unit IMPLEMENTATION.
   METHOD latest.
 
     DATA: lv_pack    TYPE xstring,
+          lv_branch  TYPE t_sha1,
           lt_objects TYPE tt_objects.
 
-    lv_pack = lcl_transport=>upload_pack( iv_repo ).
+
+    lcl_transport=>upload_pack( EXPORTING iv_repo = iv_repo
+                                IMPORTING ev_pack = lv_pack
+                                          ev_branch = lv_branch ).
     lt_objects = lcl_pack=>decode( lv_pack ).
     lcl_pack=>decode_deltas( CHANGING ct_objects = lt_objects ).
-    rt_latest = lcl_pack=>latest_objects( lt_objects ).
+    rt_latest = lcl_pack=>latest_objects( iv_branch  = lv_branch
+                                          it_objects = lt_objects ).
 
   ENDMETHOD.                    "latest
 
