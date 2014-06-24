@@ -1,4 +1,4 @@
-aGit
+abapGit
 ====
 
 Git client for ABAP
