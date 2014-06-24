@@ -35,10 +35,10 @@ TYPES: BEGIN OF st_commit,
          body      TYPE string,
        END OF st_commit.
 
-CONSTANTS: gc_commit TYPE t_type VALUE 'commit',
-           gc_tree   TYPE t_type VALUE 'tree',
-           gc_ref_d  TYPE t_type VALUE 'ref_d',
-           gc_blob   TYPE t_type VALUE 'blob'.
+CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
+           gc_tree   TYPE t_type VALUE 'tree',              "#EC NOTEXT
+           gc_ref_d  TYPE t_type VALUE 'ref_d',             "#EC NOTEXT
+           gc_blob   TYPE t_type VALUE 'blob'.              "#EC NOTEXT
 
 ******************
 
@@ -68,6 +68,10 @@ CLASS lcl_convert DEFINITION FINAL.
     CLASS-METHODS xstring_to_int IMPORTING iv_xstring TYPE xstring
                                  RETURNING value(rv_i) TYPE i.
 
+    CLASS-METHODS int_to_xstring IMPORTING iv_i TYPE i
+                                           iv_length TYPE i
+                                 RETURNING value(rv_xstring) TYPE xstring.
+
 ENDCLASS.                    "lcl_convert DEFINITION
 
 *----------------------------------------------------------------------*
@@ -76,6 +80,18 @@ ENDCLASS.                    "lcl_convert DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_convert IMPLEMENTATION.
+
+  METHOD int_to_xstring.
+
+    DATA: lv_x TYPE x LENGTH 4.
+
+
+    ASSERT iv_length = 4. " other cases not implemented
+
+    lv_x = iv_i.
+    rv_xstring = lv_x.
+
+  ENDMETHOD.                    "int_to_xstring
 
   METHOD xstring_to_int.
 
@@ -218,6 +234,9 @@ CLASS lcl_hash DEFINITION FINAL.
                                  iv_data TYPE xstring
                        RETURNING value(rv_sha1) TYPE t_sha1.
 
+    CLASS-METHODS sha1_raw IMPORTING iv_data TYPE xstring
+                       RETURNING value(rv_sha1) TYPE t_sha1.
+
 ENDCLASS.                    "lcl_hash DEFINITION
 
 *----------------------------------------------------------------------*
@@ -259,11 +278,34 @@ CLASS lcl_hash IMPLEMENTATION.
 
   ENDMETHOD.                    "adler32
 
+  METHOD sha1_raw.
+
+    DATA: lv_hash TYPE hash160.
+
+
+    CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
+      EXPORTING
+        data           = iv_data
+      IMPORTING
+        hash           = lv_hash
+      EXCEPTIONS
+        unknown_alg    = 1
+        param_error    = 2
+        internal_error = 3
+        OTHERS         = 4.
+    IF sy-subrc <> 0.
+      BREAK-POINT.
+    ENDIF.
+
+    rv_sha1 = lv_hash.
+
+  ENDMETHOD.                    "sha1_raw
+
   METHOD sha1.
 
     DATA: lv_len     TYPE i,
           lv_char10  TYPE c LENGTH 10,
-          lv_hash    TYPE hash160,
+
           lv_string  TYPE string,
           lv_xstring TYPE xstring.
 
@@ -280,21 +322,7 @@ CLASS lcl_hash IMPLEMENTATION.
 
     CONCATENATE lv_xstring iv_data INTO lv_xstring IN BYTE MODE.
 
-    CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
-      EXPORTING
-        data           = lv_xstring
-      IMPORTING
-        hash           = lv_hash
-      EXCEPTIONS
-        unknown_alg    = 1
-        param_error    = 2
-        internal_error = 3
-        OTHERS         = 4.
-    IF sy-subrc <> 0.
-      BREAK-POINT.
-    ENDIF.
-
-    rv_sha1 = lv_hash.
+    rv_sha1 = sha1_raw( lv_xstring ).
 
   ENDMETHOD.                    "sha1
 
@@ -335,20 +363,30 @@ CLASS lcl_pack DEFINITION FINAL.
                          RETURNING value(rv_data) TYPE xstring.
 
   PRIVATE SECTION.
-    CONSTANTS: c_debug_pack TYPE abap_bool VALUE abap_false.
+    CONSTANTS: c_debug_pack TYPE abap_bool VALUE abap_false,
+               c_pack_start TYPE x LENGTH 4 VALUE '5041434B',
+               c_zlib       TYPE x LENGTH 2 VALUE '789C',
+               c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
+               c_version    TYPE x LENGTH 4 VALUE '00000002'.
+
+    CLASS-METHODS type_and_length IMPORTING is_object TYPE st_object
+                                  RETURNING value(rv_xstring) TYPE xstring.
 
     CLASS-METHODS delta IMPORTING is_object TYPE st_object
                         CHANGING ct_objects TYPE tt_objects.
 
     CLASS-METHODS delta_header CHANGING cv_delta TYPE xstring.
 
-    CLASS-METHODS get_type IMPORTING iv_bitbyte TYPE t_bitbyte
+    CLASS-METHODS get_type IMPORTING iv_x TYPE x
                            RETURNING value(rv_type) TYPE t_type.
 
     CLASS-METHODS walk IMPORTING it_objects TYPE tt_objects
                                  iv_sha1 TYPE t_sha1
                                  iv_path TYPE string
                        CHANGING ct_latest TYPE tt_latest.
+
+    CLASS-METHODS get_length EXPORTING ev_length TYPE i
+                             CHANGING cv_data TYPE xstring.
 
 ENDCLASS.                    "lcl_pack DEFINITION
 
@@ -358,6 +396,98 @@ ENDCLASS.                    "lcl_pack DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_pack IMPLEMENTATION.
+
+  METHOD type_and_length.
+
+    DATA: lv_bits   TYPE string,
+          lv_type   TYPE string,
+          lv_result TYPE string,
+          lv_c      TYPE c,
+          lv_offset TYPE i,
+          lv_x4     TYPE x LENGTH 4,
+          lv_x      TYPE x LENGTH 1.
+
+
+    CASE is_object-type.
+      WHEN gc_commit.
+        lv_type = '001'.
+      WHEN gc_tree.
+        lv_type = '010'.
+      WHEN gc_blob.
+        lv_type = '011'.
+      WHEN gc_ref_d.
+        lv_type = '111'.
+      WHEN OTHERS.
+* todo?
+        BREAK-POINT.
+    ENDCASE.
+
+    lv_x4 = xstrlen( is_object-data ).
+    DO 32 TIMES.
+      GET BIT sy-index OF lv_x4 INTO lv_c.
+      CONCATENATE lv_bits lv_c INTO lv_bits.
+    ENDDO.
+
+    IF lv_bits(28) = '0000000000000000000000000000'.
+      CONCATENATE '0' lv_type lv_bits+28(4) INTO lv_result.
+    ELSEIF lv_bits(21) = '000000000000000000000'.
+      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
+      CONCATENATE lv_result '0' lv_bits+21(7) INTO lv_result.
+    ELSE.
+* todo, this can be done easier with some shifting
+      BREAK-POINT.
+    ENDIF.
+
+* convert bit string to xstring
+    CLEAR lv_x.
+    DO strlen( lv_result ) TIMES.
+      lv_offset = sy-index - 1.
+      IF lv_result+lv_offset(1) = '1'.
+        SET BIT ( lv_offset MOD 8 ) + 1 OF lv_x.
+      ENDIF.
+      IF ( lv_offset + 1 ) MOD 8 = 0.
+        CONCATENATE rv_xstring lv_x INTO rv_xstring IN BYTE MODE.
+        CLEAR lv_x.
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.                    "type_and_length
+
+  METHOD get_length.
+
+    DATA: lv_x           TYPE x,
+          lv_length_bits TYPE string,
+          lv_bitbyte     TYPE t_bitbyte.
+
+
+    lv_x = cv_data(1).
+    IF c_debug_pack = abap_true.
+      WRITE: / 'A:', lv_x, '(hex)'.                         "#EC NOTEXT
+    ENDIF.
+    lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+    IF c_debug_pack = abap_true.
+      WRITE: lv_bitbyte.
+    ENDIF.
+
+    cv_data = cv_data+1.
+    lv_length_bits = lv_bitbyte+4.
+
+    WHILE lv_bitbyte(1) <> '0'.
+      lv_x = cv_data(1).
+      IF c_debug_pack = abap_true.
+        WRITE: / 'x:', lv_x, '(hex)'.                       "#EC NOTEXT
+      ENDIF.
+      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+      IF c_debug_pack = abap_true.
+        WRITE: lv_bitbyte.
+      ENDIF.
+      cv_data = cv_data+1.
+      CONCATENATE lv_bitbyte+1 lv_length_bits INTO lv_length_bits.
+    ENDWHILE.
+
+    ev_length = lcl_convert=>bitbyte_to_int( lv_length_bits ).
+
+  ENDMETHOD.                    "get_length
 
   METHOD encode_tree.
 
@@ -395,23 +525,22 @@ CLASS lcl_pack IMPLEMENTATION.
 
     lv_string = ''.
 
-    CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space.
+    CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
     CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
-      CONCATENATE 'parent' lv_parent_lower INTO lv_tmp  SEPARATED BY space.
+      CONCATENATE 'parent' lv_parent_lower INTO lv_tmp  SEPARATED BY space. "#EC NOTEXT
       CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
     ENDIF.
 
-    CONCATENATE 'author' is_commit-author INTO lv_tmp  SEPARATED BY space.
+    CONCATENATE 'author' is_commit-author INTO lv_tmp  SEPARATED BY space. "#EC NOTEXT
     CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
-    CONCATENATE 'committer' is_commit-committer INTO lv_tmp SEPARATED BY space.
+    CONCATENATE 'committer' is_commit-committer INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
     CONCATENATE lv_string lv_tmp cl_abap_char_utilities=>newline INTO lv_string.
 
     CONCATENATE lv_string cl_abap_char_utilities=>newline is_commit-body INTO lv_string.
 
-*    BREAK-POINT.
     rv_data = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.                    "encode_commit
@@ -569,9 +698,12 @@ CLASS lcl_pack IMPLEMENTATION.
 
   METHOD get_type.
 
-    DATA: lv_char3 TYPE c LENGTH 3.
+    DATA: lv_char3   TYPE c LENGTH 3,
+          lv_bitbyte TYPE t_bitbyte.
 
-    lv_char3 = iv_bitbyte+1.
+
+    lv_bitbyte = lcl_convert=>x_to_bitbyte( iv_x ).
+    lv_char3 = lv_bitbyte+1.
 
     CASE lv_char3.
       WHEN '001'.
@@ -604,7 +736,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
     SPLIT lv_string AT cl_abap_char_utilities=>newline INTO TABLE lt_string.
 
-    lv_mode = 'tree'.
+    lv_mode = 'tree'.                                       "#EC NOTEXT
     LOOP AT lt_string ASSIGNING <lv_string>.
       lv_len = strlen( lv_mode ).
 
@@ -614,23 +746,23 @@ CLASS lcl_pack IMPLEMENTATION.
             lv_char40 = <lv_string>+5.
             TRANSLATE lv_char40 TO UPPER CASE.
             rs_commit-tree = lv_char40.
-            lv_mode = 'parent'.
+            lv_mode = 'parent'.                             "#EC NOTEXT
           WHEN 'parent'.
             lv_char40 = <lv_string>+7.
             TRANSLATE lv_char40 TO UPPER CASE.
             rs_commit-parent = lv_char40.
-            lv_mode = 'author'.
+            lv_mode = 'author'.                             "#EC NOTEXT
           WHEN 'author'.
             rs_commit-author = <lv_string>+7.
-            lv_mode = 'committer'.
+            lv_mode = 'committer'.                          "#EC NOTEXT
           WHEN 'committer'.
             rs_commit-committer = <lv_string>+10.
             CLEAR lv_mode.
         ENDCASE.
-      ELSEIF lv_mode = 'parent' AND <lv_string>(6) = 'author'.
+      ELSEIF lv_mode = 'parent' AND <lv_string>(6) = 'author'. "#EC NOTEXT
 * first commit doesnt have parent
         rs_commit-author = <lv_string>+7.
-        lv_mode = 'committer'.
+        lv_mode = 'committer'.                              "#EC NOTEXT
       ELSE.
 * body
         CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
@@ -857,92 +989,51 @@ CLASS lcl_pack IMPLEMENTATION.
 
     DATA: lv_x           TYPE x,
           lv_data        TYPE xstring,
-          lv_bitbyte     TYPE t_bitbyte,
           lv_type        TYPE c LENGTH 6,
           lv_zlib        TYPE x LENGTH 2,
           lv_objects     TYPE i,
+          lv_len         TYPE i,
+          lv_sha1        TYPE t_sha1,
           lv_ref_delta   TYPE t_sha1,
           lv_adler32     TYPE t_adler32,
           lv_compressed     TYPE xstring,
           lv_compressed_len TYPE i,
           lv_decompress_len TYPE i,
           lv_decompressed   TYPE xstring,
-          lv_objects_count  TYPE i,
           lv_xstring     TYPE xstring,
           lv_expected    TYPE i,
-          lv_length_bits TYPE string,
           ls_object      LIKE LINE OF rt_objects.
 
 
     lv_data = iv_data.
 
-    IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> '5041434B'.
+* header
+    IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
       BREAK-POINT.
       RETURN.
     ENDIF.
-
-    IF c_debug_pack = abap_true.
-      WRITE: / '-------------------Start PACK-------------------'. "#EC NOTEXT
-    ENDIF.
-
     lv_data = lv_data+4.
 
-    IF c_debug_pack = abap_true.
-      WRITE: / 'Version:', lv_data(4).                      "#EC NOTEXT
+* version
+    IF lv_data(4) <> c_version.
+      BREAK-POINT.
+      RETURN.
     ENDIF.
     lv_data = lv_data+4.
 
+* number of objects
     lv_xstring = lv_data(4).
     lv_objects = lcl_convert=>xstring_to_int( lv_xstring ).
-    IF c_debug_pack = abap_true.
-      WRITE: / 'Objects:', lv_data(4), '(hex)', lv_objects. "#EC NOTEXT
-    ENDIF.
     lv_data = lv_data+4.
 
-    IF c_debug_pack = abap_true.
-      WRITE: /.
-    ENDIF.
 
     DO lv_objects TIMES.
-      lv_objects_count = sy-index.
-      IF c_debug_pack = abap_true.
-        WRITE: / 'Object', lv_objects_count.                "#EC NOTEXT
-      ENDIF.
 
       lv_x = lv_data(1).
-      IF c_debug_pack = abap_true.
-        WRITE: / 'A:', lv_x, '(hex)'.
-      ENDIF.
-      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
-      IF c_debug_pack = abap_true.
-        WRITE: lv_bitbyte.
-      ENDIF.
+      lv_type = get_type( lv_x ).
 
-      lv_type = get_type( lv_bitbyte ).
-
-      IF c_debug_pack = abap_true.
-        WRITE: lv_type.
-      ENDIF.
-      lv_data = lv_data+1.
-      lv_length_bits = lv_bitbyte+4.
-
-      WHILE lv_bitbyte(1) <> '0'.
-        lv_x = lv_data(1).
-        IF c_debug_pack = abap_true.
-          WRITE: / 'x:', lv_x, '(hex)'.
-        ENDIF.
-        lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
-        IF c_debug_pack = abap_true.
-          WRITE: lv_bitbyte.
-        ENDIF.
-        lv_data = lv_data+1.
-        CONCATENATE lv_bitbyte+1 lv_length_bits INTO lv_length_bits.
-      ENDWHILE.
-
-      lv_expected = lcl_convert=>bitbyte_to_int( lv_length_bits ).
-      IF c_debug_pack = abap_true.
-        WRITE: / 'Length', lv_length_bits, '=', lv_expected. "#EC NOTEXT
-      ENDIF.
+      get_length( IMPORTING ev_length = lv_expected
+                  CHANGING cv_data = lv_data ).
 
       IF lv_type = gc_ref_d.
         lv_ref_delta = lv_data(20).
@@ -951,7 +1042,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
 * strip header, '789C', CMF + FLG
       lv_zlib = lv_data(2).
-      IF lv_zlib <> '789C' AND lv_zlib <> '7801'.
+      IF lv_zlib <> c_zlib AND lv_zlib <> c_zlib_hmm.
         BREAK-POINT.
         WRITE: / 'Unexpected zlib header'.                  "#EC NOTEXT
         RETURN.
@@ -960,7 +1051,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
 *******************************
 
-      IF lv_zlib = '789C'.
+      IF lv_zlib = c_zlib.
         cl_abap_gzip=>decompress_binary(
           EXPORTING
             gzip_in     = lv_data
@@ -989,7 +1080,7 @@ CLASS lcl_pack IMPLEMENTATION.
         lv_data = lv_data+lv_compressed_len.
         lv_data = lv_data+4. " skip adler checksum
 
-      ELSEIF lv_zlib = '7801'.
+      ELSEIF lv_zlib = c_zlib_hmm.
 * this takes some processing, when time permits, implement DEFLATE algorithm
 * cl_abap_gzip copmression works for '789C', but does not produce the same
 * result when '7801'
@@ -1055,14 +1146,56 @@ CLASS lcl_pack IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-*  WRITE: / 'Done,', lv_objects_count, 'objects, expected', lv_objects. "#EC NOTEXT
-* todo, SHA1 at end
+* check SHA1 at end of pack
+    lv_len = xstrlen( iv_data ) - 20.
+    lv_xstring = iv_data(lv_len).
+    lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
+    IF lv_sha1 <> lv_data.
+      BREAK-POINT.
+    ENDIF.
 
   ENDMETHOD.                    "decode
 
   METHOD encode.
-* todo
-    RETURN.
+
+    DATA: lv_sha1       TYPE t_sha1,
+          lv_adler32    TYPE t_adler32,
+          lv_len        TYPE i,
+          lv_compressed TYPE xstring,
+          lv_xstring    TYPE xstring.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
+
+
+    rv_data = c_pack_start.
+
+    CONCATENATE rv_data c_version INTO rv_data IN BYTE MODE.
+
+    lv_len = lines( it_objects ).
+    lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_len
+                                              iv_length = 4 ).
+    CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
+
+    LOOP AT it_objects ASSIGNING <ls_object>.
+      lv_xstring = type_and_length( <ls_object> ).
+      CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
+
+      cl_abap_gzip=>compress_binary(
+        EXPORTING
+          raw_in         = <ls_object>-data
+        IMPORTING
+          gzip_out       = lv_compressed ).
+
+      CONCATENATE rv_data c_zlib lv_compressed INTO rv_data IN BYTE MODE.
+
+      lv_adler32 = lcl_hash=>adler32( <ls_object>-data ).
+      CONCATENATE rv_data lv_adler32  INTO rv_data IN BYTE MODE.
+
+    ENDLOOP.
+
+    lv_sha1 = lcl_hash=>sha1_raw( rv_data ).
+    CONCATENATE rv_data lv_sha1 INTO rv_data IN BYTE MODE.
+
   ENDMETHOD.                    "encode
 
 ENDCLASS.                    "lcl_pack IMPLEMENTATION
@@ -1141,7 +1274,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
       lv_contents = cv_data(lv_len).
       IF c_debug_http = abap_true.
-        WRITE: '(hex length:', lv_contents(4), ')'.
+        WRITE: '(hex length:', lv_contents(4), ')'.         "#EC NOTEXT
       ENDIF.
       lv_contents = lv_contents+4.
       IF c_debug_http = abap_true.
@@ -1172,7 +1305,6 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD upload_pack.
 
     DATA: lv_code        TYPE i,
-          lv_status_text TYPE string,
           li_client      TYPE REF TO if_http_client,
           lt_result      TYPE TABLE OF string,
           lv_buffer      TYPE string,
@@ -1184,11 +1316,11 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_data        TYPE string.
 
 
-    CONCATENATE iv_repo '.git' INTO lv_repo.
+    CONCATENATE iv_repo '.git' INTO lv_repo.                "#EC NOTEXT
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = 'https://github.com'
+        url    = 'https://github.com'                       "#EC NOTEXT
       IMPORTING
         client = li_client ).
 
@@ -1202,12 +1334,16 @@ CLASS lcl_transport IMPLEMENTATION.
         value = lv_repo && '/info/refs?service=git-upload-pack' ).
     li_client->send( ).
     li_client->receive( ).
+
+*    DATA: lt_fields      TYPE tihttpnvp.
+*    li_client->response->get_header_fields( CHANGING fields = lt_fields ).
+*    BREAK-POINT.
+
     li_client->response->get_status(
       IMPORTING
-        code   = lv_code
-        reason = lv_status_text ).
+        code   = lv_code ).
     IF c_debug_http = abap_true.
-      WRITE: / 'HTTP_STATUS_CODE = ', lv_code, lv_status_text.
+      WRITE: / 'HTTP_STATUS_CODE = ', lv_code.
     ENDIF.
     lv_data = li_client->response->get_cdata( ).
 
@@ -1242,7 +1378,12 @@ CLASS lcl_transport IMPLEMENTATION.
         name  = 'Content-Type'
         value = 'Content-Type: application/x-git-upload-pack-request' ). "#EC NOTEXT
 
-    lv_line = 'want' && ` ` && lv_hash && ` ` && 'side-band-64k no-progress' && cl_abap_char_utilities=>newline.
+    lv_line = 'want' &&
+              ` ` &&
+              lv_hash &&
+              ` ` &&
+              'side-band-64k no-progress'
+              && cl_abap_char_utilities=>newline.           "#EC NOTEXT
     pkt( EXPORTING iv_string = lv_line
          CHANGING cv_pkt = lv_pkt ).
 
@@ -1255,10 +1396,9 @@ CLASS lcl_transport IMPLEMENTATION.
     li_client->receive( ).
     li_client->response->get_status(
       IMPORTING
-        code   = lv_code
-        reason = lv_status_text ).
+        code   = lv_code ).
     IF c_debug_http = abap_true.
-      WRITE: / 'HTTP_STATUS_CODE = ', lv_code, lv_status_text.
+      WRITE: / 'HTTP_STATUS_CODE = ', lv_code.
     ENDIF.
 
     lv_xstring = li_client->response->get_data( ).
@@ -1295,25 +1435,26 @@ ENDCLASS.                    "lcl_transport IMPLEMENTATION
 *----------------------------------------------------------------------*
 FORM run.
 
-*  DATA: lv_repo TYPE string VALUE '/larshp/Foobar'.                " 100%
-*DATA: lv_repo TYPE string VALUE '/larshp/MouseChase'.            " 100%
-  DATA: lv_repo TYPE string VALUE '/larshp/Dicing'.                " 100%
-*DATA: lv_repo TYPE string VALUE '/snowplow/snowplow'.            " base not found, 10000 ref deltas, multiple parents
-*DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-Regex-Training'.  " 100%
-*DATA: lv_repo TYPE string VALUE '/sciruela/ABAP-Exercises'.      " 100%
-*DATA: lv_repo TYPE string VALUE '/adsworth/ABAP-Utils'.          " 100%
-*DATA: lv_repo TYPE string VALUE '/rvanmil/Run-ABAP-Code'.        " 100%
-*DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-OOP-Library'.     " 100%
-*DATA: lv_repo TYPE string VALUE '/ivanfemia/abap2xlsx'.          " base not found, 2000 ref deltas, multiple parents
-*DATA: lv_repo TYPE string VALUE '/InfoSize/abapsourcesearch'.    " 100%
-*DATA: lv_repo TYPE string VALUE '/google/flatbuffers'.           " 100%
-*DATA: lv_repo TYPE string VALUE '/antiboredom/videogrep'.        " 100%
-*DATA: lv_repo TYPE string VALUE '/idank/explainshell'.           " 100%
-*DATA: lv_repo TYPE string VALUE '/education/teachers_pet'.       " base not found, 694 ref deltas, multiple parents
-*DATA: lv_repo TYPE string VALUE '/gmarik/Vundle.vim'.            " base not found, 829 ref deltas, multiple parents
-*DATA: lv_repo TYPE string VALUE '/mephux/komanda'.               " base not found, 685 ref deltas, multiple parents
-*DATA: lv_repo TYPE string VALUE '/mrmrs/colors'.                 " 100%
-*DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
+  DATA: lv_repo TYPE string VALUE '/larshp/Foobar'.                " 100%
+*  DATA: lv_repo TYPE string VALUE '/larshp/MouseChase'.            " 100%
+*  DATA: lv_repo TYPE string VALUE '/larshp/Dicing'.                " 100%
+*  DATA: lv_repo TYPE string VALUE '/larshp/Datamatrix'.            " 100% password protected
+*  DATA: lv_repo TYPE string VALUE '/snowplow/snowplow'.            " base not found, 10000 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-Regex-Training'.  " 100%
+*  DATA: lv_repo TYPE string VALUE '/sciruela/ABAP-Exercises'.      " 100%
+*  DATA: lv_repo TYPE string VALUE '/adsworth/ABAP-Utils'.          " 100%
+*  DATA: lv_repo TYPE string VALUE '/rvanmil/Run-ABAP-Code'.        " 100%
+*  DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-OOP-Library'.     " 100%
+*  DATA: lv_repo TYPE string VALUE '/ivanfemia/abap2xlsx'.          " base not found, 2000 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/InfoSize/abapsourcesearch'.    " 100%
+*  DATA: lv_repo TYPE string VALUE '/google/flatbuffers'.           " 100%
+*  DATA: lv_repo TYPE string VALUE '/antiboredom/videogrep'.        " 100%
+*  DATA: lv_repo TYPE string VALUE '/idank/explainshell'.           " 100%
+*  DATA: lv_repo TYPE string VALUE '/education/teachers_pet'.       " base not found, 694 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/gmarik/Vundle.vim'.            " base not found, 829 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/mephux/komanda'.               " base not found, 685 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/mrmrs/colors'.                 " 100%
+*  DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
 
   DATA: lv_pack    TYPE xstring,
         lt_latest  TYPE tt_latest,
@@ -1323,6 +1464,10 @@ FORM run.
 
 
   lv_pack = lcl_transport=>upload_pack( lv_repo ).
+
+  IF lv_pack IS INITIAL.
+    RETURN.
+  ENDIF.
 
   lt_objects = lcl_pack=>decode( lv_pack ).
 
@@ -1377,16 +1522,16 @@ FORM output_summary USING pt_objects TYPE tt_objects.
 
 
   _count gc_commit.
-  WRITE: / lv_lines, 'commits'.
+  WRITE: / lv_lines, 'commits'.                             "#EC NOTEXT
 
   _count gc_tree.
-  WRITE: / lv_lines, 'trees'.
+  WRITE: / lv_lines, 'trees'.                               "#EC NOTEXT
 
   _count gc_blob.
-  WRITE: / lv_lines, 'blobs'.
+  WRITE: / lv_lines, 'blobs'.                               "#EC NOTEXT
 
   _count gc_ref_d.
-  WRITE: / lv_lines, 'ref deltas'.
+  WRITE: / lv_lines, 'ref deltas'.                          "#EC NOTEXT
 
   WRITE: /.
 
@@ -1435,6 +1580,10 @@ CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
     METHODS encode_decode_tree FOR TESTING.
     METHODS encode_decode_commit FOR TESTING.
+    METHODS encode_decode_pack_short FOR TESTING.
+    METHODS encode_decode_pack_long FOR TESTING.
+
+    METHODS convert_int FOR TESTING.
 
     CLASS-METHODS latest IMPORTING iv_repo TYPE string
                          RETURNING value(rt_latest) TYPE tt_latest.
@@ -1449,6 +1598,82 @@ ENDCLASS.                    "test DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_abap_unit IMPLEMENTATION.
+
+  METHOD convert_int.
+
+    CONSTANTS: lc_i TYPE i VALUE 1000.
+
+    DATA: lv_xstring TYPE xstring,
+          lv_i       TYPE i.
+
+
+    lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lc_i
+                                              iv_length = 4 ).
+    lv_i = lcl_convert=>xstring_to_int( lv_xstring ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = lc_i
+        act = lv_i ).
+
+  ENDMETHOD.                    "convert_int
+
+  METHOD encode_decode_pack_short.
+
+    DATA: lt_objects TYPE tt_objects,
+          ls_object  LIKE LINE OF lt_objects,
+          lt_result  TYPE tt_objects,
+          lv_data    TYPE xstring.
+
+
+    lv_data = '0123456789ABCDEF'.
+
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob
+                                     iv_data = lv_data ).
+    ls_object-type = gc_blob.
+    ls_object-data = lv_data.
+    APPEND ls_object TO lt_objects.
+
+    CLEAR lv_data.
+    lv_data = lcl_pack=>encode( lt_objects ).
+    lt_result = lcl_pack=>decode( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = lt_objects
+        act = lt_result ).
+
+  ENDMETHOD.                    "encode_decode_pack
+
+  METHOD encode_decode_pack_long.
+
+    DATA: lt_objects TYPE tt_objects,
+          ls_object  LIKE LINE OF lt_objects,
+          lv_xstring TYPE xstring,
+          lt_result  TYPE tt_objects,
+          lv_data    TYPE xstring.
+
+
+    lv_xstring = '0123456789ABCDEF'.
+    DO 20 TIMES.
+      CONCATENATE lv_xstring lv_data INTO lv_data IN BYTE MODE.
+    ENDDO.
+
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob
+                                     iv_data = lv_data ).
+    ls_object-type = gc_blob.
+    ls_object-data = lv_data.
+    APPEND ls_object TO lt_objects.
+
+    CLEAR lv_data.
+    lv_data = lcl_pack=>encode( lt_objects ).
+    lt_result = lcl_pack=>decode( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = lt_objects
+        act = lt_result ).
+
+  ENDMETHOD.                    "encode_decode_pack_long
 
   METHOD encode_decode_tree.
 
@@ -1531,6 +1756,8 @@ CLASS lcl_abap_unit IMPLEMENTATION.
 
     lt_latest = latest( iv_repo ).
 
+    cl_abap_unit_assert=>assert_not_initial( lt_latest ).
+
     LOOP AT lt_latest ASSIGNING <ls_latest>.
       CONCATENATE
         'https://raw.githubusercontent.com'
@@ -1592,7 +1819,7 @@ FORM output_objects USING pt_objects TYPE tt_objects.
         PERFORM output_commit USING <ls_object>.
       WHEN OTHERS.
         BREAK-POINT.
-        WRITE: / 'todo'.
+        WRITE: / 'todo'.                                    "#EC NOTEXT
     ENDCASE.
   ENDLOOP.
 
@@ -1614,10 +1841,10 @@ FORM output_commit USING ps_object TYPE st_object.
 
   ls_commit = lcl_pack=>decode_commit( ps_object-data ).
 
-  WRITE: / 'tree', ls_commit-tree.
-  WRITE: / 'parent', ls_commit-parent.
-  WRITE: / 'author', ls_commit-author.
-  WRITE: / 'committer', ls_commit-committer.
+  WRITE: / 'tree', ls_commit-tree.                          "#EC NOTEXT
+  WRITE: / 'parent', ls_commit-parent.                      "#EC NOTEXT
+  WRITE: / 'author', ls_commit-author.                      "#EC NOTEXT
+  WRITE: / 'committer', ls_commit-committer.                "#EC NOTEXT
   WRITE: / ls_commit-body.
 
 ENDFORM.                    " OUTPUT_COMMIT
