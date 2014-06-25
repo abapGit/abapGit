@@ -444,6 +444,7 @@ ENDCLASS.                    "lcl_hash IMPLEMENTATION
 CLASS lcl_pack DEFINITION FINAL.
 
   PUBLIC SECTION.
+
     CLASS-METHODS decode IMPORTING iv_data TYPE xstring
                          RETURNING value(rt_objects) TYPE tt_objects
                          RAISING lcx_exception.
@@ -467,10 +468,6 @@ CLASS lcl_pack DEFINITION FINAL.
                          RETURNING value(rt_latest) TYPE tt_latest
                          RAISING lcx_exception.
 
-*    CLASS-METHODS latest_commit IMPORTING it_objects TYPE tt_objects
-*                             RETURNING value(rs_object) TYPE st_object
-*                             RAISING lcx_exception.
-
     CLASS-METHODS latest_objects IMPORTING iv_branch TYPE t_sha1
                                            it_objects TYPE tt_objects
                          RETURNING value(rt_latest) TYPE tt_latest
@@ -485,8 +482,8 @@ CLASS lcl_pack DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CONSTANTS: c_debug_pack TYPE abap_bool VALUE abap_false,
-               c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
+    CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
+               c_debug_pack TYPE abap_bool VALUE abap_false,
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
                c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
@@ -1331,18 +1328,13 @@ CLASS lcl_transport DEFINITION FINAL.
                                RAISING lcx_exception.
 
   PRIVATE SECTION.
-    CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_true,
+    CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_false,
                c_cap_list   TYPE string VALUE 'side-band-64k no-progress',
                c_dot_git    TYPE c LENGTH 4 VALUE '.git'.
 
     CLASS-METHODS pkt_string
                       IMPORTING iv_string TYPE string
                       RETURNING value(rv_pkt) TYPE string
-                      RAISING lcx_exception.
-
-    CLASS-METHODS pkt_xstring
-                      IMPORTING iv_xstring TYPE xstring
-                      RETURNING value(rv_pkt) TYPE xstring
                       RAISING lcx_exception.
 
     CLASS-METHODS parse
@@ -1361,8 +1353,10 @@ CLASS lcl_transport DEFINITION FINAL.
                       RAISING lcx_exception.
 
     CLASS-METHODS check_http_200
-                      IMPORTING if_client TYPE REF TO if_http_client
+                      IMPORTING ii_client TYPE REF TO if_http_client
                       RAISING lcx_exception.
+
+    CLASS-METHODS get_null RETURNING value(rv_c) TYPE char1.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -1373,27 +1367,26 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_transport IMPLEMENTATION.
 
-  METHOD pkt_xstring.
+  METHOD get_null.
 
-    DATA: lv_x2      TYPE x LENGTH 2,
-          lv_xstring TYPE xstring,
-          lv_string  TYPE string.
+    DATA lv_x(4) TYPE x VALUE '00000000'.
+    DATA lv_z(2) TYPE c.
+
+    FIELD-SYMBOLS <lv_y> TYPE c.
 
 
-    lv_x2 = xstrlen( iv_xstring ).
-    lv_string = lv_x2.
-    lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
+    ASSIGN lv_x TO <lv_y> CASTING.
+    lv_z = <lv_y>.
+    rv_c = lv_z(1).
 
-    CONCATENATE lv_xstring iv_xstring INTO rv_pkt IN BYTE MODE.
-
-  ENDMETHOD.                    "pkt_xstring
+  ENDMETHOD.                    "get_null
 
   METHOD check_http_200.
 
     DATA: lv_code TYPE i.
 
 
-    if_client->response->get_status(
+    ii_client->response->get_status(
       IMPORTING
         code   = lv_code ).
     IF lv_code <> 200.
@@ -1434,7 +1427,11 @@ CLASS lcl_transport IMPLEMENTATION.
     SPLIT lv_data AT cl_abap_char_utilities=>newline INTO TABLE lt_result.
     LOOP AT lt_result INTO lv_data.
       IF lv_data CP '*refs/heads/master*'.
-        lv_hash = lv_data+4.
+        IF sy-tabix = 2.
+          lv_hash = lv_data+8.
+        ELSE.
+          lv_hash = lv_data+4.
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
@@ -1454,11 +1451,9 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: li_client  TYPE REF TO if_http_client,
           lv_cmd_pkt TYPE string,
           lv_line    TYPE string,
-          lv_x       TYPE x,
-          lv_pack    TYPE xstring,
           lv_tmp     TYPE xstring,
           lv_xstring TYPE xstring,
-          lv_code    TYPE i,
+          lv_string  TYPE string,
           lv_buffer  TYPE string,
           lv_branch  TYPE t_sha1,
           lv_repo    TYPE string.
@@ -1477,7 +1472,7 @@ CLASS lcl_transport IMPLEMENTATION.
         iv_service = 'receive'
       IMPORTING
         ei_client  = li_client
-        ev_branch = lv_branch ).
+        ev_branch  = lv_branch ).
 
 ****************************
 
@@ -1491,43 +1486,36 @@ CLASS lcl_transport IMPLEMENTATION.
         name  = 'Content-Type'
         value = 'Content-Type: application/x-git-receive-pack-request' ). "#EC NOTEXT
 
-* todo, test report-status capability
-
     lv_line = lv_branch &&
               ` ` &&
               iv_commit &&
               ` ` &&
               'refs/heads/master' &&
-*              ` ` &&
-*              c_cap_list &&
+              get_null( ) &&
+              ` ` &&
+              'report-status' &&
               cl_abap_char_utilities=>newline.              "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
-    lv_buffer = lv_cmd_pkt
-             && '0000'
-             && cl_abap_char_utilities=>newline.
+    lv_buffer = lv_cmd_pkt && '0000'.
     lv_tmp = lcl_convert=>string_to_xstring_utf8( lv_buffer ).
 
-*    lv_x = '01'.
-*    CONCATENATE lv_x iv_pack INTO lv_pack IN BYTE MODE. " band
-*    lv_xstring = pkt_xstring( lv_pack ).
-break-point.
     CONCATENATE lv_tmp iv_pack INTO lv_xstring IN BYTE MODE.
 
     li_client->request->set_data( lv_xstring ).
+
     li_client->send( ).
     li_client->receive( ).
-    li_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
+    check_http_200( li_client ).
 
     lv_xstring = li_client->response->get_data( ).
     li_client->close( ).
 
-* todo, try calling parse to check xstring
-    BREAK-POINT.
-
-* expect "000Aunpack ok"
+    lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
+    WRITE: / lv_string.
+    IF NOT lv_string CP '*unpack ok*'.
+      BREAK-POINT.
+    ENDIF.
 
   ENDMETHOD.                    "receive_pack
 
@@ -1789,7 +1777,7 @@ FORM receive USING ps_parent TYPE st_object
   lv_time = lcl_time=>get( ).
 
 * blob
-  lv_blob = lcl_convert=>string_to_xstring_utf8( 'this is the readme' ). "#EC NOTEXT
+  lv_blob = lcl_convert=>string_to_xstring_utf8( 'it works, yes new' ). "#EC NOTEXT
 
 * tree
   CLEAR ls_node.
