@@ -35,6 +35,8 @@ TYPES: BEGIN OF st_commit,
          body      TYPE string,
        END OF st_commit.
 
+TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
 CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_tree   TYPE t_type VALUE 'tree',              "#EC NOTEXT
            gc_ref_d  TYPE t_type VALUE 'ref_d',             "#EC NOTEXT
@@ -199,51 +201,15 @@ CLASS lcl_convert IMPLEMENTATION.
 
   METHOD xstring_to_int.
 
-    DATA: lv_string TYPE string.
+    DATA: lv_xstring TYPE xstring,
+          lv_x TYPE x.
 
-* todo, this can be done a lot easier
 
-    lv_string = iv_xstring.
-    WHILE strlen( lv_string ) > 0.
-      rv_i = rv_i * 16.
-      CASE lv_string(1).
-        WHEN '0'.
-        WHEN '1'.
-          rv_i = rv_i + 1.
-        WHEN '2'.
-          rv_i = rv_i + 2.
-        WHEN '3'.
-          rv_i = rv_i + 3.
-        WHEN '4'.
-          rv_i = rv_i + 4.
-        WHEN '5'.
-          rv_i = rv_i + 5.
-        WHEN '6'.
-          rv_i = rv_i + 6.
-        WHEN '7'.
-          rv_i = rv_i + 7.
-        WHEN '8'.
-          rv_i = rv_i + 8.
-        WHEN '9'.
-          rv_i = rv_i + 9.
-        WHEN 'A'.
-          rv_i = rv_i + 10.
-        WHEN 'B'.
-          rv_i = rv_i + 11.
-        WHEN 'C'.
-          rv_i = rv_i + 12.
-        WHEN 'D'.
-          rv_i = rv_i + 13.
-        WHEN 'E'.
-          rv_i = rv_i + 14.
-        WHEN 'F'.
-          rv_i = rv_i + 15.
-        WHEN OTHERS.
-          RAISE EXCEPTION TYPE lcx_exception
-            EXPORTING
-              iv_text = 'Unexpected character'.             "#EC NOTEXT
-      ENDCASE.
-      lv_string = lv_string+1.
+    lv_xstring = iv_xstring.
+    WHILE xstrlen( lv_xstring ) > 0.
+      lv_x = lv_xstring(1).
+      rv_i = rv_i * 256 + lv_x.
+      lv_xstring = lv_xstring+1.
     ENDWHILE.
 
   ENDMETHOD.                    "xstring_to_int
@@ -1308,6 +1274,278 @@ CLASS lcl_pack IMPLEMENTATION.
 ENDCLASS.                    "lcl_pack IMPLEMENTATION
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_persistence DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_persistence DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS add IMPORTING iv_repo TYPE string.
+    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_string.
+
+ENDCLASS.                    "lcl_persistence DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_persistence IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_persistence IMPLEMENTATION.
+
+  METHOD add.
+* todo
+    RETURN.
+  ENDMETHOD.                    "add
+
+  METHOD list.
+* todo
+    APPEND 'https://github.com/larshp/Foobar.git' TO rt_repos.
+  ENDMETHOD.                    "list
+
+ENDCLASS.                    "lcl_persistence IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_view DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_gui DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: init.
+
+    CLASS-METHODS: on_sapevent
+                      FOR EVENT sapevent OF cl_gui_html_viewer
+                      IMPORTING action frame getdata postdata query_table. "#EC NEEDED
+
+  PRIVATE SECTION.
+    CLASS-DATA go_html_viewer TYPE REF TO cl_gui_html_viewer.
+
+    CLASS-METHODS: view
+                      IMPORTING iv_html TYPE string.
+
+    CLASS-METHODS: render
+                      RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: render_css
+                      RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: render_repo
+                      IMPORTING iv_repo TYPE string
+                      RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: short_name
+                      IMPORTING iv_repo TYPE string
+                      RETURNING value(rv_short) TYPE string.
+
+    CLASS-METHODS: install.
+
+    CLASS-METHODS: add.
+
+ENDCLASS.                    "lcl_view DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_view IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_gui IMPLEMENTATION.
+
+  METHOD on_sapevent.
+
+    CASE action.
+      WHEN 'install'.
+        install( ).
+      WHEN 'explore'.
+* todo
+        BREAK-POINT.
+      WHEN 'abapgithome'.
+        cl_gui_frontend_services=>execute(
+            document = 'https://github.com/larshp/abapGit' ).
+      WHEN 'add'.
+        add( ).
+      WHEN OTHERS.
+        BREAK-POINT.
+    ENDCASE.
+
+  ENDMETHOD.                    "on_sapevent
+
+  METHOD add.
+
+    DATA: lv_obj_type TYPE rseuap-obj_type,
+          lv_obj_name TYPE rseuap-obj_name.
+
+
+    CALL FUNCTION 'WB_TREE_OBJECT_CHOICE'
+      IMPORTING
+        obj_type = lv_obj_type
+        obj_name = lv_obj_name.
+    IF lv_obj_type IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    BREAK-POINT.
+
+  ENDMETHOD.                    "add
+
+  METHOD install.
+
+* todo, let user choose
+* lcl_persistence=>add( ).
+    RETURN.
+
+  ENDMETHOD.                    "install
+
+  METHOD render_css.
+
+    rv_html = '<style type="text/css">' &&
+          'body {' &&
+          'font-family: verdana;' &&
+          '}' &&
+          'a:link {' &&
+          'color: blue;' &&
+          '}' &&
+          'a:visited {' &&
+          'color: blue;' &&
+          '}' &&
+          'a.grey:link {' &&
+          'color: grey;' &&
+          'font-size: smaller;' &&
+          '}' &&
+          'a.grey:visited {' &&
+          'color: grey;' &&
+          'font-size: smaller;' &&
+          '}' &&
+          'h1 {' &&
+          'display: inline;' &&
+          '}' &&
+          'h2 {' &&
+          'display: inline;' &&
+          '}' &&
+          '</style>'.
+
+  ENDMETHOD.                    "render_css
+
+  METHOD render.
+
+    DATA: lt_repos TYPE tt_string,
+          lv_repo  LIKE LINE OF lt_repos.
+
+
+    lt_repos = lcl_persistence=>list( ).
+
+    rv_html = '<html>' &&
+      '<head>' &&
+      '<title>My first styled page</title>' &&
+      render_css( ) &&
+      '</head>' &&
+      '<body>' &&
+      '<b><h1>abapGit</h1></b>&nbsp;' &&
+      '<a href="sapevent:install">Clone/Install/Start/New</a>&nbsp;' &&
+      '<a href="sapevent:explore">Explore</a>&nbsp;' &&
+      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' &&
+      '<hr>'.
+
+    LOOP AT lt_repos INTO lv_repo.
+      rv_html = rv_html &&
+        '<a href="#' &&
+        short_name( lv_repo ) &&
+        '" class="grey">' &&
+        short_name( lv_repo ) &&
+        '</a>&nbsp;'.
+    ENDLOOP.
+
+    rv_html = rv_html && '<br><br><br>'.
+
+    LOOP AT lt_repos INTO lv_repo.
+      rv_html = rv_html && render_repo( lv_repo ).
+    ENDLOOP.
+
+    rv_html = rv_html && '</body></html>'.
+
+  ENDMETHOD.                    "render
+
+  METHOD render_repo.
+
+    rv_html = rv_html &&
+      '<a id="' &&
+      short_name( iv_repo ) &&
+      '"></a><h2>' &&
+      short_name( iv_repo ) &&
+      '</h2>&nbsp;' &&
+      iv_repo &&
+      '<br>'.
+
+    rv_html = rv_html && 'todo<br><a href="sapevent:add">add</a>'.
+
+  ENDMETHOD.                    "render_repo
+
+  METHOD short_name.
+
+*todo
+    rv_short = 'Foobar'.                                    "#EC NOTEXT
+
+  ENDMETHOD.                    "short_name
+
+  METHOD init.
+
+    DATA: lt_events TYPE cntl_simple_events,
+          ls_event  LIKE LINE OF lt_events.
+
+
+    CREATE OBJECT go_html_viewer
+      EXPORTING
+        parent = cl_gui_container=>screen0.
+
+    CLEAR ls_event.
+    ls_event-eventid = go_html_viewer->m_id_sapevent.
+    ls_event-appl_event = 'x'.
+    APPEND ls_event TO lt_events.
+    CALL METHOD go_html_viewer->set_registered_events
+      EXPORTING
+        events = lt_events.
+
+    SET HANDLER lcl_gui=>on_sapevent FOR go_html_viewer.
+
+    view( render( ) ).
+
+  ENDMETHOD.                    "init
+
+  METHOD view.
+
+    DATA: lt_data TYPE TABLE OF text200,
+          lv_html TYPE string,
+          lv_url  TYPE text200.
+
+
+    lv_html = iv_html.
+
+    WHILE strlen( lv_html ) > 0.
+      IF strlen( lv_html ) < 200.
+        APPEND lv_html TO lt_data.
+        CLEAR lv_html.
+      ELSE.
+        APPEND lv_html(200) TO lt_data.
+        lv_html = lv_html+200.
+      ENDIF.
+    ENDWHILE.
+
+    CALL METHOD go_html_viewer->load_data
+      IMPORTING
+        assigned_url = lv_url
+      CHANGING
+        data_table   = lt_data.
+
+    CALL METHOD go_html_viewer->show_url
+      EXPORTING
+        url = lv_url.
+
+  ENDMETHOD.                    "view
+
+ENDCLASS.                    "lcl_view IMPLEMENTATION
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_transport DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -1329,7 +1567,6 @@ CLASS lcl_transport DEFINITION FINAL.
 
   PRIVATE SECTION.
     CONSTANTS: c_debug_http TYPE abap_bool VALUE abap_false,
-               c_cap_list   TYPE string VALUE 'side-band-64k no-progress',
                c_dot_git    TYPE c LENGTH 4 VALUE '.git'.
 
     CLASS-METHODS pkt_string
@@ -1352,6 +1589,11 @@ CLASS lcl_transport DEFINITION FINAL.
                                 ev_branch TYPE t_sha1
                       RAISING lcx_exception.
 
+    CLASS-METHODS set_headers
+                      IMPORTING iv_repo TYPE string
+                                iv_service TYPE string
+                                ii_client TYPE REF TO if_http_client.
+
     CLASS-METHODS check_http_200
                       IMPORTING ii_client TYPE REF TO if_http_client
                       RAISING lcx_exception.
@@ -1366,6 +1608,20 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_transport IMPLEMENTATION.
+
+  METHOD set_headers.
+
+    ii_client->request->set_header_field(
+        name  = '~request_method'
+        value = 'POST' ).
+    ii_client->request->set_header_field(
+        name  = '~request_uri'
+        value = iv_repo && '/git-' && iv_service && '-pack' ).
+    ii_client->request->set_header_field(
+        name  = 'Content-Type'
+        value = 'Content-Type: application/x-git-' && iv_service && '-pack-request' ). "#EC NOTEXT
+
+  ENDMETHOD.                    "set_headers
 
   METHOD get_null.
 
@@ -1448,6 +1704,8 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD receive_pack.
 
+    CONSTANTS: lc_service TYPE string VALUE 'receive'.
+
     DATA: li_client  TYPE REF TO if_http_client,
           lv_cmd_pkt TYPE string,
           lv_line    TYPE string,
@@ -1459,7 +1717,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_repo    TYPE string.
 
 
-    IF NOT iv_repo CP '*Foobar*'.
+    IF NOT iv_repo CP '*Foobar*'. " temp guard
       BREAK-POINT.
       RETURN.
     ENDIF.
@@ -1469,22 +1727,16 @@ CLASS lcl_transport IMPLEMENTATION.
     ref_discovery(
       EXPORTING
         iv_repo    = lv_repo
-        iv_service = 'receive'
+        iv_service = lc_service
       IMPORTING
         ei_client  = li_client
         ev_branch  = lv_branch ).
 
-****************************
-
-    li_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'POST' ).
-    li_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_repo && '/git-receive-pack' ).
-    li_client->request->set_header_field(
-        name  = 'Content-Type'
-        value = 'Content-Type: application/x-git-receive-pack-request' ). "#EC NOTEXT
+    set_headers(
+      EXPORTING
+        iv_repo    = lv_repo
+        iv_service = lc_service
+        ii_client  = li_client ).
 
     lv_line = lv_branch &&
               ` ` &&
@@ -1596,6 +1848,8 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
+    CONSTANTS: lc_service TYPE string VALUE 'upload'.
+
     DATA: li_client      TYPE REF TO if_http_client,
           lv_buffer      TYPE string,
           lv_xstring     TYPE xstring,
@@ -1609,28 +1863,22 @@ CLASS lcl_transport IMPLEMENTATION.
     ref_discovery(
       EXPORTING
         iv_repo    = lv_repo
-        iv_service = 'upload'
+        iv_service = lc_service
       IMPORTING
         ei_client  = li_client
         ev_branch  = ev_branch ).
 
-*--------------------------------------------------------------------
-
-    li_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'POST' ).
-    li_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_repo && '/git-upload-pack' ).
-    li_client->request->set_header_field(
-        name  = 'Content-Type'
-        value = 'Content-Type: application/x-git-upload-pack-request' ). "#EC NOTEXT
+    set_headers(
+      EXPORTING
+        iv_repo    = lv_repo
+        iv_service = lc_service
+        ii_client  = li_client ).
 
     lv_line = 'want' &&
               ` ` &&
               ev_branch &&
               ` ` &&
-              c_cap_list
+              'side-band-64k no-progress shallow'
               && cl_abap_char_utilities=>newline.           "#EC NOTEXT
     lv_pkt = pkt_string( lv_line ).
 
@@ -1680,26 +1928,39 @@ ENDCLASS.                    "lcl_transport IMPLEMENTATION
 *----------------------------------------------------------------------*
 FORM run.
 
+  lcl_gui=>init( ).
+
+  WRITE: / '.'. " required
+
+ENDFORM.                    "run
+
+*&---------------------------------------------------------------------*
+*&      Form  receive_test
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+FORM receive_test.
+
   DATA: lv_repo TYPE string VALUE '/larshp/Foobar'.                " 100%
 *  DATA: lv_repo TYPE string VALUE '/larshp/MouseChase'.            " 100%
 *  DATA: lv_repo TYPE string VALUE '/larshp/Dicing'.                " 100%
-*  DATA: lv_repo TYPE string VALUE '/larshp/Datamatrix'.            " 100% password protected
-*  DATA: lv_repo TYPE string VALUE '/snowplow/snowplow'.            " base not found, 10000 ref deltas, multiple parents
 *  DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-Regex-Training'.  " 100%
 *  DATA: lv_repo TYPE string VALUE '/sciruela/ABAP-Exercises'.      " 100%
 *  DATA: lv_repo TYPE string VALUE '/adsworth/ABAP-Utils'.          " 100%
 *  DATA: lv_repo TYPE string VALUE '/rvanmil/Run-ABAP-Code'.        " 100%
 *  DATA: lv_repo TYPE string VALUE '/rvanmil/ABAP-OOP-Library'.     " 100%
-*  DATA: lv_repo TYPE string VALUE '/ivanfemia/abap2xlsx'.          " base not found, 2000 ref deltas, multiple parents
 *  DATA: lv_repo TYPE string VALUE '/InfoSize/abapsourcesearch'.    " 100%
 *  DATA: lv_repo TYPE string VALUE '/google/flatbuffers'.           " 100%
 *  DATA: lv_repo TYPE string VALUE '/antiboredom/videogrep'.        " 100%
 *  DATA: lv_repo TYPE string VALUE '/idank/explainshell'.           " 100%
+*  DATA: lv_repo TYPE string VALUE '/mrmrs/colors'.                 " 100%
+*  DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
+
+*  DATA: lv_repo TYPE string VALUE '/snowplow/snowplow'.            " base not found, 10000 ref deltas, multiple parents
+*  DATA: lv_repo TYPE string VALUE '/ivanfemia/abap2xlsx'.          " base not found, 2000 ref deltas, multiple parents
 *  DATA: lv_repo TYPE string VALUE '/education/teachers_pet'.       " base not found, 694 ref deltas, multiple parents
 *  DATA: lv_repo TYPE string VALUE '/gmarik/Vundle.vim'.            " base not found, 829 ref deltas, multiple parents
 *  DATA: lv_repo TYPE string VALUE '/mephux/komanda'.               " base not found, 685 ref deltas, multiple parents
-*  DATA: lv_repo TYPE string VALUE '/mrmrs/colors'.                 " 100%
-*  DATA: lv_repo TYPE string VALUE '/montagejs/collections'.        " 100%
 
   DATA: lv_pack      TYPE xstring,
         lv_branch    TYPE t_sha1,
@@ -1726,7 +1987,7 @@ FORM run.
 
       lcl_pack=>decode_deltas( CHANGING ct_objects = lt_objects ).
 
-*      PERFORM output_objects USING lt_objects.
+      PERFORM output_objects USING lt_objects.
 
       lcl_pack=>sanity_checks( lt_objects ).
 
@@ -1777,7 +2038,7 @@ FORM receive USING ps_parent TYPE st_object
   lv_time = lcl_time=>get( ).
 
 * blob
-  lv_blob = lcl_convert=>string_to_xstring_utf8( 'it works, yes new' ). "#EC NOTEXT
+  lv_blob = lcl_convert=>string_to_xstring_utf8( 'some text chokoladesovs' ). "#EC NOTEXT
 
 * tree
   CLEAR ls_node.
@@ -1942,19 +2203,21 @@ CLASS lcl_abap_unit IMPLEMENTATION.
 
   METHOD convert_int.
 
-    CONSTANTS: lc_i TYPE i VALUE 1000.
-
     DATA: lv_xstring TYPE xstring,
-          lv_i       TYPE i.
+          lv_input   TYPE i,
+          lv_result  TYPE i.
 
 
-    lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lc_i
-                                              iv_length = 4 ).
-    lv_i = lcl_convert=>xstring_to_int( lv_xstring ).
+    DO 1000 TIMES.
+      lv_input = sy-index.
+      lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_input
+                                                iv_length = 4 ).
+      lv_result = lcl_convert=>xstring_to_int( lv_xstring ).
 
-    cl_abap_unit_assert=>assert_equals(
-        exp = lc_i
-        act = lv_i ).
+      cl_abap_unit_assert=>assert_equals(
+          exp = lv_input
+          act = lv_result ).
+    ENDDO.
 
   ENDMETHOD.                    "convert_int
 
