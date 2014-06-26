@@ -104,6 +104,21 @@ CLASS lcl_serialize DEFINITION FINAL.
                             RAISING lcx_exception.
     CLASS-METHODS p_deserialize.
 
+    CLASS-METHODS xml_root
+                            EXPORTING ei_ixml TYPE REF TO if_ixml
+                                      ei_xml_doc TYPE REF TO if_ixml_document
+                                      ei_root TYPE REF TO if_ixml_element.
+
+    CLASS-METHODS xml_add_structure
+                            IMPORTING ig_structure TYPE data
+                                      ii_xml_doc TYPE REF TO if_ixml_document
+                                      ii_root TYPE REF TO if_ixml_element.
+
+    CLASS-METHODS xml_render
+                            IMPORTING ii_ixml TYPE REF TO if_ixml
+                                      ii_xml_doc TYPE REF TO if_ixml_document
+                            RETURNING value(rv_string) TYPE string.
+
 ENDCLASS.                    "lcl_serialize DEFINITION
 
 *----------------------------------------------------------------------*
@@ -135,64 +150,124 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   METHOD p_serialize.
 
-    DATA: ls_reposrc      TYPE reposrc,
-          ls_prog_inf     TYPE rpy_prog,
+    DATA: ls_prog_inf     TYPE rpy_prog,
           lv_program_name TYPE programm,
+          lv_xml          TYPE string,
           lt_source       TYPE TABLE OF abaptxt255.
 
-
-*    SELECT SINGLE * FROM reposrc INTO ls_reposrc WHERE progname = iv_obj_name AND r3state = 'A'.
-*    IF sy-subrc <> 0.
-*      RAISE EXCEPTION TYPE lcx_exception
-*        EXPORTING
-*          iv_text = 'Not found in REPOSRC'.                 "#EC NOTEXT
-*    ENDIF.
-*    READ REPORT iv_obj_name INTO lt_source.
-*    IF sy-subrc <> 0.
-*      RAISE EXCEPTION TYPE lcx_exception
-*        EXPORTING
-*          iv_text = 'Error reading report source'.          "#EC NOTEXT
-*    ENDIF.
 
     lv_program_name = iv_obj_name.
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
-*       LANGUAGE            = SY-LANGU
-        program_name        = lv_program_name
-*       WITH_INCLUDELIST    = 'X'
-*       ONLY_SOURCE         = ' '
-*       ONLY_TEXTS          = ' '
-*       READ_LATEST_VERSION = ' '
-*       WITH_LOWERCASE      = ' '
+*       LANGUAGE         = SY-LANGU
+        program_name     = lv_program_name
+*       WITH_INCLUDELIST = 'X'
       IMPORTING
-        prog_inf            = ls_prog_inf
+        prog_inf         = ls_prog_inf
       TABLES
-*       INCLUDE_TAB         =
-*        source              =
-        source_extended     = lt_source
-*       TEXTELEMENTS        =
+*       INCLUDE_TAB      =
+        source_extended  = lt_source
+*       TEXTELEMENTS     =
       EXCEPTIONS
-        cancelled           = 1
-        not_found           = 2
-        permission_error    = 3
-        OTHERS              = 4.
+        cancelled        = 1
+        not_found        = 2
+        permission_error = 3
+        OTHERS           = 4.
     IF sy-subrc <> 0.
-* todo
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Error reading program'.                "#EC NOTEXT
     ENDIF.
+
+    CLEAR: ls_prog_inf-creat_user,
+           ls_prog_inf-mod_user,
+           ls_prog_inf-mandant.
+
+
+    DATA: li_ixml TYPE REF TO if_ixml,
+          li_xml_doc TYPE REF TO if_ixml_document,
+          li_root TYPE REF TO if_ixml_element.
+
+    xml_root( IMPORTING ei_ixml = li_ixml
+                        ei_xml_doc = li_xml_doc
+                        ei_root = li_root ).
+    xml_add_structure( EXPORTING ig_structure = ls_prog_inf
+                                 ii_xml_doc = li_xml_doc
+                                 ii_root = li_root ).
+    lv_xml = xml_render( ii_ixml = li_ixml
+                         ii_xml_doc = li_xml_doc ).
 
     BREAK-POINT.
 
-* todo
-* report REPTRAN
-
   ENDMETHOD.                    "p
+
+  METHOD xml_root.
+
+    ei_ixml = cl_ixml=>create( ).
+    ei_xml_doc = ei_ixml->create_document( ).
+
+    ei_root = ei_xml_doc->create_element( 'abapGit' ).
+    ei_root->set_attribute( name = 'version' value = 'foo' ).
+    ei_root->set_attribute( name = 'type' value = 'bar' ).
+    ei_xml_doc->append_child( ei_root ).
+
+  ENDMETHOD.                    "xml_root
+
+  METHOD xml_add_structure.
+
+    DATA: li_element       TYPE REF TO if_ixml_element,
+          li_text          TYPE REF TO if_ixml_text,
+          lv_string        TYPE string,
+          lo_descr_ref     TYPE REF TO cl_abap_structdescr.
+
+    FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
+                   <lg_any>  TYPE any.
+
+
+    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+
+
+
+    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
+
+      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
+
+      lv_string  = <ls_comp>-name.
+      li_element = ii_xml_doc->create_element( lv_string ).
+
+      lv_string  = <lg_any>.
+      li_text    = ii_xml_doc->create_text( lv_string ).
+
+      li_element->append_child( li_text ).
+
+      ii_root->append_child( li_element ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "structure_to_xml
+
+  METHOD xml_render.
+
+    DATA: li_ostream       TYPE REF TO if_ixml_ostream,
+          li_renderer      TYPE REF TO if_ixml_renderer,
+          li_streamfactory TYPE REF TO if_ixml_stream_factory.
+
+
+    li_streamfactory = ii_ixml->create_stream_factory( ).
+    li_ostream = li_streamfactory->create_ostream_cstring( rv_string ).
+    li_renderer = ii_ixml->create_renderer( ostream = li_ostream document = ii_xml_doc ).
+    li_renderer->set_normalizing( ).
+    li_renderer->render( ).
+
+  ENDMETHOD.                    "xml_render
 
   METHOD p_deserialize.
 *fm UPDATE_PROGDIR
 *fm RS_CORR_INSERT
 *fm RS_GET_ALL_INCLUDES
 * http://scn.sap.com/thread/961517
+
+* report REPTRAN
 
 *INSERT REPORT prog FROM itab
 *              [MAXIMUM WIDTH INTO wid]
