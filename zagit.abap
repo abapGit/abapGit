@@ -217,8 +217,10 @@ CLASS lcl_serialize IMPLEMENTATION.
   METHOD xml_add_structure.
 
     DATA: li_element       TYPE REF TO if_ixml_element,
+          li_structure     TYPE REF TO if_ixml_element,
           li_text          TYPE REF TO if_ixml_text,
           lv_string        TYPE string,
+          lv_name          TYPE string,
           lo_descr_ref     TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
@@ -226,8 +228,8 @@ CLASS lcl_serialize IMPLEMENTATION.
 
 
     lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
-
-
+    lv_name = lo_descr_ref->get_relative_name( ).
+    li_structure = ii_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
 
@@ -241,8 +243,10 @@ CLASS lcl_serialize IMPLEMENTATION.
 
       li_element->append_child( li_text ).
 
-      ii_root->append_child( li_element ).
+      li_structure->append_child( li_element ).
     ENDLOOP.
+
+    ii_root->append_child( li_structure ).
 
   ENDMETHOD.                    "structure_to_xml
 
