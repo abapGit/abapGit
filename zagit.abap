@@ -81,147 +81,51 @@ CLASS lcx_exception IMPLEMENTATION.
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize DEFINITION
+*       CLASS lcl_xml DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize DEFINITION FINAL.
+CLASS lcl_xml DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS serialize IMPORTING iv_obj_type TYPE rseuap-obj_type
-                                      iv_obj_name TYPE rseuap-obj_name
-                            RETURNING value(rt_files) TYPE tt_files
-                            RAISING lcx_exception.
-
-    CLASS-METHODS deserialize
-                            IMPORTING it_files TYPE tt_files
-                            RAISING lcx_exception.
+    METHODS constructor.
+    METHODS add_structure IMPORTING ig_structure TYPE data.
+    METHODS render        RETURNING value(rv_string) TYPE string.
 
   PRIVATE SECTION.
-    CLASS-METHODS p_serialize
-                            IMPORTING iv_obj_name TYPE rseuap-obj_name
-                            RETURNING value(rt_files) TYPE tt_files
-                            RAISING lcx_exception.
-    CLASS-METHODS p_deserialize.
+    DATA: mi_ixml    TYPE REF TO if_ixml,
+          mi_xml_doc TYPE REF TO if_ixml_document,
+          mi_root    TYPE REF TO if_ixml_element.
 
-    CLASS-METHODS xml_root
-                            EXPORTING ei_ixml TYPE REF TO if_ixml
-                                      ei_xml_doc TYPE REF TO if_ixml_document
-                                      ei_root TYPE REF TO if_ixml_element.
-
-    CLASS-METHODS xml_add_structure
-                            IMPORTING ig_structure TYPE data
-                                      ii_xml_doc TYPE REF TO if_ixml_document
-                                      ii_root TYPE REF TO if_ixml_element.
-
-    CLASS-METHODS xml_render
-                            IMPORTING ii_ixml TYPE REF TO if_ixml
-                                      ii_xml_doc TYPE REF TO if_ixml_document
-                            RETURNING value(rv_string) TYPE string.
-
-ENDCLASS.                    "lcl_serialize DEFINITION
+ENDCLASS.                    "lcl_xml DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize IMPLEMENTATION
+*       CLASS lcl_xml IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize IMPLEMENTATION.
+CLASS lcl_xml IMPLEMENTATION.
 
-  METHOD serialize.
+  METHOD constructor.
 
-    CASE iv_obj_type.
-      WHEN 'P'.
-        rt_files = p_serialize( iv_obj_name ).
-      WHEN OTHERS.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text = 'Serialize, unknown type'.            "#EC NOTEXT
-    ENDCASE.
+    mi_ixml = cl_ixml=>create( ).
+    mi_xml_doc = mi_ixml->create_document( ).
 
-  ENDMETHOD.                    "serialize
-
-  METHOD deserialize.
-
-* todo
-    RETURN.
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD p_serialize.
-
-    DATA: ls_prog_inf     TYPE rpy_prog,
-          lv_program_name TYPE programm,
-          lv_xml          TYPE string,
-          lt_source       TYPE TABLE OF abaptxt255.
-
-
-    lv_program_name = iv_obj_name.
-
-    CALL FUNCTION 'RPY_PROGRAM_READ'
-      EXPORTING
-*       LANGUAGE         = SY-LANGU
-        program_name     = lv_program_name
-*       WITH_INCLUDELIST = 'X'
-      IMPORTING
-        prog_inf         = ls_prog_inf
-      TABLES
-*       INCLUDE_TAB      =
-        source_extended  = lt_source
-*       TEXTELEMENTS     =
-      EXCEPTIONS
-        cancelled        = 1
-        not_found        = 2
-        permission_error = 3
-        OTHERS           = 4.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = 'Error reading program'.                "#EC NOTEXT
-    ENDIF.
-
-    CLEAR: ls_prog_inf-creat_user,
-           ls_prog_inf-mod_user,
-           ls_prog_inf-mandant.
-
-
-    DATA: li_ixml TYPE REF TO if_ixml,
-          li_xml_doc TYPE REF TO if_ixml_document,
-          li_root TYPE REF TO if_ixml_element.
-
-    xml_root( IMPORTING ei_ixml = li_ixml
-                        ei_xml_doc = li_xml_doc
-                        ei_root = li_root ).
-    xml_add_structure( EXPORTING ig_structure = ls_prog_inf
-                                 ii_xml_doc = li_xml_doc
-                                 ii_root = li_root ).
-    lv_xml = xml_render( ii_ixml = li_ixml
-                         ii_xml_doc = li_xml_doc ).
-
-    BREAK-POINT.
-
-  ENDMETHOD.                    "p
-
-  METHOD xml_root.
-
-    ei_ixml = cl_ixml=>create( ).
-    ei_xml_doc = ei_ixml->create_document( ).
-
-    ei_root = ei_xml_doc->create_element( 'abapGit' ).
-    ei_root->set_attribute( name = 'version' value = 'foo' ).
-    ei_root->set_attribute( name = 'type' value = 'bar' ).
-    ei_xml_doc->append_child( ei_root ).
+    mi_root = mi_xml_doc->create_element( 'abapGit' ).
+    mi_root->set_attribute( name = 'version' value = 'foo' ). "#EC NOTEXT
+    mi_root->set_attribute( name = 'type' value = 'bar' ).  "#EC NOTEXT
+    mi_xml_doc->append_child( mi_root ).
 
   ENDMETHOD.                    "xml_root
 
-  METHOD xml_add_structure.
+  METHOD add_structure.
 
-    DATA: li_element       TYPE REF TO if_ixml_element,
-          li_structure     TYPE REF TO if_ixml_element,
-          li_text          TYPE REF TO if_ixml_text,
-          lv_string        TYPE string,
-          lv_name          TYPE string,
-          lo_descr_ref     TYPE REF TO cl_abap_structdescr.
+    DATA: li_element   TYPE REF TO if_ixml_element,
+          li_structure TYPE REF TO if_ixml_element,
+          li_text      TYPE REF TO if_ixml_text,
+          lv_string    TYPE string,
+          lv_name      TYPE string,
+          lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
                    <lg_any>  TYPE any.
@@ -229,70 +133,44 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
     lv_name = lo_descr_ref->get_relative_name( ).
-    li_structure = ii_xml_doc->create_element( lv_name ).
+    li_structure = mi_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
 
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
 
       lv_string  = <ls_comp>-name.
-      li_element = ii_xml_doc->create_element( lv_string ).
+      li_element = mi_xml_doc->create_element( lv_string ).
 
       lv_string  = <lg_any>.
-      li_text    = ii_xml_doc->create_text( lv_string ).
+      li_text    = mi_xml_doc->create_text( lv_string ).
 
       li_element->append_child( li_text ).
 
       li_structure->append_child( li_element ).
     ENDLOOP.
 
-    ii_root->append_child( li_structure ).
+    mi_root->append_child( li_structure ).
 
   ENDMETHOD.                    "structure_to_xml
 
-  METHOD xml_render.
+  METHOD render.
 
     DATA: li_ostream       TYPE REF TO if_ixml_ostream,
           li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
 
-    li_streamfactory = ii_ixml->create_stream_factory( ).
+    li_streamfactory = mi_ixml->create_stream_factory( ).
     li_ostream = li_streamfactory->create_ostream_cstring( rv_string ).
-    li_renderer = ii_ixml->create_renderer( ostream = li_ostream document = ii_xml_doc ).
+    li_renderer = mi_ixml->create_renderer( ostream = li_ostream document = mi_xml_doc ).
     li_renderer->set_normalizing( ).
     li_renderer->render( ).
 
   ENDMETHOD.                    "xml_render
 
-  METHOD p_deserialize.
-*fm UPDATE_PROGDIR
-*fm RS_CORR_INSERT
-*fm RS_GET_ALL_INCLUDES
-* http://scn.sap.com/thread/961517
+ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
-* report REPTRAN
-
-*INSERT REPORT prog FROM itab
-*              [MAXIMUM WIDTH INTO wid]
-*              { [KEEPING DIRECTORY ENTRY]
-*              | { [PROGRAM TYPE pt]
-*                  [FIXED-POINT ARITHMETIC fp]
-*                  [UNICODE ENABLING uc] }
-*              | [DIRECTORY ENTRY dir] }.
-
-*fm RS_INSERT_INTO_WORKING_AREA
-*
-*CL_OO_SOURCE
-*
-*function group SEOP
-*
-*function module RPY_PROGRAM_INSERT
-
-    RETURN.
-  ENDMETHOD.                    "p_deserialize
-
-ENDCLASS.                    "lcl_serialize IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_time DEFINITION
@@ -589,6 +467,147 @@ CLASS lcl_convert IMPLEMENTATION.
   ENDMETHOD.                    "x_to_bitbyte
 
 ENDCLASS.                    "lcl_convert IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize IMPORTING iv_obj_type TYPE rseuap-obj_type
+                                      iv_obj_name TYPE rseuap-obj_name
+                            RETURNING value(rt_files) TYPE tt_files
+                            RAISING lcx_exception.
+
+    CLASS-METHODS deserialize
+                            IMPORTING it_files TYPE tt_files
+                            RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS p_serialize
+                            IMPORTING iv_obj_name TYPE rseuap-obj_name
+                            RETURNING value(rt_files) TYPE tt_files
+                            RAISING lcx_exception.
+    CLASS-METHODS p_deserialize.
+
+ENDCLASS.                    "lcl_serialize DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize IMPLEMENTATION.
+
+  METHOD serialize.
+
+* todo, translate via table EUOBJEDIT ?
+
+    CASE iv_obj_type.
+      WHEN 'P'.
+        rt_files = p_serialize( iv_obj_name ).
+      WHEN OTHERS.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Serialize, unknown type'.            "#EC NOTEXT
+    ENDCASE.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+
+* todo
+    RETURN.
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD p_serialize.
+
+    DATA: ls_prog_inf     TYPE rpy_prog,
+          lv_program_name TYPE programm,
+          lv_xml          TYPE string,
+          lt_source       TYPE TABLE OF abaptxt255,
+          lv_source       TYPE string,
+          ls_file         LIKE LINE OF rt_files,
+          lo_xml          TYPE REF TO lcl_xml.
+
+
+    lv_program_name = iv_obj_name.
+
+    CALL FUNCTION 'RPY_PROGRAM_READ'
+      EXPORTING
+        program_name     = lv_program_name
+      IMPORTING
+        prog_inf         = ls_prog_inf
+      TABLES
+        source_extended  = lt_source
+      EXCEPTIONS
+        cancelled        = 1
+        not_found        = 2
+        permission_error = 3
+        OTHERS           = 4.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Error reading program'.                "#EC NOTEXT
+    ENDIF.
+
+    CLEAR: ls_prog_inf-creat_user,
+           ls_prog_inf-mod_user,
+           ls_prog_inf-mandant.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->add_structure( ls_prog_inf ).
+    lv_xml = lo_xml->render( ).
+
+    CLEAR ls_file.
+    ls_file-path = '/'.
+    CONCATENATE lv_program_name '.xml' INTO ls_file-filename.
+    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
+    APPEND ls_file TO rt_files.
+
+    CONCATENATE LINES OF lt_source INTO lv_source SEPARATED BY gc_newline.
+    CLEAR ls_file.
+    ls_file-path = '/'.
+    CONCATENATE lv_program_name '.abap' INTO ls_file-filename.
+    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
+    APPEND ls_file TO rt_files.
+
+    BREAK-POINT.
+
+  ENDMETHOD.                    "p
+
+
+  METHOD p_deserialize.
+*fm UPDATE_PROGDIR
+*fm RS_CORR_INSERT
+*fm RS_GET_ALL_INCLUDES
+* http://scn.sap.com/thread/961517
+
+* report REPTRAN
+
+*INSERT REPORT prog FROM itab
+*              [MAXIMUM WIDTH INTO wid]
+*              { [KEEPING DIRECTORY ENTRY]
+*              | { [PROGRAM TYPE pt]
+*                  [FIXED-POINT ARITHMETIC fp]
+*                  [UNICODE ENABLING uc] }
+*              | [DIRECTORY ENTRY dir] }.
+
+*fm RS_INSERT_INTO_WORKING_AREA
+*
+*CL_OO_SOURCE
+*
+*function group SEOP
+*
+*function module RPY_PROGRAM_INSERT
+
+    RETURN.
+  ENDMETHOD.                    "p_deserialize
+
+ENDCLASS.                    "lcl_serialize IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_hash DEFINITION
@@ -1793,7 +1812,6 @@ CLASS lcl_transport IMPLEMENTATION.
       lv_contents = lv_contents+4.
       IF xstrlen( lv_contents ) > 1 AND lv_contents(1) = '01'. " band 1
         CONCATENATE lv_pack lv_contents+1 INTO lv_pack IN BYTE MODE.
-      ELSE.
       ENDIF.
 
       cv_data = cv_data+lv_len.
