@@ -1,4 +1,5 @@
 REPORT zabapgit.
+* todo, program header + license
 
 TYPES: t_type     TYPE c LENGTH 6,
        t_bitbyte  TYPE c LENGTH 8,
@@ -35,7 +36,15 @@ TYPES: BEGIN OF st_commit,
          body      TYPE string,
        END OF st_commit.
 
-TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+*TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
+TYPES: BEGIN OF st_repo,
+         url TYPE string,
+         branch_name TYPE string,
+       END OF st_repo.
+
+TYPES: tt_repos TYPE STANDARD TABLE OF st_repo WITH DEFAULT KEY.
+
 
 CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_tree   TYPE t_type VALUE 'tree',              "#EC NOTEXT
@@ -74,7 +83,6 @@ CLASS lcx_exception IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-*    BREAK-POINT.
     mv_text = iv_text.
   ENDMETHOD.                    "CONSTRUCTOR
 
@@ -193,7 +201,7 @@ ENDCLASS.                    "lcl_time DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_repo DEFINITION FINAL.
+CLASS lcl_url DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: host
@@ -229,7 +237,7 @@ ENDCLASS.                    "lcl_repo DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_repo IMPLEMENTATION.
+CLASS lcl_url IMPLEMENTATION.
 
   METHOD host.
     regex( EXPORTING iv_repo = iv_repo
@@ -486,11 +494,11 @@ CLASS lcl_serialize DEFINITION FINAL.
                             RAISING lcx_exception.
 
   PRIVATE SECTION.
-    CLASS-METHODS p_serialize
+    CLASS-METHODS prog_serialize
                             IMPORTING iv_obj_name TYPE rseuap-obj_name
                             RETURNING value(rt_files) TYPE tt_files
                             RAISING lcx_exception.
-    CLASS-METHODS p_deserialize.
+    CLASS-METHODS prog_deserialize.
 
 ENDCLASS.                    "lcl_serialize DEFINITION
 
@@ -503,11 +511,19 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   METHOD serialize.
 
-* todo, translate via table EUOBJEDIT ?
+    DATA: lv_object TYPE tadir-object.
 
-    CASE iv_obj_type.
-      WHEN 'P'.
-        rt_files = p_serialize( iv_obj_name ).
+
+    SELECT SINGLE tadir FROM euobjedit INTO lv_object WHERE type = iv_obj_type.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Not found in EUOBJEDIT'.               "#EC NOTEXT
+    ENDIF.
+
+    CASE lv_object.
+      WHEN 'PROG'.
+        rt_files = prog_serialize( iv_obj_name ).
       WHEN OTHERS.
         RAISE EXCEPTION TYPE lcx_exception
           EXPORTING
@@ -523,7 +539,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD p_serialize.
+  METHOD prog_serialize.
 
     DATA: ls_prog_inf     TYPE rpy_prog,
           lv_program_name TYPE programm,
@@ -564,23 +580,23 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     CLEAR ls_file.
     ls_file-path = '/'.
-    CONCATENATE lv_program_name '.xml' INTO ls_file-filename.
+    CONCATENATE lv_program_name '.prog.xml' INTO ls_file-filename.
+    TRANSLATE ls_file-filename TO LOWER CASE.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
     APPEND ls_file TO rt_files.
 
     CONCATENATE LINES OF lt_source INTO lv_source SEPARATED BY gc_newline.
     CLEAR ls_file.
     ls_file-path = '/'.
-    CONCATENATE lv_program_name '.abap' INTO ls_file-filename.
+    CONCATENATE lv_program_name '.prog.abap' INTO ls_file-filename.
+    TRANSLATE ls_file-filename TO LOWER CASE.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
     APPEND ls_file TO rt_files.
-
-    BREAK-POINT.
 
   ENDMETHOD.                    "p
 
 
-  METHOD p_deserialize.
+  METHOD prog_deserialize.
 *fm UPDATE_PROGDIR
 *fm RS_CORR_INSERT
 *fm RS_GET_ALL_INCLUDES
@@ -895,6 +911,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
     DATA: lv_string  TYPE string,
           lv_null    TYPE x,
+          lt_nodes   LIKE it_nodes,
           lv_xstring TYPE xstring.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF it_nodes.
@@ -902,7 +919,10 @@ CLASS lcl_pack IMPLEMENTATION.
 
     lv_null = '00'.
 
-    LOOP AT it_nodes ASSIGNING <ls_node>.
+    lt_nodes[] = it_nodes[].
+    SORT lt_nodes BY name ASCENDING. " this has to be done, or unpack will fail on server side
+
+    LOOP AT lt_nodes ASSIGNING <ls_node>.
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
       lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
@@ -1522,8 +1542,8 @@ ENDCLASS.                    "lcl_pack IMPLEMENTATION
 CLASS lcl_persistence DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS add IMPORTING iv_repo TYPE string.
-    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_string.
+    CLASS-METHODS add IMPORTING is_repo TYPE st_repo.
+    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_repos.
 
 ENDCLASS.                    "lcl_persistence DEFINITION
 
@@ -1540,8 +1560,15 @@ CLASS lcl_persistence IMPLEMENTATION.
   ENDMETHOD.                    "add
 
   METHOD list.
+
+    DATA: ls_repo TYPE st_repo.
+
+    ls_repo-url = 'https://github.com/larshp/Foobar.git'.
+    ls_repo-branch_name = 'ref/heads/master'.
 * todo
-    APPEND 'https://github.com/larshp/Foobar.git' TO rt_repos.
+
+    APPEND ls_repo TO rt_repos.
+
   ENDMETHOD.                    "list
 
 ENDCLASS.                    "lcl_persistence IMPLEMENTATION
@@ -1555,13 +1582,13 @@ CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
 * from GitHub to SAP
-    CLASS-METHODS upload_pack IMPORTING iv_repo TYPE string
+    CLASS-METHODS upload_pack IMPORTING is_repo TYPE st_repo
                               EXPORTING ev_pack TYPE xstring
                                         ev_branch TYPE t_sha1
                               RAISING lcx_exception.
 
 * from SAP to GitHub
-    CLASS-METHODS receive_pack IMPORTING iv_repo TYPE string
+    CLASS-METHODS receive_pack IMPORTING is_repo TYPE st_repo
                                          iv_commit TYPE t_sha1
                                          iv_pack TYPE xstring
                                RAISING lcx_exception.
@@ -1581,14 +1608,14 @@ CLASS lcl_transport DEFINITION FINAL.
                       RETURNING value(rv_len) TYPE i.
 
     CLASS-METHODS ref_discovery
-                      IMPORTING iv_repo TYPE string
+                      IMPORTING is_repo TYPE st_repo
                                 iv_service TYPE string
                       EXPORTING ei_client TYPE REF TO if_http_client
                                 ev_branch TYPE t_sha1
                       RAISING lcx_exception.
 
     CLASS-METHODS set_headers
-                      IMPORTING iv_repo TYPE string
+                      IMPORTING is_repo TYPE st_repo
                                 iv_service TYPE string
                                 ii_client TYPE REF TO if_http_client
                       RAISING lcx_exception.
@@ -1615,7 +1642,7 @@ CLASS lcl_transport IMPLEMENTATION.
         value = 'POST' ).
     ii_client->request->set_header_field(
         name  = '~request_uri'
-        value = lcl_repo=>path_name( iv_repo ) && '.git/git-' && iv_service && '-pack' ).
+        value = lcl_url=>path_name( is_repo-url ) && '.git/git-' && iv_service && '-pack' ).
     ii_client->request->set_header_field(
         name  = 'Content-Type'
         value = 'Content-Type: application/x-git-' && iv_service && '-pack-request' ). "#EC NOTEXT
@@ -1655,13 +1682,14 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD ref_discovery.
 
     DATA: lv_hash   TYPE c LENGTH 40,
+          lv_len    TYPE i,
           lt_result TYPE TABLE OF string,
           lv_data   TYPE string.
 
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = lcl_repo=>host( iv_repo )
+        url    = lcl_url=>host( is_repo-url )
       IMPORTING
         client = ei_client ).
 
@@ -1671,7 +1699,7 @@ CLASS lcl_transport IMPLEMENTATION.
         value = 'GET' ).
     ei_client->request->set_header_field(
         name  = '~request_uri'
-        value = lcl_repo=>path_name( iv_repo ) && '.git/info/refs?service=git-' && iv_service && '-pack' ).
+        value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-' && iv_service && '-pack' ).
     ei_client->send( ).
     ei_client->receive( ).
 
@@ -1679,14 +1707,23 @@ CLASS lcl_transport IMPLEMENTATION.
 
     lv_data = ei_client->response->get_cdata( ).
 
+    IF is_repo-branch_name IS INITIAL.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'branch empty'.                         "#EC NOTEXT
+    ENDIF.
+
+    lv_len = strlen( is_repo-branch_name ).
     SPLIT lv_data AT gc_newline INTO TABLE lt_result.
     LOOP AT lt_result INTO lv_data.
-      IF lv_data CP '*refs/heads/master*'.
-        IF sy-tabix = 2.
-          lv_hash = lv_data+8.
-        ELSE.
-          lv_hash = lv_data+4.
-        ENDIF.
+      IF sy-tabix = 1.
+        CONTINUE. " current loop
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49 AND lv_data+49(lv_len) = is_repo-branch_name.
+        lv_hash = lv_data+8.
+        EXIT. " current loop
+      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45 AND lv_data+45 = is_repo-branch_name.
+        lv_hash = lv_data+4.
+        EXIT. " current loop
       ENDIF.
     ENDLOOP.
 
@@ -1715,22 +1752,23 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_branch  TYPE t_sha1.
 
 
-    IF NOT iv_repo CP '*Foobar*'. " temp guard
+    IF NOT is_repo-url CP '*Foobar*'. " temp guard
       BREAK-POINT.
       RETURN.
     ENDIF.
 
     ref_discovery(
       EXPORTING
-        iv_repo    = iv_repo
+        is_repo    = is_repo
         iv_service = lc_service
       IMPORTING
         ei_client  = li_client
         ev_branch  = lv_branch ).
+* todo, lv_branch should also be importing parameter?
 
     set_headers(
       EXPORTING
-        iv_repo    = iv_repo
+        is_repo    = is_repo
         iv_service = lc_service
         ii_client  = li_client ).
 
@@ -1738,7 +1776,7 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               iv_commit &&
               ` ` &&
-              'refs/heads/master' &&
+              is_repo-branch_name &&
               get_null( ) &&
               ` ` &&
               'report-status' &&
@@ -1834,7 +1872,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     ref_discovery(
       EXPORTING
-        iv_repo    = iv_repo
+        is_repo    = is_repo
         iv_service = lc_service
       IMPORTING
         ei_client  = li_client
@@ -1842,7 +1880,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     set_headers(
       EXPORTING
-        iv_repo    = iv_repo
+        is_repo    = is_repo
         iv_service = lc_service
         ii_client  = li_client ).
 
@@ -1901,11 +1939,15 @@ CLASS lcl_porcelain DEFINITION FINAL.
 
   PUBLIC SECTION.
 
-    CLASS-METHODS pull IMPORTING iv_repo TYPE string
+    CLASS-METHODS pull IMPORTING is_repo TYPE st_repo
                        EXPORTING et_files TYPE tt_files
                                  et_objects TYPE tt_objects
-                       CHANGING cv_branch TYPE t_sha1 OPTIONAL
+                                 ev_branch TYPE t_sha1
                        RAISING lcx_exception.
+
+    CLASS-METHODS add IMPORTING is_repo TYPE st_repo
+                                it_files TYPE tt_files
+                      RAISING lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS walk IMPORTING it_objects TYPE tt_objects
@@ -1923,27 +1965,127 @@ ENDCLASS.                    "lcl_porcelain DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_porcelain IMPLEMENTATION.
 
+  METHOD add.
+
+* todo, only supports adding files to root of repository
+
+    DATA: lt_files   TYPE tt_files,
+          lt_objects TYPE tt_objects,
+          lt_nodes   TYPE tt_nodes,
+          lv_branch  TYPE t_sha1,
+          ls_commit  TYPE st_commit,
+          ls_object  TYPE st_object,
+          lv_time    TYPE t_unixtime,
+          lv_pack    TYPE xstring,
+          lv_commit  TYPE xstring,
+          lv_tree    TYPE xstring.
+
+    FIELD-SYMBOLS: <ls_file> TYPE st_file,
+                   <ls_node> LIKE LINE OF lt_nodes.
+
+
+* first check if files already exist in repository
+    lcl_porcelain=>pull( EXPORTING is_repo = is_repo
+                         IMPORTING et_files = lt_files
+                                   et_objects = lt_objects
+                                   ev_branch = lv_branch ).
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      READ TABLE lt_files WITH KEY path = <ls_file>-path filename = <ls_file>-filename
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'already in repository'.              "#EC NOTEXT
+      ENDIF.
+    ENDLOOP.
+
+* find tree and add new files
+    READ TABLE lt_objects INTO ls_object WITH KEY sha1 = lv_branch type = gc_commit.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'commit not found'.                     "#EC NOTEXT
+    ENDIF.
+    ls_commit = lcl_pack=>decode_commit( ls_object-data ).
+
+    READ TABLE lt_objects INTO ls_object WITH KEY sha1 = ls_commit-tree type = gc_tree.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'tree not found'.                       "#EC NOTEXT
+    ENDIF.
+    CLEAR lt_objects[].
+
+    lt_nodes = lcl_pack=>decode_tree( ls_object-data ).
+    LOOP AT it_files ASSIGNING <ls_file>.
+      APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+      <ls_node>-chmod = gc_chmod_file.
+      <ls_node>-name = <ls_file>-filename.
+      <ls_node>-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
+    ENDLOOP.
+    lv_tree = lcl_pack=>encode_tree( lt_nodes ).
+
+* new commit
+    CLEAR ls_commit.
+    lv_time = lcl_time=>get( ).
+    ls_commit-tree      = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
+    ls_commit-parent    = lv_branch.
+    CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
+      INTO ls_commit-author SEPARATED BY space.             "#EC NOTEXT
+    CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
+      INTO ls_commit-committer SEPARATED BY space.          "#EC NOTEXT
+    ls_commit-body      = 'from program'.                       " todo
+    lv_commit = lcl_pack=>encode_commit( ls_commit ).
+
+
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit ).
+    ls_object-type = gc_commit.
+    ls_object-data = lv_commit.
+    APPEND ls_object TO lt_objects.
+    CLEAR ls_object.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
+    ls_object-type = gc_tree.
+    ls_object-data = lv_tree.
+    APPEND ls_object TO lt_objects.
+    LOOP AT it_files ASSIGNING <ls_file>.
+      CLEAR ls_object.
+      ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
+      ls_object-type = gc_blob.
+      ls_object-data = <ls_file>-data.
+      APPEND ls_object TO lt_objects.
+    ENDLOOP.
+
+    lv_pack = lcl_pack=>encode( lt_objects ).
+
+    lcl_transport=>receive_pack( is_repo   = is_repo
+                                 iv_commit = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit )
+                                 iv_pack   = lv_pack ).
+
+  ENDMETHOD.                    "add
+
   METHOD pull.
-* todo, if cv_branch is filled
 
     DATA: ls_object  LIKE LINE OF et_objects,
           ls_commit  TYPE st_commit,
           lv_pack    TYPE xstring.
 
 
-    lcl_transport=>upload_pack( EXPORTING iv_repo = iv_repo
+    lcl_transport=>upload_pack( EXPORTING is_repo = is_repo
                                 IMPORTING ev_pack = lv_pack
-                                          ev_branch = cv_branch ).
+                                          ev_branch = ev_branch ).
 
     IF lv_pack IS INITIAL.
-* todo, exception
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'empty pack'.                           "#EC NOTEXT
     ENDIF.
 
     et_objects = lcl_pack=>decode( lv_pack ).
     lcl_pack=>decode_deltas( CHANGING ct_objects = et_objects ).
 
-    READ TABLE et_objects INTO ls_object WITH KEY sha1 = cv_branch type = gc_commit.
+    READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_commit.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_exception
         EXPORTING
@@ -2035,13 +2177,13 @@ CLASS lcl_gui DEFINITION FINAL.
                       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: render_repo
-                      IMPORTING iv_repo TYPE string
+                      IMPORTING is_repo TYPE st_repo
                       RETURNING value(rv_html) TYPE string
                       RAISING lcx_exception.
 
     CLASS-METHODS: install.
 
-    CLASS-METHODS: add RAISING lcx_exception.
+    CLASS-METHODS: add IMPORTING is_repo TYPE st_repo RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -2054,7 +2196,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD on_sapevent.
 
-    DATA: lx_exception TYPE REF TO lcx_exception.
+    DATA: lx_exception TYPE REF TO lcx_exception,
+          ls_repo      TYPE st_repo.
 
 
     TRY.
@@ -2067,7 +2210,9 @@ CLASS lcl_gui IMPLEMENTATION.
             cl_gui_frontend_services=>execute(
                 document = 'https://github.com/larshp/abapGit' ).
           WHEN 'add'.
-            add( ).
+            ls_repo-url = getdata.
+            ls_repo-branch_name = 'refs/heads/master'. " todo
+            add( ls_repo ).
           WHEN OTHERS.
             RAISE EXCEPTION TYPE lcx_exception
               EXPORTING
@@ -2102,11 +2247,14 @@ CLASS lcl_gui IMPLEMENTATION.
     lt_files = lcl_serialize=>serialize( iv_obj_type = lv_obj_type
                                          iv_obj_name = lv_obj_name ).
 
+    lcl_porcelain=>add( is_repo  = is_repo
+                        it_files = lt_files ).
+
   ENDMETHOD.                    "add
 
   METHOD install.
 
-* todo, select git url + branch?
+* todo, select git url + branch name
 * lcl_persistence=>add( ).
     BREAK-POINT.
     RETURN.
@@ -2145,8 +2293,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lt_repos TYPE tt_string,
-          lv_repo  LIKE LINE OF lt_repos.
+    DATA: lt_repos TYPE tt_repos,
+          ls_repo  LIKE LINE OF lt_repos.
 
 
     lt_repos = lcl_persistence=>list( ).
@@ -2164,17 +2312,17 @@ CLASS lcl_gui IMPLEMENTATION.
       '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;'             && gc_newline &&
       '<hr>'                                                                && gc_newline.
 
-    LOOP AT lt_repos INTO lv_repo.
+    LOOP AT lt_repos INTO ls_repo.
       rv_html = rv_html &&
-        '<a href="#' && lcl_repo=>name( lv_repo ) &&'" class="grey">' &&
-        lcl_repo=>name( lv_repo ) &&
+        '<a href="#' && lcl_url=>name( ls_repo-url ) &&'" class="grey">' &&
+        lcl_url=>name( ls_repo-url ) &&
         '</a>&nbsp;'.
     ENDLOOP.
 
     rv_html = rv_html && '<br><br><br>'.
 
-    LOOP AT lt_repos INTO lv_repo.
-      rv_html = rv_html && render_repo( lv_repo ).
+    LOOP AT lt_repos INTO ls_repo.
+      rv_html = rv_html && render_repo( ls_repo  ).
     ENDLOOP.
 
     rv_html = rv_html && '</body></html>'.
@@ -2189,13 +2337,13 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     rv_html = rv_html &&
-      '<a id="' && lcl_repo=>name( iv_repo ) && '"></a>' &&
-      '<h2>' && lcl_repo=>name( iv_repo ) && '</h2>&nbsp;' &&
-      iv_repo &&
+      '<a id="' && lcl_url=>name( is_repo-url ) && '"></a>' &&
+      '<h2>' && lcl_url=>name( is_repo-url ) && '</h2>&nbsp;' &&
+      is_repo-url &&
       '<br>'.
 
-    lcl_porcelain=>pull( EXPORTING iv_repo = iv_repo
-                         IMPORTING et_files = lt_files ).
+    lcl_porcelain=>pull( EXPORTING is_repo        = is_repo
+                         IMPORTING et_files       = lt_files ).
 
     rv_html = rv_html && '<table border="1">' && gc_newline.
     LOOP AT lt_files ASSIGNING <ls_file>.
@@ -2207,7 +2355,7 @@ CLASS lcl_gui IMPLEMENTATION.
     ENDLOOP.
     rv_html = rv_html && '</table>' && gc_newline.
 
-    rv_html = rv_html && 'todo<br><a href="sapevent:add">add</a>'.
+    rv_html = rv_html && 'todo<br><a href="sapevent:add?' && is_repo-url && '">add</a>'.
 
   ENDMETHOD.                    "render_repo
 
@@ -2284,201 +2432,6 @@ FORM run.
 
 ENDFORM.                    "run
 
-*&---------------------------------------------------------------------*
-*&      Form  receive_test
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-FORM receive_test.
-
-  DATA: lv_repo      TYPE string VALUE 'https://github.com/larshp/Foobar.git',
-        lv_branch    TYPE t_sha1,
-        lt_files     TYPE tt_files,
-        ls_object    TYPE st_object,
-        lx_exception TYPE REF TO lcx_exception,
-        lt_objects   TYPE tt_objects.
-
-  FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
-
-
-  TRY.
-
-      lcl_porcelain=>pull( EXPORTING iv_repo    = lv_repo
-                           IMPORTING et_files   = lt_files
-                                     et_objects = lt_objects
-                           CHANGING  cv_branch  = lv_branch ).
-
-      LOOP AT lt_files ASSIGNING <ls_file>.
-        WRITE: / <ls_file>-path, 40 <ls_file>-filename.
-      ENDLOOP.
-
-      READ TABLE lt_objects INTO ls_object WITH KEY sha1 = lv_branch type = gc_commit.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text = 'Commit not found'.                   "#EC NOTEXT
-      ENDIF.
-      PERFORM receive USING ls_object lv_repo.
-
-    CATCH lcx_exception INTO lx_exception.
-      WRITE: / 'Error:', lx_exception->mv_text.             "#EC NOTEXT
-  ENDTRY.
-
-ENDFORM.                    "run
-
-*&---------------------------------------------------------------------*
-*&      Form  download
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*      -->PS_PARENT  text
-*----------------------------------------------------------------------*
-FORM receive USING ps_parent TYPE st_object
-                   pv_repo TYPE string
-            RAISING lcx_exception.
-
-  DATA: ls_commit  TYPE st_commit,
-        lt_nodes   TYPE tt_nodes,
-        ls_node    LIKE LINE OF lt_nodes,
-        lt_objects TYPE tt_objects,
-        ls_object  LIKE LINE OF lt_objects,
-        lv_blob    TYPE xstring,
-        lv_pack    TYPE xstring,
-        lv_tree    TYPE xstring,
-        lv_time    TYPE t_unixtime,
-        lv_commit  TYPE xstring.
-
-
-  lv_time = lcl_time=>get( ).
-
-* blob
-  lv_blob = lcl_convert=>string_to_xstring_utf8( 'some text chokoladesovs' ). "#EC NOTEXT
-
-* tree
-  CLEAR ls_node.
-  ls_node-chmod = gc_chmod_file.
-  ls_node-name = 'README.md'.
-  ls_node-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_blob ).
-  APPEND ls_node TO lt_nodes.
-  lv_tree = lcl_pack=>encode_tree( lt_nodes ).
-
-* commit
-  CLEAR ls_commit.
-  ls_commit-tree      = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
-  ls_commit-parent    = ps_parent-sha1.
-  CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
-    INTO ls_commit-author SEPARATED BY space.               "#EC NOTEXT
-  CONCATENATE 'larshp <larshp@hotmail.com>' lv_time
-    INTO ls_commit-committer SEPARATED BY space.            "#EC NOTEXT
-  ls_commit-body      = 'first post'.                       "#EC NOTEXT
-  lv_commit = lcl_pack=>encode_commit( ls_commit ).
-
-
-  CLEAR ls_object.
-  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit ).
-  ls_object-type = gc_commit.
-  ls_object-data = lv_commit.
-  APPEND ls_object TO lt_objects.
-  CLEAR ls_object.
-  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_tree iv_data = lv_tree ).
-  ls_object-type = gc_tree.
-  ls_object-data = lv_tree.
-  APPEND ls_object TO lt_objects.
-  CLEAR ls_object.
-  ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_blob ).
-  ls_object-type = gc_blob.
-  ls_object-data = lv_blob.
-  APPEND ls_object TO lt_objects.
-
-  lv_pack = lcl_pack=>encode( lt_objects ).
-
-  lcl_transport=>receive_pack( iv_repo   = pv_repo
-                               iv_commit = lcl_hash=>sha1( iv_type = gc_commit iv_data = lv_commit )
-                               iv_pack   = lv_pack ).
-
-ENDFORM.                    "download
-
-*&---------------------------------------------------------------------*
-*&      Form  show_utf8
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*      -->PV_DATA    text
-*----------------------------------------------------------------------*
-FORM output_string USING pv_data TYPE xstring.
-
-  DATA: lv_string TYPE string.
-
-
-  lv_string = lcl_convert=>xstring_to_string_utf8( pv_data ).
-  WRITE: / lv_string.
-
-ENDFORM.                    "show_utf8
-
-*&---------------------------------------------------------------------*
-*&      Form  output_summary
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-FORM output_summary USING pt_objects TYPE tt_objects.
-
-  DATA: lv_lines TYPE i.
-
-  FIELD-SYMBOLS: <ls_object> LIKE LINE OF pt_objects.
-
-  DEFINE _count.
-    lv_lines = 0.
-    loop at pt_objects assigning <ls_object> where type = &1.
-      lv_lines = lv_lines + 1.
-    endloop.
-  END-OF-DEFINITION.
-
-
-  _count gc_commit.
-  WRITE: / lv_lines, 'commits'.                             "#EC NOTEXT
-
-  _count gc_tree.
-  WRITE: / lv_lines, 'trees'.                               "#EC NOTEXT
-
-  _count gc_blob.
-  WRITE: / lv_lines, 'blobs'.                               "#EC NOTEXT
-
-  _count gc_ref_d.
-  WRITE: / lv_lines, 'ref deltas'.                          "#EC NOTEXT
-
-  WRITE: /.
-
-ENDFORM.                    "output_summary
-
-*&---------------------------------------------------------------------*
-*&      Form  OUTPUT_XSTRING
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*  -->  p1        text
-*  <--  p2        text
-*----------------------------------------------------------------------*
-FORM output_xstring USING pv_data TYPE xstring.
-
-  CONSTANTS: lc_len TYPE i VALUE 100.
-
-  DATA: lv_offset TYPE i,
-        lv_len    TYPE i.
-
-
-  lv_len = xstrlen( pv_data ).
-  DO.
-    IF lv_offset + lc_len > lv_len.
-      WRITE: / pv_data+lv_offset.
-      EXIT. " current loop
-    ELSE.
-      WRITE: / pv_data+lv_offset(lc_len).
-    ENDIF.
-    lv_offset = lv_offset + lc_len.
-  ENDDO.
-
-ENDFORM.                    " OUTPUT_XSTRING
-
 *----------------------------------------------------------------------*
 *       CLASS test DEFINITION
 *----------------------------------------------------------------------*
@@ -2502,7 +2455,7 @@ CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
     METHODS repo_url FOR TESTING RAISING lcx_exception.
     METHODS repo_error FOR TESTING.
 
-    CLASS-METHODS compare IMPORTING iv_repo TYPE string
+    CLASS-METHODS compare IMPORTING is_repo TYPE st_repo
                           RAISING lcx_exception.
     CLASS-METHODS http_fetch IMPORTING iv_url TYPE string
                              RETURNING value(rv_data) TYPE xstring.
@@ -2518,7 +2471,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
   METHOD repo_error.
 
     TRY.
-        lcl_repo=>host( 'not a real url' ).                 "#EC NOTEXT
+        lcl_url=>host( 'not a real url' ).                  "#EC NOTEXT
         cl_abap_unit_assert=>fail( ).
       CATCH lcx_exception.                              "#EC NO_HANDLER
     ENDTRY.
@@ -2529,7 +2482,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
 
     DATA: lv_host TYPE string.
 
-    lv_host = lcl_repo=>host( 'https://github.com/larshp/Foobar.git' ).
+    lv_host = lcl_url=>host( 'https://github.com/larshp/Foobar.git' ).
 
     cl_abap_unit_assert=>assert_equals(
         exp = 'https://github.com'
@@ -2750,7 +2703,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
 
-    lcl_porcelain=>pull( EXPORTING iv_repo  = iv_repo
+    lcl_porcelain=>pull( EXPORTING is_repo  = is_repo
                          IMPORTING et_files = lt_files ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
@@ -2758,7 +2711,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     LOOP AT lt_files ASSIGNING <ls_file>.
       lv_url =
         'https://raw.githubusercontent.com' &&
-        lcl_repo=>path_name( iv_repo ) &&
+        lcl_url=>path_name( is_repo-url ) &&
         '/master' &&
         <ls_file>-path &&
         <ls_file>-filename.                                 "#EC NOTEXT
@@ -2773,104 +2726,36 @@ CLASS lcl_abap_unit IMPLEMENTATION.
   ENDMETHOD.                    "compare
 
   METHOD repository_larshp_foobar.
-    compare( 'https://github.com/larshp/Foobar.git' ).      "#EC NOTEXT
+
+    DATA: ls_repo TYPE st_repo.
+
+    ls_repo-url = 'https://github.com/larshp/Foobar.git'.   "#EC NOTEXT
+    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
+
+    compare( ls_repo ).
+
   ENDMETHOD.                    "test_minus_ten_percent
 
   METHOD repository_larshp_mousechase.
-    compare( 'https://github.com/larshp/MouseChase.git' ).  "#EC NOTEXT
+
+    DATA: ls_repo TYPE st_repo.
+
+    ls_repo-url = 'https://github.com/larshp/MouseChase.git'. "#EC NOTEXT
+    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
+
+    compare( ls_repo ).
+
   ENDMETHOD.                    "larshp_mousechase
 
   METHOD repository_larshp_dicing.
-    compare( 'https://github.com/larshp/Dicing.git' ).      "#EC NOTEXT
+
+    DATA: ls_repo TYPE st_repo.
+
+    ls_repo-url = 'https://github.com/larshp/Dicing.git'.   "#EC NOTEXT
+    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
+
+    compare( ls_repo ).
+
   ENDMETHOD.                    "larshp_dicing
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
-
-*&---------------------------------------------------------------------*
-*&      Form  OUTPUT_OBJECTS
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*      -->P_LT_COMMITS  text
-*----------------------------------------------------------------------*
-FORM output_objects USING pt_objects TYPE tt_objects
-                  RAISING lcx_exception.
-
-  FIELD-SYMBOLS: <ls_object> LIKE LINE OF pt_objects.
-
-
-  LOOP AT pt_objects ASSIGNING <ls_object>.
-
-    WRITE: / 'SHA1:', <ls_object>-sha1, <ls_object>-type.
-
-    CASE <ls_object>-type.
-      WHEN gc_commit.
-        PERFORM output_commit USING <ls_object>.
-      WHEN gc_tree.
-        PERFORM output_tree USING <ls_object>.
-      WHEN gc_blob.
-        PERFORM output_blob USING <ls_object>.
-      WHEN OTHERS.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text = 'Output, unknown type'.               "#EC NOTEXT
-    ENDCASE.
-
-    WRITE: /.
-  ENDLOOP.
-
-ENDFORM.                    " OUTPUT_OBJECTS
-
-*&---------------------------------------------------------------------*
-*&      Form  output_tree
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-FORM output_tree USING ps_object TYPE st_object
-               RAISING lcx_exception.
-
-  DATA: lt_nodes TYPE tt_nodes.
-
-  FIELD-SYMBOLS: <ls_node> LIKE LINE OF lt_nodes.
-
-
-  lt_nodes = lcl_pack=>decode_tree( ps_object-data ).
-  LOOP AT lt_nodes ASSIGNING <ls_node>.
-    WRITE: / <ls_node>-chmod, <ls_node>-sha1, <ls_node>-name.
-  ENDLOOP.
-
-ENDFORM.                    "output_tree
-
-*&---------------------------------------------------------------------*
-*&      Form  output_blob
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-FORM output_blob USING ps_object TYPE st_object.
-
-  WRITE: / ps_object-data.
-
-ENDFORM.                    "output_blob
-
-*&---------------------------------------------------------------------*
-*&      Form  OUTPUT_COMMIT
-*&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
-*      -->P_<LS_COMMIT>  text
-*----------------------------------------------------------------------*
-FORM output_commit USING ps_object TYPE st_object
-                   RAISING lcx_exception.
-
-  DATA: ls_commit TYPE st_commit.
-
-
-  ls_commit = lcl_pack=>decode_commit( ps_object-data ).
-
-  WRITE: / 'tree', 20 ls_commit-tree.                       "#EC NOTEXT
-  WRITE: / 'parent', 20 ls_commit-parent.                   "#EC NOTEXT
-  WRITE: / 'author', 20 ls_commit-author.                   "#EC NOTEXT
-  WRITE: / 'committer', 20 ls_commit-committer.             "#EC NOTEXT
-  WRITE: /20 ls_commit-body.
-
-ENDFORM.                    " OUTPUT_COMMIT
