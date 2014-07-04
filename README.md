@@ -21,6 +21,7 @@ Todo
 - license?
 - injection?
 - shallow/deepen?
+- handling conflicts
 
 ---
 
