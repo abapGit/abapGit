@@ -22,7 +22,3 @@ Todo
 - injection?
 - shallow/deepen?
 - handling conflicts
-
----
-
-SAPHTML_EVENTS_DEMO
