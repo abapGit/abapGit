@@ -36,15 +36,25 @@ TYPES: BEGIN OF st_commit,
          body      TYPE string,
        END OF st_commit.
 
-*TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
-
 TYPES: BEGIN OF st_repo,
          url TYPE string,
          branch_name TYPE string,
        END OF st_repo.
+*TYPES: tt_repos TYPE STANDARD TABLE OF st_repo WITH DEFAULT KEY.
 
-TYPES: tt_repos TYPE STANDARD TABLE OF st_repo WITH DEFAULT KEY.
+TYPES: BEGIN OF st_repo_sha1,
+         url TYPE string,
+         branch_name TYPE string,
+         sha1 TYPE string,
+       END OF st_repo_sha1.
+TYPES: tt_repos_sha1 TYPE STANDARD TABLE OF st_repo_sha1 WITH DEFAULT KEY.
 
+TYPES: BEGIN OF st_result,
+         type   TYPE rseuap-obj_type,
+         name   TYPE rseuap-obj_name,
+         action TYPE string,
+       END OF st_result.
+TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
 
 CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_tree   TYPE t_type VALUE 'tree',              "#EC NOTEXT
@@ -491,6 +501,8 @@ CLASS lcl_serialize DEFINITION FINAL.
 
     CLASS-METHODS deserialize
                             IMPORTING it_files TYPE tt_files
+                                      iv_updated TYPE abap_bool
+                            RETURNING value(rt_results) TYPE tt_results
                             RAISING lcx_exception.
 
   PRIVATE SECTION.
@@ -498,7 +510,19 @@ CLASS lcl_serialize DEFINITION FINAL.
                             IMPORTING iv_obj_name TYPE rseuap-obj_name
                             RETURNING value(rt_files) TYPE tt_files
                             RAISING lcx_exception.
+
     CLASS-METHODS prog_deserialize.
+
+    CLASS-METHODS prog_exists
+                            IMPORTING iv_obj_name TYPE rseuap-obj_name
+                            RETURNING value(rv_bool) TYPE abap_bool.
+
+    CLASS-METHODS compare_files
+                            IMPORTING it_repo TYPE tt_files
+                                      it_sap TYPE tt_files
+                                      iv_updated TYPE abap_bool
+                            RETURNING value(rv_action) TYPE string
+                            RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_serialize DEFINITION
 
@@ -508,6 +532,20 @@ ENDCLASS.                    "lcl_serialize DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize IMPLEMENTATION.
+
+  METHOD prog_exists.
+
+    DATA: lv_progname TYPE reposrc-progname.
+
+
+    SELECT SINGLE progname FROM reposrc INTO lv_progname WHERE progname = iv_obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.                    "prog_exists
 
   METHOD serialize.
 
@@ -532,12 +570,77 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+* todo, change name to analyze?
   METHOD deserialize.
 
-* todo
-    RETURN.
+* not exist in sap = 'create'
+* match            = 'match'
+* newer in repo    = 'update'
+* newer in sap     = 'commit'
+
+    DATA: lv_pre    TYPE rseuap-obj_name,
+          lt_files  TYPE tt_files,
+          ls_result LIKE LINE OF rt_results,
+          lv_type   TYPE string,
+          lv_ext    TYPE string.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
+      TRANSLATE lv_pre TO UPPER CASE.
+      TRANSLATE lv_type TO UPPER CASE.
+
+      IF lv_ext <> 'xml'.
+        CONTINUE. " current loop
+      ENDIF.
+
+      CLEAR ls_result.
+      ls_result-type = lv_type.
+      ls_result-name = lv_pre.
+
+      CASE lv_type.
+        WHEN 'PROG'.
+          IF prog_exists( lv_pre ) = abap_true.
+            lt_files = prog_serialize( lv_pre ).
+            ls_result-action = compare_files( it_repo = it_files it_sap = lt_files iv_updated = iv_updated ).
+          ELSE.
+            ls_result-action = 'create'.
+          ENDIF.
+      ENDCASE.
+
+      APPEND ls_result TO rt_results.
+
+    ENDLOOP.
+
+* how to handle deleted in repo?
 
   ENDMETHOD.                    "deserialize
+
+  METHOD compare_files.
+
+    FIELD-SYMBOLS: <ls_sap> TYPE st_file.
+
+
+    LOOP AT it_sap ASSIGNING <ls_sap>.
+      READ TABLE it_repo WITH KEY path = <ls_sap>-path
+                                  filename = <ls_sap>-filename
+                                  data = <ls_sap>-data
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        IF iv_updated = abap_true.
+          rv_action = 'update'.
+        ELSE.
+          rv_action = 'commit'.
+        ENDIF.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    rv_action = 'match'.
+
+  ENDMETHOD.                    "compare_files
 
   METHOD prog_serialize.
 
@@ -580,7 +683,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     CLEAR ls_file.
     ls_file-path = '/'.
-    CONCATENATE lv_program_name '.prog.xml' INTO ls_file-filename.
+    CONCATENATE lv_program_name '.prog.xml' INTO ls_file-filename. "#EC NOTEXT
     TRANSLATE ls_file-filename TO LOWER CASE.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
     APPEND ls_file TO rt_files.
@@ -588,7 +691,7 @@ CLASS lcl_serialize IMPLEMENTATION.
     CONCATENATE LINES OF lt_source INTO lv_source SEPARATED BY gc_newline.
     CLEAR ls_file.
     ls_file-path = '/'.
-    CONCATENATE lv_program_name '.prog.abap' INTO ls_file-filename.
+    CONCATENATE lv_program_name '.prog.abap' INTO ls_file-filename. "#EC NOTEXT
     TRANSLATE ls_file-filename TO LOWER CASE.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
     APPEND ls_file TO rt_files.
@@ -764,11 +867,6 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS encode IMPORTING it_objects TYPE tt_objects
                          RETURNING value(rv_data) TYPE xstring
-                         RAISING lcx_exception.
-
-* todo, to be deleted:
-    CLASS-METHODS sanity_checks IMPORTING it_objects TYPE tt_objects
-                         RETURNING value(rt_files) TYPE tt_files
                          RAISING lcx_exception.
 
     CLASS-METHODS: encode_tree IMPORTING it_nodes TYPE tt_nodes
@@ -966,61 +1064,6 @@ CLASS lcl_pack IMPLEMENTATION.
     rv_data = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.                    "encode_commit
-
-  METHOD sanity_checks.
-
-    DATA: ls_commit TYPE st_commit,
-          lt_nodes  TYPE tt_nodes.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
-                   <ls_node>   LIKE LINE OF lt_nodes.
-
-
-* check that parent exists for all commits
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_commit.
-      ls_commit = lcl_pack=>decode_commit( <ls_object>-data ).
-      IF ls_commit-parent IS INITIAL.
-        CONTINUE.
-      ENDIF.
-      READ TABLE it_objects WITH KEY sha1 = ls_commit-parent type = gc_commit
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        WRITE: / 'Commit', ls_commit-parent, 'not found'.   "#EC NOTEXT
-      ENDIF.
-    ENDLOOP.
-
-* check that tree exists for all commits
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_commit.
-      ls_commit = lcl_pack=>decode_commit( <ls_object>-data ).
-      READ TABLE it_objects WITH KEY sha1 = ls_commit-tree type = gc_tree
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        WRITE: / 'Tree', ls_commit-tree, 'not found'.       "#EC NOTEXT
-      ENDIF.
-    ENDLOOP.
-
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_tree.
-* check that blobs in trees exists
-      lt_nodes = lcl_pack=>decode_tree( <ls_object>-data ).
-      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_file.
-        READ TABLE it_objects WITH KEY sha1 = <ls_node>-sha1 type = gc_blob
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          WRITE: / 'Blob', <ls_node>-sha1, 'not found'.     "#EC NOTEXT
-        ENDIF.
-      ENDLOOP.
-
-* check that directories/trees in trees exists
-      LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_dir.
-        READ TABLE it_objects WITH KEY sha1 = <ls_node>-sha1 type = gc_tree
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          WRITE: / 'Tree', <ls_node>-sha1, 'not found'.     "#EC NOTEXT
-        ENDIF.
-      ENDLOOP.
-    ENDLOOP.
-
-  ENDMETHOD.                    "sanity_checks
 
   METHOD get_type.
 
@@ -1542,8 +1585,10 @@ ENDCLASS.                    "lcl_pack IMPLEMENTATION
 CLASS lcl_persistence DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS add IMPORTING is_repo TYPE st_repo.
-    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_repos.
+    CLASS-METHODS add IMPORTING is_repo TYPE st_repo_sha1.
+
+    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_repos_sha1
+                       RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_persistence DEFINITION
 
@@ -1556,18 +1601,69 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   METHOD add.
 * todo
+    BREAK-POINT.
     RETURN.
   ENDMETHOD.                    "add
 
   METHOD list.
 
-    DATA: ls_repo TYPE st_repo.
+    DATA: lt_lines TYPE TABLE OF tline,
+          ls_repo  TYPE st_repo_sha1.
 
-    ls_repo-url = 'https://github.com/larshp/Foobar.git'.
-    ls_repo-branch_name = 'ref/heads/master'.
-* todo
+    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
 
-    APPEND ls_repo TO rt_repos.
+
+    CALL FUNCTION 'READ_TEXT'
+      EXPORTING
+        id                      = 'ST'
+        language                = 'E'
+        name                    = 'ZABAPGIT'
+        object                  = 'TEXT'
+      TABLES
+        lines                   = lt_lines
+      EXCEPTIONS
+        id                      = 1
+        language                = 2
+        name                    = 3
+        not_found               = 4
+        object                  = 5
+        reference_check         = 6
+        wrong_access_to_archive = 7
+        OTHERS                  = 8.
+    IF sy-subrc = 4.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Error from READ_TEXT'.                 "#EC NOTEXT
+    ENDIF.
+
+    IF lines( lt_lines ) MOD 3 <> 0.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'Persistence, text broken'.             "#EC NOTEXT
+    ENDIF.
+
+    CLEAR ls_repo.
+    LOOP AT lt_lines ASSIGNING <ls_line>.
+      IF <ls_line>-tdline IS INITIAL.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'Persistence, text broken'.           "#EC NOTEXT
+      ENDIF.
+      IF ls_repo-url IS INITIAL.
+        ls_repo-url = <ls_line>-tdline.
+        CONTINUE. " current loop
+      ENDIF.
+      IF ls_repo-branch_name IS INITIAL.
+        ls_repo-branch_name = <ls_line>-tdline.
+        CONTINUE. " current loop
+      ENDIF.
+
+      ls_repo-sha1 = <ls_line>-tdline.
+      APPEND ls_repo TO rt_repos.
+      CLEAR ls_repo.
+    ENDLOOP.
 
   ENDMETHOD.                    "list
 
@@ -1752,9 +1848,10 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_branch  TYPE t_sha1.
 
 
-    IF NOT is_repo-url CP '*Foobar*'. " temp guard
-      BREAK-POINT.
-      RETURN.
+    IF NOT is_repo-url CP '*Foobar*'.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'not Foobar repository, temporary guard'. "#EC NOTEXT
     ENDIF.
 
     ref_discovery(
@@ -1798,9 +1895,10 @@ CLASS lcl_transport IMPLEMENTATION.
     li_client->close( ).
 
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
-    WRITE: / lv_string.
     IF NOT lv_string CP '*unpack ok*'.
-      BREAK-POINT.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = 'unpack not ok'.                        "#EC NOTEXT
     ENDIF.
 
   ENDMETHOD.                    "receive_pack
@@ -2157,7 +2255,7 @@ ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
 CLASS lcl_gui DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: init RAISING lcx_exception.
+    CLASS-METHODS: run RAISING lcx_exception.
 
     CLASS-METHODS: on_sapevent
                       FOR EVENT sapevent OF cl_gui_html_viewer
@@ -2177,13 +2275,25 @@ CLASS lcl_gui DEFINITION FINAL.
                       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: render_repo
-                      IMPORTING is_repo TYPE st_repo
+                      IMPORTING is_repo TYPE st_repo_sha1
                       RETURNING value(rv_html) TYPE string
                       RAISING lcx_exception.
 
-    CLASS-METHODS: install.
+    CLASS-METHODS: install
+                      RAISING lcx_exception.
 
-    CLASS-METHODS: add IMPORTING is_repo TYPE st_repo RAISING lcx_exception.
+    CLASS-METHODS: add
+                      IMPORTING is_repo TYPE st_repo
+                      RAISING lcx_exception.
+
+    CLASS-METHODS: struct_encode
+                      IMPORTING ig_structure TYPE any
+                      RETURNING value(rv_string) TYPE string.
+
+    CLASS-METHODS: struct_decode
+                      IMPORTING iv_string TYPE clike
+                      CHANGING cg_structure TYPE any
+                      RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -2193,6 +2303,56 @@ ENDCLASS.                    "lcl_gui DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
+
+  METHOD struct_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
+                   <lg_any>   TYPE any.
+
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    LOOP AT lt_fields ASSIGNING <ls_field>.
+      ASSIGN COMPONENT <ls_field>-name OF STRUCTURE cg_structure TO <lg_any>.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text = 'wrong field'.                        "#EC NOTEXT
+      ENDIF.
+
+      <lg_any> = <ls_field>-value.
+    ENDLOOP.
+
+  ENDMETHOD.                    "struct_decode
+
+  METHOD struct_encode.
+
+    DATA: lt_fields    TYPE tihttpnvp,
+          lo_descr_ref TYPE REF TO cl_abap_structdescr,
+          ls_field     LIKE LINE OF lt_fields.
+
+    FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
+                   <lg_any>  TYPE any.
+
+
+    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+
+    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
+
+      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
+      ASSERT sy-subrc = 0.
+
+      ls_field-name = <ls_comp>-name.
+      ls_field-value = <lg_any>.
+      APPEND ls_field TO lt_fields.
+    ENDLOOP.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+  ENDMETHOD.                    "encode_struct
 
   METHOD on_sapevent.
 
@@ -2210,16 +2370,18 @@ CLASS lcl_gui IMPLEMENTATION.
             cl_gui_frontend_services=>execute(
                 document = 'https://github.com/larshp/abapGit' ).
           WHEN 'add'.
-            ls_repo-url = getdata.
-            ls_repo-branch_name = 'refs/heads/master'. " todo
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo ).
             add( ls_repo ).
+          WHEN 'refresh'.
+            view( render( ) ).
           WHEN OTHERS.
             RAISE EXCEPTION TYPE lcx_exception
               EXPORTING
                 iv_text = 'Unknown action'.                 "#EC NOTEXT
         ENDCASE.
       CATCH lcx_exception INTO lx_exception.
-        MESSAGE lx_exception->mv_text TYPE 'E'.
+        MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
   ENDMETHOD.                    "on_sapevent
@@ -2232,17 +2394,13 @@ CLASS lcl_gui IMPLEMENTATION.
 
 * todo, by package
 * todo, by transport
-* todo
-*    CALL FUNCTION 'WB_TREE_OBJECT_CHOICE'
-*      IMPORTING
-*        obj_type = lv_obj_type
-*        obj_name = lv_obj_name.
-*    IF lv_obj_type IS INITIAL.
-*      RETURN.
-*    ENDIF.
-
-    lv_obj_type = 'P'.
-    lv_obj_name = 'ZTEST'.
+    CALL FUNCTION 'WB_TREE_OBJECT_CHOICE'
+      IMPORTING
+        obj_type = lv_obj_type
+        obj_name = lv_obj_name.
+    IF lv_obj_type IS INITIAL.
+      RETURN.
+    ENDIF.
 
     lt_files = lcl_serialize=>serialize( iv_obj_type = lv_obj_type
                                          iv_obj_name = lv_obj_name ).
@@ -2256,8 +2414,10 @@ CLASS lcl_gui IMPLEMENTATION.
 
 * todo, select git url + branch name
 * lcl_persistence=>add( ).
-    BREAK-POINT.
-    RETURN.
+
+    RAISE EXCEPTION TYPE lcx_exception
+      EXPORTING
+        iv_text = 'todo, to be implemented'.                "#EC NOTEXT
 
   ENDMETHOD.                    "install
 
@@ -2293,7 +2453,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lt_repos TYPE tt_repos,
+    DATA: lt_repos TYPE tt_repos_sha1,
           ls_repo  LIKE LINE OF lt_repos.
 
 
@@ -2307,6 +2467,7 @@ CLASS lcl_gui IMPLEMENTATION.
       '</head>'                                                             && gc_newline &&
       '<body>'                                                              && gc_newline &&
       '<h1>abapGit</h1>&nbsp;'                                              && gc_newline &&
+      '<a href="sapevent:refresh">Refresh</a>&nbsp;'                        && gc_newline &&
       '<a href="sapevent:install">Clone/Install/Start/New</a>&nbsp;'        && gc_newline &&
       '<a href="sapevent:explore">Explore</a>&nbsp;'                        && gc_newline &&
       '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;'             && gc_newline &&
@@ -2322,7 +2483,7 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html && '<br><br><br>'.
 
     LOOP AT lt_repos INTO ls_repo.
-      rv_html = rv_html && render_repo( ls_repo  ).
+      rv_html = rv_html && render_repo( ls_repo ).
     ENDLOOP.
 
     rv_html = rv_html && '</body></html>'.
@@ -2331,19 +2492,28 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_repo.
 
-    DATA: lt_files TYPE tt_files.
+    DATA: lt_files   TYPE tt_files,
+          ls_repo    TYPE st_repo,
+          lv_branch  TYPE t_sha1,
+          lv_updated TYPE abap_bool,
+          lt_results TYPE tt_results.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
+                   <ls_result> LIKE LINE OF lt_results.
 
 
     rv_html = rv_html &&
       '<a id="' && lcl_url=>name( is_repo-url ) && '"></a>' &&
       '<h2>' && lcl_url=>name( is_repo-url ) && '</h2>&nbsp;' &&
       is_repo-url &&
+      '&nbsp;' &&
+      is_repo-branch_name &&
       '<br>'.
 
-    lcl_porcelain=>pull( EXPORTING is_repo        = is_repo
-                         IMPORTING et_files       = lt_files ).
+    MOVE-CORRESPONDING is_repo TO ls_repo.
+    lcl_porcelain=>pull( EXPORTING is_repo   = ls_repo
+                         IMPORTING et_files  = lt_files
+                                   ev_branch = lv_branch ).
 
     rv_html = rv_html && '<table border="1">' && gc_newline.
     LOOP AT lt_files ASSIGNING <ls_file>.
@@ -2355,11 +2525,30 @@ CLASS lcl_gui IMPLEMENTATION.
     ENDLOOP.
     rv_html = rv_html && '</table>' && gc_newline.
 
-    rv_html = rv_html && 'todo<br><a href="sapevent:add?' && is_repo-url && '">add</a>'.
+    rv_html = rv_html && '<a href="sapevent:add?' && struct_encode( is_repo ) && '">add</a>'.
+    rv_html = rv_html && '<br>'.
+
+    IF lv_branch <> is_repo-sha1.
+      lv_updated = abap_true.
+    ELSE.
+      lv_updated = abap_false.
+    ENDIF.
+    lt_results = lcl_serialize=>deserialize( it_files   = lt_files
+                                             iv_updated = lv_updated ).
+    LOOP AT lt_results ASSIGNING <ls_result>.
+      rv_html = rv_html &&
+        <ls_result>-type &&
+        '&nbsp;' &&
+        <ls_result>-name &&
+        '&nbsp;' &&
+        <ls_result>-action &&
+        '&nbsp;' &&
+        '<br>'.
+    ENDLOOP.
 
   ENDMETHOD.                    "render_repo
 
-  METHOD init.
+  METHOD run.
 
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events.
@@ -2423,12 +2612,12 @@ FORM run.
 
 
   TRY.
-      lcl_gui=>init( ).
+      lcl_gui=>run( ).
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
 
-  WRITE: / '.'. " required
+  WRITE: / '.'.     " required
 
 ENDFORM.                    "run
 
