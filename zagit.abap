@@ -811,6 +811,8 @@ CLASS lcl_serialize IMPLEMENTATION.
         _raise 'Serialize, unknown type'.
     ENDCASE.
 
+* todo, duplicates in rt_files? via includes?
+
   ENDMETHOD.                    "serialize
 
   METHOD status.
@@ -904,14 +906,20 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   METHOD prog_serialize.
 
-    DATA: ls_progdir     TYPE progdir,
+    DATA: ls_progdir      TYPE progdir,
           lv_program_name TYPE programm,
           lv_xml          TYPE string,
           lt_source       TYPE TABLE OF abaptxt255,
           lv_source       TYPE string,
+          lt_files        LIKE rt_files,
+          lt_dynpros      TYPE TABLE OF d020s,
+          lt_includes     TYPE programt,
           lt_textelements TYPE textpool_table,
           ls_file         LIKE LINE OF rt_files,
           lo_xml          TYPE REF TO lcl_xml.
+
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes,
+                   <ls_dynpro>  LIKE LINE OF lt_dynpros.
 
 
     lv_program_name = iv_obj_name.
@@ -952,6 +960,47 @@ CLASS lcl_serialize IMPLEMENTATION.
     lo_xml->table_add( lt_textelements ).
     lv_xml = lo_xml->render( ).
 
+
+    CALL FUNCTION 'RS_SCREEN_LIST'
+      EXPORTING
+        dynnr     = '*'
+        progname  = lv_program_name
+      TABLES
+        dynpros   = lt_dynpros
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc = 2.
+      _raise 'error from screen_list'.
+    ENDIF.
+
+    DATA: ls_header TYPE rpy_dyhead,
+          lt_containers TYPE dycatt_tab,
+          lt_fields_to_containers TYPE dyfatc_tab,
+          lt_flow_logic TYPE swydyflow.
+
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+      CALL FUNCTION 'RPY_DYNPRO_READ'
+        EXPORTING
+          progname             = lv_program_name
+          dynnr                = <ls_dynpro>-dnum
+        IMPORTING
+          header               = ls_header
+        TABLES
+          containers           = lt_containers
+          fields_to_containers = lt_fields_to_containers
+          flow_logic           = lt_flow_logic
+        EXCEPTIONS
+          cancelled            = 1
+          not_found            = 2
+          permission_error     = 3
+          OTHERS               = 4.
+      IF sy-subrc <> 0.
+        _raise 'Error while reading dynpro'.
+      ENDIF.
+* todo, add to xml
+    ENDLOOP.
+
     CLEAR ls_file.
     ls_file-path = '/'.
     CONCATENATE lv_program_name '.prog.xml' INTO ls_file-filename. "#EC NOTEXT
@@ -966,6 +1015,25 @@ CLASS lcl_serialize IMPLEMENTATION.
     TRANSLATE ls_file-filename TO LOWER CASE.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
     APPEND ls_file TO rt_files.
+
+
+    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
+      EXPORTING
+        program      = lv_program_name
+      TABLES
+        includetab   = lt_includes
+      EXCEPTIONS
+        not_existent = 1
+        no_program   = 2
+        OTHERS       = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from get_all_includes'.
+    ENDIF.
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+      lt_files = prog_serialize( <lv_include> ).
+      APPEND LINES OF lt_files TO rt_files.
+    ENDLOOP.
 
   ENDMETHOD.                    "prog_serialize
 
@@ -3241,6 +3309,8 @@ CLASS lcl_gui IMPLEMENTATION.
         <ls_result>-obj_type &&
         '&nbsp;' &&
         <ls_result>-obj_name &&
+        '&nbsp;' &&
+        <ls_result>-match &&
         '<br>'.
     ENDLOOP.
 
