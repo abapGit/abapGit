@@ -285,6 +285,10 @@ CLASS lcl_xml DEFINITION FINAL.
                                     ii_root TYPE REF TO if_ixml_element OPTIONAL
                           RAISING lcx_exception.
 
+    METHODS element_add IMPORTING ig_element TYPE data
+                                  ii_root TYPE REF TO if_ixml_element OPTIONAL
+                          RAISING lcx_exception.
+
     METHODS structure_read CHANGING cg_structure TYPE data.
 
     METHODS render        RETURNING value(rv_string) TYPE string.
@@ -372,9 +376,10 @@ CLASS lcl_xml IMPLEMENTATION.
 
     DATA: lv_name         TYPE string,
           li_table        TYPE REF TO if_ixml_element,
+          lv_kind         TYPE abap_typecategory,
           lo_table_descr  TYPE REF TO cl_abap_tabledescr.
 
-    FIELD-SYMBOLS: <lg_line>  TYPE any.
+    FIELD-SYMBOLS: <lg_line> TYPE any.
 
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
@@ -385,14 +390,55 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
     li_table = mi_xml_doc->create_element( lv_name ).
+    lv_kind = lo_table_descr->get_table_line_type( )->kind.
 
     LOOP AT it_table ASSIGNING <lg_line>.
-      structure_add( ig_structure = <lg_line> ii_root = li_table ).
+      CASE lv_kind.
+        WHEN cl_abap_typedescr=>kind_struct.
+          structure_add( ig_structure = <lg_line>
+                         ii_root      = li_table ).
+        WHEN cl_abap_typedescr=>kind_elem.
+          element_add( ig_element = <lg_line>
+                       ii_root    = li_table ).
+        WHEN OTHERS.
+          _raise 'unknown kind'.
+      ENDCASE.
     ENDLOOP.
 
     mi_root->append_child( li_table ).
 
   ENDMETHOD.                    "table_add
+
+  METHOD element_add.
+
+    DATA: lo_descr   TYPE REF TO cl_abap_elemdescr,
+          lv_string  TYPE string,
+          li_element TYPE REF TO if_ixml_element,
+          li_text    TYPE REF TO if_ixml_text,
+          lv_name    TYPE string.
+
+
+    lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_element ).
+
+    lv_name = lo_descr->get_relative_name( ).
+    IF lv_name IS INITIAL.
+      _raise 'no name'.
+    ENDIF.
+
+    li_element = mi_xml_doc->create_element( lv_name ).
+
+    lv_string  = ig_element.
+    li_text    = mi_xml_doc->create_text( lv_string ).
+
+    li_element->append_child( li_text ).
+
+    IF ii_root IS SUPPLIED.
+      ii_root->append_child( li_element ).
+    ELSE.
+      mi_root->append_child( li_element ).
+    ENDIF.
+
+  ENDMETHOD.                    "element_add
 
   METHOD structure_add.
 
@@ -408,6 +454,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
 
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+
     lv_name = lo_descr->get_relative_name( ).
     IF lv_name IS INITIAL.
       _raise 'no name'.
@@ -738,188 +785,69 @@ CLASS lcl_convert IMPLEMENTATION.
 ENDCLASS.                    "lcl_convert IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize DEFINITION
+*       INTERFACE lif_serialize IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize DEFINITION FINAL.
+INTERFACE lif_serialize.
+
+  CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+                           RETURNING value(rt_files) TYPE tt_files
+                           RAISING lcx_exception.
+
+  CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+                                       it_files TYPE tt_files
+                             RAISING lcx_exception.
+
+  CLASS-METHODS: exists IMPORTING iv_obj_name TYPE tadir-obj_name
+                        RETURNING value(rv_exists) TYPE abap_bool
+                        RAISING lcx_exception.
+
+ENDINTERFACE.                    "lif_serialize IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_prog DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_prog DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS serialize IMPORTING iv_obj_type TYPE tadir-object
-                                      iv_obj_name TYPE tadir-obj_name
-                            RETURNING value(rt_files) TYPE tt_files
-                            RAISING lcx_exception.
+    INTERFACES lif_serialize.
 
-    CLASS-METHODS status    IMPORTING it_files TYPE tt_files
-                            RETURNING value(rt_results) TYPE tt_results
-                            RAISING lcx_exception.
-
-    CLASS-METHODS deserialize IMPORTING it_files TYPE tt_files
-                            RAISING lcx_exception.
+    ALIASES: serialize FOR lif_serialize~serialize,
+             deserialize FOR lif_serialize~deserialize,
+             exists FOR lif_serialize~exists.
 
   PRIVATE SECTION.
-    CLASS-METHODS prog_serialize
-                            IMPORTING iv_obj_name TYPE tadir-obj_name
-                            RETURNING value(rt_files) TYPE tt_files
-                            RAISING lcx_exception.
+    CLASS-METHODS: serialize_dynpros IMPORTING iv_program_name TYPE programm
+                                               io_xml TYPE REF TO lcl_xml
+                                     RAISING lcx_exception.
 
-    CLASS-METHODS prog_deserialize
-                            IMPORTING it_files TYPE tt_files
-                                      iv_obj_name TYPE tadir-obj_name
-                            RAISING lcx_exception.
+    CLASS-METHODS: serialize_includes IMPORTING iv_program_name TYPE programm
+                                                io_xml TYPE REF TO lcl_xml
+                                      CHANGING ct_files TYPE tt_files
+                                      RAISING lcx_exception.
 
-    CLASS-METHODS prog_exists
-                            IMPORTING iv_obj_name TYPE tadir-obj_name
-                            RETURNING value(rv_bool) TYPE abap_bool.
-
-    CLASS-METHODS compare_files
-                            IMPORTING it_repo TYPE tt_files
-                                      it_sap TYPE tt_files
-                            RETURNING value(rv_match) TYPE abap_bool
-                            RAISING lcx_exception.
-
-ENDCLASS.                    "lcl_serialize DEFINITION
+ENDCLASS.                    "lcl_serialize_prog DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize IMPLEMENTATION
+*       CLASS lcl_serialize_prog IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize IMPLEMENTATION.
+CLASS lcl_serialize_prog IMPLEMENTATION.
 
-  METHOD prog_exists.
-
-    DATA: lv_progname TYPE reposrc-progname.
-
-
-    SELECT SINGLE progname FROM reposrc INTO lv_progname
-      WHERE progname = iv_obj_name.                         "#EC WARNOK
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
-
-  ENDMETHOD.                    "prog_exists
-
-  METHOD serialize.
-
-    CASE iv_obj_type.
-      WHEN 'PROG'.
-        rt_files = prog_serialize( iv_obj_name ).
-      WHEN OTHERS.
-        _raise 'Serialize, unknown type'.
-    ENDCASE.
-
-* todo, duplicates in rt_files? via includes?
-
-  ENDMETHOD.                    "serialize
-
-  METHOD status.
-
-    DATA: lv_pre    TYPE tadir-obj_name,
-          lt_files  TYPE tt_files,
-          ls_result LIKE LINE OF rt_results,
-          lv_type   TYPE string,
-          lv_ext    TYPE string.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
-
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
-      TRANSLATE lv_pre TO UPPER CASE.
-      TRANSLATE lv_type TO UPPER CASE.
-
-      IF lv_ext <> 'xml'.
-        CONTINUE. " current loop
-      ENDIF.
-
-      CLEAR ls_result.
-      ls_result-obj_type = lv_type.
-      ls_result-obj_name = lv_pre.
-
-      CASE lv_type.
-        WHEN 'PROG'.
-          IF prog_exists( lv_pre ) = abap_true.
-            lt_files = prog_serialize( lv_pre ).
-            ls_result-match = compare_files( it_repo = it_files it_sap = lt_files ).
-          ENDIF.
-        WHEN OTHERS.
-          _raise 'status, unknown type'.
-      ENDCASE.
-
-      APPEND ls_result TO rt_results.
-    ENDLOOP.
-
-* todo, how to handle deleted in repo?
-
-  ENDMETHOD.                    "status
-
-  METHOD deserialize.
-
-    DATA: lv_pre   TYPE tadir-obj_name,
-          lv_type  TYPE string,
-          lv_ext   TYPE string.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
-
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
-      TRANSLATE lv_pre TO UPPER CASE.
-      TRANSLATE lv_type TO UPPER CASE.
-
-      IF lv_ext <> 'xml'.
-        CONTINUE. " current loop
-      ENDIF.
-
-      CASE lv_type.
-        WHEN 'PROG'.
-          prog_deserialize( it_files = it_files iv_obj_name = lv_pre ).
-        WHEN OTHERS.
-          _raise 'deserialize, unknown type'.
-      ENDCASE.
-    ENDLOOP.
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD compare_files.
-
-    FIELD-SYMBOLS: <ls_sap> TYPE st_file.
-
-
-    LOOP AT it_sap ASSIGNING <ls_sap>.
-      READ TABLE it_repo WITH KEY path = <ls_sap>-path
-                                  filename = <ls_sap>-filename
-                                  data = <ls_sap>-data
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        rv_match = abap_false.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    rv_match = abap_true.
-
-  ENDMETHOD.                    "compare_files
-
-  METHOD prog_serialize.
+  METHOD lif_serialize~serialize.
 
     DATA: ls_progdir      TYPE progdir,
           lv_program_name TYPE programm,
           lv_xml          TYPE string,
           lt_source       TYPE TABLE OF abaptxt255,
           lv_source       TYPE string,
-          lt_files        LIKE rt_files,
-          lt_dynpros      TYPE TABLE OF d020s,
-          lt_includes     TYPE programt,
           lt_textelements TYPE textpool_table,
           ls_file         LIKE LINE OF rt_files,
           lo_xml          TYPE REF TO lcl_xml.
-
-    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes,
-                   <ls_dynpro>  LIKE LINE OF lt_dynpros.
 
 
     lv_program_name = iv_obj_name.
@@ -927,6 +855,7 @@ CLASS lcl_serialize IMPLEMENTATION.
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
         program_name     = lv_program_name
+        with_lowercase   = abap_true
       TABLES
         source_extended  = lt_source
         textelements     = lt_textelements
@@ -958,48 +887,17 @@ CLASS lcl_serialize IMPLEMENTATION.
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_progdir ).
     lo_xml->table_add( lt_textelements ).
-    lv_xml = lo_xml->render( ).
 
+    IF ls_progdir-subc = '1'.
+      serialize_includes( EXPORTING iv_program_name = lv_program_name
+                                    io_xml = lo_xml
+                          CHANGING ct_files = rt_files ).
 
-    CALL FUNCTION 'RS_SCREEN_LIST'
-      EXPORTING
-        dynnr     = '*'
-        progname  = lv_program_name
-      TABLES
-        dynpros   = lt_dynpros
-      EXCEPTIONS
-        not_found = 1
-        OTHERS    = 2.
-    IF sy-subrc = 2.
-      _raise 'error from screen_list'.
+      serialize_dynpros( EXPORTING iv_program_name = lv_program_name
+                                   io_xml = lo_xml ).
     ENDIF.
 
-    DATA: ls_header TYPE rpy_dyhead,
-          lt_containers TYPE dycatt_tab,
-          lt_fields_to_containers TYPE dyfatc_tab,
-          lt_flow_logic TYPE swydyflow.
-
-    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
-      CALL FUNCTION 'RPY_DYNPRO_READ'
-        EXPORTING
-          progname             = lv_program_name
-          dynnr                = <ls_dynpro>-dnum
-        IMPORTING
-          header               = ls_header
-        TABLES
-          containers           = lt_containers
-          fields_to_containers = lt_fields_to_containers
-          flow_logic           = lt_flow_logic
-        EXCEPTIONS
-          cancelled            = 1
-          not_found            = 2
-          permission_error     = 3
-          OTHERS               = 4.
-      IF sy-subrc <> 0.
-        _raise 'Error while reading dynpro'.
-      ENDIF.
-* todo, add to xml
-    ENDLOOP.
+    lv_xml = lo_xml->render( ).
 
     CLEAR ls_file.
     ls_file-path = '/'.
@@ -1016,10 +914,19 @@ CLASS lcl_serialize IMPLEMENTATION.
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
     APPEND ls_file TO rt_files.
 
+  ENDMETHOD.                    "lif_serialize~serialize
+
+  METHOD serialize_includes.
+
+    DATA: lt_includes TYPE programt,
+          lt_files    LIKE ct_files.
+
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
+
 
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        program      = lv_program_name
+        program      = iv_program_name
       TABLES
         includetab   = lt_includes
       EXCEPTIONS
@@ -1030,15 +937,69 @@ CLASS lcl_serialize IMPLEMENTATION.
       _raise 'Error from get_all_includes'.
     ENDIF.
 
+    io_xml->table_add( lt_includes ).
+
     LOOP AT lt_includes ASSIGNING <lv_include>.
-      lt_files = prog_serialize( <lv_include> ).
-      APPEND LINES OF lt_files TO rt_files.
+      lt_files = lif_serialize~serialize( <lv_include> ).
+      APPEND LINES OF lt_files TO ct_files.
     ENDLOOP.
 
-  ENDMETHOD.                    "prog_serialize
+  ENDMETHOD.                    "serialize_includes
+
+  METHOD serialize_dynpros.
+
+    DATA: ls_header               TYPE rpy_dyhead,
+          lt_containers           TYPE dycatt_tab,
+          lt_fields_to_containers TYPE dyfatc_tab,
+          lt_flow_logic           TYPE swydyflow,
+          lt_dynpros              TYPE TABLE OF d020s.
+
+    FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF lt_dynpros.
 
 
-  METHOD prog_deserialize.
+    CALL FUNCTION 'RS_SCREEN_LIST'
+      EXPORTING
+        dynnr     = ''
+        progname  = iv_program_name
+      TABLES
+        dynpros   = lt_dynpros
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc = 2.
+      _raise 'error from screen_list'.
+    ENDIF.
+
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+      CALL FUNCTION 'RPY_DYNPRO_READ'
+        EXPORTING
+          progname             = iv_program_name
+          dynnr                = <ls_dynpro>-dnum
+        IMPORTING
+          header               = ls_header
+        TABLES
+          containers           = lt_containers
+          fields_to_containers = lt_fields_to_containers
+          flow_logic           = lt_flow_logic
+        EXCEPTIONS
+          cancelled            = 1
+          not_found            = 2
+          permission_error     = 3
+          OTHERS               = 4.
+      IF sy-subrc <> 0.
+        _raise 'Error while reading dynpro'.
+      ENDIF.
+
+      io_xml->structure_add( ls_header ).
+      io_xml->table_add( lt_containers ).
+      io_xml->table_add( lt_fields_to_containers ).
+      io_xml->table_add( lt_flow_logic ).
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "serialize_dynpros
+
+  METHOD lif_serialize~deserialize.
 
     DATA: lv_name        TYPE string,
           lv_xml         TYPE string,
@@ -1076,7 +1037,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     SPLIT lv_abap AT gc_newline INTO TABLE lt_source.
 
-    IF prog_exists( iv_obj_name ) = abap_true.
+    IF exists( iv_obj_name ) = abap_true.
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
           program_name     = ls_progdir-name
@@ -1135,7 +1096,172 @@ CLASS lcl_serialize IMPLEMENTATION.
       COMMIT WORK.
     ENDIF.
 
-  ENDMETHOD.                    "p_deserialize
+  ENDMETHOD.                    "lif_serialize~deserialize
+
+  METHOD lif_serialize~exists.
+
+    DATA: lv_progname TYPE reposrc-progname.
+
+
+    SELECT SINGLE progname FROM reposrc INTO lv_progname
+      WHERE progname = iv_obj_name.                         "#EC WARNOK
+    IF sy-subrc = 0.
+      rv_exists = abap_true.
+    ELSE.
+      rv_exists = abap_false.
+    ENDIF.
+
+  ENDMETHOD.                    "exists
+
+ENDCLASS.                    "lcl_serialize_prog IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize IMPORTING iv_obj_type TYPE tadir-object
+                                      iv_obj_name TYPE tadir-obj_name
+                            RETURNING value(rt_files) TYPE tt_files
+                            RAISING lcx_exception.
+
+    CLASS-METHODS status    IMPORTING it_files TYPE tt_files
+                            RETURNING value(rt_results) TYPE tt_results
+                            RAISING lcx_exception.
+
+    CLASS-METHODS deserialize IMPORTING it_files TYPE tt_files
+                            RAISING lcx_exception.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS compare_files
+                            IMPORTING it_repo TYPE tt_files
+                                      it_sap TYPE tt_files
+                            RETURNING value(rv_match) TYPE abap_bool
+                            RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lt_files TYPE tt_files.
+
+
+    CASE iv_obj_type.
+      WHEN 'PROG'.
+        rt_files = lcl_serialize_prog=>serialize( iv_obj_name ).
+      WHEN OTHERS.
+        _raise 'Serialize, unknown type'.
+    ENDCASE.
+
+* check for duplicates
+    lt_files[] = rt_files[].
+    SORT lt_files BY path ASCENDING filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
+    IF lines( lt_files ) <> lines( rt_files ).
+      _raise 'Duplicates'.
+    ENDIF.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD status.
+
+    DATA: lv_pre    TYPE tadir-obj_name,
+          lt_files  TYPE tt_files,
+          ls_result LIKE LINE OF rt_results,
+          lv_type   TYPE string,
+          lv_ext    TYPE string.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
+      TRANSLATE lv_pre TO UPPER CASE.
+      TRANSLATE lv_type TO UPPER CASE.
+
+      IF lv_ext <> 'xml'.
+        CONTINUE. " current loop
+      ENDIF.
+
+      CLEAR ls_result.
+      ls_result-obj_type = lv_type.
+      ls_result-obj_name = lv_pre.
+
+      CASE lv_type.
+        WHEN 'PROG'.
+          IF lcl_serialize_prog=>exists( lv_pre ) = abap_true.
+            lt_files = lcl_serialize_prog=>serialize( lv_pre ).
+            ls_result-match = compare_files( it_repo = it_files it_sap = lt_files ).
+          ENDIF.
+        WHEN OTHERS.
+          _raise 'status, unknown type'.
+      ENDCASE.
+
+      APPEND ls_result TO rt_results.
+    ENDLOOP.
+
+* todo, how to handle deleted in repo?
+
+  ENDMETHOD.                    "status
+
+  METHOD deserialize.
+
+    DATA: lv_pre   TYPE tadir-obj_name,
+          lv_type  TYPE string,
+          lv_ext   TYPE string.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
+      TRANSLATE lv_pre TO UPPER CASE.
+      TRANSLATE lv_type TO UPPER CASE.
+
+      IF lv_ext <> 'xml'.
+        CONTINUE. " current loop
+      ENDIF.
+
+      CASE lv_type.
+        WHEN 'PROG'.
+          lcl_serialize_prog=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+        WHEN OTHERS.
+          _raise 'deserialize, unknown type'.
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD compare_files.
+
+    FIELD-SYMBOLS: <ls_sap> TYPE st_file.
+
+
+    LOOP AT it_sap ASSIGNING <ls_sap>.
+      READ TABLE it_repo WITH KEY path = <ls_sap>-path
+                                  filename = <ls_sap>-filename
+                                  data = <ls_sap>-data
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        rv_match = abap_false.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    rv_match = abap_true.
+
+  ENDMETHOD.                    "compare_files
 
 ENDCLASS.                    "lcl_serialize IMPLEMENTATION
 
@@ -2533,6 +2659,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
                        RETURNING value(rv_branch) TYPE t_sha1
                        RAISING lcx_exception.
 
+* todo, new files can/should be handled by push, so add is obsolete?
     CLASS-METHODS add IMPORTING is_repo TYPE st_repo
                                 is_comment TYPE st_comment
                                 it_files TYPE tt_files
@@ -2642,7 +2769,10 @@ CLASS lcl_porcelain IMPLEMENTATION.
     LOOP AT it_files ASSIGNING <ls_file>.
       READ TABLE lt_nodes ASSIGNING <ls_node> WITH KEY name = <ls_file>-filename.
       IF sy-subrc <> 0.
-        _raise 'node not found'.
+* in case of new files, eg. when adding include to report
+        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+        <ls_node>-chmod = gc_chmod_file.
+        <ls_node>-name = <ls_file>-filename.
       ENDIF.
 
       <ls_node>-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
