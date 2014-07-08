@@ -7,15 +7,21 @@ Git client for ABAP
 
 Design Goals
 ------------
-- easy installation
-- easy upgrade
-- small system footprint
-- code readable in git repository
+- Easy installation
+- Easy upgrade
+- Small system footprint
+- Code readable in git repository
 
 
-Todo
-----
-- downwards compatability
-- shallow/deepen
-- too many pulls, create repo object
-- list what will happen/has happened when doing pull
+Installation Guide
+------------------
+Copy the ABAP into new report via SE38 or SE80, activate, run
+
+
+FAQ
+---
+### 1) foo ###
+do something
+
+### 2) moo ###
+boo
