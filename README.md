@@ -15,10 +15,5 @@ Design Goals
 
 Todo
 ----
-- test empty tree
-- test on old ABAP AS
-- repository without commits
-- license?
-- injection?
-- shallow/deepen?
-- handling conflicts
+- downwards compatability
+- shallow/deepen
