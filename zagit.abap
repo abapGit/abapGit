@@ -278,31 +278,53 @@ ENDCLASS.                    "lcl_user IMPLEMENTATION
 CLASS lcl_xml DEFINITION FINAL.
 
   PUBLIC SECTION.
-    METHODS constructor   IMPORTING iv_xml TYPE string OPTIONAL
-                          RAISING lcx_exception.
+    METHODS constructor    IMPORTING iv_xml TYPE string OPTIONAL
+                           RAISING lcx_exception.
 
-    METHODS structure_add IMPORTING ig_structure TYPE data
-                                    ii_root TYPE REF TO if_ixml_element OPTIONAL
-                          RAISING lcx_exception.
+    METHODS element_add    IMPORTING ig_element TYPE data
+                                     ii_root TYPE REF TO if_ixml_element OPTIONAL
+                           RAISING lcx_exception.
 
-    METHODS element_add IMPORTING ig_element TYPE data
-                                  ii_root TYPE REF TO if_ixml_element OPTIONAL
-                          RAISING lcx_exception.
+* todo, METHODS element_read
 
-    METHODS structure_read CHANGING cg_structure TYPE data.
+    METHODS structure_add  IMPORTING ig_structure TYPE data
+                                     ii_root TYPE REF TO if_ixml_element OPTIONAL
+                           RAISING lcx_exception.
 
-    METHODS render        RETURNING value(rv_string) TYPE string.
+    METHODS structure_read IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
+                           CHANGING cg_structure TYPE data
+                           RAISING lcx_exception.
 
-    METHODS table_add     IMPORTING it_table TYPE STANDARD TABLE
-                          RAISING lcx_exception.
+    METHODS table_add      IMPORTING it_table TYPE STANDARD TABLE
+                                     ii_root TYPE REF TO if_ixml_element OPTIONAL
+                           RAISING lcx_exception.
 
-* todo
-* methods table_read
+    METHODS table_read     IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
+                           CHANGING ct_table TYPE STANDARD TABLE
+                           RAISING lcx_exception.
+
+
+    METHODS xml_render     RETURNING value(rv_string) TYPE string.
+
+    METHODS xml_element    IMPORTING iv_name TYPE string
+                           RETURNING value(ri_element) TYPE REF TO if_ixml_element.
+
+    METHODS xml_add        IMPORTING ii_element TYPE REF TO if_ixml_element.
+
+    METHODS xml_find       IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
+                                     iv_name TYPE string
+                           RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
   PRIVATE SECTION.
+
     DATA: mi_ixml    TYPE REF TO if_ixml,
           mi_xml_doc TYPE REF TO if_ixml_document,
           mi_root    TYPE REF TO if_ixml_element.
+
+    METHODS special_names CHANGING cv_name TYPE string.
+
+    METHODS error IMPORTING ii_parser TYPE REF TO if_ixml_parser
+                  RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_xml DEFINITION
 
@@ -313,11 +335,45 @@ ENDCLASS.                    "lcl_xml DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_xml IMPLEMENTATION.
 
+  METHOD xml_find.
+
+    IF ii_root IS BOUND.
+      ri_element = ii_root->find_from_name( depth = 0 name = iv_name ).
+      IF NOT ri_element IS BOUND.
+        RETURN.
+      ENDIF.
+      ii_root->remove_child( ri_element ).
+    ELSE.
+      ri_element = mi_root->find_from_name( depth = 0 name = iv_name ).
+      IF NOT ri_element IS BOUND.
+        RETURN.
+      ENDIF.
+      mi_root->remove_child( ri_element ).
+    ENDIF.
+
+  ENDMETHOD.                    "xml_find
+
+  METHOD xml_element.
+
+    ri_element = mi_xml_doc->create_element( iv_name ).
+
+  ENDMETHOD.                    "xml_element
+
+  METHOD special_names.
+
+    IF cv_name(1) = '*'.
+      CONCATENATE 'STAR' cv_name+1 INTO cv_name.
+    ELSEIF cv_name(1) = '2'.
+      CONCATENATE 'TWO' cv_name+1 INTO cv_name.
+    ENDIF.
+
+  ENDMETHOD.                    "special_names
+
   METHOD structure_read.
 
     DATA: lv_name      TYPE string,
-          li_struct    TYPE REF TO if_ixml_element,
           lv_value     TYPE string,
+          li_struct    TYPE REF TO if_ixml_element,
           lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <lg_any>  TYPE any,
@@ -326,20 +382,106 @@ CLASS lcl_xml IMPLEMENTATION.
 
     lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( cg_structure ).
     lv_name = lo_descr_ref->get_relative_name( ).
+    IF lv_name IS INITIAL.
+      _raise 'no name'.
+    ENDIF.
 
-    li_struct = mi_root->find_from_name( depth = 0 name = lv_name ).
+    li_struct = xml_find( ii_root = ii_root
+                          iv_name = lv_name ).
+    IF NOT li_struct IS BOUND.
+      RETURN.
+    ENDIF.
 
     LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
 
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE cg_structure TO <lg_any>.
 
       lv_name = <ls_comp>-name.
+      special_names( CHANGING cv_name = lv_name ).
       lv_value = li_struct->find_from_name( depth = 0 name = lv_name )->get_value( ).
 
       <lg_any> = lv_value.
     ENDLOOP.
 
   ENDMETHOD.                    "structure_read
+
+  METHOD table_read.
+
+    DATA: lv_name         TYPE string,
+          li_root         TYPE REF TO if_ixml_element,
+          lv_kind         TYPE abap_typecategory,
+          lo_table_descr  TYPE REF TO cl_abap_tabledescr.
+
+    FIELD-SYMBOLS: <lg_line> TYPE any.
+
+
+    lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
+    lv_name = lo_table_descr->get_relative_name( ).
+    IF lv_name IS INITIAL.
+      _raise 'no name'.
+    ENDIF.
+
+    li_root = xml_find( ii_root = ii_root
+                        iv_name = lv_name ).
+    IF NOT li_root IS BOUND.
+      RETURN.
+    ENDIF.
+*    IF ii_root IS BOUND.
+*      li_root = ii_root->find_from_name( depth = 0 name = lv_name ).
+*    ELSE.
+*      li_root = mi_root->find_from_name( depth = 0 name = lv_name ).
+*    ENDIF.
+
+    lv_kind = lo_table_descr->get_table_line_type( )->kind.
+
+    DO.
+      APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
+      CASE lv_kind.
+        WHEN cl_abap_typedescr=>kind_struct.
+          structure_read( EXPORTING ii_root      = li_root
+                          CHANGING cg_structure = <lg_line> ).
+        WHEN OTHERS.
+          _raise 'unknown kind'.
+      ENDCASE.
+
+      IF <lg_line> IS INITIAL.
+        DELETE ct_table INDEX lines( ct_table ).
+        ASSERT sy-subrc = 0.
+        EXIT. " current loop
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.                    "table_read
+
+  METHOD error.
+
+    DATA: lv_error TYPE i,
+          lv_txt1  TYPE string,
+          lv_txt2  TYPE string,
+          lv_txt3  TYPE string,
+          li_error TYPE REF TO if_ixml_parse_error.
+
+
+    IF ii_parser->num_errors( ) <> 0.
+      DO ii_parser->num_errors( ) TIMES.
+        lv_error = sy-index - 1.
+        li_error = ii_parser->get_error( lv_error ).
+
+        lv_txt1 = 'Column:' && li_error->get_column( ).     "#EC NOTEXT
+        lv_txt2 = 'Line:' && li_error->get_line( ).         "#EC NOTEXT
+        lv_txt3 = li_error->get_reason( ).
+
+        CALL FUNCTION 'POPUP_TO_INFORM'
+          EXPORTING
+            titel = 'Error from XLM parser'                 "#EC NOTEXT
+            txt1  = lv_txt1
+            txt2  = lv_txt2
+            txt3  = lv_txt3.
+      ENDDO.
+    ENDIF.
+
+    _raise 'Error while parsing XML'.
+  ENDMETHOD.                    "error
 
   METHOD constructor.
 
@@ -358,7 +500,7 @@ CLASS lcl_xml IMPLEMENTATION.
                                           istream        = li_istream
                                           document       = mi_xml_doc ).
       IF li_parser->parse( ) <> 0.
-        _raise 'Error while parsing XML'.
+        error( li_parser ).
       ENDIF.
 
       li_istream->close( ).
@@ -405,9 +547,17 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-    mi_root->append_child( li_table ).
+    IF ii_root IS SUPPLIED.
+      ii_root->append_child( li_table ).
+    ELSE.
+      mi_root->append_child( li_table ).
+    ENDIF.
 
   ENDMETHOD.                    "table_add
+
+  METHOD xml_add.
+    mi_root->append_child( ii_element ).
+  ENDMETHOD.                    "xml_add
 
   METHOD element_add.
 
@@ -465,8 +615,9 @@ CLASS lcl_xml IMPLEMENTATION.
 
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
 
-      lv_string  = <ls_comp>-name.
-      li_element = mi_xml_doc->create_element( lv_string ).
+      lv_name  = <ls_comp>-name.
+      special_names( CHANGING cv_name = lv_name ).
+      li_element = mi_xml_doc->create_element( lv_name ).
 
       lv_string  = <lg_any>.
       li_text    = mi_xml_doc->create_text( lv_string ).
@@ -484,7 +635,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
   ENDMETHOD.                    "structure_to_xml
 
-  METHOD render.
+  METHOD xml_render.
 
     DATA: li_ostream       TYPE REF TO if_ixml_ostream,
           li_renderer      TYPE REF TO if_ixml_renderer,
@@ -697,7 +848,7 @@ CLASS lcl_convert IMPLEMENTATION.
   METHOD xstring_to_int.
 
     DATA: lv_xstring TYPE xstring,
-          lv_x TYPE x.
+          lv_x       TYPE x.
 
 
     lv_xstring = iv_xstring.
@@ -711,8 +862,8 @@ CLASS lcl_convert IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
-    DATA: lv_len    TYPE i,
-          lo_obj    TYPE REF TO cl_abap_conv_in_ce.
+    DATA: lv_len TYPE i,
+          lo_obj TYPE REF TO cl_abap_conv_in_ce.
 
 
     TRY.
@@ -824,10 +975,18 @@ CLASS lcl_serialize_prog DEFINITION FINAL.
                                                io_xml TYPE REF TO lcl_xml
                                      RAISING lcx_exception.
 
+    CLASS-METHODS: deserialize_dynpros IMPORTING io_xml   TYPE REF TO lcl_xml
+                                       RAISING lcx_exception.
+
     CLASS-METHODS: serialize_includes IMPORTING iv_program_name TYPE programm
                                                 io_xml TYPE REF TO lcl_xml
                                       CHANGING ct_files TYPE tt_files
                                       RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize_abap IMPORTING iv_obj_name TYPE tadir-obj_name
+                                              io_xml      TYPE REF TO lcl_xml
+                                              iv_abap     TYPE string
+                                    RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_serialize_prog DEFINITION
 
@@ -897,7 +1056,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                                    io_xml = lo_xml ).
     ENDIF.
 
-    lv_xml = lo_xml->render( ).
+    lv_xml = lo_xml->xml_render( ).
 
     CLEAR ls_file.
     ls_file-path = '/'.
@@ -937,6 +1096,13 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       _raise 'Error from get_all_includes'.
     ENDIF.
 
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+      IF NOT <lv_include> CP 'Z*' AND NOT <lv_include> CP 'Y*'.
+        DELETE lt_includes INDEX sy-tabix.
+      ENDIF.
+    ENDLOOP.
+
+* todo, not sure it is needed to add this to the xml
     io_xml->table_add( lt_includes ).
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
@@ -952,6 +1118,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
           lt_containers           TYPE dycatt_tab,
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow,
+          li_element              TYPE REF TO if_ixml_element,
           lt_dynpros              TYPE TABLE OF d020s.
 
     FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF lt_dynpros.
@@ -971,6 +1138,9 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+
+      li_element = io_xml->xml_element( 'SCREEN' ).
+
       CALL FUNCTION 'RPY_DYNPRO_READ'
         EXPORTING
           progname             = iv_program_name
@@ -990,10 +1160,17 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
         _raise 'Error while reading dynpro'.
       ENDIF.
 
-      io_xml->structure_add( ls_header ).
-      io_xml->table_add( lt_containers ).
-      io_xml->table_add( lt_fields_to_containers ).
-      io_xml->table_add( lt_flow_logic ).
+      io_xml->structure_add( ig_structure = ls_header
+                             ii_root      = li_element ).
+
+      io_xml->table_add( it_table = lt_containers
+                         ii_root  = li_element ).
+      io_xml->table_add( it_table = lt_fields_to_containers
+                         ii_root  = li_element ).
+      io_xml->table_add( it_table = lt_flow_logic
+                         ii_root  = li_element ).
+
+      io_xml->xml_add( li_element ).
 
     ENDLOOP.
 
@@ -1001,28 +1178,25 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   METHOD lif_serialize~deserialize.
 
-    DATA: lv_name        TYPE string,
-          lv_xml         TYPE string,
-          ls_progdir     TYPE progdir,
-          ls_progdir_new TYPE progdir,
-          lo_xml         TYPE REF TO lcl_xml,
-          lt_source      TYPE TABLE OF abaptxt255,
-          lv_abap        TYPE string.
+    DATA: lv_filename TYPE string,
+          lv_xml      TYPE string,
+          lo_xml      TYPE REF TO lcl_xml,
+          lv_abap     TYPE string.
 
     FIELD-SYMBOLS: <ls_xml>  LIKE LINE OF it_files,
                    <ls_abap> LIKE LINE OF it_files.
 
 
-    lv_name = iv_obj_name && '.prog.xml'.                   "#EC NOTEXT
-    TRANSLATE lv_name TO LOWER CASE.
-    READ TABLE it_files ASSIGNING <ls_xml> WITH KEY filename = lv_name.
+    lv_filename = iv_obj_name && '.prog.xml'.               "#EC NOTEXT
+    TRANSLATE lv_filename TO LOWER CASE.
+    READ TABLE it_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       _raise 'PROG, xml not found'.
     ENDIF.
 
-    lv_name = iv_obj_name && '.prog.abap'.                  "#EC NOTEXT
-    TRANSLATE lv_name TO LOWER CASE.
-    READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_name.
+    lv_filename = iv_obj_name && '.prog.abap'.              "#EC NOTEXT
+    TRANSLATE lv_filename TO LOWER CASE.
+    READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       _raise 'PROG, abap not found'.
     ENDIF.
@@ -1033,9 +1207,54 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     CREATE OBJECT lo_xml
       EXPORTING
         iv_xml = lv_xml.
-    lo_xml->structure_read( CHANGING cg_structure = ls_progdir ).
 
-    SPLIT lv_abap AT gc_newline INTO TABLE lt_source.
+    deserialize_abap( iv_obj_name = iv_obj_name
+                      io_xml      = lo_xml
+                      iv_abap     = lv_abap ).
+
+    deserialize_dynpros( lo_xml ).
+
+  ENDMETHOD.                    "lif_serialize~deserialize
+
+  METHOD deserialize_dynpros.
+
+    DATA: li_element              TYPE REF TO if_ixml_element,
+          ls_header               TYPE rpy_dyhead,
+          lt_containers           TYPE dycatt_tab,
+          lt_fields_to_containers TYPE dyfatc_tab,
+          lt_flow_logic           TYPE swydyflow.
+
+
+    DO.
+      li_element = io_xml->xml_find( 'SCREEN' ).
+      IF NOT li_element IS BOUND.
+        EXIT. " current loop
+      ENDIF.
+
+      io_xml->structure_read( EXPORTING ii_root     = li_element
+                              CHANGING cg_structure = ls_header ).
+
+      io_xml->table_read( EXPORTING ii_root  = li_element
+                          CHANGING ct_table = lt_containers ).
+      io_xml->table_read( EXPORTING ii_root  = li_element
+                          CHANGING ct_table = lt_fields_to_containers ).
+      io_xml->table_read( EXPORTING ii_root  = li_element
+                          CHANGING ct_table = lt_flow_logic ).
+      BREAK-POINT.
+    ENDDO.
+
+  ENDMETHOD.                    "deserialize_dynpros
+
+  METHOD deserialize_abap.
+
+    DATA: lt_source      TYPE TABLE OF abaptxt255,
+          ls_progdir     TYPE progdir,
+          ls_progdir_new TYPE progdir.
+
+
+    io_xml->structure_read( CHANGING cg_structure = ls_progdir ).
+
+    SPLIT iv_abap AT gc_newline INTO TABLE lt_source.
 
     IF exists( iv_obj_name ) = abap_true.
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
@@ -1480,6 +1699,10 @@ CLASS lcl_pack IMPLEMENTATION.
     ELSEIF lv_bits(21) = '000000000000000000000'.
       CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
       CONCATENATE lv_result '0' lv_bits+21(7) INTO lv_result.
+    ELSEIF lv_bits(14) = '00000000000000'.
+      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
+      CONCATENATE lv_result '1' lv_bits+21(7) INTO lv_result.
+      CONCATENATE lv_result '0' lv_bits+14(7) INTO lv_result.
     ELSE.
 * use shifting?
       _raise 'Todo, encoding length'.
@@ -2659,12 +2882,6 @@ CLASS lcl_porcelain DEFINITION FINAL.
                        RETURNING value(rv_branch) TYPE t_sha1
                        RAISING lcx_exception.
 
-* todo, new files can/should be handled by push, so add is obsolete?
-    CLASS-METHODS add IMPORTING is_repo TYPE st_repo
-                                is_comment TYPE st_comment
-                                it_files TYPE tt_files
-                      RAISING lcx_exception.
-
   PRIVATE SECTION.
     CLASS-METHODS walk IMPORTING it_objects TYPE tt_objects
                                  iv_sha1 TYPE t_sha1
@@ -2753,6 +2970,9 @@ CLASS lcl_porcelain IMPLEMENTATION.
 
     DATA: lt_objects TYPE tt_objects,
           lt_nodes   TYPE tt_nodes,
+          lt_files   LIKE it_files,
+          lv_sha1    TYPE t_sha1,
+          lv_index   TYPE i,
           lv_branch  TYPE t_sha1.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
@@ -2766,22 +2986,34 @@ CLASS lcl_porcelain IMPLEMENTATION.
     lt_nodes = root_tree( it_objects = lt_objects
                           iv_branch  = lv_branch ).
 
-    LOOP AT it_files ASSIGNING <ls_file>.
+    lt_files[] = it_files[].
+
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      lv_index = sy-tabix.
       READ TABLE lt_nodes ASSIGNING <ls_node> WITH KEY name = <ls_file>-filename.
       IF sy-subrc <> 0.
-* in case of new files, eg. when adding include to report
+* new files
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
         <ls_node>-chmod = gc_chmod_file.
         <ls_node>-name = <ls_file>-filename.
       ENDIF.
 
-      <ls_node>-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
+      lv_sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
+      IF <ls_node>-sha1 <> lv_sha1.
+        <ls_node>-sha1 = lv_sha1.
+      ELSE.
+        DELETE lt_files INDEX lv_index.
+      ENDIF.
     ENDLOOP.
+
+    IF lt_files[] IS INITIAL.
+      _raise 'no files'.
+    ENDIF.
 
     rv_branch = receive_pack( is_comment = is_comment
                               is_repo    = is_repo
                               it_nodes   = lt_nodes
-                              it_files   = it_files
+                              it_files   = lt_files
                               iv_branch  = lv_branch ).
 
   ENDMETHOD.                    "push
@@ -2805,51 +3037,6 @@ CLASS lcl_porcelain IMPLEMENTATION.
     rt_nodes = lcl_pack=>decode_tree( ls_object-data ).
 
   ENDMETHOD.                    "root_tree
-
-  METHOD add.
-
-* todo, works with root files
-
-    DATA: lt_files   TYPE tt_files,
-          lt_objects TYPE tt_objects,
-          lt_nodes   TYPE tt_nodes,
-          lv_branch  TYPE t_sha1.
-
-    FIELD-SYMBOLS: <ls_file> TYPE st_file,
-                   <ls_node> LIKE LINE OF lt_nodes.
-
-
-* first check if files already exist in repository
-    lcl_porcelain=>pull( EXPORTING is_repo    = is_repo
-                         IMPORTING et_files   = lt_files
-                                   et_objects = lt_objects
-                                   ev_branch  = lv_branch ).
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE lt_files WITH KEY path = <ls_file>-path filename = <ls_file>-filename
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
-        _raise 'already in repository'.
-      ENDIF.
-    ENDLOOP.
-
-    lt_nodes = root_tree( it_objects = lt_objects
-                          iv_branch  = lv_branch ).
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-      <ls_node>-chmod = gc_chmod_file.
-      <ls_node>-name = <ls_file>-filename.
-      <ls_node>-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = <ls_file>-data ).
-    ENDLOOP.
-
-    receive_pack( is_comment = is_comment
-                  is_repo    = is_repo
-                  it_nodes   = lt_nodes
-                  it_files   = it_files
-                  iv_branch  = lv_branch ).
-
-  ENDMETHOD.                    "add
 
   METHOD pull.
 
@@ -3242,9 +3429,9 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lcl_porcelain=>add( is_comment = ls_comment
-                        is_repo    = is_repo
-                        it_files   = lt_files ).
+    lcl_porcelain=>push( is_comment = ls_comment
+                         is_repo    = is_repo
+                         it_files   = lt_files ).
 
     view( render( ) ).
 
@@ -3454,6 +3641,9 @@ CLASS lcl_gui IMPLEMENTATION.
       WHEN OTHERS.
         _raise 'status unknown'.
     ENDCASE.
+
+* todo, remove:
+    rv_html = rv_html && '&nbsp;<a href="sapevent:pull?' && struct_encode( ls_repo ) && '">pull</a>'.
 
   ENDMETHOD.                    "render_repo
 
