@@ -1,7 +1,7 @@
 REPORT zabapgit.
 * todo, program header + license
 * todo, too many pulls, create repo object
-* todo, send client name via git protocol
+* todo, list what will happen/has happened when doing pull
 
 CONSTANTS: gc_version TYPE string VALUE 'alpha'.            "#EC NOTEXT
 
@@ -56,8 +56,16 @@ TYPES: BEGIN OF st_result,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
          match    TYPE abap_bool,
+         filename TYPE string,
        END OF st_result.
 TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
+
+TYPES: BEGIN OF st_diff,
+         local TYPE string,
+         result TYPE c LENGTH 1,
+         remote TYPE string,
+       END OF st_diff.
+TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_comment,
          username TYPE string,
@@ -309,7 +317,8 @@ CLASS lcl_xml DEFINITION FINAL.
     METHODS xml_element    IMPORTING iv_name TYPE string
                            RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
-    METHODS xml_add        IMPORTING ii_element TYPE REF TO if_ixml_element.
+    METHODS xml_add        IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
+                                     ii_element TYPE REF TO if_ixml_element.
 
     METHODS xml_find       IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
                                      iv_name TYPE string
@@ -380,6 +389,8 @@ CLASS lcl_xml IMPLEMENTATION.
                    <ls_comp> TYPE abap_compdescr.
 
 
+    CLEAR cg_structure.
+
     lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( cg_structure ).
     lv_name = lo_descr_ref->get_relative_name( ).
     IF lv_name IS INITIAL.
@@ -407,13 +418,15 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_read.
 
-    DATA: lv_name         TYPE string,
-          li_root         TYPE REF TO if_ixml_element,
-          lv_kind         TYPE abap_typecategory,
-          lo_table_descr  TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name        TYPE string,
+          li_root        TYPE REF TO if_ixml_element,
+          lv_kind        TYPE abap_typecategory,
+          lo_table_descr TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
+
+    CLEAR ct_table[].
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
     lv_name = lo_table_descr->get_relative_name( ).
@@ -426,11 +439,6 @@ CLASS lcl_xml IMPLEMENTATION.
     IF NOT li_root IS BOUND.
       RETURN.
     ENDIF.
-*    IF ii_root IS BOUND.
-*      li_root = ii_root->find_from_name( depth = 0 name = lv_name ).
-*    ELSE.
-*      li_root = mi_root->find_from_name( depth = 0 name = lv_name ).
-*    ENDIF.
 
     lv_kind = lo_table_descr->get_table_line_type( )->kind.
 
@@ -438,7 +446,7 @@ CLASS lcl_xml IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
-          structure_read( EXPORTING ii_root      = li_root
+          structure_read( EXPORTING ii_root     = li_root
                           CHANGING cg_structure = <lg_line> ).
         WHEN OTHERS.
           _raise 'unknown kind'.
@@ -547,16 +555,19 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-    IF ii_root IS SUPPLIED.
-      ii_root->append_child( li_table ).
-    ELSE.
-      mi_root->append_child( li_table ).
-    ENDIF.
+    xml_add( ii_root    = ii_root
+             ii_element = li_table ).
 
   ENDMETHOD.                    "table_add
 
   METHOD xml_add.
-    mi_root->append_child( ii_element ).
+
+    IF ii_root IS BOUND.
+      ii_root->append_child( ii_element ).
+    ELSE.
+      mi_root->append_child( ii_element ).
+    ENDIF.
+
   ENDMETHOD.                    "xml_add
 
   METHOD element_add.
@@ -582,11 +593,8 @@ CLASS lcl_xml IMPLEMENTATION.
 
     li_element->append_child( li_text ).
 
-    IF ii_root IS SUPPLIED.
-      ii_root->append_child( li_element ).
-    ELSE.
-      mi_root->append_child( li_element ).
-    ENDIF.
+    xml_add( ii_root    = ii_root
+             ii_element = li_element ).
 
   ENDMETHOD.                    "element_add
 
@@ -627,11 +635,8 @@ CLASS lcl_xml IMPLEMENTATION.
       li_structure->append_child( li_element ).
     ENDLOOP.
 
-    IF ii_root IS SUPPLIED.
-      ii_root->append_child( li_structure ).
-    ELSE.
-      mi_root->append_child( li_structure ).
-    ENDIF.
+    xml_add( ii_root    = ii_root
+             ii_element = li_structure ).
 
   ENDMETHOD.                    "structure_to_xml
 
@@ -668,6 +673,60 @@ CLASS lcl_time DEFINITION FINAL.
     CONSTANTS: c_epoch TYPE datum VALUE '19700101'.
 
 ENDCLASS.                    "lcl_time DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_time IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_time IMPLEMENTATION.
+
+  METHOD get.
+
+    DATA: lv_i       TYPE i,
+          lv_tz      TYPE tznzone,
+          lv_utcdiff TYPE tznutcdiff,
+          lv_utcsign TYPE tznutcsign.
+
+
+    lv_i = sy-datum - c_epoch.
+    lv_i = lv_i * 86400.
+    lv_i = lv_i + sy-uzeit.
+
+    CALL FUNCTION 'TZON_GET_OS_TIMEZONE'
+      IMPORTING
+        ef_timezone = lv_tz.
+
+    CALL FUNCTION 'TZON_GET_OFFSET'
+      EXPORTING
+        if_timezone      = lv_tz
+        if_local_date    = sy-datum
+        if_local_time    = sy-uzeit
+      IMPORTING
+        ef_utcdiff       = lv_utcdiff
+        ef_utcsign       = lv_utcsign
+      EXCEPTIONS
+        conversion_error = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      _raise 'Timezone error'.
+    ENDIF.
+
+    CASE lv_utcsign.
+      WHEN '+'.
+        lv_i = lv_i - lv_utcdiff.
+      WHEN '-'.
+        lv_i = lv_i + lv_utcdiff.
+    ENDCASE.
+
+    rv_time = lv_i.
+    CONDENSE rv_time.
+    rv_time+11 = lv_utcsign.
+    rv_time+12 = lv_utcdiff.
+
+  ENDMETHOD.                    "get
+
+ENDCLASS.                    "lcl_time IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
@@ -741,60 +800,6 @@ CLASS lcl_url IMPLEMENTATION.
   ENDMETHOD.                    "url
 
 ENDCLASS.                    "lcl_repo IMPLEMENTATION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_time IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_time IMPLEMENTATION.
-
-  METHOD get.
-
-    DATA: lv_i       TYPE i,
-          lv_tz      TYPE tznzone,
-          lv_utcdiff TYPE tznutcdiff,
-          lv_utcsign TYPE tznutcsign.
-
-
-    lv_i = sy-datum - c_epoch.
-    lv_i = lv_i * 86400.
-    lv_i = lv_i + sy-uzeit.
-
-    CALL FUNCTION 'TZON_GET_OS_TIMEZONE'
-      IMPORTING
-        ef_timezone = lv_tz.
-
-    CALL FUNCTION 'TZON_GET_OFFSET'
-      EXPORTING
-        if_timezone      = lv_tz
-        if_local_date    = sy-datum
-        if_local_time    = sy-uzeit
-      IMPORTING
-        ef_utcdiff       = lv_utcdiff
-        ef_utcsign       = lv_utcsign
-      EXCEPTIONS
-        conversion_error = 1
-        OTHERS           = 2.
-    IF sy-subrc <> 0.
-      _raise 'Timezone error'.
-    ENDIF.
-
-    CASE lv_utcsign.
-      WHEN '+'.
-        lv_i = lv_i - lv_utcdiff.
-      WHEN '-'.
-        lv_i = lv_i + lv_utcdiff.
-    ENDCASE.
-
-    rv_time = lv_i.
-    CONDENSE rv_time.
-    rv_time+11 = lv_utcsign.
-    rv_time+12 = lv_utcdiff.
-
-  ENDMETHOD.                    "get
-
-ENDCLASS.                    "lcl_time IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_convert DEFINITION
@@ -957,6 +962,73 @@ INTERFACE lif_serialize.
 ENDINTERFACE.                    "lif_serialize IMPLEMENTATION
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_diff DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_diff DEFINITION FINAL.
+
+  PUBLIC SECTION.
+* assumes data is UTF8 based with newlines
+    CLASS-METHODS diff IMPORTING iv_local TYPE xstring
+                                 iv_remote TYPE xstring
+                       RETURNING value(rt_diffs) TYPE tt_diffs.
+
+ENDCLASS.                    "lcl_diff DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_diff IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_diff IMPLEMENTATION.
+
+  METHOD diff.
+
+* todo, this is way too simple, but will do for now
+
+    DATA: lv_local  TYPE string,
+          lv_remote TYPE string,
+          lt_local  TYPE TABLE OF string,
+          lt_remote TYPE TABLE OF string.
+
+    FIELD-SYMBOLS: <lv_string> TYPE string,
+                   <ls_diff>   LIKE LINE OF rt_diffs.
+
+
+    lv_local = lcl_convert=>xstring_to_string_utf8( iv_local ).
+    lv_remote = lcl_convert=>xstring_to_string_utf8( iv_remote ).
+
+    SPLIT lv_local AT gc_newline INTO TABLE lt_local.
+    SPLIT lv_remote AT gc_newline INTO TABLE lt_remote.
+
+
+    LOOP AT lt_local ASSIGNING <lv_string>.
+      APPEND INITIAL LINE TO rt_diffs ASSIGNING <ls_diff>.
+      <ls_diff>-local = <lv_string>.
+    ENDLOOP.
+
+    LOOP AT lt_remote ASSIGNING <lv_string>.
+      READ TABLE rt_diffs INDEX sy-tabix ASSIGNING <ls_diff>.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO rt_diffs ASSIGNING <ls_diff>.
+      ENDIF.
+      <ls_diff>-remote = <lv_string>.
+    ENDLOOP.
+
+    LOOP AT rt_diffs ASSIGNING <ls_diff>.
+      IF <ls_diff>-local = <ls_diff>-remote.
+        <ls_diff>-result = '='.
+      ELSE.
+        <ls_diff>-result = '!'.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.                    "diff
+
+ENDCLASS.                    "lcl_diff IMPLEMENTATION
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_serialize_prog DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -977,11 +1049,6 @@ CLASS lcl_serialize_prog DEFINITION FINAL.
 
     CLASS-METHODS: deserialize_dynpros IMPORTING io_xml   TYPE REF TO lcl_xml
                                        RAISING lcx_exception.
-
-    CLASS-METHODS: serialize_includes IMPORTING iv_program_name TYPE programm
-                                                io_xml TYPE REF TO lcl_xml
-                                      CHANGING ct_files TYPE tt_files
-                                      RAISING lcx_exception.
 
     CLASS-METHODS: deserialize_abap IMPORTING iv_obj_name TYPE tadir-obj_name
                                               io_xml      TYPE REF TO lcl_xml
@@ -1048,10 +1115,6 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     lo_xml->table_add( lt_textelements ).
 
     IF ls_progdir-subc = '1'.
-      serialize_includes( EXPORTING iv_program_name = lv_program_name
-                                    io_xml = lo_xml
-                          CHANGING ct_files = rt_files ).
-
       serialize_dynpros( EXPORTING iv_program_name = lv_program_name
                                    io_xml = lo_xml ).
     ENDIF.
@@ -1074,43 +1137,6 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "lif_serialize~serialize
-
-  METHOD serialize_includes.
-
-    DATA: lt_includes TYPE programt,
-          lt_files    LIKE ct_files.
-
-    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
-
-
-    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
-      EXPORTING
-        program      = iv_program_name
-      TABLES
-        includetab   = lt_includes
-      EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from get_all_includes'.
-    ENDIF.
-
-    LOOP AT lt_includes ASSIGNING <lv_include>.
-      IF NOT <lv_include> CP 'Z*' AND NOT <lv_include> CP 'Y*'.
-        DELETE lt_includes INDEX sy-tabix.
-      ENDIF.
-    ENDLOOP.
-
-* todo, not sure it is needed to add this to the xml
-    io_xml->table_add( lt_includes ).
-
-    LOOP AT lt_includes ASSIGNING <lv_include>.
-      lt_files = lif_serialize~serialize( <lv_include> ).
-      APPEND LINES OF lt_files TO ct_files.
-    ENDLOOP.
-
-  ENDMETHOD.                    "serialize_includes
 
   METHOD serialize_dynpros.
 
@@ -1235,12 +1261,35 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                               CHANGING cg_structure = ls_header ).
 
       io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING ct_table = lt_containers ).
+                          CHANGING  ct_table = lt_containers ).
       io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING ct_table = lt_fields_to_containers ).
+                          CHANGING  ct_table = lt_fields_to_containers ).
       io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING ct_table = lt_flow_logic ).
-      BREAK-POINT.
+                          CHANGING  ct_table = lt_flow_logic ).
+
+      CALL FUNCTION 'RPY_DYNPRO_INSERT'
+        EXPORTING
+          header                 = ls_header
+        TABLES
+          containers             = lt_containers
+          fields_to_containers   = lt_fields_to_containers
+          flow_logic             = lt_flow_logic
+        EXCEPTIONS
+          cancelled              = 1
+          already_exists         = 2
+          program_not_exists     = 3
+          not_executed           = 4
+          missing_required_field = 5
+          illegal_field_value    = 6
+          field_not_allowed      = 7
+          not_generated          = 8
+          illegal_field_position = 9
+          OTHERS                 = 10.
+      IF sy-subrc <> 2 AND sy-subrc <> 0.
+        _raise 'error from RPY_DYNPRO_INSERT'.
+      ENDIF.
+* todo, RPY_DYNPRO_UPDATE?
+
     ENDDO.
 
   ENDMETHOD.                    "deserialize_dynpros
@@ -1358,7 +1407,7 @@ CLASS lcl_serialize DEFINITION FINAL.
 
     CLASS-METHODS compare_files
                             IMPORTING it_repo TYPE tt_files
-                                      it_sap TYPE tt_files
+                                      is_gen TYPE st_file
                             RETURNING value(rv_match) TYPE abap_bool
                             RAISING lcx_exception.
 
@@ -1401,7 +1450,8 @@ CLASS lcl_serialize IMPLEMENTATION.
           lv_type   TYPE string,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
+                   <ls_gen>  LIKE LINE OF lt_files.
 
 
     LOOP AT it_files ASSIGNING <ls_file>.
@@ -1419,16 +1469,22 @@ CLASS lcl_serialize IMPLEMENTATION.
 
       CASE lv_type.
         WHEN 'PROG'.
-          IF lcl_serialize_prog=>exists( lv_pre ) = abap_true.
-            lt_files = lcl_serialize_prog=>serialize( lv_pre ).
-            ls_result-match = compare_files( it_repo = it_files it_sap = lt_files ).
-          ENDIF.
+          lt_files = lcl_serialize_prog=>serialize( lv_pre ).
+
         WHEN OTHERS.
           _raise 'status, unknown type'.
       ENDCASE.
 
-      APPEND ls_result TO rt_results.
+      LOOP AT lt_files ASSIGNING <ls_gen>.
+        ls_result-filename = <ls_gen>-filename.
+        ls_result-match = compare_files( it_repo = it_files is_gen = <ls_gen> ).
+        APPEND ls_result TO rt_results.
+      ENDLOOP.
     ENDLOOP.
+
+    SORT rt_results BY obj_type obj_name filename.
+    DELETE ADJACENT DUPLICATES FROM rt_results
+      COMPARING obj_type obj_name filename.
 
 * todo, how to handle deleted in repo?
 
@@ -1464,21 +1520,15 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   METHOD compare_files.
 
-    FIELD-SYMBOLS: <ls_sap> TYPE st_file.
-
-
-    LOOP AT it_sap ASSIGNING <ls_sap>.
-      READ TABLE it_repo WITH KEY path = <ls_sap>-path
-                                  filename = <ls_sap>-filename
-                                  data = <ls_sap>-data
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        rv_match = abap_false.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    rv_match = abap_true.
+    READ TABLE it_repo WITH KEY path = is_gen-path
+                                filename = is_gen-filename
+                                data = is_gen-data
+      TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      rv_match = abap_false.
+    ELSE.
+      rv_match = abap_true.
+    ENDIF.
 
   ENDMETHOD.                    "compare_files
 
@@ -2522,13 +2572,13 @@ ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
-* from GitHub to SAP
+* remote to local
     CLASS-METHODS upload_pack IMPORTING is_repo TYPE st_repo
                               EXPORTING ev_pack TYPE xstring
                                         ev_branch TYPE t_sha1
                               RAISING lcx_exception.
 
-* from SAP to GitHub
+* local to remote
     CLASS-METHODS receive_pack IMPORTING is_repo TYPE st_repo
                                          iv_commit TYPE t_sha1
                                          iv_pack TYPE xstring
@@ -2713,7 +2763,7 @@ CLASS lcl_transport IMPLEMENTATION.
               is_repo-branch_name &&
               get_null( ) &&
               ` ` &&
-              'report-status' &&
+              'report-status agent=abapGit/' && gc_version &&
               gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
@@ -2821,7 +2871,7 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               ev_branch &&
               ` ` &&
-              'side-band-64k no-progress'
+              'side-band-64k no-progress agent=abapGit/' && gc_version
               && gc_newline.                                "#EC NOTEXT
     lv_pkt = pkt_string( lv_line ).
 
@@ -3124,7 +3174,7 @@ CLASS lcl_gui DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS: run RAISING lcx_exception.
 
-    CLASS-METHODS: on_sapevent
+    CLASS-METHODS: on_event
                       FOR EVENT sapevent OF cl_gui_html_viewer
                       IMPORTING action frame getdata postdata query_table. "#EC NEEDED
 
@@ -3146,6 +3196,12 @@ CLASS lcl_gui DEFINITION FINAL.
                       RETURNING value(rv_html) TYPE string
                       RAISING lcx_exception.
 
+    CLASS-METHODS: render_header
+                          RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: render_footer
+                          RETURNING value(rv_html) TYPE string.
+
     CLASS-METHODS: install
                       RAISING lcx_exception.
 
@@ -3161,8 +3217,19 @@ CLASS lcl_gui DEFINITION FINAL.
                       IMPORTING is_repo TYPE st_repo
                       RAISING lcx_exception.
 
+    CLASS-METHODS: diff
+                      IMPORTING is_result TYPE st_result
+                                is_repo TYPE st_repo
+                      RAISING lcx_exception.
+
+    CLASS-METHODS render_diff IMPORTING is_result TYPE st_result
+                                        it_diffs TYPE tt_diffs.
+
+    CLASS-METHODS fix_prefix_spaces CHANGING cv_value TYPE string.
+
     CLASS-METHODS: struct_encode
-                      IMPORTING ig_structure TYPE any
+                      IMPORTING ig_structure1 TYPE any
+                                ig_structure2 TYPE any OPTIONAL
                       RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS: struct_decode
@@ -3182,6 +3249,118 @@ ENDCLASS.                    "lcl_gui DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
+
+  METHOD render_header.
+
+    rv_html = '<html>'                                                          && gc_newline &&
+          '<head>'                                                              && gc_newline &&
+          '<title>abapGit</title>'                                              && gc_newline &&
+          render_css( )                                                         && gc_newline &&
+          '<meta http-equiv="content-type" content="text/html; charset=utf-8">' && gc_newline &&
+          '</head>'                                                             && gc_newline &&
+          '<body>'.
+
+  ENDMETHOD.                    "render_head
+
+  METHOD diff.
+
+    DATA: lt_remote  TYPE tt_files,
+          lt_local   TYPE tt_files,
+          lt_diffs   TYPE tt_diffs.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
+                   <ls_local> LIKE LINE OF lt_local.
+
+
+    lcl_porcelain=>pull( EXPORTING is_repo  = is_repo
+                         IMPORTING et_files = lt_remote ).
+
+    lt_local = lcl_serialize=>serialize( iv_obj_type = is_result-obj_type
+                                         iv_obj_name = is_result-obj_name ).
+
+    READ TABLE lt_remote ASSIGNING <ls_remote>
+      WITH KEY filename = is_result-filename.
+    IF sy-subrc <> 0.
+      _raise 'not found remotely'.
+    ENDIF.
+    READ TABLE lt_local ASSIGNING <ls_local>
+      WITH KEY filename = is_result-filename.
+    IF sy-subrc <> 0.
+      _raise 'not found locally'.
+    ENDIF.
+
+    lt_diffs = lcl_diff=>diff( iv_local = <ls_local>-data
+                               iv_remote = <ls_remote>-data ).
+
+    render_diff( is_result = is_result
+                 it_diffs  = lt_diffs ).
+
+  ENDMETHOD.                    "diff
+
+  METHOD fix_prefix_spaces.
+
+    DATA: lv_char   TYPE c LENGTH 1,
+          lv_count  TYPE i.
+
+* todo, this must be easier somehow, regex?
+    lv_count = 0.
+    DO.
+      IF strlen( cv_value ) = 0.
+        EXIT.
+      ENDIF.
+      lv_char = cv_value(1).
+      IF lv_char = space.
+        cv_value = cv_value+1.
+        lv_count = lv_count + 1.
+      ELSE.
+        EXIT.
+      ENDIF.
+    ENDDO.
+    DO lv_count TIMES.
+      CONCATENATE '&nbsp;' cv_value INTO cv_value.
+    ENDDO.
+
+  ENDMETHOD.                    "fix_prefix_spaces
+
+  METHOD render_diff.
+
+    DATA: lv_html   TYPE string,
+          lv_local  TYPE string,
+          lv_remote TYPE string.
+
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF it_diffs.
+
+
+    lv_html = render_header( ) &&
+              '<h1>diff</h1>&nbsp;<a href="sapevent:refresh">Back</a>' &&
+              '<hr><h3>' &&
+              is_result-obj_type && '&nbsp;' &&
+              is_result-obj_name && '&nbsp;' &&
+              is_result-filename && '</h3><br><br>'.
+
+    lv_html = lv_html && '<table border="0">' && gc_newline &&
+              '<tr><td><h2>Local</h2></td><td></td><td><h2>Remote</h2></td></tr>'.
+
+    LOOP AT it_diffs ASSIGNING <ls_diff>.
+      lv_local = escape( val = <ls_diff>-local format = cl_abap_format=>e_html_attr ).
+      fix_prefix_spaces( CHANGING cv_value = lv_local ).
+      lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
+      fix_prefix_spaces( CHANGING cv_value = lv_remote ).
+
+      lv_html = lv_html &&
+        '<tr>' && gc_newline &&
+        '<td><tt>' && lv_local && '</tt></td>' && gc_newline &&
+        '<td>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' && gc_newline &&
+        '<td><tt>' && lv_remote && '</tt></td>' && gc_newline &&
+        '</tr>' && gc_newline.
+    ENDLOOP.
+    lv_html = lv_html && '</table>' && gc_newline.
+
+    lv_html = lv_html && render_footer( ).
+    view( lv_html ).
+
+  ENDMETHOD.                    "render_diff
 
   METHOD popup_comment.
 
@@ -3324,7 +3503,7 @@ CLASS lcl_gui IMPLEMENTATION.
     LOOP AT lt_fields ASSIGNING <ls_field>.
       ASSIGN COMPONENT <ls_field>-name OF STRUCTURE cg_structure TO <lg_any>.
       IF sy-subrc <> 0.
-        _raise 'wrong field'.
+        CONTINUE. " more structures might be encoded in same string
       ENDIF.
 
       <lg_any> = <ls_field>-value.
@@ -3342,11 +3521,11 @@ CLASS lcl_gui IMPLEMENTATION.
                    <lg_any>  TYPE any.
 
 
-    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure1 ).
 
     LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
 
-      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
+      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure1 TO <lg_any>.
       ASSERT sy-subrc = 0.
 
       ls_field-name = <ls_comp>-name.
@@ -3354,12 +3533,27 @@ CLASS lcl_gui IMPLEMENTATION.
       APPEND ls_field TO lt_fields.
     ENDLOOP.
 
+    IF ig_structure2 IS SUPPLIED.
+      lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure2 ).
+
+      LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
+
+        ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure2 TO <lg_any>.
+        ASSERT sy-subrc = 0.
+
+        ls_field-name = <ls_comp>-name.
+        ls_field-value = <lg_any>.
+        APPEND ls_field TO lt_fields.
+      ENDLOOP.
+    ENDIF.
+
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
   ENDMETHOD.                    "encode_struct
 
-  METHOD on_sapevent.
+  METHOD on_event.
 
     DATA: lx_exception TYPE REF TO lcx_exception,
+          ls_result    TYPE st_result,
           ls_repo      TYPE st_repo.
 
 
@@ -3382,6 +3576,13 @@ CLASS lcl_gui IMPLEMENTATION.
             struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo ).
             commit( ls_repo ).
+          WHEN 'diff'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_result ).
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo ).
+            diff( is_result = ls_result
+                  is_repo   = ls_repo ).
           WHEN 'pull'.
             struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo ).
@@ -3393,7 +3594,7 @@ CLASS lcl_gui IMPLEMENTATION.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
-  ENDMETHOD.                    "on_sapevent
+  ENDMETHOD.                    "on_event
 
   METHOD add.
 
@@ -3537,13 +3738,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lt_repos = lcl_persistence=>list( ).
 
-    rv_html = '<html>'                                                      && gc_newline &&
-      '<head>'                                                              && gc_newline &&
-      '<title>abapGit</title>'                                              && gc_newline &&
-      render_css( )                                                         && gc_newline &&
-      '<meta http-equiv="content-type" content="text/html; charset=utf-8">' && gc_newline &&
-      '</head>'                                                             && gc_newline &&
-      '<body>'                                                              && gc_newline &&
+    rv_html = render_header( ) &&
       '<h1>abapGit</h1>&nbsp;'                                              && gc_newline &&
       '<a href="sapevent:refresh">Refresh</a>&nbsp;'                        && gc_newline &&
       '<a href="sapevent:install">Clone</a>&nbsp;'                          && gc_newline &&
@@ -3564,6 +3759,12 @@ CLASS lcl_gui IMPLEMENTATION.
       rv_html = rv_html && render_repo( ls_repo ).
     ENDLOOP.
 
+    rv_html = rv_html && render_footer( ).
+
+  ENDMETHOD.                    "render
+
+  METHOD render_footer.
+
     rv_html = rv_html &&
               '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
               gc_version &&
@@ -3571,13 +3772,14 @@ CLASS lcl_gui IMPLEMENTATION.
 
     rv_html = rv_html && '</body></html>'.
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.                    "render_footer
 
   METHOD render_repo.
 
     DATA: lt_files   TYPE tt_files,
           ls_repo    TYPE st_repo,
           lv_branch  TYPE t_sha1,
+          lv_link    TYPE string,
           lv_status  TYPE string,
           lt_results TYPE tt_results.
 
@@ -3621,15 +3823,24 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    rv_html = rv_html && '<table border="1">' && gc_newline.
     LOOP AT lt_results ASSIGNING <ls_result>.
+      IF <ls_result>-match = abap_false.
+        lv_link = '<a href="sapevent:diff?' && struct_encode( ig_structure1 = <ls_result> ig_structure2 = is_repo ) && '">diff</a>'.
+      ELSE.
+        CLEAR lv_link.
+      ENDIF.
+
       rv_html = rv_html &&
-        <ls_result>-obj_type &&
-        '&nbsp;' &&
-        <ls_result>-obj_name &&
-        '&nbsp;' &&
-        <ls_result>-match &&
-        '<br>'.
+        '<tr>' && gc_newline &&
+        '<td>' && <ls_result>-obj_type && '</td>' && gc_newline &&
+        '<td>' && <ls_result>-obj_name && '</td>' && gc_newline &&
+        '<td>' && <ls_result>-match && '</td>' && gc_newline &&
+        '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
+        '<td>' && lv_link && '</td>' && gc_newline &&
+        '</tr>' && gc_newline.
     ENDLOOP.
+    rv_html = rv_html && '</table>' && gc_newline.
 
     CASE lv_status.
       WHEN 'match'.
@@ -3641,9 +3852,6 @@ CLASS lcl_gui IMPLEMENTATION.
       WHEN OTHERS.
         _raise 'status unknown'.
     ENDCASE.
-
-* todo, remove:
-    rv_html = rv_html && '&nbsp;<a href="sapevent:pull?' && struct_encode( ls_repo ) && '">pull</a>'.
 
   ENDMETHOD.                    "render_repo
 
@@ -3663,7 +3871,7 @@ CLASS lcl_gui IMPLEMENTATION.
     APPEND ls_event TO lt_events.
     go_html_viewer->set_registered_events( lt_events ).
 
-    SET HANDLER lcl_gui=>on_sapevent FOR go_html_viewer.
+    SET HANDLER lcl_gui=>on_event FOR go_html_viewer.
 
     view( render( ) ).
 
