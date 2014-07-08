@@ -1,9 +1,30 @@
 REPORT zabapgit.
-* todo, program header + license
-* todo, too many pulls, create repo object
-* todo, list what will happen/has happened when doing pull
+
+* See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_version TYPE string VALUE 'alpha'.            "#EC NOTEXT
+
+* The MIT License (MIT)
+*
+* Copyright (c) 2014 Lars Hvam Petersen
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 
 TYPES: t_type     TYPE c LENGTH 6,
        t_bitbyte  TYPE c LENGTH 8,
@@ -293,7 +314,7 @@ CLASS lcl_xml DEFINITION FINAL.
                                      ii_root TYPE REF TO if_ixml_element OPTIONAL
                            RAISING lcx_exception.
 
-* todo, METHODS element_read
+* METHODS element_read
 
     METHODS structure_add  IMPORTING ig_structure TYPE data
                                      ii_root TYPE REF TO if_ixml_element OPTIONAL
@@ -2748,7 +2769,6 @@ CLASS lcl_transport IMPLEMENTATION.
       IMPORTING
         ei_client  = li_client
         ev_branch  = lv_branch ).
-* todo, lv_branch should also be importing parameter?
 
     set_headers(
       EXPORTING
@@ -3603,6 +3623,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_obj_name TYPE rseuap-obj_name,
           ls_comment  TYPE st_comment,
           lv_object   TYPE tadir-object,
+          lv_branch   TYPE t_sha1,
           lv_name     TYPE tadir-obj_name.
 
 * todo, by package
@@ -3630,9 +3651,12 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lcl_porcelain=>push( is_comment = ls_comment
-                         is_repo    = is_repo
-                         it_files   = lt_files ).
+    lv_branch = lcl_porcelain=>push( is_comment = ls_comment
+                                     is_repo    = is_repo
+                                     it_files   = lt_files ).
+
+    lcl_persistence=>update( is_repo   = is_repo
+                             iv_branch = lv_branch ).
 
     view( render( ) ).
 
