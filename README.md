@@ -13,6 +13,6 @@ Copy the ABAP into new report via SE38 or SE80, activate, run
 
 ## FAQ ##
 ##### 1) foo #####
-do something
+bar
 ##### 2) moo #####
 boo
