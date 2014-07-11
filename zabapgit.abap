@@ -96,6 +96,11 @@ TYPES: BEGIN OF st_comment,
          comment  TYPE string,
        END OF st_comment.
 
+TYPES: BEGIN OF st_item,
+         obj_type TYPE tadir-object,
+         obj_name TYPE tadir-obj_name,
+       END OF st_item.
+
 CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_tree   TYPE t_type VALUE 'tree',              "#EC NOTEXT
            gc_ref_d  TYPE t_type VALUE 'ref_d',             "#EC NOTEXT
@@ -1038,17 +1043,25 @@ ENDCLASS.                    "lcl_diff IMPLEMENTATION
 CLASS lcl_serialize_common DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
-    CLASS-METHODS: xml_to_file IMPORTING iv_obj_name TYPE tadir-obj_name
-                                         io_xml      TYPE REF TO lcl_xml
+    CLASS-METHODS: xml_to_file IMPORTING is_item TYPE st_item
+                                         io_xml  TYPE REF TO lcl_xml
                                RETURNING value(rs_file) TYPE st_file
                                RAISING lcx_exception.
 
-    CLASS-METHODS: read_xml IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: read_xml IMPORTING is_item  TYPE st_item
                                       it_files TYPE tt_files
                             RETURNING value(ro_xml) TYPE REF TO lcl_xml
                             RAISING lcx_exception.
 
-    CLASS-DATA: gv_type TYPE tadir-object VALUE ''.
+    CLASS-METHODS: read_abap IMPORTING is_item  TYPE st_item
+                                       it_files TYPE tt_files
+                            CHANGING ct_abap TYPE STANDARD TABLE
+                            RAISING lcx_exception.
+
+    CLASS-METHODS: abap_to_file IMPORTING is_item TYPE st_item
+                                          it_abap TYPE STANDARD TABLE
+                                RETURNING value(rs_file) TYPE st_file
+                                RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_serialize_common DEFINITION
 
@@ -1059,6 +1072,40 @@ ENDCLASS.                    "lcl_serialize_common DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common IMPLEMENTATION.
 
+  METHOD read_abap.
+
+    DATA: lv_filename TYPE string,
+          lv_abap     TYPE string.
+
+    FIELD-SYMBOLS: <ls_abap> LIKE LINE OF it_files.
+
+
+    lv_filename = is_item-obj_name && '.' && is_item-obj_type && '.abap'. "#EC NOTEXT
+    TRANSLATE lv_filename TO LOWER CASE.
+    READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
+    IF sy-subrc <> 0.
+      _raise 'abap not found'.
+    ENDIF.
+    lv_abap = lcl_convert=>xstring_to_string_utf8( <ls_abap>-data ).
+
+    SPLIT lv_abap AT gc_newline INTO TABLE ct_abap.
+
+  ENDMETHOD.                    "read_abap
+
+  METHOD abap_to_file.
+
+    DATA: lv_source TYPE string.
+
+
+    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY gc_newline.
+    CLEAR rs_file.
+    rs_file-path = '/'.
+    CONCATENATE is_item-obj_name '.' is_item-obj_type '.abap' INTO rs_file-filename. "#EC NOTEXT
+    TRANSLATE rs_file-filename TO LOWER CASE.
+    rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
+
+  ENDMETHOD.                    "abap_to_file
+
   METHOD read_xml.
 
     DATA: lv_filename TYPE string,
@@ -1067,7 +1114,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_xml> LIKE LINE OF it_files.
 
 
-    lv_filename = iv_obj_name && '.' && gv_type && '.xml'.  "#EC NOTEXT
+    lv_filename = is_item-obj_name && '.' && is_item-obj_type && '.xml'. "#EC NOTEXT
     TRANSLATE lv_filename TO LOWER CASE.
     READ TABLE it_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
@@ -1087,13 +1134,9 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     DATA: lv_xml TYPE string.
 
 
-    IF gv_type IS INITIAL.
-      _raise 'gv_type empty'.
-    ENDIF.
-
     lv_xml = io_xml->xml_render( ).
     rs_file-path = '/'.
-    CONCATENATE iv_obj_name '.' gv_type '.xml' INTO rs_file-filename. "#EC NOTEXT
+    CONCATENATE is_item-obj_name '.' is_item-obj_type '.xml' INTO rs_file-filename. "#EC NOTEXT
     TRANSLATE rs_file-filename TO LOWER CASE.
     rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
 
@@ -1109,15 +1152,13 @@ ENDCLASS.                    "lcl_serialize_common IMPLEMENTATION
 CLASS lcl_serialize_doma DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_doma DEFINITION
 
@@ -1128,10 +1169,6 @@ ENDCLASS.                    "lcl_serialize_doma DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_doma IMPLEMENTATION.
 
-  METHOD class_constructor.
-    gv_type = 'DOMA'.
-  ENDMETHOD.                    "class_constructor
-
   METHOD serialize.
 
     DATA: lv_name  TYPE ddobjname,
@@ -1141,7 +1178,7 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
           lo_xml   TYPE REF TO lcl_xml.
 
 
-    lv_name = iv_obj_name.
+    lv_name = is_item-obj_name.
 
     CALL FUNCTION 'DDIF_DOMA_GET'
       EXPORTING
@@ -1167,8 +1204,8 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
     lo_xml->structure_add( ls_dd01v ).
     lo_xml->table_add( lt_dd07v ).
 
-    ls_file = xml_to_file( iv_obj_name = iv_obj_name
-                           io_xml      = lo_xml ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "serialize
@@ -1180,8 +1217,8 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
           lt_dd07v TYPE dd07v_tab.
 
 
-    lo_xml = read_xml( iv_obj_name = iv_obj_name
-                       it_files    = it_files ).
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_dd01v ).
     lo_xml->table_read( CHANGING ct_table = lt_dd07v ).
@@ -1200,15 +1237,13 @@ ENDCLASS.                    "lcl_serialize_doma IMPLEMENTATION
 CLASS lcl_serialize_dtel DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1219,10 +1254,6 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_dtel IMPLEMENTATION.
 
-  METHOD class_constructor.
-    gv_type = 'DTEL'.
-  ENDMETHOD.                    "class_constructor
-
   METHOD serialize.
 
     DATA: lv_name  TYPE ddobjname,
@@ -1232,7 +1263,7 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
           lo_xml   TYPE REF TO lcl_xml.
 
 
-    lv_name = iv_obj_name.
+    lv_name = is_item-obj_name.
 
     CALL FUNCTION 'DDIF_DTEL_GET'
       EXPORTING
@@ -1257,8 +1288,8 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
     lo_xml->structure_add( ls_dd04v ).
     lo_xml->structure_add( ls_tpara ).
 
-    ls_file = xml_to_file( iv_obj_name = iv_obj_name
-                           io_xml      = lo_xml ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "serialize
@@ -1270,8 +1301,8 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
           ls_tpara TYPE tpara.
 
 
-    lo_xml = read_xml( iv_obj_name = iv_obj_name
-                       it_files    = it_files ).
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_dd04v ).
     lo_xml->structure_read( CHANGING cg_structure = ls_tpara ).
@@ -1290,15 +1321,13 @@ ENDCLASS.                    "lcl_serialize_dtel IMPLEMENTATION
 CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1309,18 +1338,17 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_clas IMPLEMENTATION.
 
-  METHOD class_constructor.
-    gv_type = 'CLAS'.
-  ENDMETHOD.                    "class_constructor
-
   METHOD serialize.
 
-    DATA: lo_source TYPE REF TO cl_oo_source,
-          lt_source TYPE seop_source_string,
-          ls_clskey TYPE seoclskey.
+    DATA: lo_source     TYPE REF TO cl_oo_source,
+          lt_source     TYPE seop_source_string,
+          ls_vseoclass  TYPE vseoclass,
+          ls_file       TYPE st_file,
+          lo_xml        TYPE REF TO lcl_xml,
+          ls_clskey     TYPE seoclskey.
 
 
-    ls_clskey-clsname = iv_obj_name.
+    ls_clskey-clsname = is_item-obj_name.
 
     CREATE OBJECT lo_source
       EXPORTING
@@ -1328,18 +1356,71 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
       EXCEPTIONS
         class_not_existing = 1
         OTHERS             = 2.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
       _raise 'error from CL_OO_SOURCE'.
     ENDIF.
     lo_source->read( ).
     lt_source = lo_source->get_old_source( ).
+* todo, text elements?
+* todo, local classes in class
 
-    _raise 'todo'.
+    CALL FUNCTION 'SEO_CLASS_GET'
+      EXPORTING
+        clskey       = ls_clskey
+        version      = seoc_version_active
+      IMPORTING
+        class        = ls_vseoclass
+      EXCEPTIONS
+        not_existing = 1
+        deleted      = 2
+        is_interface = 3
+        model_only   = 4
+        OTHERS       = 5.
+    IF sy-subrc <> 0.
+      _raise 'error rom seo_class_get'.
+    ENDIF.
+
+    CLEAR: ls_vseoclass-uuid,
+           ls_vseoclass-author,
+           ls_vseoclass-createdon,
+           ls_vseoclass-changedby,
+           ls_vseoclass-changedon.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_vseoclass ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+    ls_file = abap_to_file( is_item = is_item
+                            it_abap = lt_source ).
+    APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "serialize
 
   METHOD deserialize.
+
+    DATA: ls_vseoclass TYPE vseoclass,
+          lt_source    TYPE seop_source_string,
+          lo_xml       TYPE REF TO lcl_xml.
+
+
+* fm SEO_CLASS_CREATE_F_DATA
+* CL_OO_SOURCE ?
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
+
+    read_abap( EXPORTING is_item  = is_item
+                         it_files = it_files
+               CHANGING  ct_abap = lt_source ).
+
+    BREAK-POINT.
+
     _raise 'todo'.
+
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_CLAS IMPLEMENTATION
@@ -1352,15 +1433,13 @@ ENDCLASS.                    "lcl_serialize_CLAS IMPLEMENTATION
 CLASS lcl_serialize_fugr DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1370,10 +1449,6 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_fugr IMPLEMENTATION.
-
-  METHOD class_constructor.
-    gv_type = 'FUGR'.
-  ENDMETHOD.                    "class_constructor
 
   METHOD serialize.
     _raise 'todo'.
@@ -1393,15 +1468,13 @@ ENDCLASS.                    "lcl_serialize_FUGR IMPLEMENTATION
 CLASS lcl_serialize_tabl DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1411,10 +1484,6 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_tabl IMPLEMENTATION.
-
-  METHOD class_constructor.
-    gv_type = 'TABL'.
-  ENDMETHOD.                    "class_constructor
 
   METHOD serialize.
     _raise 'todo'.
@@ -1434,15 +1503,13 @@ ENDCLASS.                    "lcl_serialize_TABL IMPLEMENTATION
 CLASS lcl_serialize_msag DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1452,10 +1519,6 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_msag IMPLEMENTATION.
-
-  METHOD class_constructor.
-    gv_type = 'MSAG'.
-  ENDMETHOD.                    "class_constructor
 
   METHOD serialize.
     _raise 'todo'.
@@ -1475,15 +1538,13 @@ ENDCLASS.                    "lcl_serialize_MSAG IMPLEMENTATION
 CLASS lcl_serialize_tran DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
@@ -1493,10 +1554,6 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_tran IMPLEMENTATION.
-
-  METHOD class_constructor.
-    gv_type = 'TRAN'.
-  ENDMETHOD.                    "class_constructor
 
   METHOD serialize.
     _raise 'todo'.
@@ -1516,15 +1573,13 @@ ENDCLASS.                    "lcl_serialize_TRAN IMPLEMENTATION
 CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
                              RETURNING value(rt_files) TYPE tt_files
                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
-
-    CLASS-METHODS: class_constructor.
 
 
   PRIVATE SECTION.
@@ -1537,7 +1592,7 @@ CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
     CLASS-METHODS: deserialize_abap IMPORTING iv_obj_name TYPE tadir-obj_name
                                               io_xml      TYPE REF TO lcl_xml
-                                              iv_abap     TYPE string
+                                              it_source   TYPE abaptxt255_tab
                                     RAISING lcx_exception.
 
     CLASS-METHODS exists IMPORTING iv_obj_name TYPE tadir-obj_name
@@ -1552,10 +1607,6 @@ ENDCLASS.                    "lcl_serialize_prog DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_prog IMPLEMENTATION.
 
-  METHOD class_constructor.
-    gv_type = 'PROG'.
-  ENDMETHOD.                    "class_constructor
-
   METHOD serialize.
 
 * todo, more symmetry, serialize vs deserialize
@@ -1568,12 +1619,11 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
           lo_xml          TYPE REF TO lcl_xml.
 
 
-    lv_program_name = iv_obj_name.
+    lv_program_name = is_item-obj_name.
 
     IF exists( lv_program_name ) = abap_false.
-      _raise 'not found in progdir'.
+      RETURN.
     ENDIF.
-
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
@@ -1616,17 +1666,12 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     ENDIF.
 
 
-    ls_file = xml_to_file( iv_obj_name = iv_obj_name
-                           io_xml      = lo_xml ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-
-    CONCATENATE LINES OF lt_source INTO lv_source SEPARATED BY gc_newline.
-    CLEAR ls_file.
-    ls_file-path = '/'.
-    CONCATENATE lv_program_name '.' gv_type '.abap' INTO ls_file-filename. "#EC NOTEXT
-    TRANSLATE ls_file-filename TO LOWER CASE.
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
+    ls_file = abap_to_file( is_item = is_item
+                            it_abap = lt_source ).
     APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "lif_serialize~serialize
@@ -1699,25 +1744,19 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
     DATA: lv_filename TYPE string,
           lo_xml      TYPE REF TO lcl_xml,
-          lv_abap     TYPE string.
-
-    FIELD-SYMBOLS: <ls_abap> LIKE LINE OF it_files.
+          lt_source   TYPE abaptxt255_tab.
 
 
-    lo_xml = read_xml( iv_obj_name = iv_obj_name
-                       it_files    = it_files ).
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
 
-    lv_filename = iv_obj_name && '.prog.abap'.              "#EC NOTEXT
-    TRANSLATE lv_filename TO LOWER CASE.
-    READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      _raise 'PROG, abap not found'.
-    ENDIF.
-    lv_abap = lcl_convert=>xstring_to_string_utf8( <ls_abap>-data ).
+    read_abap( EXPORTING is_item  = is_item
+                         it_files = it_files
+               CHANGING  ct_abap = lt_source ).
 
-    deserialize_abap( iv_obj_name = iv_obj_name
+    deserialize_abap( iv_obj_name = is_item-obj_name
                       io_xml      = lo_xml
-                      iv_abap     = lv_abap ).
+                      it_source   = lt_source ).
 
     deserialize_dynpros( lo_xml ).
 
@@ -1777,21 +1816,20 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   METHOD deserialize_abap.
 
-    DATA: lt_source      TYPE TABLE OF abaptxt255,
-          ls_progdir     TYPE progdir,
+    DATA: ls_progdir     TYPE progdir,
           ls_progdir_new TYPE progdir.
 
 
     io_xml->structure_read( CHANGING cg_structure = ls_progdir ).
 
-    SPLIT iv_abap AT gc_newline INTO TABLE lt_source.
+
 
     IF exists( iv_obj_name ) = abap_true.
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
           program_name     = ls_progdir-name
         TABLES
-          source_extended  = lt_source
+          source_extended  = it_source
         EXCEPTIONS
           cancelled        = 1
           permission_error = 2
@@ -1813,7 +1851,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
           program_type        = ls_progdir-subc
           title_string        = 'todo'
         TABLES
-          source_extended     = lt_source
+          source_extended     = it_source
         EXCEPTIONS
           already_exists      = 1
           cancelled           = 2
@@ -1876,8 +1914,7 @@ ENDCLASS.                    "lcl_serialize_prog IMPLEMENTATION
 CLASS lcl_serialize DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS serialize IMPORTING iv_obj_type TYPE tadir-object
-                                      iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS serialize IMPORTING is_item TYPE st_item
                             RETURNING value(rt_files) TYPE tt_files
                             RAISING lcx_exception.
 
@@ -1910,23 +1947,23 @@ CLASS lcl_serialize IMPLEMENTATION.
     DATA: lt_files TYPE tt_files.
 
 
-    CASE iv_obj_type.
+    CASE is_item-obj_type.
       WHEN 'PROG'.
-        rt_files = lcl_serialize_prog=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_prog=>serialize( is_item ).
       WHEN 'DOMA'.
-        rt_files = lcl_serialize_doma=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_doma=>serialize( is_item ).
       WHEN 'DTEL'.
-        rt_files = lcl_serialize_dtel=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_dtel=>serialize( is_item ).
       WHEN 'CLAS'.
-        rt_files = lcl_serialize_clas=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_clas=>serialize( is_item ).
       WHEN 'FUGR'.
-        rt_files = lcl_serialize_fugr=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_fugr=>serialize( is_item ).
       WHEN 'TABL'.
-        rt_files = lcl_serialize_tabl=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_tabl=>serialize( is_item ).
       WHEN 'TRAN'.
-        rt_files = lcl_serialize_tran=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_tran=>serialize( is_item ).
       WHEN 'MSAG'.
-        rt_files = lcl_serialize_msag=>serialize( iv_obj_name ).
+        rt_files = lcl_serialize_msag=>serialize( is_item ).
       WHEN OTHERS.
         _raise 'Serialize, unknown type'.
     ENDCASE.
@@ -1947,6 +1984,7 @@ CLASS lcl_serialize IMPLEMENTATION.
           lt_files  TYPE tt_files,
           ls_result LIKE LINE OF rt_results,
           lv_type   TYPE string,
+          ls_item   TYPE st_item,
           lv_ext    TYPE string.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
@@ -1966,8 +2004,18 @@ CLASS lcl_serialize IMPLEMENTATION.
       ls_result-obj_type = lv_type.
       ls_result-obj_name = lv_pre.
 
-      lt_files = serialize( iv_obj_type = ls_result-obj_type
-                            iv_obj_name = ls_result-obj_name ).
+      CLEAR ls_item.
+      ls_item-obj_type = lv_type.
+      ls_item-obj_name = lv_pre.
+
+      lt_files = serialize( ls_item ).
+
+      IF lt_files[] IS INITIAL.
+* item does not exist locally
+        ls_result-filename = <ls_file>-filename.
+        APPEND ls_result TO rt_results.
+        CONTINUE. " current loop
+      ENDIF.
 
       LOOP AT lt_files ASSIGNING <ls_gen>.
         ls_result-filename = <ls_gen>-filename.
@@ -1989,6 +2037,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     DATA: lv_pre   TYPE tadir-obj_name,
           lv_type  TYPE string,
+          ls_item  TYPE st_item,
           lv_ext   TYPE string.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
@@ -2003,23 +2052,35 @@ CLASS lcl_serialize IMPLEMENTATION.
         CONTINUE. " current loop
       ENDIF.
 
+      CLEAR ls_item.
+      ls_item-obj_type = lv_type.
+      ls_item-obj_name = lv_pre.
+
       CASE lv_type.
         WHEN 'PROG'.
-          lcl_serialize_prog=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_prog=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'DOMA'.
-          lcl_serialize_doma=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_doma=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'DTEL'.
-          lcl_serialize_dtel=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_dtel=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'CLAS'.
-          lcl_serialize_clas=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_clas=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'FUGR'.
-          lcl_serialize_fugr=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_fugr=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'TABL'.
-          lcl_serialize_tabl=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_tabl=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'TRAN'.
-          lcl_serialize_tran=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_tran=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN 'MSAG'.
-          lcl_serialize_msag=>deserialize( it_files = it_files iv_obj_name = lv_pre ).
+          lcl_serialize_msag=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
         WHEN OTHERS.
           _raise 'deserialize, unknown type'.
       ENDCASE.
@@ -3705,10 +3766,10 @@ CLASS lcl_gui DEFINITION FINAL.
                       RAISING lcx_exception.
 
     CLASS-METHODS: render_header
-                          RETURNING value(rv_html) TYPE string.
+                      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: render_footer
-                          RETURNING value(rv_html) TYPE string.
+                      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: install
                       RAISING lcx_exception.
@@ -3730,8 +3791,9 @@ CLASS lcl_gui DEFINITION FINAL.
                                 is_repo TYPE st_repo
                       RAISING lcx_exception.
 
-    CLASS-METHODS render_diff IMPORTING is_result TYPE st_result
-                                        it_diffs TYPE tt_diffs.
+    CLASS-METHODS render_diff
+                      IMPORTING is_result TYPE st_result
+                                it_diffs TYPE tt_diffs.
 
     CLASS-METHODS: struct_encode
                       IMPORTING ig_structure1 TYPE any
@@ -3772,6 +3834,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lt_remote  TYPE tt_files,
           lt_local   TYPE tt_files,
+          ls_item    TYPE st_item,
           lt_diffs   TYPE tt_diffs.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
@@ -3781,8 +3844,11 @@ CLASS lcl_gui IMPLEMENTATION.
     lcl_porcelain=>pull( EXPORTING is_repo  = is_repo
                          IMPORTING et_files = lt_remote ).
 
-    lt_local = lcl_serialize=>serialize( iv_obj_type = is_result-obj_type
-                                         iv_obj_name = is_result-obj_name ).
+    CLEAR ls_item.
+    ls_item-obj_type = is_result-obj_type.
+    ls_item-obj_name = is_result-obj_name.
+
+    lt_local = lcl_serialize=>serialize( ls_item ).
 
     READ TABLE lt_remote ASSIGNING <ls_remote>
       WITH KEY filename = is_result-filename.
@@ -3928,6 +3994,7 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lv_branch      TYPE t_sha1,
           lt_results     TYPE tt_results,
           lt_push        TYPE tt_files,
+          ls_item        TYPE st_item,
           ls_comment     TYPE st_comment,
           lt_files       TYPE tt_files.
 
@@ -3941,8 +4008,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
     CLEAR lt_files[].
     LOOP AT lt_results ASSIGNING <ls_result> WHERE match = abap_false.
-      lt_files = lcl_serialize=>serialize( iv_obj_type = <ls_result>-obj_type
-                                           iv_obj_name = <ls_result>-obj_name ).
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+
+      lt_files = lcl_serialize=>serialize( ls_item ).
       APPEND LINES OF lt_files TO lt_push.
     ENDLOOP.
 
@@ -4027,6 +4097,7 @@ CLASS lcl_gui IMPLEMENTATION.
     ENDIF.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
   ENDMETHOD.                    "encode_struct
 
   METHOD on_event.
@@ -4078,8 +4149,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD add.
 
     DATA: lt_files    TYPE tt_files,
-          lv_obj_type TYPE tadir-object,
-          lv_obj_name TYPE tadir-obj_name,
+          ls_item     TYPE st_item,
           ls_comment  TYPE st_comment,
           lv_euobj_id TYPE euobj-id,
           lv_branch   TYPE t_sha1,
@@ -4133,23 +4203,22 @@ CLASS lcl_gui IMPLEMENTATION.
 
     READ TABLE lt_spopli ASSIGNING <ls_spopli> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
-    lv_obj_type = <ls_spopli>-varoption.
+    ls_item-obj_type = <ls_spopli>-varoption.
 
-    lv_euobj_id = lv_obj_type.
+    lv_euobj_id = ls_item-obj_type.
     CALL FUNCTION 'REPOSITORY_INFO_SYSTEM_F4'
       EXPORTING
         object_type          = lv_euobj_id
         suppress_selection   = abap_true
       IMPORTING
-        object_name_selected = lv_obj_name
+        object_name_selected = ls_item-obj_name
       EXCEPTIONS
         cancel               = 01.
     IF sy-subrc = 1.
       RETURN.
     ENDIF.
 
-    lt_files = lcl_serialize=>serialize( iv_obj_type = lv_obj_type
-                                         iv_obj_name = lv_obj_name ).
+    lt_files = lcl_serialize=>serialize( ls_item ).
 
     ls_comment = popup_comment( ).
     IF ls_comment IS INITIAL.
@@ -4470,9 +4539,6 @@ ENDFORM.                    "run
 CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    METHODS repository_foobar FOR TESTING RAISING lcx_exception.
-    METHODS repository_mousechase FOR TESTING RAISING lcx_exception.
-    METHODS repository_dicing FOR TESTING RAISING lcx_exception.
 
     METHODS encode_decode_tree FOR TESTING RAISING lcx_exception.
     METHODS encode_decode_commit FOR TESTING RAISING lcx_exception.
@@ -4484,11 +4550,6 @@ CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
     METHODS repo_url FOR TESTING RAISING lcx_exception.
     METHODS repo_error FOR TESTING.
-
-    CLASS-METHODS compare IMPORTING is_repo TYPE st_repo
-                          RAISING lcx_exception.
-    CLASS-METHODS http_fetch IMPORTING iv_url TYPE string
-                             RETURNING value(rv_data) TYPE xstring.
 
 ENDCLASS.                    "test DEFINITION
 *----------------------------------------------------------------------*
@@ -4698,94 +4759,5 @@ CLASS lcl_abap_unit IMPLEMENTATION.
         act = ls_result ).
 
   ENDMETHOD.                    "commit_encode_decode
-
-  METHOD http_fetch.
-
-    DATA: li_client TYPE REF TO if_http_client,
-          lv_code   TYPE i.
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url    = iv_url
-      IMPORTING
-        client = li_client ).
-
-    li_client->send( ).
-    li_client->receive( ).
-    li_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-
-    cl_abap_unit_assert=>assert_equals(
-        exp = 200
-        act = lv_code ).
-
-    rv_data = li_client->response->get_data( ).
-
-  ENDMETHOD.                    "http_fetch
-
-  METHOD compare.
-
-    DATA: lv_url    TYPE string,
-          lv_data   TYPE xstring,
-          lt_files TYPE tt_files.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
-
-
-    lcl_porcelain=>pull( EXPORTING is_repo  = is_repo
-                         IMPORTING et_files = lt_files ).
-
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
-
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      lv_url =
-        'https://raw.githubusercontent.com' &&
-        lcl_url=>path_name( is_repo-url ) &&
-        '/master' &&
-        <ls_file>-path &&
-        <ls_file>-filename.                                 "#EC NOTEXT
-
-      lv_data = http_fetch( lv_url ).
-
-      cl_abap_unit_assert=>assert_equals(
-          exp = <ls_file>-data
-          act = lv_data ).
-    ENDLOOP.
-
-  ENDMETHOD.                    "compare
-
-  METHOD repository_foobar.
-
-    DATA: ls_repo TYPE st_repo.
-
-    ls_repo-url = 'https://github.com/larshp/Foobar.git'.   "#EC NOTEXT
-    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
-
-    compare( ls_repo ).
-
-  ENDMETHOD.                    "test_minus_ten_percent
-
-  METHOD repository_mousechase.
-
-    DATA: ls_repo TYPE st_repo.
-
-    ls_repo-url = 'https://github.com/larshp/MouseChase.git'. "#EC NOTEXT
-    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
-
-    compare( ls_repo ).
-
-  ENDMETHOD.                    "larshp_mousechase
-
-  METHOD repository_dicing.
-
-    DATA: ls_repo TYPE st_repo.
-
-    ls_repo-url = 'https://github.com/larshp/Dicing.git'.   "#EC NOTEXT
-    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
-
-    compare( ls_repo ).
-
-  ENDMETHOD.                    "larshp_dicing
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
