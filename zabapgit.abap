@@ -1063,6 +1063,9 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
                                 RETURNING value(rs_file) TYPE st_file
                                 RAISING lcx_exception.
 
+    CLASS-METHODS: activate IMPORTING is_item TYPE st_item
+                            RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_common DEFINITION
 
 *----------------------------------------------------------------------*
@@ -1071,6 +1074,42 @@ ENDCLASS.                    "lcl_serialize_common DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common IMPLEMENTATION.
+
+  METHOD activate.
+
+    DATA: lt_objects  TYPE dwinactiv_tab,
+          lv_obj_name TYPE dwinactiv-obj_name.
+
+
+    lv_obj_name = is_item-obj_name.
+
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
+      EXPORTING
+        obj_name         = lv_obj_name
+        object           = is_item-obj_type
+      TABLES
+        inactive_objects = lt_objects.
+
+    IF lt_objects[] IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+      TABLES
+        objects                = lt_objects
+      EXCEPTIONS
+        excecution_error       = 1
+        cancelled              = 2
+        insert_into_corr_error = 3
+        execution_error        = 4
+        OTHERS                 = 5.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+    ENDIF.
+
+* todo, fm RS_MASS_ACTIVATION?
+
+  ENDMETHOD.                    "activate
 
   METHOD read_abap.
 
@@ -1329,6 +1368,12 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+  PRIVATE SECTION.
+    CLASS-METHODS exists IMPORTING is_clskey TYPE seoclskey
+                         RETURNING value(rv_exists) TYPE abap_bool.
+
+    CLASS-METHODS remove_signatures CHANGING ct_source TYPE seop_source_string.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -1337,6 +1382,53 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_clas IMPLEMENTATION.
+
+  METHOD remove_signatures.
+
+* signatures messes up in CL_OO_SOURCE when deserializing and serializing within same session
+
+    CONSTANTS:
+      lc_begin TYPE string VALUE '* <SIGNATURE>---------------------------------------------------------------------------------------+',
+      lc_end   TYPE string VALUE '* +--------------------------------------------------------------------------------------</SIGNATURE>'.
+
+    DATA: lv_remove TYPE abap_bool,
+          lv_source LIKE LINE OF ct_source.
+
+
+    lv_remove = abap_false.
+    LOOP AT ct_source INTO lv_source.
+      IF lv_source = lc_begin.
+        lv_remove = abap_true.
+      ENDIF.
+      IF lv_remove = abap_true.
+        DELETE ct_source INDEX sy-tabix.
+      ENDIF.
+      IF lv_source = lc_end.
+        lv_remove = abap_false.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.                    "remove_signatures
+
+  METHOD exists.
+
+    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
+      EXPORTING
+        clskey        = is_clskey
+      EXCEPTIONS
+        not_specified = 1
+        not_existing  = 2
+        is_interface  = 3
+        no_text       = 4
+        inconsistent  = 5
+        OTHERS        = 6.
+    IF sy-subrc = 2.
+      rv_exists = abap_false.
+    ELSE.
+      rv_exists = abap_true.
+    ENDIF.
+
+  ENDMETHOD.                    "exists
 
   METHOD serialize.
 
@@ -1350,19 +1442,32 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
     ls_clskey-clsname = is_item-obj_name.
 
+    IF exists( ls_clskey ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'SEO_BUFFER_REFRESH'
+      EXPORTING
+        version = seoc_version_active
+        force   = seox_true.
+    CALL FUNCTION 'SEO_BUFFER_REFRESH'
+      EXPORTING
+        version = seoc_version_inactive
+        force   = seox_true.
+
     CREATE OBJECT lo_source
       EXPORTING
         clskey             = ls_clskey
       EXCEPTIONS
         class_not_existing = 1
         OTHERS             = 2.
-    IF sy-subrc = 1.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
+    IF sy-subrc <> 0.
       _raise 'error from CL_OO_SOURCE'.
     ENDIF.
-    lo_source->read( ).
+
+    lo_source->read( 'A' ).
     lt_source = lo_source->get_old_source( ).
+    remove_signatures( CHANGING ct_source = lt_source ).
 * todo, text elements?
 * todo, local classes in class
 
@@ -1379,7 +1484,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         model_only   = 4
         OTHERS       = 5.
     IF sy-subrc <> 0.
-      _raise 'error rom seo_class_get'.
+      _raise 'error from seo_class_get'.
     ENDIF.
 
     CLEAR: ls_vseoclass-uuid,
@@ -1404,11 +1509,11 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass TYPE vseoclass,
           lt_source    TYPE seop_source_string,
-          lo_xml       TYPE REF TO lcl_xml.
+          lo_source    TYPE REF TO cl_oo_source,
+          lo_xml       TYPE REF TO lcl_xml,
+          ls_clskey    TYPE seoclskey.
 
 
-* fm SEO_CLASS_CREATE_F_DATA
-* CL_OO_SOURCE ?
     lo_xml = read_xml( is_item  = is_item
                        it_files = it_files ).
     lo_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
@@ -1417,9 +1522,53 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
                          it_files = it_files
                CHANGING  ct_abap = lt_source ).
 
-    BREAK-POINT.
 
-    _raise 'todo'.
+    ls_clskey-clsname = is_item-obj_name.
+
+* function group SEOK
+* function group SEOQ
+* todo, transport and package?
+
+    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+      EXPORTING
+        overwrite       = seox_true
+      CHANGING
+        class           = ls_vseoclass
+      EXCEPTIONS
+        existing        = 1
+        is_interface    = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      _raise 'error from SEO_CLASS_CREATE_COMPLETE'.
+    ENDIF.
+
+
+    CREATE OBJECT lo_source
+      EXPORTING
+        clskey             = ls_clskey
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from CL_OO_SOURCE'.
+    ENDIF.
+
+    TRY.
+        lo_source->access_permission( seok_access_modify ).
+        lo_source->set_source( lt_source ).
+        lo_source->save( ).
+        lo_source->access_permission( seok_access_free ).
+      CATCH cx_oo_access_permission.
+        _raise 'permission error'.
+      CATCH cx_oo_source_save_failure.
+        _raise 'save failure'.
+    ENDTRY.
+
+    activate( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1614,7 +1763,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     DATA: ls_progdir      TYPE progdir,
           lv_program_name TYPE programm,
           lt_source       TYPE TABLE OF abaptxt255,
-          lv_source       TYPE string,
+*          lv_source       TYPE string,
           ls_file         LIKE LINE OF rt_files,
           lo_xml          TYPE REF TO lcl_xml.
 
@@ -1742,8 +1891,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lv_filename TYPE string,
-          lo_xml      TYPE REF TO lcl_xml,
+    DATA: lo_xml      TYPE REF TO lcl_xml,
           lt_source   TYPE abaptxt255_tab.
 
 
