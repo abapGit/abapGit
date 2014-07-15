@@ -1068,12 +1068,14 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
     CLASS-METHODS: activate IMPORTING is_item TYPE st_item
                             RAISING lcx_exception.
 
+    CLASS-METHODS: corr_insert IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
   PRIVATE SECTION.
     CLASS-METHODS: filename IMPORTING is_item  TYPE st_item
                                       iv_extra TYPE string OPTIONAL
                                       iv_ext   TYPE string
                             RETURNING value(rv_filename) TYPE string.
-
 
 ENDCLASS.                    "lcl_serialize_common DEFINITION
 
@@ -1083,6 +1085,30 @@ ENDCLASS.                    "lcl_serialize_common DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common IMPLEMENTATION.
+
+  METHOD corr_insert.
+
+    DATA: ls_object TYPE ddenqs.
+
+
+    ls_object-objtype = is_item-obj_type.
+    ls_object-objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = ls_object
+        object_class        = 'DICT'
+        master_language     = sy-langu
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CORR_INSERT'.
+    ENDIF.
+
+  ENDMETHOD.                    "corr_insert
 
   METHOD filename.
 
@@ -1097,37 +1123,59 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
   METHOD activate.
 
+* function group SEWORKINGAREA
+
     DATA: lt_objects  TYPE dwinactiv_tab,
           lv_obj_name TYPE dwinactiv-obj_name.
 
 
     lv_obj_name = is_item-obj_name.
 
-    CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
-      EXPORTING
-        obj_name         = lv_obj_name
-        object           = is_item-obj_type
-      TABLES
-        inactive_objects = lt_objects.
+    CASE is_item-obj_type.
+      WHEN 'CLAS'.
+        CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
+          EXPORTING
+            obj_name         = lv_obj_name
+            object           = is_item-obj_type
+          TABLES
+            inactive_objects = lt_objects.
 
-    IF lt_objects[] IS INITIAL.
-      RETURN.
-    ENDIF.
+        IF lt_objects[] IS INITIAL.
+          RETURN.
+        ENDIF.
 
-    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-      TABLES
-        objects                = lt_objects
-      EXCEPTIONS
-        excecution_error       = 1
-        cancelled              = 2
-        insert_into_corr_error = 3
-        execution_error        = 4
-        OTHERS                 = 5.
-    IF sy-subrc <> 0.
-      _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
-    ENDIF.
+        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+          TABLES
+            objects                = lt_objects
+          EXCEPTIONS
+            excecution_error       = 1
+            cancelled              = 2
+            insert_into_corr_error = 3
+            execution_error        = 4
+            OTHERS                 = 5.
+        IF sy-subrc <> 0.
+          _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+        ENDIF.
 
-* todo, fm RS_MASS_ACTIVATION?
+      WHEN 'DOMA' OR 'DTEL'.
+        CALL FUNCTION 'RS_WORKING_OBJECT_ACTIVATE'
+          EXPORTING
+            object                     = is_item-obj_type
+            obj_name                   = lv_obj_name
+            dictionary_only            = abap_true
+          EXCEPTIONS
+            object_not_in_working_area = 1
+            execution_error            = 2
+            cancelled                  = 3
+            insert_into_corr_error     = 4
+            OTHERS                     = 5.
+        IF sy-subrc <> 0.
+          _raise 'error from RS_WORKING_OBJECT_ACTIVATE'.
+        ENDIF.
+
+      WHEN OTHERS.
+        _raise 'activate, unknown type'.
+    ENDCASE.
 
   ENDMETHOD.                    "activate
 
@@ -1257,6 +1305,10 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'error from DDIF_DOMA_GET'.
     ENDIF.
+    IF ls_dd01v IS INITIAL.
+      RETURN. " does not exist
+    ENDIF.
+
 * todo, translated texts?
 
     CLEAR: ls_dd01v-as4user,
@@ -1275,9 +1327,17 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
-          ls_dd01v TYPE dd01v,
-          lt_dd07v TYPE dd07v_tab.
+* package SEDD
+* package SDIC
+
+* fm TR_TADIR_INTERFACE
+* fm RS_CORR_INSERT ?
+* break LSTRDF31 line 540
+
+    DATA: lo_xml    TYPE REF TO lcl_xml,
+          ls_dd01v  TYPE dd01v,
+          lv_name   TYPE ddobjname,
+          lt_dd07v  TYPE dd07v_tab.
 
 
     lo_xml = read_xml( is_item  = is_item
@@ -1286,7 +1346,28 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
     lo_xml->structure_read( CHANGING cg_structure = ls_dd01v ).
     lo_xml->table_read( CHANGING ct_table = lt_dd07v ).
 
-    _raise 'todo'.
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_DOMA_PUT'
+      EXPORTING
+        name              = lv_name
+        dd01v_wa          = ls_dd01v
+      TABLES
+        dd07v_tab         = lt_dd07v
+      EXCEPTIONS
+        doma_not_found    = 1
+        name_inconsistent = 2
+        doma_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_DOMA_PUT'.
+    ENDIF.
+
+    activate( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1341,7 +1422,11 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'Error from DDIF_DTEL_GET'.
     ENDIF.
-* translated texts?
+    IF ls_dd04v IS INITIAL.
+      RETURN. " does not exist
+    ENDIF.
+
+* todo, translated texts?
 
     CLEAR: ls_dd04v-as4user,
            ls_dd04v-as4date,
@@ -1361,6 +1446,7 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
 
     DATA: lo_xml   TYPE REF TO lcl_xml,
           ls_dd04v TYPE dd04v,
+          lv_name  TYPE ddobjname,
           ls_tpara TYPE tpara.
 
 
@@ -1370,7 +1456,26 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
     lo_xml->structure_read( CHANGING cg_structure = ls_dd04v ).
     lo_xml->structure_read( CHANGING cg_structure = ls_tpara ).
 
-    _raise 'todo'.
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_DTEL_PUT'
+      EXPORTING
+        name              = lv_name
+        dd04v_wa          = ls_dd04v
+      EXCEPTIONS
+        dtel_not_found    = 1
+        name_inconsistent = 2
+        dtel_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_DTEL_PUT'.
+    ENDIF.
+
+    activate( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -2397,6 +2502,7 @@ CLASS lcl_serialize IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
 
+* todo, sort objects when activating? DOMA first, DTEL, etc.
     LOOP AT it_files ASSIGNING <ls_file>.
       SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
       TRANSLATE lv_pre TO UPPER CASE.
@@ -2410,6 +2516,7 @@ CLASS lcl_serialize IMPLEMENTATION.
       ls_item-obj_type = lv_type.
       ls_item-obj_name = lv_pre.
 
+* todo, dont deserialize if it already matches
       CASE lv_type.
         WHEN 'PROG'.
           lcl_serialize_prog=>deserialize( is_item  = ls_item
@@ -3635,6 +3742,8 @@ CLASS lcl_transport IMPLEMENTATION.
       ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45 AND lv_data+45 = is_repo-branch_name.
         lv_hash = lv_data+4.
         EXIT. " current loop
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+        _raise 'No branches, create branch manually by adding file'.
       ENDIF.
     ENDLOOP.
 
@@ -4512,26 +4621,30 @@ CLASS lcl_gui IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_spopli> LIKE LINE OF lt_spopli.
 
+    DEFINE _add.
+      append initial line to lt_spopli assigning <ls_spopli>.
+      <ls_spopli>-varoption = &1.                           "#EC NOTEXT
+    END-OF-DEFINITION.
+
 
 * todo, by package
 * todo, by transport
 
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'PROG Program'.                 "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'DTEL Data Element'.            "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'DOMA Domain'.                  "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'CLAS Class'.                   "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'FUGR Function Group'.          "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'MSAG Message Class'.           "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'TABL Table'.                   "#EC NOTEXT
-    APPEND INITIAL LINE TO lt_spopli ASSIGNING <ls_spopli>.
-    <ls_spopli>-varoption = 'TRAN Transaction'.             "#EC NOTEXT
+    _add 'PROG Program'.
+    _add 'DTEL Data Element'.
+    _add 'DOMA Domain'.
+    _add 'CLAS Class'.
+    _add 'FUGR Function Group (todo)'.
+    _add 'MSAG Message Class (todo)'.
+    _add 'TABL Table/Structure (todo)'.
+    _add 'TRAN Transaction (todo)'.
+    _add 'SSFO Smart Form (todo)'.
+    _add 'FORM SAP Script (todo)'.
+    _add 'SHLP Search Help (todo)'.
+    _add 'VIEW View (todo)'.
+*table contents
+*lock object
+*web dynpro
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
@@ -4708,11 +4821,15 @@ CLASS lcl_gui IMPLEMENTATION.
         '</a>&nbsp;'.
     ENDLOOP.
 
-    rv_html = rv_html && '<br><br><br>'.
+    IF lt_repos[] IS INITIAL.
+      rv_html = rv_html && '<br><a href="sapevent:explore">Explore</a> new projects'.
+    ELSE.
+      rv_html = rv_html && '<br><br><br>'.
 
-    LOOP AT lt_repos INTO ls_repo.
-      rv_html = rv_html && render_repo( ls_repo ).
-    ENDLOOP.
+      LOOP AT lt_repos INTO ls_repo.
+        rv_html = rv_html && render_repo( ls_repo ).
+      ENDLOOP.
+    ENDIF.
 
     rv_html = rv_html && render_footer( ).
 
@@ -4754,7 +4871,7 @@ CLASS lcl_gui IMPLEMENTATION.
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
-    rv_html = rv_html && '<table border="1">' && gc_newline.
+    rv_html = rv_html && '<br><u>Remote files</u><table border="1">' && gc_newline.
     LOOP AT lt_files ASSIGNING <ls_file>.
       rv_html = rv_html &&
         '<tr>' && gc_newline &&
@@ -4778,7 +4895,7 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    rv_html = rv_html && '<table border="1">' && gc_newline.
+    rv_html = rv_html && '<u>Objects</u><table border="1">' && gc_newline.
     LOOP AT lt_results ASSIGNING <ls_result>.
       IF <ls_result>-match = abap_false.
         lv_link = '<a href="sapevent:diff?' &&
@@ -4809,6 +4926,8 @@ CLASS lcl_gui IMPLEMENTATION.
       WHEN OTHERS.
         _raise 'status unknown'.
     ENDCASE.
+
+    rv_html = rv_html && '<br><br><br>'.
 
   ENDMETHOD.                    "render_repo
 
