@@ -1054,17 +1054,26 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
                             RAISING lcx_exception.
 
     CLASS-METHODS: read_abap IMPORTING is_item  TYPE st_item
+                                       iv_extra TYPE string OPTIONAL
                                        it_files TYPE tt_files
                             CHANGING ct_abap TYPE STANDARD TABLE
                             RAISING lcx_exception.
 
     CLASS-METHODS: abap_to_file IMPORTING is_item TYPE st_item
+                                          iv_extra TYPE string OPTIONAL
                                           it_abap TYPE STANDARD TABLE
                                 RETURNING value(rs_file) TYPE st_file
                                 RAISING lcx_exception.
 
     CLASS-METHODS: activate IMPORTING is_item TYPE st_item
                             RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: filename IMPORTING is_item  TYPE st_item
+                                      iv_extra TYPE string OPTIONAL
+                                      iv_ext   TYPE string
+                            RETURNING value(rv_filename) TYPE string.
+
 
 ENDCLASS.                    "lcl_serialize_common DEFINITION
 
@@ -1074,6 +1083,17 @@ ENDCLASS.                    "lcl_serialize_common DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common IMPLEMENTATION.
+
+  METHOD filename.
+
+    IF iv_extra IS INITIAL.
+      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_ext INTO rv_filename. "#EC NOTEXT
+    ELSE.
+      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_extra '.' iv_ext INTO rv_filename. "#EC NOTEXT
+    ENDIF.
+    TRANSLATE rv_filename TO LOWER CASE.
+
+  ENDMETHOD.                    "filename
 
   METHOD activate.
 
@@ -1119,8 +1139,10 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_abap> LIKE LINE OF it_files.
 
 
-    lv_filename = is_item-obj_name && '.' && is_item-obj_type && '.abap'. "#EC NOTEXT
-    TRANSLATE lv_filename TO LOWER CASE.
+    lv_filename = filename( is_item  = is_item
+                            iv_extra = iv_extra
+                            iv_ext   = 'abap' ).            "#EC NOTEXT
+
     READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       _raise 'abap not found'.
@@ -1139,8 +1161,9 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY gc_newline.
     CLEAR rs_file.
     rs_file-path = '/'.
-    CONCATENATE is_item-obj_name '.' is_item-obj_type '.abap' INTO rs_file-filename. "#EC NOTEXT
-    TRANSLATE rs_file-filename TO LOWER CASE.
+    rs_file-filename = filename( is_item  = is_item
+                                 iv_extra = iv_extra
+                                 iv_ext   = 'abap' ).       "#EC NOTEXT
     rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
 
   ENDMETHOD.                    "abap_to_file
@@ -1153,8 +1176,9 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_xml> LIKE LINE OF it_files.
 
 
-    lv_filename = is_item-obj_name && '.' && is_item-obj_type && '.xml'. "#EC NOTEXT
-    TRANSLATE lv_filename TO LOWER CASE.
+    lv_filename = filename( is_item  = is_item
+                            iv_ext   = 'xml' ).             "#EC NOTEXT
+
     READ TABLE it_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       _raise 'xml not found'.
@@ -1372,6 +1396,30 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS exists IMPORTING is_clskey TYPE seoclskey
                          RETURNING value(rv_exists) TYPE abap_bool.
 
+    CLASS-METHODS serialize_abap IMPORTING is_clskey TYPE seoclskey
+                                 RETURNING value(rt_source) TYPE seop_source_string
+                                 RAISING lcx_exception.
+
+    CLASS-METHODS serialize_locals_imp IMPORTING is_clskey TYPE seoclskey
+                                 RETURNING value(rt_source) TYPE seop_source_string
+                                 RAISING lcx_exception.
+
+    CLASS-METHODS serialize_locals_def IMPORTING is_clskey TYPE seoclskey
+                                 RETURNING value(rt_source) TYPE seop_source_string
+                                 RAISING lcx_exception.
+
+    CLASS-METHODS serialize_testclasses IMPORTING is_clskey TYPE seoclskey
+                                 RETURNING value(rt_source) TYPE seop_source_string
+                                 RAISING lcx_exception.
+
+    CLASS-METHODS serialize_macros IMPORTING is_clskey TYPE seoclskey
+                                 RETURNING value(rt_source) TYPE seop_source_string
+                                 RAISING lcx_exception.
+
+    CLASS-METHODS serialize_xml IMPORTING is_clskey TYPE seoclskey
+                                RETURNING value(ro_xml) TYPE REF TO lcl_xml
+                                RAISING lcx_exception.
+
     CLASS-METHODS remove_signatures CHANGING ct_source TYPE seop_source_string.
 
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
@@ -1382,6 +1430,99 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_clas IMPLEMENTATION.
+
+  METHOD serialize_locals_imp.
+
+    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
+      EXPORTING
+        clskey                       = is_clskey
+        inctype                      = seop_ext_class_locals_imp
+      IMPORTING
+        source_expanded              = rt_source
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        not_existing                 = 2
+        OTHERS                       = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from get_include_source'.
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_local
+
+  METHOD serialize_locals_def.
+
+    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
+      EXPORTING
+        clskey                       = is_clskey
+        inctype                      = seop_ext_class_locals_def
+      IMPORTING
+        source_expanded              = rt_source
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        not_existing                 = 2
+        OTHERS                       = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from get_include_source'.
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_locals_def
+
+  METHOD serialize_testclasses.
+
+    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
+      EXPORTING
+        clskey                       = is_clskey
+        inctype                      = seop_ext_class_testclasses
+      IMPORTING
+        source_expanded              = rt_source
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        not_existing                 = 2
+        OTHERS                       = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from get_include_source'.
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_test
+
+  METHOD serialize_macros.
+
+    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
+      EXPORTING
+        clskey                       = is_clskey
+        inctype                      = seop_ext_class_macros
+      IMPORTING
+        source_expanded              = rt_source
+      EXCEPTIONS
+        _internal_class_not_existing = 1
+        not_existing                 = 2
+        OTHERS                       = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from get_include_source'.
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_macro
+
+  METHOD serialize_abap.
+
+    DATA: lo_source TYPE REF TO cl_oo_source.
+
+
+    CREATE OBJECT lo_source
+      EXPORTING
+        clskey             = is_clskey
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from CL_OO_SOURCE'.
+    ENDIF.
+
+    lo_source->read( 'A' ).
+    rt_source = lo_source->get_old_source( ).
+    remove_signatures( CHANGING ct_source = rt_source ).
+
+  ENDMETHOD.                    "serialize_abap
 
   METHOD remove_signatures.
 
@@ -1432,9 +1573,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: lo_source     TYPE REF TO cl_oo_source,
-          lt_source     TYPE seop_source_string,
-          ls_vseoclass  TYPE vseoclass,
+    DATA: lt_source     TYPE seop_source_string,
           ls_file       TYPE st_file,
           lo_xml        TYPE REF TO lcl_xml,
           ls_clskey     TYPE seoclskey.
@@ -1455,25 +1594,60 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-    CREATE OBJECT lo_source
-      EXPORTING
-        clskey             = ls_clskey
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      _raise 'error from CL_OO_SOURCE'.
+* todo, text elements?
+
+    lt_source = serialize_abap( ls_clskey ).
+    ls_file = abap_to_file( is_item = is_item
+                            it_abap = lt_source ).
+    APPEND ls_file TO rt_files.
+
+    lt_source = serialize_locals_def( ls_clskey ).
+    IF NOT lt_source[] IS INITIAL.
+      ls_file = abap_to_file( is_item  = is_item
+                              iv_extra = 'locals_def'
+                              it_abap  = lt_source ).       "#EC NOTEXT
+      APPEND ls_file TO rt_files.
     ENDIF.
 
-    lo_source->read( 'A' ).
-    lt_source = lo_source->get_old_source( ).
-    remove_signatures( CHANGING ct_source = lt_source ).
-* todo, text elements?
-* todo, local classes in class
+    lt_source = serialize_locals_imp( ls_clskey ).
+    IF NOT lt_source[] IS INITIAL.
+      ls_file = abap_to_file( is_item  = is_item
+                              iv_extra = 'locals_imp'
+                              it_abap  = lt_source ).       "#EC NOTEXT
+      APPEND ls_file TO rt_files.
+    ENDIF.
+
+    lt_source = serialize_testclasses( ls_clskey ).
+    IF NOT lt_source[] IS INITIAL.
+      ls_file = abap_to_file( is_item  = is_item
+                              iv_extra = 'testclasses'
+                              it_abap  = lt_source ).       "#EC NOTEXT
+      APPEND ls_file TO rt_files.
+    ENDIF.
+
+    lt_source = serialize_macros( ls_clskey ).
+    IF NOT lt_source[] IS INITIAL.
+      ls_file = abap_to_file( is_item  = is_item
+                              iv_extra = 'macros'
+                              it_abap  = lt_source ).       "#EC NOTEXT
+      APPEND ls_file TO rt_files.
+    ENDIF.
+
+    lo_xml = serialize_xml( ls_clskey ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD serialize_xml.
+
+    DATA: ls_vseoclass  TYPE vseoclass.
+
 
     CALL FUNCTION 'SEO_CLASS_GET'
       EXPORTING
-        clskey       = ls_clskey
+        clskey       = is_clskey
         version      = seoc_version_active
       IMPORTING
         class        = ls_vseoclass
@@ -1493,25 +1667,22 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
            ls_vseoclass-changedby,
            ls_vseoclass-changedon.
 
-    CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_vseoclass ).
-    ls_file = xml_to_file( is_item = is_item
-                           io_xml  = lo_xml ).
-    APPEND ls_file TO rt_files.
+    CREATE OBJECT ro_xml.
+    ro_xml->structure_add( ls_vseoclass ).
 
-    ls_file = abap_to_file( is_item = is_item
-                            it_abap = lt_source ).
-    APPEND ls_file TO rt_files.
-
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.                    "serialize_xml
 
   METHOD deserialize.
 
-    DATA: ls_vseoclass TYPE vseoclass,
-          lt_source    TYPE seop_source_string,
-          lo_source    TYPE REF TO cl_oo_source,
-          lo_xml       TYPE REF TO lcl_xml,
-          ls_clskey    TYPE seoclskey.
+    DATA: ls_vseoclass   TYPE vseoclass,
+          lt_source      TYPE seop_source_string,
+          lo_source      TYPE REF TO cl_oo_source,
+          lo_xml         TYPE REF TO lcl_xml,
+          lt_locals_def  TYPE seop_source_string,
+          lt_locals_imp  TYPE seop_source_string,
+          lt_locals_mac  TYPE seop_source_string,
+          lt_testclasses TYPE seop_source_string,
+          ls_clskey      TYPE seoclskey.
 
 
     lo_xml = read_xml( is_item  = is_item
@@ -1522,12 +1693,33 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
                          it_files = it_files
                CHANGING  ct_abap = lt_source ).
 
+    read_abap( EXPORTING is_item  = is_item
+                         iv_extra = 'locals_def'
+                         it_files = it_files
+               CHANGING  ct_abap = lt_locals_def ).         "#EC NOTEXT
+
+    read_abap( EXPORTING is_item  = is_item
+                         iv_extra = 'locals_imp'
+                         it_files = it_files
+               CHANGING  ct_abap = lt_locals_imp ).         "#EC NOTEXT
+
+    read_abap( EXPORTING is_item  = is_item
+                         iv_extra = 'macros'
+                         it_files = it_files
+               CHANGING  ct_abap = lt_locals_mac ).         "#EC NOTEXT
+
+    read_abap( EXPORTING is_item  = is_item
+                         iv_extra = 'testclasses'
+                         it_files = it_files
+               CHANGING  ct_abap = lt_testclasses ).        "#EC NOTEXT
 
     ls_clskey-clsname = is_item-obj_name.
 
 * function group SEOK
 * function group SEOQ
-* todo, transport and package?
+* function group SEOP
+* class CL_OO_CLASSNAME_SERVICE
+* class CL_OO_SOURCE
 
     CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
       EXPORTING
@@ -1546,6 +1738,23 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
       _raise 'error from SEO_CLASS_CREATE_COMPLETE'.
     ENDIF.
 
+    CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
+      EXPORTING
+        clskey                 = ls_clskey
+        force                  = seox_true
+        locals_def             = lt_locals_def
+        locals_imp             = lt_locals_imp
+        locals_mac             = lt_locals_mac
+        locals_testclasses     = lt_testclasses
+      EXCEPTIONS
+        not_existing           = 1
+        model_only             = 2
+        locals_not_generated   = 3
+        locals_not_initialised = 4
+        OTHERS                 = 5.
+    IF sy-subrc <> 0.
+      _raise 'error from generate_locals'.
+    ENDIF.
 
     CREATE OBJECT lo_source
       EXPORTING
@@ -1758,12 +1967,9 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   METHOD serialize.
 
-* todo, more symmetry, serialize vs deserialize
-
     DATA: ls_progdir      TYPE progdir,
           lv_program_name TYPE programm,
           lt_source       TYPE TABLE OF abaptxt255,
-*          lv_source       TYPE string,
           ls_file         LIKE LINE OF rt_files,
           lo_xml          TYPE REF TO lcl_xml.
 
