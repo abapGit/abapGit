@@ -4235,6 +4235,7 @@ CLASS lcl_gui DEFINITION FINAL.
                       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: install
+                      IMPORTING iv_url TYPE string
                       RAISING lcx_exception.
 
     CLASS-METHODS: add
@@ -4567,13 +4568,15 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lx_exception TYPE REF TO lcx_exception,
           ls_result    TYPE st_result,
+          lv_url       type string,
           ls_repo      TYPE st_repo.
 
 
     TRY.
         CASE action.
           WHEN 'install'.
-            install( ).
+            lv_url = getdata.
+            install( lv_url ).
           WHEN 'explore'.
             go_html_viewer->show_url( 'http://larshp.github.io/abapGit/explore.html' ).
           WHEN 'abapgithome'.
@@ -4715,9 +4718,10 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname = 'ABAPTXT255'.
+    <ls_field>-tabname   = 'ABAPTXT255'.
     <ls_field>-fieldname = 'LINE'.
     <ls_field>-fieldtext = 'Url'.                           "#EC NOTEXT
+    <ls_field>-value     = iv_url.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
