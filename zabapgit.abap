@@ -2,7 +2,7 @@ REPORT zabapgit.
 
 * See https://github.com/larshp/abapGit/
 
-CONSTANTS: gc_version TYPE string VALUE 'v0.x-alpha'.       "#EC NOTEXT
+CONSTANTS: gc_version TYPE string VALUE 'v0.1-alpha'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4837,6 +4837,9 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render.
 
     DATA: lt_repos TYPE tt_repos_sha1,
+          lv_text  TYPE c LENGTH 100,
+          lv_pct   TYPE i,
+          lv_f     type f,
           ls_repo  LIKE LINE OF lt_repos.
 
 
@@ -4863,6 +4866,14 @@ CLASS lcl_gui IMPLEMENTATION.
       rv_html = rv_html && '<br><br><br>'.
 
       LOOP AT lt_repos INTO ls_repo.
+        lv_f = ( sy-tabix / lines( lt_repos ) ) * 100.
+        lv_pct = lv_f.
+        lv_text = lcl_url=>name( ls_repo-url ).
+        CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+          EXPORTING
+            percentage = lv_pct
+            text       = lv_text.
+
         rv_html = rv_html && render_repo( ls_repo ).
       ENDLOOP.
     ENDIF.
