@@ -2,7 +2,7 @@ REPORT zabapgit.
 
 * See https://github.com/larshp/abapGit/
 
-CONSTANTS: gc_version TYPE string VALUE 'alpha'.            "#EC NOTEXT
+CONSTANTS: gc_version TYPE string VALUE 'v0.1-alpha'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2107,7 +2107,8 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       IMPORTING
         e_progdir  = ls_progdir.
 
-    CLEAR: ls_progdir-cnam,
+    CLEAR: ls_progdir-edtx,
+           ls_progdir-cnam,
            ls_progdir-cdat,
            ls_progdir-unam,
            ls_progdir-udat,
@@ -4568,7 +4569,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lx_exception TYPE REF TO lcx_exception,
           ls_result    TYPE st_result,
-          lv_url       type string,
+          lv_url       TYPE string,
           ls_repo      TYPE st_repo.
 
 
