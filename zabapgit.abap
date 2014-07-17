@@ -2,7 +2,7 @@ REPORT zabapgit.
 
 * See https://github.com/larshp/abapGit/
 
-CONSTANTS: gc_version TYPE string VALUE 'v0.1-alpha'.       "#EC NOTEXT
+CONSTANTS: gc_version TYPE string VALUE 'v0.x-alpha'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1042,6 +1042,10 @@ ENDCLASS.                    "lcl_diff IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common DEFINITION ABSTRACT.
 
+  PUBLIC SECTION.
+    CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
+                gt_programs TYPE TABLE OF dwinactiv.
+
   PROTECTED SECTION.
     CLASS-METHODS: xml_to_file IMPORTING is_item TYPE st_item
                                          io_xml  TYPE REF TO lcl_xml
@@ -1065,7 +1069,7 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
                                 RETURNING value(rs_file) TYPE st_file
                                 RAISING lcx_exception.
 
-    CLASS-METHODS: activate IMPORTING is_item TYPE st_item
+    CLASS-METHODS: into_working_area IMPORTING is_item TYPE st_item
                             RAISING lcx_exception.
 
     CLASS-METHODS: corr_insert IMPORTING is_item TYPE st_item
@@ -1104,7 +1108,9 @@ CLASS lcl_serialize_common IMPLEMENTATION.
         permission_failure  = 2
         unknown_objectclass = 3
         OTHERS              = 4.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 1.
+      _raise 'Cancelled'.
+    ELSEIF sy-subrc <> 0.
       _raise 'error from RS_CORR_INSERT'.
     ENDIF.
 
@@ -1121,12 +1127,16 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
   ENDMETHOD.                    "filename
 
-  METHOD activate.
+  METHOD into_working_area.
 
 * function group SEWORKINGAREA
+* function module RS_INSERT_INTO_WORKING_AREA
+* class CL_WB_ACTIVATION_WORK_AREA
 
     DATA: lt_objects  TYPE dwinactiv_tab,
           lv_obj_name TYPE dwinactiv-obj_name.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
 
 
     lv_obj_name = is_item-obj_name.
@@ -1139,40 +1149,11 @@ CLASS lcl_serialize_common IMPLEMENTATION.
             object           = is_item-obj_type
           TABLES
             inactive_objects = lt_objects.
-
-        IF lt_objects[] IS INITIAL.
-          RETURN.
-        ENDIF.
-
-        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-          TABLES
-            objects                = lt_objects
-          EXCEPTIONS
-            excecution_error       = 1
-            cancelled              = 2
-            insert_into_corr_error = 3
-            execution_error        = 4
-            OTHERS                 = 5.
-        IF sy-subrc <> 0.
-          _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
-        ENDIF.
-
+        APPEND LINES OF lt_objects TO lcl_serialize_common=>gt_programs.
       WHEN 'DOMA' OR 'DTEL'.
-        CALL FUNCTION 'RS_WORKING_OBJECT_ACTIVATE'
-          EXPORTING
-            object                     = is_item-obj_type
-            obj_name                   = lv_obj_name
-            dictionary_only            = abap_true
-          EXCEPTIONS
-            object_not_in_working_area = 1
-            execution_error            = 2
-            cancelled                  = 3
-            insert_into_corr_error     = 4
-            OTHERS                     = 5.
-        IF sy-subrc <> 0.
-          _raise 'error from RS_WORKING_OBJECT_ACTIVATE'.
-        ENDIF.
-
+        APPEND INITIAL LINE TO lcl_serialize_common=>gt_ddic ASSIGNING <ls_object>.
+        <ls_object>-object   = is_item-obj_type.
+        <ls_object>-obj_name = lv_obj_name.
       WHEN OTHERS.
         _raise 'activate, unknown type'.
     ENDCASE.
@@ -1367,7 +1348,7 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
       _raise 'error from DDIF_DOMA_PUT'.
     ENDIF.
 
-    activate( is_item ).
+    into_working_area( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1475,7 +1456,7 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
       _raise 'error from DDIF_DTEL_PUT'.
     ENDIF.
 
-    activate( is_item ).
+    into_working_area( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1882,7 +1863,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         _raise 'save failure'.
     ENDTRY.
 
-    activate( is_item ).
+    into_working_area( is_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -2332,6 +2313,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       ls_progdir_new-dbapl = ls_progdir-dbapl.
       ls_progdir_new-rload = ls_progdir-rload.
 
+* todo, use new approach for activating, call method into_working_list()
       CALL FUNCTION 'UPDATE_PROGDIR'
         EXPORTING
           i_progdir    = ls_progdir_new
@@ -2392,6 +2374,8 @@ CLASS lcl_serialize DEFINITION FINAL.
                                       is_gen TYPE st_file
                             RETURNING value(rv_match) TYPE abap_bool
                             RAISING lcx_exception.
+
+    CLASS-METHODS activate RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_serialize DEFINITION
 
@@ -2503,6 +2487,9 @@ CLASS lcl_serialize IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
 
+    CLEAR lcl_serialize_common=>gt_ddic[].
+    CLEAR lcl_serialize_common=>gt_ddic[].
+
 * todo, sort objects when activating? DOMA first, DTEL, etc.
     LOOP AT it_files ASSIGNING <ls_file>.
       SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
@@ -2548,7 +2535,51 @@ CLASS lcl_serialize IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
+    activate( ).
+
   ENDMETHOD.                    "deserialize
+
+  METHOD activate.
+
+* ddic
+    IF NOT lcl_serialize_common=>gt_ddic[] IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_true
+          with_popup             = abap_true
+        TABLES
+          objects                = lcl_serialize_common=>gt_ddic
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          execution_error        = 4
+          OTHERS                 = 5.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+* programs
+    IF NOT lcl_serialize_common=>gt_programs[] IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_false
+          with_popup             = abap_true
+        TABLES
+          objects                = lcl_serialize_common=>gt_programs
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          execution_error        = 4
+          OTHERS                 = 5.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.                    "activate
 
   METHOD compare_files.
 
