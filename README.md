@@ -9,7 +9,7 @@ Git client for ABAP
 - Code readable in git repository
 
 ## Installation Guide ##
-Copy the ABAP into new report via SE38 or SE80, setup SSL in STRUST, activate, run
+Copy the ABAP into new report via SE38 or SE80, setup SSL in STRUST, activate, run (tested on 7.30 and 7.40)
 
 ## FAQ ##
 ##### 1) SSL Setup #####
