@@ -2828,7 +2828,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
 
     CLEAR lcl_serialize_common=>gt_ddic[].
-    CLEAR lcl_serialize_common=>gt_ddic[].
+    CLEAR lcl_serialize_common=>gt_programs[].
 
 
     lt_results = status( it_files ).
