@@ -2,7 +2,7 @@ REPORT zabapgit.
 
 * See https://github.com/larshp/abapGit/
 
-CONSTANTS: gc_version TYPE string VALUE 'v0.1-alpha'.       "#EC NOTEXT
+CONSTANTS: gc_version TYPE string VALUE 'v0.2-alpha'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -332,10 +332,12 @@ CLASS lcl_xml DEFINITION FINAL.
                            RAISING lcx_exception.
 
     METHODS table_add      IMPORTING it_table TYPE STANDARD TABLE
+                                     iv_name TYPE string OPTIONAL
                                      ii_root TYPE REF TO if_ixml_element OPTIONAL
                            RAISING lcx_exception.
 
     METHODS table_read     IMPORTING ii_root TYPE REF TO if_ixml_element OPTIONAL
+                                     iv_name TYPE string OPTIONAL
                            CHANGING ct_table TYPE STANDARD TABLE
                            RAISING lcx_exception.
 
@@ -458,6 +460,11 @@ CLASS lcl_xml IMPLEMENTATION.
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
     lv_name = lo_table_descr->get_relative_name( ).
+
+    IF lv_name IS INITIAL.
+      lv_name = iv_name.
+    ENDIF.
+
     IF lv_name IS INITIAL.
       _raise 'no name'.
     ENDIF.
@@ -562,6 +569,10 @@ CLASS lcl_xml IMPLEMENTATION.
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
     lv_name = lo_table_descr->get_relative_name( ).
+
+    IF lv_name IS INITIAL.
+      lv_name = iv_name.
+    ENDIF.
 
     IF lv_name IS INITIAL.
       _raise 'no name'.
@@ -1042,6 +1053,10 @@ ENDCLASS.                    "lcl_diff IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_common DEFINITION ABSTRACT.
 
+  PUBLIC SECTION.
+    CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
+                gt_programs TYPE TABLE OF dwinactiv.
+
   PROTECTED SECTION.
     CLASS-METHODS: xml_to_file IMPORTING is_item TYPE st_item
                                          io_xml  TYPE REF TO lcl_xml
@@ -1065,7 +1080,8 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
                                 RETURNING value(rs_file) TYPE st_file
                                 RAISING lcx_exception.
 
-    CLASS-METHODS: activate IMPORTING is_item TYPE st_item
+    CLASS-METHODS: activation_add IMPORTING iv_type TYPE trobjtype
+                                            iv_name TYPE clike
                             RAISING lcx_exception.
 
     CLASS-METHODS: corr_insert IMPORTING is_item TYPE st_item
@@ -1104,7 +1120,9 @@ CLASS lcl_serialize_common IMPLEMENTATION.
         permission_failure  = 2
         unknown_objectclass = 3
         OTHERS              = 4.
-    IF sy-subrc <> 0.
+    IF sy-subrc = 1.
+      _raise 'Cancelled'.
+    ELSEIF sy-subrc <> 0.
       _raise 'error from RS_CORR_INSERT'.
     ENDIF.
 
@@ -1121,58 +1139,39 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
   ENDMETHOD.                    "filename
 
-  METHOD activate.
+  METHOD activation_add.
 
 * function group SEWORKINGAREA
+* function module RS_INSERT_INTO_WORKING_AREA
+* class CL_WB_ACTIVATION_WORK_AREA
 
     DATA: lt_objects  TYPE dwinactiv_tab,
           lv_obj_name TYPE dwinactiv-obj_name.
 
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
 
-    lv_obj_name = is_item-obj_name.
 
-    CASE is_item-obj_type.
+    lv_obj_name = iv_name.
+
+    CASE iv_type.
       WHEN 'CLAS'.
         CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
           EXPORTING
             obj_name         = lv_obj_name
-            object           = is_item-obj_type
+            object           = iv_type
           TABLES
             inactive_objects = lt_objects.
-
-        IF lt_objects[] IS INITIAL.
-          RETURN.
-        ENDIF.
-
-        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-          TABLES
-            objects                = lt_objects
-          EXCEPTIONS
-            excecution_error       = 1
-            cancelled              = 2
-            insert_into_corr_error = 3
-            execution_error        = 4
-            OTHERS                 = 5.
-        IF sy-subrc <> 0.
-          _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
-        ENDIF.
-
-      WHEN 'DOMA' OR 'DTEL'.
-        CALL FUNCTION 'RS_WORKING_OBJECT_ACTIVATE'
-          EXPORTING
-            object                     = is_item-obj_type
-            obj_name                   = lv_obj_name
-            dictionary_only            = abap_true
-          EXCEPTIONS
-            object_not_in_working_area = 1
-            execution_error            = 2
-            cancelled                  = 3
-            insert_into_corr_error     = 4
-            OTHERS                     = 5.
-        IF sy-subrc <> 0.
-          _raise 'error from RS_WORKING_OBJECT_ACTIVATE'.
-        ENDIF.
-
+        APPEND LINES OF lt_objects TO lcl_serialize_common=>gt_programs.
+      WHEN 'DOMA' OR 'DTEL' OR 'TABL'.
+* todo also insert_into_working_area?
+        APPEND INITIAL LINE TO lcl_serialize_common=>gt_ddic ASSIGNING <ls_object>.
+        <ls_object>-object   = iv_type.
+        <ls_object>-obj_name = lv_obj_name.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD'.
+* these seem to go into the workarea automatically
+        APPEND INITIAL LINE TO lcl_serialize_common=>gt_programs ASSIGNING <ls_object>.
+        <ls_object>-object   = iv_type.
+        <ls_object>-obj_name = lv_obj_name.
       WHEN OTHERS.
         _raise 'activate, unknown type'.
     ENDCASE.
@@ -1367,7 +1366,8 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
       _raise 'error from DDIF_DOMA_PUT'.
     ENDIF.
 
-    activate( is_item ).
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1475,7 +1475,8 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
       _raise 'error from DDIF_DTEL_PUT'.
     ENDIF.
 
-    activate( is_item ).
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1882,7 +1883,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         _raise 'save failure'.
     ENDTRY.
 
-    activate( is_item ).
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
 
   ENDMETHOD.                    "deserialize
 
@@ -1949,11 +1951,141 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 CLASS lcl_serialize_tabl IMPLEMENTATION.
 
   METHOD serialize.
+
+    DATA: lv_name  TYPE ddobjname,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_file  TYPE st_file,
+          ls_dd02v TYPE dd02v,
+          ls_dd09l TYPE dd09l,
+          lt_dd03p TYPE ddtt_dd03p,
+          lt_dd05m TYPE ddtt_dd05m,
+          lt_dd08v TYPE ddtt_dd08v,
+          lt_dd12v TYPE dd12vtab,
+          lt_dd17v TYPE dd17vtab,
+          lt_dd35v TYPE ddtt_dd35v,
+          lt_dd36m TYPE dd36mttyp.
+
+    FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v.
+
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_TABL_GET'
+      EXPORTING
+        name          = lv_name
+      IMPORTING
+        dd02v_wa      = ls_dd02v
+        dd09l_wa      = ls_dd09l
+      TABLES
+        dd03p_tab     = lt_dd03p
+        dd05m_tab     = lt_dd05m
+        dd08v_tab     = lt_dd08v
+        dd12v_tab     = lt_dd12v
+        dd17v_tab     = lt_dd17v
+        dd35v_tab     = lt_dd35v
+        dd36m_tab     = lt_dd36m
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_TABL_GET'.
+    ENDIF.
+
+    CLEAR: ls_dd02v-as4user,
+           ls_dd02v-as4date,
+           ls_dd02v-as4time.
+
+    CLEAR: ls_dd09l-as4user,
+           ls_dd09l-as4date,
+           ls_dd09l-as4time.
+
+    LOOP AT lt_dd12v ASSIGNING <ls_dd12v>.
+      CLEAR: <ls_dd12v>-as4user,
+             <ls_dd12v>-as4date,
+             <ls_dd12v>-as4time.
+    ENDLOOP.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_dd02v ).
+    lo_xml->structure_add( ls_dd09l ).
+    lo_xml->table_add( lt_dd03p ).
+    lo_xml->table_add( lt_dd05m ).
+    lo_xml->table_add( lt_dd08v ).
+    lo_xml->table_add( lt_dd12v ).
+    lo_xml->table_add( lt_dd17v ).
+    lo_xml->table_add( lt_dd35v ).
+    lo_xml->table_add( lt_dd36m ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
     _raise 'todo'.
+
   ENDMETHOD.                    "serialize
 
   METHOD deserialize.
+
+    DATA: lv_name  TYPE ddobjname,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_dd02v TYPE dd02v,
+          ls_dd09l TYPE dd09l,
+          lt_dd03p TYPE ddtt_dd03p,
+          lt_dd05m TYPE ddtt_dd05m,
+          lt_dd08v TYPE ddtt_dd08v,
+          lt_dd12v TYPE dd12vtab,
+          lt_dd17v TYPE dd17vtab,
+          lt_dd35v TYPE ddtt_dd35v,
+          lt_dd36m TYPE dd36mttyp.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd02v ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
+
+    lo_xml->table_read( CHANGING ct_table = lt_dd03p ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd05m ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd08v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd12v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd17v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd35v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd36m ).
+
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_TABL_PUT'
+      EXPORTING
+        name              = lv_name
+        dd02v_wa          = ls_dd02v
+        dd09l_wa          = ls_dd09l
+      TABLES
+        dd03p_tab         = lt_dd03p
+        dd05m_tab         = lt_dd05m
+        dd08v_tab         = lt_dd08v
+        dd35v_tab         = lt_dd35v
+        dd36m_tab         = lt_dd36m
+      EXCEPTIONS
+        tabl_not_found    = 1
+        name_inconsistent = 2
+        tabl_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_TABL_PUT'.
+    ENDIF.
+
+* todo dd012v and dd17v?
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
     _raise 'todo'.
+
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_TABL IMPLEMENTATION
@@ -2050,10 +2182,18 @@ CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                                io_xml TYPE REF TO lcl_xml
                                      RAISING lcx_exception.
 
+    CLASS-METHODS: serialize_cua IMPORTING iv_program_name TYPE programm
+                                           io_xml TYPE REF TO lcl_xml
+                                 RAISING lcx_exception.
+
     CLASS-METHODS: deserialize_dynpros IMPORTING io_xml   TYPE REF TO lcl_xml
                                        RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize_abap IMPORTING iv_obj_name TYPE tadir-obj_name
+    CLASS-METHODS: deserialize_cua IMPORTING io_xml  TYPE REF TO lcl_xml
+                                             is_item TYPE st_item
+                                   RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize_abap IMPORTING is_item     TYPE st_item
                                               io_xml      TYPE REF TO lcl_xml
                                               it_source   TYPE abaptxt255_tab
                                     RAISING lcx_exception.
@@ -2069,6 +2209,165 @@ ENDCLASS.                    "lcl_serialize_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_prog IMPLEMENTATION.
+
+  METHOD deserialize_cua.
+
+    DATA: ls_tr_key TYPE trkey,
+          ls_adm    TYPE rsmpe_adm,
+          lt_sta    TYPE TABLE OF rsmpe_stat,
+          lt_fun    TYPE TABLE OF rsmpe_funt,
+          lt_men    TYPE TABLE OF rsmpe_men,
+          lt_mtx    TYPE TABLE OF rsmpe_mnlt,
+          lt_act    TYPE TABLE OF rsmpe_act,
+          lt_but    TYPE TABLE OF rsmpe_but,
+          lt_pfk    TYPE TABLE OF rsmpe_pfk,
+          lt_set    TYPE TABLE OF rsmpe_staf,
+          lt_doc    TYPE TABLE OF rsmpe_atrt,
+          lt_tit    TYPE TABLE OF rsmpe_titt,
+          lt_biv    TYPE TABLE OF rsmpe_buts.
+
+
+    io_xml->structure_read( CHANGING cg_structure = ls_adm ).
+    IF ls_adm IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_STAT_TABLE'
+                        CHANGING ct_table = lt_sta ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_FUNT_TABLE'
+                        CHANGING ct_table = lt_fun ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_MEN_TABLE'
+                        CHANGING ct_table = lt_men ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_MNLT_TABLE'
+                        CHANGING ct_table = lt_mtx ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_ACT_TABLE'
+                        CHANGING ct_table = lt_act ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_BUT_TABLE'
+                        CHANGING ct_table = lt_but ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_PFK_TABLE'
+                        CHANGING ct_table = lt_pfk ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_STAF_TABLE'
+                        CHANGING ct_table = lt_set ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_ATRT_TABLE'
+                        CHANGING ct_table = lt_doc ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_TITT_TABLE'
+                        CHANGING ct_table = lt_tit ).
+    io_xml->table_read( EXPORTING iv_name = 'RSMPE_BUTS_TABLE'
+                        CHANGING ct_table = lt_biv ).
+
+    SELECT SINGLE devclass INTO ls_tr_key-devclass
+      FROM tadir
+      WHERE pgmid = 'R3TR'
+      AND object = is_item-obj_type
+      AND obj_name = is_item-obj_name.
+    IF sy-subrc <> 0.
+      _raise 'not found in tadir'.
+    ENDIF.
+
+    ls_tr_key-obj_type = is_item-obj_type.
+    ls_tr_key-obj_name = is_item-obj_name.
+    ls_tr_key-sub_type = 'CUAD'.
+    ls_tr_key-sub_name = is_item-obj_name.
+
+    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
+      EXPORTING
+        program   = is_item-obj_name
+        language  = sy-langu
+        tr_key    = ls_tr_key
+        adm       = ls_adm
+        state     = 'I'
+      TABLES
+        sta       = lt_sta
+        fun       = lt_fun
+        men       = lt_men
+        mtx       = lt_mtx
+        act       = lt_act
+        but       = lt_but
+        pfk       = lt_pfk
+        set       = lt_set
+        doc       = lt_doc
+        tit       = lt_tit
+        biv       = lt_biv
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CUA_INTERNAL_WRITE'.
+    ENDIF.
+
+    activation_add( iv_type = 'CUAD'
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize_cua
+
+  METHOD serialize_cua.
+
+    DATA: ls_adm TYPE rsmpe_adm,
+          lt_sta TYPE TABLE OF rsmpe_stat,
+          lt_fun TYPE TABLE OF rsmpe_funt,
+          lt_men TYPE TABLE OF rsmpe_men,
+          lt_mtx TYPE TABLE OF rsmpe_mnlt,
+          lt_act TYPE TABLE OF rsmpe_act,
+          lt_but TYPE TABLE OF rsmpe_but,
+          lt_pfk TYPE TABLE OF rsmpe_pfk,
+          lt_set TYPE TABLE OF rsmpe_staf,
+          lt_doc TYPE TABLE OF rsmpe_atrt,
+          lt_tit TYPE TABLE OF rsmpe_titt,
+          lt_biv TYPE TABLE OF rsmpe_buts.
+
+
+    CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
+      EXPORTING
+        program         = iv_program_name
+        language        = sy-langu
+        state           = 'A'
+      IMPORTING
+        adm             = ls_adm
+      TABLES
+        sta             = lt_sta
+        fun             = lt_fun
+        men             = lt_men
+        mtx             = lt_mtx
+        act             = lt_act
+        but             = lt_but
+        pfk             = lt_pfk
+        set             = lt_set
+        doc             = lt_doc
+        tit             = lt_tit
+        biv             = lt_biv
+      EXCEPTIONS
+        not_found       = 1
+        unknown_version = 2
+        OTHERS          = 3.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CUA_INTERNAL_FETCH'.
+    ENDIF.
+
+    io_xml->structure_add( ls_adm ).
+    io_xml->table_add( it_table = lt_sta
+                       iv_name = 'RSMPE_STAT_TABLE' ).
+    io_xml->table_add( it_table = lt_fun
+                       iv_name = 'RSMPE_FUNT_TABLE' ).
+    io_xml->table_add( it_table = lt_men
+                       iv_name = 'RSMPE_MEN_TABLE' ).
+    io_xml->table_add( it_table = lt_mtx
+                       iv_name = 'RSMPE_MNLT_TABLE' ).
+    io_xml->table_add( it_table = lt_act
+                       iv_name = 'RSMPE_ACT_TABLE' ).
+    io_xml->table_add( it_table = lt_but
+                       iv_name = 'RSMPE_BUT_TABLE' ).
+    io_xml->table_add( it_table = lt_pfk
+                       iv_name = 'RSMPE_PFK_TABLE' ).
+    io_xml->table_add( it_table = lt_set
+                       iv_name = 'RSMPE_STAF_TABLE' ).
+    io_xml->table_add( it_table = lt_doc
+                       iv_name = 'RSMPE_ATRT_TABLE' ).
+    io_xml->table_add( it_table = lt_tit
+                       iv_name = 'RSMPE_TITT_TABLE' ).
+    io_xml->table_add( it_table = lt_biv
+                       iv_name = 'RSMPE_BUTS_TABLE' ).
+
+  ENDMETHOD.                    "serialize_cua
 
   METHOD serialize.
 
@@ -2124,7 +2423,10 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     IF ls_progdir-subc = '1'.
       serialize_dynpros( EXPORTING iv_program_name = lv_program_name
                                    io_xml          = lo_xml ).
+      serialize_cua( EXPORTING iv_program_name = lv_program_name
+                               io_xml          = lo_xml ).
     ENDIF.
+
 
 
     ls_file = xml_to_file( is_item = is_item
@@ -2212,13 +2514,16 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
     read_abap( EXPORTING is_item  = is_item
                          it_files = it_files
-               CHANGING  ct_abap = lt_source ).
+               CHANGING  ct_abap  = lt_source ).
 
-    deserialize_abap( iv_obj_name = is_item-obj_name
+    deserialize_abap( is_item     = is_item
                       io_xml      = lo_xml
                       it_source   = lt_source ).
 
     deserialize_dynpros( lo_xml ).
+
+    deserialize_cua( is_item = is_item
+                     io_xml  = lo_xml ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
 
@@ -2227,6 +2532,8 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     DATA: li_element              TYPE REF TO if_ixml_element,
           ls_header               TYPE rpy_dyhead,
           lt_containers           TYPE dycatt_tab,
+          ls_item                 TYPE st_item,
+          lv_name                 TYPE dwinactiv-obj_name,
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow.
 
@@ -2270,6 +2577,11 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
+      CONCATENATE ls_header-program ls_header-screen INTO lv_name RESPECTING BLANKS.
+
+      activation_add( iv_type = 'DYNP'
+                      iv_name = lv_name ).
+
     ENDDO.
 
   ENDMETHOD.                    "deserialize_dynpros
@@ -2277,6 +2589,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
   METHOD deserialize_abap.
 
     DATA: ls_progdir     TYPE progdir,
+          ls_item        LIKE is_item,
           ls_progdir_new TYPE progdir.
 
 
@@ -2284,10 +2597,11 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
 
 
-    IF exists( iv_obj_name ) = abap_true.
+    IF exists( is_item-obj_name ) = abap_true.
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
           program_name     = ls_progdir-name
+          save_inactive    = 'I'
         TABLES
           source_extended  = it_source
         EXCEPTIONS
@@ -2310,6 +2624,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
           program_name        = ls_progdir-name
           program_type        = ls_progdir-subc
           title_string        = 'todo'
+          save_inactive       = 'I'
         TABLES
           source_extended     = it_source
         EXCEPTIONS
@@ -2322,8 +2637,15 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
         _raise 'PROG, error inserting'.
       ENDIF.
 
-      SELECT SINGLE * FROM progdir INTO ls_progdir_new
-        WHERE name = ls_progdir-name AND state = 'A'.
+      CALL FUNCTION 'READ_PROGDIR'
+        EXPORTING
+          i_progname = ls_progdir-name
+          i_state    = 'I'
+        IMPORTING
+          e_progdir  = ls_progdir_new
+        EXCEPTIONS
+          not_exists = 1
+          OTHERS     = 2.
       IF sy-subrc <> 0.
         _raise 'not found in PROGDIR'.
       ENDIF.
@@ -2344,8 +2666,10 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
         _raise 'PROG, error inserting'.
       ENDIF.
 
-      COMMIT WORK.
     ENDIF.
+
+    activation_add( iv_type = 'REPS'
+                    iv_name = is_item-obj_name ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
 
@@ -2353,7 +2677,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
     DATA: lv_progname TYPE reposrc-progname.
 
-
+* function group SEUEXIST
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = iv_obj_name.                         "#EC WARNOK
     IF sy-subrc = 0.
@@ -2392,6 +2716,8 @@ CLASS lcl_serialize DEFINITION FINAL.
                                       is_gen TYPE st_file
                             RETURNING value(rv_match) TYPE abap_bool
                             RAISING lcx_exception.
+
+    CLASS-METHODS activate RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_serialize DEFINITION
 
@@ -2495,30 +2821,28 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lv_pre   TYPE tadir-obj_name,
-          lv_type  TYPE string,
-          ls_item  TYPE st_item,
-          lv_ext   TYPE string.
+    DATA: ls_item    TYPE st_item,
+          lt_results TYPE tt_results.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 
-* todo, sort objects when activating? DOMA first, DTEL, etc.
-    LOOP AT it_files ASSIGNING <ls_file>.
-      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
-      TRANSLATE lv_pre TO UPPER CASE.
-      TRANSLATE lv_type TO UPPER CASE.
+    CLEAR lcl_serialize_common=>gt_ddic[].
+    CLEAR lcl_serialize_common=>gt_ddic[].
 
-      IF lv_ext <> 'xml'.
-        CONTINUE. " current loop
-      ENDIF.
+
+    lt_results = status( it_files ).
+    DELETE lt_results WHERE match = abap_true.
+    SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
+
+    LOOP AT lt_results ASSIGNING <ls_result>.
 
       CLEAR ls_item.
-      ls_item-obj_type = lv_type.
-      ls_item-obj_name = lv_pre.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
 
-* todo, dont deserialize if it already matches
-      CASE lv_type.
+      CASE ls_item-obj_type.
         WHEN 'PROG'.
           lcl_serialize_prog=>deserialize( is_item  = ls_item
                                            it_files = it_files ).
@@ -2548,7 +2872,51 @@ CLASS lcl_serialize IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
+    activate( ).
+
   ENDMETHOD.                    "deserialize
+
+  METHOD activate.
+
+* ddic
+    IF NOT lcl_serialize_common=>gt_ddic[] IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_true
+          with_popup             = abap_true
+        TABLES
+          objects                = lcl_serialize_common=>gt_ddic
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          execution_error        = 4
+          OTHERS                 = 5.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+* programs
+    IF NOT lcl_serialize_common=>gt_programs[] IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_false
+          with_popup             = abap_true
+        TABLES
+          objects                = lcl_serialize_common=>gt_programs
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          execution_error        = 4
+          OTHERS                 = 5.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.                    "activate
 
   METHOD compare_files.
 
@@ -4631,7 +4999,7 @@ CLASS lcl_gui IMPLEMENTATION.
     END-OF-DEFINITION.
 
 
-* todo, by package
+* todo, by package, fm TADIR_GET
 * todo, by transport
 
     _add 'PROG Program'.
@@ -4806,6 +5174,9 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render.
 
     DATA: lt_repos TYPE tt_repos_sha1,
+          lv_text  TYPE c LENGTH 100,
+          lv_pct   TYPE i,
+          lv_f     TYPE f,
           ls_repo  LIKE LINE OF lt_repos.
 
 
@@ -4832,6 +5203,14 @@ CLASS lcl_gui IMPLEMENTATION.
       rv_html = rv_html && '<br><br><br>'.
 
       LOOP AT lt_repos INTO ls_repo.
+        lv_f = ( sy-tabix / lines( lt_repos ) ) * 100.
+        lv_pct = lv_f.
+        lv_text = lcl_url=>name( ls_repo-url ).
+        CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+          EXPORTING
+            percentage = lv_pct
+            text       = lv_text.
+
         rv_html = rv_html && render_repo( ls_repo ).
       ENDLOOP.
     ENDIF.
