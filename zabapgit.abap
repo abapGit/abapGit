@@ -376,19 +376,20 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD xml_find.
 
+    DATA: li_root LIKE ii_root.
+
+
     IF ii_root IS BOUND.
-      ri_element = ii_root->find_from_name( depth = 0 name = iv_name ).
-      IF NOT ri_element IS BOUND.
-        RETURN.
-      ENDIF.
-      ii_root->remove_child( ri_element ).
+      li_root = ii_root.
     ELSE.
-      ri_element = mi_root->find_from_name( depth = 0 name = iv_name ).
-      IF NOT ri_element IS BOUND.
-        RETURN.
-      ENDIF.
-      mi_root->remove_child( ri_element ).
+      li_root = mi_root.
     ENDIF.
+
+    ri_element = li_root->find_from_name( depth = 0 name = iv_name ).
+    IF NOT ri_element IS BOUND.
+      RETURN.
+    ENDIF.
+    li_root->remove_child( ri_element ).
 
   ENDMETHOD.                    "xml_find
 
@@ -469,8 +470,8 @@ CLASS lcl_xml IMPLEMENTATION.
       _raise 'no name'.
     ENDIF.
 
-    li_root = xml_find( ii_root = ii_root
-                        iv_name = lv_name ).
+    li_root = xml_find( ii_root   = ii_root
+                        iv_name   = lv_name ).
     IF NOT li_root IS BOUND.
       RETURN.
     ENDIF.
@@ -1167,7 +1168,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
         APPEND INITIAL LINE TO lcl_serialize_common=>gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD'.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT'.
 * these seem to go into the workarea automatically
         APPEND INITIAL LINE TO lcl_serialize_common=>gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -1331,7 +1332,6 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
 
 * fm TR_TADIR_INTERFACE
 * fm RS_CORR_INSERT ?
-* break LSTRDF31 line 540
 
     DATA: lo_xml    TYPE REF TO lcl_xml,
           ls_dd01v  TYPE dd01v,
@@ -2168,35 +2168,52 @@ ENDCLASS.                    "lcl_serialize_TRAN IMPLEMENTATION
 CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
-                             RETURNING value(rt_files) TYPE tt_files
-                             RAISING lcx_exception.
+    CLASS-METHODS: serialize  IMPORTING is_item TYPE st_item
+                              RETURNING value(rt_files) TYPE tt_files
+                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
-                                         it_files TYPE tt_files
-                               RAISING lcx_exception.
+    CLASS-METHODS: deserialize
+                              IMPORTING is_item TYPE st_item
+                                       it_files TYPE tt_files
+                              RAISING lcx_exception.
 
 
   PRIVATE SECTION.
-    CLASS-METHODS: serialize_dynpros IMPORTING iv_program_name TYPE programm
-                                               io_xml TYPE REF TO lcl_xml
-                                     RAISING lcx_exception.
+    CLASS-METHODS: serialize_dynpros
+                              IMPORTING iv_program_name TYPE programm
+                                        io_xml TYPE REF TO lcl_xml
+                              RAISING lcx_exception.
 
-    CLASS-METHODS: serialize_cua IMPORTING iv_program_name TYPE programm
-                                           io_xml TYPE REF TO lcl_xml
-                                 RAISING lcx_exception.
+    CLASS-METHODS: serialize_cua
+                              IMPORTING iv_program_name TYPE programm
+                                        io_xml TYPE REF TO lcl_xml
+                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize_dynpros IMPORTING io_xml   TYPE REF TO lcl_xml
-                                       RAISING lcx_exception.
+    CLASS-METHODS: serialize_textpool
+                              IMPORTING iv_program_name TYPE programm
+                                        io_xml TYPE REF TO lcl_xml
+                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize_cua IMPORTING io_xml  TYPE REF TO lcl_xml
-                                             is_item TYPE st_item
-                                   RAISING lcx_exception.
+    CLASS-METHODS: deserialize_dynpros
+                              IMPORTING io_xml   TYPE REF TO lcl_xml
+                              RAISING lcx_exception.
 
-    CLASS-METHODS: deserialize_abap IMPORTING is_item     TYPE st_item
-                                              io_xml      TYPE REF TO lcl_xml
-                                              it_source   TYPE abaptxt255_tab
-                                    RAISING lcx_exception.
+    CLASS-METHODS: deserialize_cua
+                              IMPORTING io_xml  TYPE REF TO lcl_xml
+                                        is_item TYPE st_item
+                              RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize_textpool
+                              IMPORTING it_tpool TYPE textpool_table
+                                        is_item  TYPE st_item
+                              RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize_abap
+                              IMPORTING is_item     TYPE st_item
+                                        io_xml      TYPE REF TO lcl_xml
+                                        it_source   TYPE abaptxt255_tab
+                                        it_tpool    TYPE textpool_table
+                              RAISING lcx_exception.
 
     CLASS-METHODS exists IMPORTING iv_obj_name TYPE tadir-obj_name
                          RETURNING value(rv_exists) TYPE abap_bool.
@@ -2209,6 +2226,39 @@ ENDCLASS.                    "lcl_serialize_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_prog IMPLEMENTATION.
+
+  METHOD deserialize_textpool.
+
+    READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
+    IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
+      RETURN. " no action for includes
+    ENDIF.
+
+    INSERT TEXTPOOL is_item-obj_name
+      FROM it_tpool
+      LANGUAGE sy-langu
+      STATE 'I'.                                     "#EC CI_INSERT_REP
+
+    IF sy-subrc <> 0.
+      _raise 'error from INSERT TEXTPOOL'.
+    ENDIF.
+
+    activation_add( iv_type = 'REPT'
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize_textpool
+
+  METHOD serialize_textpool.
+
+* function modules RS_TEXTPOOL_* cannot be used as these dont work for includes
+
+    DATA: lt_tpool TYPE textpool_table.
+
+
+    READ TEXTPOOL iv_program_name INTO lt_tpool LANGUAGE sy-langu.
+    io_xml->table_add( lt_tpool ).
+
+  ENDMETHOD.                    "serialize_textpool
 
   METHOD deserialize_cua.
 
@@ -2427,7 +2477,8 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                                io_xml          = lo_xml ).
     ENDIF.
 
-
+    serialize_textpool( EXPORTING iv_program_name = lv_program_name
+                                  io_xml          = lo_xml ).
 
     ls_file = xml_to_file( is_item = is_item
                            io_xml  = lo_xml ).
@@ -2506,6 +2557,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lo_xml      TYPE REF TO lcl_xml,
+          lt_tpool    TYPE textpool_table,
           lt_source   TYPE abaptxt255_tab.
 
 
@@ -2516,14 +2568,21 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                          it_files = it_files
                CHANGING  ct_abap  = lt_source ).
 
+    lo_xml->table_read( CHANGING  ct_table  = lt_tpool ).
+
     deserialize_abap( is_item     = is_item
                       io_xml      = lo_xml
-                      it_source   = lt_source ).
+                      it_source   = lt_source
+                      it_tpool    = lt_tpool ).
 
     deserialize_dynpros( lo_xml ).
 
     deserialize_cua( is_item = is_item
                      io_xml  = lo_xml ).
+
+    deserialize_textpool( is_item = is_item
+                          it_tpool = lt_tpool
+                          ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
 
@@ -2588,7 +2647,9 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   METHOD deserialize_abap.
 
-    DATA: ls_progdir     TYPE progdir,
+    DATA: ls_tpool       LIKE LINE OF it_tpool,
+          ls_progdir     TYPE progdir,
+          lv_title       TYPE rglif-title,
           ls_item        LIKE is_item,
           ls_progdir_new TYPE progdir.
 
@@ -2596,11 +2657,14 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     io_xml->structure_read( CHANGING cg_structure = ls_progdir ).
 
 
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.    "#EC SUBRC
+    lv_title = ls_tpool-entry.
 
     IF exists( is_item-obj_name ) = abap_true.
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
           program_name     = ls_progdir-name
+          title_string     = lv_title
           save_inactive    = 'I'
         TABLES
           source_extended  = it_source
@@ -2623,7 +2687,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
           authorization_group = ls_progdir-secu
           program_name        = ls_progdir-name
           program_type        = ls_progdir-subc
-          title_string        = 'todo'
+          title_string        = lv_title
           save_inactive       = 'I'
         TABLES
           source_extended     = it_source
@@ -2653,6 +2717,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       ls_progdir_new-ldbname = ls_progdir-ldbname.
       ls_progdir_new-dbapl = ls_progdir-dbapl.
       ls_progdir_new-rload = ls_progdir-rload.
+      ls_progdir_new-fixpt = ls_progdir-fixpt.
 
       CALL FUNCTION 'UPDATE_PROGDIR'
         EXPORTING
