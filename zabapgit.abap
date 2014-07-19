@@ -686,6 +686,7 @@ CLASS lcl_xml IMPLEMENTATION.
           li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
+* todo, the xml file says "encoding=utf-16" but its wrong
 
     li_streamfactory = mi_ixml->create_stream_factory( ).
     li_ostream = li_streamfactory->create_ostream_cstring( rv_string ).
@@ -1154,6 +1155,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
     lv_obj_name = iv_name.
 
+* todo, refactoring
     CASE iv_type.
       WHEN 'CLAS'.
         CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
@@ -1163,7 +1165,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
           TABLES
             inactive_objects = lt_objects.
         APPEND LINES OF lt_objects TO lcl_serialize_common=>gt_programs.
-      WHEN 'DOMA' OR 'DTEL' OR 'TABL'.
+      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'.
 * todo also insert_into_working_area?
         APPEND INITIAL LINE TO lcl_serialize_common=>gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -2031,6 +2033,7 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
     CALL FUNCTION 'DDIF_TABL_GET'
       EXPORTING
         name          = lv_name
+        langu         = sy-langu
       IMPORTING
         dd02v_wa      = ls_dd02v
         dd09l_wa      = ls_dd09l
@@ -2047,6 +2050,9 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
         OTHERS        = 2.
     IF sy-subrc <> 0.
       _raise 'error from DDIF_TABL_GET'.
+    ENDIF.
+    IF ls_dd02v IS INITIAL.
+      RETURN. " object does not exits
     ENDIF.
 
     CLEAR: ls_dd02v-as4user,
@@ -2078,13 +2084,12 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-    _raise 'todo'.
-
   ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
     DATA: lv_name  TYPE ddobjname,
+          lv_tname TYPE trobj_name,
           lo_xml   TYPE REF TO lcl_xml,
           ls_dd02v TYPE dd02v,
           ls_dd09l TYPE dd09l,
@@ -2093,8 +2098,11 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
           lt_dd08v TYPE ddtt_dd08v,
           lt_dd12v TYPE dd12vtab,
           lt_dd17v TYPE dd17vtab,
+          ls_dd17v LIKE LINE OF lt_dd17v,
+          lt_secondary LIKE lt_dd17v,
           lt_dd35v TYPE ddtt_dd35v,
-          lt_dd36m TYPE dd36mttyp.
+          lt_dd36m TYPE dd36mttyp,
+          ls_dd12v LIKE LINE OF lt_dd12v.
 
 
     lo_xml = read_xml( is_item  = is_item
@@ -2137,12 +2145,44 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
       _raise 'error from DDIF_TABL_PUT'.
     ENDIF.
 
-* todo dd012v and dd17v?
-
     activation_add( iv_type = is_item-obj_type
                     iv_name = is_item-obj_name ).
 
-    _raise 'todo'.
+* handle indexes
+    LOOP AT lt_dd12v INTO ls_dd12v.
+
+* todo, call corr_insert?
+
+      REFRESH lt_secondary.
+      LOOP AT lt_dd17v INTO ls_dd17v
+          WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
+        APPEND ls_dd17v TO lt_secondary.
+      ENDLOOP.
+
+      CALL FUNCTION 'DDIF_INDX_PUT'
+        EXPORTING
+          name              = ls_dd12v-sqltab
+          id                = ls_dd12v-indexname
+          dd12v_wa          = ls_dd12v
+        TABLES
+          dd17v_tab         = lt_secondary
+        EXCEPTIONS
+          indx_not_found    = 1
+          name_inconsistent = 2
+          indx_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        _raise 'error from DDIF_INDX_PUT'.
+      ENDIF.
+
+      lv_tname = ls_dd12v-sqltab.
+      lv_tname+10 = ls_dd12v-indexname.
+      activation_add( iv_type = 'INDX'
+                      iv_name = lv_tname ).
+
+    ENDLOOP.
 
   ENDMETHOD.                    "deserialize
 
@@ -2217,6 +2257,504 @@ CLASS lcl_serialize_tran IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_TRAN IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_enqu DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_enqu DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_enqu IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lv_name  TYPE ddobjname,
+          ls_file  TYPE st_file,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_dd25v TYPE dd25v,
+          lt_dd26e TYPE tmgn_dd26e,
+          lt_dd27p TYPE tmgn_dd27p.
+
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_ENQU_GET'
+      EXPORTING
+        name          = lv_name
+        state         = 'A'
+        langu         = sy-langu
+      IMPORTING
+        dd25v_wa      = ls_dd25v
+      TABLES
+        dd26e_tab     = lt_dd26e
+        dd27p_tab     = lt_dd27p
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_ENQU_GET'.
+    ENDIF.
+    IF ls_dd25v IS INITIAL.
+      RETURN. " does not exist in system
+    ENDIF.
+
+    CLEAR: ls_dd25v-as4user,
+           ls_dd25v-as4date,
+           ls_dd25v-as4time.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_dd25v ).
+    lo_xml->table_add( lt_dd26e ).
+    lo_xml->table_add( lt_dd27p ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          lv_name  TYPE ddobjname,
+          ls_dd25v TYPE dd25v,
+          lt_dd26e TYPE tmgn_dd26e,
+          lt_dd27p TYPE tmgn_dd27p.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd25v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd26e ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd27p ).
+
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_ENQU_PUT'
+      EXPORTING
+        name              = lv_name
+        dd25v_wa          = ls_dd25v
+      TABLES
+        dd26e_tab         = lt_dd26e
+        dd27p_tab         = lt_dd27p
+      EXCEPTIONS
+        enqu_not_found    = 1
+        name_inconsistent = 2
+        enqu_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_ENQU_PUT'.
+    ENDIF.
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize
+
+ENDCLASS.                    "lcl_serialize_enqu IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_shlp DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_shlp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_shlp IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lv_name  TYPE ddobjname,
+          ls_file  TYPE st_file,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_dd30v TYPE dd30v,
+          lt_dd31v TYPE ddtt_dd31v,
+          lt_dd32p TYPE ddtt_dd32p,
+          lt_dd33v TYPE ddtt_dd33v.
+
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_SHLP_GET'
+      EXPORTING
+        name          = lv_name
+        state         = 'A'
+        langu         = sy-langu
+      IMPORTING
+        dd30v_wa      = ls_dd30v
+      TABLES
+        dd31v_tab     = lt_dd31v
+        dd32p_tab     = lt_dd32p
+        dd33v_tab     = lt_dd33v
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_SHLP_GET'.
+    ENDIF.
+    IF ls_dd30v IS INITIAL.
+      RETURN. " does not exist in system
+    ENDIF.
+
+    CLEAR: ls_dd30v-as4user,
+           ls_dd30v-as4date,
+           ls_dd30v-as4time.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_dd30v ).
+    lo_xml->table_add( lt_dd31v ).
+    lo_xml->table_add( lt_dd32p ).
+    lo_xml->table_add( lt_dd33v ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          lv_name  TYPE ddobjname,
+          ls_dd30v TYPE dd30v,
+          lt_dd31v TYPE ddtt_dd31v,
+          lt_dd32p TYPE ddtt_dd32p,
+          lt_dd33v TYPE ddtt_dd33v.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd30v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd31v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd32p ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd33v ).
+
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_SHLP_PUT'
+      EXPORTING
+        name              = lv_name
+        dd30v_wa          = ls_dd30v
+      TABLES
+        dd31v_tab         = lt_dd31v
+        dd32p_tab         = lt_dd32p
+        dd33v_tab         = lt_dd33v
+      EXCEPTIONS
+        shlp_not_found    = 1
+        name_inconsistent = 2
+        shlp_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_SHLP_PUT'.
+    ENDIF.
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize
+
+ENDCLASS.                    "lcl_serialize_shlp IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_view DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_view IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_file  TYPE st_file,
+          lv_name  TYPE ddobjname,
+          ls_dd25v TYPE dd25v,
+          ls_dd09l TYPE dd09l,
+          lt_dd26v TYPE dd26v_t,
+          lt_dd27p TYPE dd27p_t,
+          lt_dd28j TYPE dd28j_t,
+          lt_dd28v TYPE ddtt_dd28v.
+
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_VIEW_GET'
+      EXPORTING
+        name          = lv_name
+        state         = 'A'
+        langu         = sy-langu
+      IMPORTING
+        dd25v_wa      = ls_dd25v
+        dd09l_wa      = ls_dd09l
+      TABLES
+        dd26v_tab     = lt_dd26v
+        dd27p_tab     = lt_dd27p
+        dd28j_tab     = lt_dd28j
+        dd28v_tab     = lt_dd28v
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_VIEW_GET'.
+    ENDIF.
+    IF ls_dd25v IS INITIAL.
+      RETURN. " does not exist in system
+    ENDIF.
+
+    CLEAR: ls_dd25v-as4user,
+           ls_dd25v-as4date,
+           ls_dd25v-as4time.
+
+    CLEAR: ls_dd09l-as4user,
+           ls_dd09l-as4date,
+           ls_dd09l-as4time.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_dd25v ).
+    lo_xml->structure_add( ls_dd09l ).
+
+    lo_xml->table_add( lt_dd26v ).
+    lo_xml->table_add( lt_dd27p ).
+    lo_xml->table_add( lt_dd28j ).
+    lo_xml->table_add( lt_dd28v ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          lv_name  TYPE ddobjname,
+          ls_dd25v TYPE dd25v,
+          ls_dd09l TYPE dd09l,
+          lt_dd26v TYPE dd26v_t,
+          lt_dd27p TYPE dd27p_t,
+          lt_dd28j TYPE dd28j_t,
+          lt_dd28v TYPE ddtt_dd28v.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd25v ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
+
+    lo_xml->table_read( CHANGING ct_table = lt_dd26v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd27p ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd28j ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd28v ).
+
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_VIEW_PUT'
+      EXPORTING
+        name              = lv_name
+        dd25v_wa          = ls_dd25v
+        dd09l_wa          = ls_dd09l
+      TABLES
+        dd26v_tab         = lt_dd26v
+        dd27p_tab         = lt_dd27p
+        dd28j_tab         = lt_dd28j
+        dd28v_tab         = lt_dd28v
+      EXCEPTIONS
+        view_not_found    = 1
+        name_inconsistent = 2
+        view_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_VIEW_PUT'.
+    ENDIF.
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize
+
+ENDCLASS.                    "lcl_serialize_view IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_ttyp DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_ttyp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_ttyp IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_file  TYPE st_file,
+          lv_name  TYPE ddobjname,
+          lt_dd42v TYPE dd42v_tab,
+          lt_dd43v TYPE dd43v_tab,
+          ls_dd40v TYPE dd40v.
+
+
+    lv_name = is_item-obj_name.
+
+    CALL FUNCTION 'DDIF_TTYP_GET'
+      EXPORTING
+        name          = lv_name
+        state         = 'A'
+        langu         = sy-langu
+      IMPORTING
+        dd40v_wa      = ls_dd40v
+      TABLES
+        dd42v_tab     = lt_dd42v
+        dd43v_tab     = lt_dd43v
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_TTYP_GET'.
+    ENDIF.
+    IF ls_dd40v IS INITIAL.
+      RETURN. " does not exist in system
+    ENDIF.
+
+    CLEAR: ls_dd40v-as4user,
+           ls_dd40v-as4date,
+           ls_dd40v-as4time.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_dd40v ).
+    lo_xml->table_add( lt_dd42v ).
+    lo_xml->table_add( lt_dd43v ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          lv_name  TYPE ddobjname,
+          lt_dd42v TYPE dd42v_tab,
+          lt_dd43v TYPE dd43v_tab,
+          ls_dd40v TYPE dd40v.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_dd40v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd42v ).
+    lo_xml->table_read( CHANGING ct_table = lt_dd43v ).
+
+    corr_insert( is_item ).
+
+    lv_name = is_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_TTYP_PUT'
+      EXPORTING
+        name              = lv_name
+        dd40v_wa          = ls_dd40v
+      TABLES
+        dd42v_tab         = lt_dd42v
+        dd43v_tab         = lt_dd43v
+      EXCEPTIONS
+        ttyp_not_found    = 1
+        name_inconsistent = 2
+        ttyp_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from DDIF_TTYP_PUT'.
+    ENDIF.
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize
+
+ENDCLASS.                    "lcl_serialize_ttyp IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_serialize_prog DEFINITION
@@ -2854,7 +3392,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
     DATA: lt_files TYPE tt_files.
 
-
+* todo, refactoring
     CASE is_item-obj_type.
       WHEN 'PROG'.
         rt_files = lcl_serialize_prog=>serialize( is_item ).
@@ -2872,6 +3410,14 @@ CLASS lcl_serialize IMPLEMENTATION.
         rt_files = lcl_serialize_tran=>serialize( is_item ).
       WHEN 'MSAG'.
         rt_files = lcl_serialize_msag=>serialize( is_item ).
+      WHEN 'TTYP'.
+        rt_files = lcl_serialize_ttyp=>serialize( is_item ).
+      WHEN 'VIEW'.
+        rt_files = lcl_serialize_view=>serialize( is_item ).
+      WHEN 'SHLP'.
+        rt_files = lcl_serialize_shlp=>serialize( is_item ).
+      WHEN 'ENQU'.
+        rt_files = lcl_serialize_enqu=>serialize( is_item ).
       WHEN OTHERS.
         _raise 'Serialize, unknown type'.
     ENDCASE.
@@ -2964,6 +3510,7 @@ CLASS lcl_serialize IMPLEMENTATION.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
+* todo, refactoring
       CASE ls_item-obj_type.
         WHEN 'PROG'.
           lcl_serialize_prog=>deserialize( is_item  = ls_item
@@ -2988,6 +3535,18 @@ CLASS lcl_serialize IMPLEMENTATION.
                                            it_files = it_files ).
         WHEN 'MSAG'.
           lcl_serialize_msag=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
+        WHEN 'TTYP'.
+          lcl_serialize_ttyp=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
+        WHEN 'VIEW'.
+          lcl_serialize_view=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
+        WHEN 'SHLP'.
+          lcl_serialize_shlp=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
+        WHEN 'ENQU'.
+          lcl_serialize_enqu=>deserialize( is_item  = ls_item
                                            it_files = it_files ).
         WHEN OTHERS.
           _raise 'deserialize, unknown type'.
@@ -5128,14 +5687,16 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'DTEL Data Element'.
     _add 'DOMA Domain'.
     _add 'CLAS Class'.
+    _add 'TABL Table/Structure'.
+    _add 'TTYP Table Type'.
+    _add 'VIEW View'.
+    _add 'SHLP Search Help'.
+    _add 'ENQU Lock Object'.
     _add 'FUGR Function Group (todo)'.
     _add 'MSAG Message Class (todo)'.
-    _add 'TABL Table/Structure (todo)'.
     _add 'TRAN Transaction (todo)'.
     _add 'SSFO Smart Form (todo)'.
-    _add 'FORM SAP Script (todo)'.
-    _add 'SHLP Search Help (todo)'.
-    _add 'VIEW View (todo)'.
+    _add 'FORM SAP Script (todo)'..
 *table contents
 *lock object
 *web dynpro
