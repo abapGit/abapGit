@@ -1294,7 +1294,7 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DOMA_GET'
       EXPORTING
         name          = lv_name
-        langu         = 'E'
+        langu         = sy-langu
       IMPORTING
         dd01v_wa      = ls_dd01v
       TABLES
@@ -1412,7 +1412,7 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DTEL_GET'
       EXPORTING
         name          = lv_name
-        langu         = 'E'
+        langu         = sy-langu
       IMPORTING
         dd04v_wa      = ls_dd04v
         tpara_wa      = ls_tpara
@@ -1499,6 +1499,15 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                RAISING lcx_exception.
 
   PRIVATE SECTION.
+    CLASS-METHODS: deserialize_abap IMPORTING is_item  TYPE st_item
+                                              it_files TYPE tt_files
+                                              io_xml   TYPE REF TO lcl_xml
+                                    RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize_textpool IMPORTING is_item  TYPE st_item
+                                                  io_xml   TYPE REF TO lcl_xml
+                                        RAISING lcx_exception.
+
     CLASS-METHODS exists IMPORTING is_clskey TYPE seoclskey
                          RETURNING value(rv_exists) TYPE abap_bool.
 
@@ -1700,8 +1709,6 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-* todo, text elements?
-
     lt_source = serialize_abap( ls_clskey ).
     ls_file = abap_to_file( is_item = is_item
                             it_abap = lt_source ).
@@ -1748,7 +1755,9 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: ls_vseoclass  TYPE vseoclass.
+    DATA: ls_vseoclass TYPE vseoclass,
+          lv_cp        TYPE program,
+          lt_tpool     TYPE textpool_table.
 
 
     CALL FUNCTION 'SEO_CLASS_GET'
@@ -1776,14 +1785,69 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     CREATE OBJECT ro_xml.
     ro_xml->structure_add( ls_vseoclass ).
 
+    lv_cp = cl_oo_classname_service=>get_classpool_name( is_clskey-clsname ).
+    READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu.
+    ro_xml->table_add( lt_tpool ).
+
   ENDMETHOD.                    "serialize_xml
 
   METHOD deserialize.
 
+* function group SEOK
+* function group SEOQ
+* function group SEOP
+* class CL_OO_CLASSNAME_SERVICE
+* class CL_OO_SOURCE
+
+    DATA: lo_xml TYPE REF TO lcl_xml.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    deserialize_abap( is_item  = is_item
+                      it_files = it_files
+                      io_xml   = lo_xml ).
+
+    deserialize_textpool( is_item = is_item
+                          io_xml  = lo_xml ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD deserialize_textpool.
+
+    DATA: lv_cp      TYPE program,
+          lv_clsname TYPE seoclsname,
+          lt_tpool   TYPE textpool_table.
+
+
+    io_xml->table_read( CHANGING ct_table = lt_tpool ).
+
+    IF lt_tpool[] IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_clsname = is_item-obj_name.
+    lv_cp = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
+
+    INSERT TEXTPOOL lv_cp
+      FROM lt_tpool
+      LANGUAGE sy-langu
+      STATE 'I'.                                     "#EC CI_INSERT_REP
+    IF sy-subrc <> 0.
+      _raise 'error from INSERT TEXTPOOL'.
+    ENDIF.
+
+    activation_add( iv_type = 'REPT'
+                    iv_name = lv_cp ).
+
+  ENDMETHOD.                    "deserialize_textpool
+
+  METHOD deserialize_abap.
+
     DATA: ls_vseoclass   TYPE vseoclass,
           lt_source      TYPE seop_source_string,
           lo_source      TYPE REF TO cl_oo_source,
-          lo_xml         TYPE REF TO lcl_xml,
           lt_locals_def  TYPE seop_source_string,
           lt_locals_imp  TYPE seop_source_string,
           lt_locals_mac  TYPE seop_source_string,
@@ -1791,9 +1855,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
           ls_clskey      TYPE seoclskey.
 
 
-    lo_xml = read_xml( is_item  = is_item
-                       it_files = it_files ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
+    io_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
 
     read_abap( EXPORTING is_item  = is_item
                          it_files = it_files
@@ -1821,11 +1883,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
     ls_clskey-clsname = is_item-obj_name.
 
-* function group SEOK
-* function group SEOQ
-* function group SEOP
-* class CL_OO_CLASSNAME_SERVICE
-* class CL_OO_SOURCE
+
 
     CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
       EXPORTING
@@ -2238,7 +2296,6 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       FROM it_tpool
       LANGUAGE sy-langu
       STATE 'I'.                                     "#EC CI_INSERT_REP
-
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
     ENDIF.
@@ -2515,7 +2572,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       _raise 'error from screen_list'.
     ENDIF.
 
-    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro> WHERE type <> 'S'. " skip generated selection screens
 
       li_element = io_xml->xml_element( 'SCREEN' ).
 
