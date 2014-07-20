@@ -4754,8 +4754,8 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: lv_hash   TYPE c LENGTH 40,
           lv_len    TYPE i,
           lt_result TYPE TABLE OF string,
-          lv_data   TYPE string.
-
+          lv_data   TYPE string,
+          lv_text   TYPE string.
 
     cl_http_client=>create_by_url(
       EXPORTING
@@ -4771,7 +4771,28 @@ CLASS lcl_transport IMPLEMENTATION.
         name  = '~request_uri'
         value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-' && iv_service && '-pack' ).
     ei_client->send( ).
-    ei_client->receive( ).
+    ei_client->receive(
+      EXCEPTIONS
+        http_communication_failure = 1
+        http_invalid_state         = 2
+        http_processing_failed     = 3
+        OTHERS                     = 4
+    ).
+    IF sy-subrc <> 0.
+      CASE sy-subrc.
+        WHEN 1.
+          lv_text = 'HTTP Communication Failure'.
+        WHEN 2.
+          lv_text = 'HTTP Invalid State'.
+        WHEN 3.
+          lv_text = 'HTTP Processing failed'.
+        WHEN OTHERS.
+          lv_text = 'Another error occured'.
+      ENDCASE.
+      RAISE EXCEPTION TYPE lcx_exception
+        EXPORTING
+          iv_text = lv_text.
+    ENDIF.
 
     check_http_200( ei_client ).
 
