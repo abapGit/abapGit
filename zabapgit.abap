@@ -440,7 +440,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
       lv_name = <ls_comp>-name.
       special_names( CHANGING cv_name = lv_name ).
-      lv_value = li_struct->find_from_name( depth = 0 name = lv_name )->get_value( ).
+      lv_value = li_struct->find_from_name( depth = 0 name = lv_name )->get_VALUE( ).
 
       <lg_any> = lv_value.
     ENDLOOP.
@@ -2072,12 +2072,16 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_dd02v ).
     lo_xml->structure_add( ls_dd09l ).
-    lo_xml->table_add( lt_dd03p ).
-    lo_xml->table_add( lt_dd05m ).
-    lo_xml->table_add( lt_dd08v ).
+    lo_xml->table_add( it_table = lt_dd03p
+                       iv_name  = 'DD03P_TABLE' ).
+    lo_xml->table_add( it_table = lt_dd05m
+                       iv_name  = 'DD05M_TABLE' ).
+    lo_xml->table_add( it_table = lt_dd08v
+                       iv_name  = 'DD08V_TABLE' ).
     lo_xml->table_add( lt_dd12v ).
     lo_xml->table_add( lt_dd17v ).
-    lo_xml->table_add( lt_dd35v ).
+    lo_xml->table_add( it_table = lt_dd35v
+                       iv_name  = 'DD35V_TALE' ).
     lo_xml->table_add( lt_dd36m ).
 
     ls_file = xml_to_file( is_item = is_item
@@ -2111,12 +2115,16 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
     lo_xml->structure_read( CHANGING cg_structure = ls_dd02v ).
     lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
 
-    lo_xml->table_read( CHANGING ct_table = lt_dd03p ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd05m ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd08v ).
+    lo_xml->table_read( EXPORTING iv_name  = 'DD03P_TABLE'
+                        CHANGING ct_table = lt_dd03p ).
+    lo_xml->table_read( EXPORTING iv_name  = 'DD05M_TABLE'
+                        CHANGING ct_table = lt_dd05m ).
+    lo_xml->table_read( EXPORTING iv_name  = 'DD08V_TABLE'
+                        CHANGING ct_table = lt_dd08v ).
     lo_xml->table_read( CHANGING ct_table = lt_dd12v ).
     lo_xml->table_read( CHANGING ct_table = lt_dd17v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd35v ).
+    lo_xml->table_read( EXPORTING iv_name  = 'DD35V_TALE'
+                        CHANGING ct_table = lt_dd35v ).
     lo_xml->table_read( CHANGING ct_table = lt_dd36m ).
 
     corr_insert( is_item ).
@@ -6112,6 +6120,11 @@ CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
     METHODS repo_url FOR TESTING RAISING lcx_exception.
     METHODS repo_error FOR TESTING.
 
+    METHODS serialize_tabl FOR TESTING RAISING lcx_exception.
+    METHODS serialize_enqu FOR TESTING RAISING lcx_exception.
+    METHODS serialize_shlp FOR TESTING RAISING lcx_exception.
+    METHODS serialize_view FOR TESTING RAISING lcx_exception.
+
 ENDCLASS.                    "test DEFINITION
 *----------------------------------------------------------------------*
 *       CLASS test IMPLEMENTATION
@@ -6119,6 +6132,66 @@ ENDCLASS.                    "test DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_abap_unit IMPLEMENTATION.
+
+  METHOD serialize_enqu.
+
+    DATA: ls_item  TYPE st_item,
+          lt_files TYPE tt_files.
+
+
+    ls_item-obj_type = 'ENQU'.
+    ls_item-obj_name = 'E_USR04'.
+
+    lt_files = lcl_serialize=>serialize( ls_item ).
+
+    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+
+  ENDMETHOD.                    "lcl_abap_unit
+
+  METHOD serialize_shlp.
+
+    DATA: ls_item  TYPE st_item,
+          lt_files TYPE tt_files.
+
+
+    ls_item-obj_type = 'SHLP'.
+    ls_item-obj_name = 'USER_LOGON'.
+
+    lt_files = lcl_serialize=>serialize( ls_item ).
+
+    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+
+  ENDMETHOD.                    "lcl_abap_unit
+
+  METHOD serialize_view.
+
+    DATA: ls_item  TYPE st_item,
+          lt_files TYPE tt_files.
+
+
+    ls_item-obj_type = 'VIEW'.
+    ls_item-obj_name = 'H_USR02'.
+
+    lt_files = lcl_serialize=>serialize( ls_item ).
+
+    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+
+  ENDMETHOD.                    "lcl_abap_unit
+
+  METHOD serialize_tabl.
+
+    DATA: ls_item  TYPE st_item,
+          lt_files TYPE tt_files.
+
+
+    ls_item-obj_type = 'TABL'.
+    ls_item-obj_name = 'USR02'.
+
+    lt_files = lcl_serialize=>serialize( ls_item ).
+
+    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+
+  ENDMETHOD.                    "serialize_table
 
   METHOD repo_error.
 
