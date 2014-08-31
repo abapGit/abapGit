@@ -1539,6 +1539,8 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
     CLASS-METHODS remove_signatures CHANGING ct_source TYPE seop_source_string.
 
+    CLASS-METHODS reduce CHANGING ct_source TYPE seop_source_string.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -1547,6 +1549,25 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_clas IMPLEMENTATION.
+
+  METHOD reduce.
+
+    DATA: lv_source LIKE LINE OF ct_source,
+          lv_found  TYPE abap_bool.
+
+
+* skip files that only contain the standard comments
+    lv_found = abap_false.
+    LOOP AT ct_source INTO lv_source.
+      IF strlen( lv_source ) >= 3 AND lv_source(3) <> '*"*'.
+        lv_found = abap_true.
+      ENDIF.
+    ENDLOOP.
+    IF lv_found = abap_false.
+      CLEAR ct_source[].
+    ENDIF.
+
+  ENDMETHOD.                    "reduce
 
   METHOD serialize_locals_imp.
 
@@ -1563,6 +1584,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'Error from get_include_source'.
     ENDIF.
+
+    reduce( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.                    "serialize_local
 
@@ -1582,6 +1605,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
       _raise 'Error from get_include_source'.
     ENDIF.
 
+    reduce( CHANGING ct_source = rt_source ).
+
   ENDMETHOD.                    "serialize_locals_def
 
   METHOD serialize_testclasses.
@@ -1596,7 +1621,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
         _internal_class_not_existing = 1
         not_existing                 = 2
         OTHERS                       = 3.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
       _raise 'Error from get_include_source'.
     ENDIF.
 
@@ -1617,6 +1642,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'Error from get_include_source'.
     ENDIF.
+
+    reduce( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.                    "serialize_macro
 
