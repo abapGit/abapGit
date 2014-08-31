@@ -1073,6 +1073,7 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
     CLASS-METHODS: read_abap IMPORTING is_item  TYPE st_item
                                        iv_extra TYPE string OPTIONAL
                                        it_files TYPE tt_files
+                                       iv_error TYPE abap_bool DEFAULT abap_true
                             CHANGING ct_abap TYPE STANDARD TABLE
                             RAISING lcx_exception.
 
@@ -1189,13 +1190,19 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_abap> LIKE LINE OF it_files.
 
 
+    CLEAR ct_abap[].
+
     lv_filename = filename( is_item  = is_item
                             iv_extra = iv_extra
                             iv_ext   = 'abap' ).            "#EC NOTEXT
 
     READ TABLE it_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
-      _raise 'abap not found'.
+      IF iv_error = abap_true.
+        _raise 'abap not found'.
+      ELSE.
+        RETURN.
+      ENDIF.
     ENDIF.
     lv_abap = lcl_convert=>xstring_to_string_utf8( <ls_abap>-data ).
 
@@ -1510,6 +1517,10 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                                   io_xml   TYPE REF TO lcl_xml
                                         RAISING lcx_exception.
 
+    CLASS-METHODS: deserialize_docu IMPORTING is_item  TYPE st_item
+                                              io_xml   TYPE REF TO lcl_xml
+                                    RAISING lcx_exception.
+
     CLASS-METHODS exists IMPORTING is_clskey TYPE seoclskey
                          RETURNING value(rv_exists) TYPE abap_bool.
 
@@ -1786,7 +1797,10 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass TYPE vseoclass,
           lv_cp        TYPE program,
-          lt_tpool     TYPE textpool_table.
+          lt_tpool     TYPE textpool_table,
+          lv_object    TYPE dokhl-object,
+          lv_state     TYPE dokhl-dokstate,
+          lt_lines     TYPE tlinetab.
 
 
     CALL FUNCTION 'SEO_CLASS_GET'
@@ -1814,9 +1828,31 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     CREATE OBJECT ro_xml.
     ro_xml->structure_add( ls_vseoclass ).
 
+
     lv_cp = cl_oo_classname_service=>get_classpool_name( is_clskey-clsname ).
     READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu.
     ro_xml->table_add( lt_tpool ).
+
+
+    lv_object = is_clskey-clsname.
+    CALL FUNCTION 'DOCU_GET'
+      EXPORTING
+        id                = 'CL'
+        langu             = 'E'
+        object            = lv_object
+      IMPORTING
+        dokstate          = lv_state
+      TABLES
+        line              = lt_lines
+      EXCEPTIONS
+        no_docu_on_screen = 1
+        no_docu_self_def  = 2
+        no_docu_temp      = 3
+        ret_code          = 4
+        OTHERS            = 5.
+    IF sy-subrc = 0 AND lv_state = 'R'.
+      ro_xml->table_add( lt_lines ).
+    ENDIF.
 
   ENDMETHOD.                    "serialize_xml
 
@@ -1841,7 +1877,39 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     deserialize_textpool( is_item = is_item
                           io_xml  = lo_xml ).
 
+    deserialize_docu( is_item = is_item
+                      io_xml  = lo_xml ).
+
   ENDMETHOD.                    "deserialize
+
+  METHOD deserialize_docu.
+
+    DATA: lt_lines  TYPE tlinetab,
+          lv_object TYPE dokhl-object.
+
+
+    io_xml->table_read( CHANGING ct_table = lt_lines ).
+
+    IF lt_lines[] IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_object = is_item-obj_name.
+    CALL FUNCTION 'DOCU_UPD'
+      EXPORTING
+        id       = 'CL'
+        langu    = 'E'
+        object   = lv_object
+      TABLES
+        line     = lt_lines
+      EXCEPTIONS
+        ret_code = 1
+        OTHERS   = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from DOCU_UPD'.
+    ENDIF.
+
+  ENDMETHOD.                    "deserialize_doku
 
   METHOD deserialize_textpool.
 
@@ -1888,27 +1956,31 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
     read_abap( EXPORTING is_item  = is_item
                          it_files = it_files
-               CHANGING  ct_abap = lt_source ).
+               CHANGING  ct_abap  = lt_source ).
 
     read_abap( EXPORTING is_item  = is_item
                          iv_extra = 'locals_def'
                          it_files = it_files
-               CHANGING  ct_abap = lt_locals_def ).         "#EC NOTEXT
+                         iv_error = abap_false
+               CHANGING  ct_abap  = lt_locals_def ).        "#EC NOTEXT
 
     read_abap( EXPORTING is_item  = is_item
                          iv_extra = 'locals_imp'
                          it_files = it_files
-               CHANGING  ct_abap = lt_locals_imp ).         "#EC NOTEXT
+                         iv_error = abap_false
+               CHANGING  ct_abap  = lt_locals_imp ).        "#EC NOTEXT
 
     read_abap( EXPORTING is_item  = is_item
                          iv_extra = 'macros'
                          it_files = it_files
-               CHANGING  ct_abap = lt_locals_mac ).         "#EC NOTEXT
+                         iv_error = abap_false
+               CHANGING  ct_abap  = lt_locals_mac ).        "#EC NOTEXT
 
     read_abap( EXPORTING is_item  = is_item
                          iv_extra = 'testclasses'
                          it_files = it_files
-               CHANGING  ct_abap = lt_testclasses ).        "#EC NOTEXT
+                         iv_error = abap_false
+               CHANGING  ct_abap  = lt_testclasses ).       "#EC NOTEXT
 
     ls_clskey-clsname = is_item-obj_name.
 
