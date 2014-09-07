@@ -5502,6 +5502,16 @@ CLASS lcl_gui IMPLEMENTATION.
           && gc_newline &&
           '<meta http-equiv="content-type" content="text/html; charset=utf-8">'
           && gc_newline &&
+          '<script>'
+          && gc_newline &&
+          'function goBack() {'
+          && gc_newline &&
+          '  window.history.back();'
+          && gc_newline &&
+          '}'
+          && gc_newline &&
+          '</script>'
+          && gc_newline &&
           '</head>'
           && gc_newline &&
           '<body>'.
@@ -5558,7 +5568,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     lv_html = render_header( ) &&
-              '<h1>diff</h1>&nbsp;<a href="sapevent:refresh">Back</a>' &&
+              '<h1>diff</h1>&nbsp;<a href="javascript:goBack()">Back</a>' &&
               '<hr><h3>' &&
               is_result-obj_type && '&nbsp;' &&
               is_result-obj_name && '&nbsp;' &&
