@@ -4895,6 +4895,8 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_data   TYPE string,
           lv_text   TYPE string.
 
+    STATICS: sv_authorization TYPE string.
+
 
     cl_http_client=>create_by_url(
       EXPORTING
@@ -4909,6 +4911,13 @@ CLASS lcl_transport IMPLEMENTATION.
     ei_client->request->set_header_field(
         name  = '~request_uri'
         value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-' && iv_service && '-pack' ).
+    IF NOT sv_authorization IS INITIAL.
+* note this will only work if all repositories uses the same login
+      ei_client->request->set_header_field(
+          name  = 'authorization'
+          value = sv_authorization ).
+      ei_client->propertytype_logon_popup = ei_client->co_disabled.
+    ENDIF.
     ei_client->send( ).
     ei_client->receive(
       EXCEPTIONS
@@ -4933,6 +4942,7 @@ CLASS lcl_transport IMPLEMENTATION.
     ENDIF.
 
     check_http_200( ei_client ).
+    sv_authorization = ei_client->request->get_header_field( 'authorization' ).
 
     lv_data = ei_client->response->get_cdata( ).
 
