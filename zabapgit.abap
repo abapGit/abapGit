@@ -1134,9 +1134,11 @@ CLASS lcl_serialize_common IMPLEMENTATION.
   METHOD filename.
 
     IF iv_extra IS INITIAL.
-      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_ext INTO rv_filename. "#EC NOTEXT
+      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_ext
+        INTO rv_filename.                                   "#EC NOTEXT
     ELSE.
-      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_extra '.' iv_ext INTO rv_filename. "#EC NOTEXT
+      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_extra '.' iv_ext
+        INTO rv_filename.                                   "#EC NOTEXT
     ENDIF.
     TRANSLATE rv_filename TO LOWER CASE.
 
@@ -1256,7 +1258,8 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
     lv_xml = io_xml->xml_render( ).
     rs_file-path = '/'.
-    CONCATENATE is_item-obj_name '.' is_item-obj_type '.xml' INTO rs_file-filename. "#EC NOTEXT
+    CONCATENATE is_item-obj_name '.' is_item-obj_type '.xml'
+      INTO rs_file-filename.                                "#EC NOTEXT
     TRANSLATE rs_file-filename TO LOWER CASE.
     rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
 
@@ -1681,7 +1684,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
   METHOD remove_signatures.
 
-* signatures messes up in CL_OO_SOURCE when deserializing and serializing within same session
+* signatures messes up in CL_OO_SOURCE when deserializing and serializing
+* within same session
 
     CONSTANTS:
       lc_begin TYPE string VALUE '* <SIGNATURE>---------------------------------------------------------------------------------------+',
@@ -1830,7 +1834,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
 
     lv_cp = cl_oo_classname_service=>get_classpool_name( is_clskey-clsname ).
-    READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu.
+    READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu. "#EC CI_READ_REP
     ro_xml->table_add( lt_tpool ).
 
 
@@ -2576,9 +2580,12 @@ CLASS lcl_serialize_shlp IMPLEMENTATION.
                        it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_dd30v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD31V_TABLE' CHANGING ct_table = lt_dd31v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD32P_TABLE' CHANGING ct_table = lt_dd32p ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD33V_TABLE' CHANGING ct_table = lt_dd33v ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD31V_TABLE'
+                        CHANGING ct_table = lt_dd31v ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD32P_TABLE'
+                        CHANGING ct_table = lt_dd32p ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD33V_TABLE'
+                        CHANGING ct_table = lt_dd33v ).
 
     corr_insert( is_item ).
 
@@ -2718,10 +2725,14 @@ CLASS lcl_serialize_view IMPLEMENTATION.
     lo_xml->structure_read( CHANGING cg_structure = ls_dd25v ).
     lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
 
-    lo_xml->table_read( EXPORTING iv_name = 'DD26V_TABLE' CHANGING ct_table = lt_dd26v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD27P_TABLE' CHANGING ct_table = lt_dd27p ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD28J_TABLE' CHANGING ct_table = lt_dd28j ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD28V_TABLE' CHANGING ct_table = lt_dd28v ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD26V_TABLE'
+                        CHANGING ct_table = lt_dd26v ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD27P_TABLE'
+                        CHANGING ct_table = lt_dd27p ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD28J_TABLE'
+                        CHANGING ct_table = lt_dd28j ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD28V_TABLE'
+                        CHANGING ct_table = lt_dd28v ).
 
     corr_insert( is_item ).
 
@@ -2966,7 +2977,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     DATA: lt_tpool TYPE textpool_table.
 
 
-    READ TEXTPOOL iv_program_name INTO lt_tpool LANGUAGE sy-langu.
+    READ TEXTPOOL iv_program_name INTO lt_tpool LANGUAGE sy-langu. "#EC CI_READ_REP
     io_xml->table_add( lt_tpool ).
 
   ENDMETHOD.                    "serialize_textpool
@@ -3226,7 +3237,8 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
       _raise 'error from screen_list'.
     ENDIF.
 
-    LOOP AT lt_dynpros ASSIGNING <ls_dynpro> WHERE type <> 'S'. " skip generated selection screens
+* loop dynpros and skip generated selection screens
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro> WHERE type <> 'S'.
 
       li_element = io_xml->xml_element( 'SCREEN' ).
 
@@ -3368,7 +3380,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     io_xml->structure_read( CHANGING cg_structure = ls_progdir ).
 
 
-    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.    "#EC SUBRC
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
     lv_title = ls_tpool-entry.
 
     IF exists( is_item-obj_name ) = abap_true.
@@ -3819,7 +3831,6 @@ CLASS lcl_hash IMPLEMENTATION.
 
     DATA: lv_len     TYPE i,
           lv_char10  TYPE c LENGTH 10,
-
           lv_string  TYPE string,
           lv_xstring TYPE xstring.
 
@@ -4019,7 +4030,8 @@ CLASS lcl_pack IMPLEMENTATION.
     lv_null = '00'.
 
     lt_nodes[] = it_nodes[].
-    SORT lt_nodes BY name ASCENDING. " this has to be done, or unpack will fail on server side
+* following has to be done, or unpack will fail on server side
+    SORT lt_nodes BY name ASCENDING.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
@@ -4050,14 +4062,17 @@ CLASS lcl_pack IMPLEMENTATION.
     CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
-      CONCATENATE 'parent' lv_parent_lower INTO lv_tmp  SEPARATED BY space. "#EC NOTEXT
+      CONCATENATE 'parent' lv_parent_lower
+        INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
       CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
     ENDIF.
 
-    CONCATENATE 'author' is_commit-author INTO lv_tmp  SEPARATED BY space. "#EC NOTEXT
+    CONCATENATE 'author' is_commit-author
+      INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
     CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
 
-    CONCATENATE 'committer' is_commit-committer INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
+    CONCATENATE 'committer' is_commit-committer
+      INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
     CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
 
     CONCATENATE lv_string gc_newline is_commit-body INTO lv_string.
@@ -4204,7 +4219,6 @@ CLASS lcl_pack IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
 
 
-
     lv_delta = is_object-data.
 
 * find base
@@ -4316,6 +4330,7 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_cursor  TYPE i,
           ls_node    TYPE st_node,
           lv_start   TYPE i.
+
 
     DO.
       IF lv_cursor >= xstrlen( iv_data ).
@@ -4825,22 +4840,29 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD set_headers.
 
+    DATA: lv_value TYPE string.
+
+
     ii_client->request->set_header_field(
         name  = '~request_method'
         value = 'POST' ).
+
+    lv_value = lcl_url=>path_name( is_repo-url ) && '.git/git-' && iv_service && '-pack'.
     ii_client->request->set_header_field(
         name  = '~request_uri'
-        value = lcl_url=>path_name( is_repo-url ) && '.git/git-' && iv_service && '-pack' ).
+        value = lv_value ).
+
+    lv_value = 'Content-Type: application/x-git-' && iv_service && '-pack-request'.
     ii_client->request->set_header_field(
         name  = 'Content-Type'
-        value = 'Content-Type: application/x-git-' && iv_service && '-pack-request' ). "#EC NOTEXT
+        value = lv_value ).
 
   ENDMETHOD.                    "set_headers
 
   METHOD get_null.
 
-    DATA lv_x(4) TYPE x VALUE '00000000'.
-    DATA lv_z(2) TYPE c.
+    DATA: lv_x(4) TYPE x VALUE '00000000',
+          lv_z(2) TYPE c.
 
     FIELD-SYMBOLS <lv_y> TYPE c.
 
@@ -4873,6 +4895,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_data   TYPE string,
           lv_text   TYPE string.
 
+
     cl_http_client=>create_by_url(
       EXPORTING
         url    = lcl_url=>host( is_repo-url )
@@ -4892,18 +4915,17 @@ CLASS lcl_transport IMPLEMENTATION.
         http_communication_failure = 1
         http_invalid_state         = 2
         http_processing_failed     = 3
-        OTHERS                     = 4
-    ).
+        OTHERS                     = 4 ).
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
-          lv_text = 'HTTP Communication Failure'.
+          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
         WHEN 2.
-          lv_text = 'HTTP Invalid State'.
+          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
         WHEN 3.
-          lv_text = 'HTTP Processing failed'.
+          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
         WHEN OTHERS.
-          lv_text = 'Another error occured'.
+          lv_text = 'Another error occured'.                "#EC NOTEXT
       ENDCASE.
       RAISE EXCEPTION TYPE lcx_exception
         EXPORTING
@@ -4923,10 +4945,12 @@ CLASS lcl_transport IMPLEMENTATION.
     LOOP AT lt_result INTO lv_data.
       IF sy-tabix = 1.
         CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49 AND lv_data+49(lv_len) = is_repo-branch_name.
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49
+          AND lv_data+49(lv_len) = is_repo-branch_name.
         lv_hash = lv_data+8.
         EXIT. " current loop
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45 AND lv_data+45 = is_repo-branch_name.
+      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45
+          AND lv_data+45 = is_repo-branch_name.
         lv_hash = lv_data+4.
         EXIT. " current loop
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
@@ -5354,7 +5378,8 @@ CLASS lcl_porcelain IMPLEMENTATION.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       IF <ls_node>-chmod = gc_chmod_file.
-        READ TABLE it_objects ASSIGNING <ls_blob> WITH KEY sha1 = <ls_node>-sha1 type = gc_blob.
+        READ TABLE it_objects ASSIGNING <ls_blob>
+          WITH KEY sha1 = <ls_node>-sha1 type = gc_blob.
         IF sy-subrc <> 0.
           _raise 'Walk, blob not found'.
         ENDIF.
@@ -5467,12 +5492,18 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_header.
 
-    rv_html = '<html>'                                                          && gc_newline &&
-          '<head>'                                                              && gc_newline &&
-          '<title>abapGit</title>'                                              && gc_newline &&
-          render_css( )                                                         && gc_newline &&
-          '<meta http-equiv="content-type" content="text/html; charset=utf-8">' && gc_newline &&
-          '</head>'                                                             && gc_newline &&
+    rv_html = '<html>'
+          && gc_newline &&
+          '<head>'
+          && gc_newline &&
+          '<title>abapGit</title>'
+          && gc_newline &&
+          render_css( )
+          && gc_newline &&
+          '<meta http-equiv="content-type" content="text/html; charset=utf-8">'
+          && gc_newline &&
+          '</head>'
+          && gc_newline &&
           '<body>'.
 
   ENDMETHOD.                    "render_head
@@ -5829,7 +5860,7 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'MSAG Message Class (todo)'.
     _add 'TRAN Transaction (todo)'.
     _add 'SSFO Smart Form (todo)'.
-    _add 'FORM SAP Script (todo)'..
+    _add 'FORM SAP Script (todo)'.
 *table contents
 *lock object
 *web dynpro
@@ -5999,12 +6030,12 @@ CLASS lcl_gui IMPLEMENTATION.
     lt_repos = lcl_persistence=>list( ).
 
     rv_html = render_header( ) &&
-      '<h1>abapGit</h1>&nbsp;'                                              && gc_newline &&
-      '<a href="sapevent:refresh">Refresh</a>&nbsp;'                        && gc_newline &&
-      '<a href="sapevent:install">Clone</a>&nbsp;'                          && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>&nbsp;'                        && gc_newline &&
-      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;'             && gc_newline &&
-      '<hr>'                                                                && gc_newline.
+      '<h1>abapGit</h1>&nbsp;'                                  && gc_newline &&
+      '<a href="sapevent:refresh">Refresh</a>&nbsp;'            && gc_newline &&
+      '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
+      '<a href="sapevent:explore">Explore</a>&nbsp;'            && gc_newline &&
+      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' && gc_newline &&
+      '<hr>'                                                    && gc_newline.
 
     LOOP AT lt_repos INTO ls_repo.
       rv_html = rv_html &&
@@ -6106,23 +6137,26 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDIF.
 
       rv_html = rv_html &&
-        '<tr>' && gc_newline &&
+        '<tr>'                                    && gc_newline &&
         '<td>' && <ls_result>-obj_type && '</td>' && gc_newline &&
         '<td>' && <ls_result>-obj_name && '</td>' && gc_newline &&
-        '<td>' && <ls_result>-match && '</td>' && gc_newline &&
+        '<td>' && <ls_result>-match && '</td>'    && gc_newline &&
         '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
-        '<td>' && lv_link && '</td>' && gc_newline &&
-        '</tr>' && gc_newline.
+        '<td>' && lv_link && '</td>'              && gc_newline &&
+        '</tr>'                                   && gc_newline.
     ENDLOOP.
     rv_html = rv_html && '</table>' && gc_newline.
 
     CASE lv_status.
       WHEN 'match'.
-        rv_html = rv_html && '<a href="sapevent:add?' && struct_encode( ls_repo ) && '">add</a>'.
+        rv_html = rv_html && '<a href="sapevent:add?'
+                  && struct_encode( ls_repo ) && '">add</a>'.
       WHEN 'commit'.
-        rv_html = rv_html && '<a href="sapevent:commit?' && struct_encode( ls_repo ) && '">commit</a>'.
+        rv_html = rv_html && '<a href="sapevent:commit?'
+                  && struct_encode( ls_repo ) && '">commit</a>'.
       WHEN 'pull'.
-        rv_html = rv_html && '<a href="sapevent:pull?' && struct_encode( ls_repo ) && '">pull</a>'.
+        rv_html = rv_html && '<a href="sapevent:pull?'
+                  && struct_encode( ls_repo ) && '">pull</a>'.
       WHEN OTHERS.
         _raise 'status unknown'.
     ENDCASE.
