@@ -1133,11 +1133,18 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
   METHOD filename.
 
+    DATA: lv_obj_name TYPE string.
+
+
+    lv_obj_name = is_item-obj_name.
+* handle namespaces
+    REPLACE ALL OCCURRENCES OF '/' IN lv_obj_name WITH '#'.
+
     IF iv_extra IS INITIAL.
-      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_ext
+      CONCATENATE lv_obj_name '.' is_item-obj_type '.' iv_ext
         INTO rv_filename.                                   "#EC NOTEXT
     ELSE.
-      CONCATENATE is_item-obj_name '.' is_item-obj_type '.' iv_extra '.' iv_ext
+      CONCATENATE lv_obj_name '.' is_item-obj_type '.' iv_extra '.' iv_ext
         INTO rv_filename.                                   "#EC NOTEXT
     ENDIF.
     TRANSLATE rv_filename TO LOWER CASE.
@@ -1258,9 +1265,10 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
     lv_xml = io_xml->xml_render( ).
     rs_file-path = '/'.
-    CONCATENATE is_item-obj_name '.' is_item-obj_type '.xml'
-      INTO rs_file-filename.                                "#EC NOTEXT
-    TRANSLATE rs_file-filename TO LOWER CASE.
+
+    rs_file-filename = filename( is_item  = is_item
+                                 iv_ext   = 'xml' ).        "#EC NOTEXT
+
     rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
 
   ENDMETHOD.                    "do
@@ -3582,6 +3590,9 @@ CLASS lcl_serialize IMPLEMENTATION.
         CONTINUE. " current loop
       ENDIF.
 
+* handle namespaces
+      REPLACE ALL OCCURRENCES OF '#' IN lv_pre WITH '/'.
+
       CLEAR ls_result.
       ls_result-obj_type = lv_type.
       ls_result-obj_name = lv_pre.
@@ -3637,6 +3648,8 @@ CLASS lcl_serialize IMPLEMENTATION.
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
+* handle namespaces
+      REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
 * todo, refactoring
       CASE ls_item-obj_type.
