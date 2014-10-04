@@ -1835,7 +1835,8 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
            ls_vseoclass-author,
            ls_vseoclass-createdon,
            ls_vseoclass-changedby,
-           ls_vseoclass-changedon.
+           ls_vseoclass-changedon,
+           ls_vseoclass-r3release.
 
     CREATE OBJECT ro_xml.
     ro_xml->structure_add( ls_vseoclass ).
