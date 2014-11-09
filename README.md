@@ -31,5 +31,5 @@ Also see blogs
 * http://scn.sap.com/people/jens.gleichmann/blog/2008/10/31/calling-webservices-from-abap-via-httpsssl-with-pfx-certificates
 * http://scn.sap.com/people/thomas.jung/blog/2004/11/17/bsp-a-developers-journal-part-xiv--consuming-webservices-with-abap
 
-#### 2) I found a bug ####
+#### 2) Bugs/Comments/Feature Requests ####
 Add an issue in the tracker, https://github.com/larshp/abapGit/issues
