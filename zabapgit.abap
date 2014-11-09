@@ -683,15 +683,17 @@ CLASS lcl_xml IMPLEMENTATION.
   ENDMETHOD.                    "structure_to_xml
 
   METHOD xml_render.
+* will render to codepage UTF-16
 
     DATA: li_ostream       TYPE REF TO if_ixml_ostream,
           li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
-* todo, the xml file says "encoding=utf-16" but its wrong?
 
     li_streamfactory = mi_ixml->create_stream_factory( ).
+
     li_ostream = li_streamfactory->create_ostream_cstring( rv_string ).
+
     li_renderer = mi_ixml->create_renderer( ostream  = li_ostream
                                             document = mi_xml_doc ).
     li_renderer->set_normalizing( ).
@@ -1273,6 +1275,10 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     rs_file-filename = filename( is_item  = is_item
                                  iv_ext   = 'xml' ).        "#EC NOTEXT
 
+    REPLACE FIRST OCCURRENCE
+      OF '<?xml version="1.0" encoding="utf-16"?>'
+      IN lv_xml
+      WITH '<?xml version="1.0" encoding="utf-8"?>'.
     rs_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
 
   ENDMETHOD.                    "do
