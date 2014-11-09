@@ -84,7 +84,7 @@ TYPES: BEGIN OF st_result,
 TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_diff,
-         local TYPE string,
+         local  TYPE string,
          result TYPE c LENGTH 1,
          remote TYPE string,
        END OF st_diff.
@@ -314,7 +314,10 @@ ENDCLASS.                    "lcl_user IMPLEMENTATION
 CLASS lcl_xml DEFINITION FINAL.
 
   PUBLIC SECTION.
+    DATA: mi_xml_doc TYPE REF TO if_ixml_document.
+
     METHODS constructor    IMPORTING iv_xml TYPE string OPTIONAL
+                                     iv_empty TYPE abap_bool DEFAULT abap_false
                            RAISING lcx_exception.
 
     METHODS element_add    IMPORTING ig_element TYPE data
@@ -357,7 +360,6 @@ CLASS lcl_xml DEFINITION FINAL.
   PRIVATE SECTION.
 
     DATA: mi_ixml    TYPE REF TO if_ixml,
-          mi_xml_doc TYPE REF TO if_ixml_document,
           mi_root    TYPE REF TO if_ixml_element.
 
     METHODS special_names CHANGING cv_name TYPE string.
@@ -550,7 +552,7 @@ CLASS lcl_xml IMPLEMENTATION.
       li_istream->close( ).
 
       mi_root = mi_xml_doc->find_from_name( depth = 0 name = 'abapGit' ).
-    ELSE.
+    ELSEIF iv_empty = abap_false.
       mi_root = mi_xml_doc->create_element( 'abapGit' ).
       mi_root->set_attribute( name = 'version' value = gc_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
@@ -686,11 +688,12 @@ CLASS lcl_xml IMPLEMENTATION.
           li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
-* todo, the xml file says "encoding=utf-16" but its wrong
+* todo, the xml file says "encoding=utf-16" but its wrong?
 
     li_streamfactory = mi_ixml->create_stream_factory( ).
     li_ostream = li_streamfactory->create_ostream_cstring( rv_string ).
-    li_renderer = mi_ixml->create_renderer( ostream = li_ostream document = mi_xml_doc ).
+    li_renderer = mi_ixml->create_renderer( ostream  = li_ostream
+                                            document = mi_xml_doc ).
     li_renderer->set_normalizing( ).
     li_renderer->render( ).
 
@@ -990,8 +993,9 @@ CLASS lcl_diff DEFINITION FINAL.
 
   PUBLIC SECTION.
 * assumes data is UTF8 based with newlines
-    CLASS-METHODS diff IMPORTING iv_local TYPE xstring
+    CLASS-METHODS diff IMPORTING iv_local  TYPE xstring
                                  iv_remote TYPE xstring
+                                 is_item   TYPE st_item
                        RETURNING value(rt_diffs) TYPE tt_diffs.
 
 ENDCLASS.                    "lcl_diff DEFINITION
@@ -2098,6 +2102,161 @@ CLASS lcl_serialize_fugr IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_FUGR IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_ssfo DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_ssfo DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_ssfo IMPLEMENTATION.
+
+  METHOD serialize.
+* see function module FB_DOWNLOAD_FORM
+
+    DATA: lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+          lo_xml      TYPE REF TO lcl_xml,
+          ls_file     TYPE st_file,
+          lv_name     TYPE string,
+          li_node     TYPE REF TO if_ixml_node,
+          li_element  TYPE REF TO if_ixml_element,
+          li_iterator TYPE REF TO if_ixml_node_iterator,
+          li_attr     TYPE REF TO if_ixml_named_node_map,
+          lv_formname TYPE tdsfname.
+
+
+    CREATE OBJECT lo_xml
+      EXPORTING
+        iv_empty = abap_true.
+
+    CREATE OBJECT lo_sf.
+    lv_formname = is_item-obj_name. " convert type
+    TRY.
+        lo_sf->load( im_formname = lv_formname
+                     im_language = '' ).
+      CATCH cx_ssf_fb.
+* the smartform is not present in system, or other error occured
+        RETURN.
+    ENDTRY.
+
+    lo_sf->xml_download( EXPORTING parent   = lo_xml->mi_xml_doc
+                         CHANGING  document = lo_xml->mi_xml_doc ).
+
+    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+
+      lv_name = li_node->get_name( ).
+      IF lv_name = 'DEVCLASS'
+          OR lv_name = 'LASTDATE'
+          OR lv_name = 'LASTTIME'.
+        li_node->set_value( '' ).
+      ENDIF.
+      IF lv_name = 'FIRSTUSER'
+          OR lv_name = 'LASTUSER'.
+        li_node->set_value( 'DUMMY' ).
+      ENDIF.
+
+* remove IDs it seems that they are not used for anything
+* the IDs are "random" so it caused diff files
+      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
+        li_attr = li_node->get_attributes( ).
+        li_attr->remove_named_item( 'ID' ).
+      ENDIF.
+
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
+
+    li_element = lo_xml->mi_xml_doc->get_root_element( ).
+    li_element->set_attribute(
+      name      = 'sf'
+      namespace = 'xmlns'
+      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). "#EC NOTEXT
+    li_element->set_attribute(
+      name  = 'xmlns'
+      value = 'urn:sap-com:sdixml-ifr:2000' ).              "#EC NOTEXT
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+* see function module FB_UPLOAD_FORM
+
+    DATA: lo_xml      TYPE REF TO lcl_xml,
+          li_node     TYPE REF TO if_ixml_node,
+          lv_formname TYPE tdsfname,
+          lv_name     TYPE string,
+          li_iterator TYPE REF TO if_ixml_node_iterator,
+          lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+          lo_res      TYPE REF TO cl_ssf_fb_smart_form.
+
+
+    CREATE OBJECT lo_sf.
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+* set "created by" and "changed by" to current user
+    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      lv_name = li_node->get_name( ).
+      CASE lv_name.
+        WHEN 'LASTDATE'.
+          li_node->set_value(
+            sy-datum(4) && '-' && sy-datum+4(2) && '-' && sy-datum+6(2) ).
+        WHEN 'LASTTIME'.
+          li_node->set_value(
+            sy-uzeit(2) && ':' && sy-uzeit+2(2) && ':' && sy-uzeit+4(2) ).
+        WHEN 'FIRSTUSER' OR 'LASTUSER'.
+          li_node->set_value( sy-uname && '' ).
+      ENDCASE.
+
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
+
+    li_node = lo_xml->mi_xml_doc->get_root_element( ).
+    lv_formname = is_item-obj_name.
+
+    lo_sf->enqueue( suppress_corr_check = space
+                    master_language     = 'E'
+                    mode                = 'INSERT'
+                    formname            = lv_formname ).
+
+    lo_sf->xml_upload( EXPORTING dom      = li_node
+                                 formname = lv_formname
+                                 language = 'E'
+                       CHANGING  sform    = lo_res ).
+
+    lo_res->store( im_formname = lo_res->header-formname
+                   im_language = 'E'
+                   im_active   = abap_true ).
+
+    lo_sf->dequeue( lv_formname ).
+
+  ENDMETHOD.                    "deserialize
+
+ENDCLASS.                    "lcl_serialize_ssfo IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_serialize_dtel DEFINITION
@@ -3557,6 +3716,8 @@ CLASS lcl_serialize IMPLEMENTATION.
         rt_files = lcl_serialize_shlp=>serialize( is_item ).
       WHEN 'ENQU'.
         rt_files = lcl_serialize_enqu=>serialize( is_item ).
+      WHEN 'SSFO'.
+        rt_files = lcl_serialize_ssfo=>serialize( is_item ).
       WHEN OTHERS.
         _raise 'Serialize, unknown type'.
     ENDCASE.
@@ -3691,6 +3852,9 @@ CLASS lcl_serialize IMPLEMENTATION.
                                            it_files = it_files ).
         WHEN 'ENQU'.
           lcl_serialize_enqu=>deserialize( is_item  = ls_item
+                                           it_files = it_files ).
+        WHEN 'SSFO'.
+          lcl_serialize_ssfo=>deserialize( is_item  = ls_item
                                            it_files = it_files ).
         WHEN OTHERS.
           _raise 'deserialize, unknown type'.
@@ -5478,6 +5642,10 @@ CLASS lcl_gui DEFINITION FINAL.
                       IMPORTING is_repo TYPE st_repo
                       RAISING lcx_exception.
 
+    CLASS-METHODS: get_object
+                      IMPORTING iv_object TYPE tadir-object
+                      RETURNING value(rv_name) TYPE tadir-obj_name.
+
     CLASS-METHODS: pull
                       IMPORTING is_repo TYPE st_repo
                       RAISING lcx_exception.
@@ -5577,8 +5745,9 @@ CLASS lcl_gui IMPLEMENTATION.
       _raise 'not found locally'.
     ENDIF.
 
-    lt_diffs = lcl_diff=>diff( iv_local = <ls_local>-data
-                               iv_remote = <ls_remote>-data ).
+    lt_diffs = lcl_diff=>diff( iv_local  = <ls_local>-data
+                               iv_remote = <ls_remote>-data
+                               is_item   = ls_item ).
 
     render_diff( is_result = is_result
                  it_diffs  = lt_diffs ).
@@ -5869,8 +6038,8 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lt_files    TYPE tt_files,
           ls_item     TYPE st_item,
           ls_comment  TYPE st_comment,
-          lv_euobj_id TYPE euobj-id,
           lv_branch   TYPE t_sha1,
+          lt_fields   TYPE TABLE OF sval,
           lt_spopli   TYPE TABLE OF spopli,
           lv_answer   TYPE c.
 
@@ -5894,10 +6063,10 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'VIEW View'.
     _add 'SHLP Search Help'.
     _add 'ENQU Lock Object'.
+    _add 'SSFO Smart Form'.
     _add 'FUGR Function Group (todo)'.
     _add 'MSAG Message Class (todo)'.
     _add 'TRAN Transaction (todo)'.
-    _add 'SSFO Smart Form (todo)'.
     _add 'FORM SAP Script (todo)'.
 *table contents
 *lock object
@@ -5929,16 +6098,8 @@ CLASS lcl_gui IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     ls_item-obj_type = <ls_spopli>-varoption.
 
-    lv_euobj_id = ls_item-obj_type.
-    CALL FUNCTION 'REPOSITORY_INFO_SYSTEM_F4'
-      EXPORTING
-        object_type          = lv_euobj_id
-        suppress_selection   = abap_true
-      IMPORTING
-        object_name_selected = ls_item-obj_name
-      EXCEPTIONS
-        cancel               = 01.
-    IF sy-subrc = 1.
+    ls_item-obj_name = get_object( ls_item-obj_type ).
+    IF ls_item-obj_name IS INITIAL.
       RETURN.
     ENDIF.
 
@@ -5959,6 +6120,59 @@ CLASS lcl_gui IMPLEMENTATION.
     view( render( ) ).
 
   ENDMETHOD.                    "add
+
+  METHOD get_object.
+
+    DATA: lv_euobj_id TYPE euobj-id,
+          lv_returncode TYPE c LENGTH 1,
+          lt_fields   TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CASE iv_object.
+      WHEN 'SSFO'.
+        APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+        <ls_field>-tabname   = 'EFRM'.
+        <ls_field>-fieldname = 'SMARTFORM'.
+        <ls_field>-fieldtext = 'Smartform'.                 "#EC NOTEXT
+        <ls_field>-field_obl = abap_true.
+
+        CALL FUNCTION 'POPUP_GET_VALUES'
+          EXPORTING
+            popup_title     = 'Select'
+          IMPORTING
+            returncode      = lv_returncode
+          TABLES
+            fields          = lt_fields
+          EXCEPTIONS
+            error_in_fields = 1
+            OTHERS          = 2.                            "#EC NOTEXT
+        IF sy-subrc <> 0 OR lv_returncode = 'A'.
+          RETURN.
+        ENDIF.
+
+        READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+        ASSERT sy-subrc = 0.
+
+        rv_name = <ls_field>-value.
+
+      WHEN OTHERS.
+        lv_euobj_id = iv_object.
+        CALL FUNCTION 'REPOSITORY_INFO_SYSTEM_F4'
+          EXPORTING
+            object_type          = lv_euobj_id
+            suppress_selection   = abap_true
+          IMPORTING
+            object_name_selected = rv_name
+          EXCEPTIONS
+            cancel               = 01.
+        IF sy-subrc = 1.
+          RETURN.
+        ENDIF.
+    ENDCASE.
+
+  ENDMETHOD.                    "get_object
 
   METHOD install.
 
