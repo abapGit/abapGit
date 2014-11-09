@@ -417,7 +417,7 @@ CLASS lcl_xml IMPLEMENTATION.
           lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <lg_any>  TYPE any,
-                   <ls_comp> TYPE abap_compdescr.
+                   <ls_comp> LIKE LINE OF lo_descr_ref->components.
 
 
     CLEAR cg_structure.
@@ -647,7 +647,7 @@ CLASS lcl_xml IMPLEMENTATION.
           lv_name      TYPE string,
           lo_descr     TYPE REF TO cl_abap_structdescr.
 
-    FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
+    FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
                    <lg_any>  TYPE any.
 
 
@@ -1012,7 +1012,7 @@ CLASS lcl_diff IMPLEMENTATION.
           lt_local  TYPE TABLE OF string,
           lt_remote TYPE TABLE OF string.
 
-    FIELD-SYMBOLS: <lv_string> TYPE string,
+    FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_local,
                    <ls_diff>   LIKE LINE OF rt_diffs.
 
 
@@ -1696,8 +1696,10 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 * within same session
 
     CONSTANTS:
-      lc_begin TYPE string VALUE '* <SIGNATURE>---------------------------------------------------------------------------------------+',
-      lc_end   TYPE string VALUE '* +--------------------------------------------------------------------------------------</SIGNATURE>'.
+      lc_begin TYPE string VALUE '* <SIGNATURE>------------------------------------'
+                               & '---------------------------------------------------+',
+      lc_end   TYPE string VALUE '* +------------------------------------------------'
+                               & '--------------------------------------</SIGNATURE>'.
 
     DATA: lv_remove TYPE abap_bool,
           lv_source LIKE LINE OF ct_source.
@@ -1943,7 +1945,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     INSERT TEXTPOOL lv_cp
       FROM lt_tpool
       LANGUAGE sy-langu
-      STATE 'I'.                                     "#EC CI_INSERT_REP
+      STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
     ENDIF.
@@ -2273,7 +2275,7 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
 
 * todo, call corr_insert?
 
-      REFRESH lt_secondary.
+      CLEAR lt_secondary.
       LOOP AT lt_dd17v INTO ls_dd17v
           WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
         APPEND ls_dd17v TO lt_secondary.
@@ -2969,7 +2971,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     INSERT TEXTPOOL is_item-obj_name
       FROM it_tpool
       LANGUAGE sy-langu
-      STATE 'I'.                                     "#EC CI_INSERT_REP
+      STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
     ENDIF.
@@ -3619,7 +3621,7 @@ CLASS lcl_serialize IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    SORT rt_results BY obj_type obj_name filename.
+    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
 
@@ -4127,7 +4129,7 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_len    TYPE i,
           lt_string TYPE TABLE OF string.
 
-    FIELD-SYMBOLS: <lv_string> TYPE string.
+    FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
 
 
     lv_string = lcl_convert=>xstring_to_string_utf8( iv_data ).
@@ -4252,7 +4254,6 @@ CLASS lcl_pack IMPLEMENTATION.
       lv_x = lv_delta(1).
       lv_delta = lv_delta+1.
       lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
-*    WRITE: / 'Opcode', lv_x, lv_bitbyte.
 
       IF lv_bitbyte(1) = '1'. " MSB
 
@@ -4866,10 +4867,11 @@ CLASS lcl_transport IMPLEMENTATION.
         name  = '~request_uri'
         value = lv_value ).
 
-    lv_value = 'Content-Type: application/x-git-' && iv_service && '-pack-request'.
+    lv_value = 'Content-Type: application/x-git-'
+                  && iv_service && '-pack-request'.         "#EC NOTEXT
     ii_client->request->set_header_field(
         name  = 'Content-Type'
-        value = lv_value ).
+        value = lv_value ).                                 "#EC NOTEXT
 
   ENDMETHOD.                    "set_headers
 
@@ -4906,7 +4908,7 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: lv_hash   TYPE c LENGTH 40,
           lv_len    TYPE i,
           lt_result TYPE TABLE OF string,
-          lv_data   TYPE string,
+          lv_data   LIKE LINE OF lt_result,
           lv_text   TYPE string.
 
     STATICS: sv_authorization TYPE string.
@@ -4924,12 +4926,13 @@ CLASS lcl_transport IMPLEMENTATION.
         value = 'GET' ).
     ei_client->request->set_header_field(
         name  = '~request_uri'
-        value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-' && iv_service && '-pack' ).
+        value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-'
+                && iv_service && '-pack' ).
     IF NOT sv_authorization IS INITIAL.
 * note this will only work if all repositories uses the same login
       ei_client->request->set_header_field(
           name  = 'authorization'
-          value = sv_authorization ).
+          value = sv_authorization ).                       "#EC NOTEXT
       ei_client->propertytype_logon_popup = ei_client->co_disabled.
     ENDIF.
     ei_client->send( ).
@@ -4956,7 +4959,8 @@ CLASS lcl_transport IMPLEMENTATION.
     ENDIF.
 
     check_http_200( ei_client ).
-    sv_authorization = ei_client->request->get_header_field( 'authorization' ).
+    sv_authorization = ei_client->request->get_header_field(
+                                                  'authorization' ). "#EC NOTEXT
 
     lv_data = ei_client->response->get_cdata( ).
 
@@ -5538,7 +5542,7 @@ CLASS lcl_gui IMPLEMENTATION.
           && gc_newline &&
           '</head>'
           && gc_newline &&
-          '<body>'.
+          '<body>'.                                         "#EC NOTEXT
 
   ENDMETHOD.                    "render_head
 
@@ -5778,7 +5782,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lo_descr_ref TYPE REF TO cl_abap_structdescr,
           ls_field     LIKE LINE OF lt_fields.
 
-    FIELD-SYMBOLS: <ls_comp> TYPE abap_compdescr,
+    FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr_ref->components,
                    <lg_any>  TYPE any.
 
 
