@@ -703,6 +703,89 @@ CLASS lcl_xml IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_debug DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_debug DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: debug_toggle.
+
+    CLASS-METHODS: render_objects IMPORTING iv_message TYPE string
+                                            it_objects TYPE tt_objects.
+
+    CLASS-METHODS: get_html RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: get_debug RETURNING value(rv_debug) TYPE abap_bool.
+
+    CLASS-METHODS: clear.
+
+  PRIVATE SECTION.
+    CLASS-DATA: gv_debug TYPE abap_bool VALUE abap_false,
+                gv_html  TYPE string.
+
+ENDCLASS.                    "lcl_debug DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_debug IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_debug IMPLEMENTATION.
+
+  METHOD get_debug.
+    rv_debug = gv_debug.
+  ENDMETHOD.                    "get_debug
+
+  METHOD get_html.
+    rv_html = gv_html.
+  ENDMETHOD.                    "get_html
+
+  METHOD render_objects.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
+
+
+    IF gv_debug = abap_false.
+      RETURN.
+    ENDIF.
+
+    gv_html = gv_html &&
+              '<br>' &&
+              iv_message &&
+              '<br>'.
+
+    LOOP AT it_objects ASSIGNING <ls_object>.
+* todo
+    ENDLOOP.
+
+  ENDMETHOD.                    "render_objects
+
+  METHOD clear.
+
+    gv_html = '<h2>Debug Information</h2>'.
+
+  ENDMETHOD.                    "clear
+
+  METHOD debug_toggle.
+
+    CASE gv_debug.
+      WHEN abap_true.
+        gv_debug = abap_false.
+        MESSAGE 'Debug mode disabled' TYPE 'S'.             "#EC NOTEXT
+      WHEN abap_false.
+        gv_debug = abap_true.
+        MESSAGE 'Debug mode enabled' TYPE 'S'.              "#EC NOTEXT
+        clear( ).
+      WHEN OTHERS.
+        ASSERT 1 = 1 + 1.
+    ENDCASE.
+
+  ENDMETHOD.                    "debug_toggle
+
+ENDCLASS.                    "lcl_debug IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_time DEFINITION
@@ -5541,7 +5624,12 @@ CLASS lcl_porcelain IMPLEMENTATION.
     ENDIF.
 
     et_objects = lcl_pack=>decode( lv_pack ).
+    lcl_debug=>render_objects( iv_message = 'Before deltas'
+                               it_objects = et_objects ).   "#EC NOTEXT
+
     lcl_pack=>decode_deltas( CHANGING ct_objects = et_objects ).
+    lcl_debug=>render_objects( iv_message = 'After deltas'
+                               it_objects = et_objects ).   "#EC NOTEXT
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_commit.
     IF sy-subrc <> 0.
@@ -5635,6 +5723,9 @@ CLASS lcl_gui DEFINITION FINAL.
                       RAISING lcx_exception.
 
     CLASS-METHODS: render_header
+                      RETURNING value(rv_html) TYPE string.
+
+    CLASS-METHODS: render_menu
                       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: render_footer
@@ -6030,10 +6121,17 @@ CLASS lcl_gui IMPLEMENTATION.
             struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo ).
             pull( ls_repo ).
+          WHEN 'debug'.
+            lcl_debug=>debug_toggle( ).
           WHEN OTHERS.
             _raise 'Unknown action'.
         ENDCASE.
       CATCH lcx_exception INTO lx_exception.
+        IF lcl_debug=>get_debug( ) = abap_true.
+          view( render_header( ) &&
+            lcl_debug=>get_html( ) &&
+            render_footer( ) ).
+        ENDIF.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
@@ -6257,6 +6355,12 @@ CLASS lcl_gui IMPLEMENTATION.
           '  color: grey;'              && gc_newline &&    "#EC NOTEXT
           '  font-size: smaller;'       && gc_newline &&    "#EC NOTEXT
           '}'                           && gc_newline &&
+          'a.white:link {'              && gc_newline &&    "#EC NOTEXT
+          '  color: white;'             && gc_newline &&    "#EC NOTEXT
+          '}'                           && gc_newline &&
+          'a.white:visited {'           && gc_newline &&    "#EC NOTEXT
+          '  color: white;'             && gc_newline &&    "#EC NOTEXT
+          '}'                           && gc_newline &&
           'h1 {'                        && gc_newline &&    "#EC NOTEXT
           '  display: inline;'          && gc_newline &&    "#EC NOTEXT
           '}'                           && gc_newline &&
@@ -6276,6 +6380,17 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "render_css
 
+  METHOD render_menu.
+
+    rv_html = '<h1>abapGit</h1>&nbsp;'                              && gc_newline &&
+          '<a href="sapevent:refresh">Refresh</a>&nbsp;'            && gc_newline &&
+          '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
+          '<a href="sapevent:explore">Explore</a>&nbsp;'            && gc_newline &&
+          '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' && gc_newline &&
+          '<hr>'                                                    && gc_newline.
+
+  ENDMETHOD.                    "render_menu
+
   METHOD render.
 
     DATA: lt_repos TYPE tt_repos_sha1,
@@ -6287,13 +6402,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lt_repos = lcl_persistence=>list( ).
 
-    rv_html = render_header( ) &&
-      '<h1>abapGit</h1>&nbsp;'                                  && gc_newline &&
-      '<a href="sapevent:refresh">Refresh</a>&nbsp;'            && gc_newline &&
-      '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>&nbsp;'            && gc_newline &&
-      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' && gc_newline &&
-      '<hr>'                                                    && gc_newline.
+    rv_html = render_header( ) && render_menu( ).
 
     LOOP AT lt_repos INTO ls_repo.
       rv_html = rv_html &&
@@ -6320,7 +6429,8 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    rv_html = rv_html && render_footer( ).
+    rv_html = rv_html &&
+              render_footer( ).
 
   ENDMETHOD.                    "render
 
@@ -6329,7 +6439,7 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html &&
               '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
               gc_version &&
-              '</h3></center>'.
+              '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'.
 
     rv_html = rv_html && '</body></html>'.
 
