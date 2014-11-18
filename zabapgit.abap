@@ -716,6 +716,8 @@ CLASS lcl_debug DEFINITION FINAL.
     CLASS-METHODS: render_objects IMPORTING iv_message TYPE string
                                             it_objects TYPE tt_objects.
 
+    CLASS-METHODS: message IMPORTING iv_message TYPE string.
+
     CLASS-METHODS: get_html RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: get_debug RETURNING value(rv_debug) TYPE abap_bool.
@@ -743,10 +745,7 @@ CLASS lcl_debug IMPLEMENTATION.
     rv_html = gv_html.
   ENDMETHOD.                    "get_html
 
-  METHOD render_objects.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
-
+  METHOD message.
 
     IF gv_debug = abap_false.
       RETURN.
@@ -757,15 +756,43 @@ CLASS lcl_debug IMPLEMENTATION.
               iv_message &&
               '<br>'.
 
+  ENDMETHOD.                    "message
+
+  METHOD render_objects.
+
+    DATA: lv_len TYPE i.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
+
+
+    IF gv_debug = abap_false.
+      RETURN.
+    ENDIF.
+
+    message( iv_message ).
+
+    gv_html = gv_html && '<table border="1">' && gc_newline.
     LOOP AT it_objects ASSIGNING <ls_object>.
-* todo
+
+      lv_len = xstrlen( <ls_object>-data ).
+      IF lv_len > 50.
+        lv_len = 50.
+      ENDIF.
+
+      gv_html = gv_html &&
+        '<tr>' && gc_newline &&
+        '<td>' && <ls_object>-sha1 && '</td>' && gc_newline &&
+        '<td>' && <ls_object>-type && '</td>' && gc_newline &&
+        '<td>' && <ls_object>-data(lv_len) && '</td>' && gc_newline &&
+        '</tr>' && gc_newline.
     ENDLOOP.
+    gv_html = gv_html && '</table>' && gc_newline.
 
   ENDMETHOD.                    "render_objects
 
   METHOD clear.
 
-    gv_html = '<h2>Debug Information</h2>'.
+    gv_html = '<h2>Debug Information</h2><br>'.
 
   ENDMETHOD.                    "clear
 
@@ -4481,6 +4508,9 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_result  TYPE xstring,
           lv_bitbyte TYPE t_bitbyte,
           lv_offset  TYPE i,
+          lv_message TYPE string,
+          lv_sha1    TYPE t_sha1,
+          lv_char40  TYPE c LENGTH 40,
           ls_object  LIKE LINE OF ct_objects,
           lv_len     TYPE i,
           lv_x       TYPE x.
@@ -4493,11 +4523,18 @@ CLASS lcl_pack IMPLEMENTATION.
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      _raise 'Base not found'.
+      lv_char40 = is_object-sha1.
+      CONCATENATE 'Base not found,' lv_char40 INTO lv_message
+        SEPARATED BY space.                                 "#EC NOTEXT
+      _raise lv_message.
     ELSE.
       lv_base = <ls_object>-data.
     ENDIF.
 
+* sanity check
+    IF <ls_object>-type = gc_ref_d.
+      _raise 'Delta, base eq delta'.
+    ENDIF.
 
     delta_header( CHANGING cv_delta = lv_delta ).
 
@@ -4559,8 +4596,23 @@ CLASS lcl_pack IMPLEMENTATION.
 
     ENDWHILE.
 
+    lv_sha1 = lcl_hash=>sha1( iv_type = <ls_object>-type iv_data = lv_result ).
+
+    lcl_debug=>message( 'Delta,' &&
+      <ls_object>-type &&
+      ',new sha1, ' &&
+      lv_sha1 &&
+      ',old: ' &&
+      <ls_object>-sha1 ).                                   "#EC NOTEXT
+    IF <ls_object>-type = gc_blob.
+      lcl_debug=>message( '<pre>' &&
+        escape( val = lcl_convert=>xstring_to_string_utf8( lv_result )
+                format = cl_abap_format=>e_html_text ) &&
+        '</pre>' ).
+    ENDIF.
+
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = <ls_object>-type iv_data = lv_result ).
+    ls_object-sha1 = lv_sha1.
     ls_object-type = <ls_object>-type.
     ls_object-data = lv_result.
     APPEND ls_object TO ct_objects.
@@ -6437,9 +6489,9 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render_footer.
 
     rv_html = rv_html &&
-              '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
-              gc_version &&
-              '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'.
+      '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
+      gc_version &&
+      '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'. "#EC NOTEXT
 
     rv_html = rv_html && '</body></html>'.
 
