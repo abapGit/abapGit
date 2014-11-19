@@ -4586,6 +4586,10 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_len = lv_len + lv_x * 65536.
         ENDIF.
 
+        IF lv_len = 0.
+          lv_len = 65536.
+        ENDIF.
+
         CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
@@ -4604,12 +4608,6 @@ CLASS lcl_pack IMPLEMENTATION.
       lv_sha1 &&
       ',old: ' &&
       <ls_object>-sha1 ).                                   "#EC NOTEXT
-    IF <ls_object>-type = gc_blob.
-      lcl_debug=>message( '<pre>' &&
-        escape( val = lcl_convert=>xstring_to_string_utf8( lv_result )
-                format = cl_abap_format=>e_html_text ) &&
-        '</pre>' ).
-    ENDIF.
 
     CLEAR ls_object.
     ls_object-sha1 = lv_sha1.
