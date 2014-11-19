@@ -545,6 +545,7 @@ CLASS lcl_xml IMPLEMENTATION.
       li_parser = mi_ixml->create_parser( stream_factory = li_stream_factory
                                           istream        = li_istream
                                           document       = mi_xml_doc ).
+      li_parser->set_normalizing( is_normalizing = abap_false ).
       IF li_parser->parse( ) <> 0.
         error( li_parser ).
       ENDIF.
@@ -3577,7 +3578,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                          it_files = it_files
                CHANGING  ct_abap  = lt_source ).
 
-    lo_xml->table_read( CHANGING  ct_table  = lt_tpool ).
+    lo_xml->table_read( CHANGING ct_table = lt_tpool ).
 
     deserialize_abap( is_item     = is_item
                       io_xml      = lo_xml
@@ -3590,8 +3591,7 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
                      io_xml  = lo_xml ).
 
     deserialize_textpool( is_item = is_item
-                          it_tpool = lt_tpool
-                          ).
+                          it_tpool = lt_tpool ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
 
