@@ -1287,7 +1287,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
 * todo, refactoring
     CASE iv_type.
-      WHEN 'CLAS'.
+      WHEN 'CLAS' OR 'INTF'.
         CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
           EXPORTING
             obj_name         = lv_obj_name
@@ -1679,7 +1679,7 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                  RETURNING value(rt_source) TYPE seop_source_string
                                  RAISING lcx_exception.
 
-    CLASS-METHODS serialize_xml IMPORTING is_clskey TYPE seoclskey
+    CLASS-METHODS serialize_xml IMPORTING is_item  TYPE st_item
                                 RETURNING value(ro_xml) TYPE REF TO lcl_xml
                                 RAISING lcx_exception.
 
@@ -1892,39 +1892,41 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
                             it_abap = lt_source ).
     APPEND ls_file TO rt_files.
 
-    lt_source = serialize_locals_def( ls_clskey ).
-    IF NOT lt_source[] IS INITIAL.
-      ls_file = abap_to_file( is_item  = is_item
-                              iv_extra = 'locals_def'
-                              it_abap  = lt_source ).       "#EC NOTEXT
-      APPEND ls_file TO rt_files.
+    IF is_item-obj_type = 'CLAS'.
+      lt_source = serialize_locals_def( ls_clskey ).
+      IF NOT lt_source[] IS INITIAL.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = 'locals_def'
+                                it_abap  = lt_source ).     "#EC NOTEXT
+        APPEND ls_file TO rt_files.
+      ENDIF.
+
+      lt_source = serialize_locals_imp( ls_clskey ).
+      IF NOT lt_source[] IS INITIAL.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = 'locals_imp'
+                                it_abap  = lt_source ).     "#EC NOTEXT
+        APPEND ls_file TO rt_files.
+      ENDIF.
+
+      lt_source = serialize_testclasses( ls_clskey ).
+      IF NOT lt_source[] IS INITIAL.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = 'testclasses'
+                                it_abap  = lt_source ).     "#EC NOTEXT
+        APPEND ls_file TO rt_files.
+      ENDIF.
+
+      lt_source = serialize_macros( ls_clskey ).
+      IF NOT lt_source[] IS INITIAL.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = 'macros'
+                                it_abap  = lt_source ).     "#EC NOTEXT
+        APPEND ls_file TO rt_files.
+      ENDIF.
     ENDIF.
 
-    lt_source = serialize_locals_imp( ls_clskey ).
-    IF NOT lt_source[] IS INITIAL.
-      ls_file = abap_to_file( is_item  = is_item
-                              iv_extra = 'locals_imp'
-                              it_abap  = lt_source ).       "#EC NOTEXT
-      APPEND ls_file TO rt_files.
-    ENDIF.
-
-    lt_source = serialize_testclasses( ls_clskey ).
-    IF NOT lt_source[] IS INITIAL.
-      ls_file = abap_to_file( is_item  = is_item
-                              iv_extra = 'testclasses'
-                              it_abap  = lt_source ).       "#EC NOTEXT
-      APPEND ls_file TO rt_files.
-    ENDIF.
-
-    lt_source = serialize_macros( ls_clskey ).
-    IF NOT lt_source[] IS INITIAL.
-      ls_file = abap_to_file( is_item  = is_item
-                              iv_extra = 'macros'
-                              it_abap  = lt_source ).       "#EC NOTEXT
-      APPEND ls_file TO rt_files.
-    ENDIF.
-
-    lo_xml = serialize_xml( ls_clskey ).
+    lo_xml = serialize_xml( is_item ).
     ls_file = xml_to_file( is_item = is_item
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
@@ -1938,23 +1940,27 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
           lt_tpool     TYPE textpool_table,
           lv_object    TYPE dokhl-object,
           lv_state     TYPE dokhl-dokstate,
+          ls_vseointerf TYPE vseointerf,
+          ls_clskey    TYPE seoclskey,
           lt_lines     TYPE tlinetab.
 
 
-    CALL FUNCTION 'SEO_CLASS_GET'
+    ls_clskey-clsname = is_item-obj_name.
+
+    CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
-        clskey       = is_clskey
+        cifkey       = ls_clskey
         version      = seoc_version_active
       IMPORTING
         class        = ls_vseoclass
+        interface    = ls_vseointerf
       EXCEPTIONS
         not_existing = 1
         deleted      = 2
-        is_interface = 3
-        model_only   = 4
-        OTHERS       = 5.
+        model_only   = 3
+        OTHERS       = 4.
     IF sy-subrc <> 0.
-      _raise 'error from seo_class_get'.
+      _raise 'error from seo_clif_get'.
     ENDIF.
 
     CLEAR: ls_vseoclass-uuid,
@@ -1964,16 +1970,29 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
            ls_vseoclass-changedon,
            ls_vseoclass-r3release.
 
+    CLEAR: ls_vseointerf-uuid,
+           ls_vseointerf-author,
+           ls_vseointerf-createdon,
+           ls_vseointerf-changedby,
+           ls_vseointerf-changedon,
+           ls_vseointerf-r3release.
+
     CREATE OBJECT ro_xml.
-    ro_xml->structure_add( ls_vseoclass ).
 
+    CASE is_item-obj_type.
+      WHEN 'CLAS'.
+        ro_xml->structure_add( ls_vseoclass ).
 
-    lv_cp = cl_oo_classname_service=>get_classpool_name( is_clskey-clsname ).
-    READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu. "#EC CI_READ_REP
-    ro_xml->table_add( lt_tpool ).
+        lv_cp = cl_oo_classname_service=>get_classpool_name( ls_clskey-clsname ).
+        READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu. "#EC CI_READ_REP
+        ro_xml->table_add( lt_tpool ).
+      WHEN 'INTF'.
+        ro_xml->structure_add( ls_vseointerf ).
+      WHEN OTHERS.
+        ASSERT 1 = 1 + 1.
+    ENDCASE.
 
-
-    lv_object = is_clskey-clsname.
+    lv_object = ls_clskey-clsname.
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
         id                = 'CL'
@@ -2013,8 +2032,10 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
                       it_files = it_files
                       io_xml   = lo_xml ).
 
-    deserialize_textpool( is_item = is_item
-                          io_xml  = lo_xml ).
+    IF is_item-obj_type = 'CLAS'.
+      deserialize_textpool( is_item = is_item
+                            io_xml  = lo_xml ).
+    ENDIF.
 
     deserialize_docu( is_item = is_item
                       io_xml  = lo_xml ).
@@ -2082,6 +2103,7 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
   METHOD deserialize_abap.
 
     DATA: ls_vseoclass   TYPE vseoclass,
+          ls_vseointerf  TYPE vseointerf,
           lt_source      TYPE seop_source_string,
           lo_source      TYPE REF TO cl_oo_source,
           lt_locals_def  TYPE seop_source_string,
@@ -2090,8 +2112,6 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
           lt_testclasses TYPE seop_source_string,
           ls_clskey      TYPE seoclskey.
 
-
-    io_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
 
     read_abap( EXPORTING is_item  = is_item
                          it_files = it_files
@@ -2124,40 +2144,69 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
     ls_clskey-clsname = is_item-obj_name.
 
 
+    CASE is_item-obj_type.
+      WHEN 'CLAS'.
+        io_xml->structure_read( CHANGING cg_structure = ls_vseoclass ).
 
-    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-      EXPORTING
-        overwrite       = seox_true
-      CHANGING
-        class           = ls_vseoclass
-      EXCEPTIONS
-        existing        = 1
-        is_interface    = 2
-        db_error        = 3
-        component_error = 4
-        no_access       = 5
-        other           = 6
-        OTHERS          = 7.
-    IF sy-subrc <> 0.
-      _raise 'error from SEO_CLASS_CREATE_COMPLETE'.
-    ENDIF.
+        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+          EXPORTING
+            overwrite       = seox_true
+          CHANGING
+            class           = ls_vseoclass
+          EXCEPTIONS
+            existing        = 1
+            is_interface    = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+        IF sy-subrc <> 0.
+          _raise 'error from SEO_CLASS_CREATE_COMPLETE'.
+        ENDIF.
 
-    CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
-      EXPORTING
-        clskey                 = ls_clskey
-        force                  = seox_true
-        locals_def             = lt_locals_def
-        locals_imp             = lt_locals_imp
-        locals_mac             = lt_locals_mac
-        locals_testclasses     = lt_testclasses
-      EXCEPTIONS
-        not_existing           = 1
-        model_only             = 2
-        locals_not_generated   = 3
-        locals_not_initialised = 4
-        OTHERS                 = 5.
-    IF sy-subrc <> 0.
-      _raise 'error from generate_locals'.
+      WHEN 'INTF'.
+        io_xml->structure_read( CHANGING cg_structure = ls_vseointerf ).
+
+        CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+          EXPORTING
+            overwrite       = seox_true
+          CHANGING
+            interface       = ls_vseointerf
+          EXCEPTIONS
+            existing        = 1
+            is_class        = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+        IF sy-subrc <> 0.
+          _raise 'Error from SEO_INTERFACE_CREATE_COMPLETE'.
+        ENDIF.
+
+      WHEN OTHERS.
+        ASSERT 1 = 1 + 1.
+    ENDCASE.
+
+    IF is_item-obj_type = 'CLAS'.
+      CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
+        EXPORTING
+          clskey                 = ls_clskey
+          force                  = seox_true
+          locals_def             = lt_locals_def
+          locals_imp             = lt_locals_imp
+          locals_mac             = lt_locals_mac
+          locals_testclasses     = lt_testclasses
+        EXCEPTIONS
+          not_existing           = 1
+          model_only             = 2
+          locals_not_generated   = 3
+          locals_not_initialised = 4
+          OTHERS                 = 5.
+      IF sy-subrc <> 0.
+        _raise 'error from generate_locals'.
+      ENDIF.
     ENDIF.
 
     CREATE OBJECT lo_source
@@ -3819,7 +3868,7 @@ CLASS lcl_serialize IMPLEMENTATION.
         rt_files = lcl_serialize_doma=>serialize( is_item ).
       WHEN 'DTEL'.
         rt_files = lcl_serialize_dtel=>serialize( is_item ).
-      WHEN 'CLAS'.
+      WHEN 'CLAS' OR 'INTF'.
         rt_files = lcl_serialize_clas=>serialize( is_item ).
       WHEN 'FUGR'.
         rt_files = lcl_serialize_fugr=>serialize( is_item ).
@@ -3947,7 +3996,7 @@ CLASS lcl_serialize IMPLEMENTATION.
         WHEN 'DTEL'.
           lcl_serialize_dtel=>deserialize( is_item  = ls_item
                                            it_files = it_files ).
-        WHEN 'CLAS'.
+        WHEN 'CLAS' OR 'INTF'.
           lcl_serialize_clas=>deserialize( is_item  = ls_item
                                            it_files = it_files ).
         WHEN 'FUGR'.
@@ -6217,6 +6266,7 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'DTEL Data Element'.
     _add 'DOMA Domain'.
     _add 'CLAS Class'.
+    _add 'INTF Interface'.
     _add 'TABL Table/Structure'.
     _add 'TTYP Table Type'.
     _add 'VIEW View'.
