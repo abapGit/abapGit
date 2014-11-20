@@ -344,8 +344,8 @@ CLASS lcl_xml DEFINITION FINAL.
                            CHANGING ct_table TYPE STANDARD TABLE
                            RAISING lcx_exception.
 
-
-    METHODS xml_render     RETURNING value(rv_string) TYPE string.
+    METHODS xml_render     IMPORTING iv_normalize TYPE abap_bool DEFAULT abap_true
+                           RETURNING value(rv_string) TYPE string.
 
     METHODS xml_element    IMPORTING iv_name TYPE string
                            RETURNING value(ri_element) TYPE REF TO if_ixml_element.
@@ -697,7 +697,9 @@ CLASS lcl_xml IMPLEMENTATION.
 
     li_renderer = mi_ixml->create_renderer( ostream  = li_ostream
                                             document = mi_xml_doc ).
-    li_renderer->set_normalizing( ).
+    IF iv_normalize = abap_true.
+      li_renderer->set_normalizing( ).
+    ENDIF.
     li_renderer->render( ).
 
   ENDMETHOD.                    "xml_render
@@ -1179,6 +1181,7 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
   PROTECTED SECTION.
     CLASS-METHODS: xml_to_file IMPORTING is_item TYPE st_item
                                          io_xml  TYPE REF TO lcl_xml
+                                         iv_normalize TYPE abap_bool DEFAULT abap_true
                                RETURNING value(rs_file) TYPE st_file
                                RAISING lcx_exception.
 
@@ -1380,7 +1383,7 @@ CLASS lcl_serialize_common IMPLEMENTATION.
     DATA: lv_xml TYPE string.
 
 
-    lv_xml = io_xml->xml_render( ).
+    lv_xml = io_xml->xml_render( iv_normalize = iv_normalize ).
     rs_file-path = '/'.
 
     rs_file-filename = filename( is_item  = is_item
@@ -2310,8 +2313,10 @@ CLASS lcl_serialize_ssfo IMPLEMENTATION.
       name  = 'xmlns'
       value = 'urn:sap-com:sdixml-ifr:2000' ).              "#EC NOTEXT
 
-    ls_file = xml_to_file( is_item = is_item
-                           io_xml  = lo_xml ).
+* the upload fails when the smartform is normalized
+    ls_file = xml_to_file( is_item      = is_item
+                           io_xml       = lo_xml
+                           iv_normalize = abap_false ).
     APPEND ls_file TO rt_files.
 
   ENDMETHOD.                    "serialize
