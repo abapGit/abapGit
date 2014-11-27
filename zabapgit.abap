@@ -68,12 +68,13 @@ TYPES: BEGIN OF st_repo,
          branch_name TYPE string,
        END OF st_repo.
 
-TYPES: BEGIN OF st_repo_sha1,
+TYPES: BEGIN OF st_repo_persi,
          url         TYPE string,
          branch_name TYPE string,
          sha1        TYPE string,
-       END OF st_repo_sha1.
-TYPES: tt_repos_sha1 TYPE STANDARD TABLE OF st_repo_sha1 WITH DEFAULT KEY.
+         package     TYPE devclass,
+       END OF st_repo_persi.
+TYPES: tt_repos_persi TYPE STANDARD TABLE OF st_repo_persi WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_result,
          obj_type TYPE tadir-object,
@@ -1110,7 +1111,6 @@ CLASS lcl_diff DEFINITION FINAL.
 * assumes data is UTF8 based with newlines
     CLASS-METHODS diff IMPORTING iv_local  TYPE xstring
                                  iv_remote TYPE xstring
-                                 is_item   TYPE st_item
                        RETURNING value(rt_diffs) TYPE tt_diffs.
 
 ENDCLASS.                    "lcl_diff DEFINITION
@@ -1415,6 +1415,9 @@ CLASS lcl_serialize_doma DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_doma DEFINITION
 
 *----------------------------------------------------------------------*
@@ -1423,6 +1426,10 @@ ENDCLASS.                    "lcl_serialize_doma DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_doma IMPLEMENTATION.
+
+  METHOD delete.
+    _raise 'todo, delete, doma'.
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -1533,6 +1540,9 @@ CLASS lcl_serialize_dtel DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -1541,6 +1551,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_dtel IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo, delete dtel'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -1634,12 +1650,15 @@ ENDCLASS.                    "lcl_serialize_dtel IMPLEMENTATION
 CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
-                             RETURNING value(rt_files) TYPE tt_files
-                             RAISING lcx_exception.
+    CLASS-METHODS: serialize   IMPORTING is_item TYPE st_item
+                               RETURNING value(rt_files) TYPE tt_files
+                               RAISING lcx_exception.
 
     CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
                                          it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING lcx_exception.
 
   PRIVATE SECTION.
@@ -1695,6 +1714,48 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_clas IMPLEMENTATION.
+
+  METHOD delete.
+
+    DATA: ls_clskey TYPE seoclskey.
+
+
+    ls_clskey-clsname = is_item-obj_name.
+
+    CASE is_item-obj_type.
+      WHEN 'CLAS'.
+        CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
+          EXPORTING
+            clskey       = ls_clskey
+          EXCEPTIONS
+            not_existing = 1
+            is_interface = 2
+            db_error     = 3
+            no_access    = 4
+            other        = 5
+            OTHERS       = 6.
+        IF sy-subrc <> 0.
+          _raise 'Error from SEO_CLASS_DELETE_COMPLETE'.
+        ENDIF.
+      WHEN 'INTF'.
+        CALL FUNCTION 'SEO_INTERFACE_DELETE_COMPLETE'
+          EXPORTING
+            intkey       = ls_clskey
+          EXCEPTIONS
+            not_existing = 1
+            is_class     = 2
+            db_error     = 3
+            no_access    = 4
+            other        = 5
+            OTHERS       = 6.
+        IF sy-subrc <> 0.
+          _raise 'Error from SEO_INTERFACE_DELETE_COMPLETE'.
+        ENDIF.
+      WHEN OTHERS.
+        _raise 'class delete, unknown type'.
+    ENDCASE.
+
+  ENDMETHOD.                    "delete
 
   METHOD reduce.
 
@@ -2238,41 +2299,6 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 ENDCLASS.                    "lcl_serialize_CLAS IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_fugr DEFINITION INHERITING FROM lcl_serialize_common FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
-                             RETURNING value(rt_files) TYPE tt_files
-                             RAISING lcx_exception.
-
-    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
-                                         it_files TYPE tt_files
-                               RAISING lcx_exception.
-
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_fugr IMPLEMENTATION.
-
-  METHOD serialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "serialize
-
-  METHOD deserialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "deserialize
-
-ENDCLASS.                    "lcl_serialize_FUGR IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_serialize_ssfo DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -2288,6 +2314,9 @@ CLASS lcl_serialize_ssfo DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2296,6 +2325,14 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_ssfo IMPLEMENTATION.
+
+  METHOD delete.
+
+* fm FB_DELETE_FORM
+
+    _raise 'todo, delete ssfo'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 * see function module FB_DOWNLOAD_FORM
@@ -2445,6 +2482,9 @@ CLASS lcl_serialize_tabl DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2453,6 +2493,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_tabl IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo, delete tabl'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -2641,76 +2687,6 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
 ENDCLASS.                    "lcl_serialize_TABL IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_msag DEFINITION INHERITING FROM lcl_serialize_common FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
-                             RETURNING value(rt_files) TYPE tt_files
-                             RAISING lcx_exception.
-
-    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
-                                         it_files TYPE tt_files
-                               RAISING lcx_exception.
-
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_msag IMPLEMENTATION.
-
-  METHOD serialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "serialize
-
-  METHOD deserialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "deserialize
-
-ENDCLASS.                    "lcl_serialize_MSAG IMPLEMENTATION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_tran DEFINITION INHERITING FROM lcl_serialize_common FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
-                             RETURNING value(rt_files) TYPE tt_files
-                             RAISING lcx_exception.
-
-    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
-                                         it_files TYPE tt_files
-                               RAISING lcx_exception.
-
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_serialize_tran IMPLEMENTATION.
-
-  METHOD serialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "serialize
-
-  METHOD deserialize.
-    _raise 'todo'.
-  ENDMETHOD.                    "deserialize
-
-ENDCLASS.                    "lcl_serialize_TRAN IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_serialize_enqu DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -2726,6 +2702,9 @@ CLASS lcl_serialize_enqu DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2734,6 +2713,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_enqu IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo delete enqu'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -2845,6 +2830,9 @@ CLASS lcl_serialize_shlp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2853,6 +2841,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_shlp IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo, delete shlp'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -2974,6 +2968,9 @@ CLASS lcl_serialize_view DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2982,6 +2979,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_view IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo, delete view'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -3123,6 +3126,9 @@ CLASS lcl_serialize_ttyp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                          it_files TYPE tt_files
                                RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -3131,6 +3137,12 @@ ENDCLASS.                    "lcl_serialize_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_ttyp IMPLEMENTATION.
+
+  METHOD delete.
+
+    _raise 'todo, delete ttyp'.
+
+  ENDMETHOD.                    "delete
 
   METHOD serialize.
 
@@ -3241,6 +3253,8 @@ CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                        it_files TYPE tt_files
                               RAISING lcx_exception.
 
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS: serialize_dynpros
@@ -3290,6 +3304,29 @@ ENDCLASS.                    "lcl_serialize_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_serialize_prog IMPLEMENTATION.
+
+  METHOD delete.
+
+    DATA: lv_program LIKE sy-repid.
+
+
+    lv_program = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DELETE_PROGRAM'
+      EXPORTING
+        program            = lv_program
+        suppress_popup     = abap_true
+      EXCEPTIONS
+        enqueue_lock       = 1
+        object_not_found   = 2
+        permission_failure = 3
+        reject_deletion    = 4
+        OTHERS             = 5.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DELETE_PROGRAM'.
+    ENDIF.
+
+  ENDMETHOD.                    "delete
 
   METHOD deserialize_textpool.
 
@@ -3654,7 +3691,6 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     DATA: li_element              TYPE REF TO if_ixml_element,
           ls_header               TYPE rpy_dyhead,
           lt_containers           TYPE dycatt_tab,
-          ls_item                 TYPE st_item,
           lv_name                 TYPE dwinactiv-obj_name,
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow.
@@ -3713,7 +3749,6 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
     DATA: ls_tpool       LIKE LINE OF it_tpool,
           ls_progdir     TYPE progdir,
           lv_title       TYPE rglif-title,
-          ls_item        LIKE is_item,
           ls_progdir_new TYPE progdir.
 
 
@@ -3834,10 +3869,17 @@ CLASS lcl_serialize DEFINITION FINAL.
                             RETURNING value(rt_results) TYPE tt_results
                             RAISING lcx_exception.
 
-    CLASS-METHODS deserialize IMPORTING it_files TYPE tt_files
+    CLASS-METHODS deserialize
+                            IMPORTING it_files TYPE tt_files
+                            RAISING lcx_exception.
+
+    CLASS-METHODS delete    IMPORTING is_item TYPE st_item
                             RAISING lcx_exception.
 
   PRIVATE SECTION.
+
+    CLASS-METHODS class_name IMPORTING is_item TYPE st_item
+                             RETURNING value(rv_class_name) TYPE string.
 
     CLASS-METHODS compare_files
                             IMPORTING it_repo TYPE tt_files
@@ -3856,41 +3898,58 @@ ENDCLASS.                    "lcl_serialize DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_serialize IMPLEMENTATION.
 
+  METHOD class_name.
+
+    CONCATENATE 'lcl_serialize_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
+    TRANSLATE rv_class_name TO UPPER CASE.
+    IF rv_class_name = 'LCL_SERIALIZE_INTF'.
+      rv_class_name = 'LCL_SERIALIZE_CLAS'.
+    ENDIF.
+
+  ENDMETHOD.                    "class_name
+
+  METHOD delete.
+
+    DATA: lv_class_name TYPE string,
+          lv_message    TYPE string.
+
+
+    lv_class_name = class_name( is_item ).
+
+    TRY.
+        CALL METHOD (lv_class_name)=>delete
+          EXPORTING
+            is_item = is_item.
+      CATCH cx_sy_dyn_call_illegal_class cx_sy_dyn_call_illegal_method.
+        CONCATENATE 'Object type' is_item-obj_type 'not supported, delete'
+          INTO lv_message
+          SEPARATED BY space.                               "#EC NOTEXT
+        _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.                    "delete
+
   METHOD serialize.
 
-    DATA: lt_files TYPE tt_files.
+    DATA: lt_files      TYPE tt_files,
+          lv_class_name TYPE string,
+          lv_message    TYPE string.
 
-* todo, refactoring
-    CASE is_item-obj_type.
-      WHEN 'PROG'.
-        rt_files = lcl_serialize_prog=>serialize( is_item ).
-      WHEN 'DOMA'.
-        rt_files = lcl_serialize_doma=>serialize( is_item ).
-      WHEN 'DTEL'.
-        rt_files = lcl_serialize_dtel=>serialize( is_item ).
-      WHEN 'CLAS' OR 'INTF'.
-        rt_files = lcl_serialize_clas=>serialize( is_item ).
-      WHEN 'FUGR'.
-        rt_files = lcl_serialize_fugr=>serialize( is_item ).
-      WHEN 'TABL'.
-        rt_files = lcl_serialize_tabl=>serialize( is_item ).
-      WHEN 'TRAN'.
-        rt_files = lcl_serialize_tran=>serialize( is_item ).
-      WHEN 'MSAG'.
-        rt_files = lcl_serialize_msag=>serialize( is_item ).
-      WHEN 'TTYP'.
-        rt_files = lcl_serialize_ttyp=>serialize( is_item ).
-      WHEN 'VIEW'.
-        rt_files = lcl_serialize_view=>serialize( is_item ).
-      WHEN 'SHLP'.
-        rt_files = lcl_serialize_shlp=>serialize( is_item ).
-      WHEN 'ENQU'.
-        rt_files = lcl_serialize_enqu=>serialize( is_item ).
-      WHEN 'SSFO'.
-        rt_files = lcl_serialize_ssfo=>serialize( is_item ).
-      WHEN OTHERS.
-        _raise 'Serialize, unknown type'.
-    ENDCASE.
+
+    lv_class_name = class_name( is_item ).
+
+    TRY.
+        CALL METHOD (lv_class_name)=>serialize
+          EXPORTING
+            is_item  = is_item
+          RECEIVING
+            rt_files = rt_files.
+      CATCH cx_sy_dyn_call_illegal_class cx_sy_dyn_call_illegal_method.
+        CONCATENATE 'Object type' is_item-obj_type 'not supported, seialize'
+          INTO lv_message
+          SEPARATED BY space.                               "#EC NOTEXT
+        _raise lv_message.
+    ENDTRY.
 
 * check for duplicates
     lt_files[] = rt_files[].
@@ -3963,6 +4022,8 @@ CLASS lcl_serialize IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: ls_item    TYPE st_item,
+          lv_class_name TYPE string,
+          lv_message TYPE string,
           lt_results TYPE tt_results.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
@@ -3985,50 +4046,20 @@ CLASS lcl_serialize IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-* todo, refactoring
-      CASE ls_item-obj_type.
-        WHEN 'PROG'.
-          lcl_serialize_prog=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'DOMA'.
-          lcl_serialize_doma=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'DTEL'.
-          lcl_serialize_dtel=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'CLAS' OR 'INTF'.
-          lcl_serialize_clas=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'FUGR'.
-          lcl_serialize_fugr=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'TABL'.
-          lcl_serialize_tabl=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'TRAN'.
-          lcl_serialize_tran=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'MSAG'.
-          lcl_serialize_msag=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'TTYP'.
-          lcl_serialize_ttyp=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'VIEW'.
-          lcl_serialize_view=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'SHLP'.
-          lcl_serialize_shlp=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'ENQU'.
-          lcl_serialize_enqu=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN 'SSFO'.
-          lcl_serialize_ssfo=>deserialize( is_item  = ls_item
-                                           it_files = it_files ).
-        WHEN OTHERS.
-          _raise 'deserialize, unknown type'.
-      ENDCASE.
+      lv_class_name = class_name( ls_item ).
+
+      TRY.
+          CALL METHOD (lv_class_name)=>deserialize
+            EXPORTING
+              is_item  = ls_item
+              it_files = it_files.
+        CATCH cx_sy_dyn_call_illegal_class cx_sy_dyn_call_illegal_method.
+          CONCATENATE 'Object type' ls_item-obj_type 'not supported, deserialize'
+            INTO lv_message
+            SEPARATED BY space.                             "#EC NOTEXT
+          _raise lv_message.
+      ENDTRY.
+
     ENDLOOP.
 
     activate( ).
@@ -4949,9 +4980,8 @@ ENDCLASS.                    "lcl_pack IMPLEMENTATION
 CLASS lcl_persistence DEFINITION FINAL.
 
   PUBLIC SECTION.
-* class-methods delete
 
-    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_repos_sha1
+    CLASS-METHODS list RETURNING value(rt_repos) TYPE tt_repos_persi
                        RAISING lcx_exception.
 
     CLASS-METHODS update IMPORTING is_repo TYPE st_repo
@@ -4959,14 +4989,23 @@ CLASS lcl_persistence DEFINITION FINAL.
                          RAISING lcx_exception.
 
     CLASS-METHODS add IMPORTING is_repo TYPE st_repo
-                                   iv_branch TYPE t_sha1
-                         RAISING lcx_exception.
+                                iv_branch TYPE t_sha1
+                                iv_package TYPE devclass
+                      RAISING lcx_exception.
+
+    CLASS-METHODS validate_package
+                      IMPORTING iv_package TYPE devclass
+                      RAISING lcx_exception.
+
+    CLASS-METHODS delete
+                      IMPORTING is_repo TYPE st_repo_persi
+                      RAISING lcx_exception.
 
   PRIVATE SECTION.
-    CLASS-METHODS read_text RETURNING value(rt_repos) TYPE tt_repos_sha1
+    CLASS-METHODS read_text RETURNING value(rt_repos) TYPE tt_repos_persi
                             RAISING lcx_exception.
 
-    CLASS-METHODS save_text IMPORTING it_repos TYPE tt_repos_sha1
+    CLASS-METHODS save_text IMPORTING it_repos TYPE tt_repos_persi
                             RAISING lcx_exception.
 
     CLASS-METHODS header RETURNING value(rs_header) TYPE thead.
@@ -4987,6 +5026,22 @@ CLASS lcl_persistence IMPLEMENTATION.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header
 
+  METHOD delete.
+
+    DATA: lt_repos TYPE tt_repos_persi.
+
+
+    lt_repos = list( ).
+
+    DELETE lt_repos WHERE url = is_repo-url AND branch_name = is_repo-branch_name.
+    IF sy-subrc <> 0.
+      _raise 'repo not found, delete'.
+    ENDIF.
+
+    save_text( lt_repos ).
+
+  ENDMETHOD.                    "delete
+
   METHOD save_text.
 
     DATA: lt_lines  TYPE TABLE OF tline,
@@ -5006,6 +5061,9 @@ CLASS lcl_persistence IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
       <ls_line>-tdformat = '*'.
       <ls_line>-tdline = <ls_repo>-sha1.
+      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
+      <ls_line>-tdformat = '*'.
+      <ls_line>-tdline = <ls_repo>-package.
     ENDLOOP.
 
     ls_header = header( ).
@@ -5030,16 +5088,46 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   ENDMETHOD.                    "save_text
 
+  METHOD validate_package.
+
+    DATA: lv_devclass TYPE tdevc-devclass.
+    DATA: lt_repos TYPE tt_repos_persi.
+
+    IF iv_package IS INITIAL.
+      _raise 'add, package empty'.
+    ENDIF.
+
+    IF iv_package = '$TMP'.
+      _raise 'not possible to use $TMP, create $FOO package'.
+    ENDIF.
+
+    SELECT SINGLE devclass FROM tdevc INTO lv_devclass
+      WHERE devclass = iv_package AND as4user <> 'SAP'.
+    IF sy-subrc <> 0.
+      _raise 'package not found or not allowed'.
+    ENDIF.
+
+* make sure its not already in use for a different repository
+    lt_repos = list( ).
+    READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      _raise 'Package already in use'.
+    ENDIF.
+
+  ENDMETHOD.                    "validate_package
+
   METHOD add.
 
-    DATA: lt_repos TYPE tt_repos_sha1.
+    DATA: lt_repos TYPE tt_repos_persi.
 
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF lt_repos.
 
 
     IF iv_branch IS INITIAL.
-      _raise 'update, sha empty'.
+      _raise 'add, sha empty'.
     ENDIF.
+
+    validate_package( iv_package ).
 
     lt_repos = list( ).
 
@@ -5050,9 +5138,10 @@ CLASS lcl_persistence IMPLEMENTATION.
     ENDIF.
 
     APPEND INITIAL LINE TO lt_repos ASSIGNING <ls_repo>.
-    <ls_repo>-url = is_repo-url.
+    <ls_repo>-url         = is_repo-url.
     <ls_repo>-branch_name = is_repo-branch_name.
-    <ls_repo>-sha1 = iv_branch.
+    <ls_repo>-sha1        = iv_branch.
+    <ls_repo>-package     = iv_package.
 
     save_text( lt_repos ).
 
@@ -5060,7 +5149,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   METHOD update.
 
-    DATA: lt_repos TYPE tt_repos_sha1.
+    DATA: lt_repos TYPE tt_repos_persi.
 
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF lt_repos.
 
@@ -5091,7 +5180,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
     DATA: lt_lines  TYPE TABLE OF tline,
           ls_header TYPE thead,
-          ls_repo   TYPE st_repo_sha1.
+          ls_repo   TYPE st_repo_persi.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
 
@@ -5121,7 +5210,9 @@ CLASS lcl_persistence IMPLEMENTATION.
       _raise 'Error from READ_TEXT'.
     ENDIF.
 
-    IF lines( lt_lines ) MOD 3 <> 0.
+    IF lines( lt_lines ) MOD 4 <> 0.
+* if this happens, delete text ZABAPGIT in SO10 or edit the text
+* manually, so it contains the right information
       _raise 'Persistence, text broken'.
     ENDIF.
 
@@ -5138,8 +5229,12 @@ CLASS lcl_persistence IMPLEMENTATION.
         ls_repo-branch_name = <ls_line>-tdline.
         CONTINUE. " current loop
       ENDIF.
+      IF ls_repo-sha1 IS INITIAL.
+        ls_repo-sha1 = <ls_line>-tdline.
+        CONTINUE. " current loop
+      ENDIF.
 
-      ls_repo-sha1 = <ls_line>-tdline.
+      ls_repo-package = <ls_line>-tdline.
       APPEND ls_repo TO rt_repos.
       CLEAR ls_repo.
     ENDLOOP.
@@ -5822,7 +5917,7 @@ CLASS lcl_gui DEFINITION FINAL.
                       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS: render_repo
-                      IMPORTING is_repo TYPE st_repo_sha1
+                      IMPORTING is_repo_persi TYPE st_repo_persi
                       RETURNING value(rv_html) TYPE string
                       RAISING lcx_exception.
 
@@ -5840,7 +5935,11 @@ CLASS lcl_gui DEFINITION FINAL.
                       RAISING lcx_exception.
 
     CLASS-METHODS: add
-                      IMPORTING is_repo TYPE st_repo
+                      IMPORTING is_repo_persi TYPE st_repo_persi
+                      RAISING lcx_exception.
+
+    CLASS-METHODS: uninstall
+                      IMPORTING is_repo TYPE st_repo_persi
                       RAISING lcx_exception.
 
     CLASS-METHODS: get_object
@@ -5947,8 +6046,7 @@ CLASS lcl_gui IMPLEMENTATION.
     ENDIF.
 
     lt_diffs = lcl_diff=>diff( iv_local  = <ls_local>-data
-                               iv_remote = <ls_remote>-data
-                               is_item   = ls_item ).
+                               iv_remote = <ls_remote>-data ).
 
     render_diff( is_result = is_result
                  it_diffs  = lt_diffs ).
@@ -6188,10 +6286,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: lx_exception TYPE REF TO lcx_exception,
-          ls_result    TYPE st_result,
-          lv_url       TYPE string,
-          ls_repo      TYPE st_repo.
+    DATA: lx_exception  TYPE REF TO lcx_exception,
+          ls_result     TYPE st_result,
+          lv_url        TYPE string,
+          ls_repo       TYPE st_repo,
+          ls_repo_persi TYPE st_repo_persi.
 
 
     TRY.
@@ -6206,8 +6305,12 @@ CLASS lcl_gui IMPLEMENTATION.
                  document = 'https://github.com/larshp/abapGit' ).
           WHEN 'add'.
             struct_decode( EXPORTING iv_string = getdata
-                           CHANGING cg_structure = ls_repo ).
-            add( ls_repo ).
+                           CHANGING cg_structure = ls_repo_persi ).
+            add( ls_repo_persi ).
+          WHEN 'uninstall'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo_persi ).
+            uninstall( ls_repo_persi ).
           WHEN 'refresh'.
             view( render( ) ).
           WHEN 'commit'.
@@ -6241,12 +6344,76 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "on_event
 
+  METHOD uninstall.
+
+    DATA: lt_tadir    TYPE TABLE OF tadir,
+          lv_count    TYPE c LENGTH 3,
+          ls_item     TYPE st_item,
+          lv_answer   TYPE c LENGTH 1,
+          lv_question TYPE c LENGTH 100.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+
+    SELECT * FROM tadir INTO TABLE lt_tadir
+      WHERE devclass = is_repo-package.                     "#EC *
+
+    IF lines( lt_tadir ) > 0.
+      lv_count = lines( lt_tadir ).
+
+      CONCATENATE 'This will delete all objects in package' is_repo-package
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CONCATENATE lv_question '(' lv_count 'objects)'
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Uninstall'
+          text_question         = lv_question
+          text_button_1         = 'Delete'
+          icon_button_1         = 'ICON_DELETE'
+          text_button_2         = 'Cancel'
+          icon_button_2         = 'ICON_CANCEL'
+          default_button        = '2'
+          display_cancel_button = abap_false
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.                        "#EC NOTEXT
+      IF sy-subrc <> 0.
+        _raise 'error from POPUP_TO_CONFIRM'.
+      ENDIF.
+
+      IF lv_answer = '2'.
+        RETURN.
+      ENDIF.
+
+      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+        CLEAR ls_item.
+        ls_item-obj_type = <ls_tadir>-object.
+        ls_item-obj_name = <ls_tadir>-obj_name.
+        lcl_serialize=>delete( ls_item ).
+      ENDLOOP.
+
+    ENDIF.
+
+    lcl_persistence=>delete( is_repo ).
+
+    view( render( ) ).
+
+  ENDMETHOD.                    "uninstall
+
   METHOD add.
 
     DATA: lt_files    TYPE tt_files,
           ls_item     TYPE st_item,
           ls_comment  TYPE st_comment,
           lv_branch   TYPE t_sha1,
+          ls_repo     TYPE st_repo,
           lt_fields   TYPE TABLE OF sval,
           lt_spopli   TYPE TABLE OF spopli,
           lv_answer   TYPE c.
@@ -6258,9 +6425,6 @@ CLASS lcl_gui IMPLEMENTATION.
       <ls_spopli>-varoption = &1.                           "#EC NOTEXT
     END-OF-DEFINITION.
 
-
-* todo, by package, fm TADIR_GET
-* todo, by transport
 
     _add 'PROG Program'.
     _add 'DTEL Data Element'.
@@ -6285,8 +6449,8 @@ CLASS lcl_gui IMPLEMENTATION.
       EXPORTING
         start_col          = 10
         start_row          = 5
-        textline1          = 'Choose object type'           "#EC NOTEXT
-        titel              = 'Choose object type'           "#EC NOTEXT
+        textline1          = 'Choose object type'
+        titel              = 'Choose object type'
       IMPORTING
         answer             = lv_answer
       TABLES
@@ -6295,7 +6459,7 @@ CLASS lcl_gui IMPLEMENTATION.
         not_enough_answers = 1
         too_much_answers   = 2
         too_much_marks     = 3
-        OTHERS             = 4.
+        OTHERS             = 4.                             "#EC NOTEXT
     IF sy-subrc <> 0.
       _raise 'error from decide_list'.
     ENDIF.
@@ -6312,6 +6476,16 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    SELECT SINGLE obj_name FROM tadir
+      INTO ls_item-obj_name
+      WHERE pgmid = 'R3TR'
+      AND object = ls_item-obj_type
+      AND obj_name = ls_item-obj_name
+      AND devclass = is_repo_persi-package.
+    IF sy-subrc <> 0.
+      _raise 'Object not found or in wrong package'.
+    ENDIF.
+
     lt_files = lcl_serialize=>serialize( ls_item ).
 
     ls_comment = popup_comment( ).
@@ -6319,11 +6493,12 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    MOVE-CORRESPONDING is_repo_persi TO ls_repo.
     lv_branch = lcl_porcelain=>push( is_comment = ls_comment
-                                     is_repo    = is_repo
+                                     is_repo    = ls_repo
                                      it_files   = lt_files ).
 
-    lcl_persistence=>update( is_repo   = is_repo
+    lcl_persistence=>update( is_repo   = ls_repo
                              iv_branch = lv_branch ).
 
     view( render( ) ).
@@ -6389,6 +6564,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lt_files      TYPE tt_files,
           ls_repo       TYPE st_repo,
           lv_branch     TYPE t_sha1,
+          lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -6397,8 +6573,13 @@ CLASS lcl_gui IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
     <ls_field>-tabname   = 'ABAPTXT255'.
     <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Url'.                           "#EC NOTEXT
+    <ls_field>-fieldtext = 'Git Clone Url'.                 "#EC NOTEXT
     <ls_field>-value     = iv_url.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TDEVC'.
+    <ls_field>-fieldname = 'DEVCLASS'.
+    <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -6426,6 +6607,12 @@ CLASS lcl_gui IMPLEMENTATION.
     ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
     lcl_url=>name( ls_repo-url ).         " validate
 
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    lcl_persistence=>validate_package( lv_package ).
 
     lcl_porcelain=>pull( EXPORTING is_repo   = ls_repo
                          IMPORTING et_files  = lt_files
@@ -6433,8 +6620,9 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lcl_serialize=>deserialize( lt_files ).
 
-    lcl_persistence=>add( is_repo   = ls_repo
-                          iv_branch = lv_branch ).
+    lcl_persistence=>add( is_repo    = ls_repo
+                          iv_branch  = lv_branch
+                          iv_package = lv_package ).
 
     view( render( ) ).
 
@@ -6498,7 +6686,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lt_repos TYPE tt_repos_sha1,
+    DATA: lt_repos TYPE tt_repos_persi,
           lv_text  TYPE c LENGTH 100,
           lv_pct   TYPE i,
           lv_f     TYPE f,
@@ -6563,14 +6751,21 @@ CLASS lcl_gui IMPLEMENTATION.
                    <ls_result> LIKE LINE OF lt_results.
 
 
-    rv_html = rv_html &&
-      '<a id="' && lcl_url=>name( is_repo-url ) && '"></a>' &&
-      '<h2>' && lcl_url=>name( is_repo-url ) && '</h2>&nbsp;' &&
-      '<h3>' && is_repo-url && '</h3>&nbsp;' &&
-      '<h3>' && is_repo-branch_name && '</h3>&nbsp;' &&
-      '<br>'.
+    MOVE-CORRESPONDING is_repo_persi TO ls_repo.
 
-    MOVE-CORRESPONDING is_repo TO ls_repo.
+    rv_html = rv_html &&
+      '<a id="' && lcl_url=>name( is_repo_persi-url ) && '"></a>' &&
+      '<h2>' && lcl_url=>name( is_repo_persi-url ) && '</h2>&nbsp;' &&
+      '<h3>' && is_repo_persi-url && '</h3>&nbsp;&nbsp;' &&
+      '<h3>' && is_repo_persi-branch_name && '</h3>&nbsp;&nbsp;' &&
+      '<h3>' && is_repo_persi-package && '</h3>&nbsp;&nbsp;' &&
+      '<br>' &&
+      '<a href="sapevent:uninstall?' &&
+      struct_encode( is_repo_persi ) &&
+      '" class="grey">' &&
+      'uninstall' &&
+      '</a><br>'.                                           "#EC NOTEXT
+
     lcl_porcelain=>pull( EXPORTING is_repo   = ls_repo
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
@@ -6588,7 +6783,7 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html && '<br>'.
 
     lt_results = lcl_serialize=>status( lt_files ).
-    IF lv_branch <> is_repo-sha1.
+    IF lv_branch <> is_repo_persi-sha1.
       lv_status = 'pull'.                                   "#EC NOTEXT
     ELSE.
       READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
@@ -6603,7 +6798,7 @@ CLASS lcl_gui IMPLEMENTATION.
     LOOP AT lt_results ASSIGNING <ls_result>.
       IF <ls_result>-match = abap_false.
         lv_link = '<a href="sapevent:diff?' &&
-          struct_encode( ig_structure1 = <ls_result> ig_structure2 = is_repo ) &&
+          struct_encode( ig_structure1 = <ls_result> ig_structure2 = ls_repo ) &&
           '">diff</a>'.
       ELSE.
         CLEAR lv_link.
@@ -6623,7 +6818,7 @@ CLASS lcl_gui IMPLEMENTATION.
     CASE lv_status.
       WHEN 'match'.
         rv_html = rv_html && '<a href="sapevent:add?'
-                  && struct_encode( ls_repo ) && '">add</a>'.
+                  && struct_encode( is_repo_persi ) && '">add</a>'.
       WHEN 'commit'.
         rv_html = rv_html && '<a href="sapevent:commit?'
                   && struct_encode( ls_repo ) && '">commit</a>'.
