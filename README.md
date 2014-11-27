@@ -20,5 +20,5 @@ Git client for ABAP
 
 * [Your first abapGit project](https://github.com/larshp/abapGit/wiki/Your-first-abapGit-project)
 
-### FAQ ##
+## FAQ ##
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
