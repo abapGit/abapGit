@@ -2,7 +2,8 @@ REPORT zabapgit.
 
 * See https://github.com/larshp/abapGit/
 
-CONSTANTS: gc_version TYPE string VALUE 'v0.2-alpha'.       "#EC NOTEXT
+CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.3'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -556,7 +557,7 @@ CLASS lcl_xml IMPLEMENTATION.
       mi_root = mi_xml_doc->find_from_name( depth = 0 name = 'abapGit' ).
     ELSEIF iv_empty = abap_false.
       mi_root = mi_xml_doc->create_element( 'abapGit' ).
-      mi_root->set_attribute( name = 'version' value = gc_version ). "#EC NOTEXT
+      mi_root->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
 
@@ -1428,7 +1429,27 @@ ENDCLASS.                    "lcl_serialize_doma DEFINITION
 CLASS lcl_serialize_doma IMPLEMENTATION.
 
   METHOD delete.
-    _raise 'todo, delete, doma'.
+* see class CL_WB_DDIC
+
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'D'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, DOMA'.
+    ENDIF.
+
   ENDMETHOD.                    "delete
 
   METHOD serialize.
@@ -1459,8 +1480,6 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
     IF ls_dd01v IS INITIAL.
       RETURN. " does not exist
     ENDIF.
-
-* todo, translated texts?
 
     CLEAR: ls_dd01v-as4user,
            ls_dd01v-as4date,
@@ -1554,7 +1573,24 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo, delete dtel'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'E'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, DTEL'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -1585,8 +1621,6 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
     IF ls_dd04v IS INITIAL.
       RETURN. " does not exist
     ENDIF.
-
-* todo, translated texts?
 
     CLEAR: ls_dd04v-as4user,
            ls_dd04v-as4date,
@@ -2328,9 +2362,27 @@ CLASS lcl_serialize_ssfo IMPLEMENTATION.
 
   METHOD delete.
 
-* fm FB_DELETE_FORM
+    DATA: lv_formname TYPE tdsfname.
 
-    _raise 'todo, delete ssfo'.
+
+    lv_formname = is_item-obj_name.
+
+    CALL FUNCTION 'FB_DELETE_FORM'
+      EXPORTING
+        i_formname            = lv_formname
+        i_with_dialog         = abap_false
+        i_with_confirm_dialog = abap_false
+      EXCEPTIONS
+        no_name               = 1
+        no_form               = 2
+        form_locked           = 3
+        no_access_permission  = 4
+        illegal_language      = 5
+        illegal_formtype      = 6
+        OTHERS                = 7.
+    IF sy-subrc <> 0.
+      _raise 'Error from FB_DELETE_FORM'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -2496,7 +2548,24 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo, delete tabl'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'T'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, TABL'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -2716,7 +2785,24 @@ CLASS lcl_serialize_enqu IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo delete enqu'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'L'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, ENQU'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -2844,7 +2930,24 @@ CLASS lcl_serialize_shlp IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo, delete shlp'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'H'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, SHLP'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -2982,7 +3085,24 @@ CLASS lcl_serialize_view IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo, delete view'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'V'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, VIEW'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -3140,7 +3260,24 @@ CLASS lcl_serialize_ttyp IMPLEMENTATION.
 
   METHOD delete.
 
-    _raise 'todo, delete ttyp'.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'A'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_DELETE_OBJ, TTYP'.
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -4014,8 +4151,6 @@ CLASS lcl_serialize IMPLEMENTATION.
     SORT rt_results BY obj_type ASCENDING obj_name ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
-
-* todo, how to handle deleted in repo?
 
   ENDMETHOD.                    "status
 
@@ -5482,7 +5617,7 @@ CLASS lcl_transport IMPLEMENTATION.
               is_repo-branch_name &&
               get_null( ) &&
               ` ` &&
-              'report-status agent=abapGit/' && gc_version &&
+              'report-status agent=abapGit/' && gc_abap_version &&
               gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
@@ -5590,7 +5725,7 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               ev_branch &&
               ` ` &&
-              'side-band-64k no-progress agent=abapGit/' && gc_version
+              'side-band-64k no-progress agent=abapGit/' && gc_abap_version
               && gc_newline.                                "#EC NOTEXT
     lv_pkt = pkt_string( lv_line ).
 
@@ -6414,7 +6549,6 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_comment  TYPE st_comment,
           lv_branch   TYPE t_sha1,
           ls_repo     TYPE st_repo,
-          lt_fields   TYPE TABLE OF sval,
           lt_spopli   TYPE TABLE OF spopli,
           lv_answer   TYPE c.
 
@@ -6731,7 +6865,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     rv_html = rv_html &&
       '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
-      gc_version &&
+      gc_abap_version &&
       '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'. "#EC NOTEXT
 
     rv_html = rv_html && '</body></html>'.
