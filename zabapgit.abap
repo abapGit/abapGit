@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.3'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.4'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3054,6 +3054,149 @@ CLASS lcl_serialize_shlp IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_shlp IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_msag DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_msag DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_msag DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_view IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_msag IMPLEMENTATION.
+
+  METHOD delete.
+
+    CALL FUNCTION 'RS_DELETE_MESSAGE_ID'
+      EXPORTING
+        nachrichtenklasse = is_item-obj_name
+        suppress_dialog   = abap_true
+      EXCEPTIONS
+        not_executed      = 1
+        not_found         = 2
+        no_permission     = 3
+        OTHERS            = 4.
+    IF sy-subrc <> 0.
+      _raise 'Error from RS_DELETE_MESSAGE_ID'.
+    ENDIF.
+
+  ENDMETHOD.                    "delete
+
+  METHOD deserialize.
+* fm RPY_MESSAGE_ID_INSERT almost works, but not in older versions
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_t100a TYPE t100a,
+          ls_t100t TYPE t100t,
+          lt_t100  TYPE TABLE OF t100.
+
+    FIELD-SYMBOLS: <ls_t100> LIKE LINE OF lt_t100.
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_t100a ).
+    lo_xml->table_read( EXPORTING iv_name = 'T100'
+                        CHANGING ct_table = lt_t100 ).
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        global_lock         = 'X'
+        object              = ls_t100a-arbgb
+        object_class        = 'T100'
+      EXCEPTIONS
+        cancelled           = 01
+        permission_failure  = 02
+        unknown_objectclass = 03.
+    IF sy-subrc <> 0.
+      _raise 'Error from RS_CORR_INSERT'.
+    ENDIF.
+
+    LOOP AT lt_t100 ASSIGNING <ls_t100>.
+      MODIFY t100 FROM <ls_t100>.                           "#EC *
+      ASSERT sy-subrc = 0.
+    ENDLOOP.
+
+    ls_t100a-lastuser = sy-uname.
+    ls_t100a-respuser = sy-uname.
+    ls_t100a-ldate = sy-datum.
+    ls_t100a-ltime = sy-uzeit.
+    MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+    ls_t100t-sprsl = 'E'.
+    ls_t100t-arbgb = ls_t100a-arbgb.
+    ls_t100t-stext = ls_t100a-stext.
+    MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD serialize.
+
+    DATA: lv_msg_id TYPE rglif-message_id,
+          ls_file   TYPE st_file,
+          ls_inf    TYPE t100a,
+          lt_source TYPE TABLE OF t100,
+          lo_xml    TYPE REF TO lcl_xml.
+
+
+    lv_msg_id = is_item-obj_name.
+
+    CALL FUNCTION 'RPY_MESSAGE_ID_READ'
+      EXPORTING
+        language         = 'E'
+        message_id       = lv_msg_id
+      IMPORTING
+        message_id_inf   = ls_inf
+      TABLES
+        source           = lt_source
+      EXCEPTIONS
+        cancelled        = 1
+        not_found        = 2
+        permission_error = 3
+        OTHERS           = 4.
+    IF sy-subrc = 2.
+      RETURN.
+    ENDIF.
+    IF sy-subrc <> 0.
+      _raise 'Error from RPY_MESSAGE_ID_READ'.
+    ENDIF.
+
+    CLEAR: ls_inf-lastuser,
+           ls_inf-ldate,
+           ls_inf-ltime.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_inf ).
+    lo_xml->table_add( it_table = lt_source
+                       iv_name  = 'T100' ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+ENDCLASS.                    "lcl_serialize_view IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_serialize_dtel DEFINITION
@@ -6571,8 +6714,8 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'SHLP Search Help'.
     _add 'ENQU Lock Object'.
     _add 'SSFO Smart Form'.
+    _add 'MSAG Message Class'.
     _add 'FUGR Function Group (todo)'.
-    _add 'MSAG Message Class (todo)'.
     _add 'TRAN Transaction (todo)'.
     _add 'FORM SAP Script (todo)'.
 *table contents
