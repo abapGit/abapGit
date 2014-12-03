@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.4'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.5'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3054,6 +3054,180 @@ CLASS lcl_serialize_shlp IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_serialize_shlp IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_TRAN DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_tran DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item TYPE st_item
+                                         it_files TYPE tt_files
+                               RAISING lcx_exception.
+
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_serialize_TRAN DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_serialize_msag IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_serialize_tran IMPLEMENTATION.
+
+  METHOD delete.
+
+    DATA: lv_transaction TYPE tstc-tcode.
+
+
+    lv_transaction = is_item-obj_name.
+
+    CALL FUNCTION 'RPY_TRANSACTION_DELETE'
+      EXPORTING
+        transaction      = lv_transaction
+      EXCEPTIONS
+        not_excecuted    = 1
+        object_not_found = 2
+        OTHERS           = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from RPY_TRANSACTION_DELETE'.
+    ENDIF.
+
+  ENDMETHOD.                    "delete
+
+  METHOD deserialize.
+
+    CONSTANTS: lc_hex_tra TYPE x VALUE '00',
+*               c_hex_men TYPE x VALUE '01',
+               lc_hex_par TYPE x VALUE '02',
+               lc_hex_rep TYPE x VALUE '80'.
+*               c_hex_rpv TYPE x VALUE '10',
+*               c_hex_obj TYPE x VALUE '08',
+*               c_hex_chk TYPE x VALUE '04',
+*               c_hex_enq TYPE x VALUE '20'.
+
+    DATA: lv_dynpro TYPE d020s-dnum,
+          lo_xml    TYPE REF TO lcl_xml,
+          ls_tstc   TYPE tstc,
+          lv_type   TYPE rglif-docutype,
+          ls_tstct  TYPE tstct,
+          ls_tstcc  TYPE tstcc.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_tstc ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tstcc ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tstct ).
+
+    lv_dynpro = ls_tstc-dypno.
+
+    CASE ls_tstc-cinfo.
+      WHEN lc_hex_tra.
+        lv_type = ststc_c_type_dialog.
+      WHEN lc_hex_rep.
+        lv_type = ststc_c_type_report.
+      WHEN lc_hex_par.
+        lv_type = ststc_c_type_parameters.
+* todo, or ststc_c_type_variant?
+      WHEN OTHERS.
+        _raise 'Transaction, unknown CINFO'.
+    ENDCASE.
+
+    CALL FUNCTION 'RPY_TRANSACTION_INSERT'
+      EXPORTING
+        transaction         = ls_tstc-tcode
+        program             = ls_tstc-pgmna
+        dynpro              = lv_dynpro
+        language            = 'E'
+        development_class   = ''
+        transaction_type    = lv_type
+        shorttext           = ls_tstct-ttext
+        html_enabled        = ls_tstcc-s_webgui
+        java_enabled        = ls_tstcc-s_platin
+        wingui_enabled      = ls_tstcc-s_win32
+      EXCEPTIONS
+        cancelled           = 1
+        already_exist       = 2
+        permission_error    = 3
+        name_not_allowed    = 4
+        name_conflict       = 5
+        illegal_type        = 6
+        object_inconsistent = 7
+        db_access_error     = 8
+        OTHERS              = 9.
+    IF sy-subrc <> 0.
+      _raise 'Error from RPY_TRANSACTION_INSERT'.
+    ENDIF.
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD serialize.
+
+    DATA: lv_transaction TYPE tstc-tcode,
+          lt_tcodes      TYPE TABLE OF tstc,
+          ls_tcode       TYPE tstc,
+          ls_tstct       TYPE tstct,
+          lt_gui_attr    TYPE TABLE OF tstcc,
+          lo_xml         TYPE REF TO lcl_xml,
+          ls_file        TYPE st_file,
+          ls_gui_attr    TYPE tstcc.
+
+
+    lv_transaction = is_item-obj_name.
+
+    CALL FUNCTION 'RPY_TRANSACTION_READ'
+      EXPORTING
+        transaction      = lv_transaction
+      TABLES
+        tcodes           = lt_tcodes
+        gui_attributes   = lt_gui_attr
+      EXCEPTIONS
+        permission_error = 1
+        cancelled        = 2
+        not_found        = 3
+        object_not_found = 4
+        OTHERS           = 5.
+    IF sy-subrc = 4.
+      RETURN.
+    ENDIF.
+    IF sy-subrc <> 0.
+      _raise 'Error from RPY_TRANSACTION_READ'.
+    ENDIF.
+
+    SELECT SINGLE * FROM tstct INTO ls_tstct
+      WHERE sprsl = 'E'
+      AND tcode = lv_transaction.
+    IF sy-subrc <> 0.
+      _raise 'Transaction description not found'.
+    ENDIF.
+
+    READ TABLE lt_tcodes INDEX 1 INTO ls_tcode.
+    ASSERT sy-subrc = 0.
+    READ TABLE lt_gui_attr INDEX 1 INTO ls_gui_attr.
+    ASSERT sy-subrc = 0.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_tcode ).
+    lo_xml->structure_add( ls_gui_attr ).
+    lo_xml->structure_add( ls_tstct ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.                    "serialize
+
+ENDCLASS.                    "lcl_serialize_msag IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_serialize_msag DEFINITION
@@ -6715,8 +6889,8 @@ CLASS lcl_gui IMPLEMENTATION.
     _add 'ENQU Lock Object'.
     _add 'SSFO Smart Form'.
     _add 'MSAG Message Class'.
+    _add 'TRAN Transaction'.
     _add 'FUGR Function Group (todo)'.
-    _add 'TRAN Transaction (todo)'.
     _add 'FORM SAP Script (todo)'.
 *table contents
 *lock object
@@ -7172,6 +7346,11 @@ FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception.
 
+
+  IF sy-langu <> 'E'.
+    WRITE: / 'Use English as logon language'.               "#EC NOTEXT
+    RETURN.
+  ENDIF.
 
   TRY.
       lcl_gui=>run( ).
