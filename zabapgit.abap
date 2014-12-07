@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.7'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.8'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1179,11 +1179,11 @@ CLASS lcl_diff IMPLEMENTATION.
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_common DEFINITION
+*       CLASS lcl_objects_common DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_common DEFINITION ABSTRACT.
+CLASS lcl_objects_common DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
     CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
@@ -1222,20 +1222,66 @@ CLASS lcl_serialize_common DEFINITION ABSTRACT.
                                          iv_package TYPE devclass
                                RAISING   lcx_exception.
 
+    CLASS-METHODS: jump_se11 IMPORTING is_item TYPE st_item
+                                       iv_radio TYPE string
+                                       iv_field TYPE string
+                             RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CLASS-METHODS: filename IMPORTING is_item            TYPE st_item
                                       iv_extra           TYPE string OPTIONAL
                                       iv_ext             TYPE string
                             RETURNING value(rv_filename) TYPE string.
 
-ENDCLASS.                    "lcl_serialize_common DEFINITION
+ENDCLASS.                    "lcl_objects_common DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_common IMPLEMENTATION
+*       CLASS lcl_objects_common IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_common IMPLEMENTATION.
+CLASS lcl_objects_common IMPLEMENTATION.
+
+  METHOD jump_se11.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPLSD_ENTRY'.
+    <ls_bdcdata>-dynpro   = '1000'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=WB_DISPLAY'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = iv_radio.
+    <ls_bdcdata>-fval = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = iv_field.
+    <ls_bdcdata>-fval = is_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SE11'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from call transaction, se11'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump_se11
 
   METHOD corr_insert.
 
@@ -1314,15 +1360,15 @@ CLASS lcl_serialize_common IMPLEMENTATION.
           _raise 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT'.
         ENDIF.
 
-        APPEND LINES OF lt_objects TO lcl_serialize_common=>gt_programs.
+        APPEND LINES OF lt_objects TO lcl_objects_common=>gt_programs.
       WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'.
 * todo also insert_into_working_area?
-        APPEND INITIAL LINE TO lcl_serialize_common=>gt_ddic ASSIGNING <ls_object>.
+        APPEND INITIAL LINE TO lcl_objects_common=>gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
       WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF'.
 * these seem to go into the workarea automatically
-        APPEND INITIAL LINE TO lcl_serialize_common=>gt_programs ASSIGNING <ls_object>.
+        APPEND INITIAL LINE TO lcl_objects_common=>gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
       WHEN OTHERS.
@@ -1417,14 +1463,14 @@ CLASS lcl_serialize_common IMPLEMENTATION.
 
   ENDMETHOD.                    "do
 
-ENDCLASS.                    "lcl_serialize_common IMPLEMENTATION
+ENDCLASS.                    "lcl_objects_common IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_doma DEFINITION
+*       CLASS lcl_object_doma DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_doma DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -1439,14 +1485,25 @@ CLASS lcl_serialize_doma DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_doma DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_doma DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_doma IMPLEMENTATION
+*       CLASS lcl_object_doma IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_doma IMPLEMENTATION.
+CLASS lcl_object_doma IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-DOMA'
+               iv_field = 'RSRD1-DOMA_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 * see class CL_WB_DDIC
@@ -1562,14 +1619,14 @@ CLASS lcl_serialize_doma IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_doma IMPLEMENTATION
+ENDCLASS.                    "lcl_object_doma IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
+*       CLASS lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_dtel DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -1584,14 +1641,25 @@ CLASS lcl_serialize_dtel DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_dtel IMPLEMENTATION.
+CLASS lcl_object_dtel IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-DDTYPE'
+               iv_field = 'RSRD1-DDTYPE_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -1697,14 +1765,14 @@ CLASS lcl_serialize_dtel IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_dtel IMPLEMENTATION
+ENDCLASS.                    "lcl_object_dtel IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
+*       CLASS lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize   IMPORTING is_item         TYPE st_item
@@ -1717,6 +1785,9 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
                                RAISING   lcx_exception.
 
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -1765,14 +1836,51 @@ CLASS lcl_serialize_clas DEFINITION INHERITING FROM lcl_serialize_common FINAL.
 
     CLASS-METHODS reduce CHANGING ct_source TYPE seop_source_string.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_clas IMPLEMENTATION.
+CLASS lcl_object_clas IMPLEMENTATION.
+
+  METHOD jump.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPLSEOD'.
+    <ls_bdcdata>-dynpro   = '1000'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=WB_DISPLAY'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'SEOCLASS-CLSNAME'.
+    <ls_bdcdata>-fval = is_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SE24'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from call transaction, clas'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -2358,14 +2466,14 @@ CLASS lcl_serialize_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_CLAS IMPLEMENTATION
+ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_ssfo DEFINITION
+*       CLASS lcl_object_ssfo DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_ssfo DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -2380,14 +2488,58 @@ CLASS lcl_serialize_ssfo DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_ssfo IMPLEMENTATION.
+CLASS lcl_object_ssfo IMPLEMENTATION.
+
+  METHOD jump.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPMSSFO'.
+    <ls_bdcdata>-dynpro   = '0100'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=DISPLAY'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RB_SF'.
+    <ls_bdcdata>-fval = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'SSFSCREEN-FNAME'.
+    <ls_bdcdata>-fval = is_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SMARTFORMS'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from call transaction, ssfo'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -2545,14 +2697,14 @@ CLASS lcl_serialize_ssfo IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_ssfo IMPLEMENTATION
+ENDCLASS.                    "lcl_object_ssfo IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
+*       CLASS lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_tabl DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -2567,14 +2719,25 @@ CLASS lcl_serialize_tabl DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_tabl IMPLEMENTATION.
+CLASS lcl_object_tabl IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-TBMA'
+               iv_field = 'RSRD1-TBMA_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -2784,14 +2947,14 @@ CLASS lcl_serialize_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_TABL IMPLEMENTATION
+ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_enqu DEFINITION
+*       CLASS lcl_object_enqu DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_enqu DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_enqu DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -2806,14 +2969,25 @@ CLASS lcl_serialize_enqu DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_enqu IMPLEMENTATION.
+CLASS lcl_object_enqu IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-ENQU'
+               iv_field = 'RSRD1-ENQU_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -2931,14 +3105,14 @@ CLASS lcl_serialize_enqu IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_enqu IMPLEMENTATION
+ENDCLASS.                    "lcl_object_enqu IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_shlp DEFINITION
+*       CLASS lcl_object_shlp DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_shlp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_shlp DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -2953,14 +3127,25 @@ CLASS lcl_serialize_shlp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_shlp IMPLEMENTATION.
+CLASS lcl_object_shlp IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-SHMA'
+               iv_field = 'RSRD1-SHMA_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -3088,14 +3273,14 @@ CLASS lcl_serialize_shlp IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_shlp IMPLEMENTATION
+ENDCLASS.                    "lcl_object_shlp IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_TRAN DEFINITION
+*       CLASS lcl_object_TRAN DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_tran DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -3110,14 +3295,54 @@ CLASS lcl_serialize_tran DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_TRAN DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_msag IMPLEMENTATION
+*       CLASS lcl_object_msag IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_tran IMPLEMENTATION.
+CLASS lcl_object_tran IMPLEMENTATION.
+
+  METHOD jump.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPLSEUK'.
+    <ls_bdcdata>-dynpro   = '0390'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=SHOW'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'TSTC-TCODE'.
+    <ls_bdcdata>-fval = is_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SE93'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from call transaction, tran'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -3263,14 +3488,14 @@ CLASS lcl_serialize_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-ENDCLASS.                    "lcl_serialize_msag IMPLEMENTATION
+ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_msag DEFINITION
+*       CLASS lcl_object_msag DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_msag DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -3285,14 +3510,54 @@ CLASS lcl_serialize_msag DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_msag DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_msag DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_view IMPLEMENTATION
+*       CLASS lcl_object_view IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_msag IMPLEMENTATION.
+CLASS lcl_object_msag IMPLEMENTATION.
+
+  METHOD jump.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPLWBMESSAGES'.
+    <ls_bdcdata>-dynpro   = '0100'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=WB_DISPLAY'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RSDAG-ARBGB'.
+    <ls_bdcdata>-fval = is_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SE91'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from call transaction, msag'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -3418,14 +3683,14 @@ CLASS lcl_serialize_msag IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-ENDCLASS.                    "lcl_serialize_view IMPLEMENTATION
+ENDCLASS.                    "lcl_object_view IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel DEFINITION
+*       CLASS lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_view DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_view DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -3440,14 +3705,25 @@ CLASS lcl_serialize_view DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_view IMPLEMENTATION.
+CLASS lcl_object_view IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-VIMA'
+               iv_field = 'RSRD1-VIMA_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -3595,14 +3871,14 @@ CLASS lcl_serialize_view IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_view IMPLEMENTATION
+ENDCLASS.                    "lcl_object_view IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_ttyp DEFINITION
+*       CLASS lcl_object_ttyp DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_ttyp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_ttyp DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
@@ -3617,14 +3893,25 @@ CLASS lcl_serialize_ttyp DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_serialize_dtel DEFINITION
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_dtel IMPLEMENTATION
+*       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_ttyp IMPLEMENTATION.
+CLASS lcl_object_ttyp IMPLEMENTATION.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-DDTYPE'
+               iv_field = 'RSRD1-DDTYPE_VAL' ).
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -3740,14 +4027,14 @@ CLASS lcl_serialize_ttyp IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-ENDCLASS.                    "lcl_serialize_ttyp IMPLEMENTATION
+ENDCLASS.                    "lcl_object_ttyp IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_prog DEFINITION
+*       CLASS lcl_object_prog DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
+CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: serialize  IMPORTING is_item         TYPE st_item
@@ -3761,6 +4048,9 @@ CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
                                RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -3837,14 +4127,22 @@ CLASS lcl_serialize_prog DEFINITION INHERITING FROM lcl_serialize_common FINAL.
     CLASS-METHODS exists IMPORTING iv_obj_name      TYPE tadir-obj_name
                          RETURNING value(rv_exists) TYPE abap_bool.
 
-ENDCLASS.                    "lcl_serialize_prog DEFINITION
+ENDCLASS.                    "lcl_object_prog DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize_prog IMPLEMENTATION
+*       CLASS lcl_object_prog IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize_prog IMPLEMENTATION.
+CLASS lcl_object_prog IMPLEMENTATION.
+
+  METHOD jump.
+
+* todo, ABAP4_CALL_TRANSACTION opens some strange editor
+* fm EDITOR_PROGRAM doesnt seem to open in new session
+    _raise 'todo, jump, PROG'.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -4397,14 +4695,14 @@ CLASS lcl_serialize_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "exists
 
-ENDCLASS.                    "lcl_serialize_prog IMPLEMENTATION
+ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize DEFINITION
+*       CLASS lcl_object DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize DEFINITION FINAL.
+CLASS lcl_objects DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize IMPORTING is_item         TYPE st_item
@@ -4424,6 +4722,9 @@ CLASS lcl_serialize DEFINITION FINAL.
     CLASS-METHODS delete    IMPORTING is_item TYPE st_item
                             RAISING   lcx_exception.
 
+    CLASS-METHODS jump      IMPORTING is_item TYPE st_item
+                            RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     CLASS-METHODS class_name IMPORTING is_item              TYPE st_item
@@ -4437,24 +4738,44 @@ CLASS lcl_serialize DEFINITION FINAL.
 
     CLASS-METHODS activate RAISING lcx_exception.
 
-ENDCLASS.                    "lcl_serialize DEFINITION
+ENDCLASS.                    "lcl_object DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_serialize IMPLEMENTATION
+*       CLASS lcl_object IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_serialize IMPLEMENTATION.
+CLASS lcl_objects IMPLEMENTATION.
 
   METHOD class_name.
 
-    CONCATENATE 'lcl_serialize_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
-    TRANSLATE rv_class_name TO UPPER CASE.
-    IF rv_class_name = 'LCL_SERIALIZE_INTF'.
-      rv_class_name = 'LCL_SERIALIZE_CLAS'.
+    CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
+    IF rv_class_name = 'LCL_OBJECT_INTF'.
+      rv_class_name = 'LCL_OBJECT_CLAS'.
     ENDIF.
 
   ENDMETHOD.                    "class_name
+
+  METHOD jump.
+
+    DATA: lv_class_name TYPE string,
+          lv_message    TYPE string.
+
+
+    lv_class_name = class_name( is_item ).
+
+    TRY.
+        CALL METHOD (lv_class_name)=>jump
+          EXPORTING
+            is_item = is_item.
+      CATCH cx_sy_dyn_call_illegal_class cx_sy_dyn_call_illegal_method.
+        CONCATENATE 'Object type' is_item-obj_type 'not supported, jump'
+          INTO lv_message
+          SEPARATED BY space.                               "#EC NOTEXT
+        _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.                    "jump
 
   METHOD delete.
 
@@ -4606,8 +4927,8 @@ CLASS lcl_serialize IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 
-    CLEAR lcl_serialize_common=>gt_ddic[].
-    CLEAR lcl_serialize_common=>gt_programs[].
+    CLEAR lcl_objects_common=>gt_ddic[].
+    CLEAR lcl_objects_common=>gt_programs[].
 
 
     lt_results = status( it_files   = it_files
@@ -4648,13 +4969,13 @@ CLASS lcl_serialize IMPLEMENTATION.
   METHOD activate.
 
 * ddic
-    IF NOT lcl_serialize_common=>gt_ddic[] IS INITIAL.
+    IF NOT lcl_objects_common=>gt_ddic[] IS INITIAL.
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
           activate_ddic_objects  = abap_true
           with_popup             = abap_true
         TABLES
-          objects                = lcl_serialize_common=>gt_ddic
+          objects                = lcl_objects_common=>gt_ddic
         EXCEPTIONS
           excecution_error       = 1
           cancelled              = 2
@@ -4666,13 +4987,13 @@ CLASS lcl_serialize IMPLEMENTATION.
     ENDIF.
 
 * programs
-    IF NOT lcl_serialize_common=>gt_programs[] IS INITIAL.
+    IF NOT lcl_objects_common=>gt_programs[] IS INITIAL.
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
           activate_ddic_objects  = abap_false
           with_popup             = abap_true
         TABLES
-          objects                = lcl_serialize_common=>gt_programs
+          objects                = lcl_objects_common=>gt_programs
         EXCEPTIONS
           excecution_error       = 1
           cancelled              = 2
@@ -4699,7 +5020,7 @@ CLASS lcl_serialize IMPLEMENTATION.
 
   ENDMETHOD.                    "compare_files
 
-ENDCLASS.                    "lcl_serialize IMPLEMENTATION
+ENDCLASS.                    "lcl_object IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_hash DEFINITION
@@ -6629,7 +6950,7 @@ CLASS lcl_gui IMPLEMENTATION.
     ls_item-obj_type = is_result-obj_type.
     ls_item-obj_name = is_result-obj_name.
 
-    lt_local = lcl_serialize=>serialize( ls_item ).
+    lt_local = lcl_objects=>serialize( ls_item ).
 
     READ TABLE lt_remote ASSIGNING <ls_remote>
       WITH KEY filename = is_result-filename.
@@ -6764,7 +7085,7 @@ CLASS lcl_gui IMPLEMENTATION.
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
-    lcl_serialize=>deserialize( it_files   = lt_files
+    lcl_objects=>deserialize( it_files   = lt_files
                                 iv_package = is_repo_persi-package ).
 
     lcl_persistence=>update( is_repo   = ls_repo
@@ -6789,7 +7110,7 @@ CLASS lcl_gui IMPLEMENTATION.
     lcl_porcelain=>pull( EXPORTING is_repo   = is_repo
                          IMPORTING et_files  = lt_files ).
 
-    lt_results = lcl_serialize=>status( lt_files ).
+    lt_results = lcl_objects=>status( lt_files ).
 
     CLEAR lt_files[].
     LOOP AT lt_results ASSIGNING <ls_result> WHERE match = abap_false.
@@ -6797,7 +7118,7 @@ CLASS lcl_gui IMPLEMENTATION.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
-      lt_files = lcl_serialize=>serialize( ls_item ).
+      lt_files = lcl_objects=>serialize( ls_item ).
       APPEND LINES OF lt_files TO lt_push.
     ENDLOOP.
 
@@ -6931,6 +7252,12 @@ CLASS lcl_gui IMPLEMENTATION.
                            CHANGING cg_structure = ls_repo ).
             diff( is_result = ls_result
                   is_repo   = ls_repo ).
+          WHEN 'jump'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_result ).
+            CLEAR ls_item.
+            MOVE-CORRESPONDING ls_result TO ls_item.
+            lcl_objects=>jump( ls_item ).
           WHEN 'pull'.
             struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo_persi ).
@@ -7003,7 +7330,7 @@ CLASS lcl_gui IMPLEMENTATION.
         CLEAR ls_item.
         ls_item-obj_type = <ls_tadir>-object.
         ls_item-obj_name = <ls_tadir>-obj_name.
-        lcl_serialize=>delete( ls_item ).
+        lcl_objects=>delete( ls_item ).
       ENDLOOP.
 
     ENDIF.
@@ -7033,7 +7360,7 @@ CLASS lcl_gui IMPLEMENTATION.
       _raise 'Object not found or in wrong package'.
     ENDIF.
 
-    lt_files = lcl_serialize=>serialize( is_item ).
+    lt_files = lcl_objects=>serialize( is_item ).
 
     ls_comment = popup_comment( ).
     IF ls_comment IS INITIAL.
@@ -7112,8 +7439,8 @@ CLASS lcl_gui IMPLEMENTATION.
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
-    lcl_serialize=>deserialize( it_files   = lt_files
-                                iv_package = lv_package ).
+    lcl_objects=>deserialize( it_files   = lt_files
+                              iv_package = lv_package ).
 
     lcl_persistence=>add( is_repo    = ls_repo
                           iv_branch  = lv_branch
@@ -7142,6 +7469,14 @@ CLASS lcl_gui IMPLEMENTATION.
           'a.grey:visited {'            && gc_newline &&    "#EC NOTEXT
           '  color: grey;'              && gc_newline &&    "#EC NOTEXT
           '  font-size: smaller;'       && gc_newline &&    "#EC NOTEXT
+          '}'                           && gc_newline &&
+          'a.plain:link {'              && gc_newline &&    "#EC NOTEXT
+          '  color: black;'             && gc_newline &&    "#EC NOTEXT
+          '  text-decoration: none;'    && gc_newline &&    "#EC NOTEXT
+          '}'                           && gc_newline &&
+          'a.plain:visited {'           && gc_newline &&    "#EC NOTEXT
+          '  color: black;'             && gc_newline &&    "#EC NOTEXT
+          '  text-decoration: none;'    && gc_newline &&    "#EC NOTEXT
           '}'                           && gc_newline &&
           'a.white:link {'              && gc_newline &&    "#EC NOTEXT
           '  color: white;'             && gc_newline &&    "#EC NOTEXT
@@ -7273,8 +7608,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
     rv_html = rv_html && '<br>'.
 
-    lt_results = lcl_serialize=>status( it_files   = lt_files
-                                        iv_package = is_repo_persi-package ).
+    lt_results = lcl_objects=>status( it_files   = lt_files
+                                      iv_package = is_repo_persi-package ).
     IF lv_branch <> is_repo_persi-sha1.
       lv_status = 'pull'.                                   "#EC NOTEXT
     ELSE.
@@ -7320,13 +7655,22 @@ CLASS lcl_gui IMPLEMENTATION.
           ENDIF.
         ENDWHILE.
 
-        lv_object = '<td rowspan="' &&
-          lv_span &&
-          '" valign="top">' &&
-          <ls_result>-obj_type &&
-          '&nbsp;' &&
-          <ls_result>-obj_name  &&
-          '</td>' && gc_newline.
+        IF <ls_result>-obj_type IS INITIAL.
+          lv_object = '<td rowspan="' &&
+            lv_span &&
+            '" valign="top">&nbsp;</td>' &&
+            gc_newline.
+        ELSE.
+          lv_object = '<td rowspan="' &&
+            lv_span &&
+            '" valign="top"><a href="sapevent:jump?' &&
+            struct_encode( <ls_result> ) &&
+            '" class="plain">' &&
+            <ls_result>-obj_type &&
+            '&nbsp;' &&
+            <ls_result>-obj_name  &&
+            '</a></td>' && gc_newline.
+        ENDIF.
       ELSE.
         CLEAR lv_object.
       ENDIF.
@@ -7476,7 +7820,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     ls_item-obj_type = 'ENQU'.
     ls_item-obj_name = 'E_USR04'.
 
-    lt_files = lcl_serialize=>serialize( ls_item ).
+    lt_files = lcl_objects=>serialize( ls_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -7491,7 +7835,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     ls_item-obj_type = 'SHLP'.
     ls_item-obj_name = 'USER_LOGON'.
 
-    lt_files = lcl_serialize=>serialize( ls_item ).
+    lt_files = lcl_objects=>serialize( ls_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -7506,7 +7850,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     ls_item-obj_type = 'VIEW'.
     ls_item-obj_name = 'VUSR02_HEADER'.
 
-    lt_files = lcl_serialize=>serialize( ls_item ).
+    lt_files = lcl_objects=>serialize( ls_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -7521,7 +7865,7 @@ CLASS lcl_abap_unit IMPLEMENTATION.
     ls_item-obj_type = 'TABL'.
     ls_item-obj_name = 'USR02'.
 
-    lt_files = lcl_serialize=>serialize( ls_item ).
+    lt_files = lcl_objects=>serialize( ls_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
