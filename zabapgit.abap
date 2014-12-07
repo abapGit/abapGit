@@ -4412,6 +4412,7 @@ CLASS lcl_serialize DEFINITION FINAL.
                             RAISING   lcx_exception.
 
     CLASS-METHODS status    IMPORTING it_files          TYPE tt_files
+                                      iv_package        TYPE devclass OPTIONAL
                             RETURNING value(rt_results) TYPE tt_results
                             RAISING   lcx_exception.
 
@@ -4515,10 +4516,12 @@ CLASS lcl_serialize IMPLEMENTATION.
           ls_result LIKE LINE OF rt_results,
           lv_type   TYPE string,
           ls_item   TYPE st_item,
+          lt_tadir  TYPE TABLE OF tadir,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
-                   <ls_gen>  LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF it_files,
+                   <ls_tadir> LIKE LINE OF lt_tadir,
+                   <ls_gen>   LIKE LINE OF lt_files.
 
 
     LOOP AT it_files ASSIGNING <ls_file>.
@@ -4526,7 +4529,7 @@ CLASS lcl_serialize IMPLEMENTATION.
       TRANSLATE lv_pre TO UPPER CASE.
       TRANSLATE lv_type TO UPPER CASE.
 
-      IF lv_ext <> 'xml'.
+      IF lv_ext <> 'xml' OR strlen( lv_type ) <> 4.
         CONTINUE. " current loop
       ENDIF.
 
@@ -4558,6 +4561,35 @@ CLASS lcl_serialize IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
+* find files only existing remotely, including non abapGit related
+    LOOP AT it_files ASSIGNING <ls_file>.
+      READ TABLE rt_results WITH KEY filename = <ls_file>-filename TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        CLEAR ls_result.
+        ls_result-match    = abap_true.
+        ls_result-filename = <ls_file>-filename.
+        APPEND ls_result TO rt_results.
+      ENDIF.
+    ENDLOOP.
+
+* find objects only existing locally
+    IF NOT iv_package IS INITIAL.
+      SELECT * FROM tadir INTO TABLE lt_tadir
+        WHERE devclass = iv_package.                        "#EC *
+      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+        READ TABLE rt_results
+          WITH KEY obj_type = <ls_tadir>-object obj_name = <ls_tadir>-obj_name
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          CLEAR ls_result.
+          ls_result-match    = abap_true.
+          ls_result-obj_type = <ls_tadir>-object.
+          ls_result-obj_name = <ls_tadir>-obj_name.
+          APPEND ls_result TO rt_results.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
     SORT rt_results BY obj_type ASCENDING obj_name ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
@@ -4578,7 +4610,8 @@ CLASS lcl_serialize IMPLEMENTATION.
     CLEAR lcl_serialize_common=>gt_programs[].
 
 
-    lt_results = status( it_files ).
+    lt_results = status( it_files   = it_files
+                         iv_package = iv_package ).
     DELETE lt_results WHERE match = abap_true.
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
@@ -5898,8 +5931,14 @@ CLASS lcl_transport IMPLEMENTATION.
         RETURN.
       WHEN 302.
         _raise 'HTTP redirect, check URL'.
+      WHEN 401.
+        _raise 'HTTP 401, unauthorized'.
+      WHEN 403.
+        _raise 'HTTP 403, forbidden'.
       WHEN 404.
         _raise 'HTTP 404, not found'.
+      WHEN 415.
+        _raise 'HTTP 415, unsupported media type'.
       WHEN OTHERS.
         _raise 'HTTP error code'.
     ENDCASE.
@@ -5912,7 +5951,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_len    TYPE i,
           lt_result TYPE TABLE OF string,
           lv_data   LIKE LINE OF lt_result,
-          lv_uri    type string,
+          lv_uri    TYPE string,
           lv_text   TYPE string.
 
     STATICS: sv_authorization TYPE string.
@@ -5932,7 +5971,7 @@ CLASS lcl_transport IMPLEMENTATION.
 * bitbucket require agent prefix = "git/"
     ei_client->request->set_header_field(
         name  = 'user-agent'
-        value = 'git/abapGit ' && gc_abap_version ).
+        value = 'git/abapGit ' && gc_abap_version ).        "#EC NOTEXT
     lv_uri = lcl_url=>path_name( is_repo-url ) &&
              '.git/info/refs?service=git-' &&
              iv_service &&
@@ -6496,16 +6535,13 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS: add
-      IMPORTING is_repo_persi TYPE st_repo_persi
+      IMPORTING is_item TYPE st_item
+                is_repo_persi TYPE st_repo_persi
       RAISING   lcx_exception.
 
     CLASS-METHODS: uninstall
       IMPORTING is_repo TYPE st_repo_persi
       RAISING   lcx_exception.
-
-    CLASS-METHODS: get_object
-      IMPORTING iv_object      TYPE tadir-object
-      RETURNING value(rv_name) TYPE tadir-obj_name.
 
     CLASS-METHODS: pull
       IMPORTING is_repo_persi TYPE st_repo_persi
@@ -6855,6 +6891,7 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_result     TYPE st_result,
           lv_url        TYPE string,
           ls_repo       TYPE st_repo,
+          ls_item       TYPE st_item,
           ls_repo_persi TYPE st_repo_persi.
 
 
@@ -6870,8 +6907,13 @@ CLASS lcl_gui IMPLEMENTATION.
                  document = 'https://github.com/larshp/abapGit' ).
           WHEN 'add'.
             struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_result ).
+            struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo_persi ).
-            add( ls_repo_persi ).
+            CLEAR ls_item.
+            MOVE-CORRESPONDING ls_result TO ls_item.
+            add( is_item       = ls_item
+                 is_repo_persi = ls_repo_persi ).
           WHEN 'uninstall'.
             struct_decode( EXPORTING iv_string = getdata
                            CHANGING cg_structure = ls_repo_persi ).
@@ -6974,83 +7016,24 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD add.
 
-    DEFINE _add.
-      append initial line to lt_spopli assigning <ls_spopli>.
-      <ls_spopli>-varoption = &1.                           "#EC NOTEXT
-    END-OF-DEFINITION.
+    DATA: lt_files    TYPE tt_files,
+          ls_comment  TYPE st_comment,
+          ls_repo     TYPE st_repo,
+          lv_branch   TYPE t_sha1,
+          lv_obj_name TYPE tadir-obj_name.
 
-    DATA: lt_files   TYPE tt_files,
-          ls_item    TYPE st_item,
-          ls_comment TYPE st_comment,
-          lv_branch  TYPE t_sha1,
-          ls_repo    TYPE st_repo,
-          lt_spopli  TYPE TABLE OF spopli,
-          lv_answer  TYPE c.
-
-    FIELD-SYMBOLS: <ls_spopli> LIKE LINE OF lt_spopli.
-
-
-    _add 'PROG Program'.
-    _add 'DTEL Data Element'.
-    _add 'DOMA Domain'.
-    _add 'CLAS Class'.
-    _add 'INTF Interface'.
-    _add 'TABL Table/Structure'.
-    _add 'TTYP Table Type'.
-    _add 'VIEW View'.
-    _add 'SHLP Search Help'.
-    _add 'ENQU Lock Object'.
-    _add 'SSFO Smart Form'.
-    _add 'MSAG Message Class'.
-    _add 'TRAN Transaction'.
-    _add 'FUGR Function Group (todo)'.
-    _add 'FORM SAP Script (todo)'.
-*table contents
-*lock object
-*web dynpro
-
-    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-      EXPORTING
-        start_col          = 10
-        start_row          = 5
-        textline1          = 'Choose object type'
-        titel              = 'Choose object type'
-      IMPORTING
-        answer             = lv_answer
-      TABLES
-        t_spopli           = lt_spopli
-      EXCEPTIONS
-        not_enough_answers = 1
-        too_much_answers   = 2
-        too_much_marks     = 3
-        OTHERS             = 4.                             "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'error from decide_list'.
-    ENDIF.
-    IF lv_answer = 'A'. " Cancelled
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_spopli ASSIGNING <ls_spopli> WITH KEY selflag = abap_true.
-    ASSERT sy-subrc = 0.
-    ls_item-obj_type = <ls_spopli>-varoption.
-
-    ls_item-obj_name = get_object( ls_item-obj_type ).
-    IF ls_item-obj_name IS INITIAL.
-      RETURN.
-    ENDIF.
 
     SELECT SINGLE obj_name FROM tadir
-      INTO ls_item-obj_name
+      INTO lv_obj_name
       WHERE pgmid = 'R3TR'
-      AND object = ls_item-obj_type
-      AND obj_name = ls_item-obj_name
+      AND object = is_item-obj_type
+      AND obj_name = is_item-obj_name
       AND devclass = is_repo_persi-package.
     IF sy-subrc <> 0.
       _raise 'Object not found or in wrong package'.
     ENDIF.
 
-    lt_files = lcl_serialize=>serialize( ls_item ).
+    lt_files = lcl_serialize=>serialize( is_item ).
 
     ls_comment = popup_comment( ).
     IF ls_comment IS INITIAL.
@@ -7068,59 +7051,6 @@ CLASS lcl_gui IMPLEMENTATION.
     view( render( ) ).
 
   ENDMETHOD.                    "add
-
-  METHOD get_object.
-
-    DATA: lv_euobj_id   TYPE euobj-id,
-          lv_returncode TYPE c LENGTH 1,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CASE iv_object.
-      WHEN 'SSFO'.
-        APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-        <ls_field>-tabname   = 'EFRM'.
-        <ls_field>-fieldname = 'SMARTFORM'.
-        <ls_field>-fieldtext = 'Smartform'.                 "#EC NOTEXT
-        <ls_field>-field_obl = abap_true.
-
-        CALL FUNCTION 'POPUP_GET_VALUES'
-          EXPORTING
-            popup_title     = 'Select'
-          IMPORTING
-            returncode      = lv_returncode
-          TABLES
-            fields          = lt_fields
-          EXCEPTIONS
-            error_in_fields = 1
-            OTHERS          = 2.                            "#EC NOTEXT
-        IF sy-subrc <> 0 OR lv_returncode = 'A'.
-          RETURN.
-        ENDIF.
-
-        READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-        ASSERT sy-subrc = 0.
-
-        rv_name = <ls_field>-value.
-
-      WHEN OTHERS.
-        lv_euobj_id = iv_object.
-        CALL FUNCTION 'REPOSITORY_INFO_SYSTEM_F4'
-          EXPORTING
-            object_type          = lv_euobj_id
-            suppress_selection   = abap_true
-          IMPORTING
-            object_name_selected = rv_name
-          EXCEPTIONS
-            cancel               = 01.
-        IF sy-subrc = 1.
-          RETURN.
-        ENDIF.
-    ENDCASE.
-
-  ENDMETHOD.                    "get_object
 
   METHOD install.
 
@@ -7313,10 +7243,13 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_branch  TYPE t_sha1,
           lv_link    TYPE string,
           lv_status  TYPE string,
-          lt_results TYPE tt_results.
+          lv_object  TYPE string,
+          lv_index   LIKE sy-tabix,
+          lv_span    TYPE i,
+          lt_results TYPE tt_results,
+          ls_next    LIKE LINE OF lt_results.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
-                   <ls_result> LIKE LINE OF lt_results.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 
     MOVE-CORRESPONDING is_repo_persi TO ls_repo.
@@ -7338,19 +7271,10 @@ CLASS lcl_gui IMPLEMENTATION.
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
-    rv_html = rv_html && '<br><u>Remote files</u><table border="1">' && gc_newline.
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      rv_html = rv_html &&
-        '<tr>' && gc_newline &&
-        '<td>' && <ls_file>-path && '</td>' && gc_newline &&
-        '<td>' && <ls_file>-filename && '</td>' && gc_newline &&
-        '</tr>' && gc_newline.
-    ENDLOOP.
-    rv_html = rv_html && '</table>' && gc_newline.
-
     rv_html = rv_html && '<br>'.
 
-    lt_results = lcl_serialize=>status( lt_files ).
+    lt_results = lcl_serialize=>status( it_files   = lt_files
+                                        iv_package = is_repo_persi-package ).
     IF lv_branch <> is_repo_persi-sha1.
       lv_status = 'pull'.                                   "#EC NOTEXT
     ELSE.
@@ -7362,39 +7286,70 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    rv_html = rv_html && '<u>Objects</u><table border="1">' && gc_newline.
+    rv_html = rv_html && '<table border="1">' && gc_newline &&
+      '<tr>'                                  && gc_newline &&
+      '<td><u>Local object</u></td>'          && gc_newline &&
+      '<td></td>'                             && gc_newline &&
+      '<td><u>Remote file</u></td>'           && gc_newline &&
+      '<td></td>'                             && gc_newline &&
+      '</tr>'                                 && gc_newline.
+
     LOOP AT lt_results ASSIGNING <ls_result>.
-      IF <ls_result>-match = abap_false.
+      lv_index = sy-tabix.
+
+      CLEAR lv_link.
+      IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
+        lv_link = '<a href="sapevent:add?' &&
+          struct_encode( ig_structure1 = is_repo_persi ig_structure2 = <ls_result> )
+          && '">add</a>'.
+      ELSEIF <ls_result>-match = abap_false.
         lv_link = '<a href="sapevent:diff?' &&
           struct_encode( ig_structure1 = <ls_result> ig_structure2 = ls_repo ) &&
           '">diff</a>'.
+      ENDIF.
+
+      IF lv_span = 0.
+        READ TABLE lt_results INTO ls_next INDEX lv_index.
+        WHILE ls_next-obj_type = <ls_result>-obj_type
+            AND ls_next-obj_name = <ls_result>-obj_name.
+          lv_span  = lv_span + 1.
+          lv_index = lv_index + 1.
+          READ TABLE lt_results INTO ls_next INDEX lv_index.
+          IF sy-subrc <> 0.
+            EXIT. " current loop.
+          ENDIF.
+        ENDWHILE.
+
+        lv_object = '<td rowspan="' &&
+          lv_span &&
+          '" valign="top">' &&
+          <ls_result>-obj_type &&
+          '&nbsp;' &&
+          <ls_result>-obj_name  &&
+          '</td>' && gc_newline.
       ELSE.
-        CLEAR lv_link.
+        CLEAR lv_object.
       ENDIF.
 
       rv_html = rv_html &&
         '<tr>'                                    && gc_newline &&
-        '<td>' && <ls_result>-obj_type && '</td>' && gc_newline &&
-        '<td>' && <ls_result>-obj_name && '</td>' && gc_newline &&
+        lv_object                                 &&
         '<td>' && <ls_result>-match && '</td>'    && gc_newline &&
         '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
         '<td>' && lv_link && '</td>'              && gc_newline &&
         '</tr>'                                   && gc_newline.
+
+      lv_span = lv_span - 1.
     ENDLOOP.
     rv_html = rv_html && '</table>' && gc_newline.
 
     CASE lv_status.
-      WHEN 'match'.
-        rv_html = rv_html && '<a href="sapevent:add?'
-                  && struct_encode( is_repo_persi ) && '">add</a>'.
       WHEN 'commit'.
         rv_html = rv_html && '<a href="sapevent:commit?'
                   && struct_encode( ls_repo ) && '">commit</a>'.
       WHEN 'pull'.
         rv_html = rv_html && '<a href="sapevent:pull?'
                   && struct_encode( is_repo_persi ) && '">pull</a>'.
-      WHEN OTHERS.
-        _raise 'status unknown'.
     ENDCASE.
 
     rv_html = rv_html && '<br><br><br>'.
