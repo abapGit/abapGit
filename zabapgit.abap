@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.6'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.7'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5893,9 +5893,16 @@ CLASS lcl_transport IMPLEMENTATION.
     ii_client->response->get_status(
       IMPORTING
         code   = lv_code ).
-    IF lv_code <> 200.
-      _raise 'HTTP error code'.
-    ENDIF.
+    CASE lv_code.
+      WHEN 200.
+        RETURN.
+      WHEN 302.
+        _raise 'HTTP redirect, check URL'.
+      WHEN 404.
+        _raise 'HTTP 404, not found'.
+      WHEN OTHERS.
+        _raise 'HTTP error code'.
+    ENDCASE.
 
   ENDMETHOD.                    "http_200
 
@@ -5913,6 +5920,7 @@ CLASS lcl_transport IMPLEMENTATION.
     cl_http_client=>create_by_url(
       EXPORTING
         url    = lcl_url=>host( is_repo-url )
+        ssl_id = 'ANONYM'
       IMPORTING
         client = ei_client ).
 
@@ -5941,6 +5949,7 @@ CLASS lcl_transport IMPLEMENTATION.
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
+* make sure SSL is setup properly in STRUST
           lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
         WHEN 2.
           lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
