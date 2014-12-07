@@ -5912,6 +5912,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_len    TYPE i,
           lt_result TYPE TABLE OF string,
           lv_data   LIKE LINE OF lt_result,
+          lv_uri    type string,
           lv_text   TYPE string.
 
     STATICS: sv_authorization TYPE string.
@@ -5928,10 +5929,17 @@ CLASS lcl_transport IMPLEMENTATION.
     ei_client->request->set_header_field(
         name  = '~request_method'
         value = 'GET' ).
+* bitbucket require agent prefix = "git/"
+    ei_client->request->set_header_field(
+        name  = 'user-agent'
+        value = 'git/abapGit ' && gc_abap_version ).
+    lv_uri = lcl_url=>path_name( is_repo-url ) &&
+             '.git/info/refs?service=git-' &&
+             iv_service &&
+             '-pack'.
     ei_client->request->set_header_field(
         name  = '~request_uri'
-        value = lcl_url=>path_name( is_repo-url ) && '.git/info/refs?service=git-'
-                && iv_service && '-pack' ).
+        value = lv_uri ).
     IF NOT sv_authorization IS INITIAL.
 * note this will only work if all repositories uses the same login
       ei_client->request->set_header_field(
@@ -6035,7 +6043,7 @@ CLASS lcl_transport IMPLEMENTATION.
               is_repo-branch_name &&
               get_null( ) &&
               ` ` &&
-              'report-status agent=abapGit/' && gc_abap_version &&
+              'report-status agent=git/abapGit ' && gc_abap_version &&
               gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
@@ -6143,7 +6151,7 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               ev_branch &&
               ` ` &&
-              'side-band-64k no-progress agent=abapGit/' && gc_abap_version
+              'side-band-64k no-progress agent=git/abapGit ' && gc_abap_version
               && gc_newline.                                "#EC NOTEXT
     lv_pkt = pkt_string( lv_line ).
 
