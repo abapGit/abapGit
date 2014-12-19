@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.8'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.9'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -7760,11 +7760,18 @@ ENDCLASS.                    "lcl_gui IMPLEMENTATION
 *----------------------------------------------------------------------*
 FORM run.
 
-  DATA: lx_exception TYPE REF TO lcx_exception.
+  DATA: lx_exception TYPE REF TO lcx_exception,
+        lv_ind       TYPE t000-ccnocliind.
 
 
   IF sy-langu <> 'E'.
     WRITE: / 'Use English as logon language'.               "#EC NOTEXT
+    RETURN.
+  ENDIF.
+
+  SELECT SINGLE ccnocliind FROM t000 INTO lv_ind WHERE mandt = sy-mandt.
+  IF sy-subrc = 0 AND lv_ind <> ' ' AND lv_ind <> '1'. " check changes allowed
+    WRITE: / 'Wrong client, changes to repository objects not allowed'. "#EC NOTEXT
     RETURN.
   ENDIF.
 
