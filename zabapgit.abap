@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.9'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.10'.        "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -91,6 +91,8 @@ TYPES: BEGIN OF st_diff,
          remote TYPE string,
        END OF st_diff.
 TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
+
+TYPES: tt_tadir TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_comment,
          username TYPE string,
@@ -4719,13 +4721,16 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-    CLASS-METHODS delete    IMPORTING is_item TYPE st_item
+    CLASS-METHODS delete    IMPORTING it_tadir TYPE tt_tadir
                             RAISING   lcx_exception.
 
     CLASS-METHODS jump      IMPORTING is_item TYPE st_item
                             RAISING   lcx_exception.
 
   PRIVATE SECTION.
+
+    CLASS-METHODS delete_obj IMPORTING is_item TYPE st_item
+                             RAISING   lcx_exception.
 
     CLASS-METHODS class_name IMPORTING is_item              TYPE st_item
                              RETURNING value(rv_class_name) TYPE string.
@@ -4778,6 +4783,43 @@ CLASS lcl_objects IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD delete.
+
+    DATA: ls_item  TYPE st_item,
+          lt_tadir LIKE it_tadir.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+
+
+* misuse field KORRNUM to fix deletion sequence
+
+    lt_tadir[] = it_tadir[].
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      <ls_tadir>-korrnum = '1000'.
+    ENDLOOP.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>
+        WHERE object = 'TABL' OR object = 'TTYP' OR object = 'VIEW'.
+      <ls_tadir>-korrnum = '7000'.
+    ENDLOOP.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir> WHERE object = 'DTEL'.
+      <ls_tadir>-korrnum = '8000'.
+    ENDLOOP.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir> WHERE object = 'DOMA'.
+      <ls_tadir>-korrnum = '9000'.
+    ENDLOOP.
+
+    SORT lt_tadir BY korrnum ASCENDING.
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      lcl_objects=>delete_obj( ls_item ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "delete
+
+  METHOD delete_obj.
 
     DATA: lv_class_name TYPE string,
           lv_message    TYPE string.
@@ -7280,7 +7322,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD uninstall.
 
-    DATA: lt_tadir    TYPE TABLE OF tadir,
+    DATA: lt_tadir    TYPE tt_tadir,
           lv_count    TYPE c LENGTH 3,
           ls_item     TYPE st_item,
           lv_answer   TYPE c LENGTH 1,
@@ -7326,12 +7368,7 @@ CLASS lcl_gui IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        CLEAR ls_item.
-        ls_item-obj_type = <ls_tadir>-object.
-        ls_item-obj_name = <ls_tadir>-obj_name.
-        lcl_objects=>delete( ls_item ).
-      ENDLOOP.
+      lcl_objects=>delete( lt_tadir ).
 
     ENDIF.
 
