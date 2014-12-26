@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.10'.        "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.11'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6507,17 +6507,21 @@ CLASS lcl_transport IMPLEMENTATION.
 
     WHILE xstrlen( cv_data ) >= 4.
       lv_len = length_utf8_hex( cv_data ).
-      IF lv_len = 0.
-        EXIT. " current loop
-      ENDIF.
 
       lv_contents = cv_data(lv_len).
+      IF lv_len = 0.
+        cv_data = cv_data+4.
+        CONTINUE.
+      ELSE.
+        cv_data = cv_data+lv_len.
+      ENDIF.
+
       lv_contents = lv_contents+4.
+
       IF xstrlen( lv_contents ) > 1 AND lv_contents(1) = '01'. " band 1
         CONCATENATE lv_pack lv_contents+1 INTO lv_pack IN BYTE MODE.
       ENDIF.
 
-      cv_data = cv_data+lv_len.
     ENDWHILE.
 
     ev_pack = lv_pack.
@@ -6532,7 +6536,8 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_buffer  TYPE string,
           lv_xstring TYPE xstring,
           lv_line    TYPE string,
-          lv_pkt     TYPE string.
+          lv_pkt1    TYPE string,
+          lv_pkt2    TYPE string.
 
 
     ref_discovery(
@@ -6555,9 +6560,12 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               'side-band-64k no-progress agent=git/abapGit ' && gc_abap_version
               && gc_newline.                                "#EC NOTEXT
-    lv_pkt = pkt_string( lv_line ).
+    lv_pkt1 = pkt_string( lv_line ).
 
-    lv_buffer = lv_pkt
+    lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).
+
+    lv_buffer = lv_pkt1
+             && lv_pkt2
              && '0000'
              && '0009done' && gc_newline.
 
