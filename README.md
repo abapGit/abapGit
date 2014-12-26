@@ -14,6 +14,7 @@ Git client for ABAP
 
 &nbsp;
 * [Installing a repository](https://github.com/larshp/abapGit/wiki/Installing-a-repository)
+* [Keeping code up to date](https://github.com/larshp/abapGit/wiki/Keeping-code-up-to-date)
 * [Uninstalling a repository](https://github.com/larshp/abapGit/wiki/Uninstalling-a-repository)
 
 &nbsp;
