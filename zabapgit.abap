@@ -115,6 +115,8 @@ CONSTANTS: gc_chmod_file TYPE c LENGTH 6 VALUE '100644',
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
+DATA: gv_agent TYPE string.
+
 DEFINE _raise.
   raise exception type lcx_exception
     exporting
@@ -4795,17 +4797,16 @@ CLASS lcl_objects IMPLEMENTATION.
     lt_tadir[] = it_tadir[].
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      <ls_tadir>-korrnum = '1000'.
-    ENDLOOP.
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>
-        WHERE object = 'TABL' OR object = 'TTYP' OR object = 'VIEW'.
-      <ls_tadir>-korrnum = '7000'.
-    ENDLOOP.
-    LOOP AT lt_tadir ASSIGNING <ls_tadir> WHERE object = 'DTEL'.
-      <ls_tadir>-korrnum = '8000'.
-    ENDLOOP.
-    LOOP AT lt_tadir ASSIGNING <ls_tadir> WHERE object = 'DOMA'.
-      <ls_tadir>-korrnum = '9000'.
+      CASE <ls_tadir>-object.
+        WHEN 'TABL' OR 'TTYP' OR 'VIEW'.
+          <ls_tadir>-korrnum = '7000'.
+        WHEN 'DTEL'.
+          <ls_tadir>-korrnum = '8000'.
+        WHEN 'DOMA'.
+          <ls_tadir>-korrnum = '9000'.
+        WHEN OTHERS.
+          <ls_tadir>-korrnum = '1000'.
+      ENDCASE.
     ENDLOOP.
 
     SORT lt_tadir BY korrnum ASCENDING.
@@ -6331,10 +6332,9 @@ CLASS lcl_transport IMPLEMENTATION.
     ei_client->request->set_header_field(
         name  = '~request_method'
         value = 'GET' ).
-* bitbucket require agent prefix = "git/"
     ei_client->request->set_header_field(
         name  = 'user-agent'
-        value = 'git/abapGit ' && gc_abap_version ).        "#EC NOTEXT
+        value = gv_agent ).                                 "#EC NOTEXT
     lv_uri = lcl_url=>path_name( is_repo-url ) &&
              '.git/info/refs?service=git-' &&
              iv_service &&
@@ -6445,7 +6445,7 @@ CLASS lcl_transport IMPLEMENTATION.
               is_repo-branch_name &&
               get_null( ) &&
               ` ` &&
-              'report-status agent=git/abapGit ' && gc_abap_version &&
+              'report-status agent=' && gv_agent &&
               gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
@@ -6558,11 +6558,11 @@ CLASS lcl_transport IMPLEMENTATION.
               ` ` &&
               ev_branch &&
               ` ` &&
-              'side-band-64k no-progress agent=git/abapGit ' && gc_abap_version
+              'side-band-64k no-progress agent=' && gv_agent
               && gc_newline.                                "#EC NOTEXT
     lv_pkt1 = pkt_string( lv_line ).
 
-    lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).
+    lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).       "#EC NOTEXT
 
     lv_buffer = lv_pkt1
              && lv_pkt2
@@ -7333,11 +7333,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lt_tadir    TYPE tt_tadir,
           lv_count    TYPE c LENGTH 3,
-          ls_item     TYPE st_item,
           lv_answer   TYPE c LENGTH 1,
           lv_question TYPE c LENGTH 100.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
 
 
     SELECT * FROM tadir INTO TABLE lt_tadir
@@ -7820,6 +7817,9 @@ FORM run.
     WRITE: / 'Wrong client, changes to repository objects not allowed'. "#EC NOTEXT
     RETURN.
   ENDIF.
+
+* bitbucket require agent prefix = "git/"
+  gv_agent = 'git/abapGit ' && gc_abap_version.
 
   TRY.
       lcl_gui=>run( ).
