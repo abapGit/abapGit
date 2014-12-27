@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.12'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.13'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6265,6 +6265,12 @@ CLASS lcl_transport IMPLEMENTATION.
     ii_client->request->set_header_field(
         name  = 'Content-Type'
         value = lv_value ).                                 "#EC NOTEXT
+
+    lv_value = 'application/x-git-'
+                  && iv_service && '-pack-result'.          "#EC NOTEXT
+    ii_client->request->set_header_field(
+        name  = 'Accept'
+        value = lv_value ).
 
   ENDMETHOD.                    "set_headers
 
