@@ -94,6 +94,8 @@ TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
 
 TYPES: tt_tadir TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY.
 
+TYPES: tt_rs38l_incl TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
+
 TYPES: BEGIN OF st_comment,
          username TYPE string,
          email    TYPE string,
@@ -3690,6 +3692,296 @@ CLASS lcl_object_msag IMPLEMENTATION.
 ENDCLASS.                    "lcl_object_view IMPLEMENTATION
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_object_fugr DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: serialize IMPORTING is_item         TYPE st_item
+                             RETURNING value(rt_files) TYPE tt_files
+                             RAISING   lcx_exception.
+
+    CLASS-METHODS: deserialize IMPORTING is_item  TYPE st_item
+                                         it_files TYPE tt_files
+                                         iv_package TYPE devclass
+                               RAISING   lcx_exception.
+
+    CLASS-METHODS: delete      IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+    CLASS-METHODS jump         IMPORTING is_item TYPE st_item
+                               RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: main_name IMPORTING is_item TYPE st_item
+                             RETURNING value(rv_program) TYPE program
+                             RAISING   lcx_exception.
+
+    CLASS-METHODS: functions IMPORTING is_item TYPE st_item
+                             RETURNING value(rt_functab) TYPE tt_rs38l_incl
+                             RAISING   lcx_exception.
+
+    CLASS-METHODS: includes IMPORTING iv_program TYPE program
+                                      it_functab TYPE tt_rs38l_incl
+                            RETURNING value(rt_includes) TYPE rso_t_objnm
+                            RAISING lcx_exception.
+
+    CLASS-METHODS: serialize_functions IMPORTING it_functab TYPE tt_rs38l_incl
+                                       RETURNING value(rt_files) TYPE tt_files
+                                       RAISING lcx_exception.
+
+    CLASS-METHODS: serialize_includes IMPORTING it_includes TYPE rso_t_objnm
+                                      RETURNING value(rt_files) TYPE tt_files
+                                      RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_dtel IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_fugr IMPLEMENTATION.
+
+* see CL_FDT_WEB_SERVICE
+* FUNCTION_POOL_CREATE
+* FUNCTION_POOL_DELETE
+* RS_FUNCTIONMODULE_INSERT
+* RS_FUNCTION_DELETE
+* RPY_FUNCTIONMODULE_INSERT
+* RPY_FUNCTIONMODULE_READ
+* RPY_FUNCTIONMODULE_READ_NEW
+*
+* function group SEUF
+* function group SIFP
+
+  METHOD includes.
+
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functab.
+
+
+    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
+      EXPORTING
+        program                = iv_program
+*       WITH_RESERVED_INCLUDES =
+*       WITH_CLASS_INCLUDES    = ' ' hmm, todo
+      TABLES
+        includetab             = rt_includes
+      EXCEPTIONS
+        not_existent           = 1
+        no_program             = 2
+        OTHERS                 = 3.
+    IF sy-subrc <> 0.
+      _raise 'Error from RS_GET_ALL_INCLUDES'.
+    ENDIF.
+
+    LOOP AT it_functab ASSIGNING <ls_func>.
+      DELETE TABLE rt_includes FROM <ls_func>-include.
+    ENDLOOP.
+
+  ENDMETHOD.                    "includes
+
+  METHOD functions.
+
+    DATA: lv_area TYPE rs38l-area.
+
+
+    lv_area = is_item-obj_name.
+
+    CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
+      EXPORTING
+        function_pool           = lv_area
+      TABLES
+        functab                 = rt_functab
+      EXCEPTIONS
+        function_pool_not_found = 1
+        OTHERS                  = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from RS_FUNCTION_POOL_CONTENTS'.
+    ENDIF.
+
+  ENDMETHOD.                    "functions
+
+  METHOD main_name.
+
+    DATA: lv_area TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_group TYPE rs38l-area.
+
+
+    lv_area = is_item-obj_name.
+
+    CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+      EXPORTING
+        complete_area                = lv_area
+      IMPORTING
+        namespace                    = lv_namespace
+        group                        = lv_group
+      EXCEPTIONS
+        include_not_exists           = 1
+        group_not_exists             = 2
+        no_selections                = 3
+        no_function_include          = 4
+        no_function_pool             = 5
+        delimiter_wrong_position     = 6
+        no_customer_function_group   = 7
+        no_customer_function_include = 8
+        reserved_name_customer       = 9
+        namespace_too_long           = 10
+        area_length_error            = 11
+        OTHERS                       = 12.
+    IF sy-subrc <> 0.
+      _raise 'Error from FUNCTION_INCLUDE_SPLIT'.
+    ENDIF.
+
+    CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
+
+  ENDMETHOD.                    "main_name
+
+  METHOD serialize_functions.
+
+    DATA: lt_import TYPE TABLE OF rsimp,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_file  TYPE st_file,
+          lt_changing TYPE TABLE OF rscha,
+          lt_export TYPE TABLE OF rsexp,
+          lt_tables TYPE TABLE OF rstbl,
+          lt_exception TYPE TABLE OF rsexc,
+          lt_documentation TYPE TABLE OF rsfdo,
+          lt_source TYPE TABLE OF rssource,
+          lv_global_flag TYPE rs38l-global,
+          lv_remote_call TYPE rs38l-remote,
+          lv_update_task TYPE rs38l-utask,
+          lv_short_text TYPE tftit-stext,
+          lv_function_pool TYPE rs38l-area,
+          lv_remote_basxml TYPE rs38l-basxml_enabled.
+
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functab.
+
+
+    LOOP AT it_functab ASSIGNING <ls_func>.
+      CALL FUNCTION 'RPY_FUNCTIONMODULE_READ'
+        EXPORTING
+          functionname            = <ls_func>-funcname
+        IMPORTING
+          global_flag             = lv_global_flag
+          remote_call             = lv_remote_call
+          update_task             = lv_update_task
+          short_text              = lv_short_text
+          function_pool           = lv_function_pool
+          remote_basxml_supported = lv_remote_basxml
+        TABLES
+          import_parameter        = lt_import
+          changing_parameter      = lt_changing
+          export_parameter        = lt_export
+          tables_parameter        = lt_tables
+          exception_list          = lt_exception
+          documentation           = lt_documentation
+          source                  = lt_source
+        EXCEPTIONS
+          error_message           = 1
+          function_not_found      = 2
+          invalid_name            = 3
+          OTHERS                  = 4.
+      IF sy-subrc <> 0.
+        _raise 'Error from RPY_FUNCTIONMODULE_READ_NEW'.
+      ENDIF.
+
+* filename = functiongroup.funtionmodule.abap
+*          = functiongroup.funcionmodule.xml
+
+* todo
+      CREATE OBJECT lo_xml.
+      lo_xml->element_add( lv_global_flag ).
+      lo_xml->element_add( lv_remote_call ).
+      lo_xml->element_add( lv_update_task ).
+      lo_xml->element_add( lv_short_text ).
+      lo_xml->element_add( lv_function_pool ).
+      lo_xml->element_add( lv_remote_basxml ).
+
+*      ls_file = xml_to_file( is_item = is_item
+*                             io_xml  = lo_xml ).
+*      APPEND ls_file TO rt_files.
+*
+*      ls_file = abap_to_file( is_item = is_item
+*                              it_abap = lt_source ).
+*      APPEND ls_file TO rt_files.
+
+* todo
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "serialize_functions
+
+  METHOD serialize_includes.
+
+    DATA: lt_source TYPE abaptxt255_tab.
+
+    FIELD-SYMBOLS: <ls_include> LIKE LINE OF it_includes.
+
+
+    LOOP AT it_includes ASSIGNING <ls_include>.
+* filename = functiongroup.include.abap
+*            functiongroup.include.xml
+      CALL FUNCTION 'RPY_PROGRAM_READ'
+        EXPORTING
+          program_name     = <ls_include>
+          with_lowercase   = abap_true
+        TABLES
+          source_extended  = lt_source
+        EXCEPTIONS
+          cancelled        = 1
+          not_found        = 2
+          permission_error = 3
+          OTHERS           = 4.
+      IF sy-subrc <> 0.
+        _raise 'Error from RPY_PROGRAM_READ'.
+      ENDIF.
+
+* todo
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "serialize_includes
+
+  METHOD serialize.
+
+    DATA: lv_program  TYPE program,
+          lt_includes TYPE rso_t_objnm,
+          lt_functab  TYPE tt_rs38l_incl.
+
+
+    lv_program = main_name( is_item ).
+    lt_functab = functions( is_item ).
+    lt_includes = includes( iv_program = lv_program
+                            it_functab = lt_functab ).
+
+    BREAK-POINT.
+
+    serialize_functions( lt_functab ).
+    serialize_includes( lt_includes ).
+
+    _raise 'todo, FUGR'.
+
+  ENDMETHOD.                    "serialize
+
+  METHOD deserialize.
+    _raise 'todo, FUGR'.
+  ENDMETHOD.                    "deserialize
+
+  METHOD delete.
+    _raise 'todo, FUGR'.
+  ENDMETHOD.                    "delete
+
+  METHOD jump.
+    _raise 'todo, FUGR'.
+  ENDMETHOD.                    "jump
+
+ENDCLASS.                    "lcl_object_fugr IMPLEMENTATION
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -4857,7 +5149,7 @@ CLASS lcl_objects IMPLEMENTATION.
           RECEIVING
             rt_files = rt_files.
       CATCH cx_sy_dyn_call_illegal_class cx_sy_dyn_call_illegal_method.
-        CONCATENATE 'Object type' is_item-obj_type 'not supported, seialize'
+        CONCATENATE 'Object type' is_item-obj_type 'not supported, serialize'
           INTO lv_message
           SEPARATED BY space.                               "#EC NOTEXT
         _raise lv_message.
