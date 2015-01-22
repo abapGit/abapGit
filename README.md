@@ -4,6 +4,8 @@ Git client for ABAP
 
 Works with: [GitHub](https://github.com/), [Gitorious](https://gitorious.org/), [GitLab](https://gitlab.com/), [Assembla](https://www.assembla.com/git/), [Bitbucket](https://bitbucket.org/)
 
+ABAP Version: 702 or higher(feel free to submit pull request with fixes for lower ABAP versions)
+
 ## Design Goals ##
 - Easy installation
 - Easy upgrade
