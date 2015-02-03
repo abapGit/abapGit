@@ -29,6 +29,8 @@ CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
 * SOFTWARE.
 ********************************************************************************
 
+TYPE-POOLS seop.
+
 TYPES: t_type     TYPE c LENGTH 6,
        t_bitbyte  TYPE c LENGTH 8,
        t_adler32  TYPE x LENGTH 4,
@@ -80,7 +82,7 @@ TYPES: tt_repos_persi TYPE STANDARD TABLE OF st_repo_persi WITH DEFAULT KEY.
 TYPES: BEGIN OF st_result,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
-         match    TYPE abap_bool,
+         match    TYPE sap_bool,
          filename TYPE string,
        END OF st_result.
 TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
@@ -95,6 +97,8 @@ TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
 TYPES: tt_tadir TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY.
 
 TYPES: tt_rs38l_incl TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
+
+TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_comment,
          username TYPE string,
@@ -333,7 +337,7 @@ CLASS lcl_xml DEFINITION FINAL.
 
     METHODS constructor
       IMPORTING iv_xml   TYPE string OPTIONAL
-                iv_empty TYPE abap_bool DEFAULT abap_false
+                iv_empty TYPE sap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
     METHODS element_add
@@ -371,7 +375,7 @@ CLASS lcl_xml DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS xml_render
-      IMPORTING iv_normalize     TYPE abap_bool DEFAULT abap_true
+      IMPORTING iv_normalize     TYPE sap_bool DEFAULT abap_true
       RETURNING value(rv_string) TYPE string.
 
     METHODS xml_element
@@ -448,9 +452,10 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_name      TYPE string,
           lv_value     TYPE string,
           li_struct    TYPE REF TO if_ixml_element,
+          li_elm       TYPE REF TO if_ixml_element,
           lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
-    FIELD-SYMBOLS: <lg_any>  TYPE any,
+    FIELD-SYMBOLS: <lg_any>  TYPE ANY,
                    <ls_comp> LIKE LINE OF lo_descr_ref->components.
 
 
@@ -478,7 +483,8 @@ CLASS lcl_xml IMPLEMENTATION.
 
       lv_name = <ls_comp>-name.
       special_names( CHANGING cv_name = lv_name ).
-      lv_value = li_struct->find_from_name( depth = 0 name = lv_name )->get_value( ).
+      li_elm = li_struct->find_from_name( depth = 0 name = lv_name ).
+      lv_value = li_elm->get_value( ).
 
       <lg_any> = lv_value.
     ENDLOOP.
@@ -490,9 +496,11 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_name        TYPE string,
           li_root        TYPE REF TO if_ixml_element,
           lv_kind        TYPE abap_typecategory,
+          lv_index       TYPE i,
+          lo_data_descr  TYPE REF TO cl_abap_datadescr,
           lo_table_descr TYPE REF TO cl_abap_tabledescr.
 
-    FIELD-SYMBOLS: <lg_line> TYPE any.
+    FIELD-SYMBOLS: <lg_line> TYPE ANY.
 
 
     CLEAR ct_table[].
@@ -514,7 +522,8 @@ CLASS lcl_xml IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_kind = lo_table_descr->get_table_line_type( )->kind.
+    lo_data_descr = lo_table_descr->get_table_line_type( ).
+    lv_kind = lo_data_descr->kind.
 
     DO.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
@@ -530,7 +539,8 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDCASE.
 
       IF <lg_line> IS INITIAL.
-        DELETE ct_table INDEX lines( ct_table ).
+        lv_index = LINES( ct_table ).
+        DELETE ct_table INDEX lv_index.
         ASSERT sy-subrc = 0.
         EXIT. " current loop
       ENDIF.
@@ -544,16 +554,20 @@ CLASS lcl_xml IMPLEMENTATION.
           lv_txt1  TYPE string,
           lv_txt2  TYPE string,
           lv_txt3  TYPE string,
+          lv_times TYPE i,
           li_error TYPE REF TO if_ixml_parse_error.
 
 
     IF ii_parser->num_errors( ) <> 0.
-      DO ii_parser->num_errors( ) TIMES.
+      lv_times = ii_parser->num_errors( ).
+      DO lv_times TIMES.
         lv_error = sy-index - 1.
         li_error = ii_parser->get_error( lv_error ).
 
-        lv_txt1 = 'Column:' && li_error->get_column( ).     "#EC NOTEXT
-        lv_txt2 = 'Line:' && li_error->get_line( ).         "#EC NOTEXT
+        lv_txt1 = li_error->get_column( ).
+        CONCATENATE 'Column:' lv_txt1 INTO lv_txt1.         "#EC NOTEXT
+        lv_txt2 = li_error->get_line( ).
+        CONCATENATE 'Line:' lv_txt2 INTO lv_txt2.           "#EC NOTEXT
         lv_txt3 = li_error->get_reason( ).
 
         CALL FUNCTION 'POPUP_TO_INFORM'
@@ -605,9 +619,10 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_name        TYPE string,
           li_table       TYPE REF TO if_ixml_element,
           lv_kind        TYPE abap_typecategory,
+          lo_data_descr  TYPE REF TO cl_abap_datadescr,
           lo_table_descr TYPE REF TO cl_abap_tabledescr.
 
-    FIELD-SYMBOLS: <lg_line> TYPE any.
+    FIELD-SYMBOLS: <lg_line> TYPE ANY.
 
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
@@ -622,7 +637,8 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
     li_table = mi_xml_doc->create_element( lv_name ).
-    lv_kind = lo_table_descr->get_table_line_type( )->kind.
+    lo_data_descr = lo_table_descr->get_table_line_type( ).
+    lv_kind = lo_data_descr->kind.
 
     LOOP AT it_table ASSIGNING <lg_line>.
       CASE lv_kind.
@@ -714,7 +730,7 @@ CLASS lcl_xml IMPLEMENTATION.
           lo_descr     TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
-                   <lg_any>  TYPE any.
+                   <lg_any>  TYPE ANY.
 
 
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
@@ -781,7 +797,8 @@ ENDCLASS.                    "lcl_xml IMPLEMENTATION
 CLASS lcl_debug DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS debug_toggle.
+    CLASS-METHODS debug_toggle
+      RAISING lcx_exception.
 
     CLASS-METHODS render_objects
       IMPORTING iv_message TYPE string
@@ -794,12 +811,12 @@ CLASS lcl_debug DEFINITION FINAL.
       RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS get_debug
-      RETURNING value(rv_debug) TYPE abap_bool.
+      RETURNING value(rv_debug) TYPE sap_bool.
 
     CLASS-METHODS clear.
 
   PRIVATE SECTION.
-    CLASS-DATA: gv_debug TYPE abap_bool VALUE abap_false,
+    CLASS-DATA: gv_debug TYPE sap_bool VALUE abap_false,
                 gv_html  TYPE string.
 
 ENDCLASS.                    "lcl_debug DEFINITION
@@ -825,16 +842,15 @@ CLASS lcl_debug IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    gv_html = gv_html &&
-              '<br>' &&
-              iv_message &&
-              '<br>'.
+    CONCATENATE gv_html '<br>' iv_message '<br>' INTO gv_html.
 
   ENDMETHOD.                    "message
 
   METHOD render_objects.
 
-    DATA: lv_len TYPE i.
+    DATA: lv_len    TYPE i,
+          lv_text40 TYPE c LENGTH 40,
+          lv_text50 TYPE c LENGTH 50.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
@@ -845,22 +861,24 @@ CLASS lcl_debug IMPLEMENTATION.
 
     message( iv_message ).
 
-    gv_html = gv_html && '<table border="1">' && gc_newline.
+    CONCATENATE gv_html '<table border="1">' gc_newline INTO gv_html.
     LOOP AT it_objects ASSIGNING <ls_object>.
 
-      lv_len = xstrlen( <ls_object>-data ).
+      lv_len = XSTRLEN( <ls_object>-data ).
       IF lv_len > 50.
         lv_len = 50.
       ENDIF.
 
-      gv_html = gv_html &&
-        '<tr>' && gc_newline &&
-        '<td>' && <ls_object>-sha1 && '</td>' && gc_newline &&
-        '<td>' && <ls_object>-type && '</td>' && gc_newline &&
-        '<td>' && <ls_object>-data(lv_len) && '</td>' && gc_newline &&
-        '</tr>' && gc_newline.
+      lv_text40 = <ls_object>-sha1.
+      lv_text50 = <ls_object>-data(lv_len).
+      CONCATENATE gv_html
+        '<tr>' gc_newline
+        '<td>' lv_text40 '</td>' gc_newline
+        '<td>' <ls_object>-type '</td>' gc_newline
+        '<td>' lv_text50 '</td>' gc_newline
+        '</tr>' gc_newline INTO gv_html.
     ENDLOOP.
-    gv_html = gv_html && '</table>' && gc_newline.
+    CONCATENATE gv_html '</table>' gc_newline INTO gv_html.
 
   ENDMETHOD.                    "render_objects
 
@@ -881,7 +899,7 @@ CLASS lcl_debug IMPLEMENTATION.
         MESSAGE 'Debug mode enabled' TYPE 'S'.              "#EC NOTEXT
         clear( ).
       WHEN OTHERS.
-        ASSERT 1 = 1 + 1.
+        _raise 'Unknown debug toggle'.
     ENDCASE.
 
   ENDMETHOD.                    "debug_toggle
@@ -1096,7 +1114,7 @@ CLASS lcl_convert IMPLEMENTATION.
 
 
     lv_xstring = iv_xstring.
-    WHILE xstrlen( lv_xstring ) > 0.
+    WHILE XSTRLEN( lv_xstring ) > 0.
       lv_x = lv_xstring(1).
       rv_i = rv_i * 256 + lv_x.
       lv_xstring = lv_xstring+1.
@@ -1114,7 +1132,7 @@ CLASS lcl_convert IMPLEMENTATION.
         lo_obj = cl_abap_conv_in_ce=>create(
             input    = iv_data
             encoding = 'UTF-8' ).
-        lv_len = xstrlen( iv_data ).
+        lv_len = XSTRLEN( iv_data ).
 
         lo_obj->read( EXPORTING n    = lv_len
                       IMPORTING data = rv_string ).
@@ -1154,7 +1172,7 @@ CLASS lcl_convert IMPLEMENTATION.
     lv_bits = iv_bits.
 
     rv_int = 0.
-    WHILE strlen( lv_bits ) > 0.
+    WHILE STRLEN( lv_bits ) > 0.
       rv_int = rv_int * 2.
       IF lv_bits(1) = '1'.
         rv_int = rv_int + 1.
@@ -1296,7 +1314,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item        TYPE st_item
                 iv_extra       TYPE clike OPTIONAL
                 io_xml         TYPE REF TO lcl_xml
-                iv_normalize   TYPE abap_bool DEFAULT abap_true
+                iv_normalize   TYPE sap_bool DEFAULT abap_true
       RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
@@ -1311,7 +1329,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item  TYPE st_item
                 iv_extra TYPE clike OPTIONAL
                 it_files TYPE tt_files
-                iv_error TYPE abap_bool DEFAULT abap_true
+                iv_error TYPE sap_bool DEFAULT abap_true
       CHANGING  ct_abap  TYPE STANDARD TABLE
       RAISING   lcx_exception.
 
@@ -1384,7 +1402,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
 
   METHOD deserialize_program.
 
-    DATA: lv_exists      TYPE abap_bool,
+    DATA: lv_exists      TYPE sap_bool,
           lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,
@@ -1434,7 +1452,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
       ENDIF.
 
       IF NOT it_tpool[] IS INITIAL.
-        INSERT TEXTPOOL is_progdir-name
+        INSERT textpool is_progdir-name
           FROM it_tpool
           LANGUAGE sy-langu
           STATE 'I'.
@@ -1665,7 +1683,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
                                io_xml          = lo_xml ).
     ENDIF.
 
-    IF lines( lt_tpool ) = 1.
+    IF LINES( lt_tpool ) = 1.
       READ TABLE lt_tpool INDEX 1 INTO ls_tpool.
       IF ls_tpool-id = 'R' AND ls_tpool-key = '' AND ls_tpool-length = 0.
         DELETE lt_tpool INDEX 1.
@@ -1752,7 +1770,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
       _raise 'Error from call transaction, se11'.
     ENDIF.
 
-  ENDMETHOD.                    "jump_se11
+  ENDMETHOD.                                                "jump_se11
 
   METHOD corr_insert.
 
@@ -2010,7 +2028,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     DATA: lv_name  TYPE ddobjname,
           ls_dd01v TYPE dd01v,
-          lt_dd07v TYPE dd07v_tab,
+          lt_dd07v TYPE TABLE OF dd07v,
           ls_file  TYPE st_file,
           lo_xml   TYPE REF TO lcl_xml.
 
@@ -2041,7 +2059,8 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_dd01v ).
-    lo_xml->table_add( lt_dd07v ).
+    lo_xml->table_add( iv_name = 'DD07V_TAB'
+                       it_table = lt_dd07v ).
 
     ls_file = xml_to_file( is_item = is_item
                            io_xml  = lo_xml ).
@@ -2060,14 +2079,15 @@ CLASS lcl_object_doma IMPLEMENTATION.
     DATA: lo_xml   TYPE REF TO lcl_xml,
           ls_dd01v TYPE dd01v,
           lv_name  TYPE ddobjname,
-          lt_dd07v TYPE dd07v_tab.
+          lt_dd07v TYPE TABLE OF dd07v.
 
 
     lo_xml = read_xml( is_item  = is_item
                        it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_dd01v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd07v ).
+    lo_xml->table_read( EXPORTING iv_name = 'DD07V_TAB'
+                        CHANGING ct_table = lt_dd07v ).
 
     corr_insert( is_item    = is_item
                  iv_package = iv_package ).
@@ -2295,31 +2315,31 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS exists
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rv_exists) TYPE abap_bool.
+      RETURNING value(rv_exists) TYPE sap_bool.
 
     CLASS-METHODS serialize_abap
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rt_source) TYPE seop_source_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rt_source) TYPE seop_source_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rt_source) TYPE seop_source_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_testclasses
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rt_source) TYPE seop_source_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING value(rt_source) TYPE seop_source_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_xml
@@ -2328,10 +2348,10 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS remove_signatures
-      CHANGING ct_source TYPE seop_source_string.
+      CHANGING ct_source TYPE tt_string.
 
     CLASS-METHODS reduce
-      CHANGING ct_source TYPE seop_source_string.
+      CHANGING ct_source TYPE tt_string.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -2424,13 +2444,13 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD reduce.
 
     DATA: lv_source LIKE LINE OF ct_source,
-          lv_found  TYPE abap_bool.
+          lv_found  TYPE sap_bool.
 
 
 * skip files that only contain the standard comments
     lv_found = abap_false.
     LOOP AT ct_source INTO lv_source.
-      IF strlen( lv_source ) >= 3 AND lv_source(3) <> '*"*'.
+      IF STRLEN( lv_source ) >= 3 AND lv_source(3) <> '*"*'.
         lv_found = abap_true.
       ENDIF.
     ENDLOOP.
@@ -2550,7 +2570,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       lc_end   TYPE string VALUE '* +------------------------------------------------'
       & '--------------------------------------</SIGNATURE>'.
 
-    DATA: lv_remove TYPE abap_bool,
+    DATA: lv_remove TYPE sap_bool,
           lv_source LIKE LINE OF ct_source.
 
 
@@ -2813,7 +2833,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lv_clsname = is_item-obj_name.
     lv_cp = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
 
-    INSERT TEXTPOOL lv_cp
+    INSERT textpool lv_cp
       FROM lt_tpool
       LANGUAGE sy-langu
       STATE 'I'.
@@ -4177,7 +4197,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       IMPORTING
         message_id_inf   = ls_inf
       TABLES
-        source           = lt_source
+        SOURCE           = lt_source
       EXCEPTIONS
         cancelled        = 1
         not_found        = 2
@@ -4690,7 +4710,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           tables_parameter        = lt_tables
           exception_list          = lt_exception
           documentation           = lt_documentation
-          source                  = lt_source
+          SOURCE                  = lt_source
         EXCEPTIONS
           error_message           = 1
           function_not_found      = 2
@@ -5272,11 +5292,11 @@ CLASS lcl_object_prog IMPLEMENTATION.
   METHOD deserialize_textpool.
 
     READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
-    IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
+    IF ( sy-subrc = 0 AND LINES( it_tpool ) = 1 ) OR LINES( it_tpool ) = 0.
       RETURN. " no action for includes
     ENDIF.
 
-    INSERT TEXTPOOL is_item-obj_name
+    INSERT textpool is_item-obj_name
       FROM it_tpool
       LANGUAGE sy-langu
       STATE 'I'.
@@ -5523,7 +5543,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE tt_files
                 is_gen          TYPE st_file
-      RETURNING value(rv_match) TYPE abap_bool
+      RETURNING value(rv_match) TYPE sap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS activate
@@ -5651,7 +5671,7 @@ CLASS lcl_objects IMPLEMENTATION.
     lt_files[] = rt_files[].
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
-    IF lines( lt_files ) <> lines( rt_files ).
+    IF LINES( lt_files ) <> LINES( rt_files ).
       _raise 'Duplicates'.
     ENDIF.
 
@@ -5677,7 +5697,7 @@ CLASS lcl_objects IMPLEMENTATION.
       TRANSLATE lv_pre TO UPPER CASE.
       TRANSLATE lv_type TO UPPER CASE.
 
-      IF lv_ext <> 'xml' OR strlen( lv_type ) <> 4.
+      IF lv_ext <> 'xml' OR STRLEN( lv_type ) <> 4.
         CONTINUE. " current loop
       ENDIF.
 
@@ -5802,7 +5822,7 @@ CLASS lcl_objects IMPLEMENTATION.
           activate_ddic_objects  = abap_true
           with_popup             = abap_true
         TABLES
-          objects                = lcl_objects_common=>gt_ddic
+          OBJECTS                = lcl_objects_common=>gt_ddic
         EXCEPTIONS
           excecution_error       = 1
           cancelled              = 2
@@ -5820,7 +5840,7 @@ CLASS lcl_objects IMPLEMENTATION.
           activate_ddic_objects  = abap_false
           with_popup             = abap_true
         TABLES
-          objects                = lcl_objects_common=>gt_programs
+          OBJECTS                = lcl_objects_common=>gt_programs
         EXCEPTIONS
           excecution_error       = 1
           cancelled              = 2
@@ -5894,7 +5914,7 @@ CLASS lcl_hash IMPLEMENTATION.
           lv_char8 TYPE c LENGTH 8.
 
 
-    DO xstrlen( iv_xstring ) TIMES.
+    do xstrlen( iv_xstring ) times.
       lv_index = sy-index - 1.
 
       lv_a = ( lv_a + iv_xstring+lv_index(1) ) MOD lc_adler.
@@ -5911,7 +5931,7 @@ CLASS lcl_hash IMPLEMENTATION.
 
     rv_checksum = lv_char8.
 
-  ENDMETHOD.                    "adler32
+  ENDMETHOD.                                                "adler32
 
   METHOD sha1_raw.
 
@@ -5934,7 +5954,7 @@ CLASS lcl_hash IMPLEMENTATION.
 
     rv_sha1 = lv_hash.
 
-  ENDMETHOD.                    "sha1_raw
+  ENDMETHOD.                                                "sha1_raw
 
   METHOD sha1.
 
@@ -5944,7 +5964,7 @@ CLASS lcl_hash IMPLEMENTATION.
           lv_xstring TYPE xstring.
 
 
-    lv_len = xstrlen( iv_data ).
+    lv_len = XSTRLEN( iv_data ).
     lv_char10 = lv_len.
     CONDENSE lv_char10.
     CONCATENATE iv_type lv_char10 INTO lv_string SEPARATED BY space.
@@ -5958,7 +5978,7 @@ CLASS lcl_hash IMPLEMENTATION.
 
     rv_sha1 = sha1_raw( lv_xstring ).
 
-  ENDMETHOD.                    "sha1
+  ENDMETHOD.                                                "sha1
 
 ENDCLASS.                    "lcl_hash IMPLEMENTATION
 
@@ -6004,7 +6024,7 @@ CLASS lcl_pack DEFINITION FINAL.
 
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
-               c_debug_pack TYPE abap_bool VALUE abap_false,
+               c_debug_pack TYPE sap_bool VALUE abap_false,
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
                c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
@@ -6064,7 +6084,7 @@ CLASS lcl_pack IMPLEMENTATION.
         _raise 'Unexpected object type while encoding pack'.
     ENDCASE.
 
-    lv_x4 = xstrlen( is_object-data ).
+    lv_x4 = XSTRLEN( is_object-data ).
     DO 32 TIMES.
       GET BIT sy-index OF lv_x4 INTO lv_c.
       CONCATENATE lv_bits lv_c INTO lv_bits.
@@ -6086,10 +6106,10 @@ CLASS lcl_pack IMPLEMENTATION.
 
 * convert bit string to xstring
     CLEAR lv_x.
-    DO strlen( lv_result ) TIMES.
+    do strlen( lv_result ) times.
       lv_offset = sy-index - 1.
       IF lv_result+lv_offset(1) = '1'.
-        SET BIT ( lv_offset MOD 8 ) + 1 OF lv_x.
+        SET bit ( lv_offset mod 8 ) + 1 of lv_x.
       ENDIF.
       IF ( lv_offset + 1 ) MOD 8 = 0.
         CONCATENATE rv_xstring lv_x INTO rv_xstring IN BYTE MODE.
@@ -6240,7 +6260,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
     lv_mode = 'tree'.                                       "#EC NOTEXT
     LOOP AT lt_string ASSIGNING <lv_string>.
-      lv_len = strlen( lv_mode ).
+      lv_len = STRLEN( lv_mode ).
 
       IF NOT lv_mode IS INITIAL AND <lv_string>(lv_len) = lv_mode.
         CASE lv_mode.
@@ -6273,7 +6293,7 @@ CLASS lcl_pack IMPLEMENTATION.
     ENDLOOP.
 
 * strip first newline
-    IF strlen( rs_commit-body ) >= 2.
+    IF STRLEN( rs_commit-body ) >= 2.
       rs_commit-body = rs_commit-body+2.
     ENDIF.
 
@@ -6361,7 +6381,7 @@ CLASS lcl_pack IMPLEMENTATION.
     delta_header( CHANGING cv_delta = lv_delta ).
 
 
-    WHILE xstrlen( lv_delta ) > 0.
+    WHILE XSTRLEN( lv_delta ) > 0.
 
       lv_x = lv_delta(1).
       lv_delta = lv_delta+1.
@@ -6473,7 +6493,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
 
     DO.
-      IF lv_cursor >= xstrlen( iv_data ).
+      IF lv_cursor >= XSTRLEN( iv_data ).
         EXIT. " current loop
       ENDIF.
 
@@ -6528,7 +6548,7 @@ CLASS lcl_pack IMPLEMENTATION.
     lv_data = iv_data.
 
 * header
-    IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
+    IF NOT XSTRLEN( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
       _raise 'Unexpected pack header'.
     ENDIF.
     lv_data = lv_data+4.
@@ -6599,7 +6619,7 @@ CLASS lcl_pack IMPLEMENTATION.
 * result when '7801'
 * compressed data might be larger than origial so add 10, adding 10 is safe
 * as package always ends with sha1 checksum
-        DO lv_expected + 10 TIMES.
+        do lv_expected + 10 times.
           lv_compressed_len = sy-index.
 
           cl_abap_gzip=>decompress_binary(
@@ -6656,7 +6676,7 @@ CLASS lcl_pack IMPLEMENTATION.
     ENDDO.
 
 * check SHA1 at end of pack
-    lv_len = xstrlen( iv_data ) - 20.
+    lv_len = XSTRLEN( iv_data ) - 20.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
     IF lv_sha1 <> lv_data.
@@ -6680,7 +6700,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
     CONCATENATE rv_data c_version INTO rv_data IN BYTE MODE.
 
-    lv_len = lines( it_objects ).
+    lv_len = LINES( it_objects ).
     lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_len
                                               iv_length = 4 ).
     CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
@@ -6952,7 +6972,7 @@ CLASS lcl_persistence IMPLEMENTATION.
       _raise 'Error from READ_TEXT'.
     ENDIF.
 
-    IF lines( lt_lines ) MOD 4 <> 0.
+    IF LINES( lt_lines ) MOD 4 <> 0.
 * if this happens, delete text ZABAPGIT in SO10 or edit the text
 * manually, so it contains the right information
       _raise 'Persistence, text broken'.
@@ -7117,7 +7137,7 @@ CLASS lcl_transport IMPLEMENTATION.
         _raise 'HTTP error code'.
     ENDCASE.
 
-  ENDMETHOD.                    "http_200
+  ENDMETHOD.                                                "http_200
 
   METHOD ref_discovery.
 
@@ -7193,26 +7213,26 @@ CLASS lcl_transport IMPLEMENTATION.
       _raise 'branch empty'.
     ENDIF.
 
-    lv_len = strlen( is_repo-branch_name ).
+    lv_len = STRLEN( is_repo-branch_name ).
     SPLIT lv_data AT gc_newline INTO TABLE lt_result.
     LOOP AT lt_result INTO lv_data.
       IF sy-tabix = 1.
         CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49
+      ELSEIF sy-tabix = 2 AND STRLEN( lv_data ) > 49
           AND lv_data+49(lv_len) = is_repo-branch_name.
         lv_hash = lv_data+8.
         EXIT. " current loop
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45
+      ELSEIF sy-tabix > 2 AND STRLEN( lv_data ) > 45
           AND lv_data+45 = is_repo-branch_name.
         lv_hash = lv_data+4.
         EXIT. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+      ELSEIF sy-tabix = 2 AND STRLEN( lv_data ) = 8 AND lv_data(8) = '00000000'.
         _raise 'No branches, create branch manually by adding file'.
       ENDIF.
     ENDLOOP.
 
     TRANSLATE lv_hash TO UPPER CASE.
-    IF strlen( lv_hash ) <> 40.
+    IF STRLEN( lv_hash ) <> 40.
       _raise 'Branch not found'.
     ENDIF.
 
@@ -7296,7 +7316,7 @@ CLASS lcl_transport IMPLEMENTATION.
     lo_obj = cl_abap_conv_in_ce=>create(
         input    = lv_xstring
         encoding = 'UTF-8' ).
-    lv_len = xstrlen( lv_xstring ).
+    lv_len = XSTRLEN( lv_xstring ).
 
     lo_obj->read( EXPORTING n    = lv_len
                   IMPORTING data = lv_string ).
@@ -7315,7 +7335,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_pack     TYPE xstring.
 
 
-    WHILE xstrlen( cv_data ) >= 4.
+    WHILE XSTRLEN( cv_data ) >= 4.
       lv_len = length_utf8_hex( cv_data ).
 
       lv_contents = cv_data(lv_len).
@@ -7328,7 +7348,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
       lv_contents = lv_contents+4.
 
-      IF xstrlen( lv_contents ) > 1 AND lv_contents(1) = '01'. " band 1
+      IF XSTRLEN( lv_contents ) > 1 AND lv_contents(1) = '01'. " band 1
         CONCATENATE lv_pack lv_contents+1 INTO lv_pack IN BYTE MODE.
       ENDIF.
 
@@ -7398,7 +7418,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_len TYPE i.
 
 
-    lv_len = strlen( iv_string ).
+    lv_len = STRLEN( iv_string ).
 
     IF lv_len >= 255.
       _raise 'PKT, todo'.
@@ -8015,7 +8035,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_string TYPE string.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
-                   <lg_any>   TYPE any.
+                   <lg_any>   TYPE ANY.
 
 
     lv_string = iv_string.     " type conversion
@@ -8039,7 +8059,7 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_field     LIKE LINE OF lt_fields.
 
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr_ref->components,
-                   <lg_any>  TYPE any.
+                   <lg_any>  TYPE ANY.
 
 
     lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( ig_structure1 ).
@@ -8155,8 +8175,8 @@ CLASS lcl_gui IMPLEMENTATION.
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE devclass = is_repo-package.                     "#EC *
 
-    IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
+    IF LINES( lt_tadir ) > 0.
+      lv_count = LINES( lt_tadir ).
 
       CONCATENATE 'This will delete all objects in package' is_repo-package
         INTO lv_question
@@ -8398,7 +8418,7 @@ CLASS lcl_gui IMPLEMENTATION.
       rv_html = rv_html && '<br><br><br>'.
 
       LOOP AT lt_repos INTO ls_repo.
-        lv_f = ( sy-tabix / lines( lt_repos ) ) * 100.
+        lv_f = ( sy-tabix / LINES( lt_repos ) ) * 100.
         lv_pct = lv_f.
         IF lv_pct = 100.
           lv_pct = 99.
@@ -8589,8 +8609,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lv_html = iv_html.
 
-    WHILE strlen( lv_html ) > 0.
-      IF strlen( lv_html ) < 200.
+    WHILE STRLEN( lv_html ) > 0.
+      IF STRLEN( lv_html ) < 200.
         APPEND lv_html TO lt_data.
         CLEAR lv_html.
       ELSE.
@@ -8651,7 +8671,7 @@ ENDFORM.                    "run
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS lcl_abap_unit DEFINITION FOR TESTING risk level harmless duration short FINAL.
 
   PRIVATE SECTION.
 
