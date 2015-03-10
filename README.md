@@ -24,6 +24,7 @@ ABAP Version: 702 or higher
 &nbsp;
 
 * [Your first abapGit project](https://github.com/larshp/abapGit/wiki/Your-first-abapGit-project)
+* [Moving existing package contents into git](https://github.com/larshp/abapGit/wiki/Moving-existing-package-contents-into-git)
 * [Contributing to a project](https://github.com/larshp/abapGit/wiki/Contributing-to-a-project)
 
 ## FAQ ##
