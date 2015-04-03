@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.18'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.19'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -7759,6 +7759,11 @@ CLASS lcl_gui DEFINITION FINAL.
       IMPORTING iv_url TYPE string
       RAISING   lcx_exception.
 
+    CLASS-METHODS analyze_existing
+      IMPORTING it_results       TYPE tt_results
+      RETURNING VALUE(rv_cancel) TYPE abap_bool
+      RAISING   lcx_exception.
+
     CLASS-METHODS add
       IMPORTING is_item       TYPE st_item
                 is_repo_persi TYPE st_repo_persi
@@ -8282,6 +8287,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lt_files      TYPE tt_files,
           ls_repo       TYPE st_repo,
           lv_branch     TYPE t_sha1,
+          lt_results    TYPE tt_results,
           lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
@@ -8336,6 +8342,12 @@ CLASS lcl_gui IMPLEMENTATION.
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
+    lt_results = lcl_objects=>status( it_files   = lt_files
+                                      iv_package = lv_package ).
+    IF analyze_existing( lt_results ) = abap_true.
+      RETURN.
+    ENDIF.
+
     lcl_objects=>deserialize( it_files   = lt_files
                               iv_package = lv_package ).
 
@@ -8346,6 +8358,56 @@ CLASS lcl_gui IMPLEMENTATION.
     view( render( ) ).
 
   ENDMETHOD.                    "install
+
+  METHOD analyze_existing.
+
+    DATA: lv_question TYPE text100,
+          lv_answer   TYPE c LENGTH 1.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+      SELECT COUNT( * ) FROM tadir
+        WHERE pgmid = 'R3TR'
+        AND object = <ls_result>-obj_type
+        AND obj_name = <ls_result>-obj_name.
+      IF sy-subrc = 0.
+
+        CONCATENATE 'Object'
+          <ls_result>-obj_type
+          <ls_result>-obj_name
+          'already exists in system'
+          INTO lv_question SEPARATED BY space.              "#EC NOTEXT
+
+        CALL FUNCTION 'POPUP_TO_CONFIRM'
+          EXPORTING
+            titlebar              = 'Warning'
+            text_question         = lv_question
+            text_button_1         = 'Continue'
+            icon_button_1         = 'ICON_OKAY'
+            text_button_2         = 'Cancel'
+            icon_button_2         = 'ICON_CANCEL'
+            default_button        = '2'
+            display_cancel_button = abap_false
+          IMPORTING
+            answer                = lv_answer
+          EXCEPTIONS
+            text_not_found        = 1
+            OTHERS                = 2.                        "#EC NOTEXT
+        IF sy-subrc <> 0.
+          _raise 'error from POPUP_TO_CONFIRM'.
+        ENDIF.
+
+        IF lv_answer = '2'.
+          rv_cancel = abap_true.
+          RETURN.
+        ENDIF.
+
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD render_css.
 
