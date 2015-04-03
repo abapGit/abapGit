@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.19'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.20'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -8367,7 +8367,7 @@ CLASS lcl_gui IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
 
-    LOOP AT it_results ASSIGNING <ls_result>.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT filename IS INITIAL.
       SELECT COUNT( * ) FROM tadir
         WHERE pgmid = 'R3TR'
         AND object = <ls_result>-obj_type
