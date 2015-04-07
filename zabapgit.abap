@@ -5548,14 +5548,14 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
+    CLASS-METHODS class_name
+      IMPORTING is_item              TYPE st_item
+      RETURNING value(rv_class_name) TYPE string.
+
   PRIVATE SECTION.
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
-
-    CLASS-METHODS class_name
-      IMPORTING is_item              TYPE st_item
-      RETURNING value(rv_class_name) TYPE string.
 
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE tt_files
@@ -8602,7 +8602,10 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_index   LIKE sy-tabix,
           lv_span    TYPE i,
           lt_results TYPE tt_results,
-          ls_next    LIKE LINE OF lt_results.
+          ls_next    LIKE LINE OF lt_results,
+          ls_item    TYPE st_item,
+          lv_class_name TYPE string,
+          lo_object  TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
@@ -8659,9 +8662,16 @@ CLASS lcl_gui IMPLEMENTATION.
 
       CLEAR lv_link.
       IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
-        lv_link = '<a href="sapevent:add?' &&
-          struct_encode( ig_structure1 = is_repo_persi ig_structure2 = <ls_result> )
-          && '">add</a>'.
+        MOVE-CORRESPONDING <ls_result> TO ls_item.
+        lv_class_name = lcl_objects=>class_name( ls_item ).
+        TRY.
+            CREATE OBJECT lo_object TYPE (lv_class_name).
+            lv_link = '<a href="sapevent:add?' &&
+              struct_encode( ig_structure1 = is_repo_persi ig_structure2 = <ls_result> )
+              && '">add</a>'.
+          CATCH CX_SY_CREATE_OBJECT_ERROR.
+            lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
+        ENDTRY.
       ELSEIF <ls_result>-match = abap_false.
         lv_link = '<a href="sapevent:diff?' &&
           struct_encode( ig_structure1 = <ls_result> ig_structure2 = ls_repo ) &&
