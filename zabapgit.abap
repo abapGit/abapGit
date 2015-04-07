@@ -7841,7 +7841,7 @@ CLASS lcl_gui IMPLEMENTATION.
           && gc_newline &&
           '</head>'
           && gc_newline &&
-          '<body>'.                                         "#EC NOTEXT
+          '<body style="background: rgba(222, 241, 242, 1);">' && gc_newline.                                         "#EC NOTEXT
 
   ENDMETHOD.                    "render_head
 
@@ -8470,7 +8470,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
     rv_html = '<style type="text/css">' && gc_newline &&
           'body {'                      && gc_newline &&    "#EC NOTEXT
-          '  font-family: verdana;'     && gc_newline &&    "#EC NOTEXT
+          '  font-family: Arial,Helvetica,sans-serif;' && gc_newline &&    "#EC NOTEXT
+          '  background: #DEF1F2;'      && gc_newline &&    "#EC NOTEXT
           '}'                           && gc_newline &&
           'a:link {'                    && gc_newline &&    "#EC NOTEXT
           '  color: blue;'              && gc_newline &&    "#EC NOTEXT
@@ -8514,6 +8515,19 @@ CLASS lcl_gui IMPLEMENTATION.
           '}'                           && gc_newline &&
           'pre {'                       && gc_newline &&
           '  display: inline;'          && gc_newline &&
+          '}'                           && gc_newline &&
+          'table, th, td {'             && gc_newline &&
+          '  border: 1px solid black;'  && gc_newline &&
+          '  border-collapse: collapse;' && gc_newline &&
+          '}'                           && gc_newline &&
+          'th, td {'                    && gc_newline &&
+          '  padding: 5px;'             && gc_newline &&
+          '}'                           && gc_newline &&
+          'th {'                        && gc_newline &&
+          '  background: #e5e5e5;'      && gc_newline &&
+          '}'                           && gc_newline &&
+          'td {'                        && gc_newline &&
+           ' background: #F8FCFC;'      && gc_newline &&
           '}'                           && gc_newline &&
           '</style>'                    && gc_newline.
 
@@ -8651,10 +8665,10 @@ CLASS lcl_gui IMPLEMENTATION.
 
     rv_html = rv_html && '<table border="1">' && gc_newline &&
       '<tr>'                                  && gc_newline &&
-      '<td><u>Local object</u></td>'          && gc_newline &&
-      '<td></td>'                             && gc_newline &&
-      '<td><u>Remote file</u></td>'           && gc_newline &&
-      '<td></td>'                             && gc_newline &&
+      '<th><u>Local object</u></th>'          && gc_newline &&
+      '<th></td>'                             && gc_newline &&
+      '<th><u>Remote file</u></th>'           && gc_newline &&
+      '<th></th>'                             && gc_newline &&
       '</tr>'                                 && gc_newline.
 
     LOOP AT lt_results ASSIGNING <ls_result>.
