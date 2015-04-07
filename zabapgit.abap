@@ -7841,7 +7841,8 @@ CLASS lcl_gui IMPLEMENTATION.
           && gc_newline &&
           '</head>'
           && gc_newline &&
-          '<body style="background: rgba(222, 241, 242, 1);">' && gc_newline.                                         "#EC NOTEXT
+          '<body style="background: rgba(222, 241, 242, 1);">'
+          && gc_newline. "#EC NOTEXT
 
   ENDMETHOD.                    "render_head
 
@@ -8254,7 +8255,6 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD remove.
 
     DATA: lt_tadir    TYPE tt_tadir,
-          lv_count    TYPE c LENGTH 3,
           lv_answer   TYPE c LENGTH 1,
           lv_question TYPE c LENGTH 100.
 
@@ -8263,9 +8263,9 @@ CLASS lcl_gui IMPLEMENTATION.
       AND object <> 'DEVC'.                                 "#EC *
 
     IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
 
-      CONCATENATE 'This will remove the repository reference to the package' is_repo-package
+      CONCATENATE 'This will remove the repository reference to the package'
+        is_repo-package
         INTO lv_question
         SEPARATED BY space.                                 "#EC NOTEXT
 
@@ -8535,7 +8535,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_menu.
     rv_html =
-      '<img src="http://git-scm.com/images/logos/downloads/Git-Icon-1788C.png" height="50px">' && gc_newline &&
+      '<img src="http://git-scm.com/images/logos/downloads/Git-Icon-1788C.png" height="50px">'
+      && gc_newline &&
       '<h1>abapGit</h1>&nbsp;'                                  && gc_newline &&
       '<a href="sapevent:refresh">Refresh</a>&nbsp;'            && gc_newline &&
       '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
@@ -8599,7 +8600,9 @@ CLASS lcl_gui IMPLEMENTATION.
       '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'. "#EC NOTEXT
 
     rv_html = rv_html &&
-      '<center><img src="http://git-scm.com/images/logos/downloads/Git-Logo-2Color.png"></center>'. "#EC NOTEXT
+      '<center>' &&
+      '<img src="http://git-scm.com/images/logos/downloads/Git-Logo-2Color.png">' &&
+      '</center>'. "#EC NOTEXT
 
     rv_html = rv_html && '</body></html>'.
 
