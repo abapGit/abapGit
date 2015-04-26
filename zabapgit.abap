@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.22'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.23'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5064,6 +5064,166 @@ CLASS lcl_object_view IMPLEMENTATION.
 ENDCLASS.                    "lcl_object_view IMPLEMENTATION
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_object_nrob DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_nrob IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_nrob IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          lv_object     TYPE tnro-object,
+          ls_file       LIKE LINE OF rt_files,
+          ls_attributes TYPE tnro,
+          ls_text       TYPE tnrot.
+
+
+    lv_object = is_item-obj_name.
+
+    CALL FUNCTION 'NUMBER_RANGE_OBJECT_READ'
+      EXPORTING
+        language          = 'E'
+        object            = lv_object
+      IMPORTING
+        object_attributes = ls_attributes
+        object_text       = ls_text
+      EXCEPTIONS
+        object_not_found  = 1
+        OTHERS            = 2.
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from NUMBER_RANGE_OBJECT_READ'.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_attributes ).
+    lo_xml->structure_add( ls_text ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          lt_errors     TYPE TABLE OF inoer,
+          ls_attributes TYPE tnro,
+          ls_text       TYPE tnrot.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_attributes ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_text ).
+
+    CALL FUNCTION 'NUMBER_RANGE_OBJECT_UPDATE'
+      EXPORTING
+        indicator                 = 'I'
+        object_attributes         = ls_attributes
+        object_text               = ls_text
+      TABLES
+        errors                    = lt_errors
+      EXCEPTIONS
+        object_already_exists     = 1
+        object_attributes_missing = 2
+        object_not_found          = 3
+        object_text_missing       = 4
+        wrong_indicator           = 5
+        OTHERS                    = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from NUMBER_RANGE_OBJECT_UPDATE'.
+    ENDIF.
+
+    CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
+      EXPORTING
+        object                 = ls_attributes-object
+      EXCEPTIONS
+        object_not_initialized = 1.
+    IF sy-subrc <> 0.
+      _raise 'error from NUMBER_RANGE_OBJECT_CLOSE'.
+    ENDIF.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_test_modus       = abap_false
+        wi_tadir_pgmid      = 'R3TR'
+        wi_tadir_object     = 'NROB'
+        wi_tadir_obj_name   = is_item-obj_name
+        wi_tadir_author     = sy-uname
+        wi_tadir_devclass   = iv_package
+        wi_tadir_masterlang = sy-langu
+        wi_set_genflag      = abap_true
+      EXCEPTIONS
+        OTHERS              = 1.
+    IF sy-subrc <> 0.
+      _raise 'error from TR_TADIR_INTERFACE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lv_object TYPE tnro-object.
+
+
+    lv_object = is_item-obj_name.
+
+    CALL FUNCTION 'NUMBER_RANGE_OBJECT_DELETE'
+      EXPORTING
+        language           = 'E'
+        object             = lv_object
+      EXCEPTIONS
+        delete_not_allowed = 1
+        object_not_found   = 2
+        wrong_indicator    = 3
+        OTHERS             = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from NUMBER_RANGE_OBJECT_DELETE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    _raise 'todo'.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_object_ttyp DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -5093,7 +5253,7 @@ CLASS lcl_object_ttyp DEFINITION INHERITING FROM lcl_objects_common FINAL.
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_object_dtel IMPLEMENTATION
+*       CLASS lcl_object_ttyp IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
