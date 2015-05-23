@@ -7375,7 +7375,10 @@ CLASS lcl_transport IMPLEMENTATION.
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
-* make sure SSL is setup properly in STRUST
+* make sure: 
+* a) SSL is setup properly in STRUST
+* b) no firewalls
+* check trace file in transaction SMICM
           lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
         WHEN 2.
           lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
