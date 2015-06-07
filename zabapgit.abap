@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.23'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.24'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -76,6 +76,7 @@ TYPES: BEGIN OF st_repo_persi,
          branch_name TYPE string,
          sha1        TYPE string,
          package     TYPE devclass,
+         offline     TYPE sap_bool,
        END OF st_repo_persi.
 TYPES: tt_repos_persi TYPE STANDARD TABLE OF st_repo_persi WITH DEFAULT KEY.
 
@@ -176,7 +177,7 @@ CLASS lcl_user DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_username
-      RETURNING VALUE(rv_username) TYPE string
+      RETURNING value(rv_username) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS set_email
@@ -184,13 +185,13 @@ CLASS lcl_user DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_email
-      RETURNING VALUE(rv_email) TYPE string
+      RETURNING value(rv_email) TYPE string
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS read
       IMPORTING iv_name         TYPE tdobname
-      RETURNING VALUE(rv_value) TYPE string
+      RETURNING value(rv_value) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS save
@@ -378,11 +379,11 @@ CLASS lcl_xml DEFINITION FINAL.
 
     METHODS xml_render
       IMPORTING iv_normalize     TYPE sap_bool DEFAULT abap_true
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     METHODS xml_element
       IMPORTING iv_name           TYPE string
-      RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
+      RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
     METHODS xml_add
       IMPORTING ii_root    TYPE REF TO if_ixml_element OPTIONAL
@@ -391,7 +392,7 @@ CLASS lcl_xml DEFINITION FINAL.
     METHODS xml_find
       IMPORTING ii_root           TYPE REF TO if_ixml_element OPTIONAL
                 iv_name           TYPE string
-      RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
+      RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
   PRIVATE SECTION.
 
@@ -819,10 +820,10 @@ CLASS lcl_debug DEFINITION FINAL.
       IMPORTING iv_message TYPE string.
 
     CLASS-METHODS get_html
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS get_debug
-      RETURNING VALUE(rv_debug) TYPE sap_bool.
+      RETURNING value(rv_debug) TYPE sap_bool.
 
     CLASS-METHODS clear.
 
@@ -926,7 +927,7 @@ CLASS lcl_time DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS get
-      RETURNING VALUE(rv_time) TYPE t_unixtime
+      RETURNING value(rv_time) TYPE t_unixtime
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -998,17 +999,17 @@ CLASS lcl_url DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS host
       IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_host) TYPE string
+      RETURNING value(rv_host) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS name
       IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_name) TYPE string
+      RETURNING value(rv_name) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS path_name
       IMPORTING iv_repo             TYPE string
-      RETURNING VALUE(rv_path_name) TYPE string
+      RETURNING value(rv_path_name) TYPE string
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -1073,29 +1074,29 @@ CLASS lcl_convert DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS bitbyte_to_int
       IMPORTING iv_bits       TYPE clike
-      RETURNING VALUE(rv_int) TYPE i.
+      RETURNING value(rv_int) TYPE i.
 
     CLASS-METHODS x_to_bitbyte
       IMPORTING iv_x              TYPE x
-      RETURNING VALUE(rv_bitbyte) TYPE t_bitbyte.
+      RETURNING value(rv_bitbyte) TYPE t_bitbyte.
 
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING iv_string         TYPE string
-      RETURNING VALUE(rv_xstring) TYPE xstring.
+      RETURNING value(rv_xstring) TYPE xstring.
 
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS xstring_to_int
       IMPORTING iv_xstring  TYPE xstring
-      RETURNING VALUE(rv_i) TYPE i
+      RETURNING value(rv_i) TYPE i
       RAISING   lcx_exception.
 
     CLASS-METHODS int_to_xstring
       IMPORTING iv_i              TYPE i
                 iv_length         TYPE i
-      RETURNING VALUE(rv_xstring) TYPE xstring.
+      RETURNING value(rv_xstring) TYPE xstring.
 
 ENDCLASS.                    "lcl_convert DEFINITION
 
@@ -1220,7 +1221,7 @@ CLASS lcl_diff DEFINITION FINAL.
     CLASS-METHODS diff
       IMPORTING iv_local        TYPE xstring
                 iv_remote       TYPE xstring
-      RETURNING VALUE(rt_diffs) TYPE tt_diffs.
+      RETURNING value(rt_diffs) TYPE tt_diffs.
 
 ENDCLASS.                    "lcl_diff DEFINITION
 
@@ -1326,14 +1327,14 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
                 iv_extra       TYPE clike OPTIONAL
                 io_xml         TYPE REF TO lcl_xml
                 iv_normalize   TYPE sap_bool DEFAULT abap_true
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS read_xml
       IMPORTING is_item       TYPE st_item
                 iv_extra      TYPE clike OPTIONAL
                 it_files      TYPE tt_files
-      RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
+      RETURNING value(ro_xml) TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     CLASS-METHODS read_abap
@@ -1348,7 +1349,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item        TYPE st_item
                 iv_extra       TYPE clike OPTIONAL
                 it_abap        TYPE STANDARD TABLE
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS activation_add
@@ -1369,13 +1370,13 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
 
     CLASS-METHODS read_progdir
       IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
+      RETURNING value(rs_progdir) TYPE ty_progdir.
 
     CLASS-METHODS serialize_program
       IMPORTING is_item         TYPE st_item
                 iv_program      TYPE programm OPTIONAL
                 iv_extra        TYPE clike OPTIONAL
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_program
@@ -1390,7 +1391,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item            TYPE st_item
                 iv_extra           TYPE clike OPTIONAL
                 iv_ext             TYPE string
-      RETURNING VALUE(rv_filename) TYPE string.
+      RETURNING value(rv_filename) TYPE string.
 
     CLASS-METHODS serialize_dynpros
       IMPORTING iv_program_name TYPE programm
@@ -1978,7 +1979,7 @@ CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2140,7 +2141,7 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2290,7 +2291,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2327,36 +2328,36 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS exists
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rv_exists) TYPE sap_bool.
+      RETURNING value(rv_exists) TYPE sap_bool.
 
     CLASS-METHODS serialize_abap
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_testclasses
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_xml
       IMPORTING is_item       TYPE st_item
-      RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
+      RETURNING value(ro_xml) TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     CLASS-METHODS remove_signatures
@@ -3011,7 +3012,7 @@ CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3247,7 +3248,7 @@ CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3501,7 +3502,7 @@ CLASS lcl_object_enqu DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3663,7 +3664,7 @@ CLASS lcl_object_shlp DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3835,7 +3836,7 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4054,7 +4055,7 @@ CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4253,7 +4254,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4273,22 +4274,22 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PRIVATE SECTION.
     CLASS-METHODS main_name
       IMPORTING is_item           TYPE st_item
-      RETURNING VALUE(rv_program) TYPE program
+      RETURNING value(rv_program) TYPE program
       RAISING   lcx_exception.
 
     CLASS-METHODS functions
       IMPORTING is_item           TYPE st_item
-      RETURNING VALUE(rt_functab) TYPE tt_rs38l_incl
+      RETURNING value(rt_functab) TYPE tt_rs38l_incl
       RAISING   lcx_exception.
 
     CLASS-METHODS includes
       IMPORTING is_item            TYPE st_item
-      RETURNING VALUE(rt_includes) TYPE rso_t_objnm
+      RETURNING value(rt_includes) TYPE rso_t_objnm
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_functions
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_functions
@@ -4298,7 +4299,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS serialize_xml
       IMPORTING is_item        TYPE st_item
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_xml
@@ -4309,7 +4310,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS serialize_includes
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_includes
@@ -4608,15 +4609,15 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        program      = lv_program
+        program                = lv_program
 *       WITH_RESERVED_INCLUDES =
 *       WITH_CLASS_INCLUDES    = ' ' hmm, todo
       TABLES
-        includetab   = rt_includes
+        includetab             = rt_includes
       EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
+        not_existent           = 1
+        no_program             = 2
+        OTHERS                 = 3.
     IF sy-subrc <> 0.
       _raise 'Error from RS_GET_ALL_INCLUDES'.
     ENDIF.
@@ -4881,7 +4882,7 @@ CLASS lcl_object_view DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5073,7 +5074,7 @@ CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5090,7 +5091,7 @@ CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_nrob DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_nrob IMPLEMENTATION
@@ -5133,7 +5134,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -5191,7 +5192,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       _raise 'error from TR_TADIR_INTERFACE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5213,15 +5214,15 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       _raise 'error from NUMBER_RANGE_OBJECT_DELETE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
     _raise 'todo'.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_nrob IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_ttyp DEFINITION
@@ -5233,7 +5234,7 @@ CLASS lcl_object_ttyp DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5393,7 +5394,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5686,13 +5687,13 @@ CLASS lcl_objects DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS status
       IMPORTING it_files          TYPE tt_files
                 iv_package        TYPE devclass OPTIONAL
-      RETURNING VALUE(rt_results) TYPE tt_results
+      RETURNING value(rt_results) TYPE tt_results
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5710,7 +5711,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE st_item
-      RETURNING VALUE(rv_class_name) TYPE string.
+      RETURNING value(rv_class_name) TYPE string.
 
   PRIVATE SECTION.
     CLASS-METHODS delete_obj
@@ -5720,7 +5721,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE tt_files
                 is_gen          TYPE st_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
+      RETURNING value(rv_match) TYPE sap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS activate
@@ -6065,17 +6066,17 @@ CLASS lcl_hash DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS adler32
       IMPORTING iv_xstring         TYPE xstring
-      RETURNING VALUE(rv_checksum) TYPE t_adler32.
+      RETURNING value(rv_checksum) TYPE t_adler32.
 
     CLASS-METHODS sha1
       IMPORTING iv_type        TYPE t_type
                 iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE t_sha1
+      RETURNING value(rv_sha1) TYPE t_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE t_sha1
+      RETURNING value(rv_sha1) TYPE t_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
@@ -6178,12 +6179,12 @@ CLASS lcl_pack DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS decode
       IMPORTING iv_data           TYPE xstring
-      RETURNING VALUE(rt_objects) TYPE tt_objects
+      RETURNING value(rt_objects) TYPE tt_objects
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_tree
       IMPORTING iv_data         TYPE xstring
-      RETURNING VALUE(rt_nodes) TYPE tt_nodes
+      RETURNING value(rt_nodes) TYPE tt_nodes
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_deltas
@@ -6192,21 +6193,21 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS decode_commit
       IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rs_commit) TYPE st_commit
+      RETURNING value(rs_commit) TYPE st_commit
       RAISING   lcx_exception.
 
     CLASS-METHODS encode
       IMPORTING it_objects     TYPE tt_objects
-      RETURNING VALUE(rv_data) TYPE xstring
+      RETURNING value(rv_data) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_tree
       IMPORTING it_nodes       TYPE tt_nodes
-      RETURNING VALUE(rv_data) TYPE xstring.
+      RETURNING value(rv_data) TYPE xstring.
 
     CLASS-METHODS encode_commit
       IMPORTING is_commit      TYPE st_commit
-      RETURNING VALUE(rv_data) TYPE xstring.
+      RETURNING value(rv_data) TYPE xstring.
 
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
@@ -6217,7 +6218,7 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS type_and_length
       IMPORTING is_object         TYPE st_object
-      RETURNING VALUE(rv_xstring) TYPE xstring
+      RETURNING value(rv_xstring) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS delta
@@ -6230,7 +6231,7 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
-      RETURNING VALUE(rv_type) TYPE t_type
+      RETURNING value(rv_type) TYPE t_type
       RAISING   lcx_exception.
 
     CLASS-METHODS get_length
@@ -6924,7 +6925,7 @@ CLASS lcl_persistence DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS list
-      RETURNING VALUE(rt_repos) TYPE tt_repos_persi
+      RETURNING value(rt_repos) TYPE tt_repos_persi
       RAISING   lcx_exception.
 
     CLASS-METHODS update
@@ -6934,8 +6935,9 @@ CLASS lcl_persistence DEFINITION FINAL.
 
     CLASS-METHODS add
       IMPORTING is_repo    TYPE st_repo
-                iv_branch  TYPE t_sha1
+                iv_branch  TYPE t_sha1 OPTIONAL
                 iv_package TYPE devclass
+                iv_offline TYPE sap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
     CLASS-METHODS validate_package
@@ -6947,16 +6949,37 @@ CLASS lcl_persistence DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    CLASS-METHODS read_text
-      RETURNING VALUE(rt_repos) TYPE tt_repos_persi
+    CLASS-METHODS read_text_online
+      RETURNING value(rt_repos) TYPE tt_repos_persi
       RAISING   lcx_exception.
 
-    CLASS-METHODS save_text
+    CLASS-METHODS save_text_online
       IMPORTING it_repos TYPE tt_repos_persi
       RAISING   lcx_exception.
 
-    CLASS-METHODS header
-      RETURNING VALUE(rs_header) TYPE thead.
+    CLASS-METHODS header_online
+      RETURNING value(rs_header) TYPE thead.
+
+    CLASS-METHODS read_text_offline
+      RETURNING value(rt_repos) TYPE tt_repos_persi
+      RAISING   lcx_exception.
+
+    CLASS-METHODS save_text_offline
+      IMPORTING it_repos TYPE tt_repos_persi
+      RAISING   lcx_exception.
+
+    CLASS-METHODS header_offline
+      RETURNING value(rs_header) TYPE thead.
+
+    CLASS-METHODS read_text
+      IMPORTING is_header TYPE thead
+      RETURNING value(rt_lines) TYPE tlinetab
+      RAISING   lcx_exception.
+
+    CLASS-METHODS save_text
+      IMPORTING is_header TYPE thead
+                it_lines  TYPE tlinetab
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_persistence DEFINITION
 
@@ -6967,12 +6990,39 @@ ENDCLASS.                    "lcl_persistence DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_persistence IMPLEMENTATION.
 
-  METHOD header.
+  METHOD save_text.
+
+    CALL FUNCTION 'SAVE_TEXT'
+      EXPORTING
+        header   = is_header
+      TABLES
+        lines    = it_lines
+      EXCEPTIONS
+        id       = 1
+        language = 2
+        name     = 3
+        object   = 4
+        OTHERS   = 5.
+    IF sy-subrc <> 0.
+      ROLLBACK WORK.
+      _raise 'error from SAVE_TEXT'.
+    ENDIF.
+
+  ENDMETHOD.                    "save_text
+
+  METHOD header_online.
     rs_header-tdid     = 'ST'.
     rs_header-tdspras  = 'E'.
     rs_header-tdname   = 'ZABAPGIT'.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header
+
+  METHOD header_offline.
+    rs_header-tdid     = 'ST'.
+    rs_header-tdspras  = 'E'.
+    rs_header-tdname   = 'ZABAPGIT_OFFLINE'.
+    rs_header-tdobject = 'TEXT'.
+  ENDMETHOD.                    "header_offline
 
   METHOD delete.
 
@@ -6986,20 +7036,20 @@ CLASS lcl_persistence IMPLEMENTATION.
       _raise 'repo not found, delete'.
     ENDIF.
 
-    save_text( lt_repos ).
+    save_text_online( lt_repos ).
+    save_text_offline( lt_repos ).
 
   ENDMETHOD.                    "delete
 
-  METHOD save_text.
+  METHOD save_text_online.
 
-    DATA: lt_lines  TYPE TABLE OF tline,
-          ls_header TYPE thead.
+    DATA: lt_lines  TYPE TABLE OF tline.
 
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repos,
                    <ls_line> LIKE LINE OF lt_lines.
 
 
-    LOOP AT it_repos ASSIGNING <ls_repo>.
+    LOOP AT it_repos ASSIGNING <ls_repo> WHERE offline = abap_false.
       APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
       <ls_line>-tdformat = '*'.
       <ls_line>-tdline = <ls_repo>-url.
@@ -7014,32 +7064,42 @@ CLASS lcl_persistence IMPLEMENTATION.
       <ls_line>-tdline = <ls_repo>-package.
     ENDLOOP.
 
-    ls_header = header( ).
-
-    CALL FUNCTION 'SAVE_TEXT'
-      EXPORTING
-        header   = ls_header
-      TABLES
-        lines    = lt_lines
-      EXCEPTIONS
-        id       = 1
-        language = 2
-        name     = 3
-        object   = 4
-        OTHERS   = 5.
-    IF sy-subrc <> 0.
-      ROLLBACK WORK.
-      _raise 'error from SAVE_TEXT'.
-    ENDIF.
+    save_text( is_header = header_online( )
+               it_lines  = lt_lines ).
 
     COMMIT WORK.
 
   ENDMETHOD.                    "save_text
 
+  METHOD save_text_offline.
+
+    DATA: lt_lines  TYPE TABLE OF tline.
+
+    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repos,
+                   <ls_line> LIKE LINE OF lt_lines.
+
+
+    LOOP AT it_repos ASSIGNING <ls_repo> WHERE offline = abap_true.
+      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
+      <ls_line>-tdformat = '*'.
+      <ls_line>-tdline = <ls_repo>-url.
+      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
+      <ls_line>-tdformat = '*'.
+      <ls_line>-tdline = <ls_repo>-package.
+    ENDLOOP.
+
+    save_text( is_header = header_offline( )
+               it_lines  = lt_lines ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "save_text_offline
+
   METHOD validate_package.
 
-    DATA: lv_devclass TYPE tdevc-devclass.
-    DATA: lt_repos TYPE tt_repos_persi.
+    DATA: lv_devclass TYPE tdevc-devclass,
+          lt_repos TYPE tt_repos_persi.
+
 
     IF iv_package IS INITIAL.
       _raise 'add, package empty'.
@@ -7071,7 +7131,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF lt_repos.
 
 
-    IF iv_branch IS INITIAL.
+    IF iv_branch IS INITIAL AND iv_offline = abap_false.
       _raise 'add, sha empty'.
     ENDIF.
 
@@ -7090,8 +7150,10 @@ CLASS lcl_persistence IMPLEMENTATION.
     <ls_repo>-branch_name = is_repo-branch_name.
     <ls_repo>-sha1        = iv_branch.
     <ls_repo>-package     = iv_package.
+    <ls_repo>-offline     = iv_offline.
 
-    save_text( lt_repos ).
+    save_text_online( lt_repos ).
+    save_text_offline( lt_repos ).
 
   ENDMETHOD.                    "insert
 
@@ -7116,33 +7178,26 @@ CLASS lcl_persistence IMPLEMENTATION.
 
     <ls_repo>-sha1 = iv_branch.
 
-    save_text( lt_repos ).
+    save_text_online( lt_repos ).
 
   ENDMETHOD.                    "update
 
   METHOD list.
-    rt_repos = read_text( ).
+    CLEAR rt_repos.
+    APPEND LINES OF read_text_online( ) TO rt_repos.
+    APPEND LINES OF read_text_offline( ) TO rt_repos.
   ENDMETHOD.                    "list
 
   METHOD read_text.
 
-    DATA: lt_lines  TYPE TABLE OF tline,
-          ls_header TYPE thead,
-          ls_repo   TYPE st_repo_persi.
-
-    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
-
-
-    ls_header = header( ).
-
     CALL FUNCTION 'READ_TEXT'
       EXPORTING
-        id                      = ls_header-tdid
-        language                = ls_header-tdspras
-        name                    = ls_header-tdname
-        object                  = ls_header-tdobject
+        id                      = is_header-tdid
+        language                = is_header-tdspras
+        name                    = is_header-tdname
+        object                  = is_header-tdobject
       TABLES
-        lines                   = lt_lines
+        lines                   = rt_lines
       EXCEPTIONS
         id                      = 1
         language                = 2
@@ -7156,6 +7211,21 @@ CLASS lcl_persistence IMPLEMENTATION.
       RETURN.
     ELSEIF sy-subrc <> 0.
       _raise 'Error from READ_TEXT'.
+    ENDIF.
+
+  ENDMETHOD.                    "read_text
+
+  METHOD read_text_online.
+
+    DATA: lt_lines  TYPE TABLE OF tline,
+          ls_repo   TYPE st_repo_persi.
+
+    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
+
+
+    lt_lines = read_text( header_online( ) ).
+    IF lines( lt_lines ) = 0.
+      RETURN.
     ENDIF.
 
     IF lines( lt_lines ) MOD 4 <> 0.
@@ -7189,6 +7259,43 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   ENDMETHOD.                    "list
 
+  METHOD read_text_offline.
+
+    DATA: lt_lines  TYPE TABLE OF tline,
+          ls_repo   TYPE st_repo_persi.
+
+    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
+
+
+    lt_lines = read_text( header_offline( ) ).
+    IF lines( lt_lines ) = 0.
+      RETURN.
+    ENDIF.
+
+    IF lines( lt_lines ) MOD 2 <> 0.
+* if this happens, delete text ZABAPGIT in SO10 or edit the text
+* manually, so it contains the right information
+      _raise 'Persistence, text broken'.
+    ENDIF.
+
+    CLEAR ls_repo.
+    LOOP AT lt_lines ASSIGNING <ls_line>.
+      IF <ls_line>-tdline IS INITIAL.
+        _raise 'Persistence, text broken'.
+      ENDIF.
+      IF ls_repo-url IS INITIAL.
+        ls_repo-url = <ls_line>-tdline.
+        CONTINUE. " current loop
+      ENDIF.
+
+      ls_repo-package = <ls_line>-tdline.
+      ls_repo-offline = abap_true.
+      APPEND ls_repo TO rt_repos.
+      CLEAR ls_repo.
+    ENDLOOP.
+
+  ENDMETHOD.                    "list
+
 ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -7216,7 +7323,7 @@ CLASS lcl_transport DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rv_pkt) TYPE string
+      RETURNING value(rv_pkt) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
@@ -7225,7 +7332,7 @@ CLASS lcl_transport DEFINITION FINAL.
 
     CLASS-METHODS length_utf8_hex
       IMPORTING iv_data       TYPE xstring
-      RETURNING VALUE(rv_len) TYPE i.
+      RETURNING value(rv_len) TYPE i.
 
     CLASS-METHODS ref_discovery
       IMPORTING is_repo    TYPE st_repo
@@ -7245,7 +7352,7 @@ CLASS lcl_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
+      RETURNING value(rv_c) TYPE char1.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -7375,7 +7482,7 @@ CLASS lcl_transport IMPLEMENTATION.
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
-* make sure: 
+* make sure:
 * a) SSL is setup properly in STRUST
 * b) no firewalls
 * check trace file in transaction SMICM
@@ -7621,6 +7728,238 @@ CLASS lcl_transport IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
 
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_zip DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_zip DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS import
+      IMPORTING is_repo TYPE st_repo_persi
+      RAISING lcx_exception.
+
+    CLASS-METHODS export
+      IMPORTING is_repo TYPE st_repo_persi
+      RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS file_upload
+      RETURNING value(rv_xstr) TYPE xstring
+      RAISING lcx_exception.
+
+    CLASS-METHODS decode_files
+      IMPORTING iv_xstr TYPE xstring
+      RETURNING value(rt_files) TYPE tt_files
+      RAISING lcx_exception.
+
+    CLASS-METHODS filename
+      IMPORTING iv_str TYPE string
+      RETURNING value(rv_filename) TYPE string
+      RAISING lcx_exception.
+
+    CLASS-METHODS file_download
+      IMPORTING iv_xstr TYPE xstring
+      RAISING lcx_exception.
+
+    CLASS-METHODS encode_files
+      IMPORTING rt_files TYPE tt_files
+      RETURNING value(iv_xstr) TYPE xstring
+      RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_zip DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_zip IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_zip IMPLEMENTATION.
+
+  METHOD file_download.
+    _raise 'todo'.
+  ENDMETHOD.                    "file_download
+
+  METHOD encode_files.
+    _raise 'todo'.
+  ENDMETHOD.                    "encode_files
+
+  METHOD filename.
+
+    DATA: lv_path TYPE string.                              "#EC NEEDED
+
+
+    FIND REGEX '(.*/)(.*)' IN iv_str
+      SUBMATCHES lv_path rv_filename.
+    IF sy-subrc <> 0.
+      _raise 'Malformed path'.
+    ENDIF.
+    TRANSLATE rv_filename TO LOWER CASE.
+
+  ENDMETHOD.                    "filename
+
+  METHOD file_upload.
+
+    DATA: lt_data       TYPE TABLE OF x255,
+          lt_file_table TYPE filetable,
+          ls_file_table LIKE LINE OF lt_file_table,
+          lv_action     TYPE i,
+          lv_string     TYPE string,
+          lv_rc         TYPE i,
+          lv_length     TYPE i.
+
+
+    cl_gui_frontend_services=>file_open_dialog(
+      EXPORTING
+        window_title            = 'Import ZIP'
+        default_extension       = 'ZIP'
+      CHANGING
+        file_table              = lt_file_table
+        rc                      = lv_rc
+        user_action             = lv_action
+      EXCEPTIONS
+        file_open_dialog_failed = 1
+        cntl_error              = 2
+        error_no_gui            = 3
+        not_supported_by_gui    = 4
+        OTHERS                  = 5 ).                      "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from file_open_dialog'.
+    ENDIF.
+    IF lv_action = cl_gui_frontend_services=>action_cancel.
+      _raise 'cancelled'.
+    ENDIF.
+
+    READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
+    ASSERT sy-subrc = 0.
+    lv_string = ls_file_table-filename.
+
+    cl_gui_frontend_services=>gui_upload(
+      EXPORTING
+        filename                = lv_string
+        filetype                = 'BIN'
+      IMPORTING
+        filelength              = lv_length
+      CHANGING
+        data_tab                = lt_data
+      EXCEPTIONS
+        file_open_error         = 1
+        file_read_error         = 2
+        no_batch                = 3
+        gui_refuse_filetransfer = 4
+        invalid_type            = 5
+        no_authority            = 6
+        unknown_error           = 7
+        bad_data_format         = 8
+        header_not_allowed      = 9
+        separator_not_allowed   = 10
+        header_too_long         = 11
+        unknown_dp_error        = 12
+        access_denied           = 13
+        dp_out_of_memory        = 14
+        disk_full               = 15
+        dp_timeout              = 16
+        not_supported_by_gui    = 17
+        error_no_gui            = 18
+        OTHERS                  = 19 ).
+    IF sy-subrc <> 0.
+      _raise 'error from gui_upload'.
+    ENDIF.
+
+    CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.
+    rv_xstr = rv_xstr(lv_length).
+
+  ENDMETHOD.                    "file_upload
+
+  METHOD decode_files.
+
+    DATA: lo_zip    TYPE REF TO cl_abap_zip,
+          lv_xstr   TYPE xstring,
+          lt_splice TYPE cl_abap_zip=>t_splice_entries.
+
+    FIELD-SYMBOLS: <ls_splice> LIKE LINE OF lt_splice,
+                   <ls_file> LIKE LINE OF rt_files.
+
+
+    CREATE OBJECT lo_zip.
+    lo_zip->load( EXPORTING
+                    zip             = iv_xstr
+                  EXCEPTIONS
+                    zip_parse_error = 1
+                    OTHERS          = 2 ).
+    IF sy-subrc <> 0.
+      _raise 'error from zip'.
+    ENDIF.
+
+    lt_splice = cl_abap_zip=>splice( iv_xstr ).
+
+    LOOP AT lt_splice ASSIGNING <ls_splice>.
+      lo_zip->get(
+        EXPORTING
+          name                    = <ls_splice>-name
+        IMPORTING
+          content                 = lv_xstr
+        EXCEPTIONS
+          zip_index_error         = 1
+          zip_decompression_error = 2
+          OTHERS                  = 3 ).
+      IF sy-subrc <> 0.
+        _raise 'error from zip get'.
+      ENDIF.
+
+      APPEND INITIAL LINE TO rt_files ASSIGNING <ls_file>.
+      <ls_file>-path     = '/'.
+      <ls_file>-filename = filename( <ls_splice>-name ).
+      <ls_file>-data     = lv_xstr.
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "decode_files
+
+  METHOD import.
+
+    DATA: lt_files TYPE tt_files.
+
+
+    lt_files = decode_files( file_upload( ) ).
+
+*    lcl_objects=>deserialize( it_files   = lt_files
+*                              iv_package = is_repo-package ).
+
+    _raise 'todo'.
+
+  ENDMETHOD.                    "import
+
+  METHOD export.
+
+    DATA: lt_tadir TYPE STANDARD TABLE OF tadir,
+          ls_item  TYPE st_item,
+          lt_files TYPE tt_files,
+          lt_zip   TYPE tt_files.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+
+    SELECT * FROM tadir INTO TABLE lt_tadir
+      WHERE devclass = is_repo-package
+      AND object <> 'DEVC'.                                 "#EC *
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      lt_files = lcl_objects=>serialize( ls_item ).
+      APPEND LINES OF lt_files TO lt_zip.
+    ENDLOOP.
+
+    file_download( encode_files( lt_zip ) ).
+
+  ENDMETHOD.                    "export
+
+ENDCLASS.                    "lcl_zip IMPLEMENTATION
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_porcelain DEFINITION
 *----------------------------------------------------------------------*
@@ -7640,7 +7979,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
       IMPORTING is_repo          TYPE st_repo
                 is_comment       TYPE st_comment
                 it_files         TYPE tt_files
-      RETURNING VALUE(rv_branch) TYPE t_sha1
+      RETURNING value(rv_branch) TYPE t_sha1
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -7654,7 +7993,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
     CLASS-METHODS root_tree
       IMPORTING it_objects      TYPE tt_objects
                 iv_branch       TYPE t_sha1
-      RETURNING VALUE(rt_nodes) TYPE tt_nodes
+      RETURNING value(rt_nodes) TYPE tt_nodes
       RAISING   lcx_exception.
 
     CLASS-METHODS receive_pack
@@ -7663,7 +8002,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
                 it_nodes         TYPE tt_nodes
                 it_files         TYPE tt_files
                 iv_branch        TYPE t_sha1
-      RETURNING VALUE(rv_branch) TYPE t_sha1
+      RETURNING value(rv_branch) TYPE t_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_porcelain DEFINITION
@@ -7906,33 +8245,46 @@ CLASS lcl_gui DEFINITION FINAL.
       IMPORTING iv_html TYPE string.
 
     CLASS-METHODS render
-      RETURNING VALUE(rv_html) TYPE string
+      RETURNING value(rv_html) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS render_css
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
-    CLASS-METHODS render_repo
+    CLASS-METHODS render_repo_online
       IMPORTING is_repo_persi  TYPE st_repo_persi
-      RETURNING VALUE(rv_html) TYPE string
+      RETURNING value(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_repo_offline
+      IMPORTING is_repo_persi  TYPE st_repo_persi
+      RETURNING value(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS repo_name
+      IMPORTING is_repo TYPE st_repo_persi
+      RETURNING value(rv_name) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS render_header
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS render_menu
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS render_footer
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS install
       IMPORTING iv_url TYPE string
       RAISING   lcx_exception.
 
+    CLASS-METHODS newoffline
+      RAISING   lcx_exception.
+
     CLASS-METHODS analyze_existing
       IMPORTING it_results       TYPE tt_results
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
+      RETURNING value(rv_cancel) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS add
@@ -7968,7 +8320,7 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS struct_encode
       IMPORTING ig_structure1    TYPE any
                 ig_structure2    TYPE any OPTIONAL
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS struct_decode
       IMPORTING iv_string    TYPE clike
@@ -7976,11 +8328,11 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS popup_comment
-      RETURNING VALUE(rs_comment) TYPE st_comment
+      RETURNING value(rs_comment) TYPE st_comment
       RAISING   lcx_exception.
 
     CLASS-METHODS get_logo_src
-      RETURNING VALUE(rv_src) TYPE string.
+      RETURNING value(rv_src) TYPE string.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -8356,6 +8708,18 @@ CLASS lcl_gui IMPLEMENTATION.
             pull( ls_repo_persi ).
           WHEN 'debug'.
             lcl_debug=>debug_toggle( ).
+          WHEN 'newoffline'.
+            newoffline( ).
+          WHEN 'zipimport'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo_persi ).
+            lcl_zip=>import( ls_repo_persi ).
+            view( render( ) ).
+          WHEN 'zipexport'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo_persi ).
+            lcl_zip=>export( ls_repo_persi ).
+            view( render( ) ).
           WHEN OTHERS.
             _raise 'Unknown action'.
         ENDCASE.
@@ -8428,47 +8792,39 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD remove.
 
-    DATA: lt_tadir    TYPE tt_tadir,
-          lv_answer   TYPE c LENGTH 1,
+    DATA: lv_answer   TYPE c LENGTH 1,
           lv_question TYPE c LENGTH 100.
 
-    SELECT * FROM tadir INTO TABLE lt_tadir
-      WHERE devclass = is_repo-package
-      AND object <> 'DEVC'.                                 "#EC *
 
-    IF lines( lt_tadir ) > 0.
+    CONCATENATE 'This will remove the repository reference to the package'
+      is_repo-package
+      INTO lv_question
+      SEPARATED BY space.                                   "#EC NOTEXT
 
-      CONCATENATE 'This will remove the repository reference to the package'
-        is_repo-package
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          titlebar              = 'Remove'
-          text_question         = lv_question
-          text_button_1         = 'Remove'
-          icon_button_1         = 'ICON_WF_UNLINK'
-          text_button_2         = 'Cancel'
-          icon_button_2         = 'ICON_CANCEL'
-          default_button        = '2'
-          display_cancel_button = abap_false
-        IMPORTING
-          answer                = lv_answer
-        EXCEPTIONS
-          text_not_found        = 1
-          OTHERS                = 2.                        "#EC NOTEXT
-      IF sy-subrc <> 0.
-        _raise 'error from POPUP_TO_CONFIRM'.
-      ENDIF.
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-
-      lcl_persistence=>delete( is_repo ).
-
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Remove'
+        text_question         = lv_question
+        text_button_1         = 'Remove'
+        icon_button_1         = 'ICON_WF_UNLINK'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                          "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
     ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    lcl_persistence=>delete( is_repo ).
 
     view( render( ) ).
 
@@ -8511,6 +8867,63 @@ CLASS lcl_gui IMPLEMENTATION.
     view( render( ) ).
 
   ENDMETHOD.                    "add
+
+  METHOD newoffline.
+
+    DATA: lv_returncode TYPE c,
+          ls_repo       TYPE st_repo,
+          lv_package    TYPE devclass,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'ABAPTXT255'.
+    <ls_field>-fieldname = 'LINE'.
+    <ls_field>-fieldtext = 'Name'.                          "#EC NOTEXT
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TDEVC'.
+    <ls_field>-fieldname = 'DEVCLASS'.
+    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'New Offline Project'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ls_repo-url = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    lcl_persistence=>validate_package( lv_package ).
+
+    lcl_persistence=>add( is_repo    = ls_repo
+                          iv_package = lv_package
+                          iv_offline = abap_true ).
+
+    view( render( ) ).
+
+  ENDMETHOD.                    "newoffline
 
   METHOD install.
 
@@ -8593,16 +9006,17 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD analyze_existing.
 
     DATA: lv_question TYPE text100,
+          lv_pgmid    TYPE tadir-pgmid,
           lv_answer   TYPE c LENGTH 1.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
 
     LOOP AT it_results ASSIGNING <ls_result> WHERE NOT filename IS INITIAL.
-      SELECT COUNT( * ) FROM tadir
+      SELECT SINGLE pgmid FROM tadir INTO lv_pgmid
         WHERE pgmid = 'R3TR'
         AND object = <ls_result>-obj_type
-        AND obj_name = <ls_result>-obj_name.
+        AND obj_name = <ls_result>-obj_name.         "#EC CI_SEL_NESTED
       IF sy-subrc = 0.
 
         CONCATENATE 'Object'
@@ -8716,9 +9130,20 @@ CLASS lcl_gui IMPLEMENTATION.
       '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
       '<a href="sapevent:explore">Explore</a>&nbsp;'            && gc_newline &&
       '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' && gc_newline &&
+      '<a href="sapevent:newoffline">New offline project</a>&nbsp;' && gc_newline &&
       '<hr>'                                                    && gc_newline.
 
   ENDMETHOD.                    "render_menu
+
+  METHOD repo_name.
+
+    IF is_repo-offline = abap_true.
+      rv_name = is_repo-url.
+    ELSE.
+      rv_name = lcl_url=>name( is_repo-url ).
+    ENDIF.
+
+  ENDMETHOD.                    "repo_name
 
   METHOD render.
 
@@ -8734,9 +9159,10 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = render_header( ) && render_menu( ).
 
     LOOP AT lt_repos INTO ls_repo.
+
       rv_html = rv_html &&
-        '<a href="#' && lcl_url=>name( ls_repo-url ) &&'" class="grey">' &&
-        lcl_url=>name( ls_repo-url ) &&
+        '<a href="#' && repo_name( ls_repo ) &&'" class="grey">' &&
+        repo_name( ls_repo ) &&
         '</a>&nbsp;'.
     ENDLOOP.
 
@@ -8751,13 +9177,17 @@ CLASS lcl_gui IMPLEMENTATION.
         IF lv_pct = 100.
           lv_pct = 99.
         ENDIF.
-        lv_text = lcl_url=>name( ls_repo-url ).
+        lv_text = repo_name( ls_repo ).
         CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
           EXPORTING
             percentage = lv_pct
             text       = lv_text.
 
-        rv_html = rv_html && render_repo( ls_repo ).
+        IF ls_repo-offline = abap_true.
+          rv_html = rv_html && render_repo_offline( ls_repo ).
+        ELSE.
+          rv_html = rv_html && render_repo_online( ls_repo ).
+        ENDIF.
       ENDLOOP.
     ENDIF.
 
@@ -8782,7 +9212,61 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "render_footer
 
-  METHOD render_repo.
+  METHOD render_repo_offline.
+
+    DATA: lt_tadir TYPE STANDARD TABLE OF tadir.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+
+
+    rv_html = rv_html &&
+      '<a id="' && repo_name( is_repo_persi ) && '"></a>' &&
+      '<h2>' && repo_name( is_repo_persi ) && '</h2>&nbsp;' &&
+      '<h3>' && is_repo_persi-package && '</h3>&nbsp;&nbsp;' &&
+      '<br>' &&
+      '<a href="sapevent:remove?' &&
+      struct_encode( is_repo_persi ) &&
+      '" class="grey">' &&
+      'remove' &&
+      '</a>&nbsp;' &&
+      '<a href="sapevent:uninstall?' &&
+      struct_encode( is_repo_persi ) &&
+      '" class="grey">' &&
+      'uninstall' &&
+      '</a><br><br>'.                                       "#EC NOTEXT
+
+    rv_html = rv_html && '<table border="1">' && gc_newline &&
+      '<tr>'                                  && gc_newline &&
+      '<th><u>Local object</u></th>'          && gc_newline &&
+      '</tr>'                                 && gc_newline.
+
+    SELECT * FROM tadir INTO TABLE lt_tadir
+      WHERE devclass = is_repo_persi-package
+      AND object <> 'DEVC'.                                 "#EC *
+
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+* todo, add jump link like in online rendering
+      rv_html = rv_html && '<tr>' &&
+        '<td>' && <ls_tadir>-object &&
+        '&nbsp;' && <ls_tadir>-obj_name &&
+        '</td>' && gc_newline &&
+        '</tr>' && gc_newline.
+    ENDLOOP.
+
+    rv_html = rv_html && '</table>' && gc_newline.
+
+    rv_html = rv_html && '<a href="sapevent:zipimport?' &&
+      struct_encode( is_repo_persi ) &&
+      '">' && 'Import ZIP' &&
+      '</a>&nbsp;' &&
+      '<a href="sapevent:zipexport?' &&
+      struct_encode( is_repo_persi ) &&
+      '">' && 'Export ZIP' &&
+      '</a><br>'.                                           "#EC NOTEXT
+
+  ENDMETHOD.                    "render_repo_offline
+
+  METHOD render_repo_online.
 
     DATA: lt_files      TYPE tt_files,
           ls_repo       TYPE st_repo,
@@ -8804,8 +9288,8 @@ CLASS lcl_gui IMPLEMENTATION.
     MOVE-CORRESPONDING is_repo_persi TO ls_repo.
 
     rv_html = rv_html &&
-      '<a id="' && lcl_url=>name( is_repo_persi-url ) && '"></a>' &&
-      '<h2>' && lcl_url=>name( is_repo_persi-url ) && '</h2>&nbsp;' &&
+      '<a id="' && repo_name( is_repo_persi ) && '"></a>' &&
+      '<h2>' && repo_name( is_repo_persi ) && '</h2>&nbsp;' &&
       '<h3>' && is_repo_persi-url && '</h3>&nbsp;&nbsp;' &&
       '<h3>' && is_repo_persi-branch_name && '</h3>&nbsp;&nbsp;' &&
       '<h3>' && is_repo_persi-package && '</h3>&nbsp;&nbsp;' &&
@@ -9071,7 +9555,7 @@ ENDFORM.                    "run
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
 
@@ -9097,7 +9581,7 @@ ENDCLASS.                    "test DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_abap_unit IMPLEMENTATION.
+CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD serialize_enqu.
 
