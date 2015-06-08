@@ -9346,7 +9346,7 @@ CLASS lcl_gui IMPLEMENTATION.
       '<a href="sapevent:zipexport?' &&
       struct_encode( is_repo_persi ) &&
       '">' && 'Export ZIP' &&
-      '</a><br>'.                                           "#EC NOTEXT
+      '</a><br><br><br>'.                                   "#EC NOTEXT
 
   ENDMETHOD.                    "render_repo_offline
 
