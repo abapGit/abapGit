@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.24'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.25'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5991,6 +5991,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     activate( ).
 
+* update package tree for SE80
     lv_tree = 'EU_' && iv_package.
     CALL FUNCTION 'WB_TREE_ACTUALIZE'
       EXPORTING
@@ -7765,8 +7766,8 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING lcx_exception.
 
     CLASS-METHODS encode_files
-      IMPORTING rt_files TYPE tt_files
-      RETURNING value(iv_xstr) TYPE xstring
+      IMPORTING it_files TYPE tt_files
+      RETURNING value(rv_xstr) TYPE xstring
       RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_zip DEFINITION
@@ -7779,11 +7780,92 @@ ENDCLASS.                    "lcl_zip DEFINITION
 CLASS lcl_zip IMPLEMENTATION.
 
   METHOD file_download.
-    _raise 'todo'.
+
+    DATA: lt_rawdata  TYPE solix_tab,
+          lv_action   TYPE i,
+          lv_filename TYPE string,
+          lv_path     TYPE string,
+          lv_fullpath TYPE string.
+
+
+    cl_gui_frontend_services=>file_save_dialog(
+      EXPORTING
+        window_title         = 'Export ZIP'
+        default_extension    = 'ZIP'
+        default_file_name    = 'export.zip'
+      CHANGING
+        filename             = lv_filename
+        path                 = lv_path
+        fullpath             = lv_fullpath
+        user_action          = lv_action
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).                         "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from file_save_dialog'.
+    ENDIF.
+    IF lv_action = cl_gui_frontend_services=>action_cancel.
+      _raise 'cancelled'.
+    ENDIF.
+
+    lt_rawdata = cl_bcs_convert=>xstring_to_solix( iv_xstr ).
+
+    cl_gui_frontend_services=>gui_download(
+      EXPORTING
+        bin_filesize              = xstrlen( iv_xstr )
+        filename                  = lv_fullpath
+        filetype                  = 'BIN'
+      CHANGING
+        data_tab                  = lt_rawdata
+      EXCEPTIONS
+        file_write_error          = 1
+        no_batch                  = 2
+        gui_refuse_filetransfer   = 3
+        invalid_type              = 4
+        no_authority              = 5
+        unknown_error             = 6
+        header_not_allowed        = 7
+        separator_not_allowed     = 8
+        filesize_not_allowed      = 9
+        header_too_long           = 10
+        dp_error_create           = 11
+        dp_error_send             = 12
+        dp_error_write            = 13
+        unknown_dp_error          = 14
+        access_denied             = 15
+        dp_out_of_memory          = 16
+        disk_full                 = 17
+        dp_timeout                = 18
+        file_not_found            = 19
+        dataprovider_exception    = 20
+        control_flush_error       = 21
+        not_supported_by_gui      = 22
+        error_no_gui              = 23
+        OTHERS                    = 24 ).
+    IF sy-subrc <> 0.
+      _raise 'error from gui_download'.
+    ENDIF.
+
   ENDMETHOD.                    "file_download
 
   METHOD encode_files.
-    _raise 'todo'.
+
+    DATA: lo_zip TYPE REF TO cl_abap_zip.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    CREATE OBJECT lo_zip.
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      lo_zip->add( name    = <ls_file>-filename
+                   content = <ls_file>-data ).
+    ENDLOOP.
+
+    rv_xstr = lo_zip->save( ).
+
   ENDMETHOD.                    "encode_files
 
   METHOD filename.
@@ -7791,10 +7873,14 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lv_path TYPE string.                              "#EC NEEDED
 
 
-    FIND REGEX '(.*/)(.*)' IN iv_str
-      SUBMATCHES lv_path rv_filename.
-    IF sy-subrc <> 0.
-      _raise 'Malformed path'.
+    IF iv_str CA '/'.
+      FIND REGEX '(.*/)(.*)' IN iv_str
+        SUBMATCHES lv_path rv_filename.
+      IF sy-subrc <> 0.
+        _raise 'Malformed path'.
+      ENDIF.
+    ELSE.
+      rv_filename = iv_str.
     ENDIF.
     TRANSLATE rv_filename TO LOWER CASE.
 
@@ -7925,10 +8011,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
     lt_files = decode_files( file_upload( ) ).
 
-*    lcl_objects=>deserialize( it_files   = lt_files
-*                              iv_package = is_repo-package ).
-
-    _raise 'todo'.
+    lcl_objects=>deserialize( it_files   = lt_files
+                              iv_package = is_repo-package ).
 
   ENDMETHOD.                    "import
 
