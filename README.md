@@ -17,6 +17,8 @@ ABAP Version: 702 or higher
 * [Uninstalling abapGit](https://github.com/larshp/abapGit/wiki/Uninstalling-abapGit)
 
 ### Online Projects ###
+Requires SSL setup and access to the internet from the SAP system. This is the easiest way to keep the code up to date or contribute to existing projects.
+
 * [Installing a repository](https://github.com/larshp/abapGit/wiki/Installing-a-repository)
 * [Keeping code up to date](https://github.com/larshp/abapGit/wiki/Keeping-code-up-to-date)
 * [Uninstalling a repository](https://github.com/larshp/abapGit/wiki/Uninstalling-a-repository)
@@ -27,6 +29,7 @@ ABAP Version: 702 or higher
 * [Contributing to a project](https://github.com/larshp/abapGit/wiki/Contributing-to-a-project)
 
 ### Offline Projects ###
+No SSL or internet access required, will work if the SAP system is behind a firewall. 
 * [Installing a repository offline](https://github.com/larshp/abapGit/wiki/Installing-a-repository-offline)
 
 ## FAQ ##
