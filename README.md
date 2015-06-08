@@ -17,12 +17,9 @@ ABAP Version: 702 or higher
 * [Uninstalling abapGit](https://github.com/larshp/abapGit/wiki/Uninstalling-abapGit)
 
 ### Online Projects ###
-&nbsp;
 * [Installing a repository](https://github.com/larshp/abapGit/wiki/Installing-a-repository)
 * [Keeping code up to date](https://github.com/larshp/abapGit/wiki/Keeping-code-up-to-date)
 * [Uninstalling a repository](https://github.com/larshp/abapGit/wiki/Uninstalling-a-repository)
-
-&nbsp;
 
 * [Your first abapGit project](https://github.com/larshp/abapGit/wiki/Your-first-abapGit-project)
 * [Moving existing package contents into git](https://github.com/larshp/abapGit/wiki/Moving-existing-package-contents-into-git)
