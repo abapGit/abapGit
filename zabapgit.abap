@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.25'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.26'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1771,17 +1771,10 @@ CLASS lcl_objects_common IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SE11'
-        mode_val                = 'E'
+        tcode     = 'SE11'
+        mode_val  = 'E'
       TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from call transaction, se11'.
-    ENDIF.
+        using_tab = lt_bdcdata.
 
   ENDMETHOD.                                                "jump_se11
 
@@ -2398,17 +2391,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SE24'
-        mode_val                = 'E'
+        tcode     = 'SE24'
+        mode_val  = 'E'
       TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from call transaction, clas'.
-    ENDIF.
+        using_tab = lt_bdcdata.
 
   ENDMETHOD.                    "jump
 
@@ -3002,6 +2988,174 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
+CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_ssst IMPLEMENTATION.
+
+  METHOD serialize.
+* see fm SSF_DOWNLOAD_STYLE
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          lv_style_name TYPE tdssname,
+          ls_header     TYPE ssfcats,
+          ls_file       LIKE LINE OF rt_files,
+          lt_paragraphs TYPE TABLE OF ssfparas,
+          lt_strings    TYPE TABLE OF ssfstrings,
+          lt_tabstops   TYPE TABLE OF stxstab.
+
+
+    lv_style_name = is_item-obj_name.
+
+    CALL FUNCTION 'SSF_READ_STYLE'
+      EXPORTING
+        i_style_name             = lv_style_name
+        i_style_active_flag      = 'A'
+        i_style_variant          = '%MAIN'
+        i_style_language         = 'E'
+      IMPORTING
+        e_header                 = ls_header
+      TABLES
+        e_paragraphs             = lt_paragraphs
+        e_strings                = lt_strings
+        e_tabstops               = lt_tabstops
+      EXCEPTIONS
+        no_name                  = 1
+        no_style                 = 2
+        active_style_not_found   = 3
+        inactive_style_not_found = 4
+        no_variant               = 5
+        no_main_variant          = 6
+        cancelled                = 7
+        no_access_permission     = 8
+        OTHERS                   = 9.
+    IF sy-subrc = 2.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from SSF_READ_STYLE'.
+    ENDIF.
+
+    CLEAR ls_header-version.
+    CLEAR ls_header-firstuser.
+    CLEAR ls_header-firstdate.
+    CLEAR ls_header-firsttime.
+    CLEAR ls_header-lastuser.
+    CLEAR ls_header-lastdate.
+    CLEAR ls_header-lasttime.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_header ).
+    lo_xml->table_add( it_table = lt_paragraphs
+                       iv_name  = 'SSFPARAS' ).
+    lo_xml->table_add( it_table = lt_strings
+                       iv_name  = 'SSFSTRINGS' ).
+    lo_xml->table_add( it_table = lt_tabstops
+                       iv_name  = 'STXSTAB' ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+* see fm SSF_UPLOAD_STYLE
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          ls_header     TYPE ssfcats,
+          lt_paragraphs TYPE TABLE OF ssfparas,
+          lt_strings    TYPE TABLE OF ssfstrings,
+          lt_tabstops   TYPE TABLE OF stxstab.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_header ).
+    lo_xml->table_read( EXPORTING iv_name = 'SSFPARAS'
+                        CHANGING ct_table = lt_paragraphs ).
+    lo_xml->table_read( EXPORTING iv_name = 'SSFSTRINGS'
+                        CHANGING ct_table = lt_strings ).
+    lo_xml->table_read( EXPORTING iv_name = 'STXSTAB'
+                        CHANGING ct_table = lt_tabstops ).
+
+    CALL FUNCTION 'SSF_SAVE_STYLE'
+      EXPORTING
+        i_header     = ls_header
+      TABLES
+        i_paragraphs = lt_paragraphs
+        i_strings    = lt_strings
+        i_tabstops   = lt_tabstops.
+
+    CALL FUNCTION 'SSF_ACTIVATE_STYLE'
+      EXPORTING
+        i_stylename          = ls_header-stylename
+      EXCEPTIONS
+        no_name              = 1
+        no_style             = 2
+        cancelled            = 3
+        no_access_permission = 4
+        illegal_language     = 5
+        OTHERS               = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from SSF_ACTIVATE_STYLE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lv_stylename TYPE tdssname.
+
+
+    lv_stylename = is_item-obj_name.
+
+    CALL FUNCTION 'SSF_DELETE_STYLE'
+      EXPORTING
+        i_stylename           = lv_stylename
+        i_with_dialog         = abap_false
+        i_with_confirm_dialog = abap_false
+      EXCEPTIONS
+        no_name               = 1
+        no_style              = 2
+        style_locked          = 3
+        cancelled             = 4
+        no_access_permission  = 5
+        illegal_language      = 6
+        OTHERS                = 7.
+    IF sy-subrc <> 0.
+      _raise 'error from SSF_DELETE_STYLE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD jump.
+    _raise 'todo'.
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_ssfo DEFINITION
 *----------------------------------------------------------------------*
@@ -3065,17 +3219,10 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SMARTFORMS'
-        mode_val                = 'E'
+        tcode     = 'SMARTFORMS'
+        mode_val  = 'E'
       TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from call transaction, ssfo'.
-    ENDIF.
+        using_tab = lt_bdcdata.
 
   ENDMETHOD.                    "jump
 
@@ -3885,17 +4032,10 @@ CLASS lcl_object_tran IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SE93'
-        mode_val                = 'E'
+        tcode     = 'SE93'
+        mode_val  = 'E'
       TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from call transaction, tran'.
-    ENDIF.
+        using_tab = lt_bdcdata.
 
   ENDMETHOD.                    "jump
 
@@ -4104,17 +4244,10 @@ CLASS lcl_object_msag IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                   = 'SE91'
-        mode_val                = 'E'
+        tcode     = 'SE91'
+        mode_val  = 'E'
       TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from call transaction, msag'.
-    ENDIF.
+        using_tab = lt_bdcdata.
 
   ENDMETHOD.                    "jump
 
@@ -4168,7 +4301,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_t100 ASSIGNING <ls_t100>.
-      MODIFY t100 FROM <ls_t100>.                           "#EC *
+      MODIFY t100 FROM <ls_t100>.                         "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
 
       CLEAR ls_t100u.
@@ -4176,7 +4309,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.
-      MODIFY t100u FROM ls_t100u.                           "#EC *
+      MODIFY t100u FROM ls_t100u.                         "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
@@ -5922,7 +6055,7 @@ CLASS lcl_objects IMPLEMENTATION.
     IF NOT iv_package IS INITIAL.
       SELECT * FROM tadir INTO TABLE lt_tadir
         WHERE devclass = iv_package
-        AND object <> 'DEVC'.                               "#EC *
+        AND object <> 'DEVC'.             "#EC CI_GENBUFF "#EC CI_SUBRC
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
         READ TABLE rt_results
           WITH KEY obj_type = <ls_tadir>-object obj_name = <ls_tadir>-obj_name
@@ -8028,7 +8161,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE devclass = is_repo-package
-      AND object <> 'DEVC'.                                 "#EC *
+      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       CLEAR ls_item.
@@ -8828,7 +8961,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE devclass = is_repo-package
-      AND object <> 'DEVC'.                                 "#EC *
+      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     IF lines( lt_tadir ) > 0.
       lv_count = lines( lt_tadir ).
@@ -9326,7 +9459,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE devclass = is_repo_persi-package
-      AND object <> 'DEVC'.                                 "#EC *
+      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 * todo, add jump link like in online rendering
