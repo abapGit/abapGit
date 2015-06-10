@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.26'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.27'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -7895,7 +7895,8 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS file_download
-      IMPORTING iv_xstr TYPE xstring
+      IMPORTING is_repo TYPE st_repo_persi
+                iv_xstr TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_files
@@ -7917,15 +7918,18 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lt_rawdata  TYPE solix_tab,
           lv_action   TYPE i,
           lv_filename TYPE string,
+          lv_default  TYPE string,
           lv_path     TYPE string,
           lv_fullpath TYPE string.
 
 
+    CONCATENATE is_repo-url '_' sy-datlo '_' sy-timlo INTO lv_default.
+
     cl_gui_frontend_services=>file_save_dialog(
       EXPORTING
         window_title         = 'Export ZIP'
-        default_extension    = 'ZIP'
-        default_file_name    = 'export.zip'
+        default_extension    = 'zip'
+        default_file_name    = lv_default
       CHANGING
         filename             = lv_filename
         path                 = lv_path
@@ -8171,7 +8175,8 @@ CLASS lcl_zip IMPLEMENTATION.
       APPEND LINES OF lt_files TO lt_zip.
     ENDLOOP.
 
-    file_download( encode_files( lt_zip ) ).
+    file_download( is_repo = is_repo
+                   iv_xstr = encode_files( lt_zip ) ).
 
   ENDMETHOD.                    "export
 
