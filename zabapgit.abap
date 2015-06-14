@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.29'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.30'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -124,6 +124,8 @@ CONSTANTS: BEGIN OF gc_chmod,
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
+CONSTANTS: gc_english TYPE spras VALUE 'E'.
+
 CONSTANTS: BEGIN OF gc_diff,
              insert TYPE c LENGTH 1 VALUE 'I',
              delete TYPE c LENGTH 1 VALUE 'D',
@@ -225,7 +227,7 @@ CLASS lcl_user IMPLEMENTATION.
     CALL FUNCTION 'READ_TEXT'
       EXPORTING
         id                      = 'ST'
-        language                = 'E'
+        language                = gc_english
         name                    = iv_name
         object                  = 'TEXT'
       TABLES
@@ -262,7 +264,7 @@ CLASS lcl_user IMPLEMENTATION.
     APPEND ls_line TO lt_lines.
 
     ls_header-tdid       = 'ST'.
-    ls_header-tdspras    = 'E'.
+    ls_header-tdspras    = gc_english.
     ls_header-tdname     = iv_name.
     ls_header-tdobject   = 'TEXT'.
 
@@ -1564,7 +1566,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
       IF NOT it_tpool[] IS INITIAL.
         INSERT TEXTPOOL is_progdir-name
           FROM it_tpool
-          LANGUAGE sy-langu
+          LANGUAGE gc_english
           STATE 'I'.
         IF sy-subrc <> 0.
           _raise 'error from INSERT TEXTPOOL'.
@@ -1632,7 +1634,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
     CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
       EXPORTING
         program         = iv_program_name
-        language        = sy-langu
+        language        = gc_english
         state           = 'A'
       IMPORTING
         adm             = ls_adm
@@ -1893,7 +1895,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
         object              = ls_object
         object_class        = 'DICT'
         devclass            = iv_package
-        master_language     = sy-langu
+        master_language     = gc_english
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
@@ -2146,7 +2148,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DOMA_GET'
       EXPORTING
         name          = lv_name
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd01v_wa      = ls_dd01v
       TABLES
@@ -2307,7 +2309,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DTEL_GET'
       EXPORTING
         name          = lv_name
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd04v_wa      = ls_dd04v
         tpara_wa      = ls_tpara
@@ -2815,7 +2817,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         ro_xml->structure_add( ls_vseoclass ).
 
         lv_cp = cl_oo_classname_service=>get_classpool_name( ls_clskey-clsname ).
-        READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE sy-langu. "#EC CI_READ_REP
+        READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE gc_english. "#EC CI_READ_REP
         ro_xml->table_add( lt_tpool ).
       WHEN 'INTF'.
         ro_xml->structure_add( ls_vseointerf ).
@@ -2827,7 +2829,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
         id                = 'CL'
-        langu             = 'E'
+        langu             = gc_english
         object            = lv_object
       IMPORTING
         dokstate          = lv_state
@@ -2890,7 +2892,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CALL FUNCTION 'DOCU_UPD'
       EXPORTING
         id       = 'CL'
-        langu    = 'E'
+        langu    = gc_english
         object   = lv_object
       TABLES
         line     = lt_lines
@@ -2921,7 +2923,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     INSERT TEXTPOOL lv_cp
       FROM lt_tpool
-      LANGUAGE sy-langu
+      LANGUAGE gc_english
       STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
@@ -3116,7 +3118,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         i_style_name             = lv_style_name
         i_style_active_flag      = 'A'
         i_style_variant          = '%MAIN'
-        i_style_language         = 'E'
+        i_style_language         = gc_english
       IMPORTING
         e_header                 = ls_header
       TABLES
@@ -3235,6 +3237,140 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   METHOD jump.
     _raise 'todo'.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_para IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml    TYPE REF TO lcl_xml,
+          ls_file   LIKE LINE OF rt_files,
+          ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
+
+
+    SELECT SINGLE * FROM tpara INTO ls_tpara
+      WHERE paramid = is_item-obj_name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tparat INTO ls_tparat
+      WHERE paramid = is_item-obj_name
+      AND sprache = gc_english.
+    IF sy-subrc <> 0.
+      _raise 'PARA no english description'.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_tpara ).
+    lo_xml->structure_add( ls_tparat ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+* see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
+
+    DATA: lo_xml    TYPE REF TO lcl_xml,
+          lv_mode   TYPE c LENGTH 1,
+          ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
+
+
+    SELECT SINGLE * FROM tpara INTO ls_tpara
+      WHERE paramid = is_item-obj_name.
+    IF sy-subrc = 0.
+      lv_mode = 'M'.
+    ELSE.
+      lv_mode = 'I'.
+    ENDIF.
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tpara ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tparat ).
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = is_item-obj_name
+        object_class        = 'PARA'
+        mode                = lv_mode
+        global_lock         = abap_true
+        devclass            = iv_package
+        master_language     = gc_english
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CORR_INSERT, PARA'.
+    ENDIF.
+
+    MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+    MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lv_paramid TYPE tpara-paramid.
+
+
+    lv_paramid = is_item-obj_name.
+    CALL FUNCTION 'RS_PARAMETER_DELETE'
+      EXPORTING
+        objectname = lv_paramid
+      EXCEPTIONS
+        cancelled  = 1
+        OTHERS     = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_PRAMETER_DELETE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'PARA'
+        in_new_window = abap_true.
+
   ENDMETHOD.
 
 ENDCLASS.
@@ -3454,17 +3590,17 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
 
 * todo, iv_package?
     lo_sf->enqueue( suppress_corr_check = space
-                    master_language     = 'E'
+                    master_language     = gc_english
                     mode                = 'INSERT'
                     formname            = lv_formname ).
 
     lo_sf->xml_upload( EXPORTING dom      = li_node
                                  formname = lv_formname
-                                 language = 'E'
+                                 language = gc_english
                        CHANGING  sform    = lo_res ).
 
     lo_res->store( im_formname = lo_res->header-formname
-                   im_language = 'E'
+                   im_language = gc_english
                    im_active   = abap_true ).
 
     lo_sf->dequeue( lv_formname ).
@@ -3563,7 +3699,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     CALL FUNCTION 'DDIF_TABL_GET'
       EXPORTING
         name          = lv_name
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd02v_wa      = ls_dd02v
         dd09l_wa      = ls_dd09l
@@ -3810,7 +3946,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd25v_wa      = ls_dd25v
       TABLES
@@ -3973,7 +4109,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd30v_wa      = ls_dd30v
       TABLES
@@ -4197,7 +4333,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         transaction         = ls_tstc-tcode
         program             = ls_tstc-pgmna
         dynpro              = lv_dynpro
-        language            = 'E'
+        language            = gc_english
         development_class   = iv_package
         transaction_type    = lv_type
         shorttext           = ls_tstct-ttext
@@ -4254,7 +4390,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ENDIF.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
-      WHERE sprsl = 'E'
+      WHERE sprsl = gc_english
       AND tcode = lv_transaction.
     IF sy-subrc <> 0.
       _raise 'Transaction description not found'.
@@ -4362,7 +4498,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        global_lock         = 'X'
+        global_lock         = abap_true
         devclass            = iv_package
         object              = ls_t100a-arbgb
         object_class        = 'T100'
@@ -4387,7 +4523,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
-    ls_t100a-masterlang = 'E'.
+    ls_t100a-masterlang = gc_english.
     ls_t100a-lastuser = sy-uname.
     ls_t100a-respuser = sy-uname.
     ls_t100a-ldate = sy-datum.
@@ -4395,7 +4531,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    ls_t100t-sprsl = 'E'.
+    ls_t100t-sprsl = gc_english.
     ls_t100t-arbgb = ls_t100a-arbgb.
     ls_t100t-stext = ls_t100a-stext.
     MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
@@ -4416,7 +4552,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     CALL FUNCTION 'RPY_MESSAGE_ID_READ'
       EXPORTING
-        language         = 'E'
+        language         = gc_english
         message_id       = lv_msg_id
       IMPORTING
         message_id_inf   = ls_inf
@@ -4782,7 +4918,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     SELECT SINGLE areat INTO lv_areat
       FROM tlibt
-      WHERE spras = sy-langu
+      WHERE spras = gc_english
       AND area = is_item-obj_name.
     IF sy-subrc <> 0.
       _raise 'not found in TLIBT'.
@@ -5172,7 +5308,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd25v_wa      = ls_dd25v
         dd09l_wa      = ls_dd09l
@@ -5327,7 +5463,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_READ'
       EXPORTING
-        language          = 'E'
+        language          = gc_english
         object            = lv_object
       IMPORTING
         object_attributes = ls_attributes
@@ -5398,7 +5534,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wi_tadir_obj_name   = is_item-obj_name
         wi_tadir_author     = sy-uname
         wi_tadir_devclass   = iv_package
-        wi_tadir_masterlang = sy-langu
+        wi_tadir_masterlang = gc_english
         wi_set_genflag      = abap_true
       EXCEPTIONS
         OTHERS              = 1.
@@ -5417,7 +5553,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_DELETE'
       EXPORTING
-        language           = 'E'
+        language           = gc_english
         object             = lv_object
       EXCEPTIONS
         delete_not_allowed = 1
@@ -5521,7 +5657,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = sy-langu
+        langu         = gc_english
       IMPORTING
         dd40v_wa      = ls_dd40v
       TABLES
@@ -5692,7 +5828,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     INSERT TEXTPOOL is_item-obj_name
       FROM it_tpool
-      LANGUAGE sy-langu
+      LANGUAGE gc_english
       STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
@@ -5765,7 +5901,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
       EXPORTING
         program   = is_item-obj_name
-        language  = sy-langu
+        language  = gc_english
         tr_key    = ls_tr_key
         adm       = ls_adm
         state     = 'I'
@@ -7230,14 +7366,14 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   METHOD header_online.
     rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = 'E'.
+    rs_header-tdspras  = gc_english.
     rs_header-tdname   = 'ZABAPGIT'.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header
 
   METHOD header_offline.
     rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = 'E'.
+    rs_header-tdspras  = gc_english.
     rs_header-tdname   = 'ZABAPGIT_OFFLINE'.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header_offline
@@ -8771,9 +8907,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
       lv_html = lv_html &&
         '<tr>' && gc_newline &&
-        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' && gc_newline &&
-        '<td' && lv_cresult && '>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' && gc_newline &&
-        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' && gc_newline &&
+        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
+        gc_newline &&
+        '<td' && lv_cresult && '>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' &&
+        gc_newline &&
+        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
+        gc_newline &&
         '</tr>' && gc_newline.
     ENDLOOP.
     lv_html = lv_html && '</table>' && gc_newline.
@@ -9860,7 +9999,7 @@ FORM run.
         lv_ind       TYPE t000-ccnocliind.
 
 
-  IF sy-langu <> 'E'.
+  IF sy-langu <> gc_english.
     WRITE: / 'Use English as logon language'.               "#EC NOTEXT
     RETURN.
   ENDIF.
