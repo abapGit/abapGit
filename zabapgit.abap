@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.27'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.28'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -117,10 +117,18 @@ CONSTANTS: gc_commit TYPE t_type VALUE 'commit',            "#EC NOTEXT
            gc_ref_d  TYPE t_type VALUE 'ref_d',             "#EC NOTEXT
            gc_blob   TYPE t_type VALUE 'blob'.              "#EC NOTEXT
 
-CONSTANTS: gc_chmod_file TYPE c LENGTH 6 VALUE '100644',
-           gc_chmod_dir  TYPE c LENGTH 5 VALUE '40000'.
+CONSTANTS: BEGIN OF gc_chmod,
+             file TYPE c LENGTH 6 VALUE '100644',
+             dir  TYPE c LENGTH 5 VALUE '40000',
+           END OF gc_chmod.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
+
+CONSTANTS: BEGIN OF gc_diff,
+             insert TYPE c LENGTH 1 VALUE 'I',
+             delete TYPE c LENGTH 1 VALUE 'D',
+             update TYPE c LENGTH 1 VALUE 'U',
+           END OF gc_diff.
 
 DATA: gv_agent TYPE string.
 
@@ -1218,10 +1226,29 @@ CLASS lcl_diff DEFINITION FINAL.
 
   PUBLIC SECTION.
 * assumes data is UTF8 based with newlines
+* only works with lines up to 255 characters
     CLASS-METHODS diff
-      IMPORTING iv_local        TYPE xstring
-                iv_remote       TYPE xstring
-      RETURNING VALUE(rt_diffs) TYPE tt_diffs.
+      IMPORTING iv_local       TYPE xstring
+                iv_remote      TYPE xstring
+      RETURNING VALUE(rt_diff) TYPE tt_diffs.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: unpack
+      IMPORTING iv_local  TYPE xstring
+                iv_remote TYPE xstring
+      EXPORTING et_local  TYPE abaptxt255_tab
+                et_remote TYPE abaptxt255_tab.
+
+    CLASS-METHODS: render
+      IMPORTING it_local       TYPE abaptxt255_tab
+                it_remote      TYPE abaptxt255_tab
+                it_delta       TYPE vxabapt255_tab
+      RETURNING VALUE(rt_diff) TYPE tt_diffs.
+
+    CLASS-METHODS: compute
+      IMPORTING it_local        TYPE abaptxt255_tab
+                it_remote       TYPE abaptxt255_tab
+      RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
 
 ENDCLASS.                    "lcl_diff DEFINITION
 
@@ -1232,48 +1259,118 @@ ENDCLASS.                    "lcl_diff DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_diff IMPLEMENTATION.
 
-  METHOD diff.
-
-* todo, this is way too simple, but will do for now
+  METHOD unpack.
 
     DATA: lv_local  TYPE string,
-          lv_remote TYPE string,
-          lt_local  TYPE TABLE OF string,
-          lt_remote TYPE TABLE OF string.
-
-    FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_local,
-                   <ls_diff>   LIKE LINE OF rt_diffs.
+          lv_remote TYPE string.
 
 
-    lv_local = lcl_convert=>xstring_to_string_utf8( iv_local ).
+    lv_local  = lcl_convert=>xstring_to_string_utf8( iv_local ).
     lv_remote = lcl_convert=>xstring_to_string_utf8( iv_remote ).
 
-    SPLIT lv_local AT gc_newline INTO TABLE lt_local.
-    SPLIT lv_remote AT gc_newline INTO TABLE lt_remote.
+    SPLIT lv_local  AT gc_newline INTO TABLE et_local.
+    SPLIT lv_remote AT gc_newline INTO TABLE et_remote.
+
+  ENDMETHOD.
+
+  METHOD compute.
+
+    DATA: lt_trdirtab_old TYPE TABLE OF trdir,
+          lt_trdirtab_new TYPE TABLE OF trdir,
+          lt_trdir_delta  TYPE TABLE OF xtrdir.
 
 
-    LOOP AT lt_local ASSIGNING <lv_string>.
-      APPEND INITIAL LINE TO rt_diffs ASSIGNING <ls_diff>.
-      <ls_diff>-local = <lv_string>.
-    ENDLOOP.
+    CALL FUNCTION 'SVRS_COMPUTE_DELTA_REPS'
+      TABLES
+        texttab_old  = it_remote
+        texttab_new  = it_local
+        trdirtab_old = lt_trdirtab_old
+        trdirtab_new = lt_trdirtab_new
+        trdir_delta  = lt_trdir_delta
+        text_delta   = rt_delta.
 
-    LOOP AT lt_remote ASSIGNING <lv_string>.
-      READ TABLE rt_diffs INDEX sy-tabix ASSIGNING <ls_diff>.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO rt_diffs ASSIGNING <ls_diff>.
-      ENDIF.
-      <ls_diff>-remote = <lv_string>.
-    ENDLOOP.
+  ENDMETHOD.
 
-    LOOP AT rt_diffs ASSIGNING <ls_diff>.
-      IF <ls_diff>-local = <ls_diff>-remote.
-        <ls_diff>-result = '='.
-      ELSE.
-        <ls_diff>-result = '!'.
-      ENDIF.
-    ENDLOOP.
+  METHOD diff.
+
+    DATA: lt_delta  TYPE vxabapt255_tab,
+          lt_local  TYPE abaptxt255_tab,
+          lt_remote TYPE abaptxt255_tab.
+
+
+    unpack( EXPORTING iv_local  = iv_local
+                      iv_remote = iv_remote
+            IMPORTING et_local  = lt_local
+                      et_remote = lt_remote ).
+
+    lt_delta = compute( it_local  = lt_local
+                        it_remote = lt_remote ).
+
+    rt_diff = render( it_local  = lt_local
+                      it_remote = lt_remote
+                      it_delta  = lt_delta ).
 
   ENDMETHOD.                    "diff
+
+  METHOD render.
+
+    DEFINE _append.
+      clear ls_diff.
+      ls_diff-local = &1.
+      ls_diff-result = &2.
+      ls_diff-remote = &3.
+      append ls_diff to rt_diff.
+    END-OF-DEFINITION.
+
+    DATA: lv_rindex TYPE i VALUE 1,
+          lv_lindex TYPE i VALUE 1,
+          ls_local  LIKE LINE OF it_local,
+          ls_remote LIKE LINE OF it_remote,
+          ls_diff   LIKE LINE OF rt_diff,
+          lt_delta  LIKE it_delta,
+          ls_delta  LIKE LINE OF it_delta.
+
+
+    lt_delta = it_delta.
+
+    DO.
+      READ TABLE lt_delta INTO ls_delta WITH KEY number = lv_rindex.
+      IF sy-subrc = 0.
+        DELETE lt_delta INDEX sy-tabix.
+
+        CASE ls_delta-vrsflag.
+          WHEN gc_diff-delete.
+            _append '' gc_diff-delete ls_delta-line.
+            lv_rindex = lv_rindex + 1.
+          WHEN gc_diff-insert.
+            _append ls_delta-line gc_diff-insert ''.
+            lv_lindex = lv_lindex + 1.
+          WHEN gc_diff-update.
+            CLEAR ls_local.
+            READ TABLE it_local INTO ls_local INDEX lv_lindex.
+            ASSERT sy-subrc = 0.
+            _append ls_local gc_diff-update ls_delta-line.
+            lv_lindex = lv_lindex + 1.
+            lv_rindex = lv_rindex + 1.
+          WHEN OTHERS.
+            ASSERT 1 = 1 + 1.
+        ENDCASE.
+      ELSE.
+        CLEAR ls_local.
+        READ TABLE it_local INTO ls_local INDEX lv_lindex.
+        lv_lindex = lv_lindex + 1.
+        CLEAR ls_remote.
+        READ TABLE it_remote INTO ls_remote INDEX lv_rindex.
+        lv_rindex = lv_rindex + 1.
+        _append ls_local '' ls_remote.
+      ENDIF.
+
+      IF lv_lindex > lines( it_local ) AND lv_rindex > lines( it_remote ).
+        EXIT. " current loop
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
@@ -6478,15 +6575,14 @@ CLASS lcl_pack IMPLEMENTATION.
 
   METHOD encode_tree.
 
+    CONSTANTS: lc_null TYPE x VALUE '00'.
+
     DATA: lv_string  TYPE string,
-          lv_null    TYPE x,
           lt_nodes   LIKE it_nodes,
           lv_xstring TYPE xstring.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF it_nodes.
 
-
-    lv_null = '00'.
 
     lt_nodes[] = it_nodes[].
 * following has to be done, or unpack will fail on server side
@@ -6496,7 +6592,7 @@ CLASS lcl_pack IMPLEMENTATION.
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
       lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
-      CONCATENATE rv_data lv_xstring lv_null <ls_node>-sha1 INTO rv_data IN BYTE MODE.
+      CONCATENATE rv_data lv_xstring lc_null <ls_node>-sha1 INTO rv_data IN BYTE MODE.
     ENDLOOP.
 
   ENDMETHOD.                    "encode_tree
@@ -6800,7 +6896,8 @@ CLASS lcl_pack IMPLEMENTATION.
 
   METHOD decode_tree.
 
-    CONSTANTS: lc_sha_length TYPE i VALUE 20.
+    CONSTANTS: lc_sha_length TYPE i VALUE 20,
+               lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
           lv_chmod   TYPE string,
@@ -6818,7 +6915,7 @@ CLASS lcl_pack IMPLEMENTATION.
         EXIT. " current loop
       ENDIF.
 
-      IF iv_data+lv_cursor(1) = '00'.
+      IF iv_data+lv_cursor(1) = lc_null.
         lv_len = lv_cursor - lv_start.
         lv_xstring = iv_data+lv_start(lv_len).
 
@@ -6829,7 +6926,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
         CLEAR ls_node.
         ls_node-chmod = lv_chmod.
-        IF ls_node-chmod <> gc_chmod_dir AND ls_node-chmod <> gc_chmod_file.
+        IF ls_node-chmod <> gc_chmod-dir AND ls_node-chmod <> gc_chmod-file.
           _raise 'Unknown chmod'.
         ENDIF.
 
@@ -7760,6 +7857,8 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD parse.
 
+    CONSTANTS: lc_band1 TYPE x VALUE '01'.
+
     DATA: lv_len      TYPE i,
           lv_contents TYPE xstring,
           lv_pack     TYPE xstring.
@@ -7778,7 +7877,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
       lv_contents = lv_contents+4.
 
-      IF xstrlen( lv_contents ) > 1 AND lv_contents(1) = '01'. " band 1
+      IF xstrlen( lv_contents ) > 1 AND lv_contents(1) = lc_band1.
         CONCATENATE lv_pack lv_contents+1 INTO lv_pack IN BYTE MODE.
       ENDIF.
 
@@ -8319,7 +8418,7 @@ CLASS lcl_porcelain IMPLEMENTATION.
       IF sy-subrc <> 0.
 * new files
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod_file.
+        <ls_node>-chmod = gc_chmod-file.
         <ls_node>-name = <ls_file>-filename.
       ENDIF.
 
@@ -8418,7 +8517,7 @@ CLASS lcl_porcelain IMPLEMENTATION.
     lt_nodes = lcl_pack=>decode_tree( <ls_tree>-data ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
-      IF <ls_node>-chmod = gc_chmod_file.
+      IF <ls_node>-chmod = gc_chmod-file.
         READ TABLE it_objects ASSIGNING <ls_blob>
           WITH KEY sha1 = <ls_node>-sha1 type = gc_blob.
         IF sy-subrc <> 0.
@@ -8433,7 +8532,7 @@ CLASS lcl_porcelain IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod_dir.
+    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod-dir.
       CONCATENATE iv_path <ls_node>-name '/' INTO lv_path.
       walk( EXPORTING it_objects = it_objects
                       iv_sha1 = <ls_node>-sha1
@@ -8635,10 +8734,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_diff.
 
-    DATA: lv_html   TYPE string,
-          lv_local  TYPE string,
-          lv_remote TYPE string.
-
+    DATA: lv_html    TYPE string,
+          lv_local   TYPE string,
+          lv_remote  TYPE string,
+          lv_clocal  TYPE string,
+          lv_cresult TYPE string,
+          lv_cremote TYPE string.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF it_diffs.
 
@@ -8650,18 +8751,42 @@ CLASS lcl_gui IMPLEMENTATION.
               is_result-obj_name && '&nbsp;' &&
               is_result-filename && '</h3><br><br>'.
 
-    lv_html = lv_html && '<table border="0">' && gc_newline &&
-              '<tr><td><h2>Local</h2></td><td></td><td><h2>Remote</h2></td></tr>'.
+    lv_html = lv_html &&
+              '<table border="0">'       && gc_newline &&
+              '<tr>'                     && gc_newline &&
+              '<td><h2>Local</h2></td>'  && gc_newline &&
+              '<td></td>'                && gc_newline &&
+              '<td><h2>Remote</h2></td>' && gc_newline &&
+              '</tr>'.
 
     LOOP AT it_diffs ASSIGNING <ls_diff>.
       lv_local = escape( val = <ls_diff>-local format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
 
+      CASE <ls_diff>-result.
+        WHEN gc_diff-insert.
+          lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
+          lv_cresult = ' style="background:lightgreen;"'.   "#EC NOTEXT
+          lv_cremote = ''.
+        WHEN gc_diff-delete.
+          lv_clocal = ''.
+          lv_cresult = ' style="background:lightpink;"'.    "#EC NOTEXT
+          lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
+        WHEN gc_diff-update.
+          lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
+          lv_cresult = ' style="background:lightgreen;"'.   "#EC NOTEXT
+          lv_cremote = ' style="background:lightgreen;"'.   "#EC NOTEXT
+        WHEN OTHERS.
+          lv_clocal = ''.
+          lv_cresult = ''.
+          lv_cremote = ''.
+      ENDCASE.
+
       lv_html = lv_html &&
         '<tr>' && gc_newline &&
-        '<td><pre>' && lv_local && '</pre></td>' && gc_newline &&
-        '<td>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' && gc_newline &&
-        '<td><pre>' && lv_remote && '</pre></td>' && gc_newline &&
+        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' && gc_newline &&
+        '<td' && lv_cresult && '>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' && gc_newline &&
+        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' && gc_newline &&
         '</tr>' && gc_newline.
     ENDLOOP.
     lv_html = lv_html && '</table>' && gc_newline.
@@ -9772,6 +9897,151 @@ FORM run.
 
 ENDFORM.                    "run
 
+CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    DATA: mt_local    TYPE TABLE OF string,
+          mt_remote   TYPE TABLE OF string,
+          mt_expected TYPE tt_diffs,
+          ms_expected LIKE LINE OF mt_expected.
+
+    METHODS: setup.
+    METHODS: test.
+
+    METHODS:
+      diff01 FOR TESTING,
+      diff02 FOR TESTING,
+      diff03 FOR TESTING,
+      diff04 FOR TESTING,
+      diff05 FOR TESTING,
+      diff06 FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_diff IMPLEMENTATION.
+
+  DEFINE _local.
+    append &1 to mt_local.
+  END-OF-DEFINITION.
+
+  DEFINE _remote.
+    append &1 to mt_remote.
+  END-OF-DEFINITION.
+
+  DEFINE _expected.
+    clear ms_expected.
+    ms_expected-local = &1.
+    ms_expected-result = &2.
+    ms_expected-remote = &3.
+    append ms_expected to mt_expected.
+  END-OF-DEFINITION.
+
+  METHOD setup.
+    CLEAR mt_local.
+    CLEAR mt_remote.
+    CLEAR mt_expected.
+  ENDMETHOD.
+
+  METHOD test.
+
+    DATA: lv_local   TYPE string,
+          lv_xlocal  TYPE xstring,
+          lv_remote  TYPE string,
+          lv_xremote TYPE xstring,
+          lt_diff    TYPE tt_diffs.
+
+
+    CONCATENATE LINES OF mt_local  INTO lv_local SEPARATED BY gc_newline.
+    CONCATENATE LINES OF mt_remote INTO lv_remote SEPARATED BY gc_newline.
+
+    lv_xlocal  = lcl_convert=>string_to_xstring_utf8( lv_local ).
+    lv_xremote = lcl_convert=>string_to_xstring_utf8( lv_remote ).
+
+    lt_diff = lcl_diff=>diff( iv_local  = lv_xlocal
+                              iv_remote = lv_xremote ).
+
+    cl_abap_unit_assert=>assert_equals( act = lt_diff
+                                        exp = mt_expected ).
+
+
+  ENDMETHOD.
+
+  METHOD diff01.
+
+* insert
+    _local '1'.
+    _expected '1' gc_diff-insert ''.
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff02.
+
+* identical
+    _local '1'.
+    _remote '1'.
+    _expected '1' '' '1'.
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff03.
+
+* delete
+    _remote '1'.
+    _expected '' gc_diff-delete '1'.
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff04.
+
+* update
+    _local '1+'.
+    _remote '1'.
+    _expected '1+' gc_diff-update '1'.
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff05.
+
+* identical
+    _local '1'.
+    _local '2'.
+    _remote '1'.
+    _remote '2'.
+    _expected '1' '' '1'.
+    _expected '2' '' '2'.
+    test( ).
+
+  ENDMETHOD.
+
+  METHOD diff06.
+
+    _local '1'.
+    _local '2'.
+    _local 'inserted'.
+    _local '3'.
+    _local '4 update'.
+
+    _remote '1'.
+    _remote '2'.
+    _remote '3'.
+    _remote '4'.
+
+    _expected '1' '' '1'.
+    _expected '2' '' '2'.
+    _expected 'inserted' gc_diff-insert ''.
+    _expected '3' '' '3'.
+    _expected '4 update' gc_diff-update '4'.
+
+    test( ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS test DEFINITION
 *----------------------------------------------------------------------*
@@ -9789,21 +10059,34 @@ CLASS ltcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS convert_int FOR TESTING RAISING lcx_exception.
 
+ENDCLASS.                    "test DEFINITION
+
+CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+
     METHODS repo_url FOR TESTING RAISING lcx_exception.
     METHODS repo_error FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
 
     METHODS serialize_tabl FOR TESTING RAISING lcx_exception.
     METHODS serialize_enqu FOR TESTING RAISING lcx_exception.
     METHODS serialize_shlp FOR TESTING RAISING lcx_exception.
     METHODS serialize_view FOR TESTING RAISING lcx_exception.
 
-ENDCLASS.                    "test DEFINITION
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS test IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS ltcl_abap_unit IMPLEMENTATION.
+CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_enqu.
 
@@ -9865,6 +10148,10 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_table
 
+ENDCLASS.
+
+CLASS ltcl_url IMPLEMENTATION.
+
   METHOD repo_error.
 
     TRY.
@@ -9886,6 +10173,10 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
         act = lv_host ).
 
   ENDMETHOD.                    "repo_url
+
+ENDCLASS.
+
+CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD convert_int.
 
@@ -9909,6 +10200,9 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_pack_multiple.
 
+    CONSTANTS: lc_data TYPE x LENGTH 15 VALUE '123456789ABCDEF545794254754554',
+               lc_sha  TYPE x LENGTH 20 VALUE '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+
     DATA: lt_objects TYPE tt_objects,
           ls_object  LIKE LINE OF lt_objects,
           lt_nodes   TYPE tt_nodes,
@@ -9919,7 +10213,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
 
 * blob
-    lv_data = '123456789ABCDEF545794254754554'.
+    lv_data = lc_data.
     CLEAR ls_object.
     ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob iv_data = lv_data ).
     ls_object-type = gc_blob.
@@ -9928,8 +10222,8 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
 * commit
     CLEAR ls_commit.
-    ls_commit-tree      = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
-    ls_commit-parent    = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    ls_commit-tree      = lc_sha.
+    ls_commit-parent    = lc_sha.
     ls_commit-author    = 'John Foobar'.
     ls_commit-committer = 'John Foobar'.
     ls_commit-body      = 'body'.
@@ -9944,7 +10238,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
     CLEAR ls_node.
     ls_node-chmod     = '12456'.
     ls_node-name      = 'foobar.abap'.
-    ls_node-sha1      = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    ls_node-sha1      = lc_sha.
     APPEND ls_node TO lt_nodes.
     lv_data = lcl_pack=>encode_tree( lt_nodes ).
     CLEAR ls_object.
@@ -9966,13 +10260,15 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_pack_short.
 
+    CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
+
     DATA: lt_objects TYPE tt_objects,
           ls_object  LIKE LINE OF lt_objects,
           lt_result  TYPE tt_objects,
           lv_data    TYPE xstring.
 
 
-    lv_data = '0123456789ABCDEF'.
+    lv_data = lc_data.
 
     CLEAR ls_object.
     ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob
@@ -9993,6 +10289,8 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_pack_long.
 
+    CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
+
     DATA: lt_objects TYPE tt_objects,
           ls_object  LIKE LINE OF lt_objects,
           lv_xstring TYPE xstring,
@@ -10000,7 +10298,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
           lv_data    TYPE xstring.
 
 
-    lv_xstring = '0123456789ABCDEF'.
+    lv_xstring = lc_data.
     DO 20 TIMES.
       CONCATENATE lv_xstring lv_data INTO lv_data IN BYTE MODE.
     ENDDO.
@@ -10024,15 +10322,17 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_tree.
 
+    CONSTANTS: lc_sha TYPE x LENGTH 20 VALUE '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+
     DATA: lt_nodes  TYPE tt_nodes,
           ls_node   LIKE LINE OF lt_nodes,
           lv_data   TYPE xstring,
           lt_result TYPE tt_nodes.
 
     CLEAR ls_node.
-    ls_node-chmod = gc_chmod_file.
+    ls_node-chmod = gc_chmod-file.
     ls_node-name = 'foobar.txt'.
-    ls_node-sha1 = '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    ls_node-sha1 = lc_sha.
     APPEND ls_node TO lt_nodes.
 
     lv_data = lcl_pack=>encode_tree( lt_nodes ).
@@ -10046,13 +10346,16 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_commit.
 
+    CONSTANTS: lc_tree   TYPE x LENGTH 20 VALUE '44CDE614A283A88DC5F46CB3C4B7F0B3600B64F7',
+               lc_parent TYPE x LENGTH 20 VALUE '83A88DC5F46CB3C4B7F0B3600B64F744CDE614A2'.
+
     DATA: ls_commit TYPE st_commit,
           ls_result TYPE st_commit,
           lv_data   TYPE xstring.
 
 
-    ls_commit-tree      = '44CDE614A283A88DC5F46CB3C4B7F0B3600B64F7'.
-    ls_commit-parent    = '83A88DC5F46CB3C4B7F0B3600B64F744CDE614A2'.
+    ls_commit-tree      = lc_tree.
+    ls_commit-parent    = lc_parent.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-body      = 'very informative'.
