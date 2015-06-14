@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.28'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.29'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1868,10 +1868,15 @@ CLASS lcl_objects_common IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode     = 'SE11'
-        mode_val  = 'E'
+        tcode                 = 'SE11'
+        mode_val              = 'E'
       TABLES
-        using_tab = lt_bdcdata.
+        using_tab             = lt_bdcdata
+      EXCEPTIONS
+        system_failure        = 1
+        communication_failure = 2
+        resource_failure      = 3
+        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
 
   ENDMETHOD.                                                "jump_se11
 
@@ -2467,31 +2472,12 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPLSEOD'.
-    <ls_bdcdata>-dynpro   = '1000'.
-    <ls_bdcdata>-dynbegin = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
-    <ls_bdcdata>-fval = '=WB_DISPLAY'.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'SEOCLASS-CLSNAME'.
-    <ls_bdcdata>-fval = is_item-obj_name.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
+    CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-        tcode     = 'SE24'
-        mode_val  = 'E'
-      TABLES
-        using_tab = lt_bdcdata.
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'CLAS'
+        in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
 
@@ -3316,10 +3302,15 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode     = 'SMARTFORMS'
-        mode_val  = 'E'
+        tcode                 = 'SMARTFORMS'
+        mode_val              = 'E'
       TABLES
-        using_tab = lt_bdcdata.
+        using_tab             = lt_bdcdata
+      EXCEPTIONS
+        system_failure        = 1
+        communication_failure = 2
+        resource_failure      = 3
+        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 
@@ -4129,10 +4120,15 @@ CLASS lcl_object_tran IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode     = 'SE93'
-        mode_val  = 'E'
+        tcode                 = 'SE93'
+        mode_val              = 'E'
       TABLES
-        using_tab = lt_bdcdata.
+        using_tab             = lt_bdcdata
+      EXCEPTIONS
+        system_failure        = 1
+        communication_failure = 2
+        resource_failure      = 3
+        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 
@@ -4320,31 +4316,12 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPLWBMESSAGES'.
-    <ls_bdcdata>-dynpro   = '0100'.
-    <ls_bdcdata>-dynbegin = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
-    <ls_bdcdata>-fval = '=WB_DISPLAY'.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'RSDAG-ARBGB'.
-    <ls_bdcdata>-fval = is_item-obj_name.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
+    CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-        tcode     = 'SE91'
-        mode_val  = 'E'
-      TABLES
-        using_tab = lt_bdcdata.
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'MSAG'
+        in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
 
@@ -5097,7 +5074,14 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD jump.
-    _raise 'todo, FUGR'.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'FUGR'
+        in_new_window = abap_true.
+
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_fugr IMPLEMENTATION
@@ -5667,9 +5651,12 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD jump.
 
-* todo, ABAP4_CALL_TRANSACTION opens some strange editor
-* fm EDITOR_PROGRAM doesnt seem to open in new session
-    _raise 'todo, jump, PROG'.
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'PROG'
+        in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
 
