@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.30'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.31'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3241,6 +3241,269 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_object_suso DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_susc DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_suso IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          ls_file       LIKE LINE OF rt_files,
+          ls_tobj       TYPE tobj,
+          ls_tobjt      TYPE tobjt,
+          ls_tobjvorflg TYPE tobjvorflg,
+          lt_tactz      TYPE TABLE OF tactz,
+          lt_tobjvordat TYPE TABLE OF tobjvordat,
+          lt_tobjvor    TYPE TABLE OF tobjvor.
+
+
+    SELECT SINGLE * FROM tobj INTO ls_tobj
+      WHERE objct = is_item-obj_name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+    CLEAR ls_tobj-bname.
+
+    SELECT SINGLE * FROM tobjt INTO ls_tobjt
+      WHERE object = is_item-obj_name
+      AND langu = gc_english.
+    IF sy-subrc <> 0.
+      _raise 'TOBJT no english description'.
+    ENDIF.
+
+    SELECT SINGLE * FROM tobjvorflg INTO ls_tobjvorflg
+      WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
+
+    SELECT * FROM tactz INTO TABLE lt_tactz
+      WHERE brobj = is_item-obj_name.                     "#EC CI_SUBRC
+
+    SELECT * FROM tobjvordat INTO TABLE lt_tobjvordat
+      WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
+
+    SELECT * FROM tobjvor INTO TABLE lt_tobjvor
+      WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_tobj ).
+    lo_xml->structure_add( ls_tobjt ).
+    lo_xml->structure_add( ls_tobjvorflg ).
+    lo_xml->table_add( it_table = lt_tactz
+                       iv_name = 'TACTZ' ).
+    lo_xml->table_add( it_table = lt_tobjvordat
+                       iv_name = 'TOBJVORDAT' ).
+    lo_xml->table_add( it_table = lt_tobjvor
+                       iv_name = 'TOBJVOR' ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+* see function group SUSA
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          lv_objectname TYPE e071-obj_name,
+          ls_tobj       TYPE tobj,
+          ls_tobjt      TYPE tobjt,
+          ls_tobjvorflg TYPE tobjvorflg,
+          lt_tactz      TYPE TABLE OF tactz,
+          lt_tobjvordat TYPE TABLE OF tobjvordat,
+          lt_tobjvor    TYPE TABLE OF tobjvor.
+
+
+    ASSERT NOT is_item-obj_name IS INITIAL.
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tobj ).
+    ls_tobj-bname = sy-uname.
+    lo_xml->structure_read( CHANGING cg_structure = ls_tobjt ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tobjvorflg ).
+    lo_xml->table_read( EXPORTING iv_name  = 'TACTZ'
+                        CHANGING  ct_table = lt_tactz ).
+    lo_xml->table_read( EXPORTING iv_name  = 'TOBJVORDAT'
+                        CHANGING  ct_table = lt_tobjvordat ).
+    lo_xml->table_read( EXPORTING iv_name  = 'TOBJVOR'
+                        CHANGING  ct_table = lt_tobjvor ).
+
+    lv_objectname = is_item-obj_name.
+    CALL FUNCTION 'SUSR_COMMEDITCHECK'
+      EXPORTING
+        objectname      = lv_objectname
+        transobjecttype = 'O'.
+
+    MODIFY tobj FROM ls_tobj.                             "#EC CI_SUBRC
+    MODIFY tobjt FROM ls_tobjt.                           "#EC CI_SUBRC
+    MODIFY tobjvorflg FROM ls_tobjvorflg.                 "#EC CI_SUBRC
+    DELETE FROM tactz WHERE brobj = is_item-obj_name.     "#EC CI_SUBRC
+    INSERT tactz FROM TABLE lt_tactz.                     "#EC CI_SUBRC
+    DELETE FROM tobjvordat WHERE objct = is_item-obj_name. "#EC CI_SUBRC
+    INSERT tobjvordat FROM TABLE lt_tobjvordat.           "#EC CI_SUBRC
+    DELETE FROM tobjvor WHERE objct = is_item-obj_name.   "#EC CI_SUBRC
+    INSERT tobjvor FROM TABLE lt_tobjvor.                 "#EC CI_SUBRC
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lv_object TYPE tobj-objct.
+
+
+    lv_object = is_item-obj_name.
+    CALL FUNCTION 'SUSR_DELETE_OBJECT'
+      EXPORTING
+        object = lv_object.
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    DATA: lv_object TYPE tobj-objct.
+
+
+    lv_object = is_item-obj_name.
+    CALL FUNCTION 'SUSR_SHOW_OBJECT'
+      EXPORTING
+        object = lv_object.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS lcl_object_susc IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_file  LIKE LINE OF rt_files,
+          ls_tobc  TYPE tobc,
+          ls_tobct TYPE tobct.
+
+
+    SELECT SINGLE * FROM tobc INTO ls_tobc
+      WHERE oclss = is_item-obj_name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tobct INTO ls_tobct
+      WHERE oclss = is_item-obj_name
+      AND langu = gc_english.
+    IF sy-subrc <> 0.
+      _raise 'TOBCT no english description'.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_tobc ).
+    lo_xml->structure_add( ls_tobct ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+* see function group SUSA
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          ls_tobc       TYPE tobc,
+          lv_objectname TYPE e071-obj_name,
+          ls_tobct      TYPE tobct.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tobc ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tobct ).
+
+    lv_objectname = is_item-obj_name.
+    CALL FUNCTION 'SUSR_COMMEDITCHECK'
+      EXPORTING
+        objectname      = lv_objectname
+        transobjecttype = 'C'.
+
+    INSERT tobc FROM ls_tobc.                             "#EC CI_SUBRC
+* ignore sy-subrc as all fields are key fields
+
+    MODIFY tobct FROM ls_tobct.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lv_objclass TYPE tobc-oclss.
+
+
+    lv_objclass = is_item-obj_name.
+    CALL FUNCTION 'SUSR_DELETE_OBJECT_CLASS'
+      EXPORTING
+        objclass = lv_objclass.
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    DATA: lv_objclass TYPE tobc-oclss.
+
+
+    lv_objclass = is_item-obj_name.
+    CALL FUNCTION 'SUSR_SHOW_OBJECT_CLASS'
+      EXPORTING
+        objclass = lv_objclass.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
@@ -6133,6 +6396,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       CASE <ls_tadir>-object.
+        WHEN 'SUSC'.
+          <ls_tadir>-korrnum = '5000'.
         WHEN 'TABL' OR 'TTYP' OR 'VIEW'.
           <ls_tadir>-korrnum = '7000'.
         WHEN 'DTEL'.
@@ -8389,6 +8654,10 @@ CLASS lcl_zip IMPLEMENTATION.
       WHERE devclass = is_repo-package
       AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
+    IF lt_tadir IS INITIAL.
+      _raise 'Package is empty'.
+    ENDIF.
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
@@ -8778,6 +9047,9 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS get_logo_src
       RETURNING VALUE(rv_src) TYPE string.
 
+    CLASS-METHODS zipexport
+      RAISING lcx_exception.
+
 ENDCLASS.                    "lcl_gui DEFINITION
 
 *----------------------------------------------------------------------*
@@ -8786,6 +9058,48 @@ ENDCLASS.                    "lcl_gui DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
+
+  METHOD zipexport.
+
+    DATA: lv_returncode TYPE c,
+          ls_repo_persi TYPE st_repo_persi,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TDEVC'.
+    <ls_field>-fieldname = 'DEVCLASS'.
+    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Export package to ZIP'                           "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ls_repo_persi-package = <ls_field>-value.
+    TRANSLATE ls_repo_persi-package TO UPPER CASE.
+    ls_repo_persi-url = ls_repo_persi-package.
+
+    lcl_zip=>export( ls_repo_persi ).
+
+  ENDMETHOD.
 
   METHOD render_header.
 
@@ -9193,6 +9507,8 @@ CLASS lcl_gui IMPLEMENTATION.
                            CHANGING cg_structure = ls_repo_persi ).
             lcl_zip=>export( ls_repo_persi ).
             view( render( ) ).
+          WHEN 'zipexport_gui'.
+            zipexport( ).
           WHEN OTHERS.
             _raise 'Unknown action'.
         ENDCASE.
@@ -9674,7 +9990,9 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html &&
       '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
       gc_abap_version &&
-      '&nbsp;<a href="sapevent:debug" class="white">d</a></h3></center>'. "#EC NOTEXT
+      '&nbsp;<a href="sapevent:debug" class="white">d</a>' &&
+      '&nbsp;<a href="sapevent:zipexport_gui" class="white">e</a>' &&
+      '</h3></center>'.                                     "#EC NOTEXT
 
     rv_html = rv_html &&
       '<center>' &&
