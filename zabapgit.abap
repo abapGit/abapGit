@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.31'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.32'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9175,7 +9175,6 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_local   TYPE string,
           lv_remote  TYPE string,
           lv_clocal  TYPE string,
-          lv_cresult TYPE string,
           lv_cremote TYPE string.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF it_diffs.
@@ -9203,19 +9202,15 @@ CLASS lcl_gui IMPLEMENTATION.
       CASE <ls_diff>-result.
         WHEN gc_diff-insert.
           lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
-          lv_cresult = ' style="background:lightgreen;"'.   "#EC NOTEXT
           lv_cremote = ''.
         WHEN gc_diff-delete.
           lv_clocal = ''.
-          lv_cresult = ' style="background:lightpink;"'.    "#EC NOTEXT
           lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
         WHEN gc_diff-update.
           lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
-          lv_cresult = ' style="background:lightgreen;"'.   "#EC NOTEXT
-          lv_cremote = ' style="background:lightgreen;"'.   "#EC NOTEXT
+          lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
         WHEN OTHERS.
           lv_clocal = ''.
-          lv_cresult = ''.
           lv_cremote = ''.
       ENDCASE.
 
@@ -9223,7 +9218,7 @@ CLASS lcl_gui IMPLEMENTATION.
         '<tr>' && gc_newline &&
         '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
         gc_newline &&
-        '<td' && lv_cresult && '>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' &&
+        '<td>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' &&
         gc_newline &&
         '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
         gc_newline &&
