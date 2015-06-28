@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.34'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.35'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6336,6 +6336,10 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rv_class_name) TYPE string.
 
   PRIVATE SECTION.
+    CLASS-METHODS resolve_tabl
+      CHANGING ct_tadir TYPE tt_tadir
+      RAISING  lcx_exception.
+
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
@@ -6412,10 +6416,23 @@ CLASS lcl_objects IMPLEMENTATION.
           <ls_tadir>-korrnum = '8000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
+        WHEN 'PROG'.
+* delete includes after main programs
+          SELECT COUNT(*) FROM reposrc
+            WHERE progname = <ls_tadir>-obj_name
+            AND r3state = 'A'
+            AND subc = 'I'.
+          IF sy-subrc = 0.
+            <ls_tadir>-korrnum = '2000'.
+          ELSE.
+            <ls_tadir>-korrnum = '1000'.
+          ENDIF.
         WHEN OTHERS.
           <ls_tadir>-korrnum = '1000'.
       ENDCASE.
     ENDLOOP.
+
+    resolve_tabl( CHANGING ct_tadir = lt_tadir ).
 
     SORT lt_tadir BY korrnum ASCENDING.
 
@@ -6427,6 +6444,78 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "delete
+
+  METHOD resolve_tabl.
+* this will make sure the deletion sequence of structures/tables work
+* in case they have dependencies with .INCLUDE
+
+    TYPES: BEGIN OF ty_edge,
+             from TYPE sobj_name,
+             to   TYPE sobj_name,
+           END OF ty_edge.
+
+    DATA: lt_nodes       TYPE TABLE OF sobj_name,
+          lt_edges       TYPE TABLE OF ty_edge,
+          lt_findstrings TYPE TABLE OF rsfind,
+          lt_founds      TYPE TABLE OF rsfindlst,
+          lt_scope       TYPE STANDARD TABLE OF seu_obj.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir,
+                   <ls_edge>  LIKE LINE OF lt_edges,
+                   <ls_found> LIKE LINE OF lt_founds,
+                   <lv_node>  LIKE LINE OF lt_nodes.
+
+
+* build nodes
+    LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE object = 'TABL'.
+      APPEND <ls_tadir>-obj_name TO lt_nodes.
+    ENDLOOP.
+
+    APPEND 'TABL' TO lt_scope.
+    APPEND 'STRU' TO lt_scope.
+
+* build edges
+    LOOP AT lt_nodes ASSIGNING <lv_node>.
+
+      CLEAR lt_findstrings.
+      APPEND <lv_node> TO lt_findstrings.
+
+      CALL FUNCTION 'RS_EU_CROSSREF'
+        EXPORTING
+          i_find_obj_cls           = 'TABL'
+        TABLES
+          i_findstrings            = lt_findstrings
+          o_founds                 = lt_founds
+          i_scope_object_cls       = lt_scope
+        EXCEPTIONS
+          not_executed             = 1
+          not_found                = 2
+          illegal_object           = 3
+          no_cross_for_this_object = 4
+          batch                    = 5
+          batchjob_error           = 6
+          wrong_type               = 7
+          object_not_exist         = 8
+          OTHERS                   = 9.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      LOOP AT lt_founds ASSIGNING <ls_found>.
+        APPEND INITIAL LINE TO lt_edges ASSIGNING <ls_edge>.
+        <ls_edge>-from = <lv_node>.
+        <ls_edge>-to = <ls_found>-object.
+      ENDLOOP.
+
+    ENDLOOP.
+* todo, work in progress
+*
+*do.
+*loop at lt_nodes assigning <lv_node>.
+*endloop.
+*enddo.
+
+  ENDMETHOD.
 
   METHOD delete_obj.
 
