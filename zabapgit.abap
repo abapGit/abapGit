@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.32'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.33'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3229,7 +3229,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         no_access_permission  = 5
         illegal_language      = 6
         OTHERS                = 7.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
       _raise 'error from SSF_DELETE_STYLE'.
     ENDIF.
 
@@ -3733,7 +3733,7 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
         illegal_language      = 5
         illegal_formtype      = 6
         OTHERS                = 7.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
       _raise 'Error from FB_DELETE_FORM'.
     ENDIF.
 
@@ -6398,7 +6398,9 @@ CLASS lcl_objects IMPLEMENTATION.
       CASE <ls_tadir>-object.
         WHEN 'SUSC'.
           <ls_tadir>-korrnum = '5000'.
-        WHEN 'TABL' OR 'TTYP' OR 'VIEW'.
+        WHEN 'TTYP'.
+          <ls_tadir>-korrnum = '6000'.
+        WHEN 'TABL' OR 'VIEW'.
           <ls_tadir>-korrnum = '7000'.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
