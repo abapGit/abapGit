@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.33'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.34'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1789,10 +1789,10 @@ CLASS lcl_objects_common IMPLEMENTATION.
     lo_xml->structure_add( ig_structure = ls_progdir
                            iv_name      = 'PROGDIR' ).
     IF ls_progdir-subc = '1'.
-      serialize_dynpros( EXPORTING iv_program_name = lv_program_name
-                                   io_xml          = lo_xml ).
-      serialize_cua( EXPORTING iv_program_name = lv_program_name
-                               io_xml          = lo_xml ).
+      serialize_dynpros( iv_program_name = lv_program_name
+                         io_xml          = lo_xml ).
+      serialize_cua( iv_program_name = lv_program_name
+                     io_xml          = lo_xml ).
     ENDIF.
 
     IF lines( lt_tpool ) = 1.
@@ -4115,8 +4115,14 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         _raise 'error from DDIF_INDX_PUT'.
       ENDIF.
 
-      lv_tname = ls_dd12v-sqltab.
-      lv_tname+10 = ls_dd12v-indexname.
+      CALL FUNCTION 'DD_DD_TO_E071'
+        EXPORTING
+          type     = 'INDX'
+          name     = ls_dd12v-sqltab
+          id       = ls_dd12v-indexname
+        IMPORTING
+          obj_name = lv_tname.
+
       activation_add( iv_type = 'INDX'
                       iv_name = lv_tname ).
 
@@ -8180,7 +8186,6 @@ CLASS lcl_transport IMPLEMENTATION.
         ev_branch  = lv_branch ).
 
     set_headers(
-      EXPORTING
         is_repo    = is_repo
         iv_service = lc_service
         ii_client  = li_client ).
@@ -8298,7 +8303,6 @@ CLASS lcl_transport IMPLEMENTATION.
         ev_branch  = ev_branch ).
 
     set_headers(
-      EXPORTING
         is_repo    = is_repo
         iv_service = lc_service
         ii_client  = li_client ).
