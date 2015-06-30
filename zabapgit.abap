@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.35'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.36'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6457,6 +6457,9 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: lt_nodes       TYPE TABLE OF sobj_name,
           lt_edges       TYPE TABLE OF ty_edge,
           lt_findstrings TYPE TABLE OF rsfind,
+          lv_plus        TYPE i VALUE 0,
+          lv_index       TYPE i,
+          lv_before      TYPE i,
           lt_founds      TYPE TABLE OF rsfindlst,
           lt_scope       TYPE STANDARD TABLE OF seu_obj.
 
@@ -6504,16 +6507,32 @@ CLASS lcl_objects IMPLEMENTATION.
       LOOP AT lt_founds ASSIGNING <ls_found>.
         APPEND INITIAL LINE TO lt_edges ASSIGNING <ls_edge>.
         <ls_edge>-from = <lv_node>.
-        <ls_edge>-to = <ls_found>-object.
+        <ls_edge>-to   = <ls_found>-object.
       ENDLOOP.
 
     ENDLOOP.
-* todo, work in progress
-*
-*do.
-*loop at lt_nodes assigning <lv_node>.
-*endloop.
-*enddo.
+
+    DO.
+      lv_before = lines( lt_nodes ).
+      LOOP AT lt_nodes ASSIGNING <lv_node>.
+        lv_index = sy-tabix.
+        READ TABLE lt_edges WITH KEY from = <lv_node> TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          LOOP AT ct_tadir ASSIGNING <ls_tadir>
+              WHERE obj_name = <lv_node> AND object = 'TABL'.
+            <ls_tadir>-korrnum = <ls_tadir>-korrnum + lv_plus.
+            CONDENSE <ls_tadir>-korrnum.
+          ENDLOOP.
+          DELETE lt_edges WHERE to = <lv_node>.
+          DELETE lt_nodes INDEX lv_index.
+          EXIT. " make sure the sequence is fixed
+        ENDIF.
+      ENDLOOP.
+      IF lv_before = lines( lt_nodes ).
+        EXIT.
+      ENDIF.
+      lv_plus = lv_plus + 1.
+    ENDDO.
 
   ENDMETHOD.
 
@@ -6662,6 +6681,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: ls_item       TYPE st_item,
           lv_class_name TYPE string,
+          lv_pct        TYPE i,
+          lv_f          TYPE f,
           lv_message    TYPE string,
           lv_tree       TYPE dirtree-tname,
           lt_results    TYPE tt_results.
@@ -6680,12 +6701,19 @@ CLASS lcl_objects IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
 
     LOOP AT lt_results ASSIGNING <ls_result>.
+      lv_f = ( sy-tabix / lines( lt_results ) ) * 100.
+      lv_pct = lv_f.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
+
+      CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+        EXPORTING
+          percentage = lv_pct
+          text       = <ls_result>-obj_name.
 
       lv_class_name = class_name( ls_item ).
 
