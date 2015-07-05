@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.37'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.38'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -376,7 +376,7 @@ CLASS lcl_xml DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS table_add
-      IMPORTING it_table TYPE STANDARD TABLE
+      IMPORTING it_table TYPE ANY TABLE
                 iv_name  TYPE string OPTIONAL
                 ii_root  TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
@@ -3072,6 +3072,246 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
+
+CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_sicf_key,
+             icf_name   TYPE icfservice-icf_name,
+             icfparguid TYPE icfservice-icfparguid,
+           END OF ty_sicf_key.
+
+    CLASS-METHODS read
+      IMPORTING is_item       TYPE st_item
+      EXPORTING es_icfservice TYPE icfservice
+                es_icfdocu    TYPE icfdocu
+                et_icfhandler TYPE icfhandtbl
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_sicf IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: ls_icfservice TYPE icfservice,
+          ls_icfdocu    TYPE icfdocu,
+          lo_xml        TYPE REF TO lcl_xml,
+          ls_file       LIKE LINE OF rt_files,
+          lt_icfhandler TYPE icfhandtbl.
+
+
+    read( EXPORTING is_item = is_item
+          IMPORTING es_icfservice = ls_icfservice
+                    es_icfdocu    = ls_icfdocu
+                    et_icfhandler = lt_icfhandler ).
+
+    CLEAR ls_icfservice-icfnodguid.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_icfservice ).
+    lo_xml->structure_add( ls_icfdocu ).
+    lo_xml->table_add( lt_icfhandler ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+    _raise 'todo, SICF'.
+
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: lt_serv_info TYPE icfservtbl,
+          ls_serv_info LIKE LINE OF lt_serv_info,
+          ls_key       TYPE ty_sicf_key.
+
+
+    ls_key = is_item-obj_name.
+
+    cl_icf_tree=>if_icf_tree~get_info_from_serv(
+      EXPORTING
+        icf_name          = ls_key-icf_name
+        icfparguid        = ls_key-icfparguid
+        icf_langu         = gc_english
+      IMPORTING
+        serv_info         = lt_serv_info
+        icfdocu           = es_icfdocu
+      EXCEPTIONS
+        wrong_name        = 1
+        wrong_parguid     = 2
+        incorrect_service = 3
+        no_authority      = 4
+        OTHERS            = 5 ).
+    IF sy-subrc <> 0.
+      _raise 'error from get_info_from_serv'.
+    ENDIF.
+
+    ASSERT lines( lt_serv_info ) = 1.
+    READ TABLE lt_serv_info INDEX 1 INTO ls_serv_info.
+    ASSERT sy-subrc = 0.
+
+    MOVE-CORRESPONDING ls_serv_info-service TO es_icfservice.
+    CLEAR es_icfservice-icf_cuser.
+    CLEAR es_icfservice-icf_cdate.
+    CLEAR es_icfservice-icf_muser.
+    CLEAR es_icfservice-icf_mdate.
+
+    APPEND LINES OF ls_serv_info-handlertbl TO et_icfhandler.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: ls_icfservice TYPE icfservice,
+          ls_icfdocu    TYPE icfdocu,
+          lt_icfhandler TYPE icfhandtbl.
+
+
+    cl_icf_tree=>if_icf_tree~insert_node(
+      EXPORTING
+        icf_name                  = ls_icfservice-icf_name
+        icfparguid                = ls_icfservice-icfparguid
+        icfdocu                   = ls_icfdocu
+        doculang                  = gc_english
+*    icfhandlst                = lt_icfhandler todo
+        package                   = iv_package
+        application               = space
+      EXCEPTIONS
+        empty_icf_name            = 1
+        no_new_virtual_host       = 2
+        special_service_error     = 3
+        parent_not_existing       = 4
+        enqueue_error             = 5
+        node_already_existing     = 6
+        empty_docu                = 7
+        doculang_not_installed    = 8
+        security_info_error       = 9
+        user_password_error       = 10
+        password_encryption_error = 11
+        invalid_url               = 12
+        invalid_otr_concept       = 13
+        formflg401_error          = 14
+        handler_error             = 15
+        transport_error           = 16
+        tadir_error               = 17
+        package_not_found         = 18
+        wrong_application         = 19
+        not_allow_application     = 20
+        no_application            = 21
+        invalid_icfparguid        = 22
+        alt_name_invalid          = 23
+        alternate_name_exist      = 24
+        wrong_icf_name            = 25
+        no_authority              = 26
+        OTHERS                    = 27 ).
+    IF sy-subrc <> 0.
+      _raise 'error from insert_node'.
+    ENDIF.
+
+    cl_icf_tree=>if_icf_tree~change_node(
+      EXPORTING
+        icf_name                  = ls_icfservice-icf_name
+        icfparguid                = ls_icfservice-icfparguid
+        icfdocu                   = ls_icfdocu
+        doculang                  = gc_english
+*    icfhandlst                = lt_icfhandler todo
+        package                   = iv_package
+        application               = space
+      EXCEPTIONS
+        empty_icf_name            = 1
+        no_new_virtual_host       = 2
+        special_service_error     = 3
+        parent_not_existing       = 4
+        enqueue_error             = 5
+        node_already_existing     = 6
+        empty_docu                = 7
+        doculang_not_installed    = 8
+        security_info_error       = 9
+        user_password_error       = 10
+        password_encryption_error = 11
+        invalid_url               = 12
+        invalid_otr_concept       = 13
+        formflg401_error          = 14
+        handler_error             = 15
+        transport_error           = 16
+        tadir_error               = 17
+        package_not_found         = 18
+        wrong_application         = 19
+        not_allow_application     = 20
+        no_application            = 21
+        invalid_icfparguid        = 22
+        alt_name_invalid          = 23
+        alternate_name_exist      = 24
+        wrong_icf_name            = 25
+        no_authority              = 26
+        OTHERS                    = 27 ).
+    IF sy-subrc <> 0.
+      _raise 'error from change_node'.
+    ENDIF.
+
+    _raise 'todo, SICF'.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: ls_icfservice TYPE icfservice.
+
+
+    read( EXPORTING is_item = is_item
+          IMPORTING es_icfservice = ls_icfservice ).
+
+    cl_icf_tree=>if_icf_tree~delete_node(
+      EXPORTING
+        icfparguid                  = ls_icfservice-icfnodguid
+      EXCEPTIONS
+        no_virtual_host_delete      = 1
+        special_service_error       = 2
+        enqueue_error               = 3
+        node_not_existing           = 4
+        node_has_childs             = 5
+        node_is_aliased             = 6
+        node_not_in_original_system = 7
+        transport_error             = 8
+        tadir_error                 = 9
+        db_error                    = 10
+        no_authority                = 11
+        OTHERS                      = 12 ).
+    IF sy-subrc <> 0.
+      _raise 'error from delete_node'.
+    ENDIF.
+
+    _raise 'todo, SICF'.
+
+  ENDMETHOD.
+
+  METHOD jump.
+    _raise 'todo, SICF'.
+  ENDMETHOD.
+
+ENDCLASS.
 
 CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
