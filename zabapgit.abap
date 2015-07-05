@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.36'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.37'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3095,9 +3095,27 @@ CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+    CLASS-METHODS validate_font
+      IMPORTING iv_tdfamily TYPE tdfamily
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_object_ssst IMPLEMENTATION.
+
+  METHOD validate_font.
+
+    DATA: lv_tdfamily TYPE tfo01-tdfamily.
+
+
+    SELECT SINGLE tdfamily FROM tfo01 INTO lv_tdfamily
+      WHERE tdfamily = iv_tdfamily.
+    IF sy-subrc <> 0.
+      _raise 'Font family not found'.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD serialize.
 * see fm SSF_DOWNLOAD_STYLE
@@ -3184,6 +3202,8 @@ CLASS lcl_object_ssst IMPLEMENTATION.
                         CHANGING ct_table = lt_strings ).
     lo_xml->table_read( EXPORTING iv_name = 'STXSTAB'
                         CHANGING ct_table = lt_tabstops ).
+
+    validate_font( ls_header-tdfamily ).
 
     CALL FUNCTION 'SSF_SAVE_STYLE'
       EXPORTING
