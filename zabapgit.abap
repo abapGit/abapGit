@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.38'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.39'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -8747,6 +8747,7 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS export
       IMPORTING is_repo TYPE st_repo_persi
+                iv_zip  TYPE abap_bool DEFAULT abap_true
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -8767,6 +8768,10 @@ CLASS lcl_zip DEFINITION FINAL.
     CLASS-METHODS file_download
       IMPORTING is_repo TYPE st_repo_persi
                 iv_xstr TYPE xstring
+      RAISING   lcx_exception.
+
+    CLASS-METHODS files_commit
+      IMPORTING it_files TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_files
@@ -9049,10 +9054,92 @@ CLASS lcl_zip IMPLEMENTATION.
       APPEND LINES OF lt_files TO lt_zip.
     ENDLOOP.
 
-    file_download( is_repo = is_repo
-                   iv_xstr = encode_files( lt_zip ) ).
+    IF iv_zip = abap_true.
+      file_download( is_repo = is_repo
+                     iv_xstr = encode_files( lt_zip ) ).
+    ELSE.
+      files_commit( lt_zip ).
+    ENDIF.
 
   ENDMETHOD.                    "export
+
+  METHOD files_commit.
+
+    DATA: lv_folder   TYPE string,
+          lv_filename TYPE string,
+          lt_rawdata  TYPE solix_tab.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    cl_gui_frontend_services=>directory_browse(
+      EXPORTING
+        window_title         = 'Select folder'
+      CHANGING
+        selected_folder      = lv_folder
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).                         "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from directory_browser'.
+    ENDIF.
+
+    IF lv_folder IS INITIAL.
+      RETURN.
+    ENDIF.
+
+* todo, prompt to find git executeable, or assume or test if its in PATH
+
+* todo, prompt for commit message
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).
+
+      CONCATENATE lv_folder <ls_file>-path <ls_file>-filename INTO lv_filename.
+
+      cl_gui_frontend_services=>gui_download(
+        EXPORTING
+          bin_filesize            = xstrlen( <ls_file>-data )
+          filename                = lv_filename
+          filetype                = 'BIN'
+        CHANGING
+          data_tab                = lt_rawdata
+        EXCEPTIONS
+          file_write_error        = 1
+          no_batch                = 2
+          gui_refuse_filetransfer = 3
+          invalid_type            = 4
+          no_authority            = 5
+          unknown_error           = 6
+          header_not_allowed      = 7
+          separator_not_allowed   = 8
+          filesize_not_allowed    = 9
+          header_too_long         = 10
+          dp_error_create         = 11
+          dp_error_send           = 12
+          dp_error_write          = 13
+          unknown_dp_error        = 14
+          access_denied           = 15
+          dp_out_of_memory        = 16
+          disk_full               = 17
+          dp_timeout              = 18
+          file_not_found          = 19
+          dataprovider_exception  = 20
+          control_flush_error     = 21
+          not_supported_by_gui    = 22
+          error_no_gui            = 23
+          OTHERS                  = 24 ).
+      IF sy-subrc <> 0.
+        _raise 'error from gui_download'.
+      ENDIF.
+
+    ENDLOOP.
+
+* todo, call 'git commit -m "message"'
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_zip IMPLEMENTATION
 
@@ -9885,6 +9972,12 @@ CLASS lcl_gui IMPLEMENTATION.
                            CHANGING cg_structure = ls_repo_persi ).
             lcl_zip=>export( ls_repo_persi ).
             view( render( ) ).
+          WHEN 'files_commit'.
+            struct_decode( EXPORTING iv_string = getdata
+                           CHANGING cg_structure = ls_repo_persi ).
+            lcl_zip=>export( is_repo = ls_repo_persi
+                             iv_zip  = abap_false ).
+            view( render( ) ).
           WHEN 'zipexport_gui'.
             zipexport( ).
           WHEN OTHERS.
@@ -10431,7 +10524,12 @@ CLASS lcl_gui IMPLEMENTATION.
       '<a href="sapevent:zipexport?' &&
       struct_encode( is_repo_persi ) &&
       '">' && 'Export ZIP' &&
-      '</a><br><br><br>'.                                   "#EC NOTEXT
+      '</a>&nbsp;' &&
+      '<a href="sapevent:files_commit?' &&
+      struct_encode( is_repo_persi ) &&
+      '">' && 'Export files and commit' &&
+      '</a>&nbsp;' &&
+      '<br><br><br>'.                                       "#EC NOTEXT
 
   ENDMETHOD.                    "render_repo_offline
 
