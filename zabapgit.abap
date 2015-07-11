@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.41'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.42'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -10358,11 +10358,14 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_obj_name TYPE tadir-obj_name.
 
 
+* fix for SICF services
+    CONCATENATE is_item-obj_name '%' INTO lv_obj_name.
+
     SELECT SINGLE obj_name FROM tadir
       INTO lv_obj_name
       WHERE pgmid = 'R3TR'
       AND object = is_item-obj_type
-      AND obj_name = is_item-obj_name
+      AND obj_name LIKE lv_obj_name
       AND devclass = is_repo_persi-package.
     IF sy-subrc <> 0.
       _raise 'Object not found or in wrong package'.
