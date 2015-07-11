@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.40'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.41'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -97,6 +97,8 @@ TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
 
 TYPES: tt_tadir TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY.
 
+TYPES: tt_icfhandler TYPE STANDARD TABLE OF icfhandler WITH DEFAULT KEY.
+
 TYPES: tt_rs38l_incl TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
 
 TYPES: tt_string TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
@@ -173,6 +175,33 @@ CLASS lcx_exception IMPLEMENTATION.
   ENDMETHOD.                    "CONSTRUCTOR
 
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
+
+CLASS lcl_tadir DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS read IMPORTING iv_package      TYPE tadir-devclass
+                       RETURNING VALUE(rt_tadir) TYPE tt_tadir.
+
+ENDCLASS.
+
+CLASS lcl_tadir IMPLEMENTATION.
+
+  METHOD read.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF rt_tadir.
+
+
+    SELECT * FROM tadir INTO TABLE rt_tadir
+      WHERE devclass = iv_package
+      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
+
+    LOOP AT rt_tadir ASSIGNING <ls_tadir> WHERE object = 'SICF'.
+      <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_user DEFINITION
@@ -376,7 +405,7 @@ CLASS lcl_xml DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS table_add
-      IMPORTING it_table TYPE ANY TABLE
+      IMPORTING it_table TYPE STANDARD TABLE
                 iv_name  TYPE string OPTIONAL
                 ii_root  TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
@@ -546,7 +575,7 @@ CLASS lcl_xml IMPLEMENTATION.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
-          structure_read( EXPORTING ii_root     = li_root
+          structure_read( EXPORTING ii_root    = li_root
                           IMPORTING ev_success = lv_success
                           CHANGING cg_structure = <lg_line> ).
         WHEN cl_abap_typedescr=>kind_elem.
@@ -3105,7 +3134,33 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item       TYPE st_item
       EXPORTING es_icfservice TYPE icfservice
                 es_icfdocu    TYPE icfdocu
-                et_icfhandler TYPE icfhandtbl
+                et_icfhandler TYPE tt_icfhandler
+                ev_url        TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS insert_sicf
+      IMPORTING is_icfservice TYPE icfservice
+                is_icfdocu    TYPE icfdocu
+                it_icfhandler TYPE tt_icfhandler
+                iv_package    TYPE devclass
+                iv_url        TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS change_sicf
+      IMPORTING is_icfservice TYPE icfservice
+                is_icfdocu    TYPE icfdocu
+                it_icfhandler TYPE tt_icfhandler
+                iv_package    TYPE devclass
+                iv_parent     TYPE icfparguid
+      RAISING   lcx_exception.
+
+    CLASS-METHODS to_icfhndlist
+      IMPORTING it_list        TYPE tt_icfhandler
+      RETURNING VALUE(rt_list) TYPE icfhndlist.
+
+    CLASS-METHODS find_parent
+      IMPORTING iv_url           TYPE string
+      RETURNING VALUE(rv_parent) TYPE icfparguid
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -3116,28 +3171,38 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     DATA: ls_icfservice TYPE icfservice,
           ls_icfdocu    TYPE icfdocu,
+          lv_url        TYPE string,
+          ls_item       LIKE is_item,
           lo_xml        TYPE REF TO lcl_xml,
           ls_file       LIKE LINE OF rt_files,
-          lt_icfhandler TYPE icfhandtbl.
+          lt_icfhandler TYPE TABLE OF icfhandler.
 
 
     read( EXPORTING is_item = is_item
           IMPORTING es_icfservice = ls_icfservice
                     es_icfdocu    = ls_icfdocu
-                    et_icfhandler = lt_icfhandler ).
+                    et_icfhandler = lt_icfhandler
+                    ev_url        = lv_url ).
+
+    IF ls_icfservice IS INITIAL.
+      RETURN.
+    ENDIF.
 
     CLEAR ls_icfservice-icfnodguid.
+    CLEAR ls_icfservice-icfparguid.
 
     CREATE OBJECT lo_xml.
+    lo_xml->element_add( lv_url ).
     lo_xml->structure_add( ls_icfservice ).
     lo_xml->structure_add( ls_icfdocu ).
-    lo_xml->table_add( lt_icfhandler ).
+    lo_xml->table_add( iv_name = 'ICFHANDLER_TABLE' it_table = lt_icfhandler ).
 
-    ls_file = xml_to_file( is_item = is_item
+* multiple SICF nodes with same name cannot be added to repository
+    MOVE-CORRESPONDING is_item TO ls_item.
+    ls_item-obj_name = ls_icfservice-icf_name.
+    ls_file = xml_to_file( is_item = ls_item
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
-
-    _raise 'todo, SICF'.
 
   ENDMETHOD.
 
@@ -3147,8 +3212,20 @@ CLASS lcl_object_sicf IMPLEMENTATION.
           ls_serv_info LIKE LINE OF lt_serv_info,
           ls_key       TYPE ty_sicf_key.
 
+    FIELD-SYMBOLS: <ls_icfhandler> LIKE LINE OF et_icfhandler.
+
 
     ls_key = is_item-obj_name.
+    IF ls_key-icfparguid IS INITIAL.
+* limitation: name must be unique
+      SELECT SINGLE icfparguid FROM icfservice
+        INTO ls_key-icfparguid
+        WHERE icf_name = ls_key-icf_name
+        AND icf_cuser <> 'SAP' ##WARN_OK.
+      IF sy-subrc <> 0.
+        RETURN.
+      ENDIF.
+    ENDIF.
 
     cl_icf_tree=>if_icf_tree~get_info_from_serv(
       EXPORTING
@@ -3158,6 +3235,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       IMPORTING
         serv_info         = lt_serv_info
         icfdocu           = es_icfdocu
+        url               = ev_url
       EXCEPTIONS
         wrong_name        = 1
         wrong_parguid     = 2
@@ -3178,26 +3256,112 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     CLEAR es_icfservice-icf_muser.
     CLEAR es_icfservice-icf_mdate.
 
+    CLEAR es_icfdocu-icfparguid.
+
     APPEND LINES OF ls_serv_info-handlertbl TO et_icfhandler.
+    LOOP AT et_icfhandler ASSIGNING <ls_icfhandler>.
+      CLEAR <ls_icfhandler>-icfparguid.
+    ENDLOOP.
 
   ENDMETHOD.
 
   METHOD deserialize.
 
-    DATA: ls_icfservice TYPE icfservice,
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          ls_icfservice TYPE icfservice,
+          ls_read       TYPE icfservice,
           ls_icfdocu    TYPE icfdocu,
-          lt_icfhandler TYPE icfhandtbl.
+          lv_url        TYPE string,
+          lt_icfhandler TYPE TABLE OF icfhandler.
 
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->element_read( CHANGING cg_element = lv_url ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_icfservice ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_icfdocu ).
+    lo_xml->table_read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
+                        CHANGING ct_table = lt_icfhandler ).
+
+    read( EXPORTING is_item       = is_item
+          IMPORTING es_icfservice = ls_read ).
+    IF ls_read IS INITIAL.
+      insert_sicf( is_icfservice = ls_icfservice
+                   is_icfdocu    = ls_icfdocu
+                   it_icfhandler = lt_icfhandler
+                   iv_package    = iv_package
+                   iv_url        = lv_url ).
+    ELSE.
+      change_sicf( is_icfservice = ls_icfservice
+                   is_icfdocu    = ls_icfdocu
+                   it_icfhandler = lt_icfhandler
+                   iv_package    = iv_package
+                   iv_parent     = ls_read-icfparguid ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD to_icfhndlist.
+
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF it_list.
+
+
+* convert to sorted table
+    LOOP AT it_list ASSIGNING <ls_list>.
+      INSERT <ls_list>-icfhandler INTO TABLE rt_list.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD find_parent.
+
+    cl_icf_tree=>if_icf_tree~service_from_url(
+      EXPORTING
+        url                   = iv_url
+        hostnumber            = 0
+      IMPORTING
+        icfnodguid            = rv_parent
+      EXCEPTIONS
+        wrong_application     = 1
+        no_application        = 2
+        not_allow_application = 3
+        wrong_url             = 4
+        no_authority          = 5
+        OTHERS                = 6 ).
+    IF sy-subrc <> 0.
+      _raise 'error from service_from_url'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD insert_sicf.
+
+    DATA: lt_icfhndlist TYPE icfhndlist,
+          ls_icfserdesc TYPE icfserdesc,
+          ls_icfdocu    TYPE icfdocu,
+          lv_parent     TYPE icfparguid.
+
+
+    lt_icfhndlist = to_icfhndlist( it_icfhandler ).
+    lv_parent = find_parent( iv_url ).
+
+* nice, it seems that the structure should be mistreated
+    ls_icfdocu = is_icfdocu-icf_docu.
+
+    MOVE-CORRESPONDING is_icfservice TO ls_icfserdesc.
 
     cl_icf_tree=>if_icf_tree~insert_node(
       EXPORTING
-        icf_name                  = ls_icfservice-icf_name
-        icfparguid                = ls_icfservice-icfparguid
+        icf_name                  = is_icfservice-orig_name
+        icfparguid                = lv_parent
         icfdocu                   = ls_icfdocu
         doculang                  = gc_english
-*    icfhandlst                = lt_icfhandler todo
+        icfhandlst                = lt_icfhndlist
         package                   = iv_package
         application               = space
+        icfserdesc                = ls_icfserdesc
+        icfactive                 = abap_true
       EXCEPTIONS
         empty_icf_name            = 1
         no_new_virtual_host       = 2
@@ -3230,15 +3394,33 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from insert_node'.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD change_sicf.
+
+    DATA: lt_icfhndlist TYPE icfhndlist,
+          ls_icfserdesc TYPE icfserdesc,
+          ls_icfdocu    TYPE icfdocu.
+
+
+    lt_icfhndlist = to_icfhndlist( it_icfhandler ).
+
+* nice, it seems that the structure should be mistreated
+    ls_icfdocu = is_icfdocu-icf_docu.
+
+    MOVE-CORRESPONDING is_icfservice TO ls_icfserdesc.
+
     cl_icf_tree=>if_icf_tree~change_node(
       EXPORTING
-        icf_name                  = ls_icfservice-icf_name
-        icfparguid                = ls_icfservice-icfparguid
-        icfdocu                   = ls_icfdocu
+        icf_name                  = is_icfservice-orig_name
+        icfparguid                = iv_parent
+        icfdocu                   = is_icfdocu
         doculang                  = gc_english
-*    icfhandlst                = lt_icfhandler todo
+        icfhandlst                = lt_icfhndlist
         package                   = iv_package
         application               = space
+        icfserdesc                = ls_icfserdesc
+        icfactive                 = abap_true
       EXCEPTIONS
         empty_icf_name            = 1
         no_new_virtual_host       = 2
@@ -3271,8 +3453,6 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from change_node'.
     ENDIF.
 
-    _raise 'todo, SICF'.
-
   ENDMETHOD.
 
   METHOD delete.
@@ -3280,12 +3460,14 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     DATA: ls_icfservice TYPE icfservice.
 
 
-    read( EXPORTING is_item = is_item
+    read( EXPORTING is_item       = is_item
           IMPORTING es_icfservice = ls_icfservice ).
 
     cl_icf_tree=>if_icf_tree~delete_node(
       EXPORTING
-        icfparguid                  = ls_icfservice-icfnodguid
+        icfparguid                  = ls_icfservice-icfparguid
+      CHANGING
+        icf_name                    = ls_icfservice-icf_name
       EXCEPTIONS
         no_virtual_host_delete      = 1
         special_service_error       = 2
@@ -3302,8 +3484,6 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'error from delete_node'.
     ENDIF.
-
-    _raise 'todo, SICF'.
 
   ENDMETHOD.
 
@@ -5044,7 +5224,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       CLEAR ls_t100u.
-      MOVE-CORRESPONDING <ls_t100> TO ls_t100u.
+      MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##ENH_OK.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.
@@ -6903,7 +7083,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
 * find files only existing remotely, including non abapGit related
     LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE rt_results WITH KEY filename = <ls_file>-filename TRANSPORTING NO FIELDS.
+      READ TABLE rt_results WITH KEY filename = <ls_file>-filename
+        TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         CLEAR ls_result.
         ls_result-match    = abap_true.
@@ -6914,9 +7095,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
 * find objects only existing locally
     IF NOT iv_package IS INITIAL.
-      SELECT * FROM tadir INTO TABLE lt_tadir
-        WHERE devclass = iv_package
-        AND object <> 'DEVC'.             "#EC CI_GENBUFF "#EC CI_SUBRC
+      lt_tadir = lcl_tadir=>read( iv_package ).
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
         READ TABLE rt_results
           WITH KEY obj_type = <ls_tadir>-object obj_name = <ls_tadir>-obj_name
@@ -9079,9 +9258,7 @@ CLASS lcl_zip IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
 
 
-    SELECT * FROM tadir INTO TABLE lt_tadir
-      WHERE devclass = is_repo-package
-      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
+    lt_tadir = lcl_tadir=>read( is_repo-package ).
 
     IF lt_tadir IS INITIAL.
       _raise 'Package is empty'.
@@ -9195,13 +9372,13 @@ CLASS lcl_zip IMPLEMENTATION.
         error_execute_failed   = 7
         synchronous_failed     = 8
         not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
+        OTHERS                 = 10 ).                      "#EC NOTEXT
     IF sy-subrc <> 0.
       _raise 'error from execute'.
     ENDIF.
 
 * make sure to set git user.email and user.name manually
-    lv_par = 'commit -m "' && lv_message && '"'.
+    lv_par = 'commit -m "' && lv_message && '"'.            "#EC NOTEXT
     cl_gui_frontend_services=>execute(
       EXPORTING
         application            = 'git'
@@ -10086,9 +10263,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_question TYPE c LENGTH 100.
 
 
-    SELECT * FROM tadir INTO TABLE lt_tadir
-      WHERE devclass = is_repo-package
-      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
+    lt_tadir = lcl_tadir=>read( is_repo-package ).
 
     IF lines( lt_tadir ) > 0.
       lv_count = lines( lt_tadir ).
@@ -10586,9 +10761,7 @@ CLASS lcl_gui IMPLEMENTATION.
       '<th><u>Local object</u></th>'          && gc_newline &&
       '</tr>'                                 && gc_newline.
 
-    SELECT * FROM tadir INTO TABLE lt_tadir
-      WHERE devclass = is_repo_persi-package
-      AND object <> 'DEVC'.               "#EC CI_GENBUFF "#EC CI_SUBRC
+    lt_tadir = lcl_tadir=>read( is_repo_persi-package ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 * todo, add jump link like in online rendering
