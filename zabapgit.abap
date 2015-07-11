@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.42'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.43'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -382,11 +382,13 @@ CLASS lcl_xml DEFINITION FINAL.
 
     METHODS element_add
       IMPORTING ig_element TYPE data
+                iv_name    TYPE string OPTIONAL
                 ii_root    TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
 
     METHODS element_read
       IMPORTING ii_root    TYPE REF TO if_ixml_element OPTIONAL
+                iv_name    TYPE string OPTIONAL
       EXPORTING ev_success TYPE abap_bool
       CHANGING  cg_element TYPE data
       RAISING   lcx_exception.
@@ -727,9 +729,13 @@ CLASS lcl_xml IMPLEMENTATION.
 
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_element ).
 
-    lv_name = lo_descr->get_relative_name( ).
-    IF lv_name IS INITIAL.
-      _raise 'no name'.
+    IF iv_name IS INITIAL.
+      lv_name = lo_descr->get_relative_name( ).
+      IF lv_name IS INITIAL.
+        _raise 'no name'.
+      ENDIF.
+    ELSE.
+      lv_name = iv_name.
     ENDIF.
 
     li_element = mi_xml_doc->create_element( lv_name ).
@@ -755,9 +761,13 @@ CLASS lcl_xml IMPLEMENTATION.
 
     lo_descr ?= cl_abap_typedescr=>describe_by_data( cg_element ).
 
-    lv_name = lo_descr->get_relative_name( ).
-    IF lv_name IS INITIAL.
-      _raise 'no name'.
+    IF iv_name IS INITIAL.
+      lv_name = lo_descr->get_relative_name( ).
+      IF lv_name IS INITIAL.
+        _raise 'no name'.
+      ENDIF.
+    ELSE.
+      lv_name = iv_name.
     ENDIF.
 
     li_element = xml_find( ii_root = ii_root
@@ -3101,6 +3111,284 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
+
+CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS get_filename
+      IMPORTING iv_url             TYPE string
+      RETURNING VALUE(rv_filename) TYPE string.
+
+    CLASS-METHODS find_content
+      IMPORTING is_item           TYPE st_item
+                it_files          TYPE tt_files
+                iv_url            TYPE string
+      RETURNING VALUE(rv_content) TYPE xstring
+      RAISING   lcx_exception.
+
+    CLASS-METHODS build_filename
+      IMPORTING is_item            TYPE st_item
+                iv_filename        TYPE string
+      RETURNING VALUE(rv_filename) TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_object_smim IMPLEMENTATION.
+
+  METHOD build_filename.
+
+    CONCATENATE is_item-obj_name is_item-obj_type iv_filename
+      INTO rv_filename SEPARATED BY '.'.
+    TRANSLATE rv_filename TO LOWER CASE.
+
+  ENDMETHOD.
+
+  METHOD find_content.
+
+    DATA: lv_filename TYPE string.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+
+
+    lv_filename = get_filename( iv_url ).
+
+    lv_filename = build_filename( is_item     = is_item
+                                  iv_filename = lv_filename ).
+
+    READ TABLE it_files ASSIGNING <ls_file> WITH KEY filename = lv_filename.
+    IF sy-subrc <> 0.
+      _raise 'SMIM, file not found'.
+    ENDIF.
+
+    rv_content = <ls_file>-data.
+
+  ENDMETHOD.
+
+  METHOD get_filename.
+
+    DATA: lv_lines   TYPE i,
+          lt_strings TYPE TABLE OF string.
+
+
+    SPLIT iv_url AT '/' INTO TABLE lt_strings.
+    lv_lines = lines( lt_strings ).
+    ASSERT lv_lines > 0.
+    READ TABLE lt_strings INDEX lv_lines INTO rv_filename.
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: lv_io       TYPE sdok_docid,
+          lv_url      TYPE string,
+          lv_folder   TYPE abap_bool,
+          ls_file     LIKE LINE OF rt_files,
+          lv_filename TYPE string,
+          lv_content  TYPE xstring,
+          lo_xml      TYPE REF TO lcl_xml,
+          li_api      TYPE REF TO if_mr_api.
+
+
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
+    lv_io = is_item-obj_name.
+
+    li_api->get_url_for_io(
+      EXPORTING
+        i_loio            = lv_io
+      IMPORTING
+        e_url             = lv_url
+        e_is_folder       = lv_folder
+      EXCEPTIONS
+        parameter_missing = 1
+        error_occured     = 2
+        not_found         = 3
+        OTHERS            = 4 ).
+    IF sy-subrc = 3.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from get_url_for_io'.
+    ENDIF.
+
+    IF lv_folder = abap_false.
+      li_api->get_by_io(
+        EXPORTING
+          i_loio             = lv_io
+        IMPORTING
+          e_content          = lv_content
+        EXCEPTIONS
+          parameter_missing  = 1
+          error_occured      = 2
+          not_found          = 3
+          permission_failure = 4
+          OTHERS             = 5 ).
+      IF sy-subrc <> 0.
+        _raise 'error from get_by_io'.
+      ENDIF.
+
+      lv_filename = get_filename( lv_url ).
+      CLEAR ls_file.
+      ls_file-filename = build_filename( is_item     = is_item
+                                         iv_filename = lv_filename ).
+      ls_file-path = '/'.
+      ls_file-data = lv_content.
+      APPEND ls_file TO rt_files.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->element_add( iv_name = 'URL' ig_element = lv_url ).
+    lo_xml->element_add( iv_name = 'FOLDER' ig_element = lv_folder ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lv_url      TYPE string,
+          lv_folder   TYPE abap_bool,
+          lo_xml      TYPE REF TO lcl_xml,
+          lv_content  TYPE xstring,
+          lv_filename TYPE skwf_filnm,
+          lv_io       TYPE sdok_docid,
+          ls_skwf_io  TYPE skwf_io,
+          li_api      TYPE REF TO if_mr_api.
+
+
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
+    lv_io = is_item-obj_name.
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->element_read( EXPORTING iv_name = 'URL'
+                          CHANGING cg_element = lv_url ).
+    lo_xml->element_read( EXPORTING iv_name = 'FOLDER'
+                          CHANGING cg_element = lv_folder ).
+
+    ls_skwf_io-objid = lv_io.
+
+    IF lv_folder = abap_true.
+      li_api->create_folder(
+        EXPORTING
+          i_url              = lv_url
+          i_language         = sy-langu
+          i_dev_package      = iv_package
+          i_folder_loio      = ls_skwf_io
+        EXCEPTIONS
+          parameter_missing  = 1
+          error_occured      = 2
+          cancelled          = 3
+          permission_failure = 4
+          folder_exists      = 5
+          OTHERS             = 6 ).
+      IF sy-subrc <> 0.
+        _raise 'error frrom SMIM create_folder'.
+      ENDIF.
+    ELSE.
+      lv_filename = get_filename( lv_url ).
+      cl_wb_mime_repository=>determine_io_class(
+        EXPORTING
+          filename = lv_filename
+        IMPORTING
+          io_class = ls_skwf_io-class ).
+      CONCATENATE ls_skwf_io-class '_L' INTO ls_skwf_io-class.
+
+      lv_content = find_content( is_item  = is_item
+                                 it_files = it_files
+                                 iv_url   = lv_url ).
+
+      li_api->put(
+        EXPORTING
+          i_url                   = lv_url
+          i_content               = lv_content
+          i_dev_package           = iv_package
+          i_new_loio              = ls_skwf_io
+        EXCEPTIONS
+          parameter_missing       = 1
+          error_occured           = 2
+          cancelled               = 3
+          permission_failure      = 4
+          data_inconsistency      = 5
+          new_loio_already_exists = 6
+          is_folder               = 7
+          OTHERS                  = 8 ).
+      IF sy-subrc <> 0.
+        _raise 'error from SMIM put'.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: li_api TYPE REF TO if_mr_api,
+          lv_url TYPE string,
+          lv_io  TYPE sdok_docid.
+
+
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
+    lv_io = is_item-obj_name.
+
+    li_api->get_url_for_io(
+      EXPORTING
+        i_loio            = lv_io
+      IMPORTING
+        e_url             = lv_url
+      EXCEPTIONS
+        parameter_missing = 1
+        error_occured     = 2
+        not_found         = 3
+        OTHERS            = 4 ).
+    IF sy-subrc = 3.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from get_url_for_io'.
+    ENDIF.
+
+    li_api->delete(
+      EXPORTING
+        i_url              = lv_url
+        i_delete_children  = abap_true
+        i_suppress_dialogs = abap_true
+      EXCEPTIONS
+        parameter_missing  = 1
+        error_occured      = 2
+        cancelled          = 3
+        permission_failure = 4
+        not_found          = 5
+        OTHERS             = 6 ).
+    IF sy-subrc <> 0.
+      _raise 'error from delete'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD jump.
+    _raise 'todo, SMIM'.
+  ENDMETHOD.
+
+ENDCLASS.
 
 CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
