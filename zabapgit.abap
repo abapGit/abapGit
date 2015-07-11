@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.39'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.40'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -8779,6 +8779,10 @@ CLASS lcl_zip DEFINITION FINAL.
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
+    CLASS-METHODS get_message
+      RETURNING VALUE(rv_message) TYPE string
+      RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_zip DEFINITION
 
 *----------------------------------------------------------------------*
@@ -8787,6 +8791,43 @@ ENDCLASS.                    "lcl_zip DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_zip IMPLEMENTATION.
+
+  METHOD get_message.
+
+    DATA: lv_returncode TYPE c,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname = 'ABAPTXT255'.
+    <ls_field>-fieldname = 'LINE'.
+    <ls_field>-fieldtext = 'Commit message'.                "#EC NOTEXT
+    <ls_field>-field_obl = abap_true.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Enter commit message'    "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      _raise 'cancelled'.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    rv_message = <ls_field>-value.
+
+  ENDMETHOD.
 
   METHOD file_download.
 
@@ -9067,6 +9108,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
     DATA: lv_folder   TYPE string,
           lv_filename TYPE string,
+          lv_par      TYPE string,
+          lv_message  TYPE string,
           lt_rawdata  TYPE solix_tab.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
@@ -9090,9 +9133,7 @@ CLASS lcl_zip IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-* todo, prompt to find git executeable, or assume or test if its in PATH
-
-* todo, prompt for commit message
+    lv_message = get_message( ).
 
     LOOP AT it_files ASSIGNING <ls_file>.
       lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).
@@ -9137,7 +9178,50 @@ CLASS lcl_zip IMPLEMENTATION.
 
     ENDLOOP.
 
-* todo, call 'git commit -m "message"'
+* assumption: git command is in PATH
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        application            = 'git'
+        default_directory      = lv_folder
+        synchronous            = 'X'
+        parameter              = 'add *'
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+    IF sy-subrc <> 0.
+      _raise 'error from execute'.
+    ENDIF.
+
+* make sure to set git user.email and user.name manually
+    lv_par = 'commit -m "' && lv_message && '"'.
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        application            = 'git'
+        default_directory      = lv_folder
+        synchronous            = 'X'
+        parameter              = lv_par
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+    IF sy-subrc <> 0.
+      _raise 'error from execute'.
+    ENDIF.
 
   ENDMETHOD.
 
