@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.43'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.44'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4639,8 +4639,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
   METHOD jump.
 
     jump_se11( is_item  = is_item
-               iv_radio = 'RSRD1-TBMA'
-               iv_field = 'RSRD1-TBMA_VAL' ).
+               iv_radio = 'RSRD1-DDTYPE'
+               iv_field = 'RSRD1-DDTYPE_VAL' ).
 
   ENDMETHOD.                    "jump
 
