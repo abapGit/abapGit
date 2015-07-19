@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.45'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.46'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -148,7 +148,7 @@ START-OF-SELECTION.
   PERFORM run.
 
 *----------------------------------------------------------------------*
-*       CLASS CX_LOCAL_EXCEPTION DEFINITION
+*       CLASS LCX_EXCEPTION DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
@@ -163,7 +163,7 @@ CLASS lcx_exception DEFINITION INHERITING FROM cx_static_check FINAL.
 ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS CX_LOCAL_EXCEPTION IMPLEMENTATION
+*       CLASS LCX_EXCEPTION IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
@@ -175,6 +175,24 @@ CLASS lcx_exception IMPLEMENTATION.
   ENDMETHOD.                    "CONSTRUCTOR
 
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS LCX_NOT_FOUND DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcx_not_found DEFINITION INHERITING FROM cx_static_check FINAL.
+
+ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS LCX_NOT_FOUND IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcx_not_found IMPLEMENTATION.
+
+ENDCLASS.
 
 CLASS lcl_tadir DEFINITION FINAL.
 
@@ -3152,9 +3170,42 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_filename        TYPE string
       RETURNING VALUE(rv_filename) TYPE string.
 
+    CLASS-METHODS get_url_for_io
+      IMPORTING iv_loio      TYPE sdok_docid
+      EXPORTING ev_url       TYPE string
+                ev_is_folder TYPE boole_d
+      RAISING   lcx_not_found
+                lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_object_smim IMPLEMENTATION.
+
+  METHOD get_url_for_io.
+
+    DATA: li_api TYPE REF TO if_mr_api.
+
+
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
+
+    li_api->get_url_for_io(
+      EXPORTING
+        i_loio            = iv_loio
+      IMPORTING
+        e_url             = ev_url
+        e_is_folder       = ev_is_folder
+      EXCEPTIONS
+        parameter_missing = 1
+        error_occured     = 2
+        not_found         = 3
+        OTHERS            = 4 ).
+    IF sy-subrc = 3.
+      RAISE EXCEPTION TYPE lcx_not_found.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from get_url_for_io'.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD build_filename.
 
@@ -3213,27 +3264,21 @@ CLASS lcl_object_smim IMPLEMENTATION.
     li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
     lv_io = is_item-obj_name.
 
-    li_api->get_url_for_io(
-      EXPORTING
-        i_loio            = lv_io
-      IMPORTING
-        e_url             = lv_url
-        e_is_folder       = lv_folder
-      EXCEPTIONS
-        parameter_missing = 1
-        error_occured     = 2
-        not_found         = 3
-        OTHERS            = 4 ).
-    IF sy-subrc = 3.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      _raise 'error from get_url_for_io'.
-    ENDIF.
+    TRY.
+        get_url_for_io(
+          EXPORTING
+            iv_loio      = lv_io
+          IMPORTING
+            ev_url       = lv_url
+            ev_is_folder = lv_folder ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
 
     IF lv_folder = abap_false.
-      li_api->get_by_io(
+      li_api->get(
         EXPORTING
-          i_loio             = lv_io
+          i_url              = lv_url
         IMPORTING
           e_content          = lv_content
         EXCEPTIONS
@@ -3243,7 +3288,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           permission_failure = 4
           OTHERS             = 5 ).
       IF sy-subrc <> 0.
-        _raise 'error from get_by_io'.
+        _raise 'error from mime api->get'.
       ENDIF.
 
       lv_filename = get_filename( lv_url ).
@@ -3303,7 +3348,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           permission_failure = 4
           folder_exists      = 5
           OTHERS             = 6 ).
-      IF sy-subrc <> 0.
+      IF sy-subrc <> 5 AND sy-subrc <> 0.
         _raise 'error frrom SMIM create_folder'.
       ENDIF.
     ELSE.
@@ -3351,27 +3396,21 @@ CLASS lcl_object_smim IMPLEMENTATION.
     li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
     lv_io = is_item-obj_name.
 
-    li_api->get_url_for_io(
-      EXPORTING
-        i_loio            = lv_io
-      IMPORTING
-        e_url             = lv_url
-      EXCEPTIONS
-        parameter_missing = 1
-        error_occured     = 2
-        not_found         = 3
-        OTHERS            = 4 ).
-    IF sy-subrc = 3.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      _raise 'error from get_url_for_io'.
-    ENDIF.
+
+    TRY.
+        get_url_for_io(
+          EXPORTING
+            iv_loio = lv_io
+          IMPORTING
+            ev_url  = lv_url ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
 
     li_api->delete(
       EXPORTING
         i_url              = lv_url
         i_delete_children  = abap_true
-        i_suppress_dialogs = abap_true
       EXCEPTIONS
         parameter_missing  = 1
         error_occured      = 2
