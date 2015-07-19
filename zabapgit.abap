@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.46'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.47'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3183,27 +3183,33 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD get_url_for_io.
 
-    DATA: li_api TYPE REF TO if_mr_api.
+    DATA: ls_io       TYPE skwf_io,
+          lv_url      TYPE skwf_url,
+          ls_smimloio TYPE smimloio.
 
 
-    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
-
-    li_api->get_url_for_io(
-      EXPORTING
-        i_loio            = iv_loio
-      IMPORTING
-        e_url             = ev_url
-        e_is_folder       = ev_is_folder
-      EXCEPTIONS
-        parameter_missing = 1
-        error_occured     = 2
-        not_found         = 3
-        OTHERS            = 4 ).
-    IF sy-subrc = 3.
+    SELECT SINGLE * FROM smimloio INTO ls_smimloio
+      WHERE loio_id = iv_loio.
+    IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
-    ELSEIF sy-subrc <> 0.
-      _raise 'error from get_url_for_io'.
     ENDIF.
+
+    IF ls_smimloio-lo_class = wbmr_c_skwf_folder_class.
+      ev_is_folder = abap_true.
+      ls_io-objtype = skwfc_obtype_folder.
+    ELSE.
+      ls_io-objtype = skwfc_obtype_loio.
+    ENDIF.
+    ls_io-class = ls_smimloio-lo_class.
+    ls_io-objid = ls_smimloio-loio_id.
+
+    CALL FUNCTION 'SKWF_NMSPC_IO_ADDRESS_GET'
+      EXPORTING
+        io  = ls_io
+      IMPORTING
+        url = lv_url.
+
+    ev_url = lv_url.
 
   ENDMETHOD.
 
