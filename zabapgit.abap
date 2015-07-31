@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.47'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.48'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -641,7 +641,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
         CALL FUNCTION 'POPUP_TO_INFORM'
           EXPORTING
-            titel = 'Error from XLM parser'                 "#EC NOTEXT
+            titel = 'Error from XML parser'                 "#EC NOTEXT
             txt1  = lv_txt1
             txt2  = lv_txt2
             txt3  = lv_txt3.
