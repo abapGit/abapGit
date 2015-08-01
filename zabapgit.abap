@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.49'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.50'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -532,6 +532,7 @@ CLASS lcl_xml IMPLEMENTATION.
           lv_value     TYPE string,
           li_struct    TYPE REF TO if_ixml_element,
           li_elm       TYPE REF TO if_ixml_element,
+          lo_typedescr TYPE REF TO cl_abap_typedescr,
           lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <lg_any>  TYPE any,
@@ -545,7 +546,7 @@ CLASS lcl_xml IMPLEMENTATION.
     IF iv_name IS INITIAL.
       lv_name = lo_descr_ref->get_relative_name( ).
       IF lv_name IS INITIAL.
-        _raise 'no name'.
+        _raise 'no name, structure read'.
       ENDIF.
     ELSE.
       lv_name = iv_name.
@@ -559,16 +560,29 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
-
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE cg_structure TO <lg_any>.
+      ASSERT sy-subrc = 0.
 
       lv_name = <ls_comp>-name.
       special_names( CHANGING cv_name = lv_name ).
-      li_elm = li_struct->find_from_name( depth = 0 name = lv_name ).
-      IF li_elm IS BOUND.
-        lv_value = li_elm->get_value( ).
-        <lg_any> = lv_value.
-      ENDIF.
+
+      lo_typedescr = cl_abap_typedescr=>describe_by_data( <lg_any> ).
+      CASE lo_typedescr->kind.
+        WHEN cl_abap_typedescr=>kind_table.
+          table_read( EXPORTING ii_root    = li_struct
+                                iv_name = lv_name
+                      CHANGING  ct_table = <lg_any> ).
+        WHEN cl_abap_typedescr=>kind_struct.
+          structure_read( EXPORTING ii_root    = li_struct
+                                    iv_name = lv_name
+                          CHANGING  cg_structure = <lg_any> ).
+        WHEN cl_abap_typedescr=>kind_elem.
+          element_read( EXPORTING ii_root    = li_struct
+                                  iv_name = lv_name
+                        CHANGING  cg_element = <lg_any> ).
+        WHEN OTHERS.
+          _raise 'unknown kind, structure read'.
+      ENDCASE.
     ENDLOOP.
 
   ENDMETHOD.                    "structure_read
@@ -596,7 +610,7 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
     IF lv_name IS INITIAL.
-      _raise 'no name'.
+      _raise 'no name, table read'.
     ENDIF.
 
     li_root = xml_find( ii_root   = ii_root
@@ -718,7 +732,7 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
     IF lv_name IS INITIAL.
-      _raise 'no name'.
+      _raise 'no name, table add'.
     ENDIF.
 
     li_table = mi_xml_doc->create_element( lv_name ).
@@ -767,7 +781,7 @@ CLASS lcl_xml IMPLEMENTATION.
     IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
-        _raise 'no name'.
+        _raise 'no name, element add'.
       ENDIF.
     ELSE.
       lv_name = iv_name.
@@ -799,7 +813,7 @@ CLASS lcl_xml IMPLEMENTATION.
     IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
-        _raise 'no name'.
+        _raise 'no name, element read'.
       ENDIF.
     ELSE.
       lv_name = iv_name.
@@ -823,6 +837,7 @@ CLASS lcl_xml IMPLEMENTATION.
           li_text      TYPE REF TO if_ixml_text,
           lv_string    TYPE string,
           lv_name      TYPE string,
+          lo_typedescr TYPE REF TO cl_abap_typedescr,
           lo_descr     TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
@@ -834,7 +849,7 @@ CLASS lcl_xml IMPLEMENTATION.
     IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
-        _raise 'no name'.
+        _raise 'no name, structure add'.
       ENDIF.
     ELSE.
       lv_name = iv_name.
@@ -842,19 +857,30 @@ CLASS lcl_xml IMPLEMENTATION.
     li_structure = mi_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr->components ASSIGNING <ls_comp>.
-
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE ig_structure TO <lg_any>.
+      ASSERT sy-subrc = 0.
 
       lv_name  = <ls_comp>-name.
       special_names( CHANGING cv_name = lv_name ).
-      li_element = mi_xml_doc->create_element( lv_name ).
 
-      lv_string  = <lg_any>.
-      li_text    = mi_xml_doc->create_text( lv_string ).
+      lo_typedescr = cl_abap_typedescr=>describe_by_data( <lg_any> ).
+      CASE lo_typedescr->kind.
+        WHEN cl_abap_typedescr=>kind_table.
+          table_add( it_table = <lg_any>
+                     iv_name  = lv_name
+                     ii_root  = li_structure ).
+        WHEN cl_abap_typedescr=>kind_struct.
+          structure_add( ig_structure = <lg_any>
+                         iv_name      = lv_name
+                         ii_root      = li_structure ).
+        WHEN cl_abap_typedescr=>kind_elem.
+          element_add( ig_element = <lg_any>
+                       iv_name    = lv_name
+                       ii_root    = li_structure ).
+        WHEN OTHERS.
+          _raise 'unknown kind, structure add'.
+      ENDCASE.
 
-      li_element->append_child( li_text ).
-
-      li_structure->append_child( li_element ).
     ENDLOOP.
 
     xml_add( ii_root    = ii_root
@@ -2722,25 +2748,29 @@ CLASS lcl_object_clas IMPLEMENTATION.
 * signatures messes up in CL_OO_SOURCE when deserializing and serializing
 * within same session
 
-    CONSTANTS:
-      lc_begin TYPE string VALUE '* <SIGNATURE>------------------------------------'
-      & '---------------------------------------------------+',
-      lc_end   TYPE string VALUE '* +------------------------------------------------'
-      & '--------------------------------------</SIGNATURE>'.
-
-    DATA: lv_remove TYPE sap_bool,
+    DATA: lv_begin  TYPE string,
+          lv_end    TYPE string,
+          lv_remove TYPE sap_bool,
           lv_source LIKE LINE OF ct_source.
 
 
+    CONCATENATE '* <SIGNATURE>------------------------------------'
+      '---------------------------------------------------+'
+      INTO lv_begin.
+
+    CONCATENATE '* +------------------------------------------------'
+      '--------------------------------------</SIGNATURE>'
+      INTO lv_end.
+
     lv_remove = abap_false.
     LOOP AT ct_source INTO lv_source.
-      IF lv_source = lc_begin.
+      IF lv_source = lv_begin.
         lv_remove = abap_true.
       ENDIF.
       IF lv_remove = abap_true.
         DELETE ct_source INDEX sy-tabix.
       ENDIF.
-      IF lv_source = lc_end.
+      IF lv_source = lv_end.
         lv_remove = abap_false.
       ENDIF.
     ENDLOOP.
@@ -4052,6 +4082,290 @@ CLASS lcl_object_suso DEFINITION INHERITING FROM lcl_objects_common FINAL.
     CLASS-METHODS jump
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      read
+        IMPORTING is_item             TYPE st_item
+        RETURNING VALUE(rs_component) TYPE wdy_component_metadata
+        RAISING   lcx_exception,
+      read_controller
+        IMPORTING is_key               TYPE wdy_md_controller_key
+        RETURNING VALUE(rs_controller) TYPE wdy_md_controller_meta_data
+        RAISING   lcx_exception,
+      read_definition
+        IMPORTING is_key               TYPE wdy_md_component_key
+        RETURNING VALUE(rs_definition) TYPE wdy_md_component_meta_data
+        RAISING   lcx_exception,
+      read_view
+        IMPORTING is_key         TYPE wdy_md_view_key
+        RETURNING VALUE(rs_view) TYPE wdy_md_view_meta_data
+        RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_wdyn IMPLEMENTATION.
+
+  METHOD read_controller.
+
+    DATA: lt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
+          lt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs,
+          lt_definition TYPE TABLE OF wdy_controller.
+
+
+    CALL FUNCTION 'WDYC_GET_OBJECT'
+      EXPORTING
+        controller_key               = is_key
+        get_all_translations         = abap_false
+      TABLES
+        definition                   = lt_definition
+        descriptions                 = rs_controller-descriptions
+        controller_usages            = rs_controller-controller_usages
+        controller_components        = lt_components " todo
+        controller_component_sources = lt_sources " todo
+        controller_component_texts   = rs_controller-controller_component_texts
+        controller_parameters        = rs_controller-controller_parameters
+        controller_parameter_texts   = rs_controller-controller_parameter_texts
+        context_nodes                = rs_controller-context_nodes
+        context_attributes           = rs_controller-context_attributes
+        context_mappings             = rs_controller-context_mappings
+        fieldgroups                  = rs_controller-fieldgroups
+        controller_exceptions        = rs_controller-controller_exceptions
+        controller_exception_texts   = rs_controller-controller_exception_texts
+      EXCEPTIONS
+        not_existing                 = 1
+        OTHERS                       = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from WDYC_GET_OBJECT'.
+    ENDIF.
+
+    READ TABLE lt_definition INDEX 1 INTO rs_controller-definition.
+    IF sy-subrc <> 0.
+      _raise 'WDYC, definition not found'.
+    ENDIF.
+
+    CLEAR: rs_controller-definition-author,
+           rs_controller-definition-createdon,
+           rs_controller-definition-changedby,
+           rs_controller-definition-changedon.
+
+  ENDMETHOD.
+
+  METHOD read_definition.
+
+    DATA: lt_definition TYPE TABLE OF wdy_component.
+
+
+    CALL FUNCTION 'WDYD_GET_OBJECT'
+      EXPORTING
+        component_key           = is_key
+        get_all_translations    = abap_false
+      TABLES
+        definition              = lt_definition
+        descriptions            = rs_definition-descriptions
+        component_usages        = rs_definition-component_usages
+        interface_implementings = rs_definition-interface_implementings
+        library_usages          = rs_definition-library_usages
+        ext_ctlr_usages         = rs_definition-ext_ctlr_usages
+        ext_ctx_mappings        = rs_definition-ext_ctx_mappings
+      EXCEPTIONS
+        not_existing            = 1
+        OTHERS                  = 2.
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from WDYD_GET_OBJECT'.
+    ENDIF.
+
+    READ TABLE lt_definition INDEX 1 INTO rs_definition-definition.
+    IF sy-subrc <> 0.
+      _raise 'WDYD, definition not found'.
+    ENDIF.
+
+    CLEAR: rs_definition-definition-author,
+           rs_definition-definition-createdon,
+           rs_definition-definition-changedby,
+           rs_definition-definition-changedon,
+           rs_definition-definition-gendate,
+           rs_definition-definition-gentime.
+
+  ENDMETHOD.
+
+  METHOD read_view.
+
+    DATA: lt_definition TYPE TABLE OF wdy_view_vrs,
+          lt_psmodilog  TYPE TABLE OF smodilog,
+          lt_psmodisrc  TYPE TABLE OF smodisrc.
+
+    FIELD-SYMBOLS: <ls_definition> LIKE LINE OF lt_definition.
+
+
+    CALL FUNCTION 'WDYV_GET_OBJECT'
+      EXPORTING
+        view_key               = is_key
+        get_all_translations   = abap_false
+      TABLES
+        definition             = lt_definition
+        descriptions           = rs_view-descriptions
+        view_containers        = rs_view-view_containers
+        view_container_texts   = rs_view-view_container_texts
+        iobound_plugs          = rs_view-iobound_plugs
+        iobound_plug_texts     = rs_view-iobound_plug_texts
+        plug_parameters        = rs_view-plug_parameters
+        plug_parameter_texts   = rs_view-plug_parameter_texts
+        ui_elements            = rs_view-ui_elements
+        ui_context_bindings    = rs_view-ui_context_bindings
+        ui_event_bindings      = rs_view-ui_event_bindings
+        ui_ddic_bindings       = rs_view-ui_ddic_bindings
+        ui_properties          = rs_view-ui_properties
+        navigation_links       = rs_view-navigation_links
+        navigation_target_refs = rs_view-navigation_target_refs
+        vsh_nodes              = rs_view-vsh_nodes
+        vsh_placeholders       = rs_view-vsh_placeholders
+        viewset_properties     = rs_view-viewset_properties
+        psmodilog              = lt_psmodilog
+        psmodisrc              = lt_psmodisrc
+      EXCEPTIONS
+        not_existing           = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from WDYV_GET_OBJECT'.
+    ENDIF.
+
+    READ TABLE lt_definition INDEX 1 ASSIGNING <ls_definition>.
+    ASSERT sy-subrc = 0.
+    MOVE-CORRESPONDING <ls_definition> TO rs_view-definition.
+
+    CLEAR: rs_view-definition-author,
+           rs_view-definition-createdon,
+           rs_view-definition-changedby,
+           rs_view-definition-changedon.
+
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: lt_objects        TYPE wdy_md_transport_keys,
+          ls_controller_key TYPE wdy_md_controller_key,
+          ls_component_key  TYPE wdy_md_component_key,
+          ls_view_key       TYPE wdy_md_view_key,
+          lv_name           TYPE wdy_component_name.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
+
+
+    lv_name = is_item-obj_name.
+    CALL FUNCTION 'WDYN_GET_LIMU_OBJECTS'
+      EXPORTING
+        component_name = lv_name
+      IMPORTING
+        limu_objects   = lt_objects.
+
+    LOOP AT lt_objects ASSIGNING <ls_object>.
+      CASE <ls_object>-sub_type.
+        WHEN 'WDYC'. " controller, multiple
+          ls_controller_key = <ls_object>-sub_name.
+          APPEND read_controller( ls_controller_key ) TO rs_component-ctlr_metadata.
+        WHEN 'WDYD'. " definition, one
+          ls_component_key = <ls_object>-sub_name.
+          rs_component-comp_metadata = read_definition( ls_component_key ).
+        WHEN 'WDYV'. " view, multiple
+          ls_view_key = <ls_object>-sub_name.
+          APPEND read_view( ls_view_key ) TO rs_component-view_metadata.
+        WHEN OTHERS.
+          ASSERT 1 = 1 + 1.
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: ls_file      TYPE st_file,
+          lo_xml       TYPE REF TO lcl_xml,
+          ls_component TYPE wdy_component_metadata.
+
+
+    ls_component = read( is_item ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_component ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+    _raise 'todo, wdyn'.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lo_xml       TYPE REF TO lcl_xml,
+          ls_component TYPE wdy_component_metadata.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_component ).
+
+    _raise 'todo, wdyn'.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: li_component TYPE REF TO if_wdy_md_component,
+          lv_name      TYPE wdy_component_name.
+
+
+    lv_name = is_item-obj_name.
+    TRY.
+        li_component = cl_wdy_md_component=>get_object_by_key(
+                         name    = lv_name
+                         version = 'A' ).
+
+        li_component->if_wdy_md_lockable_object~lock( ).
+        li_component->if_wdy_md_object~delete( ).
+        li_component->if_wdy_md_lockable_object~save_to_database( ).
+        li_component->if_wdy_md_lockable_object~unlock( ).
+      CATCH cx_wdy_md_not_existing.
+        RETURN.
+      CATCH cx_wdy_md_permission_failure
+          cx_wdy_md_access_exception
+          cx_wdy_md_save_exception.
+        _raise 'WDYN permission failture'.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD jump.
+    _raise 'todo, jump wdyn'.
+  ENDMETHOD.
 
 ENDCLASS.
 
@@ -11630,11 +11944,47 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
 ENDCLASS.
 
+CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+
+    METHODS xml FOR TESTING RAISING lcx_exception.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS test IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+CLASS ltcl_xml IMPLEMENTATION.
+
+  METHOD xml.
+
+    DATA: lo_xml           TYPE REF TO lcl_xml,
+          lv_xml           TYPE string,
+          ls_component_in  TYPE wdy_component_metadata,
+          ls_component_out TYPE wdy_component_metadata.
+
+
+    ls_component_in-comp_metadata-definition-component_name = 'FOOBAR'.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_component_in ).
+    lv_xml = lo_xml->xml_render( ).
+
+    CREATE OBJECT lo_xml
+      EXPORTING
+        iv_xml = lv_xml.
+    lo_xml->structure_read( CHANGING cg_structure = ls_component_out ).
+
+    cl_abap_unit_assert=>assert_equals( act = ls_component_out
+                                        exp = ls_component_in ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_enqu.
