@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.48'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.49'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -197,12 +197,28 @@ ENDCLASS.
 CLASS lcl_tadir DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS read IMPORTING iv_package      TYPE tadir-devclass
-                       RETURNING VALUE(rt_tadir) TYPE tt_tadir.
+    CLASS-METHODS:
+      read
+        IMPORTING iv_package      TYPE tadir-devclass
+        RETURNING VALUE(rt_tadir) TYPE tt_tadir,
+      read_single
+        IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
+                  iv_object       TYPE tadir-object
+                  iv_obj_name     TYPE tadir-obj_name
+        RETURNING VALUE(rs_tadir) TYPE tadir.
 
 ENDCLASS.
 
 CLASS lcl_tadir IMPLEMENTATION.
+
+  METHOD read_single.
+
+    SELECT SINGLE * FROM tadir INTO rs_tadir
+      WHERE pgmid = iv_pgmid
+      AND object = iv_object
+      AND obj_name = iv_obj_name.                         "#EC CI_SUBRC
+
+  ENDMETHOD.
 
   METHOD read.
 
@@ -7114,6 +7130,15 @@ CLASS lcl_objects DEFINITION FINAL.
       CHANGING ct_tadir TYPE tt_tadir
       RAISING  lcx_exception.
 
+    CLASS-METHODS check_warning
+      IMPORTING is_item          TYPE st_item
+                iv_package       TYPE devclass
+      RETURNING VALUE(rv_cancel) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    CLASS-METHODS update_package_tree
+      IMPORTING iv_package TYPE devclass.
+
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
@@ -7123,6 +7148,11 @@ CLASS lcl_objects DEFINITION FINAL.
                 is_gen          TYPE st_file
       RETURNING VALUE(rv_match) TYPE sap_bool
       RAISING   lcx_exception.
+
+    CLASS-METHODS show_progress
+      IMPORTING iv_current  TYPE i
+                iv_total    TYPE i
+                iv_obj_name TYPE tadir-obj_name.
 
     CLASS-METHODS activate
       RAISING lcx_exception.
@@ -7135,6 +7165,77 @@ ENDCLASS.                    "lcl_object DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_objects IMPLEMENTATION.
+
+  METHOD show_progress.
+
+    DATA: lv_pct TYPE i,
+          lv_f   TYPE f.
+
+
+    lv_f = ( iv_current / iv_total ) * 100.
+    lv_pct = lv_f.
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = iv_obj_name.
+
+  ENDMETHOD.
+
+  METHOD check_warning.
+
+    DATA: lv_question TYPE c LENGTH 200,
+          lv_answer   TYPE c,
+          ls_tadir    TYPE tadir.
+
+
+    ls_tadir = lcl_tadir=>read_single( iv_object   = is_item-obj_type
+                                       iv_obj_name = is_item-obj_name ).
+    IF NOT ls_tadir IS INITIAL AND ls_tadir-devclass <> iv_package.
+      CONCATENATE 'Overwrite object' is_item-obj_type is_item-obj_name
+        'from package' ls_tadir-devclass
+        INTO lv_question SEPARATED BY space.                "#EC NOTEXT
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Warning'
+          text_question         = lv_question
+          text_button_1         = 'Ok'
+          icon_button_1         = 'ICON_DELETE'
+          text_button_2         = 'Cancel'
+          icon_button_2         = 'ICON_CANCEL'
+          default_button        = '2'
+          display_cancel_button = abap_false
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.                        "#EC NOTEXT
+      IF sy-subrc <> 0.
+        _raise 'error from POPUP_TO_CONFIRM'.
+      ENDIF.
+
+      IF lv_answer = '2'.
+        rv_cancel = abap_true.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD update_package_tree.
+
+    DATA: lv_tree TYPE dirtree-tname.
+
+
+* update package tree for SE80
+    lv_tree = 'EU_' && iv_package.
+    CALL FUNCTION 'WB_TREE_ACTUALIZE'
+      EXPORTING
+        tree_name              = lv_tree
+        without_crossreference = abap_true
+        with_tcode_index       = abap_true.
+
+  ENDMETHOD.
 
   METHOD class_name.
 
@@ -7454,10 +7555,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: ls_item       TYPE st_item,
           lv_class_name TYPE string,
-          lv_pct        TYPE i,
-          lv_f          TYPE f,
           lv_message    TYPE string,
-          lv_tree       TYPE dirtree-tname,
+          lv_cancel     TYPE abap_bool,
           lt_results    TYPE tt_results.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
@@ -7466,7 +7565,6 @@ CLASS lcl_objects IMPLEMENTATION.
     CLEAR lcl_objects_common=>gt_ddic[].
     CLEAR lcl_objects_common=>gt_programs[].
 
-
     lt_results = status( it_files   = it_files
                          iv_package = iv_package ).
     DELETE lt_results WHERE match = abap_true.
@@ -7474,8 +7572,9 @@ CLASS lcl_objects IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
 
     LOOP AT lt_results ASSIGNING <ls_result>.
-      lv_f = ( sy-tabix / lines( lt_results ) ) * 100.
-      lv_pct = lv_f.
+      show_progress( iv_current  = sy-tabix
+                     iv_total    = lines( lt_results )
+                     iv_obj_name = <ls_result>-obj_name ).
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -7483,10 +7582,11 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
-        EXPORTING
-          percentage = lv_pct
-          text       = <ls_result>-obj_name.
+      lv_cancel = check_warning( is_item    = ls_item
+                                 iv_package = iv_package ).
+      IF lv_cancel = abap_true.
+        RETURN.
+      ENDIF.
 
       lv_class_name = class_name( ls_item ).
 
@@ -7507,13 +7607,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     activate( ).
 
-* update package tree for SE80
-    lv_tree = 'EU_' && iv_package.
-    CALL FUNCTION 'WB_TREE_ACTUALIZE'
-      EXPORTING
-        tree_name              = lv_tree
-        without_crossreference = abap_true
-        with_tcode_index       = abap_true.
+    update_package_tree( iv_package ).
 
   ENDMETHOD.                    "deserialize
 
@@ -10060,11 +10154,6 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS newoffline
       RAISING lcx_exception.
 
-    CLASS-METHODS analyze_existing
-      IMPORTING it_results       TYPE tt_results
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   lcx_exception.
-
     CLASS-METHODS add
       IMPORTING is_item       TYPE st_item
                 is_repo_persi TYPE st_repo_persi
@@ -10844,9 +10933,6 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lt_results = lcl_objects=>status( it_files   = lt_files
                                       iv_package = lv_package ).
-    IF analyze_existing( lt_results ) = abap_true.
-      RETURN.
-    ENDIF.
 
     lcl_objects=>deserialize( it_files   = lt_files
                               iv_package = lv_package ).
@@ -10858,57 +10944,6 @@ CLASS lcl_gui IMPLEMENTATION.
     view( render( ) ).
 
   ENDMETHOD.                    "install
-
-  METHOD analyze_existing.
-
-    DATA: lv_question TYPE text100,
-          lv_pgmid    TYPE tadir-pgmid,
-          lv_answer   TYPE c LENGTH 1.
-
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
-
-
-    LOOP AT it_results ASSIGNING <ls_result> WHERE NOT filename IS INITIAL.
-      SELECT SINGLE pgmid FROM tadir INTO lv_pgmid
-        WHERE pgmid = 'R3TR'
-        AND object = <ls_result>-obj_type
-        AND obj_name = <ls_result>-obj_name.         "#EC CI_SEL_NESTED
-      IF sy-subrc = 0.
-
-        CONCATENATE 'Object'
-          <ls_result>-obj_type
-          <ls_result>-obj_name
-          'already exists in system'
-          INTO lv_question SEPARATED BY space.              "#EC NOTEXT
-
-        CALL FUNCTION 'POPUP_TO_CONFIRM'
-          EXPORTING
-            titlebar              = 'Warning'
-            text_question         = lv_question
-            text_button_1         = 'Continue'
-            icon_button_1         = 'ICON_OKAY'
-            text_button_2         = 'Cancel'
-            icon_button_2         = 'ICON_CANCEL'
-            default_button        = '2'
-            display_cancel_button = abap_false
-          IMPORTING
-            answer                = lv_answer
-          EXCEPTIONS
-            text_not_found        = 1
-            OTHERS                = 2.                      "#EC NOTEXT
-        IF sy-subrc <> 0.
-          _raise 'error from POPUP_TO_CONFIRM'.
-        ENDIF.
-
-        IF lv_answer = '2'.
-          rv_cancel = abap_true.
-          RETURN.
-        ENDIF.
-
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.                    "analyze_existing
 
   METHOD render_css.
 
