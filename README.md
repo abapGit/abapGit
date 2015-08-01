@@ -34,3 +34,5 @@ No SSL or internet access required, will work if the SAP system is behind a fire
 
 ## FAQ ##
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
+
+![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit.png)
