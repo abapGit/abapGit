@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.50'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.51'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -222,6 +222,9 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read.
 
+    DATA: lv_index    TYPE i,
+          lv_category TYPE seoclassdf-category.
+
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF rt_tadir.
 
 
@@ -230,8 +233,20 @@ CLASS lcl_tadir IMPLEMENTATION.
       AND object <> 'DEVC'
       ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
-    LOOP AT rt_tadir ASSIGNING <ls_tadir> WHERE object = 'SICF'.
-      <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
+    LOOP AT rt_tadir ASSIGNING <ls_tadir>.
+      lv_index = sy-tabix.
+
+      CASE <ls_tadir>-object.
+        WHEN 'SICF'.
+          <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
+        WHEN 'INTF'.
+          SELECT SINGLE category FROM seoclassdf INTO lv_category
+            WHERE clsname = <ls_tadir>-obj_name
+            AND version = '1'.
+          IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
+            DELETE rt_tadir INDEX lv_index.
+          ENDIF.
+      ENDCASE.
     ENDLOOP.
 
   ENDMETHOD.
@@ -529,9 +544,7 @@ CLASS lcl_xml IMPLEMENTATION.
   METHOD structure_read.
 
     DATA: lv_name      TYPE string,
-          lv_value     TYPE string,
           li_struct    TYPE REF TO if_ixml_element,
-          li_elm       TYPE REF TO if_ixml_element,
           lo_typedescr TYPE REF TO cl_abap_typedescr,
           lo_descr_ref TYPE REF TO cl_abap_structdescr.
 
@@ -832,10 +845,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD structure_add.
 
-    DATA: li_element   TYPE REF TO if_ixml_element,
-          li_structure TYPE REF TO if_ixml_element,
-          li_text      TYPE REF TO if_ixml_text,
-          lv_string    TYPE string,
+    DATA: li_structure TYPE REF TO if_ixml_element,
           lv_name      TYPE string,
           lo_typedescr TYPE REF TO cl_abap_typedescr,
           lo_descr     TYPE REF TO cl_abap_structdescr.
@@ -3779,14 +3789,10 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   METHOD change_sicf.
 
     DATA: lt_icfhndlist TYPE icfhndlist,
-          ls_icfserdesc TYPE icfserdesc,
-          ls_icfdocu    TYPE icfdocu.
+          ls_icfserdesc TYPE icfserdesc.
 
 
     lt_icfhndlist = to_icfhndlist( it_icfhandler ).
-
-* nice, it seems that the structure should be mistreated
-    ls_icfdocu = is_icfdocu-icf_docu.
 
     MOVE-CORRESPONDING is_icfservice TO ls_icfserdesc.
 
@@ -4109,6 +4115,9 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS:
+      get_limu_objects
+        IMPORTING is_item           TYPE st_item
+        RETURNING VALUE(rt_objects) TYPE wdy_md_transport_keys,
       read
         IMPORTING is_item             TYPE st_item
         RETURNING VALUE(rs_component) TYPE wdy_component_metadata
@@ -4124,11 +4133,166 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
       read_view
         IMPORTING is_key         TYPE wdy_md_view_key
         RETURNING VALUE(rs_view) TYPE wdy_md_view_meta_data
+        RAISING   lcx_exception,
+      recover_controller
+        IMPORTING is_controller TYPE wdy_md_controller_meta_data
+        RAISING   lcx_exception,
+      recover_definition
+        IMPORTING is_definition TYPE wdy_md_component_meta_data
+        RAISING   lcx_exception,
+      recover_view
+        IMPORTING is_view TYPE wdy_md_view_meta_data
+        RAISING   lcx_exception,
+      delta_controller
+        IMPORTING is_controller   TYPE wdy_md_controller_meta_data
+        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        RAISING   lcx_exception,
+      delta_definition
+        IMPORTING is_definition   TYPE wdy_md_component_meta_data
+        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        RAISING   lcx_exception,
+      delta_view
+        IMPORTING is_view         TYPE wdy_md_view_meta_data
+        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   lcx_exception.
 
 ENDCLASS.
 
 CLASS lcl_object_wdyn IMPLEMENTATION.
+
+  METHOD delta_definition.
+
+    DATA: ls_key     TYPE wdy_md_component_key,
+          ls_obj_new TYPE svrs2_versionable_object,
+          ls_obj_old TYPE svrs2_versionable_object.
+
+
+    ls_key-component_name = is_definition-definition-component_name.
+
+    SELECT COUNT(*) FROM wdy_component
+       WHERE component_name = ls_key-component_name.
+    IF sy-subrc <> 0.
+* create dummy if the component does not exist in system
+      TRY.
+          cl_wdy_md_component=>create_complete( ls_key-component_name ).
+        CATCH cx_wdy_md_exception.
+          _raise 'error creating dummy component'.
+      ENDTRY.
+    ENDIF.
+
+    ls_obj_new-objtype = wdyn_limu_component_definition.
+    ls_obj_new-objname = ls_key-component_name.
+
+    ls_obj_old-objtype = wdyn_limu_component_definition.
+    ls_obj_old-objname = ls_key-component_name.
+
+    CALL FUNCTION 'WDYD_GET_OBJECT'
+      EXPORTING
+        component_key           = ls_key
+        get_all_translations    = abap_false
+      TABLES
+        definition              = ls_obj_new-wdyd-defin
+        descriptions            = ls_obj_new-wdyd-descr
+        component_usages        = ls_obj_new-wdyd-cusag
+        interface_implementings = ls_obj_new-wdyd-intrf
+        library_usages          = ls_obj_new-wdyd-libra
+        ext_ctlr_usages         = ls_obj_new-wdyd-ctuse
+        ext_ctx_mappings        = ls_obj_new-wdyd-ctmap.
+
+    APPEND is_definition-definition TO ls_obj_old-wdyd-defin.
+    ls_obj_old-wdyd-descr = is_definition-descriptions.
+    ls_obj_old-wdyd-cusag = is_definition-component_usages.
+    ls_obj_old-wdyd-intrf = is_definition-interface_implementings.
+    ls_obj_old-wdyd-libra = is_definition-library_usages.
+    ls_obj_old-wdyd-ctuse = is_definition-ext_ctlr_usages.
+    ls_obj_old-wdyd-ctmap = is_definition-ext_ctx_mappings.
+
+    CALL FUNCTION 'SVRS_MAKE_OBJECT_DELTA'
+      EXPORTING
+        obj_old              = ls_obj_new
+        obj_new              = ls_obj_old
+      CHANGING
+        delta                = rs_delta
+      EXCEPTIONS
+        inconsistent_objects = 1.
+    IF sy-subrc <> 0.
+      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delta_controller.
+
+    _raise 'todo, delta_controller'.
+
+  ENDMETHOD.
+
+  METHOD delta_view.
+
+    _raise 'todo, delta_view'.
+
+  ENDMETHOD.
+
+  METHOD recover_definition.
+
+    DATA: ls_key    TYPE wdy_md_component_key,
+          lv_corrnr TYPE trkorr,
+          ls_delta  TYPE svrs2_xversionable_object.
+
+
+    ls_delta = delta_definition( is_definition ).
+    ls_key-component_name = is_definition-definition-component_name.
+
+    cl_wdy_md_component=>recover_version(
+      EXPORTING
+        component_key = ls_key
+        delta         = ls_delta-wdyd
+      CHANGING
+        corrnr        = lv_corrnr ).
+
+  ENDMETHOD.
+
+  METHOD recover_controller.
+
+    DATA: ls_key    TYPE wdy_controller_key,
+          lv_corrnr TYPE trkorr,
+          ls_delta  TYPE svrs2_xversionable_object.
+
+
+    ls_delta = delta_controller( is_controller ).
+
+* todo, set ls_key
+    cl_wdy_md_controller=>recover_version(
+      EXPORTING
+        controller_key = ls_key
+        delta          = ls_delta-wdyc
+      CHANGING
+        corrnr         = lv_corrnr ).
+
+    _raise 'todo, recover_controller'.
+
+  ENDMETHOD.
+
+  METHOD recover_view.
+
+    DATA: ls_key    TYPE wdy_md_view_key,
+          lv_corrnr TYPE trkorr,
+          ls_delta  TYPE svrs2_xversionable_object.
+
+
+    ls_delta = delta_view( is_view ).
+
+* todo, set ls_key
+    cl_wdy_md_abstract_view=>recover_version(
+      EXPORTING
+        view_key = ls_key
+        delta    = ls_delta-wdyv
+      CHANGING
+        corrnr   = lv_corrnr ).
+
+    _raise 'todo, recover_view'.
+
+  ENDMETHOD.
 
   METHOD read_controller.
 
@@ -4267,15 +4431,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD read.
+  METHOD get_limu_objects.
 
-    DATA: lt_objects        TYPE wdy_md_transport_keys,
-          ls_controller_key TYPE wdy_md_controller_key,
-          ls_component_key  TYPE wdy_md_component_key,
-          ls_view_key       TYPE wdy_md_view_key,
-          lv_name           TYPE wdy_component_name.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
+    DATA: lv_name TYPE wdy_component_name.
 
 
     lv_name = is_item-obj_name.
@@ -4283,17 +4441,31 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXPORTING
         component_name = lv_name
       IMPORTING
-        limu_objects   = lt_objects.
+        limu_objects   = rt_objects.
+
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: lt_objects        TYPE wdy_md_transport_keys,
+          ls_controller_key TYPE wdy_md_controller_key,
+          ls_component_key  TYPE wdy_md_component_key,
+          ls_view_key       TYPE wdy_md_view_key.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
+
+
+    lt_objects = get_limu_objects( is_item ).
 
     LOOP AT lt_objects ASSIGNING <ls_object>.
       CASE <ls_object>-sub_type.
-        WHEN 'WDYC'. " controller, multiple
+        WHEN wdyn_limu_component_controller.
           ls_controller_key = <ls_object>-sub_name.
           APPEND read_controller( ls_controller_key ) TO rs_component-ctlr_metadata.
-        WHEN 'WDYD'. " definition, one
+        WHEN wdyn_limu_component_definition.
           ls_component_key = <ls_object>-sub_name.
           rs_component-comp_metadata = read_definition( ls_component_key ).
-        WHEN 'WDYV'. " view, multiple
+        WHEN wdyn_limu_component_view.
           ls_view_key = <ls_object>-sub_name.
           APPEND read_view( ls_view_key ) TO rs_component-view_metadata.
         WHEN OTHERS.
@@ -4318,8 +4490,6 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-    _raise 'todo, wdyn'.
-
   ENDMETHOD.
 
   METHOD deserialize.
@@ -4327,44 +4497,65 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     DATA: lo_xml       TYPE REF TO lcl_xml,
           ls_component TYPE wdy_component_metadata.
 
+    FIELD-SYMBOLS: <ls_view>       LIKE LINE OF ls_component-view_metadata,
+                   <ls_controller> LIKE LINE OF ls_component-ctlr_metadata.
+
 
     lo_xml = read_xml( is_item  = is_item
                        it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_component ).
 
-    _raise 'todo, wdyn'.
+    recover_definition( ls_component-comp_metadata ).
+
+* todo
+*    LOOP AT ls_component-ctlr_metadata ASSIGNING <ls_controller>.
+*      recover_controller( <ls_controller> ).
+*    ENDLOOP.
+*    LOOP AT ls_component-view_metadata ASSIGNING <ls_view>.
+*      recover_view( <ls_view> ).
+*    ENDLOOP.
+
+* todo, source code?
+
+* todo, activate
+
+*    _raise 'todo, wdyn'.
 
   ENDMETHOD.
 
   METHOD delete.
 
-    DATA: li_component TYPE REF TO if_wdy_md_component,
-          lv_name      TYPE wdy_component_name.
+    DATA: lo_component   TYPE REF TO cl_wdy_wb_component,
+          lo_request     TYPE REF TO cl_wb_request,
+          li_state       TYPE REF TO if_wb_program_state,
+          lv_object_name TYPE seu_objkey.
 
 
-    lv_name = is_item-obj_name.
-    TRY.
-        li_component = cl_wdy_md_component=>get_object_by_key(
-                         name    = lv_name
-                         version = 'A' ).
+    CREATE OBJECT lo_component.
 
-        li_component->if_wdy_md_lockable_object~lock( ).
-        li_component->if_wdy_md_object~delete( ).
-        li_component->if_wdy_md_lockable_object~save_to_database( ).
-        li_component->if_wdy_md_lockable_object~unlock( ).
-      CATCH cx_wdy_md_not_existing.
-        RETURN.
-      CATCH cx_wdy_md_permission_failure
-          cx_wdy_md_access_exception
-          cx_wdy_md_save_exception.
-        _raise 'WDYN permission failture'.
-    ENDTRY.
+    lv_object_name = is_item-obj_name.
+    CREATE OBJECT lo_request
+      EXPORTING
+        p_object_type = 'YC'
+        p_object_name = lv_object_name
+        p_operation   = swbm_c_op_delete_no_dialog.
+
+    lo_component->if_wb_program~process_wb_request(
+      p_wb_request       = lo_request
+      p_wb_program_state = li_state ).
 
   ENDMETHOD.
 
   METHOD jump.
-    _raise 'todo, jump wdyn'.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = is_item-obj_type
+        in_new_window = abap_true.
+
   ENDMETHOD.
 
 ENDCLASS.
