@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.51'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.52'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4114,6 +4114,11 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
+
+    CLASS-DATA:
+      gt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
+      gt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs.
+
     CLASS-METHODS:
       get_limu_objects
         IMPORTING is_item           TYPE st_item
@@ -4162,19 +4167,25 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD delta_definition.
 
-    DATA: ls_key     TYPE wdy_md_component_key,
-          ls_obj_new TYPE svrs2_versionable_object,
-          ls_obj_old TYPE svrs2_versionable_object.
+    DATA: ls_key       TYPE wdy_md_component_key,
+          lv_found     TYPE abap_bool,
+          ls_obj_new   TYPE svrs2_versionable_object,
+          li_component TYPE REF TO if_wdy_md_component,
+          ls_obj_old   TYPE svrs2_versionable_object.
 
 
     ls_key-component_name = is_definition-definition-component_name.
 
-    SELECT COUNT(*) FROM wdy_component
-       WHERE component_name = ls_key-component_name.
-    IF sy-subrc <> 0.
-* create dummy if the component does not exist in system
+    lv_found = cl_wdy_md_component=>check_existency( ls_key-component_name ).
+    IF lv_found = abap_false.
       TRY.
-          cl_wdy_md_component=>create_complete( ls_key-component_name ).
+          cl_wdy_md_component=>create_complete(
+            EXPORTING
+              name      = ls_key-component_name
+            IMPORTING
+              component = li_component ).
+          li_component->save_to_database( ).
+          li_component->unlock( ).
         CATCH cx_wdy_md_exception.
           _raise 'error creating dummy component'.
       ENDTRY.
@@ -4209,8 +4220,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     CALL FUNCTION 'SVRS_MAKE_OBJECT_DELTA'
       EXPORTING
-        obj_old              = ls_obj_new
-        obj_new              = ls_obj_old
+        obj_old              = ls_obj_old
+        obj_new              = ls_obj_new
       CHANGING
         delta                = rs_delta
       EXCEPTIONS
@@ -4223,13 +4234,197 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD delta_controller.
 
-    _raise 'todo, delta_controller'.
+    DATA: lo_controller TYPE REF TO if_wdy_md_controller,
+          lv_found      TYPE abap_bool,
+          ls_key        TYPE wdy_md_controller_key,
+          ls_obj_new    TYPE svrs2_versionable_object,
+          ls_obj_old    TYPE svrs2_versionable_object.
+
+    FIELD-SYMBOLS: <ls_component> LIKE LINE OF gt_components,
+                   <ls_source>    LIKE LINE OF gt_sources.
+
+
+    ls_key-component_name = is_controller-definition-component_name.
+    ls_key-controller_name = is_controller-definition-controller_name.
+
+    lv_found = cl_wdy_md_controller=>check_existency(
+          component_name  = ls_key-component_name
+          controller_name = ls_key-controller_name ).
+    IF lv_found = abap_false.
+      TRY.
+          lo_controller ?= cl_wdy_md_controller=>create_complete(
+                component_name  = ls_key-component_name
+                controller_name = ls_key-controller_name
+                controller_type = is_controller-definition-controller_type ).
+          lo_controller->save_to_database( ).
+          lo_controller->unlock( ).
+        CATCH cx_wdy_md_exception.
+          _raise 'error creating dummy controller'.
+      ENDTRY.
+    ENDIF.
+
+    ls_obj_new-objtype = wdyn_limu_component_controller.
+    ls_obj_new-objname = ls_key.
+
+    ls_obj_old-objtype = wdyn_limu_component_controller.
+    ls_obj_old-objname = ls_key.
+
+    CALL FUNCTION 'WDYC_GET_OBJECT'
+      EXPORTING
+        controller_key               = ls_key
+        get_all_translations         = abap_false
+      TABLES
+        controller_components        = ls_obj_new-wdyc-ccomp
+        controller_component_sources = ls_obj_new-wdyc-ccoms
+        definition                   = ls_obj_new-wdyc-defin
+        descriptions                 = ls_obj_new-wdyc-descr
+        controller_usages            = ls_obj_new-wdyc-cusag
+        controller_component_texts   = ls_obj_new-wdyc-ccomt
+        controller_parameters        = ls_obj_new-wdyc-cpara
+        controller_parameter_texts   = ls_obj_new-wdyc-cpart
+        context_nodes                = ls_obj_new-wdyc-cnode
+        context_attributes           = ls_obj_new-wdyc-cattr
+        context_mappings             = ls_obj_new-wdyc-cmapp
+        controller_exceptions        = ls_obj_new-wdyc-excp
+        controller_exception_texts   = ls_obj_new-wdyc-excpt
+        fieldgroups                  = ls_obj_new-wdyc-fgrps.
+
+
+    APPEND is_controller-definition TO ls_obj_old-wdyc-defin.
+
+    LOOP AT gt_components ASSIGNING <ls_component>
+        WHERE component_name = ls_key-component_name
+        AND controller_name = ls_key-controller_name.
+      APPEND <ls_component> TO ls_obj_old-wdyc-ccomp.
+    ENDLOOP.
+    LOOP AT gt_sources ASSIGNING <ls_source>
+        WHERE component_name = ls_key-component_name
+        AND controller_name = ls_key-controller_name.
+      APPEND <ls_source> TO ls_obj_old-wdyc-ccoms.
+    ENDLOOP.
+
+    ls_obj_old-wdyc-descr = is_controller-descriptions.
+    ls_obj_old-wdyc-cusag = is_controller-controller_usages.
+    ls_obj_old-wdyc-ccomt = is_controller-controller_component_texts.
+    ls_obj_old-wdyc-cpara = is_controller-controller_parameters.
+    ls_obj_old-wdyc-cpart = is_controller-controller_parameter_texts.
+    ls_obj_old-wdyc-cnode = is_controller-context_nodes.
+    ls_obj_old-wdyc-cattr = is_controller-context_attributes.
+    ls_obj_old-wdyc-cmapp = is_controller-context_mappings.
+    ls_obj_old-wdyc-excp = is_controller-controller_exceptions.
+    ls_obj_old-wdyc-excpt = is_controller-controller_exception_texts.
+    ls_obj_old-wdyc-fgrps = is_controller-fieldgroups.
+
+    CALL FUNCTION 'SVRS_MAKE_OBJECT_DELTA'
+      EXPORTING
+        obj_old              = ls_obj_old
+        obj_new              = ls_obj_new
+      CHANGING
+        delta                = rs_delta
+      EXCEPTIONS
+        inconsistent_objects = 1.
+    IF sy-subrc <> 0.
+      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+    ENDIF.
 
   ENDMETHOD.
 
   METHOD delta_view.
 
-    _raise 'todo, delta_view'.
+    DATA: ls_key       TYPE wdy_md_view_key,
+          ls_obj_new   TYPE svrs2_versionable_object,
+          ls_obj_old   TYPE svrs2_versionable_object,
+          lv_found     TYPE abap_bool,
+          li_view      TYPE REF TO if_wdy_md_abstract_view,
+          lt_psmodilog TYPE TABLE OF smodilog,
+          lt_psmodisrc TYPE TABLE OF smodisrc.
+
+    FIELD-SYMBOLS: <ls_def> LIKE LINE OF ls_obj_old-wdyv-defin.
+
+
+    ls_key-component_name = is_view-definition-component_name.
+    ls_key-view_name      = is_view-definition-view_name.
+
+    lv_found = cl_wdy_md_abstract_view=>check_existency(
+                 component_name = ls_key-component_name
+                 name           = ls_key-view_name ).
+    IF lv_found = abap_false.
+      TRY.
+          li_view = cl_wdy_md_abstract_view=>create(
+                      component_name = is_view-definition-component_name
+                      view_name      = is_view-definition-view_name
+                      type           = is_view-definition-type ).
+          li_view->save_to_database( ).
+          li_view->unlock( ).
+        CATCH cx_wdy_md_exception.
+          _raise 'error creating dummy view'.
+      ENDTRY.
+    ENDIF.
+
+    ls_obj_new-objtype = wdyn_limu_component_view.
+    ls_obj_new-objname = ls_key.
+
+    ls_obj_old-objtype = wdyn_limu_component_view.
+    ls_obj_old-objname = ls_key.
+
+    CALL FUNCTION 'WDYV_GET_OBJECT'
+      EXPORTING
+        view_key               = ls_key
+        get_all_translations   = abap_false
+      TABLES
+        definition             = ls_obj_new-wdyv-defin
+        descriptions           = ls_obj_new-wdyv-descr
+        view_containers        = ls_obj_new-wdyv-vcont
+        view_container_texts   = ls_obj_new-wdyv-vcntt
+        iobound_plugs          = ls_obj_new-wdyv-ibplg
+        iobound_plug_texts     = ls_obj_new-wdyv-ibplt
+        plug_parameters        = ls_obj_new-wdyv-plpar
+        plug_parameter_texts   = ls_obj_new-wdyv-plprt
+        ui_elements            = ls_obj_new-wdyv-uiele
+        ui_context_bindings    = ls_obj_new-wdyv-uicon
+        ui_event_bindings      = ls_obj_new-wdyv-uievt
+        ui_ddic_bindings       = ls_obj_new-wdyv-uiddc
+        ui_properties          = ls_obj_new-wdyv-uiprp
+        navigation_links       = ls_obj_new-wdyv-navil
+        navigation_target_refs = ls_obj_new-wdyv-navit
+        vsh_nodes              = ls_obj_new-wdyv-vshno
+        vsh_placeholders       = ls_obj_new-wdyv-vshpl
+        viewset_properties     = ls_obj_new-wdyv-views
+        psmodilog              = lt_psmodilog
+        psmodisrc              = lt_psmodisrc.
+
+    APPEND INITIAL LINE TO ls_obj_old-wdyv-defin ASSIGNING <ls_def>.
+    MOVE-CORRESPONDING is_view-definition TO <ls_def>.
+
+    ls_obj_old-wdyv-descr = is_view-descriptions.
+    ls_obj_old-wdyv-vcont = is_view-view_containers.
+    ls_obj_old-wdyv-vcntt = is_view-view_container_texts.
+    ls_obj_old-wdyv-ibplg = is_view-iobound_plugs.
+    ls_obj_old-wdyv-ibplt = is_view-iobound_plug_texts.
+    ls_obj_old-wdyv-plpar = is_view-plug_parameters.
+    ls_obj_old-wdyv-plprt = is_view-plug_parameter_texts.
+    ls_obj_old-wdyv-uiele = is_view-ui_elements.
+    ls_obj_old-wdyv-uicon = is_view-ui_context_bindings.
+    ls_obj_old-wdyv-uievt = is_view-ui_event_bindings.
+    ls_obj_old-wdyv-uiddc = is_view-ui_ddic_bindings.
+    ls_obj_old-wdyv-uiprp = is_view-ui_properties.
+    ls_obj_old-wdyv-navil = is_view-navigation_links.
+    ls_obj_old-wdyv-navit = is_view-navigation_target_refs.
+    ls_obj_old-wdyv-vshno = is_view-vsh_nodes.
+    ls_obj_old-wdyv-vshpl = is_view-vsh_placeholders.
+    ls_obj_old-wdyv-views = is_view-viewset_properties.
+
+    CALL FUNCTION 'SVRS_MAKE_OBJECT_DELTA'
+      EXPORTING
+        obj_old              = ls_obj_old
+        obj_new              = ls_obj_new
+      CHANGING
+        delta                = rs_delta
+      EXCEPTIONS
+        inconsistent_objects = 1.
+    IF sy-subrc <> 0.
+      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -4260,16 +4455,15 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
 
     ls_delta = delta_controller( is_controller ).
+    ls_key-component_name  = is_controller-definition-component_name.
+    ls_key-controller_name = is_controller-definition-controller_name.
 
-* todo, set ls_key
     cl_wdy_md_controller=>recover_version(
       EXPORTING
         controller_key = ls_key
         delta          = ls_delta-wdyc
       CHANGING
         corrnr         = lv_corrnr ).
-
-    _raise 'todo, recover_controller'.
 
   ENDMETHOD.
 
@@ -4281,16 +4475,15 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
 
     ls_delta = delta_view( is_view ).
+    ls_key-component_name = is_view-definition-component_name.
+    ls_key-view_name      = is_view-definition-view_name.
 
-* todo, set ls_key
     cl_wdy_md_abstract_view=>recover_version(
       EXPORTING
         view_key = ls_key
         delta    = ls_delta-wdyv
       CHANGING
         corrnr   = lv_corrnr ).
-
-    _raise 'todo, recover_view'.
 
   ENDMETHOD.
 
@@ -4309,8 +4502,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         definition                   = lt_definition
         descriptions                 = rs_controller-descriptions
         controller_usages            = rs_controller-controller_usages
-        controller_components        = lt_components " todo
-        controller_component_sources = lt_sources " todo
+        controller_components        = lt_components
+        controller_component_sources = lt_sources
         controller_component_texts   = rs_controller-controller_component_texts
         controller_parameters        = rs_controller-controller_parameters
         controller_parameter_texts   = rs_controller-controller_parameter_texts
@@ -4326,6 +4519,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'error from WDYC_GET_OBJECT'.
     ENDIF.
+
+    APPEND LINES OF lt_components TO gt_components.
+    APPEND LINES OF lt_sources TO gt_sources.
 
     READ TABLE lt_definition INDEX 1 INTO rs_controller-definition.
     IF sy-subrc <> 0.
@@ -4455,6 +4651,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
 
 
+    CLEAR gt_components.
+    CLEAR gt_sources.
+
     lt_objects = get_limu_objects( is_item ).
 
     LOOP AT lt_objects ASSIGNING <ls_object>.
@@ -4486,6 +4685,10 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_component ).
+    lo_xml->table_add( it_table = gt_components
+                       iv_name  = 'COMPONENTS' ).
+    lo_xml->table_add( it_table = gt_sources
+                       iv_name  = 'SOURCES' ).
     ls_file = xml_to_file( is_item = is_item
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
@@ -4505,18 +4708,25 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
                        it_files = it_files ).
 
     lo_xml->structure_read( CHANGING cg_structure = ls_component ).
+    lo_xml->table_read(
+      EXPORTING
+        iv_name  = 'COMPONENTS'
+      CHANGING
+        ct_table = gt_components ).
+    lo_xml->table_read(
+      EXPORTING
+        iv_name  = 'SOURCES'
+      CHANGING
+        ct_table = gt_sources ).
 
     recover_definition( ls_component-comp_metadata ).
 
-* todo
-*    LOOP AT ls_component-ctlr_metadata ASSIGNING <ls_controller>.
-*      recover_controller( <ls_controller> ).
-*    ENDLOOP.
-*    LOOP AT ls_component-view_metadata ASSIGNING <ls_view>.
-*      recover_view( <ls_view> ).
-*    ENDLOOP.
-
-* todo, source code?
+    LOOP AT ls_component-ctlr_metadata ASSIGNING <ls_controller>.
+      recover_controller( <ls_controller> ).
+    ENDLOOP.
+    LOOP AT ls_component-view_metadata ASSIGNING <ls_view>.
+      recover_view( <ls_view> ).
+    ENDLOOP.
 
 * todo, activate
 
