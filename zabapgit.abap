@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.52'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.53'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -70,6 +70,12 @@ TYPES: BEGIN OF st_repo,
          url         TYPE string,
          branch_name TYPE string,
        END OF st_repo.
+
+TYPES: BEGIN OF st_branch_list,
+         sha1 TYPE t_sha1,
+         name TYPE string,
+       END OF st_branch_list.
+TYPES: tt_branch_list TYPE STANDARD TABLE OF st_branch_list WITH DEFAULT KEY.
 
 TYPES: BEGIN OF st_repo_persi,
          url         TYPE string,
@@ -3245,7 +3251,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
 
     SELECT SINGLE * FROM smimloio INTO ls_smimloio
-      WHERE loio_id = iv_loio.
+      WHERE loio_id = iv_loio.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
@@ -4234,7 +4240,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD delta_controller.
 
-    DATA: lo_controller TYPE REF TO if_wdy_md_controller,
+    DATA: li_controller TYPE REF TO if_wdy_md_controller,
           lv_found      TYPE abap_bool,
           ls_key        TYPE wdy_md_controller_key,
           ls_obj_new    TYPE svrs2_versionable_object,
@@ -4252,12 +4258,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           controller_name = ls_key-controller_name ).
     IF lv_found = abap_false.
       TRY.
-          lo_controller ?= cl_wdy_md_controller=>create_complete(
+          li_controller ?= cl_wdy_md_controller=>create_complete(
                 component_name  = ls_key-component_name
                 controller_name = ls_key-controller_name
                 controller_type = is_controller-definition-controller_type ).
-          lo_controller->save_to_database( ).
-          lo_controller->unlock( ).
+          li_controller->save_to_database( ).
+          li_controller->unlock( ).
         CATCH cx_wdy_md_exception.
           _raise 'error creating dummy controller'.
       ENDTRY.
@@ -4817,7 +4823,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
 
     SELECT SINGLE * FROM tobjt INTO ls_tobjt
       WHERE object = is_item-obj_name
-      AND langu = gc_english.
+      AND langu = gc_english.                           "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'TOBJT no english description'.
     ENDIF.
@@ -4826,10 +4832,10 @@ CLASS lcl_object_suso IMPLEMENTATION.
       WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
 
     SELECT * FROM tactz INTO TABLE lt_tactz
-      WHERE brobj = is_item-obj_name.                     "#EC CI_SUBRC
+      WHERE brobj = is_item-obj_name.     "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tobjvordat INTO TABLE lt_tobjvordat
-      WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
+      WHERE objct = is_item-obj_name.     "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tobjvor INTO TABLE lt_tobjvor
       WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
@@ -5044,14 +5050,14 @@ CLASS lcl_object_para IMPLEMENTATION.
 
 
     SELECT SINGLE * FROM tpara INTO ls_tpara
-      WHERE paramid = is_item-obj_name.
+      WHERE paramid = is_item-obj_name.                 "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
     SELECT SINGLE * FROM tparat INTO ls_tparat
       WHERE paramid = is_item-obj_name
-      AND sprache = gc_english.
+      AND sprache = gc_english.                         "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'PARA no english description'.
     ENDIF.
@@ -5075,7 +5081,7 @@ CLASS lcl_object_para IMPLEMENTATION.
 
 
     SELECT SINGLE * FROM tpara INTO ls_tpara
-      WHERE paramid = is_item-obj_name.
+      WHERE paramid = is_item-obj_name.                 "#EC CI_GENBUFF
     IF sy-subrc = 0.
       lv_mode = 'M'.
     ELSE.
@@ -6165,7 +6171,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
       WHERE sprsl = gc_english
-      AND tcode = lv_transaction.
+      AND tcode = lv_transaction.                       "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'Transaction description not found'.
     ENDIF.
@@ -6693,7 +6699,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT SINGLE areat INTO lv_areat
       FROM tlibt
       WHERE spras = gc_english
-      AND area = is_item-obj_name.
+      AND area = is_item-obj_name.                      "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'not found in TLIBT'.
     ENDIF.
@@ -7662,7 +7668,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
       FROM tadir
       WHERE pgmid = 'R3TR'
       AND object = is_item-obj_type
-      AND obj_name = is_item-obj_name.
+      AND obj_name = is_item-obj_name.                  "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'not found in tadir'.
     ENDIF.
@@ -9436,7 +9442,8 @@ CLASS lcl_persistence IMPLEMENTATION.
     ENDIF.
 
     SELECT SINGLE devclass FROM tdevc INTO lv_devclass
-      WHERE devclass = iv_package AND as4user <> 'SAP'.
+      WHERE devclass = iv_package
+      AND as4user <> 'SAP'.                             "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'package not found or not allowed'.
     ENDIF.
@@ -9646,10 +9653,24 @@ CLASS lcl_transport DEFINITION FINAL.
                 iv_pack   TYPE xstring
       RAISING   lcx_exception.
 
+    CLASS-METHODS branch_list
+      IMPORTING iv_url         TYPE string
+                iv_service     TYPE string DEFAULT 'upload'
+      EXPORTING ei_client      TYPE REF TO if_http_client
+                et_branch_list TYPE tt_branch_list
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
       RETURNING VALUE(rv_pkt) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS find_branch
+      IMPORTING is_repo    TYPE st_repo
+                iv_service TYPE string
+      EXPORTING ei_client  TYPE REF TO if_http_client
+                ev_branch  TYPE t_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
@@ -9660,11 +9681,9 @@ CLASS lcl_transport DEFINITION FINAL.
       IMPORTING iv_data       TYPE xstring
       RETURNING VALUE(rv_len) TYPE i.
 
-    CLASS-METHODS ref_discovery
-      IMPORTING is_repo    TYPE st_repo
-                iv_service TYPE string
-      EXPORTING ei_client  TYPE REF TO if_http_client
-                ev_branch  TYPE t_sha1
+    CLASS-METHODS parse_branch_list
+      IMPORTING iv_data        TYPE string
+      RETURNING VALUE(rt_list) TYPE tt_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS set_headers
@@ -9758,21 +9777,83 @@ CLASS lcl_transport IMPLEMENTATION.
 
   ENDMETHOD.                                                "http_200
 
-  METHOD ref_discovery.
+  METHOD parse_branch_list.
 
-    DATA: lv_hash   TYPE c LENGTH 40,
-          lv_len    TYPE i,
-          lt_result TYPE TABLE OF string,
-          lv_data   LIKE LINE OF lt_result,
-          lv_uri    TYPE string,
-          lv_text   TYPE string.
+    DATA: lt_result TYPE TABLE OF string,
+          lv_hash   TYPE c LENGTH 40,
+          lv_name   TYPE string,
+          lv_foo    TYPE string ##NEEDED,
+          lv_char   TYPE c,
+          lv_data   LIKE LINE OF lt_result.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF rt_list.
+
+
+    SPLIT iv_data AT gc_newline INTO TABLE lt_result.
+    LOOP AT lt_result INTO lv_data.
+      IF sy-tabix = 1.
+        CONTINUE. " current loop
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
+        lv_hash = lv_data+8.
+        lv_name = lv_data+49.
+        lv_char = get_null( ).
+        SPLIT lv_name AT lv_char INTO lv_name lv_foo.
+      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
+        lv_hash = lv_data+4.
+        lv_name = lv_data+45.
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+        _raise 'No branches, create branch manually by adding file'.
+      ELSE.
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
+      TRANSLATE lv_hash TO UPPER CASE.
+      <ls_branch>-sha1 = lv_hash.
+      <ls_branch>-name = lv_name.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD find_branch.
+
+    DATA: lt_branch_list TYPE tt_branch_list,
+          ls_branch_list LIKE LINE OF lt_branch_list.
+
+
+    branch_list(
+      EXPORTING
+        iv_url          = is_repo-url
+        iv_service      = iv_service
+      IMPORTING
+        ei_client       = ei_client
+        et_branch_list  = lt_branch_list ).
+
+    IF is_repo-branch_name IS INITIAL.
+      _raise 'branch empty'.
+    ENDIF.
+
+    READ TABLE lt_branch_list INTO ls_branch_list WITH KEY name = is_repo-branch_name.
+    IF sy-subrc <> 0.
+      _raise 'Branch not found'.
+    ENDIF.
+
+    ev_branch = ls_branch_list-sha1.
+
+  ENDMETHOD.
+
+  METHOD branch_list.
+
+    DATA: lv_data TYPE string,
+          lv_uri  TYPE string,
+          lv_text TYPE string.
 
     STATICS: sv_authorization TYPE string.
 
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = lcl_url=>host( is_repo-url )
+        url    = lcl_url=>host( iv_url )
         ssl_id = 'ANONYM'
       IMPORTING
         client = ei_client ).
@@ -9784,7 +9865,7 @@ CLASS lcl_transport IMPLEMENTATION.
     ei_client->request->set_header_field(
         name  = 'user-agent'
         value = gv_agent ).                                 "#EC NOTEXT
-    lv_uri = lcl_url=>path_name( is_repo-url ) &&
+    lv_uri = lcl_url=>path_name( iv_url ) &&
              '.git/info/refs?service=git-' &&
              iv_service &&
              '-pack'.
@@ -9830,35 +9911,7 @@ CLASS lcl_transport IMPLEMENTATION.
                                                   'authorization' ). "#EC NOTEXT
 
     lv_data = ei_client->response->get_cdata( ).
-
-    IF is_repo-branch_name IS INITIAL.
-      _raise 'branch empty'.
-    ENDIF.
-
-    lv_len = strlen( is_repo-branch_name ).
-    SPLIT lv_data AT gc_newline INTO TABLE lt_result.
-    LOOP AT lt_result INTO lv_data.
-      IF sy-tabix = 1.
-        CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49
-          AND lv_data+49(lv_len) = is_repo-branch_name.
-        lv_hash = lv_data+8.
-        EXIT. " current loop
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45
-          AND lv_data+45 = is_repo-branch_name.
-        lv_hash = lv_data+4.
-        EXIT. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        _raise 'No branches, create branch manually by adding file'.
-      ENDIF.
-    ENDLOOP.
-
-    TRANSLATE lv_hash TO UPPER CASE.
-    IF strlen( lv_hash ) <> 40.
-      _raise 'Branch not found'.
-    ENDIF.
-
-    ev_branch = lv_hash.
+    et_branch_list = parse_branch_list( lv_data ).
 
   ENDMETHOD.                    "ref_discovery
 
@@ -9876,7 +9929,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_branch  TYPE t_sha1.
 
 
-    ref_discovery(
+    find_branch(
       EXPORTING
         is_repo    = is_repo
         iv_service = lc_service
@@ -9993,7 +10046,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_pkt2    TYPE string.
 
 
-    ref_discovery(
+    find_branch(
       EXPORTING
         is_repo    = is_repo
         iv_service = lc_service
@@ -11504,7 +11557,7 @@ CLASS lcl_gui IMPLEMENTATION.
       WHERE pgmid = 'R3TR'
       AND object = is_item-obj_type
       AND obj_name LIKE lv_obj_name
-      AND devclass = is_repo_persi-package.
+      AND devclass = is_repo_persi-package.             "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'Object not found or in wrong package'.
     ENDIF.
@@ -11591,7 +11644,8 @@ CLASS lcl_gui IMPLEMENTATION.
           lt_files      TYPE tt_files,
           ls_repo       TYPE st_repo,
           lv_branch     TYPE t_sha1,
-          lt_results    TYPE tt_results,
+          lv_icon_ok    TYPE icon-name,
+          lv_icon_br    TYPE icon-name,
           lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
@@ -11609,17 +11663,32 @@ CLASS lcl_gui IMPLEMENTATION.
     <ls_field>-fieldname = 'DEVCLASS'.
     <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
 
-    CALL FUNCTION 'POPUP_GET_VALUES'
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TEXTL'.
+    <ls_field>-fieldname = 'LINE'.
+    <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
+    <ls_field>-value     = 'refs/heads/master'.
+    <ls_field>-field_attr = '05'.
+
+    lv_icon_ok = icon_okay.
+    lv_icon_br = icon_workflow_fork.
+
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Clone'                           "#EC NOTEXT
+        popup_title       = 'Clone'
+        programname       = sy-repid
+        formname          = 'BRANCH_POPUP'
+        ok_pushbuttontext = 'OK'
+        icon_ok_push      = lv_icon_ok
+        first_pushbutton  = 'Select branch'
+        icon_button_1     = lv_icon_br
       IMPORTING
-        returncode      = lv_returncode
+        returncode        = lv_returncode
       TABLES
-        fields          = lt_fields
+        fields            = lt_fields
       EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
+        error_in_fields   = 1
+        OTHERS            = 2. "#EC NOTEXT
     IF sy-subrc <> 0.
       _raise 'Error from POPUP_GET_VALUES'.
     ENDIF.
@@ -11629,25 +11698,26 @@ CLASS lcl_gui IMPLEMENTATION.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-
     ls_repo-url = <ls_field>-value.
-* todo, select branch or tag
-    ls_repo-branch_name = 'refs/heads/master'.              "#EC NOTEXT
     lcl_url=>name( ls_repo-url ).         " validate
 
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     lv_package = <ls_field>-value.
     TRANSLATE lv_package TO UPPER CASE.
-
     lcl_persistence=>validate_package( lv_package ).
+
+    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ls_repo-branch_name = <ls_field>-value.
 
     lcl_porcelain=>pull( EXPORTING is_repo   = ls_repo
                          IMPORTING et_files  = lt_files
                                    ev_branch = lv_branch ).
 
-    lt_results = lcl_objects=>status( it_files   = lt_files
-                                      iv_package = lv_package ).
+* call status to check for errors
+    lcl_objects=>status( it_files   = lt_files
+                         iv_package = lv_package ).
 
     lcl_objects=>deserialize( it_files   = lt_files
                               iv_package = lv_package ).
@@ -12142,8 +12212,11 @@ FORM run.
     RETURN.
   ENDIF.
 
-  SELECT SINGLE ccnocliind FROM t000 INTO lv_ind WHERE mandt = sy-mandt.
-  IF sy-subrc = 0 AND lv_ind <> ' ' AND lv_ind <> '1'. " check changes allowed
+  SELECT SINGLE ccnocliind FROM t000 INTO lv_ind
+    WHERE mandt = sy-mandt.
+  IF sy-subrc = 0
+      AND lv_ind <> ' '
+      AND lv_ind <> '1'. " check changes allowed
     WRITE: / 'Wrong client, changes to repository objects not allowed'. "#EC NOTEXT
     RETURN.
   ENDIF.
@@ -12160,6 +12233,86 @@ FORM run.
   WRITE: / '.'.     " required
 
 ENDFORM.                    "run
+
+FORM branch_popup TABLES   tt_fields STRUCTURE sval
+                  USING    pv_code
+                  CHANGING cs_error TYPE svale
+                           cv_show_popup TYPE c
+                  RAISING lcx_exception ##CALLED ##NEEDED.
+* called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
+
+  DATA: li_client    TYPE REF TO if_http_client,
+        lv_url       TYPE string,
+        lv_answer    TYPE c,
+        lx_error     TYPE REF TO lcx_exception,
+        lt_selection TYPE TABLE OF spopli,
+        lt_branches  TYPE tt_branch_list.
+
+  FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields,
+                 <ls_branch>  LIKE LINE OF lt_branches,
+                 <ls_sel>     LIKE LINE OF lt_selection,
+                 <ls_furl>    LIKE LINE OF tt_fields.
+
+
+  IF pv_code = 'COD1'.
+    cv_show_popup = abap_true.
+
+    READ TABLE tt_fields ASSIGNING <ls_furl> WITH KEY tabname = 'ABAPTXT255'.
+    IF sy-subrc <> 0 OR <ls_furl>-value IS INITIAL.
+      MESSAGE 'Fill URL' TYPE 'S' DISPLAY LIKE 'E'.         "#EC NOTEXT
+      RETURN.
+    ENDIF.
+    lv_url = <ls_furl>-value.
+
+    TRY.
+        lcl_transport=>branch_list(
+          EXPORTING
+            iv_url         = lv_url
+          IMPORTING
+            ei_client      = li_client
+            et_branch_list = lt_branches ).
+        li_client->close( ).
+      CATCH lcx_exception INTO lx_error.
+        MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
+        RETURN.
+    ENDTRY.
+
+    LOOP AT lt_branches ASSIGNING <ls_branch>.
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = <ls_branch>-name.
+    ENDLOOP.
+
+    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+      EXPORTING
+        textline1          = 'Select branch'
+        titel              = 'Select branch'
+      IMPORTING
+        answer             = lv_answer
+      TABLES
+        t_spopli           = lt_selection
+      EXCEPTIONS
+        not_enough_answers = 1
+        too_much_answers   = 2
+        too_much_marks     = 3
+        OTHERS             = 4. "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_TO_DECIDE_LIST'.
+    ENDIF.
+
+    IF lv_answer = 'A'. " cancel
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+    ASSERT sy-subrc = 0.
+
+    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TEXTL'.
+    ASSERT sy-subrc = 0.
+    <ls_fbranch>-value = <ls_sel>-varoption.
+
+  ENDIF.
+
+ENDFORM.
 
 CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
