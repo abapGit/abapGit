@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.54'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.55'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -800,7 +800,7 @@ CLASS lcl_xml IMPLEMENTATION.
     IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
-       _raise 'no name, element add'.
+        _raise 'no name, element add'.
       ENDIF.
     ELSE.
       lv_name = iv_name.
@@ -1361,7 +1361,7 @@ CLASS lcl_diff DEFINITION FINAL.
       IMPORTING it_local       TYPE abaptxt255_tab
                 it_remote      TYPE abaptxt255_tab
                 it_delta       TYPE vxabapt255_tab
-     RETURNING VALUE(rt_diff) TYPE tt_diffs.
+      RETURNING VALUE(rt_diff) TYPE tt_diffs.
 
     CLASS-METHODS: compute
       IMPORTING it_local        TYPE abaptxt255_tab
@@ -2061,7 +2061,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
 
 * todo, refactoring
     CASE iv_type.
-      WHEN 'CLAS' or 'WDYN'.
+      WHEN 'CLAS' OR 'WDYN'.
         CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
           EXPORTING
             obj_name         = lv_obj_name
@@ -2781,7 +2781,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lv_remove = abap_false.
     LOOP AT ct_source INTO lv_source.
       IF lv_source = lv_begin.
-       lv_remove = abap_true.
+        lv_remove = abap_true.
       ENDIF.
       IF lv_remove = abap_true.
         DELETE ct_source INDEX sy-tabix.
@@ -2861,7 +2861,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       lt_source = serialize_testclasses( ls_clskey ).
       IF NOT lt_source[] IS INITIAL.
         ls_file = abap_to_file( is_item  = is_item
-                               iv_extra = 'testclasses'
+                                iv_extra = 'testclasses'
                                 it_abap  = lt_source ).     "#EC NOTEXT
         APPEND ls_file TO rt_files.
       ENDIF.
@@ -4204,7 +4204,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     ls_obj_old-objname = ls_key-component_name.
 
     APPEND is_definition-definition TO ls_obj_old-wdyd-defin.
-   ls_obj_old-wdyd-descr = is_definition-descriptions.
+    ls_obj_old-wdyd-descr = is_definition-descriptions.
     ls_obj_old-wdyd-cusag = is_definition-component_usages.
     ls_obj_old-wdyd-intrf = is_definition-interface_implementings.
     ls_obj_old-wdyd-libra = is_definition-library_usages.
@@ -4481,7 +4481,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.
 
- METHOD read_definition.
+  METHOD read_definition.
 
     DATA: lt_definition TYPE TABLE OF wdy_component.
 
@@ -4705,6 +4705,160 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     lo_component->if_wb_program~process_wb_request(
       p_wb_request       = lo_request
       p_wb_program_state = li_state ).
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = is_item-obj_type
+        in_new_window = abap_true.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS read
+      IMPORTING is_item       TYPE st_item
+      EXPORTING es_app        TYPE wdy_application
+                et_properties TYPE wdy_app_property_table
+      RAISING   lcx_exception.
+
+    CLASS-METHODS save
+      IMPORTING is_app        TYPE wdy_application
+                it_properties TYPE wdy_app_property_table
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_wdya IMPLEMENTATION.
+
+  METHOD read.
+
+    DATA: li_app  TYPE REF TO if_wdy_md_application,
+          li_map  TYPE REF TO if_object_map,
+          lo_prop TYPE REF TO cl_wdy_md_application_property,
+          ls_prop LIKE LINE OF et_properties,
+          lv_name TYPE wdy_application_name.
+
+
+    lv_name = is_item-obj_name.
+    TRY.
+        li_app = cl_wdy_md_application=>get_object_by_key(
+                   name    = lv_name
+                   version = 'A' ).
+      CATCH cx_wdy_md_not_existing .
+        RETURN.
+      CATCH cx_wdy_md_permission_failure .
+        _raise 'WDYA, permission failure'.
+    ENDTRY.
+
+    li_app->if_wdy_md_object~get_definition( IMPORTING definition = es_app ).
+    CLEAR: es_app-author,
+           es_app-createdon,
+           es_app-changedby,
+           es_app-changedon.
+
+    li_map = li_app->get_properties( ).
+    DO li_map->size( ) TIMES.
+      lo_prop ?= li_map->get_by_position( sy-index ).
+      lo_prop->get_definition( IMPORTING definition = ls_prop ).
+      APPEND ls_prop TO et_properties.
+    ENDDO.
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: ls_file       TYPE st_file,
+          lo_xml        TYPE REF TO lcl_xml,
+          ls_app        TYPE wdy_application,
+          lt_properties TYPE wdy_app_property_table.
+
+
+    read( EXPORTING is_item = is_item
+          IMPORTING es_app = ls_app
+                    et_properties = lt_properties ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_app ).
+    lo_xml->table_add( lt_properties ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    _raise 'todo, WDYA, save'.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lo_xml        TYPE REF TO lcl_xml,
+          ls_app        TYPE wdy_application,
+          lt_properties TYPE wdy_app_property_table.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_app ).
+    lo_xml->table_read( CHANGING ct_table = lt_properties ).
+
+    save( is_app        = ls_app
+          it_properties = lt_properties ).
+
+    _raise 'todo, WDYA, deserialize'.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: li_app  TYPE REF TO if_wdy_md_application,
+          lv_name TYPE wdy_application_name.
+
+
+    lv_name = is_item-obj_name.
+    TRY.
+        li_app = cl_wdy_md_application=>get_object_by_key(
+                   name    = lv_name
+                   version = 'A' ).
+        li_app->if_wdy_md_object~delete( ).
+        li_app->if_wdy_md_lockable_object~save_to_database( ).
+      CATCH cx_wdy_md_not_existing.
+        RETURN.
+      CATCH cx_wdy_md_exception.
+        _raise 'WDYA, error deleting'.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -5387,7 +5541,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       EXCEPTIONS
         not_executed         = 1
         object_not_found     = 2
-       object_not_specified = 3
+        object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
       _raise 'error from RS_DD_DELETE_OBJ, TABL'.
@@ -5405,7 +5559,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           lt_dd03p TYPE TABLE OF dd03p,
           lt_dd05m TYPE TABLE OF dd05m,
           lt_dd08v TYPE TABLE OF dd08v,
-         lt_dd12v TYPE dd12vtab,
+          lt_dd12v TYPE dd12vtab,
           lt_dd17v TYPE dd17vtab,
           lt_dd35v TYPE TABLE OF dd35v,
           lt_dd36m TYPE dd36mttyp.
@@ -7671,7 +7825,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
     lo_xml = read_xml( is_item  = is_item
                        it_files = it_files ).
 
-   read_abap( EXPORTING is_item  = is_item
+    read_abap( EXPORTING is_item  = is_item
                          it_files = it_files
                CHANGING  ct_abap  = lt_source ).
 
@@ -9176,7 +9330,7 @@ CLASS lcl_pack IMPLEMENTATION.
       cl_abap_gzip=>compress_binary(
         EXPORTING
           raw_in   = <ls_object>-data
-       IMPORTING
+        IMPORTING
           gzip_out = lv_compressed ).
 
       CONCATENATE rv_data c_zlib lv_compressed INTO rv_data IN BYTE MODE.
@@ -9184,7 +9338,7 @@ CLASS lcl_pack IMPLEMENTATION.
       lv_adler32 = lcl_hash=>adler32( <ls_object>-data ).
       CONCATENATE rv_data lv_adler32  INTO rv_data IN BYTE MODE.
 
-   ENDLOOP.
+    ENDLOOP.
 
     lv_sha1 = lcl_hash=>sha1_raw( rv_data ).
     CONCATENATE rv_data lv_sha1 INTO rv_data IN BYTE MODE.
@@ -9215,7 +9369,7 @@ CLASS lcl_persistence DEFINITION FINAL.
                 iv_branch  TYPE t_sha1 OPTIONAL
                 iv_package TYPE devclass
                 iv_offline TYPE sap_bool DEFAULT abap_false
-     RAISING   lcx_exception.
+      RAISING   lcx_exception.
 
     CLASS-METHODS validate_package
       IMPORTING iv_package TYPE devclass
@@ -9659,7 +9813,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
 
     ii_client->request->set_header_field(
-       name  = '~request_method'
+        name  = '~request_method'
         value = 'POST' ).
 
     lv_value = lcl_url=>path_name( is_repo-url ) && '.git/git-' && iv_service && '-pack'.
@@ -10202,7 +10356,7 @@ CLASS lcl_zip IMPLEMENTATION.
         header_not_allowed        = 7
         separator_not_allowed     = 8
         filesize_not_allowed      = 9
-       header_too_long           = 10
+        header_too_long           = 10
         dp_error_create           = 11
         dp_error_send             = 12
         dp_error_write            = 13
@@ -10373,7 +10527,7 @@ CLASS lcl_zip IMPLEMENTATION.
       <ls_file>-filename = filename( <ls_splice>-name ).
       <ls_file>-data     = lv_xstr.
 
-   ENDLOOP.
+    ENDLOOP.
 
   ENDMETHOD.                    "decode_files
 
@@ -10581,7 +10735,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
       RETURNING VALUE(rt_nodes) TYPE tt_nodes
       RAISING   lcx_exception.
 
-   CLASS-METHODS receive_pack
+    CLASS-METHODS receive_pack
       IMPORTING is_comment       TYPE st_comment
                 is_repo          TYPE st_repo
                 it_nodes         TYPE tt_nodes
@@ -11389,7 +11543,7 @@ CLASS lcl_gui IMPLEMENTATION.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
- ENDMETHOD.                    "on_event
+  ENDMETHOD.                    "on_event
 
   METHOD uninstall.
 
@@ -11516,7 +11670,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     MOVE-CORRESPONDING is_repo_persi TO ls_repo.
     lv_branch = lcl_porcelain=>push( is_comment = ls_comment
-                                    is_repo    = ls_repo
+                                     is_repo    = ls_repo
                                      it_files   = lt_files ).
 
     lcl_persistence=>update( is_repo   = ls_repo
@@ -11795,7 +11949,7 @@ CLASS lcl_gui IMPLEMENTATION.
       LOOP AT lt_repos INTO ls_repo.
         lv_f = ( sy-tabix / lines( lt_repos ) ) * 100.
         lv_pct = lv_f.
-       IF lv_pct = 100.
+        IF lv_pct = 100.
           lv_pct = 99.
         ENDIF.
         lv_text = repo_name( ls_repo ).
@@ -12603,7 +12757,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
     DATA: lt_objects TYPE tt_objects,
           ls_object  LIKE LINE OF lt_objects,
-         lt_nodes   TYPE tt_nodes,
+          lt_nodes   TYPE tt_nodes,
           ls_node    LIKE LINE OF lt_nodes,
           ls_commit  TYPE st_commit,
           lt_result  TYPE tt_objects,
@@ -12672,7 +12826,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
     ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_blob
                                      iv_data = lv_data ).
     ls_object-type = gc_blob.
-   ls_object-data = lv_data.
+    ls_object-data = lv_data.
     APPEND ls_object TO lt_objects.
 
     CLEAR lv_data.
@@ -12727,7 +12881,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
           lv_data   TYPE xstring,
           lt_result TYPE tt_nodes.
 
-   CLEAR ls_node.
+    CLEAR ls_node.
     ls_node-chmod = gc_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = lc_sha.
