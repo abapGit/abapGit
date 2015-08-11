@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.55'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.56'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4753,6 +4753,7 @@ CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
     CLASS-METHODS save
       IMPORTING is_app        TYPE wdy_application
                 it_properties TYPE wdy_app_property_table
+                iv_package    TYPE devclass
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -4773,9 +4774,9 @@ CLASS lcl_object_wdya IMPLEMENTATION.
         li_app = cl_wdy_md_application=>get_object_by_key(
                    name    = lv_name
                    version = 'A' ).
-      CATCH cx_wdy_md_not_existing .
+      CATCH cx_wdy_md_not_existing.
         RETURN.
-      CATCH cx_wdy_md_permission_failure .
+      CATCH cx_wdy_md_permission_failure.
         _raise 'WDYA, permission failure'.
     ENDTRY.
 
@@ -4817,7 +4818,28 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD save.
 
-    _raise 'todo, WDYA, save'.
+    DATA: li_prop TYPE REF TO if_wdy_md_application_property,
+          lo_app  TYPE REF TO cl_wdy_md_application.
+
+    FIELD-SYMBOLS: <ls_property> LIKE LINE OF it_properties.
+
+
+    TRY.
+        CREATE OBJECT lo_app
+          EXPORTING
+            name       = is_app-application_name
+            definition = is_app
+            devclass   = iv_package.
+
+        LOOP AT it_properties ASSIGNING <ls_property>.
+          li_prop = lo_app->if_wdy_md_application~create_property( <ls_property>-name ).
+          li_prop->set_value( <ls_property>-value ).
+        ENDLOOP.
+
+        lo_app->if_wdy_md_lockable_object~save_to_database( ).
+      CATCH cx_wdy_md_exception.
+        _raise 'error saving WDYA'.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -4835,9 +4857,8 @@ CLASS lcl_object_wdya IMPLEMENTATION.
     lo_xml->table_read( CHANGING ct_table = lt_properties ).
 
     save( is_app        = ls_app
-          it_properties = lt_properties ).
-
-    _raise 'todo, WDYA, deserialize'.
+          it_properties = lt_properties
+          iv_package    = iv_package ).
 
   ENDMETHOD.
 
