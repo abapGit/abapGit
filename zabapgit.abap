@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.56'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.57'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -588,17 +588,19 @@ CLASS lcl_xml IMPLEMENTATION.
       lo_typedescr = cl_abap_typedescr=>describe_by_data( <lg_any> ).
       CASE lo_typedescr->kind.
         WHEN cl_abap_typedescr=>kind_table.
-          table_read( EXPORTING ii_root    = li_struct
-                                iv_name = lv_name
+          table_read( EXPORTING ii_root  = li_struct
+                                iv_name  = lv_name
                       CHANGING  ct_table = <lg_any> ).
         WHEN cl_abap_typedescr=>kind_struct.
-          structure_read( EXPORTING ii_root    = li_struct
-                                    iv_name = lv_name
+          structure_read( EXPORTING ii_root      = li_struct
+                                    iv_name      = lv_name
                           CHANGING  cg_structure = <lg_any> ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_read( EXPORTING ii_root    = li_struct
-                                  iv_name = lv_name
+                                  iv_name    = lv_name
                         CHANGING  cg_element = <lg_any> ).
+        WHEN cl_abap_typedescr=>kind_ref.
+          CONTINUE.
         WHEN OTHERS.
           _raise 'unknown kind, structure read'.
       ENDCASE.
@@ -893,6 +895,8 @@ CLASS lcl_xml IMPLEMENTATION.
           element_add( ig_element = <lg_any>
                        iv_name    = lv_name
                        ii_root    = li_structure ).
+        WHEN cl_abap_typedescr=>kind_ref.
+          CONTINUE.
         WHEN OTHERS.
           _raise 'unknown kind, structure add'.
       ENDCASE.
@@ -4721,6 +4725,195 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS read
+      IMPORTING is_item    TYPE st_item
+      EXPORTING es_outline TYPE wdy_cfg_outline_data
+                et_data    TYPE wdy_cfg_persist_data_appl_tab
+      RAISING   lcx_exception.
+
+    CLASS-METHODS save
+      IMPORTING is_outline TYPE wdy_cfg_outline_data
+                it_data    TYPE wdy_cfg_persist_data_appl_tab
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_wdca IMPLEMENTATION.
+
+  METHOD save.
+
+    _raise 'WDCA, save, todo'.
+
+*    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
+*          ls_key       TYPE wdy_config_key,
+*          ls_data      LIKE LINE OF it_data,
+*          lv_operation TYPE i,
+*          lv_name      TYPE wdy_md_object_name.
+*
+*
+*    MOVE-CORRESPONDING is_outline TO ls_key.
+*
+*    TRY.
+*        CREATE OBJECT lo_cfg
+*          EXPORTING
+*            config_key  = ls_key
+*            object_name = lv_name.
+*
+*        READ TABLE it_data INDEX 1 INTO ls_data.
+*        ASSERT sy-subrc = 0.
+*
+*        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
+*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
+*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
+*
+*        lo_cfg->set_save_data( ls_data ).
+*
+*      CATCH cx_wd_configuration.
+*        _raise 'WDCA, save error'.
+*    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: lo_cfg      TYPE REF TO cl_wdr_cfg_persistence_appl,
+          ls_key      TYPE wdy_config_key,
+          lt_messages TYPE cts_messages,
+          lv_exists   TYPE abap_bool,
+          lx_err      TYPE REF TO cx_wd_configuration,
+          lv_name     TYPE wdy_md_object_name.
+
+
+    ls_key = is_item-obj_name.
+
+    TRY.
+        CREATE OBJECT lo_cfg
+          EXPORTING
+            config_key  = ls_key
+            object_name = lv_name.
+
+        MOVE-CORRESPONDING ls_key TO es_outline.
+
+        lo_cfg->check_config_existent(
+          EXPORTING
+            i_outline_data       = es_outline
+            i_only_current_layer = abap_false
+            i_is_original        = abap_true
+          IMPORTING
+            e_is_existent        = lv_exists ).
+        IF lv_exists = abap_false.
+          RETURN.
+        ENDIF.
+
+        es_outline = lo_cfg->read_outline_data( ).
+      CATCH cx_wd_configuration INTO lx_err.
+        IF lx_err->textid = cx_wd_configuration=>conf_config_not_exist.
+          RETURN.
+        ELSE.
+          _raise 'WDCA, read error'.
+        ENDIF.
+    ENDTRY.
+
+    CLEAR: es_outline-devclass,
+           es_outline-author,
+           es_outline-createdon,
+           es_outline-changedby,
+           es_outline-changedon.
+    et_data = lo_cfg->read_data( ).
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: ls_file    TYPE st_file,
+          lo_xml     TYPE REF TO lcl_xml,
+          ls_outline TYPE wdy_cfg_outline_data,
+          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
+
+
+    read( EXPORTING is_item = is_item
+          IMPORTING es_outline = ls_outline
+                    et_data = lt_data ).
+    IF ls_outline IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_outline ).
+    lo_xml->table_add( lt_data ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lo_xml     TYPE REF TO lcl_xml,
+          ls_outline TYPE wdy_cfg_outline_data,
+          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_outline ).
+    lo_xml->table_read( CHANGING ct_table = lt_data ).
+
+    save( is_outline = ls_outline
+          it_data    = lt_data
+          iv_package = iv_package ).
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: ls_key TYPE wdy_config_key.
+
+
+    ls_key = is_item-obj_name.
+
+    cl_wdr_configuration_utils=>delete_config_4_appl( ls_key ).
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = is_item-obj_type
+        in_new_window = abap_true.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
@@ -4733,7 +4926,7 @@ CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item    TYPE st_item
                 it_files   TYPE tt_files
                 iv_package TYPE devclass
-      RAISING   lcx_exception ##needed.
+      RAISING   lcx_exception.
 
     CLASS-METHODS delete
       IMPORTING is_item TYPE st_item
