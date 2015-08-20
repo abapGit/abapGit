@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.57'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.58'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -101,7 +101,15 @@ TYPES: BEGIN OF st_diff,
        END OF st_diff.
 TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
 
-TYPES: tt_tadir TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY.
+TYPES: BEGIN OF st_tadir,
+         pgmid    TYPE tadir-pgmid,
+         object   TYPE tadir-object,
+         obj_name TYPE tadir-obj_name,
+         devclass TYPE tadir-devclass,
+         korrnum  TYPE tadir-korrnum,
+         path     TYPE string,
+       END OF st_tadir.
+TYPES: tt_tadir TYPE STANDARD TABLE OF st_tadir WITH DEFAULT KEY.
 
 TYPES: tt_icfhandler TYPE STANDARD TABLE OF icfhandler WITH DEFAULT KEY.
 
@@ -206,12 +214,22 @@ CLASS lcl_tadir DEFINITION FINAL.
     CLASS-METHODS:
       read
         IMPORTING iv_package      TYPE tadir-devclass
-        RETURNING VALUE(rt_tadir) TYPE tt_tadir,
+        RETURNING VALUE(rt_tadir) TYPE tt_tadir
+        RAISING   lcx_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object       TYPE tadir-object
                   iv_obj_name     TYPE tadir-obj_name
         RETURNING VALUE(rs_tadir) TYPE tadir.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      build
+        IMPORTING iv_package      TYPE tadir-devclass
+                  iv_parent       TYPE tadir-devclass
+                  iv_path         TYPE string
+        RETURNING VALUE(rt_tadir) TYPE tt_tadir
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -228,19 +246,36 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read.
 
+* start recursion
+    rt_tadir = build( iv_package = iv_package
+                      iv_parent  = ''
+                      iv_path    = '' ).
+
+  ENDMETHOD.
+
+  METHOD build.
+
     DATA: lv_index    TYPE i,
+          lt_tadir    TYPE tt_tadir,
+          lt_tdevc    TYPE STANDARD TABLE OF tdevc,
+          lv_len      TYPE i,
+          lv_path     TYPE string,
           lv_category TYPE seoclassdf-category.
 
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF rt_tadir.
+    FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
+                   <ls_tadir> LIKE LINE OF rt_tadir.
 
 
-    SELECT * FROM tadir INTO TABLE rt_tadir
+    SELECT * FROM tadir
+      INTO CORRESPONDING FIELDS OF TABLE rt_tadir
       WHERE devclass = iv_package
       AND object <> 'DEVC'
       ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
       lv_index = sy-tabix.
+
+      <ls_tadir>-path = iv_path.
 
       CASE <ls_tadir>-object.
         WHEN 'SICF'.
@@ -253,6 +288,28 @@ CLASS lcl_tadir IMPLEMENTATION.
             DELETE rt_tadir INDEX lv_index.
           ENDIF.
       ENDCASE.
+    ENDLOOP.
+
+* look for subpackages
+    SELECT * FROM tdevc INTO TABLE lt_tdevc
+      WHERE parentcl = iv_package.
+    LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
+      lv_len = strlen( iv_package ).
+      IF <ls_tdevc>-devclass(lv_len) <> iv_package.
+        _raise 'Unexpected package naming'.
+      ENDIF.
+
+      lv_path = <ls_tdevc>-devclass+lv_len.
+      IF lv_path(1) = '_'.
+        lv_path = lv_path+1.
+      ENDIF.
+      TRANSLATE lv_path TO LOWER CASE.
+      CONCATENATE iv_path lv_path '/' INTO lv_path.
+
+      lt_tadir = build( iv_package = <ls_tdevc>-devclass
+                        iv_parent  = iv_package
+                        iv_path    = lv_path ).
+      APPEND LINES OF lt_tadir TO rt_tadir.
     ENDLOOP.
 
   ENDMETHOD.
@@ -1479,10 +1536,10 @@ CLASS lcl_diff IMPLEMENTATION.
         ENDCASE.
       ELSE.
         CLEAR ls_local.
-        READ TABLE it_local INTO ls_local INDEX lv_lindex.
+        READ TABLE it_local INTO ls_local INDEX lv_lindex. "#EC CI_SUBRC
         lv_lindex = lv_lindex + 1.
         CLEAR ls_remote.
-        READ TABLE it_remote INTO ls_remote INDEX lv_rindex.
+        READ TABLE it_remote INTO ls_remote INDEX lv_rindex. "#EC CI_SUBRC
         lv_rindex = lv_rindex + 1.
         _append ls_local '' ls_remote.
       ENDIF.
@@ -1641,6 +1698,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
 
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
+    ASSERT sy-subrc = 0.
     lv_title = ls_tpool-entry.
 
     SELECT SINGLE progname FROM reposrc INTO lv_progname
@@ -1917,6 +1975,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
 
     IF lines( lt_tpool ) = 1.
       READ TABLE lt_tpool INDEX 1 INTO ls_tpool.
+      ASSERT sy-subrc = 0.
       IF ls_tpool-id = 'R' AND ls_tpool-key = '' AND ls_tpool-length = 0.
         DELETE lt_tpool INDEX 1.
       ENDIF.
@@ -3318,6 +3377,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     lv_lines = lines( lt_strings ).
     ASSERT lv_lines > 0.
     READ TABLE lt_strings INDEX lv_lines INTO rv_filename.
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
@@ -8505,7 +8565,7 @@ CLASS lcl_objects IMPLEMENTATION.
           ls_result LIKE LINE OF rt_results,
           lv_type   TYPE string,
           ls_item   TYPE st_item,
-          lt_tadir  TYPE TABLE OF tadir,
+          lt_tadir  TYPE tt_tadir,
           lv_ext    TYPE string.
 
     FIELD-SYMBOLS: <ls_file>  LIKE LINE OF it_files,
@@ -10513,6 +10573,7 @@ CLASS lcl_zip IMPLEMENTATION.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
     rv_message = <ls_field>-value.
 
   ENDMETHOD.
@@ -10593,7 +10654,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD encode_files.
 
-    DATA: lo_zip TYPE REF TO cl_abap_zip.
+    DATA: lo_zip      TYPE REF TO cl_abap_zip,
+          lv_filename TYPE string.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
@@ -10601,7 +10663,8 @@ CLASS lcl_zip IMPLEMENTATION.
     CREATE OBJECT lo_zip.
 
     LOOP AT it_files ASSIGNING <ls_file>.
-      lo_zip->add( name    = <ls_file>-filename
+      CONCATENATE <ls_file>-path <ls_file>-filename INTO lv_filename.
+      lo_zip->add( name    = lv_filename
                    content = <ls_file>-data ).
     ENDLOOP.
 
@@ -10759,12 +10822,13 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lt_tadir TYPE STANDARD TABLE OF tadir,
+    DATA: lt_tadir TYPE tt_tadir,
           ls_item  TYPE st_item,
           lt_files TYPE tt_files,
           lt_zip   TYPE tt_files.
 
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
+                   <ls_tadir> LIKE LINE OF lt_tadir.
 
 
     lt_tadir = lcl_tadir=>read( is_repo-package ).
@@ -10778,6 +10842,11 @@ CLASS lcl_zip IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
       lt_files = lcl_objects=>serialize( ls_item ).
+
+      LOOP AT lt_files ASSIGNING <ls_file>.
+        <ls_file>-path = <ls_tadir>-path.
+      ENDLOOP.
+
       APPEND LINES OF lt_files TO lt_zip.
     ENDLOOP.
 
@@ -11980,7 +12049,7 @@ CLASS lcl_gui IMPLEMENTATION.
     <ls_field>-tabname   = 'TEXTL'.
     <ls_field>-fieldname = 'LINE'.
     <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
-    <ls_field>-value     = 'refs/heads/master'.
+    <ls_field>-value     = 'refs/heads/master'.             "#EC NOTEXT
     <ls_field>-field_attr = '05'.
 
     lv_icon_ok = icon_okay.
@@ -12205,7 +12274,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_repo_offline.
 
-    DATA: lt_tadir TYPE STANDARD TABLE OF tadir.
+    DATA: lt_tadir TYPE tt_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
 
@@ -12349,6 +12418,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
       IF lv_span = 0.
         READ TABLE lt_results INTO ls_next INDEX lv_index.
+        ASSERT sy-subrc = 0.
         WHILE ls_next-obj_type = <ls_result>-obj_type
             AND ls_next-obj_name = <ls_result>-obj_name.
           lv_span  = lv_span + 1.
