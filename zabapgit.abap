@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.58'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.59'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -270,6 +270,7 @@ CLASS lcl_tadir IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE rt_tadir
       WHERE devclass = iv_package
       AND object <> 'DEVC'
+      AND object <> 'SOTR'
       ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
@@ -2735,8 +2736,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
         _internal_class_not_existing = 1
         not_existing                 = 2
         OTHERS                       = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from get_include_source'.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
+      _raise 'Error from get_include_source, imp'.
     ENDIF.
 
     reduce( CHANGING ct_source = rt_source ).
@@ -2755,8 +2756,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
         _internal_class_not_existing = 1
         not_existing                 = 2
         OTHERS                       = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from get_include_source'.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
+      _raise 'Error from get_include_source, def'.
     ENDIF.
 
     reduce( CHANGING ct_source = rt_source ).
@@ -2776,7 +2777,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         not_existing                 = 2
         OTHERS                       = 3.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from get_include_source'.
+      _raise 'Error from get_include_source, test'.
     ENDIF.
 
   ENDMETHOD.                    "serialize_test
@@ -2793,8 +2794,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
         _internal_class_not_existing = 1
         not_existing                 = 2
         OTHERS                       = 3.
-    IF sy-subrc <> 0.
-      _raise 'Error from get_include_source'.
+    IF sy-subrc <> 0 AND sy-subrc <> 2.
+      _raise 'Error from get_include_source, macros'.
     ENDIF.
 
     reduce( CHANGING ct_source = rt_source ).
@@ -6535,7 +6536,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         not_found        = 3
         object_not_found = 4
         OTHERS           = 5.
-    IF sy-subrc = 4.
+    IF sy-subrc = 4 OR sy-subrc = 3.
       RETURN.
     ENDIF.
     IF sy-subrc <> 0.
@@ -7199,6 +7200,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           lv_update_task   TYPE rs38l-utask,
           lv_short_text    TYPE tftit-stext,
           lt_functab       TYPE tt_rs38l_incl,
+          lt_new_source    TYPE rsfb_source,
           lv_remote_basxml TYPE rs38l-basxml_enabled.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
@@ -7207,7 +7209,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     lt_functab = functions( is_item ).
 
     LOOP AT lt_functab ASSIGNING <ls_func>.
-      CALL FUNCTION 'RPY_FUNCTIONMODULE_READ'
+* fm RPY_FUNCTIONMODULE_READ does not support source code
+* lines longer than 72 characters
+      CALL FUNCTION 'RPY_FUNCTIONMODULE_READ_NEW'
         EXPORTING
           functionname            = <ls_func>-funcname
         IMPORTING
@@ -7224,6 +7228,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           exception_list          = lt_exception
           documentation           = lt_documentation
           source                  = lt_source
+        CHANGING
+          new_source              = lt_new_source
         EXCEPTIONS
           error_message           = 1
           function_not_found      = 2
@@ -7260,7 +7266,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       ls_file = abap_to_file( is_item  = is_item
                               iv_extra = <ls_func>-funcname
-                              it_abap  = lt_source ).
+                              it_abap  = lt_new_source ).
       APPEND ls_file TO rt_files.
 
     ENDLOOP.
@@ -10499,6 +10505,11 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
+    CLASS-METHODS show_progress
+      IMPORTING iv_current  TYPE i
+                iv_total    TYPE i
+                iv_obj_name TYPE tadir-obj_name.
+
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
@@ -10539,6 +10550,21 @@ ENDCLASS.                    "lcl_zip DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_zip IMPLEMENTATION.
+
+  METHOD show_progress.
+
+    DATA: lv_pct TYPE i,
+          lv_f   TYPE f.
+
+
+    lv_f = ( iv_current / iv_total ) * 100.
+    lv_pct = lv_f.
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = iv_obj_name.
+
+  ENDMETHOD.
 
   METHOD get_message.
 
@@ -10838,6 +10864,10 @@ CLASS lcl_zip IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      show_progress( iv_current  = sy-tabix
+                     iv_total    = lines( lt_tadir )
+                     iv_obj_name = <ls_tadir>-obj_name ).
+
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
