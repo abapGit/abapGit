@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.59'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.60'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -7096,9 +7096,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   METHOD includes.
 
     DATA: lv_program TYPE program,
+          lv_cnam    TYPE reposrc-cnam,
           lt_functab TYPE tt_rs38l_incl.
 
-    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
+                   <ls_func>    LIKE LINE OF lt_functab.
 
 
     lv_program = main_name( is_item ).
@@ -7121,6 +7123,17 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     LOOP AT lt_functab ASSIGNING <ls_func>.
       DELETE TABLE rt_includes FROM <ls_func>-include.
+    ENDLOOP.
+
+* skip SAP standard includes
+    LOOP AT rt_includes ASSIGNING <lv_include>.
+      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
+        WHERE progname = <lv_include>
+        AND r3state = 'A'
+        AND cnam = 'SAP'.
+      IF sy-subrc = 0.
+        DELETE rt_includes INDEX sy-tabix.
+      ENDIF.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
@@ -7264,9 +7277,15 @@ CLASS lcl_object_fugr IMPLEMENTATION.
                              io_xml   = lo_xml ).
       APPEND ls_file TO rt_files.
 
-      ls_file = abap_to_file( is_item  = is_item
-                              iv_extra = <ls_func>-funcname
-                              it_abap  = lt_new_source ).
+      IF NOT lt_new_source IS INITIAL.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = <ls_func>-funcname
+                                it_abap  = lt_new_source ).
+      ELSE.
+        ls_file = abap_to_file( is_item  = is_item
+                                iv_extra = <ls_func>-funcname
+                                it_abap  = lt_source ).
+      ENDIF.
       APPEND ls_file TO rt_files.
 
     ENDLOOP.
