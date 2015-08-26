@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.60'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.61'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -10368,6 +10368,8 @@ CLASS lcl_transport IMPLEMENTATION.
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
       _raise 'unpack not ok'.
+    ELSEIF lv_string CP '*pre-receive hook declined*'.
+      _raise 'pre-receive hook declined'.
     ENDIF.
 
   ENDMETHOD.                    "receive_pack
