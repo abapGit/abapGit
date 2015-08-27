@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.62'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.63'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6565,6 +6565,164 @@ CLASS lcl_object_tran IMPLEMENTATION.
   ENDMETHOD.                    "serialize
 
 ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
+
+CLASS lcl_object_tobj DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_tobj IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: ls_objh  TYPE objh,
+          ls_objt  TYPE objt,
+          lt_objs  TYPE tt_objs,
+          lt_objsl TYPE tt_objsl,
+          lt_objm  TYPE tt_objm,
+          lo_xml   TYPE REF TO lcl_xml,
+          ls_file  TYPE st_file.
+
+
+    ls_objh-objectname = is_item-obj_name(10).
+    ls_objh-objecttype = is_item-obj_name+10.
+
+    CALL FUNCTION 'CTO_OBJECT_GET'
+      EXPORTING
+        iv_objectname      = ls_objh-objectname
+        iv_objecttype      = ls_objh-objecttype
+        iv_language        = gc_english
+        iv_sel_objt        = abap_true
+        iv_sel_objs        = abap_true
+        iv_sel_objsl       = abap_true
+        iv_sel_objm        = abap_true
+      IMPORTING
+        es_objh            = ls_objh
+        es_objt            = ls_objt
+*       EV_OBJT_DOESNT_EXIST       =
+      TABLES
+        tt_objs            = lt_objs
+        tt_objsl           = lt_objsl
+        tt_objm            = lt_objm
+      EXCEPTIONS
+        object_not_defined = 1
+        OTHERS             = 2.
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from CTO_OBJECT_GET'.
+    ENDIF.
+
+    CLEAR: ls_objh-luser,
+           ls_objh-ldate.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_objh ).
+    lo_xml->structure_add( ls_objt ).
+    lo_xml->table_add( lt_objs ).
+    lo_xml->table_add( lt_objsl ).
+    lo_xml->table_add( lt_objm ).
+
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: ls_objh  TYPE objh,
+          ls_objt  TYPE objt,
+          lt_objs  TYPE tt_objs,
+          lt_objsl TYPE tt_objsl,
+          lt_objm  TYPE tt_objm,
+          lo_xml   TYPE REF TO lcl_xml.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_objh ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_objt ).
+    lo_xml->table_read( CHANGING ct_table = lt_objs ).
+    lo_xml->table_read( CHANGING ct_table = lt_objsl ).
+    lo_xml->table_read( CHANGING ct_table = lt_objm ).
+
+    CALL FUNCTION 'OBJ_GENERATE'
+      EXPORTING
+        iv_objectname         = ls_objh-objectname
+        iv_objecttype         = ls_objh-objecttype
+        iv_maint_mode         = 'I'
+        iv_objecttext         = ls_objt-ddtext
+        iv_objcateg           = ls_objh-objcateg
+        iv_objtransp          = ls_objh-objtransp
+        iv_devclass           = iv_package
+      TABLES
+        tt_v_obj_s            = lt_objs
+        tt_objm               = lt_objm
+      EXCEPTIONS
+        illegal_call          = 1
+        object_not_found      = 2
+        generate_error        = 3
+        transport_error       = 4
+        object_enqueue_failed = 5
+        OTHERS                = 6.
+    IF sy-subrc <> 0.
+* todo, TOBJ has to be saved/generated after the DDIC tables have been activated
+      _raise 'error from OBJ_GENERATE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: ls_objh TYPE objh.
+
+
+    ls_objh-objectname = is_item-obj_name(10).
+    ls_objh-objecttype = is_item-obj_name+10.
+
+    CALL FUNCTION 'OBJ_GENERATE'
+      EXPORTING
+        iv_objectname         = ls_objh-objectname
+        iv_objecttype         = ls_objh-objecttype
+        iv_maint_mode         = 'D'
+      EXCEPTIONS
+        illegal_call          = 1
+        object_not_found      = 2
+        generate_error        = 3
+        transport_error       = 4
+        object_enqueue_failed = 5
+        OTHERS                = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from OBJ_GENERATE'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD jump.
+    _raise 'todo, TOBJ jump'.
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_msag DEFINITION
