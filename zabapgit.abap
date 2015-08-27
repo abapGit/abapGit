@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.61'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.62'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -34,7 +34,7 @@ TYPE-POOLS seop.
 TYPES: t_type     TYPE c LENGTH 6,
        t_bitbyte  TYPE c LENGTH 8,
        t_adler32  TYPE x LENGTH 4,
-       t_sha1     TYPE x LENGTH 20,
+       t_sha1     TYPE c LENGTH 40,
        t_unixtime TYPE c LENGTH 16.
 
 TYPES: BEGIN OF st_node,
@@ -80,7 +80,7 @@ TYPES: tt_branch_list TYPE STANDARD TABLE OF st_branch_list WITH DEFAULT KEY.
 TYPES: BEGIN OF st_repo_persi,
          url         TYPE string,
          branch_name TYPE string,
-         sha1        TYPE string,
+         sha1        TYPE t_sha1,
          package     TYPE devclass,
          offline     TYPE sap_bool,
        END OF st_repo_persi.
@@ -293,7 +293,7 @@ CLASS lcl_tadir IMPLEMENTATION.
 
 * look for subpackages
     SELECT * FROM tdevc INTO TABLE lt_tdevc
-      WHERE parentcl = iv_package.
+      WHERE parentcl = iv_package.                        "#EC CI_SUBRC
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
       lv_len = strlen( iv_package ).
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
@@ -1049,7 +1049,6 @@ CLASS lcl_debug IMPLEMENTATION.
   METHOD render_objects.
 
     DATA: lv_len    TYPE i,
-          lv_text40 TYPE c LENGTH 40,
           lv_text50 TYPE c LENGTH 50.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
@@ -1069,11 +1068,10 @@ CLASS lcl_debug IMPLEMENTATION.
         lv_len = 50.
       ENDIF.
 
-      lv_text40 = <ls_object>-sha1.
       lv_text50 = <ls_object>-data(lv_len).
       CONCATENATE gv_html
         '<tr>' gc_newline
-        '<td>' lv_text40 '</td>' gc_newline
+        '<td>' <ls_object>-sha1 '</td>' gc_newline
         '<td>' <ls_object>-type '</td>' gc_newline
         '<td>' lv_text50 '</td>' gc_newline
         '</tr>' gc_newline INTO gv_html.
@@ -8871,6 +8869,8 @@ CLASS lcl_hash IMPLEMENTATION.
 
     rv_sha1 = lv_hash.
 
+    TRANSLATE rv_sha1 TO LOWER CASE.
+
   ENDMETHOD.                                                "sha1_raw
 
   METHOD sha1.
@@ -9078,6 +9078,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
     DATA: lv_string  TYPE string,
           lt_nodes   LIKE it_nodes,
+          lv_hex20   TYPE x LENGTH 20,
           lv_xstring TYPE xstring.
 
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF it_nodes.
@@ -9091,7 +9092,8 @@ CLASS lcl_pack IMPLEMENTATION.
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
       lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
-      CONCATENATE rv_data lv_xstring lc_null <ls_node>-sha1 INTO rv_data IN BYTE MODE.
+      lv_hex20 = to_upper( <ls_node>-sha1 ).
+      CONCATENATE rv_data lv_xstring lc_null lv_hex20 INTO rv_data IN BYTE MODE.
     ENDLOOP.
 
   ENDMETHOD.                    "encode_tree
@@ -9162,7 +9164,6 @@ CLASS lcl_pack IMPLEMENTATION.
   METHOD decode_commit.
 
     DATA: lv_string TYPE string,
-          lv_char40 TYPE c LENGTH 40,
           lv_mode   TYPE string,
           lv_len    TYPE i,
           lt_string TYPE TABLE OF string.
@@ -9181,14 +9182,10 @@ CLASS lcl_pack IMPLEMENTATION.
       IF NOT lv_mode IS INITIAL AND <lv_string>(lv_len) = lv_mode.
         CASE lv_mode.
           WHEN 'tree'.
-            lv_char40 = <lv_string>+5.
-            TRANSLATE lv_char40 TO UPPER CASE.
-            rs_commit-tree = lv_char40.
+            rs_commit-tree = <lv_string>+5.
             lv_mode = 'parent'.                             "#EC NOTEXT
           WHEN 'parent'.
-            lv_char40 = <lv_string>+7.
-            TRANSLATE lv_char40 TO UPPER CASE.
-            rs_commit-parent = lv_char40.
+            rs_commit-parent = <lv_string>+7.
             lv_mode = 'author'.                             "#EC NOTEXT
           WHEN 'author'.
             rs_commit-author = <lv_string>+7.
@@ -9268,7 +9265,6 @@ CLASS lcl_pack IMPLEMENTATION.
           lv_offset  TYPE i,
           lv_message TYPE string,
           lv_sha1    TYPE t_sha1,
-          lv_char40  TYPE c LENGTH 40,
           ls_object  LIKE LINE OF ct_objects,
           lv_len     TYPE i,
           lv_x       TYPE x.
@@ -9281,8 +9277,7 @@ CLASS lcl_pack IMPLEMENTATION.
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      lv_char40 = is_object-sha1.
-      CONCATENATE 'Base not found,' lv_char40 INTO lv_message
+      CONCATENATE 'Base not found,' is_object-sha1 INTO lv_message
         SEPARATED BY space.                                 "#EC NOTEXT
       _raise lv_message.
     ELSE.
@@ -9431,6 +9426,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
         ls_node-name = lv_name.
         ls_node-sha1 = iv_data+lv_offset(lc_sha_length).
+        TRANSLATE ls_node-sha1 TO LOWER CASE.
         APPEND ls_node TO rt_nodes.
 
         lv_start = lv_cursor + 1 + lc_sha_length.
@@ -9580,6 +9576,7 @@ CLASS lcl_pack IMPLEMENTATION.
       CLEAR ls_object.
       IF lv_type = gc_ref_d.
         ls_object-sha1 = lv_ref_delta.
+        TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
         ls_object-sha1 = lcl_hash=>sha1( iv_type = lv_type iv_data = lv_decompressed ).
       ENDIF.
@@ -9596,7 +9593,7 @@ CLASS lcl_pack IMPLEMENTATION.
     lv_len = xstrlen( iv_data ) - 20.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
-    IF lv_sha1 <> lv_data.
+    IF to_upper( lv_sha1 ) <> lv_data.
       _raise 'SHA1 at end of pack doesnt match'.
     ENDIF.
 
@@ -9604,7 +9601,7 @@ CLASS lcl_pack IMPLEMENTATION.
 
   METHOD encode.
 
-    DATA: lv_sha1       TYPE t_sha1,
+    DATA: lv_sha1       TYPE x LENGTH 20,
           lv_adler32    TYPE t_adler32,
           lv_len        TYPE i,
           lv_compressed TYPE xstring,
@@ -9635,11 +9632,11 @@ CLASS lcl_pack IMPLEMENTATION.
       CONCATENATE rv_data c_zlib lv_compressed INTO rv_data IN BYTE MODE.
 
       lv_adler32 = lcl_hash=>adler32( <ls_object>-data ).
-      CONCATENATE rv_data lv_adler32  INTO rv_data IN BYTE MODE.
+      CONCATENATE rv_data lv_adler32 INTO rv_data IN BYTE MODE.
 
     ENDLOOP.
 
-    lv_sha1 = lcl_hash=>sha1_raw( rv_data ).
+    lv_sha1 = to_upper( lcl_hash=>sha1_raw( rv_data ) ).
     CONCATENATE rv_data lv_sha1 INTO rv_data IN BYTE MODE.
 
   ENDMETHOD.                    "encode
@@ -10178,7 +10175,7 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD parse_branch_list.
 
     DATA: lt_result TYPE TABLE OF string,
-          lv_hash   TYPE c LENGTH 40,
+          lv_hash   TYPE t_sha1,
           lv_name   TYPE string,
           lv_foo    TYPE string ##NEEDED,
           lv_char   TYPE c,
@@ -10206,7 +10203,6 @@ CLASS lcl_transport IMPLEMENTATION.
       ENDIF.
 
       APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
-      TRANSLATE lv_hash TO UPPER CASE.
       <ls_branch>-sha1 = lv_hash.
       <ls_branch>-name = lv_name.
     ENDLOOP.
@@ -13088,7 +13084,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
   METHOD encode_decode_pack_multiple.
 
     CONSTANTS: lc_data TYPE x LENGTH 15 VALUE '123456789ABCDEF545794254754554',
-               lc_sha  TYPE x LENGTH 20 VALUE '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+               lc_sha  TYPE t_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
     DATA: lt_objects TYPE tt_objects,
           ls_object  LIKE LINE OF lt_objects,
@@ -13209,7 +13205,7 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_tree.
 
-    CONSTANTS: lc_sha TYPE x LENGTH 20 VALUE '5F46CB3C4B7F0B3600B64F744CDE614A283A88DC'.
+    CONSTANTS: lc_sha TYPE t_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
     DATA: lt_nodes  TYPE tt_nodes,
           ls_node   LIKE LINE OF lt_nodes,
@@ -13233,8 +13229,8 @@ CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD encode_decode_commit.
 
-    CONSTANTS: lc_tree   TYPE x LENGTH 20 VALUE '44CDE614A283A88DC5F46CB3C4B7F0B3600B64F7',
-               lc_parent TYPE x LENGTH 20 VALUE '83A88DC5F46CB3C4B7F0B3600B64F744CDE614A2'.
+    CONSTANTS: lc_tree   TYPE t_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc',
+               lc_parent TYPE t_sha1 VALUE '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
     DATA: ls_commit TYPE st_commit,
           ls_result TYPE st_commit,
