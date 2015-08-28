@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.63'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.64'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -155,6 +155,12 @@ DEFINE _raise.
     exporting
       iv_text = &1.                                         "#EC NOTEXT
 END-OF-DEFINITION.
+
+******************
+
+SELECTION-SCREEN BEGIN OF SCREEN 1001.
+* dummy for triggering screen
+SELECTION-SCREEN END OF SCREEN 1001.
 
 ******************
 
@@ -12818,7 +12824,7 @@ FORM run.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
 
-  WRITE: / '.'.     " required
+  CALL SELECTION-SCREEN 1001. " trigger screen
 
 ENDFORM.                    "run
 
