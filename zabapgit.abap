@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.64'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.65'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2080,6 +2080,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
         object_class        = 'DICT'
         devclass            = iv_package
         master_language     = gc_english
+        mode                = 'INSERT'
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
@@ -6818,6 +6819,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
         devclass            = iv_package
         object              = ls_t100a-arbgb
         object_class        = 'T100'
+        mode                = 'INSERT'
       EXCEPTIONS
         cancelled           = 01
         permission_failure  = 02
