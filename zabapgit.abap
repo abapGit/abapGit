@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.65'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.66'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1701,6 +1701,24 @@ CLASS lcl_objects_common IMPLEMENTATION.
           lv_title       TYPE rglif-title,
           ls_progdir_new TYPE progdir.
 
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = is_progdir-name
+        object_class        = 'ABAP'
+        devclass            = iv_package
+        master_language     = gc_english
+        mode                = 'INSERT'
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc = 1.
+      _raise 'Cancelled'.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from RS_CORR_INSERT'.
+    ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
     ASSERT sy-subrc = 0.
