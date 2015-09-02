@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.66'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.67'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -91,6 +91,8 @@ TYPES: BEGIN OF st_result,
          obj_name TYPE tadir-obj_name,
          match    TYPE sap_bool,
          filename TYPE string,
+         package  TYPE devclass,
+         path     TYPE string,
        END OF st_result.
 TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
 
@@ -1557,6 +1559,120 @@ CLASS lcl_diff IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
+
+CLASS lcl_package DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      check IMPORTING it_results       TYPE tt_results
+                      iv_top           TYPE devclass
+            RETURNING VALUE(rv_errors) TYPE string,
+      create.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      class_to_path
+        IMPORTING
+          iv_top         TYPE devclass
+          iv_package     TYPE devclass
+        RETURNING
+          VALUE(rv_path) TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_package IMPLEMENTATION.
+
+  METHOD class_to_path.
+
+    DATA: lv_len      TYPE i,
+          lv_path     TYPE string,
+          lv_parentcl TYPE tdevc-parentcl.
+
+
+    IF iv_top = iv_package.
+      rv_path = '/'.
+    ELSE.
+      SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
+        WHERE devclass = iv_package.
+      ASSERT sy-subrc = 0.
+
+      IF lv_parentcl IS INITIAL.
+        rv_path = 'error'.
+      ELSE.
+        lv_len = strlen( lv_parentcl ).
+        lv_path = iv_package+lv_len.
+        IF lv_path(1) = '_'.
+          lv_path = lv_path+1.
+        ENDIF.
+        TRANSLATE lv_path TO LOWER CASE.
+        CONCATENATE lv_path '/' INTO lv_path.
+
+        rv_path = class_to_path( iv_top     = iv_top
+                                 iv_package = lv_parentcl ).
+
+        CONCATENATE rv_path lv_path INTO rv_path.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD check.
+
+    DATA: lv_path TYPE string.
+
+    FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
+                   <ls_res2> LIKE LINE OF it_results.
+
+
+* check files for one object is in the same folder
+    LOOP AT it_results ASSIGNING <ls_res1>
+        WHERE NOT obj_type IS INITIAL.
+      LOOP AT it_results ASSIGNING <ls_res2>
+          WHERE obj_type = <ls_res1>-obj_type
+          AND obj_name = <ls_res1>-obj_name
+          AND path <> <ls_res1>-path.
+        CONCATENATE rv_errors 'Files for object'
+          <ls_res1>-obj_type <ls_res1>-obj_name
+          'are not placed in the same folder<br>'
+          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+        EXIT.
+      ENDLOOP.
+    ENDLOOP.
+
+* check that objects are created in package corresponding to folder
+    LOOP AT it_results ASSIGNING <ls_res1>
+        WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
+      lv_path = class_to_path( iv_top     = iv_top
+                               iv_package = <ls_res1>-package ).
+      IF lv_path <> <ls_res1>-path.
+        CONCATENATE rv_errors 'Package and path does not match for object,'
+          <ls_res1>-obj_type <ls_res1>-obj_name '<br>'
+          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+      ENDIF.
+    ENDLOOP.
+
+* check for multiple files with same filename
+    LOOP AT it_results ASSIGNING <ls_res1>
+        WHERE NOT filename IS INITIAL.
+      LOOP AT it_results ASSIGNING <ls_res2>
+          WHERE filename = <ls_res1>-filename
+          AND path <> <ls_res1>-path.
+        CONCATENATE rv_errors 'Multiple files with same filename,'
+          <ls_res1>-filename '<br>'
+          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+        EXIT.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD create.
+* todo, see https://github.com/larshp/abapGit/issues/5
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_common DEFINITION
@@ -4395,9 +4511,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_obj_new   TYPE svrs2_versionable_object,
           ls_obj_old   TYPE svrs2_versionable_object,
           lv_found     TYPE abap_bool,
-          li_view      TYPE REF TO if_wdy_md_abstract_view,
-          lt_psmodilog TYPE TABLE OF smodilog,
-          lt_psmodisrc TYPE TABLE OF smodisrc.
+          li_view      TYPE REF TO if_wdy_md_abstract_view.
 
     FIELD-SYMBOLS: <ls_def> LIKE LINE OF ls_obj_old-wdyv-defin.
 
@@ -4884,12 +4998,11 @@ CLASS lcl_object_wdca IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lo_cfg      TYPE REF TO cl_wdr_cfg_persistence_appl,
-          ls_key      TYPE wdy_config_key,
-          lt_messages TYPE cts_messages,
-          lv_exists   TYPE abap_bool,
-          lx_err      TYPE REF TO cx_wd_configuration,
-          lv_name     TYPE wdy_md_object_name.
+    DATA: lo_cfg    TYPE REF TO cl_wdr_cfg_persistence_appl,
+          ls_key    TYPE wdy_config_key,
+          lv_exists TYPE abap_bool,
+          lx_err    TYPE REF TO cx_wd_configuration,
+          lv_name   TYPE wdy_md_object_name.
 
 
     ls_key = is_item-obj_name.
@@ -8773,11 +8886,13 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_type   TYPE string,
           ls_item   TYPE st_item,
           lt_tadir  TYPE tt_tadir,
+          ls_tadir  TYPE tadir,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF it_files,
-                   <ls_tadir> LIKE LINE OF lt_tadir,
-                   <ls_gen>   LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF it_files,
+                   <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <ls_result> LIKE LINE OF rt_results,
+                   <ls_gen>    LIKE LINE OF lt_files.
 
 
     LOOP AT it_files ASSIGNING <ls_file>.
@@ -8846,7 +8961,25 @@ CLASS lcl_objects IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING filename ASCENDING.
+* add path information for files
+    LOOP AT it_files ASSIGNING <ls_file>.
+      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_file>-filename.
+      IF sy-subrc = 0.
+        <ls_result>-path = <ls_file>-path.
+      ENDIF.
+    ENDLOOP.
+
+* add package information
+    LOOP AT rt_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
+      ls_tadir = lcl_tadir=>read_single( iv_object   = <ls_result>-obj_type
+                                         iv_obj_name = <ls_result>-obj_name ).
+      <ls_result>-package = ls_tadir-devclass.
+    ENDLOOP.
+
+    SORT rt_results BY
+      obj_type ASCENDING
+      obj_name ASCENDING
+      filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
 
@@ -12567,6 +12700,7 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_branch     TYPE t_sha1,
           lv_link       TYPE string,
           lv_status     TYPE string,
+          lv_package    TYPE string,
           lv_object     TYPE string,
           lv_index      LIKE sy-tabix,
           lv_span       TYPE i,
@@ -12621,7 +12755,8 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html && '<table border="1">' && gc_newline &&
       '<tr>'                                  && gc_newline &&
       '<th><u>Local object</u></th>'          && gc_newline &&
-      '<th></td>'                             && gc_newline &&
+      '<th><u>Package</u></th>'               && gc_newline &&
+      '<th><u>Path</u></th>'                  && gc_newline &&
       '<th><u>Remote file</u></th>'           && gc_newline &&
       '<th></th>'                             && gc_newline &&
       '</tr>'                                 && gc_newline.
@@ -12663,8 +12798,9 @@ CLASS lcl_gui IMPLEMENTATION.
         IF <ls_result>-obj_type IS INITIAL.
           lv_object = '<td rowspan="' &&
             lv_span &&
-            '" valign="top">&nbsp;</td>' &&
-            gc_newline.
+            '" valign="top">&nbsp;</td>'.
+
+          lv_package = lv_object.
         ELSE.
           lv_object = '<td rowspan="' &&
             lv_span &&
@@ -12674,16 +12810,24 @@ CLASS lcl_gui IMPLEMENTATION.
             <ls_result>-obj_type &&
             '&nbsp;' &&
             <ls_result>-obj_name  &&
-            '</a></td>' && gc_newline.
+            '</a></td>'.
+
+          lv_package = '<td rowspan="' &&
+            lv_span &&
+            '" valign="top">' &&
+            <ls_result>-package &&
+            '</td>'.
         ENDIF.
       ELSE.
         CLEAR lv_object.
+        CLEAR lv_package.
       ENDIF.
 
       rv_html = rv_html &&
         '<tr>'                                    && gc_newline &&
-        lv_object                                 &&
-        '<td>' && <ls_result>-match && '</td>'    && gc_newline &&
+        lv_object                                 && gc_newline &&
+        lv_package                                && gc_newline &&
+        '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
         '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
         '<td>' && lv_link && '</td>'              && gc_newline &&
         '</tr>'                                   && gc_newline.
@@ -12701,7 +12845,9 @@ CLASS lcl_gui IMPLEMENTATION.
                   && struct_encode( is_repo_persi ) && '">pull</a>'.
     ENDCASE.
 
-    rv_html = rv_html && '<br><br><br>'.
+    lv_status = lcl_package=>check( it_results = lt_results
+                                    iv_top     = is_repo_persi-package ).
+    rv_html = rv_html && lv_status && '<br><br><br>'.
 
   ENDMETHOD.                    "render_repo
 
