@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.67'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.68'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -301,7 +301,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 
 * look for subpackages
     SELECT * FROM tdevc INTO TABLE lt_tdevc
-      WHERE parentcl = iv_package.                        "#EC CI_SUBRC
+      WHERE parentcl = iv_package
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
       lv_len = strlen( iv_package ).
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
@@ -1593,7 +1594,7 @@ CLASS lcl_package IMPLEMENTATION.
       rv_path = '/'.
     ELSE.
       SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
-        WHERE devclass = iv_package.
+        WHERE devclass = iv_package.                      "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
 
       IF lv_parentcl IS INITIAL.
@@ -4507,11 +4508,11 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD delta_view.
 
-    DATA: ls_key       TYPE wdy_md_view_key,
-          ls_obj_new   TYPE svrs2_versionable_object,
-          ls_obj_old   TYPE svrs2_versionable_object,
-          lv_found     TYPE abap_bool,
-          li_view      TYPE REF TO if_wdy_md_abstract_view.
+    DATA: ls_key     TYPE wdy_md_view_key,
+          ls_obj_new TYPE svrs2_versionable_object,
+          ls_obj_old TYPE svrs2_versionable_object,
+          lv_found   TYPE abap_bool,
+          li_view    TYPE REF TO if_wdy_md_abstract_view.
 
     FIELD-SYMBOLS: <ls_def> LIKE LINE OF ls_obj_old-wdyv-defin.
 
@@ -5342,13 +5343,16 @@ CLASS lcl_object_suso IMPLEMENTATION.
       WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
 
     SELECT * FROM tactz INTO TABLE lt_tactz
-      WHERE brobj = is_item-obj_name.     "#EC CI_SUBRC "#EC CI_GENBUFF
+      WHERE brobj = is_item-obj_name
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tobjvordat INTO TABLE lt_tobjvordat
-      WHERE objct = is_item-obj_name.     "#EC CI_SUBRC "#EC CI_GENBUFF
+      WHERE objct = is_item-obj_name
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT * FROM tobjvor INTO TABLE lt_tobjvor
-      WHERE objct = is_item-obj_name.                     "#EC CI_SUBRC
+      WHERE objct = is_item-obj_name
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_tobj ).
@@ -6999,25 +7003,16 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     lv_msg_id = is_item-obj_name.
 
-    CALL FUNCTION 'RPY_MESSAGE_ID_READ'
-      EXPORTING
-        language         = gc_english
-        message_id       = lv_msg_id
-      IMPORTING
-        message_id_inf   = ls_inf
-      TABLES
-        source           = lt_source
-      EXCEPTIONS
-        cancelled        = 1
-        not_found        = 2
-        permission_error = 3
-        OTHERS           = 4.
-    IF sy-subrc = 2.
+    SELECT SINGLE * FROM t100a INTO ls_inf
+      WHERE arbgb = lv_msg_id.
+    IF sy-subrc <> 0.
       RETURN.
     ENDIF.
-    IF sy-subrc <> 0.
-      _raise 'Error from RPY_MESSAGE_ID_READ'.
-    ENDIF.
+
+    SELECT * FROM t100 INTO TABLE lt_source
+      WHERE sprsl = gc_english
+      AND arbgb = lv_msg_id
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     CLEAR: ls_inf-lastuser,
            ls_inf-ldate,
