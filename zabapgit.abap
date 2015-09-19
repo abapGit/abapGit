@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.68'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.69'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6156,6 +6156,77 @@ CLASS lcl_object_tabl IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
+
+CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_enho IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lv_enh_id    TYPE enhname,
+          lv_tool      TYPE enhtooltype,
+          lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
+          li_enh_tool  TYPE REF TO if_enh_tool.
+
+
+    lv_enh_id = is_item-obj_name.
+    TRY.
+        li_enh_tool = cl_enh_factory=>get_enhancement( lv_enh_id ).
+      CATCH cx_enh_root.
+        _raise 'Error from CL_ENH_FACTORY'.
+    ENDTRY.
+    lv_tool = li_enh_tool->get_tool( ).
+    IF lv_tool <> cl_enh_tool_badi_impl=>tooltype.
+      _raise 'Unsupported ENHO type'.
+    ENDIF.
+    lo_badi_impl ?= li_enh_tool.
+
+    _raise 'todo, ENHO'.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+    _raise 'todo, ENHO'.
+  ENDMETHOD.
+
+  METHOD delete.
+    _raise 'todo, ENHO'.
+  ENDMETHOD.
+
+  METHOD jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = is_item-obj_name
+        object_type   = 'ENHO'
+        in_new_window = abap_true.
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enqu DEFINITION
