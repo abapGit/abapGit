@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.69'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.70'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2285,7 +2285,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
         APPEND INITIAL LINE TO lcl_objects_common=>gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC'.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO'.
 * these seem to go into the workarea automatically
         APPEND INITIAL LINE TO lcl_objects_common=>gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -6179,6 +6179,13 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+    CLASS-METHODS deserialize_badi
+      IMPORTING is_item    TYPE st_item
+                io_xml     TYPE REF TO lcl_xml
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_object_enho IMPLEMENTATION.
@@ -6188,8 +6195,21 @@ CLASS lcl_object_enho IMPLEMENTATION.
     DATA: lv_enh_id    TYPE enhname,
           lv_tool      TYPE enhtooltype,
           lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
+          lv_spot_name TYPE enhspotname,
+          ls_file      TYPE st_file,
+          lo_xml       TYPE REF TO lcl_xml,
+          lv_shorttext TYPE string,
+          ls_tadir     TYPE tadir,
+          lt_impl      TYPE enh_badi_impl_data_it,
           li_enh_tool  TYPE REF TO if_enh_tool.
 
+
+    ls_tadir = lcl_tadir=>read_single(
+      iv_object   = is_item-obj_type
+      iv_obj_name = is_item-obj_name ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
 
     lv_enh_id = is_item-obj_name.
     TRY.
@@ -6203,16 +6223,111 @@ CLASS lcl_object_enho IMPLEMENTATION.
     ENDIF.
     lo_badi_impl ?= li_enh_tool.
 
-    _raise 'todo, ENHO'.
+    lv_shorttext = lo_badi_impl->if_enh_object_docu~get_shorttext( ).
+    lv_spot_name = lo_badi_impl->get_spot_name( ).
+    lt_impl      = lo_badi_impl->get_implementations( ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->element_add( lv_tool ).
+    lo_xml->element_add( ig_element = lv_shorttext
+                         iv_name    = 'SHORTTEXT' ).
+    lo_xml->element_add( lv_spot_name ).
+    lo_xml->table_add( lt_impl ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
 
   ENDMETHOD.
 
   METHOD deserialize.
-    _raise 'todo, ENHO'.
+
+    DATA: lo_xml  TYPE REF TO lcl_xml,
+          lv_tool TYPE enhtooltype.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+
+    lo_xml->element_read( CHANGING cg_element = lv_tool ).
+
+    CASE lv_tool.
+      WHEN cl_enh_tool_badi_impl=>tooltype.
+        deserialize_badi( is_item    = is_item
+                          io_xml     = lo_xml
+                          iv_package = iv_package ).
+      WHEN OTHERS.
+        _raise 'Unsupported ENHO type'.
+    ENDCASE.
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
+
+  ENDMETHOD.
+
+  METHOD deserialize_badi.
+
+    DATA: lv_spot_name TYPE enhspotname,
+          lv_shorttext TYPE string,
+          lv_enhname   TYPE enhname,
+          lo_badi      TYPE REF TO cl_enh_tool_badi_impl,
+          li_tool      TYPE REF TO if_enh_tool,
+          lv_package   TYPE devclass,
+          lt_impl      TYPE enh_badi_impl_data_it.
+
+    FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
+
+
+    io_xml->element_read( EXPORTING iv_name   = 'SHORTTEXT'
+                          CHANGING cg_element = lv_shorttext ).
+    io_xml->element_read( CHANGING cg_element = lv_spot_name ).
+    io_xml->table_read( CHANGING ct_table = lt_impl ).
+
+
+    lv_enhname = is_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname       = lv_enhname
+            enhtype       = cl_abstract_enh_tool_redef=>credefinition
+            enhtooltype   = cl_enh_tool_badi_impl=>tooltype
+          IMPORTING
+            enhancement   = li_tool
+          CHANGING
+            devclass      = lv_package ).
+        lo_badi ?= li_tool.
+
+        lo_badi->set_spot_name( lv_spot_name ).
+        lo_badi->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        LOOP AT lt_impl ASSIGNING <ls_impl>.
+          lo_badi->add_implementation( <ls_impl> ).
+        ENDLOOP.
+        lo_badi->if_enh_object~save( ).
+        lo_badi->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        _raise 'error deserializing ENHO badi'.
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD delete.
-    _raise 'todo, ENHO'.
+
+    DATA: lv_enh_id     TYPE enhname,
+          li_enh_object TYPE REF TO if_enh_object.
+
+
+    lv_enh_id = is_item-obj_name.
+    TRY.
+        li_enh_object = cl_enh_factory=>get_enhancement(
+          enhancement_id = lv_enh_id
+          lock           = abap_true ).
+        li_enh_object->delete( ).
+        li_enh_object->save( ).
+        li_enh_object->unlock( ).
+      CATCH cx_enh_root.
+        _raise 'Error deleting ENHO'.
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD jump.
@@ -6334,7 +6449,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_dd25v ).
     lo_xml->table_add( it_table = lt_dd26e
-                       iv_name = 'DD26E_TABLE').
+                       iv_name = 'DD26E_TABLE' ).
     lo_xml->table_add( it_table = lt_dd27p
                        iv_name = 'DD27P_TABLE' ).
 
