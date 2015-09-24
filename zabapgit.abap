@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.70'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.71'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -7194,6 +7194,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+    CLEAR ls_inf-respuser.
 
     SELECT * FROM t100 INTO TABLE lt_source
       WHERE sprsl = gc_english
