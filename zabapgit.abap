@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.71'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.72'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -302,7 +302,7 @@ CLASS lcl_tadir IMPLEMENTATION.
 * look for subpackages
     SELECT * FROM tdevc INTO TABLE lt_tdevc
       WHERE parentcl = iv_package
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
       lv_len = strlen( iv_package ).
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
@@ -5529,6 +5529,95 @@ CLASS lcl_object_susc IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_common FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS serialize
+      IMPORTING is_item         TYPE st_item
+      RETURNING VALUE(rt_files) TYPE tt_files
+      RAISING   lcx_exception.
+
+    CLASS-METHODS deserialize
+      IMPORTING is_item    TYPE st_item
+                it_files   TYPE tt_files
+                iv_package TYPE devclass
+      RAISING   lcx_exception ##needed.
+
+    CLASS-METHODS delete
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump
+      IMPORTING is_item TYPE st_item
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_type IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lv_ddtext    TYPE ddtypet-ddtext,
+          lv_typdname  TYPE rsedd0-typegroup,
+          lt_psmodisrc TYPE TABLE OF smodisrc,
+          lt_psmodilog TYPE TABLE OF smodilog,
+          lt_psource   TYPE TABLE OF abaptxt255,
+          lt_ptrdir    TYPE TABLE OF trdir.
+
+
+    SELECT SINGLE ddtext FROM ddtypet
+      INTO lv_ddtext
+      WHERE typegroup = is_item-obj_name
+      AND ddlanguage = gc_english.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    lv_typdname = is_item-obj_name.
+    CALL FUNCTION 'TYPD_GET_OBJECT'
+      EXPORTING
+        typdname          = lv_typdname
+      TABLES
+        psmodisrc         = lt_psmodisrc
+        psmodilog         = lt_psmodilog
+        psource           = lt_psource
+        ptrdir            = lt_ptrdir
+      EXCEPTIONS
+        version_not_found = 1
+        reps_not_exist    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      _raise 'error from TYPD_GET_OBJECT'.
+    ENDIF.
+
+    _raise 'todo, TYPE, serialize'.
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    _raise 'todo, TYPE, deserialize'.
+* fm RS_DD_TYGR_INSERT_SOURCES
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    _raise 'todo, TYPE, delete'.
+* fm TYPD_INTERNAL_SERVICE
+
+  ENDMETHOD.
+
+  METHOD jump.
+
+    jump_se11( is_item  = is_item
+               iv_radio = 'RSRD1-TYMA'
+               iv_field = 'RSRD1-TYMA_VAL' ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
@@ -7190,7 +7279,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     lv_msg_id = is_item-obj_name.
 
     SELECT SINGLE * FROM t100a INTO ls_inf
-      WHERE arbgb = lv_msg_id.
+      WHERE arbgb = lv_msg_id.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
@@ -7199,7 +7288,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     SELECT * FROM t100 INTO TABLE lt_source
       WHERE sprsl = gc_english
       AND arbgb = lv_msg_id
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
     CLEAR: ls_inf-lastuser,
            ls_inf-ldate,
@@ -13195,6 +13284,8 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
                  <ls_sel>     LIKE LINE OF lt_selection,
                  <ls_furl>    LIKE LINE OF tt_fields.
 
+
+  CLEAR cs_error.
 
   IF pv_code = 'COD1'.
     cv_show_popup = abap_true.
