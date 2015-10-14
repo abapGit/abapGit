@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.72'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.73'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -150,7 +150,7 @@ CONSTANTS: BEGIN OF gc_diff,
              update TYPE c LENGTH 1 VALUE 'U',
            END OF gc_diff.
 
-DATA: gv_agent TYPE string.
+DATA: gv_agent TYPE string ##NEEDED.
 
 DEFINE _raise.
   raise exception type lcx_exception
@@ -292,7 +292,7 @@ CLASS lcl_tadir IMPLEMENTATION.
         WHEN 'INTF'.
           SELECT SINGLE category FROM seoclassdf INTO lv_category
             WHERE clsname = <ls_tadir>-obj_name
-            AND ( version = '1' OR version = '0' ).
+            AND ( version = '1' OR version = '0' ) ##WARN_OK.
           IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
             DELETE rt_tadir INDEX lv_index.
           ENDIF.
@@ -1598,7 +1598,7 @@ CLASS lcl_package IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       IF lv_parentcl IS INITIAL.
-        rv_path = 'error'.
+        rv_path = 'error' ##NO_TEXT.
       ELSE.
         lv_len = strlen( lv_parentcl ).
         lv_path = iv_package+lv_len.
@@ -2285,7 +2285,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
         APPEND INITIAL LINE TO lcl_objects_common=>gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO'.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO' OR 'TYPE'.
 * these seem to go into the workarea automatically
         APPEND INITIAL LINE TO lcl_objects_common=>gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -5551,26 +5551,39 @@ CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+    CLASS-METHODS read
+      IMPORTING is_item   TYPE st_item
+      EXPORTING ev_ddtext TYPE ddtypet-ddtext
+                et_source TYPE abaptxt255_tab
+      RAISING   lcx_exception
+                lcx_not_found.
+
+    CLASS-METHODS create
+      IMPORTING is_item     TYPE st_item
+                iv_ddtext   TYPE ddtypet-ddtext
+                it_source   TYPE abaptxt255_tab
+                iv_devclass TYPE devclass
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_object_type IMPLEMENTATION.
 
-  METHOD serialize.
+  METHOD read.
 
-    DATA: lv_ddtext    TYPE ddtypet-ddtext,
-          lv_typdname  TYPE rsedd0-typegroup,
+    DATA: lv_typdname  TYPE rsedd0-typegroup,
           lt_psmodisrc TYPE TABLE OF smodisrc,
           lt_psmodilog TYPE TABLE OF smodilog,
-          lt_psource   TYPE TABLE OF abaptxt255,
           lt_ptrdir    TYPE TABLE OF trdir.
 
 
     SELECT SINGLE ddtext FROM ddtypet
-      INTO lv_ddtext
+      INTO ev_ddtext
       WHERE typegroup = is_item-obj_name
       AND ddlanguage = gc_english.
     IF sy-subrc <> 0.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
 
     lv_typdname = is_item-obj_name.
@@ -5580,7 +5593,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       TABLES
         psmodisrc         = lt_psmodisrc
         psmodilog         = lt_psmodilog
-        psource           = lt_psource
+        psource           = et_source
         ptrdir            = lt_ptrdir
       EXCEPTIONS
         version_not_found = 1
@@ -5590,21 +5603,116 @@ CLASS lcl_object_type IMPLEMENTATION.
       _raise 'error from TYPD_GET_OBJECT'.
     ENDIF.
 
-    _raise 'todo, TYPE, serialize'.
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: lo_xml    TYPE REF TO lcl_xml,
+          ls_file   LIKE LINE OF rt_files,
+          lv_ddtext TYPE ddtypet-ddtext,
+          lt_source TYPE abaptxt255_tab.
+
+
+    TRY.
+        read( EXPORTING
+                is_item   = is_item
+              IMPORTING
+                ev_ddtext = lv_ddtext
+                et_source = lt_source ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->element_add( lv_ddtext ).
+    ls_file = xml_to_file( is_item = is_item
+                           io_xml  = lo_xml ).
+    APPEND ls_file TO rt_files.
+
+    ls_file = abap_to_file( is_item = is_item
+                            it_abap = lt_source ).
+    APPEND ls_file TO rt_files.
+
+  ENDMETHOD.
+
+  METHOD create.
+
+    DATA: lv_progname  TYPE reposrc-progname,
+          lv_typegroup TYPE rsedd0-typegroup.
+
+
+    lv_typegroup = is_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_TYGR_INSERT_SOURCES'
+      EXPORTING
+        typegroupname        = lv_typegroup
+        ddtext               = iv_ddtext
+        corrnum              = ''
+        devclass             = iv_devclass
+      TABLES
+        source               = it_source
+      EXCEPTIONS
+        already_exists       = 1
+        not_executed         = 2
+        permission_failure   = 3
+        object_not_specified = 4
+        illegal_name         = 5
+        OTHERS               = 6.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_DD_TYGR_INSERT_SOURCES'.
+    ENDIF.
+
+    CONCATENATE '%_C' lv_typegroup INTO lv_progname.
+    UPDATE progdir SET uccheck = abap_true
+      WHERE name = lv_progname.
+    IF sy-subrc <> 0.
+      _raise 'error setting uccheck'.
+    ENDIF.
 
   ENDMETHOD.
 
   METHOD deserialize.
 
-    _raise 'todo, TYPE, deserialize'.
-* fm RS_DD_TYGR_INSERT_SOURCES
+    DATA: lo_xml    TYPE REF TO lcl_xml,
+          lv_ddtext TYPE ddtypet-ddtext,
+          lt_source TYPE abaptxt255_tab.
+
+
+    lo_xml = read_xml( is_item  = is_item
+                       it_files = it_files ).
+    lo_xml->element_read( CHANGING cg_element = lv_ddtext ).
+
+    read_abap( EXPORTING is_item  = is_item
+                         it_files = it_files
+               CHANGING  ct_abap  = lt_source ).
+
+    create( is_item     = is_item
+            iv_ddtext   = lv_ddtext
+            it_source   = lt_source
+            iv_devclass = iv_package ).
+
+    activation_add( iv_type = is_item-obj_type
+                    iv_name = is_item-obj_name ).
 
   ENDMETHOD.
 
   METHOD delete.
 
-    _raise 'todo, TYPE, delete'.
-* fm TYPD_INTERNAL_SERVICE
+    DATA: lv_typename TYPE typegroup.
+
+
+    lv_typename = is_item-obj_name.
+
+    CALL FUNCTION 'TYPD_INTERNAL_SERVICE'
+      EXPORTING
+        i_typename        = lv_typename
+        i_operation       = swbm_c_op_delete
+      EXCEPTIONS
+        illegal_operation = 1
+        OTHERS            = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from TYPD_INTERNAL_SERVICE'.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -10641,7 +10749,7 @@ CLASS lcl_transport DEFINITION FINAL.
                 iv_service     TYPE string DEFAULT 'upload'
       EXPORTING ei_client      TYPE REF TO if_http_client
                 et_branch_list TYPE tt_branch_list
-      RAISING   lcx_exception.
+      RAISING   lcx_exception ##NO_TEXT.
 
   PRIVATE SECTION.
     CLASS-METHODS pkt_string
