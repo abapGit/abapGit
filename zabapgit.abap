@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.73'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.74'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1666,6 +1666,10 @@ CLASS lcl_package IMPLEMENTATION.
         EXIT.
       ENDLOOP.
     ENDLOOP.
+
+    IF NOT rv_errors IS INITIAL.
+      CONCATENATE '<br>' rv_errors INTO rv_errors.
+    ENDIF.
 
   ENDMETHOD.
 
