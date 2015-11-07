@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.74'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.75'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9716,8 +9716,13 @@ CLASS lcl_pack IMPLEMENTATION.
       CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
       CONCATENATE lv_result '1' lv_bits+21(7) INTO lv_result.
       CONCATENATE lv_result '0' lv_bits+14(7) INTO lv_result.
+    ELSEIF lv_bits(7) = '0000000'.
+      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
+      CONCATENATE lv_result '1' lv_bits+21(7) INTO lv_result.
+      CONCATENATE lv_result '1' lv_bits+14(7) INTO lv_result.
+      CONCATENATE lv_result '0' lv_bits+7(7) INTO lv_result.
     ELSE.
-* use shifting?
+* todo, this IF can be refactored, use shifting?
       _raise 'Todo, encoding length'.
     ENDIF.
 
