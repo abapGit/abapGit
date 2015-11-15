@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.76'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.77'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5309,8 +5309,10 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: li_app  TYPE REF TO if_wdy_md_application,
-          lv_name TYPE wdy_application_name.
+    DATA: li_app    TYPE REF TO if_wdy_md_application,
+          lv_objkey TYPE wdy_wb_appl_name,
+          lv_type   TYPE seu_type,
+          lv_name   TYPE wdy_application_name.
 
 
     lv_name = is_item-obj_name.
@@ -5320,6 +5322,19 @@ CLASS lcl_object_wdya IMPLEMENTATION.
                    version = 'A' ).
         li_app->if_wdy_md_object~delete( ).
         li_app->if_wdy_md_lockable_object~save_to_database( ).
+
+* method save_to_database calls function module TR_TADIR_INTERFACE
+* with test mode = X, so it does not delete the TADIR entry.
+* Instead the standard code uses RS_TREE_OBJECT_PLACEMENT to delete
+* the TADIR entry
+        lv_objkey = is_item-obj_name.
+        CONCATENATE 'O' swbm_c_type_wdy_application INTO lv_type.
+        CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
+          EXPORTING
+            object    = lv_objkey
+            type      = lv_type
+            operation = 'DELETE'.
+
       CATCH cx_wdy_md_not_existing.
         RETURN.
       CATCH cx_wdy_md_exception.
@@ -7208,7 +7223,6 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       IMPORTING
         es_objh            = ls_objh
         es_objt            = ls_objt
-*       EV_OBJT_DOESNT_EXIST       =
       TABLES
         tt_objs            = lt_objs
         tt_objsl           = lt_objsl
@@ -7555,7 +7569,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_object_dtel DEFINITION
+ENDCLASS.                    "lcl_object_fugr DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel IMPLEMENTATION
@@ -7640,10 +7654,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
             funcname                 = <ls_functab>-funcname
-*           SUPPRESS_DELETE_LONGTEXT = ' '
             suppress_success_message = abap_true
-*           SUPPRESS_DELE_ENHA       = ' '
-*           SUPPRESS_LOCK            = ' '
           EXCEPTIONS
             error_message            = 1
             OTHERS                   = 2.
