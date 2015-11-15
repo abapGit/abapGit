@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.75'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.76'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -96,13 +96,6 @@ TYPES: BEGIN OF st_result,
        END OF st_result.
 TYPES: tt_results TYPE STANDARD TABLE OF st_result WITH DEFAULT KEY.
 
-TYPES: BEGIN OF st_diff,
-         local  TYPE string,
-         result TYPE c LENGTH 1,
-         remote TYPE string,
-       END OF st_diff.
-TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
-
 TYPES: BEGIN OF st_tadir,
          pgmid    TYPE tadir-pgmid,
          object   TYPE tadir-object,
@@ -143,12 +136,6 @@ CONSTANTS: BEGIN OF gc_chmod,
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
-
-CONSTANTS: BEGIN OF gc_diff,
-             insert TYPE c LENGTH 1 VALUE 'I',
-             delete TYPE c LENGTH 1 VALUE 'D',
-             update TYPE c LENGTH 1 VALUE 'U',
-           END OF gc_diff.
 
 DATA: gv_agent TYPE string ##NEEDED.
 
@@ -1412,14 +1399,40 @@ ENDCLASS.                    "lcl_convert IMPLEMENTATION
 CLASS lcl_diff DEFINITION FINAL.
 
   PUBLIC SECTION.
+    CONSTANTS: BEGIN OF gc_diff,
+                 insert TYPE c LENGTH 1 VALUE 'I',
+                 delete TYPE c LENGTH 1 VALUE 'D',
+                 update TYPE c LENGTH 1 VALUE 'U',
+               END OF gc_diff.
+
+    TYPES: BEGIN OF st_diff,
+             local  TYPE string,
+             result TYPE c LENGTH 1,
+             remote TYPE string,
+           END OF st_diff.
+    TYPES: tt_diffs TYPE STANDARD TABLE OF st_diff WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF st_count,
+             insert TYPE i,
+             delete TYPE i,
+             update TYPE i,
+           END OF st_count.
+
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
-    CLASS-METHODS diff
-      IMPORTING iv_local       TYPE xstring
-                iv_remote      TYPE xstring
+    METHODS constructor
+      IMPORTING iv_local  TYPE xstring
+                iv_remote TYPE xstring.
+
+    METHODS get
       RETURNING VALUE(rt_diff) TYPE tt_diffs.
 
+    METHODS count
+      RETURNING VALUE(rs_count) TYPE st_count.
+
   PRIVATE SECTION.
+    DATA mt_diff TYPE tt_diffs.
+
     CLASS-METHODS: unpack
       IMPORTING iv_local  TYPE xstring
                 iv_remote TYPE xstring
@@ -1445,6 +1458,28 @@ ENDCLASS.                    "lcl_diff DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_diff IMPLEMENTATION.
+
+  METHOD get.
+    rt_diff = mt_diff.
+  ENDMETHOD.
+
+  METHOD count.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+      CASE <ls_diff>-result.
+        WHEN lcl_diff=>gc_diff-insert.
+          rs_count-insert = rs_count-insert + 1.
+        WHEN lcl_diff=>gc_diff-delete.
+          rs_count-delete = rs_count-delete + 1.
+        WHEN lcl_diff=>gc_diff-update.
+          rs_count-update = rs_count-update + 1.
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD unpack.
 
@@ -1478,7 +1513,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD diff.
+  METHOD constructor.
 
     DATA: lt_delta  TYPE vxabapt255_tab,
           lt_local  TYPE abaptxt255_tab,
@@ -1493,7 +1528,7 @@ CLASS lcl_diff IMPLEMENTATION.
     lt_delta = compute( it_local  = lt_local
                         it_remote = lt_remote ).
 
-    rt_diff = render( it_local  = lt_local
+    mt_diff = render( it_local  = lt_local
                       it_remote = lt_remote
                       it_delta  = lt_delta ).
 
@@ -4825,6 +4860,21 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
+    SORT rs_component-ctlr_metadata BY
+      definition-component_name ASCENDING
+      definition-controller_name ASCENDING.
+
+    SORT gt_components BY
+      component_name ASCENDING
+      controller_name ASCENDING
+      cmpname ASCENDING.
+
+    SORT gt_sources BY
+      component_name ASCENDING
+      controller_name ASCENDING
+      cmpname ASCENDING
+      line_number ASCENDING.
+
   ENDMETHOD.
 
   METHOD serialize.
@@ -6180,7 +6230,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           lt_dd35v TYPE TABLE OF dd35v,
           lt_dd36m TYPE dd36mttyp.
 
-    FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v.
+    FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
+                   <ls_dd03p> LIKE LINE OF lt_dd03p.
 
 
     lv_name = is_item-obj_name.
@@ -6222,6 +6273,16 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       CLEAR: <ls_dd12v>-as4user,
              <ls_dd12v>-as4date,
              <ls_dd12v>-as4time.
+    ENDLOOP.
+
+    LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
+      CLEAR: <ls_dd03p>-ddlanguage,
+        <ls_dd03p>-dtelmaster,
+        <ls_dd03p>-ddtext,
+        <ls_dd03p>-reptext,
+        <ls_dd03p>-scrtext_s,
+        <ls_dd03p>-scrtext_m,
+        <ls_dd03p>-scrtext_l.
     ENDLOOP.
 
     CREATE OBJECT lo_xml.
@@ -10232,11 +10293,11 @@ CLASS lcl_pack IMPLEMENTATION.
         lv_data = lv_data+4. " skip adler checksum
 
       ELSEIF lv_zlib = c_zlib_hmm.
-* this takes some processing, when time permits, implement DEFLATE algorithm
+* this takes some processing. When time permits: implement DEFLATE algorithm
 * cl_abap_gzip copmression works for '789C', but does not produce the same
 * result when '7801'
 * compressed data might be larger than origial so add 10, adding 10 is safe
-* as package always ends with sha1 checksum
+* as package always ends with SHA1 checksum
         DO lv_expected + 10 TIMES.
           lv_compressed_len = sy-index.
 
@@ -12084,7 +12145,7 @@ CLASS lcl_gui DEFINITION FINAL.
 
     CLASS-METHODS render_diff
       IMPORTING is_result TYPE st_result
-                it_diffs  TYPE tt_diffs.
+                io_diff   TYPE REF TO lcl_diff.
 
     CLASS-METHODS struct_encode
       IMPORTING ig_structure1    TYPE any
@@ -12191,7 +12252,7 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lt_remote TYPE tt_files,
           lt_local  TYPE tt_files,
           ls_item   TYPE st_item,
-          lt_diffs  TYPE tt_diffs.
+          lo_diff   TYPE REF TO lcl_diff.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
                    <ls_local>  LIKE LINE OF lt_local.
@@ -12217,11 +12278,13 @@ CLASS lcl_gui IMPLEMENTATION.
       _raise 'not found locally'.
     ENDIF.
 
-    lt_diffs = lcl_diff=>diff( iv_local  = <ls_local>-data
-                               iv_remote = <ls_remote>-data ).
+    CREATE OBJECT lo_diff
+      EXPORTING
+        iv_local  = <ls_local>-data
+        iv_remote = <ls_remote>-data.
 
     render_diff( is_result = is_result
-                 it_diffs  = lt_diffs ).
+                 io_diff   = lo_diff ).
 
   ENDMETHOD.                    "diff
 
@@ -12231,9 +12294,11 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_local   TYPE string,
           lv_remote  TYPE string,
           lv_clocal  TYPE string,
-          lv_cremote TYPE string.
+          lv_cremote TYPE string,
+          ls_count   TYPE lcl_diff=>st_count,
+          lt_diffs   TYPE lcl_diff=>tt_diffs.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF it_diffs.
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
 
 
     lv_html = render_header( ) &&
@@ -12243,6 +12308,29 @@ CLASS lcl_gui IMPLEMENTATION.
               is_result-obj_name && '&nbsp;' &&
               is_result-filename && '</h3><br><br>'.
 
+    ls_count = io_diff->count( ).
+    lv_html = lv_html &&
+              '<table border="1">' && gc_newline &&
+              '<tr>'               && gc_newline &&
+              '<td>Insert</td>'    && gc_newline &&
+              '<td>'               &&
+              ls_count-insert      &&
+              '</td>'              && gc_newline &&
+              '</tr>'              && gc_newline &&
+              '<tr>'               && gc_newline &&
+              '<td>Delete</td>'    && gc_newline &&
+              '<td>'               &&
+              ls_count-delete      &&
+              '</td>'              && gc_newline &&
+              '</tr>'              && gc_newline &&
+              '<tr>'               && gc_newline &&
+              '<td>Update</td>'    && gc_newline &&
+              '<td>'               &&
+              ls_count-update      &&
+              '</td>'              && gc_newline &&
+              '</tr>'              && gc_newline &&
+              '</table><br>'       && gc_newline.
+
     lv_html = lv_html &&
               '<table border="0">'       && gc_newline &&
               '<tr>'                     && gc_newline &&
@@ -12251,18 +12339,19 @@ CLASS lcl_gui IMPLEMENTATION.
               '<td><h2>Remote</h2></td>' && gc_newline &&
               '</tr>'.
 
-    LOOP AT it_diffs ASSIGNING <ls_diff>.
+    lt_diffs = io_diff->get( ).
+    LOOP AT lt_diffs ASSIGNING <ls_diff>.
       lv_local = escape( val = <ls_diff>-local format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
 
       CASE <ls_diff>-result.
-        WHEN gc_diff-insert.
+        WHEN lcl_diff=>gc_diff-insert.
           lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
           lv_cremote = ''.
-        WHEN gc_diff-delete.
+        WHEN lcl_diff=>gc_diff-delete.
           lv_clocal = ''.
           lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
-        WHEN gc_diff-update.
+        WHEN lcl_diff=>gc_diff-update.
           lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
           lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
         WHEN OTHERS.
@@ -13469,7 +13558,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
     DATA: mt_local    TYPE TABLE OF string,
           mt_remote   TYPE TABLE OF string,
-          mt_expected TYPE tt_diffs,
+          mt_expected TYPE lcl_diff=>tt_diffs,
           ms_expected LIKE LINE OF mt_expected.
 
     METHODS: setup.
@@ -13515,7 +13604,8 @@ CLASS ltcl_diff IMPLEMENTATION.
           lv_xlocal  TYPE xstring,
           lv_remote  TYPE string,
           lv_xremote TYPE xstring,
-          lt_diff    TYPE tt_diffs.
+          lo_diff    TYPE REF TO lcl_diff,
+          lt_diff    TYPE lcl_diff=>tt_diffs.
 
 
     CONCATENATE LINES OF mt_local  INTO lv_local SEPARATED BY gc_newline.
@@ -13524,8 +13614,12 @@ CLASS ltcl_diff IMPLEMENTATION.
     lv_xlocal  = lcl_convert=>string_to_xstring_utf8( lv_local ).
     lv_xremote = lcl_convert=>string_to_xstring_utf8( lv_remote ).
 
-    lt_diff = lcl_diff=>diff( iv_local  = lv_xlocal
-                              iv_remote = lv_xremote ).
+    CREATE OBJECT lo_diff
+      EXPORTING
+        iv_local  = lv_xlocal
+        iv_remote = lv_xremote.
+
+    lt_diff = lo_diff->get( ).
 
     cl_abap_unit_assert=>assert_equals( act = lt_diff
                                         exp = mt_expected ).
@@ -13537,7 +13631,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
 * insert
     _local '1'.
-    _expected '1' gc_diff-insert ''.
+    _expected '1' lcl_diff=>gc_diff-insert ''.
     test( ).
 
   ENDMETHOD.
@@ -13556,7 +13650,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 
 * delete
     _remote '1'.
-    _expected '' gc_diff-delete '1'.
+    _expected '' lcl_diff=>gc_diff-delete '1'.
     test( ).
 
   ENDMETHOD.
@@ -13566,7 +13660,7 @@ CLASS ltcl_diff IMPLEMENTATION.
 * update
     _local '1+'.
     _remote '1'.
-    _expected '1+' gc_diff-update '1'.
+    _expected '1+' lcl_diff=>gc_diff-update '1'.
     test( ).
 
   ENDMETHOD.
@@ -13599,9 +13693,9 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     _expected '1' '' '1'.
     _expected '2' '' '2'.
-    _expected 'inserted' gc_diff-insert ''.
+    _expected 'inserted' lcl_diff=>gc_diff-insert ''.
     _expected '3' '' '3'.
-    _expected '4 update' gc_diff-update '4'.
+    _expected '4 update' lcl_diff=>gc_diff-update '4'.
 
     test( ).
 
