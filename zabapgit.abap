@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.77'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.78'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4679,7 +4679,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     DATA: lt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
           lt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs,
-          lt_definition TYPE TABLE OF wdy_controller.
+          lt_definition TYPE TABLE OF wdy_controller,
+          lt_psmodilog  TYPE TABLE OF smodilog,
+          lt_psmodisrc  TYPE TABLE OF smodisrc.
 
 
     CALL FUNCTION 'WDYC_GET_OBJECT'
@@ -4701,6 +4703,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         fieldgroups                  = rs_controller-fieldgroups
         controller_exceptions        = rs_controller-controller_exceptions
         controller_exception_texts   = rs_controller-controller_exception_texts
+        psmodilog                    = lt_psmodilog " not optional in all versions
+        psmodisrc                    = lt_psmodisrc " not optional in all versions
       EXCEPTIONS
         not_existing                 = 1
         OTHERS                       = 2.
@@ -4725,7 +4729,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD read_definition.
 
-    DATA: lt_definition TYPE TABLE OF wdy_component.
+    DATA: lt_definition TYPE TABLE OF wdy_component,
+          lt_psmodilog  TYPE TABLE OF smodilog,
+          lt_psmodisrc  TYPE TABLE OF smodisrc.
 
 
     CALL FUNCTION 'WDYD_GET_OBJECT'
@@ -4740,6 +4746,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         library_usages          = rs_definition-library_usages
         ext_ctlr_usages         = rs_definition-ext_ctlr_usages
         ext_ctx_mappings        = rs_definition-ext_ctx_mappings
+        psmodilog               = lt_psmodilog " not optional in all versions
+        psmodisrc               = lt_psmodisrc " not optional in all versions
       EXCEPTIONS
         not_existing            = 1
         OTHERS                  = 2.
