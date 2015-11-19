@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.78'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.79'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -232,10 +232,16 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read_single.
 
+    DATA: lv_obj_name TYPE tadir-obj_name.
+
+
+* fix for SICF services
+    CONCATENATE iv_obj_name '%' INTO lv_obj_name.
+
     SELECT SINGLE * FROM tadir INTO rs_tadir
       WHERE pgmid = iv_pgmid
       AND object = iv_object
-      AND obj_name = iv_obj_name.                         "#EC CI_SUBRC
+      AND obj_name LIKE lv_obj_name.                      "#EC CI_SUBRC
 
   ENDMETHOD.
 
