@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.79'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.80'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -137,7 +137,7 @@ CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
-DATA: gv_agent TYPE string ##NEEDED.
+DATA: gv_agent TYPE string ##needed.
 
 DEFINE _raise.
   raise exception type lcx_exception
@@ -201,21 +201,26 @@ ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcx_not_found IMPLEMENTATION.
 
-ENDCLASS.
+ENDCLASS.                    "lcx_not_found IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_tadir DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_tadir DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
       read
         IMPORTING iv_package      TYPE tadir-devclass
-        RETURNING VALUE(rt_tadir) TYPE tt_tadir
+        RETURNING value(rt_tadir) TYPE tt_tadir
         RAISING   lcx_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object       TYPE tadir-object
                   iv_obj_name     TYPE tadir-obj_name
-        RETURNING VALUE(rs_tadir) TYPE tadir.
+        RETURNING value(rs_tadir) TYPE tadir.
 
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -223,11 +228,16 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_package      TYPE tadir-devclass
                   iv_parent       TYPE tadir-devclass
                   iv_path         TYPE string
-        RETURNING VALUE(rt_tadir) TYPE tt_tadir
+        RETURNING value(rt_tadir) TYPE tt_tadir
         RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_tadir DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_tadir IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read_single.
@@ -235,15 +245,18 @@ CLASS lcl_tadir IMPLEMENTATION.
     DATA: lv_obj_name TYPE tadir-obj_name.
 
 
-* fix for SICF services
-    CONCATENATE iv_obj_name '%' INTO lv_obj_name.
+    IF iv_object = 'SICF'.
+      CONCATENATE iv_obj_name '%' INTO lv_obj_name.
+    ELSE.
+      lv_obj_name = iv_obj_name.
+    ENDIF.
 
     SELECT SINGLE * FROM tadir INTO rs_tadir
       WHERE pgmid = iv_pgmid
       AND object = iv_object
       AND obj_name LIKE lv_obj_name.                      "#EC CI_SUBRC
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read_single
 
   METHOD read.
 
@@ -252,7 +265,7 @@ CLASS lcl_tadir IMPLEMENTATION.
                       iv_parent  = ''
                       iv_path    = '' ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD build.
 
@@ -285,7 +298,7 @@ CLASS lcl_tadir IMPLEMENTATION.
         WHEN 'INTF'.
           SELECT SINGLE category FROM seoclassdf INTO lv_category
             WHERE clsname = <ls_tadir>-obj_name
-            AND ( version = '1' OR version = '0' ) ##WARN_OK.
+            AND ( version = '1' OR version = '0' ) ##warn_ok.
           IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
             DELETE rt_tadir INDEX lv_index.
           ENDIF.
@@ -315,9 +328,9 @@ CLASS lcl_tadir IMPLEMENTATION.
       APPEND LINES OF lt_tadir TO rt_tadir.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "build
 
-ENDCLASS.
+ENDCLASS.                    "lcl_tadir IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_user DEFINITION
@@ -332,7 +345,7 @@ CLASS lcl_user DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_username
-      RETURNING VALUE(rv_username) TYPE string
+      RETURNING value(rv_username) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS set_email
@@ -340,13 +353,13 @@ CLASS lcl_user DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_email
-      RETURNING VALUE(rv_email) TYPE string
+      RETURNING value(rv_email) TYPE string
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS read
       IMPORTING iv_name         TYPE tdobname
-      RETURNING VALUE(rv_value) TYPE string
+      RETURNING value(rv_value) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS save
@@ -536,11 +549,11 @@ CLASS lcl_xml DEFINITION FINAL.
 
     METHODS xml_render
       IMPORTING iv_normalize     TYPE sap_bool DEFAULT abap_true
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     METHODS xml_element
       IMPORTING iv_name           TYPE string
-      RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
+      RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
     METHODS xml_add
       IMPORTING ii_root    TYPE REF TO if_ixml_element OPTIONAL
@@ -549,7 +562,7 @@ CLASS lcl_xml DEFINITION FINAL.
     METHODS xml_find
       IMPORTING ii_root           TYPE REF TO if_ixml_element OPTIONAL
                 iv_name           TYPE string
-      RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
+      RETURNING value(ri_element) TYPE REF TO if_ixml_element.
 
   PRIVATE SECTION.
 
@@ -1010,10 +1023,10 @@ CLASS lcl_debug DEFINITION FINAL.
       IMPORTING iv_message TYPE string.
 
     CLASS-METHODS get_html
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS get_debug
-      RETURNING VALUE(rv_debug) TYPE sap_bool.
+      RETURNING value(rv_debug) TYPE sap_bool.
 
     CLASS-METHODS clear.
 
@@ -1115,7 +1128,7 @@ CLASS lcl_time DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS get
-      RETURNING VALUE(rv_time) TYPE t_unixtime
+      RETURNING value(rv_time) TYPE t_unixtime
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -1187,17 +1200,17 @@ CLASS lcl_url DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS host
       IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_host) TYPE string
+      RETURNING value(rv_host) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS name
       IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_name) TYPE string
+      RETURNING value(rv_name) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS path_name
       IMPORTING iv_repo             TYPE string
-      RETURNING VALUE(rv_path_name) TYPE string
+      RETURNING value(rv_path_name) TYPE string
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -1262,29 +1275,29 @@ CLASS lcl_convert DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS bitbyte_to_int
       IMPORTING iv_bits       TYPE clike
-      RETURNING VALUE(rv_int) TYPE i.
+      RETURNING value(rv_int) TYPE i.
 
     CLASS-METHODS x_to_bitbyte
       IMPORTING iv_x              TYPE x
-      RETURNING VALUE(rv_bitbyte) TYPE t_bitbyte.
+      RETURNING value(rv_bitbyte) TYPE t_bitbyte.
 
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING iv_string         TYPE string
-      RETURNING VALUE(rv_xstring) TYPE xstring.
+      RETURNING value(rv_xstring) TYPE xstring.
 
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS xstring_to_int
       IMPORTING iv_xstring  TYPE xstring
-      RETURNING VALUE(rv_i) TYPE i
+      RETURNING value(rv_i) TYPE i
       RAISING   lcx_exception.
 
     CLASS-METHODS int_to_xstring
       IMPORTING iv_i              TYPE i
                 iv_length         TYPE i
-      RETURNING VALUE(rv_xstring) TYPE xstring.
+      RETURNING value(rv_xstring) TYPE xstring.
 
 ENDCLASS.                    "lcl_convert DEFINITION
 
@@ -1431,10 +1444,10 @@ CLASS lcl_diff DEFINITION FINAL.
                 iv_remote TYPE xstring.
 
     METHODS get
-      RETURNING VALUE(rt_diff) TYPE tt_diffs.
+      RETURNING value(rt_diff) TYPE tt_diffs.
 
     METHODS count
-      RETURNING VALUE(rs_count) TYPE st_count.
+      RETURNING value(rs_count) TYPE st_count.
 
   PRIVATE SECTION.
     DATA mt_diff TYPE tt_diffs.
@@ -1449,12 +1462,12 @@ CLASS lcl_diff DEFINITION FINAL.
       IMPORTING it_local       TYPE abaptxt255_tab
                 it_remote      TYPE abaptxt255_tab
                 it_delta       TYPE vxabapt255_tab
-      RETURNING VALUE(rt_diff) TYPE tt_diffs.
+      RETURNING value(rt_diff) TYPE tt_diffs.
 
     CLASS-METHODS: compute
       IMPORTING it_local        TYPE abaptxt255_tab
                 it_remote       TYPE abaptxt255_tab
-      RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
+      RETURNING value(rt_delta) TYPE vxabapt255_tab.
 
 ENDCLASS.                    "lcl_diff DEFINITION
 
@@ -1467,7 +1480,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD get.
     rt_diff = mt_diff.
-  ENDMETHOD.
+  ENDMETHOD.                    "get
 
   METHOD count.
 
@@ -1485,7 +1498,7 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "count
 
   METHOD unpack.
 
@@ -1499,7 +1512,7 @@ CLASS lcl_diff IMPLEMENTATION.
     SPLIT lv_local  AT gc_newline INTO TABLE et_local.
     SPLIT lv_remote AT gc_newline INTO TABLE et_remote.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "unpack
 
   METHOD compute.
 
@@ -1517,7 +1530,7 @@ CLASS lcl_diff IMPLEMENTATION.
         trdir_delta  = lt_trdir_delta
         text_delta   = rt_delta.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "compute
 
   METHOD constructor.
 
@@ -1598,17 +1611,22 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "render
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_package DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_package DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
       check IMPORTING it_results       TYPE tt_results
                       iv_top           TYPE devclass
-            RETURNING VALUE(rv_errors) TYPE string,
+            RETURNING value(rv_errors) TYPE string,
       create.
 
   PRIVATE SECTION.
@@ -1618,10 +1636,15 @@ CLASS lcl_package DEFINITION FINAL.
           iv_top         TYPE devclass
           iv_package     TYPE devclass
         RETURNING
-          VALUE(rv_path) TYPE string.
+          value(rv_path) TYPE string.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_package DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_package IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_package IMPLEMENTATION.
 
   METHOD class_to_path.
@@ -1639,7 +1662,7 @@ CLASS lcl_package IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       IF lv_parentcl IS INITIAL.
-        rv_path = 'error' ##NO_TEXT.
+        rv_path = 'error' ##no_text.
       ELSE.
         lv_len = strlen( lv_parentcl ).
         lv_path = iv_package+lv_len.
@@ -1658,7 +1681,7 @@ CLASS lcl_package IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "class_to_path
 
   METHOD check.
 
@@ -1712,13 +1735,13 @@ CLASS lcl_package IMPLEMENTATION.
       CONCATENATE '<br>' rv_errors INTO rv_errors.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "check
 
   METHOD create.
 * todo, see https://github.com/larshp/abapGit/issues/5
-  ENDMETHOD.
+  ENDMETHOD.                    "create
 
-ENDCLASS.
+ENDCLASS.                    "lcl_package IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_common DEFINITION
@@ -1770,14 +1793,14 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
                 iv_extra       TYPE clike OPTIONAL
                 io_xml         TYPE REF TO lcl_xml
                 iv_normalize   TYPE sap_bool DEFAULT abap_true
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS read_xml
       IMPORTING is_item       TYPE st_item
                 iv_extra      TYPE clike OPTIONAL
                 it_files      TYPE tt_files
-      RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
+      RETURNING value(ro_xml) TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     CLASS-METHODS read_abap
@@ -1792,7 +1815,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item        TYPE st_item
                 iv_extra       TYPE clike OPTIONAL
                 it_abap        TYPE STANDARD TABLE
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS activation_add
@@ -1813,13 +1836,13 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
 
     CLASS-METHODS read_progdir
       IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
+      RETURNING value(rs_progdir) TYPE ty_progdir.
 
     CLASS-METHODS serialize_program
       IMPORTING is_item         TYPE st_item
                 iv_program      TYPE programm OPTIONAL
                 iv_extra        TYPE clike OPTIONAL
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_program
@@ -1834,7 +1857,7 @@ CLASS lcl_objects_common DEFINITION ABSTRACT.
       IMPORTING is_item            TYPE st_item
                 iv_extra           TYPE clike OPTIONAL
                 iv_ext             TYPE string
-      RETURNING VALUE(rv_filename) TYPE string.
+      RETURNING value(rv_filename) TYPE string.
 
     CLASS-METHODS serialize_dynpros
       IMPORTING iv_program_name TYPE programm
@@ -2242,7 +2265,9 @@ CLASS lcl_objects_common IMPLEMENTATION.
         system_failure        = 1
         communication_failure = 2
         resource_failure      = 3
-        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
+        OTHERS                = 4
+        ##fm_subrc_ok
+      .                                                   "#EC CI_SUBRC
 
   ENDMETHOD.                                                "jump_se11
 
@@ -2441,7 +2466,7 @@ CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2603,7 +2628,7 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2753,7 +2778,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -2790,36 +2815,36 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS exists
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rv_exists) TYPE sap_bool.
+      RETURNING value(rv_exists) TYPE sap_bool.
 
     CLASS-METHODS serialize_abap
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_testclasses
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE tt_string
+      RETURNING value(rt_source) TYPE tt_string
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_xml
       IMPORTING is_item       TYPE st_item
-      RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
+      RETURNING value(ro_xml) TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     CLASS-METHODS remove_signatures
@@ -3442,12 +3467,17 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_smim DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3467,19 +3497,19 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PRIVATE SECTION.
     CLASS-METHODS get_filename
       IMPORTING iv_url             TYPE string
-      RETURNING VALUE(rv_filename) TYPE string.
+      RETURNING value(rv_filename) TYPE string.
 
     CLASS-METHODS find_content
       IMPORTING is_item           TYPE st_item
                 it_files          TYPE tt_files
                 iv_url            TYPE string
-      RETURNING VALUE(rv_content) TYPE xstring
+      RETURNING value(rv_content) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS build_filename
       IMPORTING is_item            TYPE st_item
                 iv_filename        TYPE string
-      RETURNING VALUE(rv_filename) TYPE string.
+      RETURNING value(rv_filename) TYPE string.
 
     CLASS-METHODS get_url_for_io
       IMPORTING iv_loio      TYPE sdok_docid
@@ -3488,8 +3518,13 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_common FINAL.
       RAISING   lcx_not_found
                 lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_smim DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_smim IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD get_url_for_io.
@@ -3522,7 +3557,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
     ev_url = lv_url.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_url_for_io
 
   METHOD build_filename.
 
@@ -3530,7 +3565,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
       INTO rv_filename SEPARATED BY '.'.
     TRANSLATE rv_filename TO LOWER CASE.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "build_filename
 
   METHOD find_content.
 
@@ -3551,7 +3586,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
     rv_content = <ls_file>-data.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "find_content
 
   METHOD get_filename.
 
@@ -3565,7 +3600,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     READ TABLE lt_strings INDEX lv_lines INTO rv_filename.
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_filename
 
   METHOD serialize.
 
@@ -3625,7 +3660,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -3702,7 +3737,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -3740,20 +3775,25 @@ CLASS lcl_object_smim IMPLEMENTATION.
       _raise 'error from delete'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
     _raise 'todo, SMIM'.
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_smim IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_sicf DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -3802,15 +3842,20 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS to_icfhndlist
       IMPORTING it_list        TYPE tt_icfhandler
-      RETURNING VALUE(rt_list) TYPE icfhndlist.
+      RETURNING value(rt_list) TYPE icfhndlist.
 
     CLASS-METHODS find_parent
       IMPORTING iv_url           TYPE string
-      RETURNING VALUE(rv_parent) TYPE icfparguid
+      RETURNING value(rv_parent) TYPE icfparguid
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_sicf DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_sicf IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
 
   METHOD serialize.
@@ -3850,7 +3895,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD read.
 
@@ -3867,7 +3912,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       SELECT SINGLE icfparguid FROM icfservice
         INTO ls_key-icfparguid
         WHERE icf_name = ls_key-icf_name
-        AND icf_cuser <> 'SAP' ##WARN_OK.
+        AND icf_cuser <> 'SAP' ##warn_ok.
       IF sy-subrc <> 0.
         RETURN.
       ENDIF.
@@ -3909,7 +3954,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       CLEAR <ls_icfhandler>-icfparguid.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD deserialize.
 
@@ -3946,7 +3991,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
                    iv_parent     = ls_read-icfparguid ).
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD to_icfhndlist.
 
@@ -3958,7 +4003,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       INSERT <ls_list>-icfhandler INTO TABLE rt_list.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "to_icfhndlist
 
   METHOD find_parent.
 
@@ -3979,7 +4024,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from service_from_url'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "find_parent
 
   METHOD insert_sicf.
 
@@ -4040,7 +4085,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from insert_node'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "insert_sicf
 
   METHOD change_sicf.
 
@@ -4095,7 +4140,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from change_node'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "change_sicf
 
   METHOD delete.
 
@@ -4127,20 +4172,25 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       _raise 'error from delete_node'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
     _raise 'todo, SICF'.
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_sicf IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_ssst DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4162,8 +4212,13 @@ CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING iv_tdfamily TYPE tdfamily
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_ssst DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_ssst IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_ssst IMPLEMENTATION.
 
   METHOD validate_font.
@@ -4177,7 +4232,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
       _raise 'Font family not found'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "validate_font
 
   METHOD serialize.
 * see fm SSF_DOWNLOAD_STYLE
@@ -4242,7 +4297,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 * see fm SSF_UPLOAD_STYLE
@@ -4289,7 +4344,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
       _raise 'error from SSF_ACTIVATE_STYLE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -4315,20 +4370,25 @@ CLASS lcl_object_ssst IMPLEMENTATION.
       _raise 'error from SSF_DELETE_STYLE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
     _raise 'todo'.
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_ssst IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_suso DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_suso DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4345,14 +4405,19 @@ CLASS lcl_object_suso DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_suso DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdyn DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -4378,22 +4443,22 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
     CLASS-METHODS:
       get_limu_objects
         IMPORTING is_item           TYPE st_item
-        RETURNING VALUE(rt_objects) TYPE wdy_md_transport_keys,
+        RETURNING value(rt_objects) TYPE wdy_md_transport_keys,
       read
         IMPORTING is_item             TYPE st_item
-        RETURNING VALUE(rs_component) TYPE wdy_component_metadata
+        RETURNING value(rs_component) TYPE wdy_component_metadata
         RAISING   lcx_exception,
       read_controller
         IMPORTING is_key               TYPE wdy_md_controller_key
-        RETURNING VALUE(rs_controller) TYPE wdy_md_controller_meta_data
+        RETURNING value(rs_controller) TYPE wdy_md_controller_meta_data
         RAISING   lcx_exception,
       read_definition
         IMPORTING is_key               TYPE wdy_md_component_key
-        RETURNING VALUE(rs_definition) TYPE wdy_md_component_meta_data
+        RETURNING value(rs_definition) TYPE wdy_md_component_meta_data
         RAISING   lcx_exception,
       read_view
         IMPORTING is_key         TYPE wdy_md_view_key
-        RETURNING VALUE(rs_view) TYPE wdy_md_view_meta_data
+        RETURNING value(rs_view) TYPE wdy_md_view_meta_data
         RAISING   lcx_exception,
       recover_controller
         IMPORTING is_controller TYPE wdy_md_controller_meta_data
@@ -4406,19 +4471,24 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_common FINAL.
         RAISING   lcx_exception,
       delta_controller
         IMPORTING is_controller   TYPE wdy_md_controller_meta_data
-        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        RETURNING value(rs_delta) TYPE svrs2_xversionable_object
         RAISING   lcx_exception,
       delta_definition
         IMPORTING is_definition   TYPE wdy_md_component_meta_data
-        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        RETURNING value(rs_delta) TYPE svrs2_xversionable_object
         RAISING   lcx_exception,
       delta_view
         IMPORTING is_view         TYPE wdy_md_view_meta_data
-        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        RETURNING value(rs_delta) TYPE svrs2_xversionable_object
         RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdyn DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdyn IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD delta_definition.
@@ -4473,7 +4543,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delta_definition
 
   METHOD delta_controller.
 
@@ -4549,7 +4619,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delta_controller
 
   METHOD delta_view.
 
@@ -4620,7 +4690,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delta_view
 
   METHOD recover_definition.
 
@@ -4639,7 +4709,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       CHANGING
         corrnr        = lv_corrnr ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "recover_definition
 
   METHOD recover_controller.
 
@@ -4659,7 +4729,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       CHANGING
         corrnr         = lv_corrnr ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "recover_controller
 
   METHOD recover_view.
 
@@ -4679,7 +4749,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       CHANGING
         corrnr   = lv_corrnr ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "recover_view
 
   METHOD read_controller.
 
@@ -4731,7 +4801,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
            rs_controller-definition-changedby,
            rs_controller-definition-changedon.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read_controller
 
   METHOD read_definition.
 
@@ -4775,7 +4845,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
            rs_definition-definition-gendate,
            rs_definition-definition-gentime.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read_definition
 
   METHOD read_view.
 
@@ -4827,7 +4897,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
            rs_view-definition-changedby,
            rs_view-definition-changedon.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read_view
 
   METHOD get_limu_objects.
 
@@ -4841,7 +4911,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       IMPORTING
         limu_objects   = rt_objects.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_limu_objects
 
   METHOD read.
 
@@ -4889,7 +4959,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       cmpname ASCENDING
       line_number ASCENDING.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD serialize.
 
@@ -4910,7 +4980,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -4954,7 +5024,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     activation_add( iv_type = is_item-obj_type
                     iv_name = is_item-obj_name ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -4977,7 +5047,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       p_wb_request       = lo_request
       p_wb_program_state = li_state ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -4988,16 +5058,21 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         object_type   = is_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdca DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5027,8 +5102,13 @@ CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdca DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdca IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdca IMPLEMENTATION.
 
   METHOD save.
@@ -5063,7 +5143,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
 *        _raise 'WDCA, save error'.
 *    ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "save
 
   METHOD read.
 
@@ -5111,7 +5191,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
            es_outline-changedon.
     et_data = lo_cfg->read_data( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD serialize.
 
@@ -5135,7 +5215,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -5154,7 +5234,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
           it_data    = lt_data
           iv_package = iv_package ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5165,7 +5245,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
 
     cl_wdr_configuration_utils=>delete_config_4_appl( ls_key ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5176,16 +5256,21 @@ CLASS lcl_object_wdca IMPLEMENTATION.
         object_type   = is_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdca IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdya DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5215,8 +5300,13 @@ CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_package    TYPE devclass
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdya DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_wdya IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD read.
@@ -5252,7 +5342,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       APPEND ls_prop TO et_properties.
     ENDDO.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD serialize.
 
@@ -5273,7 +5363,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD save.
 
@@ -5300,7 +5390,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
         _raise 'error saving WDYA'.
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "save
 
   METHOD deserialize.
 
@@ -5319,7 +5409,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
           it_properties = lt_properties
           iv_package    = iv_package ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5355,7 +5445,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
         _raise 'WDYA, error deleting'.
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5366,16 +5456,21 @@ CLASS lcl_object_wdya IMPLEMENTATION.
         object_type   = is_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_wdya IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_susc DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_susc DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5392,8 +5487,13 @@ CLASS lcl_object_susc DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_susc DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_suso IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_suso IMPLEMENTATION.
 
   METHOD serialize.
@@ -5451,7 +5551,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 * see function group SUSA
@@ -5497,7 +5597,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
     DELETE FROM tobjvor WHERE objct = is_item-obj_name.   "#EC CI_SUBRC
     INSERT tobjvor FROM TABLE lt_tobjvor.                 "#EC CI_SUBRC
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5509,7 +5609,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
       EXPORTING
         object = lv_object.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5521,11 +5621,16 @@ CLASS lcl_object_suso IMPLEMENTATION.
       EXPORTING
         object = lv_object.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_suso IMPLEMENTATION
 
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_susc IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_susc IMPLEMENTATION.
 
   METHOD serialize.
@@ -5556,7 +5661,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 * see function group SUSA
@@ -5584,7 +5689,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
     MODIFY tobct FROM ls_tobct.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5596,7 +5701,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
       EXPORTING
         objclass = lv_objclass.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5608,16 +5713,21 @@ CLASS lcl_object_susc IMPLEMENTATION.
       EXPORTING
         objclass = lv_objclass.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_susc IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_type DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5649,8 +5759,13 @@ CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_devclass TYPE devclass
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_type DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_type IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD read.
@@ -5686,7 +5801,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       _raise 'error from TYPD_GET_OBJECT'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD serialize.
 
@@ -5716,7 +5831,7 @@ CLASS lcl_object_type IMPLEMENTATION.
                             it_abap = lt_source ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD create.
 
@@ -5752,7 +5867,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       _raise 'error setting uccheck'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "create
 
   METHOD deserialize.
 
@@ -5777,7 +5892,7 @@ CLASS lcl_object_type IMPLEMENTATION.
     activation_add( iv_type = is_item-obj_type
                     iv_name = is_item-obj_name ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5797,7 +5912,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       _raise 'error from TYPD_INTERNAL_SERVICE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5805,16 +5920,21 @@ CLASS lcl_object_type IMPLEMENTATION.
                iv_radio = 'RSRD1-TYMA'
                iv_field = 'RSRD1-TYMA_VAL' ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_type IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_para DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -5831,8 +5951,13 @@ CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_para DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_para IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_para IMPLEMENTATION.
 
   METHOD serialize.
@@ -5863,7 +5988,7 @@ CLASS lcl_object_para IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 * see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
@@ -5910,7 +6035,7 @@ CLASS lcl_object_para IMPLEMENTATION.
     MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -5928,7 +6053,7 @@ CLASS lcl_object_para IMPLEMENTATION.
       _raise 'error from RS_PRAMETER_DELETE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -5939,9 +6064,9 @@ CLASS lcl_object_para IMPLEMENTATION.
         object_type   = 'PARA'
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_para IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_ssfo DEFINITION
@@ -5953,7 +6078,7 @@ CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -6014,7 +6139,9 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
         system_failure        = 1
         communication_failure = 2
         resource_failure      = 3
-        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
+        OTHERS                = 4
+        ##fm_subrc_ok
+      .                                                   "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 
@@ -6187,7 +6314,7 @@ CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -6448,12 +6575,17 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -6477,8 +6609,13 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_common FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD serialize.
@@ -6528,7 +6665,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -6553,7 +6690,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
     activation_add( iv_type = is_item-obj_type
                     iv_name = is_item-obj_name ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD deserialize_badi.
 
@@ -6599,7 +6736,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         _raise 'error deserializing ENHO badi'.
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize_badi
 
   METHOD delete.
 
@@ -6619,7 +6756,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         _raise 'Error deleting ENHO'.
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
 
@@ -6630,9 +6767,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
         object_type   = 'ENHO'
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enqu DEFINITION
@@ -6644,7 +6781,7 @@ CLASS lcl_object_enqu DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -6806,7 +6943,7 @@ CLASS lcl_object_shlp DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -6978,7 +7115,7 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -7035,7 +7172,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
         system_failure        = 1
         communication_failure = 2
         resource_failure      = 3
-        OTHERS                = 4 ##FM_SUBRC_OK. "#EC CI_SUBRC
+        OTHERS                = 4
+        ##fm_subrc_ok
+      .                                                   "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 
@@ -7185,12 +7324,17 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_tobj DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_tobj DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -7207,8 +7351,13 @@ CLASS lcl_object_tobj DEFINITION INHERITING FROM lcl_objects_common FINAL.
       IMPORTING is_item TYPE st_item
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_tobj DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_tobj IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_tobj IMPLEMENTATION.
 
   METHOD serialize.
@@ -7264,7 +7413,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
                            io_xml  = lo_xml ).
     APPEND ls_file TO rt_files.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -7308,7 +7457,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       _raise 'error from OBJ_GENERATE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
   METHOD delete.
 
@@ -7334,13 +7483,13 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       _raise 'error from OBJ_GENERATE'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "delete
 
   METHOD jump.
     _raise 'todo, TOBJ jump'.
-  ENDMETHOD.
+  ENDMETHOD.                    "jump
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_tobj IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_msag DEFINITION
@@ -7352,7 +7501,7 @@ CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -7444,7 +7593,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       CLEAR ls_t100u.
-      MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##ENH_OK.
+      MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##enh_ok.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.
@@ -7518,7 +7667,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -7538,22 +7687,22 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PRIVATE SECTION.
     CLASS-METHODS main_name
       IMPORTING is_item           TYPE st_item
-      RETURNING VALUE(rv_program) TYPE program
+      RETURNING value(rv_program) TYPE program
       RAISING   lcx_exception.
 
     CLASS-METHODS functions
       IMPORTING is_item           TYPE st_item
-      RETURNING VALUE(rt_functab) TYPE tt_rs38l_incl
+      RETURNING value(rt_functab) TYPE tt_rs38l_incl
       RAISING   lcx_exception.
 
     CLASS-METHODS includes
       IMPORTING is_item            TYPE st_item
-      RETURNING VALUE(rt_includes) TYPE rso_t_objnm
+      RETURNING value(rt_includes) TYPE rso_t_objnm
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_functions
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_functions
@@ -7563,7 +7712,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS serialize_xml
       IMPORTING is_item        TYPE st_item
-      RETURNING VALUE(rs_file) TYPE st_file
+      RETURNING value(rs_file) TYPE st_file
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_xml
@@ -7574,7 +7723,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_common FINAL.
 
     CLASS-METHODS serialize_includes
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize_includes
@@ -7872,15 +8021,15 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        program      = lv_program
+        program                = lv_program
 *       WITH_RESERVED_INCLUDES =
 *       WITH_CLASS_INCLUDES    = ' ' hmm, todo
       TABLES
-        includetab   = rt_includes
+        includetab             = rt_includes
       EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
+        not_existent           = 1
+        no_program             = 2
+        OTHERS                 = 3.
     IF sy-subrc <> 0.
       _raise 'Error from RS_GET_ALL_INCLUDES'.
     ENDIF.
@@ -8174,7 +8323,7 @@ CLASS lcl_object_view DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -8366,7 +8515,7 @@ CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -8526,7 +8675,7 @@ CLASS lcl_object_ttyp DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -8686,7 +8835,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_common FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -8982,13 +9131,13 @@ CLASS lcl_objects DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE st_item
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS status
       IMPORTING it_files          TYPE tt_files
                 iv_package        TYPE devclass OPTIONAL
-      RETURNING VALUE(rt_results) TYPE tt_results
+      RETURNING value(rt_results) TYPE tt_results
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -9006,7 +9155,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE st_item
-      RETURNING VALUE(rv_class_name) TYPE string.
+      RETURNING value(rv_class_name) TYPE string.
 
   PRIVATE SECTION.
     CLASS-METHODS resolve_tabl
@@ -9016,7 +9165,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS check_warning
       IMPORTING is_item          TYPE st_item
                 iv_package       TYPE devclass
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
+      RETURNING value(rv_cancel) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS update_package_tree
@@ -9029,7 +9178,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE tt_files
                 is_gen          TYPE st_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
+      RETURNING value(rv_match) TYPE sap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS show_progress
@@ -9062,7 +9211,7 @@ CLASS lcl_objects IMPLEMENTATION.
         percentage = lv_pct
         text       = iv_obj_name.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "show_progress
 
   METHOD check_warning.
 
@@ -9103,7 +9252,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "check_warning
 
   METHOD update_package_tree.
 
@@ -9118,7 +9267,7 @@ CLASS lcl_objects IMPLEMENTATION.
         without_crossreference = abap_true
         with_tcode_index       = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "update_package_tree
 
   METHOD class_name.
 
@@ -9292,7 +9441,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_plus = lv_plus + 1.
     ENDDO.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "resolve_tabl
 
   METHOD delete_obj.
 
@@ -9580,17 +9729,17 @@ CLASS lcl_hash DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS adler32
       IMPORTING iv_xstring         TYPE xstring
-      RETURNING VALUE(rv_checksum) TYPE t_adler32.
+      RETURNING value(rv_checksum) TYPE t_adler32.
 
     CLASS-METHODS sha1
       IMPORTING iv_type        TYPE t_type
                 iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE t_sha1
+      RETURNING value(rv_sha1) TYPE t_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE t_sha1
+      RETURNING value(rv_sha1) TYPE t_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
@@ -9695,12 +9844,12 @@ CLASS lcl_pack DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS decode
       IMPORTING iv_data           TYPE xstring
-      RETURNING VALUE(rt_objects) TYPE tt_objects
+      RETURNING value(rt_objects) TYPE tt_objects
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_tree
       IMPORTING iv_data         TYPE xstring
-      RETURNING VALUE(rt_nodes) TYPE tt_nodes
+      RETURNING value(rt_nodes) TYPE tt_nodes
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_deltas
@@ -9709,21 +9858,21 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS decode_commit
       IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rs_commit) TYPE st_commit
+      RETURNING value(rs_commit) TYPE st_commit
       RAISING   lcx_exception.
 
     CLASS-METHODS encode
       IMPORTING it_objects     TYPE tt_objects
-      RETURNING VALUE(rv_data) TYPE xstring
+      RETURNING value(rv_data) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_tree
       IMPORTING it_nodes       TYPE tt_nodes
-      RETURNING VALUE(rv_data) TYPE xstring.
+      RETURNING value(rv_data) TYPE xstring.
 
     CLASS-METHODS encode_commit
       IMPORTING is_commit      TYPE st_commit
-      RETURNING VALUE(rv_data) TYPE xstring.
+      RETURNING value(rv_data) TYPE xstring.
 
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
@@ -9734,7 +9883,7 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS type_and_length
       IMPORTING is_object         TYPE st_object
-      RETURNING VALUE(rv_xstring) TYPE xstring
+      RETURNING value(rv_xstring) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS delta
@@ -9747,7 +9896,7 @@ CLASS lcl_pack DEFINITION FINAL.
 
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
-      RETURNING VALUE(rv_type) TYPE t_type
+      RETURNING value(rv_type) TYPE t_type
       RAISING   lcx_exception.
 
     CLASS-METHODS get_length
@@ -10443,7 +10592,7 @@ CLASS lcl_persistence DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS list
-      RETURNING VALUE(rt_repos) TYPE tt_repos_persi
+      RETURNING value(rt_repos) TYPE tt_repos_persi
       RAISING   lcx_exception.
 
     CLASS-METHODS update
@@ -10468,7 +10617,7 @@ CLASS lcl_persistence DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS read_text_online
-      RETURNING VALUE(rt_repos) TYPE tt_repos_persi
+      RETURNING value(rt_repos) TYPE tt_repos_persi
       RAISING   lcx_exception.
 
     CLASS-METHODS save_text_online
@@ -10476,10 +10625,10 @@ CLASS lcl_persistence DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS header_online
-      RETURNING VALUE(rs_header) TYPE thead.
+      RETURNING value(rs_header) TYPE thead.
 
     CLASS-METHODS read_text_offline
-      RETURNING VALUE(rt_repos) TYPE tt_repos_persi
+      RETURNING value(rt_repos) TYPE tt_repos_persi
       RAISING   lcx_exception.
 
     CLASS-METHODS save_text_offline
@@ -10487,11 +10636,11 @@ CLASS lcl_persistence DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS header_offline
-      RETURNING VALUE(rs_header) TYPE thead.
+      RETURNING value(rs_header) TYPE thead.
 
     CLASS-METHODS read_text
       IMPORTING is_header       TYPE thead
-      RETURNING VALUE(rt_lines) TYPE tlinetab
+      RETURNING value(rt_lines) TYPE tlinetab
       RAISING   lcx_exception.
 
     CLASS-METHODS save_text
@@ -10844,12 +10993,12 @@ CLASS lcl_transport DEFINITION FINAL.
                 iv_service     TYPE string DEFAULT 'upload'
       EXPORTING ei_client      TYPE REF TO if_http_client
                 et_branch_list TYPE tt_branch_list
-      RAISING   lcx_exception ##NO_TEXT.
+      RAISING   lcx_exception ##no_text.
 
   PRIVATE SECTION.
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rv_pkt) TYPE string
+      RETURNING value(rv_pkt) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS find_branch
@@ -10865,11 +11014,11 @@ CLASS lcl_transport DEFINITION FINAL.
 
     CLASS-METHODS length_utf8_hex
       IMPORTING iv_data       TYPE xstring
-      RETURNING VALUE(rv_len) TYPE i.
+      RETURNING value(rv_len) TYPE i.
 
     CLASS-METHODS parse_branch_list
       IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE tt_branch_list
+      RETURNING value(rt_list) TYPE tt_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS set_headers
@@ -10883,7 +11032,7 @@ CLASS lcl_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
+      RETURNING value(rv_c) TYPE char1.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -10968,7 +11117,7 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: lt_result TYPE TABLE OF string,
           lv_hash   TYPE t_sha1,
           lv_name   TYPE string,
-          lv_foo    TYPE string ##NEEDED,
+          lv_foo    TYPE string ##needed,
           lv_char   TYPE c,
           lv_data   LIKE LINE OF lt_result.
 
@@ -10998,7 +11147,7 @@ CLASS lcl_transport IMPLEMENTATION.
       <ls_branch>-name = lv_name.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "parse_branch_list
 
   METHOD find_branch.
 
@@ -11025,7 +11174,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     ev_branch = ls_branch_list-sha1.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "find_branch
 
   METHOD branch_list.
 
@@ -11319,17 +11468,17 @@ CLASS lcl_zip DEFINITION FINAL.
                 iv_obj_name TYPE tadir-obj_name.
 
     CLASS-METHODS file_upload
-      RETURNING VALUE(rv_xstr) TYPE xstring
+      RETURNING value(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_files
       IMPORTING iv_xstr         TYPE xstring
-      RETURNING VALUE(rt_files) TYPE tt_files
+      RETURNING value(rt_files) TYPE tt_files
       RAISING   lcx_exception.
 
     CLASS-METHODS filename
       IMPORTING iv_str             TYPE string
-      RETURNING VALUE(rv_filename) TYPE string
+      RETURNING value(rv_filename) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS file_download
@@ -11343,11 +11492,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS encode_files
       IMPORTING it_files       TYPE tt_files
-      RETURNING VALUE(rv_xstr) TYPE xstring
+      RETURNING value(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS get_message
-      RETURNING VALUE(rv_message) TYPE string
+      RETURNING value(rv_message) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_zip DEFINITION
@@ -11372,7 +11521,7 @@ CLASS lcl_zip IMPLEMENTATION.
         percentage = lv_pct
         text       = iv_obj_name.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "show_progress
 
   METHOD get_message.
 
@@ -11391,7 +11540,7 @@ CLASS lcl_zip IMPLEMENTATION.
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
         no_value_check  = abap_true
-        popup_title     = 'Enter commit message'    "#EC NOTEXT
+        popup_title     = 'Enter commit message'            "#EC NOTEXT
       IMPORTING
         returncode      = lv_returncode
       TABLES
@@ -11410,7 +11559,7 @@ CLASS lcl_zip IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     rv_message = <ls_field>-value.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_message
 
   METHOD file_download.
 
@@ -11816,7 +11965,7 @@ CLASS lcl_zip IMPLEMENTATION.
       _raise 'error from execute'.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "files_commit
 
 ENDCLASS.                    "lcl_zip IMPLEMENTATION
 
@@ -11839,7 +11988,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
       IMPORTING is_repo          TYPE st_repo
                 is_comment       TYPE st_comment
                 it_files         TYPE tt_files
-      RETURNING VALUE(rv_branch) TYPE t_sha1
+      RETURNING value(rv_branch) TYPE t_sha1
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -11853,7 +12002,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
     CLASS-METHODS root_tree
       IMPORTING it_objects      TYPE tt_objects
                 iv_branch       TYPE t_sha1
-      RETURNING VALUE(rt_nodes) TYPE tt_nodes
+      RETURNING value(rt_nodes) TYPE tt_nodes
       RAISING   lcx_exception.
 
     CLASS-METHODS receive_pack
@@ -11862,7 +12011,7 @@ CLASS lcl_porcelain DEFINITION FINAL.
                 it_nodes         TYPE tt_nodes
                 it_files         TYPE tt_files
                 iv_branch        TYPE t_sha1
-      RETURNING VALUE(rv_branch) TYPE t_sha1
+      RETURNING value(rv_branch) TYPE t_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_porcelain DEFINITION
@@ -12105,35 +12254,35 @@ CLASS lcl_gui DEFINITION FINAL.
       IMPORTING iv_html TYPE string.
 
     CLASS-METHODS render
-      RETURNING VALUE(rv_html) TYPE string
+      RETURNING value(rv_html) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS render_css
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS render_repo_online
       IMPORTING is_repo_persi  TYPE st_repo_persi
-      RETURNING VALUE(rv_html) TYPE string
+      RETURNING value(rv_html) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS render_repo_offline
       IMPORTING is_repo_persi  TYPE st_repo_persi
-      RETURNING VALUE(rv_html) TYPE string
+      RETURNING value(rv_html) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS repo_name
       IMPORTING is_repo        TYPE st_repo_persi
-      RETURNING VALUE(rv_name) TYPE string
+      RETURNING value(rv_name) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS render_header
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS render_menu
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS render_footer
-      RETURNING VALUE(rv_html) TYPE string.
+      RETURNING value(rv_html) TYPE string.
 
     CLASS-METHODS install
       IMPORTING iv_url TYPE string
@@ -12175,7 +12324,7 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS struct_encode
       IMPORTING ig_structure1    TYPE any
                 ig_structure2    TYPE any OPTIONAL
-      RETURNING VALUE(rv_string) TYPE string.
+      RETURNING value(rv_string) TYPE string.
 
     CLASS-METHODS struct_decode
       IMPORTING iv_string    TYPE clike
@@ -12183,11 +12332,11 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS popup_comment
-      RETURNING VALUE(rs_comment) TYPE st_comment
+      RETURNING value(rs_comment) TYPE st_comment
       RAISING   lcx_exception.
 
     CLASS-METHODS get_logo_src
-      RETURNING VALUE(rv_src) TYPE string.
+      RETURNING value(rv_src) TYPE string.
 
     CLASS-METHODS zipexport
       RAISING lcx_exception.
@@ -12218,7 +12367,7 @@ CLASS lcl_gui IMPLEMENTATION.
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
         no_value_check  = abap_true
-        popup_title     = 'Export package to ZIP'                           "#EC NOTEXT
+        popup_title     = 'Export package to ZIP'           "#EC NOTEXT
       IMPORTING
         returncode      = lv_returncode
       TABLES
@@ -12241,7 +12390,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     lcl_zip=>export( ls_repo_persi ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "zipexport
 
   METHOD render_header.
 
@@ -12797,8 +12946,11 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_obj_name TYPE tadir-obj_name.
 
 
-* fix for SICF services
-    CONCATENATE is_item-obj_name '%' INTO lv_obj_name.
+    IF is_item-obj_type = 'SICF'.
+      CONCATENATE is_item-obj_name '%' INTO lv_obj_name.
+    ELSE.
+      lv_obj_name = is_item-obj_name.
+    ENDIF.
 
     SELECT SINGLE obj_name FROM tadir
       INTO lv_obj_name
@@ -12936,7 +13088,7 @@ CLASS lcl_gui IMPLEMENTATION.
         fields            = lt_fields
       EXCEPTIONS
         error_in_fields   = 1
-        OTHERS            = 2. "#EC NOTEXT
+        OTHERS            = 2.                              "#EC NOTEXT
     IF sy-subrc <> 0.
       _raise 'Error from POPUP_GET_VALUES'.
     ENDIF.
@@ -13496,11 +13648,25 @@ FORM run.
 
 ENDFORM.                    "run
 
+*&---------------------------------------------------------------------*
+*&      Form  branch_popup
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->TT_FIELDS      text
+*      -->PV_CODE        text
+*      -->CS_ERROR       text
+*      -->CV_SHOW_POPUP  text
+*      -->RAISING        text
+*      -->LCX_EXCEPTION  text
+*      -->##CALLED       text
+*      -->##NEEDED       text
+*----------------------------------------------------------------------*
 FORM branch_popup TABLES   tt_fields STRUCTURE sval
                   USING    pv_code
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c
-                  RAISING lcx_exception ##CALLED ##NEEDED.
+                  RAISING lcx_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
   DATA: li_client    TYPE REF TO if_http_client,
@@ -13558,7 +13724,7 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
         not_enough_answers = 1
         too_much_answers   = 2
         too_much_marks     = 3
-        OTHERS             = 4. "#EC NOTEXT
+        OTHERS             = 4.                             "#EC NOTEXT
     IF sy-subrc <> 0.
       _raise 'Error from POPUP_TO_DECIDE_LIST'.
     ENDIF.
@@ -13576,8 +13742,13 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
 
   ENDIF.
 
-ENDFORM.
+ENDFORM.                    "branch_popup
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_diff DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -13597,8 +13768,13 @@ CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
       diff05 FOR TESTING,
       diff06 FOR TESTING.
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_diff DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_diff IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_diff IMPLEMENTATION.
 
   DEFINE _local.
@@ -13621,7 +13797,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     CLEAR mt_local.
     CLEAR mt_remote.
     CLEAR mt_expected.
-  ENDMETHOD.
+  ENDMETHOD.                    "setup
 
   METHOD test.
 
@@ -13650,7 +13826,7 @@ CLASS ltcl_diff IMPLEMENTATION.
                                         exp = mt_expected ).
 
 
-  ENDMETHOD.
+  ENDMETHOD.                    "test
 
   METHOD diff01.
 
@@ -13659,7 +13835,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '1' lcl_diff=>gc_diff-insert ''.
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff01
 
   METHOD diff02.
 
@@ -13669,7 +13845,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '1' '' '1'.
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff02
 
   METHOD diff03.
 
@@ -13678,7 +13854,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '' lcl_diff=>gc_diff-delete '1'.
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff03
 
   METHOD diff04.
 
@@ -13688,7 +13864,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '1+' lcl_diff=>gc_diff-update '1'.
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff04
 
   METHOD diff05.
 
@@ -13701,7 +13877,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '2' '' '2'.
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff05
 
   METHOD diff06.
 
@@ -13724,9 +13900,9 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     test( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "diff06
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_diff IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS test DEFINITION
@@ -13747,6 +13923,11 @@ CLASS ltcl_abap_unit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
 ENDCLASS.                    "test DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_url DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -13754,8 +13935,13 @@ CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
     METHODS repo_url FOR TESTING RAISING lcx_exception.
     METHODS repo_error FOR TESTING.
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_url DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_serialize DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -13765,15 +13951,20 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
     METHODS serialize_shlp FOR TESTING RAISING lcx_exception.
     METHODS serialize_view FOR TESTING RAISING lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_serialize DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_xml DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
 
     METHODS xml FOR TESTING RAISING lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_xml DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS test IMPLEMENTATION
@@ -13804,10 +13995,15 @@ CLASS ltcl_xml IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = ls_component_out
                                         exp = ls_component_in ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "xml
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_xml IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_serialize IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_enqu.
@@ -13870,8 +14066,13 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_table
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_url IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_url IMPLEMENTATION.
 
   METHOD repo_error.
@@ -13896,8 +14097,13 @@ CLASS ltcl_url IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_url
 
-ENDCLASS.
+ENDCLASS.                    "ltcl_url IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS ltcl_abap_unit IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS ltcl_abap_unit IMPLEMENTATION.
 
   METHOD convert_int.
