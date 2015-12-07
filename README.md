@@ -12,7 +12,7 @@ ABAP Version: 702 or higher
 - Small system footprint
 - Code readable in git repository
 
-## Guides ##
+## Documentation/Guides ##
 See [Wiki](/wiki)
 
 ## FAQ ##
