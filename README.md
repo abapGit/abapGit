@@ -13,7 +13,7 @@ ABAP Version: 702 or higher
 - Code readable in git repository
 
 ## Documentation/Guides ##
-See [Wiki](/wiki)
+See [Wiki](https://github.com/larshp/abapGit/wiki/)
 
 ## FAQ ##
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
