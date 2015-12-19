@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.82'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.83'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -10476,7 +10476,7 @@ ENDCLASS.                    "lcl_object IMPLEMENTATION
 CLASS lcl_hash DEFINITION FINAL.
 
   PUBLIC SECTION.
-    TYPES: ty_adler32  TYPE x LENGTH 4.
+    TYPES: ty_adler32 TYPE x LENGTH 4.
 
     CLASS-METHODS adler32
       IMPORTING iv_xstring         TYPE xstring
@@ -11939,14 +11939,24 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_pack   TYPE xstring
       RAISING   lcx_exception.
 
-    CLASS-METHODS branch_list
-      IMPORTING iv_url         TYPE string
-                iv_service     TYPE string DEFAULT 'upload'
-      EXPORTING ei_client      TYPE REF TO if_http_client
-                et_branch_list TYPE ty_branch_list_tt
-      RAISING   lcx_exception ##no_text.
+    CLASS-METHODS branches
+      IMPORTING iv_url                TYPE string
+      RETURNING VALUE(rt_branch_list) TYPE ty_branch_list_tt
+      RAISING   lcx_exception.
 
   PRIVATE SECTION.
+    CONSTANTS: BEGIN OF c_service,
+                 receive TYPE string VALUE 'receive',       "#EC NOTEXT
+                 upload  TYPE string VALUE 'upload',        "#EC NOTEXT
+               END OF c_service.
+
+    CLASS-METHODS branch_list
+      IMPORTING iv_url         TYPE string
+                iv_service     TYPE string
+      EXPORTING ei_client      TYPE REF TO if_http_client
+                et_branch_list TYPE ty_branch_list_tt
+      RAISING   lcx_exception.
+
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
       RETURNING VALUE(rv_pkt) TYPE string
@@ -12131,6 +12141,22 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                    "find_branch
 
+  METHOD branches.
+
+    DATA: li_client TYPE REF TO if_http_client.
+
+
+    lcl_git_transport=>branch_list(
+      EXPORTING
+        iv_url         = iv_url
+        iv_service     = c_service-upload
+      IMPORTING
+        ei_client      = li_client
+        et_branch_list = rt_branch_list ).
+    li_client->close( ).
+
+  ENDMETHOD.
+
   METHOD branch_list.
 
     DATA: lv_data TYPE string,
@@ -12206,8 +12232,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    CONSTANTS: lc_service TYPE string VALUE 'receive'.      "#EC NOTEXT
-
     DATA: li_client  TYPE REF TO if_http_client,
           lv_cmd_pkt TYPE string,
           lv_line    TYPE string,
@@ -12221,14 +12245,14 @@ CLASS lcl_git_transport IMPLEMENTATION.
     find_branch(
       EXPORTING
         io_repo    = io_repo
-        iv_service = lc_service
+        iv_service = c_service-receive
       IMPORTING
         ei_client  = li_client
         ev_branch  = lv_branch ).
 
     set_headers(
         io_repo    = io_repo
-        iv_service = lc_service
+        iv_service = c_service-receive
         ii_client  = li_client ).
 
     lv_line = lv_branch &&
@@ -12327,8 +12351,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    CONSTANTS: lc_service TYPE string VALUE 'upload'.       "#EC NOTEXT
-
     DATA: li_client  TYPE REF TO if_http_client,
           lv_buffer  TYPE string,
           lv_xstring TYPE xstring,
@@ -12340,14 +12362,14 @@ CLASS lcl_git_transport IMPLEMENTATION.
     find_branch(
       EXPORTING
         io_repo    = io_repo
-        iv_service = lc_service
+        iv_service = c_service-upload
       IMPORTING
         ei_client  = li_client
         ev_branch  = ev_branch ).
 
     set_headers(
         io_repo    = io_repo
-        iv_service = lc_service
+        iv_service = c_service-upload
         ii_client  = li_client ).
 
     lv_line = 'want' &&
@@ -14667,13 +14689,7 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
     lv_url = <ls_furl>-value.
 
     TRY.
-        lcl_git_transport=>branch_list(
-          EXPORTING
-            iv_url         = lv_url
-          IMPORTING
-            ei_client      = li_client
-            et_branch_list = lt_branches ).
-        li_client->close( ).
+        lt_branches = lcl_git_transport=>branches( lv_url ).
       CATCH lcx_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
         RETURN.
