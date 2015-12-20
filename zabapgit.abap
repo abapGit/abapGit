@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.83'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.84'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -44,6 +44,12 @@ TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
+TYPES: BEGIN OF ty_comment,
+         username TYPE string,
+         email    TYPE string,
+         comment  TYPE string,
+       END OF ty_comment.
+
 TYPES: BEGIN OF ty_item,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
@@ -64,8 +70,6 @@ CONSTANTS: BEGIN OF gc_chmod,
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
-
-DATA: gv_agent TYPE string.
 
 DEFINE _raise.
   raise exception type lcx_exception
@@ -1978,7 +1982,7 @@ CLASS lcl_diff DEFINITION FINAL.
     METHODS get
       RETURNING VALUE(rt_diff) TYPE ty_diffs_tt.
 
-    METHODS count
+    METHODS stats
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
@@ -2014,7 +2018,7 @@ CLASS lcl_diff IMPLEMENTATION.
     rt_diff = mt_diff.
   ENDMETHOD.                    "get
 
-  METHOD count.
+  METHOD stats.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
@@ -2227,8 +2231,8 @@ CLASS lcl_git_pack DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS delta_header
-      CHANGING  cv_delta         TYPE xstring
-      RETURNING VALUE(rv_header) TYPE i.
+      EXPORTING ev_header TYPE i
+      CHANGING  cv_delta  TYPE xstring.
 
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
@@ -2240,121 +2244,6 @@ CLASS lcl_git_pack DEFINITION FINAL.
       CHANGING  cv_data   TYPE xstring.
 
 ENDCLASS.                    "lcl_pack DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_debug DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_debug DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS debug_toggle
-      RAISING lcx_exception.
-
-    CLASS-METHODS render_objects
-      IMPORTING iv_message TYPE string
-                it_objects TYPE lcl_git_pack=>ty_objects_tt.
-
-    CLASS-METHODS message
-      IMPORTING iv_message TYPE string.
-
-    CLASS-METHODS get_html
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS get_debug
-      RETURNING VALUE(rv_debug) TYPE sap_bool.
-
-    CLASS-METHODS clear.
-
-  PRIVATE SECTION.
-    CLASS-DATA: gv_debug TYPE sap_bool VALUE abap_false,
-                gv_html  TYPE string.
-
-ENDCLASS.                    "lcl_debug DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_debug IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_debug IMPLEMENTATION.
-
-  METHOD get_debug.
-    rv_debug = gv_debug.
-  ENDMETHOD.                    "get_debug
-
-  METHOD get_html.
-    rv_html = gv_html.
-  ENDMETHOD.                    "get_html
-
-  METHOD message.
-
-    IF gv_debug = abap_false.
-      RETURN.
-    ENDIF.
-
-    CONCATENATE gv_html '<br>' iv_message '<br>' INTO gv_html.
-
-  ENDMETHOD.                    "message
-
-  METHOD render_objects.
-
-    DATA: lv_len    TYPE i,
-          lv_text50 TYPE c LENGTH 50.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
-
-
-    IF gv_debug = abap_false.
-      RETURN.
-    ENDIF.
-
-    message( iv_message ).
-
-    CONCATENATE gv_html '<table border="1">' gc_newline INTO gv_html.
-    LOOP AT it_objects ASSIGNING <ls_object>.
-
-      lv_len = xstrlen( <ls_object>-data ).
-      IF lv_len > 50.
-        lv_len = 50.
-      ENDIF.
-
-      lv_text50 = <ls_object>-data(lv_len).
-      CONCATENATE gv_html
-        '<tr>' gc_newline
-        '<td>' <ls_object>-sha1 '</td>' gc_newline
-        '<td>' <ls_object>-type '</td>' gc_newline
-        '<td>' lv_text50 '</td>' gc_newline
-        '</tr>' gc_newline INTO gv_html.
-    ENDLOOP.
-    CONCATENATE gv_html '</table>' gc_newline INTO gv_html.
-
-  ENDMETHOD.                    "render_objects
-
-  METHOD clear.
-
-    gv_html = '<h2>Debug Information</h2><br>'.
-
-  ENDMETHOD.                    "clear
-
-  METHOD debug_toggle.
-
-    CASE gv_debug.
-      WHEN abap_true.
-        gv_debug = abap_false.
-        MESSAGE 'Debug mode disabled' TYPE 'S'.             "#EC NOTEXT
-      WHEN abap_false.
-        gv_debug = abap_true.
-        MESSAGE 'Debug mode enabled' TYPE 'S'.              "#EC NOTEXT
-        clear( ).
-      WHEN OTHERS.
-        _raise 'Unknown debug toggle'.
-    ENDCASE.
-
-  ENDMETHOD.                    "debug_toggle
-
-ENDCLASS.                    "lcl_debug IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_common DEFINITION
@@ -5930,6 +5819,9 @@ CLASS lcl_object_wdya IMPLEMENTATION.
           ls_prop LIKE LINE OF et_properties,
           lv_name TYPE wdy_application_name.
 
+
+    CLEAR es_app.
+    CLEAR et_properties.
 
     lv_name = is_item-obj_name.
     TRY.
@@ -10855,7 +10747,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         EXIT. " current loop
       ENDIF.
     ENDDO.
-    rv_header = lcl_convert=>bitbyte_to_int( lv_bits ).
+    ev_header = lcl_convert=>bitbyte_to_int( lv_bits ).
 
   ENDMETHOD.                    "delta_header
 
@@ -10958,13 +10850,6 @@ CLASS lcl_git_pack IMPLEMENTATION.
     ENDWHILE.
 
     lv_sha1 = lcl_hash=>sha1( iv_type = <ls_object>-type iv_data = lv_result ).
-
-    lcl_debug=>message( 'Delta,' &&
-      <ls_object>-type &&
-      ',new sha1, ' &&
-      lv_sha1 &&
-      ',old: ' &&
-      <ls_object>-sha1 ).                                   "#EC NOTEXT
 
     CLEAR ls_object.
     ls_object-sha1 = lv_sha1.
@@ -11533,6 +11418,7 @@ CLASS lcl_persistence IMPLEMENTATION.
   METHOD read_text_online.
 
     DATA: lt_lines TYPE TABLE OF tline,
+          lv_step  TYPE i,
           ls_repo  TYPE ty_repo_persi.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
@@ -11551,21 +11437,26 @@ CLASS lcl_persistence IMPLEMENTATION.
 
     CLEAR ls_repo.
     LOOP AT lt_lines ASSIGNING <ls_line>.
-      IF sy-tabix MOD 4 = 0.
-        ls_repo-package = <ls_line>-tdline.
+      lv_step = lv_step + 1.
+      CASE lv_step.
+        WHEN 4.
+          ls_repo-package = <ls_line>-tdline.
 
-        IF ls_repo-url IS INITIAL OR ls_repo-branch_name IS INITIAL.
-          _raise 'Persistence, text broken 2'.
-        ENDIF.
-        APPEND ls_repo TO rt_repos.
-        CLEAR ls_repo.
-      ELSEIF sy-tabix MOD 3 = 0.
-        ls_repo-sha1 = <ls_line>-tdline.
-      ELSEIF sy-tabix MOD 2 = 0.
-        ls_repo-branch_name = <ls_line>-tdline.
-      ELSE.
-        ls_repo-url = <ls_line>-tdline.
-      ENDIF.
+          IF ls_repo-url IS INITIAL OR ls_repo-branch_name IS INITIAL.
+            _raise 'Persistence, text broken 2'.
+          ENDIF.
+          APPEND ls_repo TO rt_repos.
+          CLEAR ls_repo.
+          lv_step = 0.
+        WHEN 3.
+          ls_repo-sha1 = <ls_line>-tdline.
+        WHEN 2.
+          ls_repo-branch_name = <ls_line>-tdline.
+        WHEN 1.
+          ls_repo-url = <ls_line>-tdline.
+        WHEN OTHERS.
+          ASSERT 1 = 0.
+      ENDCASE.
     ENDLOOP.
 
   ENDMETHOD.                    "list
@@ -11609,7 +11500,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 
-CLASS lcl_repo DEFINITION FINAL.
+CLASS lcl_repo DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
     TYPES: ty_key TYPE i.
@@ -11623,80 +11514,233 @@ CLASS lcl_repo DEFINITION FINAL.
       get_name
         RETURNING VALUE(rv_name) TYPE string
         RAISING   lcx_exception,
-      get_url
-        RETURNING VALUE(rv_url) TYPE lcl_persistence=>ty_repo_persi-url,
-      get_branch_name
-        RETURNING VALUE(rv_name) TYPE lcl_persistence=>ty_repo_persi-branch_name,
-      get_sha1
-        RETURNING VALUE(rv_sha1) TYPE lcl_persistence=>ty_repo_persi-sha1,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence=>ty_repo_persi-package,
-      get_offline
-        RETURNING VALUE(rv_offline) TYPE lcl_persistence=>ty_repo_persi-offline,
-      set_branch
-        IMPORTING iv_branch TYPE ty_sha1
+      delete
+        RAISING lcx_exception,
+      add
+        RAISING lcx_exception,
+      refresh
+        RAISING lcx_exception,
+      render
+        RETURNING VALUE(rv_html) TYPE string
         RAISING   lcx_exception.
 
-  PRIVATE SECTION.
+  PROTECTED SECTION.
     DATA: mv_key  TYPE ty_key,
           ms_data TYPE lcl_persistence=>ty_repo_persi.
 
 ENDCLASS.
 
-CLASS lcl_repo IMPLEMENTATION.
+CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo.
 
-  METHOD constructor.
-    ms_data = is_data.
-    mv_key = iv_key.
-  ENDMETHOD.
+  PUBLIC SECTION.
+    METHODS:
+      render REDEFINITION,
+      refresh REDEFINITION,
+      constructor
+        IMPORTING iv_key  TYPE ty_key
+                  is_data TYPE lcl_persistence=>ty_repo_persi
+        RAISING   lcx_exception,
+      get_url
+        RETURNING VALUE(rv_url) TYPE lcl_persistence=>ty_repo_persi-url,
+      get_branch_name
+        RETURNING VALUE(rv_name) TYPE lcl_persistence=>ty_repo_persi-branch_name,
+      get_sha1_local
+        RETURNING VALUE(rv_sha1) TYPE lcl_persistence=>ty_repo_persi-sha1,
+      get_sha1_remote
+        RETURNING VALUE(rv_sha1) TYPE lcl_persistence=>ty_repo_persi-sha1,
+      get_files
+        RETURNING VALUE(rt_files) TYPE ty_files_tt,
+      get_objects
+        RETURNING VALUE(rt_objects) TYPE lcl_git_pack=>ty_objects_tt,
+      deserialize
+        RAISING lcx_exception,
+      push
+        IMPORTING is_comment TYPE ty_comment
+                  it_files   TYPE ty_files_tt
+        RAISING   lcx_exception.
 
-  METHOD set_branch.
+  PRIVATE SECTION.
+    DATA:
+      mt_files   TYPE ty_files_tt,
+      mt_objects TYPE lcl_git_pack=>ty_objects_tt,
+      mv_branch  TYPE ty_sha1.
 
-    DATA: lo_persistence TYPE REF TO lcl_persistence.
+    METHODS:
+      set_sha1
+        IMPORTING iv_sha1 TYPE ty_sha1
+        RAISING   lcx_exception.
 
+ENDCLASS.
 
-    CREATE OBJECT lo_persistence.
+CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo.
 
-    lo_persistence->update( iv_url         = ms_data-url
-                            iv_branch_name = ms_data-branch_name
-                            iv_branch      = iv_branch ).
+  PUBLIC SECTION.
+    METHODS:
+      render REDEFINITION.
 
-    ms_data-sha1 = iv_branch.
+ENDCLASS.
 
-  ENDMETHOD.
+*----------------------------------------------------------------------*
+*       CLASS lcl_porcelain DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_git_porcelain DEFINITION FINAL.
 
-  METHOD get_url.
-    rv_url = ms_data-url.
-  ENDMETHOD.
+  PUBLIC SECTION.
 
-  METHOD get_branch_name.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
+    CLASS-METHODS pull
+      IMPORTING io_repo    TYPE REF TO lcl_repo_online
+      EXPORTING et_files   TYPE ty_files_tt
+                et_objects TYPE lcl_git_pack=>ty_objects_tt
+                ev_branch  TYPE ty_sha1
+      RAISING   lcx_exception.
 
-  METHOD get_sha1.
-    rv_sha1 = ms_data-sha1.
-  ENDMETHOD.
+    CLASS-METHODS push
+      IMPORTING io_repo          TYPE REF TO lcl_repo_online
+                is_comment       TYPE ty_comment
+                it_files         TYPE ty_files_tt
+      RETURNING VALUE(rv_branch) TYPE ty_sha1
+      RAISING   lcx_exception.
 
-  METHOD get_package.
-    rv_package = ms_data-package.
-  ENDMETHOD.
+  PRIVATE SECTION.
+    CLASS-METHODS walk
+      IMPORTING it_objects TYPE lcl_git_pack=>ty_objects_tt
+                iv_sha1    TYPE ty_sha1
+                iv_path    TYPE string
+      CHANGING  ct_files   TYPE ty_files_tt
+      RAISING   lcx_exception.
 
-  METHOD get_offline.
-    rv_offline = ms_data-offline.
-  ENDMETHOD.
+    CLASS-METHODS root_tree
+      IMPORTING it_objects      TYPE lcl_git_pack=>ty_objects_tt
+                iv_branch       TYPE ty_sha1
+      RETURNING VALUE(rt_nodes) TYPE lcl_git_pack=>ty_nodes_tt
+      RAISING   lcx_exception.
 
-  METHOD get_key.
-    rv_key = mv_key.
-  ENDMETHOD.
+    CLASS-METHODS receive_pack
+      IMPORTING is_comment       TYPE ty_comment
+                io_repo          TYPE REF TO lcl_repo_online
+                it_nodes         TYPE lcl_git_pack=>ty_nodes_tt
+                it_files         TYPE ty_files_tt
+                iv_branch        TYPE ty_sha1
+      RETURNING VALUE(rv_branch) TYPE ty_sha1
+      RAISING   lcx_exception.
 
-  METHOD get_name.
+ENDCLASS.                    "lcl_porcelain DEFINITION
 
-    IF ms_data-offline = abap_true.
-      rv_name = ms_data-url.
-    ELSE.
-      rv_name = lcl_url=>name( ms_data-url ).
-    ENDIF.
+*----------------------------------------------------------------------*
+*       CLASS lcl_view DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_gui DEFINITION FINAL.
 
+  PUBLIC SECTION.
+    CLASS-METHODS run
+      RAISING lcx_exception.
+
+    CLASS-METHODS on_event
+                  FOR EVENT sapevent OF cl_gui_html_viewer
+      IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
+
+    CLASS-METHODS render_repo_online
+      IMPORTING io_repo        TYPE REF TO lcl_repo_online
+      RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_repo_offline
+      IMPORTING io_repo        TYPE REF TO lcl_repo_offline
+      RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-DATA go_html_viewer TYPE REF TO cl_gui_html_viewer.
+
+    CLASS-METHODS view
+      IMPORTING iv_html TYPE string.
+
+    CLASS-METHODS render
+      RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_css
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS render_header
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS render_menu
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS render_footer
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS install
+      IMPORTING iv_url TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS newoffline
+      RAISING lcx_exception.
+
+    CLASS-METHODS add
+      IMPORTING is_item TYPE ty_item
+                iv_key  TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS uninstall
+      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS remove
+      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS pull
+      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS commit
+      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS diff
+      IMPORTING is_result TYPE lcl_objects=>ty_result
+                iv_key    TYPE lcl_repo=>ty_key
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_diff
+      IMPORTING is_result TYPE lcl_objects=>ty_result
+                io_diff   TYPE REF TO lcl_diff.
+
+    CLASS-METHODS file_encode
+      IMPORTING iv_key           TYPE lcl_repo=>ty_key
+                is_file          TYPE lcl_objects=>ty_result
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS file_decode
+      IMPORTING iv_string TYPE clike
+      EXPORTING ev_key    TYPE lcl_repo=>ty_key
+                es_file   TYPE lcl_objects=>ty_result
+      RAISING   lcx_exception.
+
+    CLASS-METHODS popup_comment
+      RETURNING VALUE(rs_comment) TYPE ty_comment
+      RAISING   lcx_exception.
+
+    CLASS-METHODS get_logo_src
+      RETURNING VALUE(rv_src) TYPE string.
+
+    CLASS-METHODS zipexport
+      RAISING lcx_exception.
+
+ENDCLASS.                    "lcl_gui DEFINITION
+
+CLASS lcl_repo_offline IMPLEMENTATION.
+
+  METHOD render.
+    rv_html = lcl_gui=>render_repo_offline( me ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -11714,19 +11758,20 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS refresh
-      RAISING lcx_exception.
+      IMPORTING iv_show_progress TYPE abap_bool DEFAULT abap_true
+      RAISING   lcx_exception.
 
     CLASS-METHODS new_online
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
                 iv_package     TYPE devclass
-      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
     CLASS-METHODS new_offline
       IMPORTING iv_url         TYPE string
                 iv_package     TYPE devclass
-      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
       RAISING   lcx_exception.
 
     CLASS-METHODS add
@@ -11747,9 +11792,178 @@ CLASS lcl_repo_srv DEFINITION FINAL.
                 go_persistence TYPE REF TO lcl_persistence,
                 gt_list        TYPE ty_repo_tt.
 
-    CLASS-METHODS validate_package
-      IMPORTING iv_package TYPE devclass
-      RAISING   lcx_exception.
+    CLASS-METHODS:
+      validate_package
+        IMPORTING
+          iv_package TYPE devclass
+        RAISING
+          lcx_exception,
+      show_progress
+        IMPORTING
+          iv_current TYPE i
+          iv_total   TYPE i
+          iv_text    TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_repo_online IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( iv_key  = iv_key
+                        is_data = is_data ).
+
+    refresh( ).
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    lcl_objects=>deserialize( it_files   = mt_files
+                              iv_package = get_package( ) ).
+
+    lcl_repo_srv=>add( me ).
+
+    set_sha1( mv_branch ).
+
+  ENDMETHOD.
+
+  METHOD refresh.
+
+    lcl_git_porcelain=>pull( EXPORTING io_repo    = me
+                             IMPORTING et_files   = mt_files
+                                       et_objects = mt_objects
+                                       ev_branch  = mv_branch ).
+
+  ENDMETHOD.
+
+  METHOD get_sha1_remote.
+    rv_sha1 = mv_branch.
+  ENDMETHOD.
+
+  METHOD get_files.
+    rt_files = mt_files.
+  ENDMETHOD.
+
+  METHOD get_objects.
+    rt_objects = mt_objects.
+  ENDMETHOD.
+
+  METHOD render.
+    rv_html = lcl_gui=>render_repo_online( me ).
+  ENDMETHOD.
+
+  METHOD get_url.
+    rv_url = ms_data-url.
+  ENDMETHOD.
+
+  METHOD get_branch_name.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+  METHOD get_sha1_local.
+    rv_sha1 = ms_data-sha1.
+  ENDMETHOD.
+
+  METHOD push.
+
+    DATA: lv_branch TYPE ty_sha1.
+
+
+    lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
+                                         io_repo    = me
+                                         it_files   = it_files ).
+
+    set_sha1( lv_branch ).
+
+    refresh( ).
+
+  ENDMETHOD.
+
+  METHOD set_sha1.
+
+    DATA: lo_persistence TYPE REF TO lcl_persistence.
+
+
+    CREATE OBJECT lo_persistence.
+
+    lo_persistence->update( iv_url         = ms_data-url
+                            iv_branch_name = ms_data-branch_name
+                            iv_branch      = iv_sha1 ).
+
+    ms_data-sha1 = iv_sha1.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_repo IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_data = is_data.
+    mv_key = iv_key.
+  ENDMETHOD.
+
+  METHOD render.
+
+* to be implemented in subclass
+    ASSERT 1 = 0.
+
+  ENDMETHOD.
+
+  METHOD delete.
+
+    DATA: lo_persistence TYPE REF TO lcl_persistence.
+
+
+    CREATE OBJECT lo_persistence.
+
+    lo_persistence->delete(
+      iv_url         = ms_data-url
+      iv_branch_name = ms_data-branch_name ).
+
+  ENDMETHOD.
+
+  METHOD refresh.
+
+* redefined in LCL_REPO_ONLINE
+    RETURN.
+
+  ENDMETHOD.
+
+  METHOD add.
+
+    DATA: lo_persistence TYPE REF TO lcl_persistence.
+
+
+    CREATE OBJECT lo_persistence.
+
+    lo_persistence->add(
+      iv_url         = ms_data-url
+      iv_branch_name = ms_data-branch_name
+      iv_branch      = ms_data-sha1
+      iv_package     = ms_data-package
+      iv_offline     = ms_data-offline ).
+
+  ENDMETHOD.
+
+  METHOD get_package.
+    rv_package = ms_data-package.
+  ENDMETHOD.
+
+  METHOD get_key.
+    rv_key = mv_key.
+  ENDMETHOD.
+
+  METHOD get_name.
+
+    IF ms_data-offline = abap_true.
+      rv_name = ms_data-url.
+    ELSE.
+      rv_name = lcl_url=>name( ms_data-url ).
+    ENDIF.
+
+  ENDMETHOD.
 
 ENDCLASS.
 
@@ -11787,9 +12001,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list  TYPE lcl_persistence=>ty_repos_persi_tt,
-          lv_index TYPE i,
-          lo_repo  TYPE REF TO lcl_repo.
+    DATA: lt_list    TYPE lcl_persistence=>ty_repos_persi_tt,
+          lv_index   TYPE i,
+          lo_online  TYPE REF TO lcl_repo_online,
+          lo_offline TYPE REF TO lcl_repo_offline.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -11799,11 +12014,26 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     lt_list = go_persistence->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
       lv_index = sy-tabix.
-      CREATE OBJECT lo_repo
-        EXPORTING
-          iv_key  = lv_index
-          is_data = <ls_list>.
-      APPEND lo_repo TO gt_list.
+
+      IF iv_show_progress = abap_true.
+        show_progress( iv_current = sy-tabix
+                       iv_total   = lines( lt_list )
+                       iv_text    = <ls_list>-url ).
+      ENDIF.
+
+      IF <ls_list>-offline = abap_false.
+        CREATE OBJECT lo_online
+          EXPORTING
+            iv_key  = lv_index
+            is_data = <ls_list>.
+        APPEND lo_online TO gt_list.
+      ELSE.
+        CREATE OBJECT lo_offline
+          EXPORTING
+            iv_key  = lv_index
+            is_data = <ls_list>.
+        APPEND lo_offline TO gt_list.
+      ENDIF.
     ENDLOOP.
 
     gv_init = abap_true.
@@ -11844,6 +12074,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         iv_key  = lines( gt_list ) + 1
         is_data = ls_repo_persi.
 
+    add( ro_repo ).
+
   ENDMETHOD.
 
   METHOD add.
@@ -11853,18 +12085,37 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     LOOP AT gt_list INTO lo_repo.
       IF lo_repo->get_key( ) = io_repo->get_key( ).
+        IF lo_repo = io_repo.
+          RETURN.
+        ENDIF.
         _raise 'identical keys'.
       ENDIF.
     ENDLOOP.
 
-    go_persistence->add(
-      iv_url         = io_repo->get_url( )
-      iv_branch_name = io_repo->get_branch_name( )
-      iv_branch      = io_repo->get_sha1( )
-      iv_package     = io_repo->get_package( )
-      iv_offline     = io_repo->get_offline( ) ).
+    io_repo->add( ).
 
     APPEND io_repo TO gt_list.
+
+  ENDMETHOD.
+
+  METHOD show_progress.
+
+    DATA: lv_text TYPE c LENGTH 100,
+          lv_pct  TYPE i,
+          lv_f    TYPE f.
+
+
+    lv_text = iv_text.
+    lv_f = ( iv_current / iv_total ) * 100.
+    lv_pct = lv_f.
+    IF lv_pct = 100.
+      lv_pct = 99.
+    ENDIF.
+
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = lv_text.
 
   ENDMETHOD.
 
@@ -11900,9 +12151,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD delete.
 
-    go_persistence->delete(
-      iv_url         = io_repo->get_url( )
-      iv_branch_name = io_repo->get_branch_name( ) ).
+    io_repo->delete( ).
 
     DELETE TABLE gt_list FROM io_repo.
     ASSERT sy-subrc = 0.
@@ -11927,14 +12176,14 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING io_repo   TYPE REF TO lcl_repo
+      IMPORTING io_repo   TYPE REF TO lcl_repo_online
       EXPORTING ev_pack   TYPE xstring
                 ev_branch TYPE ty_sha1
       RAISING   lcx_exception.
 
 * local to remote
     CLASS-METHODS receive_pack
-      IMPORTING io_repo   TYPE REF TO lcl_repo
+      IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 iv_commit TYPE ty_sha1
                 iv_pack   TYPE xstring
       RAISING   lcx_exception.
@@ -11944,7 +12193,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RETURNING VALUE(rt_branch_list) TYPE ty_branch_list_tt
       RAISING   lcx_exception.
 
+    CLASS-METHODS class_constructor.
+
   PRIVATE SECTION.
+    CLASS-DATA: gv_agent TYPE string.
+
     CONSTANTS: BEGIN OF c_service,
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
                  upload  TYPE string VALUE 'upload',        "#EC NOTEXT
@@ -11963,7 +12216,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS find_branch
-      IMPORTING io_repo    TYPE REF TO lcl_repo
+      IMPORTING io_repo    TYPE REF TO lcl_repo_online
                 iv_service TYPE string
       EXPORTING ei_client  TYPE REF TO if_http_client
                 ev_branch  TYPE ty_sha1
@@ -11983,7 +12236,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS set_headers
-      IMPORTING io_repo    TYPE REF TO lcl_repo
+      IMPORTING io_repo    TYPE REF TO lcl_repo_online
                 iv_service TYPE string
                 ii_client  TYPE REF TO if_http_client
       RAISING   lcx_exception.
@@ -12003,6 +12256,13 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_git_transport IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+* bitbucket require agent prefix = "git/"
+    gv_agent = 'git/abapGit ' && gc_abap_version.
+
+  ENDMETHOD.
 
   METHOD set_headers.
 
@@ -12453,7 +12713,7 @@ CLASS lcl_zip DEFINITION FINAL.
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
-    CLASS-METHODS decode_files
+    CLASS-METHODS unzip_file
       IMPORTING iv_xstr         TYPE xstring
       RETURNING VALUE(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
@@ -12728,7 +12988,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
   ENDMETHOD.                    "file_upload
 
-  METHOD decode_files.
+  METHOD unzip_file.
 
     DATA: lo_zip    TYPE REF TO cl_abap_zip,
           lv_xstr   TYPE xstring,
@@ -12793,7 +13053,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
     lo_repo = lcl_repo_srv=>get( iv_key ).
 
-    lt_files = decode_files( file_upload( ) ).
+    lt_files = unzip_file( file_upload( ) ).
 
     lcl_objects=>deserialize( it_files   = lt_files
                               iv_package = lo_repo->get_package( ) ).
@@ -12967,59 +13227,6 @@ CLASS lcl_zip IMPLEMENTATION.
 ENDCLASS.                    "lcl_zip IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_porcelain DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_git_porcelain DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    TYPES: BEGIN OF ty_comment,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-           END OF ty_comment.
-
-    CLASS-METHODS pull
-      IMPORTING io_repo    TYPE REF TO lcl_repo
-      EXPORTING et_files   TYPE ty_files_tt
-                et_objects TYPE lcl_git_pack=>ty_objects_tt
-                ev_branch  TYPE ty_sha1
-      RAISING   lcx_exception.
-
-    CLASS-METHODS push
-      IMPORTING io_repo          TYPE REF TO lcl_repo
-                is_comment       TYPE ty_comment
-                it_files         TYPE ty_files_tt
-      RETURNING VALUE(rv_branch) TYPE ty_sha1
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CLASS-METHODS walk
-      IMPORTING it_objects TYPE lcl_git_pack=>ty_objects_tt
-                iv_sha1    TYPE ty_sha1
-                iv_path    TYPE string
-      CHANGING  ct_files   TYPE ty_files_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS root_tree
-      IMPORTING it_objects      TYPE lcl_git_pack=>ty_objects_tt
-                iv_branch       TYPE ty_sha1
-      RETURNING VALUE(rt_nodes) TYPE lcl_git_pack=>ty_nodes_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS receive_pack
-      IMPORTING is_comment       TYPE ty_comment
-                io_repo          TYPE REF TO lcl_repo
-                it_nodes         TYPE lcl_git_pack=>ty_nodes_tt
-                it_files         TYPE ty_files_tt
-                iv_branch        TYPE ty_sha1
-      RETURNING VALUE(rv_branch) TYPE ty_sha1
-      RAISING   lcx_exception.
-
-ENDCLASS.                    "lcl_porcelain DEFINITION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_porcelain IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
@@ -13073,8 +13280,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     rv_branch = lcl_hash=>sha1( iv_type = gc_type-commit iv_data = lv_commit ).
     lcl_git_transport=>receive_pack( io_repo   = io_repo
-                                 iv_commit = rv_branch
-                                 iv_pack   = lv_pack ).
+                                     iv_commit = rv_branch
+                                     iv_pack   = lv_pack ).
 
   ENDMETHOD.                    "receive_pack
 
@@ -13082,23 +13289,18 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
 * todo, only works with root files
 
-    DATA: lt_objects TYPE lcl_git_pack=>ty_objects_tt,
-          lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
-          lt_files   LIKE it_files,
-          lv_sha1    TYPE ty_sha1,
-          lv_index   TYPE i,
-          lv_branch  TYPE ty_sha1.
+    DATA:
+      lt_nodes TYPE lcl_git_pack=>ty_nodes_tt,
+      lt_files LIKE it_files,
+      lv_sha1  TYPE ty_sha1,
+      lv_index TYPE i.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
                    <ls_node> LIKE LINE OF lt_nodes.
 
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo    = io_repo
-                            IMPORTING et_objects = lt_objects
-                                      ev_branch  = lv_branch ).
-
-    lt_nodes = root_tree( it_objects = lt_objects
-                          iv_branch  = lv_branch ).
+    lt_nodes = root_tree( it_objects = io_repo->get_objects( )
+                          iv_branch  = io_repo->get_sha1_remote( ) ).
 
     lt_files[] = it_files[].
 
@@ -13128,7 +13330,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                               io_repo    = io_repo
                               it_nodes   = lt_nodes
                               it_files   = lt_files
-                              iv_branch  = lv_branch ).
+                              iv_branch  = io_repo->get_sha1_remote( ) ).
 
   ENDMETHOD.                    "push
 
@@ -13169,12 +13371,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     ENDIF.
 
     et_objects = lcl_git_pack=>decode( lv_pack ).
-    lcl_debug=>render_objects( iv_message = 'Before deltas'
-                               it_objects = et_objects ).   "#EC NOTEXT
 
     lcl_git_pack=>decode_deltas( CHANGING ct_objects = et_objects ).
-    lcl_debug=>render_objects( iv_message = 'After deltas'
-                               it_objects = et_objects ).   "#EC NOTEXT
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_type-commit.
     IF sy-subrc <> 0.
@@ -13234,113 +13432,6 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
   ENDMETHOD.                    "walk
 
 ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_view DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS run
-      RAISING lcx_exception.
-
-    CLASS-METHODS on_event
-                  FOR EVENT sapevent OF cl_gui_html_viewer
-      IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
-
-  PRIVATE SECTION.
-    CLASS-DATA go_html_viewer TYPE REF TO cl_gui_html_viewer.
-
-    CLASS-METHODS view
-      IMPORTING iv_html TYPE string.
-
-    CLASS-METHODS render
-      RETURNING VALUE(rv_html) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_css
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS render_repo_online
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(rv_html) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_repo_offline
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(rv_html) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_header
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS render_menu
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS render_footer
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS install
-      IMPORTING iv_url TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS newoffline
-      RAISING lcx_exception.
-
-    CLASS-METHODS add
-      IMPORTING is_item TYPE ty_item
-                iv_key  TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS uninstall
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS remove
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS commit
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS diff
-      IMPORTING is_result TYPE lcl_objects=>ty_result
-                iv_key    TYPE lcl_repo=>ty_key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_diff
-      IMPORTING is_result TYPE lcl_objects=>ty_result
-                io_diff   TYPE REF TO lcl_diff.
-
-    CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_repo=>ty_key
-                is_file          TYPE lcl_objects=>ty_result
-      RETURNING VALUE(rv_string) TYPE string.
-
-    CLASS-METHODS file_decode
-      IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_repo=>ty_key
-                es_file   TYPE lcl_objects=>ty_result
-      RAISING   lcx_exception.
-
-    CLASS-METHODS popup_comment
-      RETURNING VALUE(rs_comment) TYPE lcl_git_porcelain=>ty_comment
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_logo_src
-      RETURNING VALUE(rv_src) TYPE string.
-
-    CLASS-METHODS zipexport
-      RAISING lcx_exception.
-
-ENDCLASS.                    "lcl_gui DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_view IMPLEMENTATION
@@ -13424,19 +13515,17 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lt_remote TYPE ty_files_tt,
           lt_local  TYPE ty_files_tt,
           ls_item   TYPE ty_item,
-          lo_repo   TYPE REF TO lcl_repo,
+          lo_repo   TYPE REF TO lcl_repo_online,
           lo_diff   TYPE REF TO lcl_diff.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
                    <ls_local>  LIKE LINE OF lt_local.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo  = lo_repo
-                         IMPORTING et_files = lt_remote ).
+    lt_remote = lo_repo->get_files( ).
 
-    CLEAR ls_item.
     ls_item-obj_type = is_result-obj_type.
     ls_item-obj_name = is_result-obj_name.
 
@@ -13483,7 +13572,7 @@ CLASS lcl_gui IMPLEMENTATION.
               is_result-obj_name && '&nbsp;' &&
               is_result-filename && '</h3><br><br>'.
 
-    ls_count = io_diff->count( ).
+    ls_count = io_diff->stats( ).
     lv_html = lv_html &&
               '<table border="1">' && gc_newline &&
               '<tr>'               && gc_newline &&
@@ -13616,22 +13705,14 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lt_files  TYPE ty_files_tt,
-          lo_repo   TYPE REF TO lcl_repo,
-          lv_branch TYPE ty_sha1.
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
 
+    lo_repo->refresh( ).
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo   = lo_repo
-                         IMPORTING et_files  = lt_files
-                                   ev_branch = lv_branch ).
-
-    lcl_objects=>deserialize( it_files   = lt_files
-                              iv_package = lo_repo->get_package( ) ).
-
-    lo_repo->set_branch( lv_branch ).
+    lo_repo->deserialize( ).
 
     view( render( ) ).
 
@@ -13639,22 +13720,18 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD commit.
 
-    DATA: lv_branch  TYPE ty_sha1,
-          lt_results TYPE lcl_objects=>ty_results_tt,
+    DATA: lt_results TYPE lcl_objects=>ty_results_tt,
           lt_push    TYPE ty_files_tt,
           ls_item    TYPE ty_item,
-          ls_comment TYPE lcl_git_porcelain=>ty_comment,
-          lo_repo    TYPE REF TO lcl_repo,
+          ls_comment TYPE ty_comment,
+          lo_repo    TYPE REF TO lcl_repo_online,
           lt_files   TYPE ty_files_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
-
-    lcl_git_porcelain=>pull( EXPORTING io_repo   = lo_repo
-                         IMPORTING et_files  = lt_files ).
-
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lt_files = lo_repo->get_files( ).
     lt_results = lcl_objects=>status( lt_files ).
 
     CLEAR lt_files[].
@@ -13676,12 +13753,8 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_branch = lcl_git_porcelain=>push(
-      is_comment     = ls_comment
-      io_repo        = lo_repo
-      it_files       = lt_push ).
-
-    lo_repo->set_branch( lv_branch ).
+    lo_repo->push( is_comment = ls_comment
+                   it_files   = lt_push ).
 
     view( render( ) ).
 
@@ -13711,6 +13784,8 @@ CLASS lcl_gui IMPLEMENTATION.
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
     IF sy-subrc = 0.
       ev_key = <ls_field>-value.
+    ELSE.
+      CLEAR ev_key.
     ENDIF.
 
   ENDMETHOD.                    "struct_decode
@@ -13770,8 +13845,8 @@ CLASS lcl_gui IMPLEMENTATION.
                                    es_file = ls_result ).
             CLEAR ls_item.
             MOVE-CORRESPONDING ls_result TO ls_item.
-            add( is_item       = ls_item
-                 iv_key = lv_key ).
+            add( is_item = ls_item
+                 iv_key  = lv_key ).
           WHEN 'uninstall'.
             lv_key = getdata.
             uninstall( lv_key ).
@@ -13779,6 +13854,7 @@ CLASS lcl_gui IMPLEMENTATION.
             lv_key = getdata.
             remove( lv_key ).
           WHEN 'refresh'.
+            lcl_repo_srv=>refresh( ).
             view( render( ) ).
           WHEN 'commit'.
             lv_key = getdata.
@@ -13799,8 +13875,6 @@ CLASS lcl_gui IMPLEMENTATION.
           WHEN 'pull'.
             lv_key = getdata.
             pull( lv_key ).
-          WHEN 'debug'.
-            lcl_debug=>debug_toggle( ).
           WHEN 'newoffline'.
             newoffline( ).
           WHEN 'zipimport'.
@@ -13822,11 +13896,6 @@ CLASS lcl_gui IMPLEMENTATION.
             _raise 'Unknown action'.
         ENDCASE.
       CATCH lcx_exception INTO lx_exception.
-        IF lcl_debug=>get_debug( ) = abap_true.
-          view( render_header( ) &&
-            lcl_debug=>get_html( ) &&
-            render_footer( ) ).
-        ENDIF.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
@@ -13939,14 +14008,13 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD add.
 
     DATA: lt_files    TYPE ty_files_tt,
-          ls_comment  TYPE lcl_git_porcelain=>ty_comment,
-          lv_branch   TYPE ty_sha1,
-          lo_repo     TYPE REF TO lcl_repo,
+          ls_comment  TYPE ty_comment,
+          lo_repo     TYPE REF TO lcl_repo_online,
           lv_package  TYPE devclass,
           lv_obj_name TYPE tadir-obj_name.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
     lv_package = lo_repo->get_package( ).
 
     IF is_item-obj_type = 'SICF'.
@@ -13972,11 +14040,8 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_branch = lcl_git_porcelain=>push( is_comment = ls_comment
-                                         io_repo    = lo_repo
-                                         it_files   = lt_files ).
-
-    lo_repo->set_branch( lv_branch ).
+    lo_repo->push( is_comment = ls_comment
+                   it_files   = lt_files ).
 
     view( render( ) ).
 
@@ -13986,7 +14051,6 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lv_returncode TYPE c,
           lv_url        TYPE string,
-          lo_repo       TYPE REF TO lcl_repo,
           lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
@@ -14030,11 +14094,9 @@ CLASS lcl_gui IMPLEMENTATION.
     lv_package = <ls_field>-value.
     TRANSLATE lv_package TO UPPER CASE.
 
-    lo_repo = lcl_repo_srv=>new_offline(
+    lcl_repo_srv=>new_offline(
       iv_url     = lv_url
       iv_package = lv_package ).
-
-    lcl_repo_srv=>add( lo_repo ).
 
     view( render( ) ).
 
@@ -14043,14 +14105,12 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD install.
 
     DATA: lv_returncode  TYPE c,
-          lt_files       TYPE ty_files_tt,
           lv_url         TYPE string,
           lv_package     TYPE devclass,
           lv_branch_name TYPE string,
-          lv_branch      TYPE ty_sha1,
           lv_icon_ok     TYPE icon-name,
           lv_icon_br     TYPE icon-name,
-          lo_repo        TYPE REF TO lcl_repo,
+          lo_repo        TYPE REF TO lcl_repo_online,
           lt_fields      TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -14119,20 +14179,11 @@ CLASS lcl_gui IMPLEMENTATION.
       iv_branch_name = lv_branch_name
       iv_package     = lv_package ).
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo   = lo_repo
-                         IMPORTING et_files  = lt_files
-                                   ev_branch = lv_branch ).
-
 * call status to check for errors
-    lcl_objects=>status( it_files   = lt_files
-                         iv_package = lv_package ).
+    lcl_objects=>status( it_files   = lo_repo->get_files( )
+                         iv_package = lo_repo->get_package( ) ).
 
-    lcl_objects=>deserialize( it_files   = lt_files
-                              iv_package = lv_package ).
-
-    lcl_repo_srv=>add( lo_repo ).
-
-    lo_repo->set_branch( lv_branch ).
+    lo_repo->deserialize( ).
 
     view( render( ) ).
 
@@ -14222,9 +14273,6 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render.
 
     DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
-          lv_text  TYPE c LENGTH 100,
-          lv_pct   TYPE i,
-          lv_f     TYPE f,
           lo_repo  LIKE LINE OF lt_repos.
 
 
@@ -14245,22 +14293,7 @@ CLASS lcl_gui IMPLEMENTATION.
       rv_html = rv_html && '<br><br><br>'.
 
       LOOP AT lt_repos INTO lo_repo.
-        lv_f = ( sy-tabix / lines( lt_repos ) ) * 100.
-        lv_pct = lv_f.
-        IF lv_pct = 100.
-          lv_pct = 99.
-        ENDIF.
-        lv_text = lo_repo->get_name( ).
-        CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
-          EXPORTING
-            percentage = lv_pct
-            text       = lv_text.
-
-        IF lo_repo->get_offline( ) = abap_true.
-          rv_html = rv_html && render_repo_offline( lo_repo ).
-        ELSE.
-          rv_html = rv_html && render_repo_online( lo_repo ).
-        ENDIF.
+        rv_html = rv_html && lo_repo->render( ).
       ENDLOOP.
     ENDIF.
 
@@ -14274,7 +14307,6 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html = rv_html &&
       '<br><br><hr><center><h3>abapGit Version:&nbsp;' &&
       gc_abap_version &&
-      '&nbsp;<a href="sapevent:debug" class="white">d</a>' &&
       '&nbsp;<a href="sapevent:zipexport_gui" class="white">e</a>' &&
       '</h3></center>'.                                     "#EC NOTEXT
 
@@ -14347,7 +14379,6 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render_repo_online.
 
     DATA: lt_files      TYPE ty_files_tt,
-          lv_branch     TYPE ty_sha1,
           lv_link       TYPE string,
           lv_status     TYPE string,
           lv_package    TYPE string,
@@ -14381,15 +14412,13 @@ CLASS lcl_gui IMPLEMENTATION.
       'uninstall' &&
       '</a><br>'.                                           "#EC NOTEXT
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo   = io_repo
-                         IMPORTING et_files  = lt_files
-                                   ev_branch = lv_branch ).
+    lt_files = io_repo->get_files( ).
 
     rv_html = rv_html && '<br>'.
 
     lt_results = lcl_objects=>status( it_files   = lt_files
                                       iv_package = io_repo->get_package( ) ).
-    IF lv_branch <> io_repo->get_sha1( ).
+    IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
       lv_status = 'pull'.                                   "#EC NOTEXT
     ELSE.
       READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
@@ -14629,9 +14658,6 @@ FORM run.
     RETURN.
   ENDIF.
 
-* bitbucket require agent prefix = "git/"
-  gv_agent = 'git/abapGit ' && gc_abap_version.
-
   TRY.
       lcl_gui=>run( ).
     CATCH lcx_exception INTO lx_exception.
@@ -14663,8 +14689,7 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
                   RAISING lcx_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
-  DATA: li_client    TYPE REF TO if_http_client,
-        lv_url       TYPE string,
+  DATA: lv_url       TYPE string,
         lv_answer    TYPE c,
         lx_error     TYPE REF TO lcx_exception,
         lt_selection TYPE TABLE OF spopli,
