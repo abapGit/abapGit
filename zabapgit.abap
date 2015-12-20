@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.84'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.85'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9632,25 +9632,10 @@ ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 CLASS lcl_objects DEFINITION FINAL.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_result,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             match    TYPE sap_bool,
-             filename TYPE string,
-             package  TYPE devclass,
-             path     TYPE string,
-           END OF ty_result.
-    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
       RETURNING VALUE(rt_files) TYPE ty_files_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS status
-      IMPORTING it_files          TYPE ty_files_tt
-                iv_package        TYPE devclass OPTIONAL
-      RETURNING VALUE(rt_results) TYPE ty_results_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
@@ -9688,12 +9673,6 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item TYPE ty_item
       RAISING   lcx_exception.
 
-    CLASS-METHODS compare_files
-      IMPORTING it_repo         TYPE ty_files_tt
-                is_gen          TYPE ty_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
-      RAISING   lcx_exception.
-
     CLASS-METHODS show_progress
       IMPORTING iv_current  TYPE i
                 iv_total    TYPE i
@@ -9704,6 +9683,159 @@ CLASS lcl_objects DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_object DEFINITION
 
+CLASS lcl_file_status DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_result,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             match    TYPE sap_bool,
+             filename TYPE string,
+             package  TYPE devclass,
+             path     TYPE string,
+           END OF ty_result.
+    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
+
+    CLASS-METHODS status
+      IMPORTING it_files          TYPE ty_files_tt
+                iv_package        TYPE devclass
+      RETURNING VALUE(rt_results) TYPE ty_results_tt
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS compare_files
+      IMPORTING it_repo         TYPE ty_files_tt
+                is_gen          TYPE ty_file
+      RETURNING VALUE(rv_match) TYPE sap_bool
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_file_status IMPLEMENTATION.
+
+  METHOD compare_files.
+
+    READ TABLE it_repo WITH KEY path = is_gen-path
+                                filename = is_gen-filename
+                                data = is_gen-data
+      TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      rv_match = abap_false.
+    ELSE.
+      rv_match = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD status.
+
+    DATA: lv_pre    TYPE tadir-obj_name,
+          lt_files  TYPE ty_files_tt,
+          ls_result LIKE LINE OF rt_results,
+          lv_type   TYPE string,
+          ls_item   TYPE ty_item,
+          lt_tadir  TYPE lcl_tadir=>ty_tadir_tt,
+          ls_tadir  TYPE tadir,
+          lv_ext    TYPE string.
+
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF it_files,
+                   <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <ls_result> LIKE LINE OF rt_results,
+                   <ls_gen>    LIKE LINE OF lt_files.
+
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
+      TRANSLATE lv_pre TO UPPER CASE.
+      TRANSLATE lv_type TO UPPER CASE.
+
+      IF lv_ext <> 'xml' OR strlen( lv_type ) <> 4.
+        CONTINUE. " current loop
+      ENDIF.
+
+* handle namespaces
+      REPLACE ALL OCCURRENCES OF '#' IN lv_pre WITH '/'.
+
+      CLEAR ls_result.
+      ls_result-obj_type = lv_type.
+      ls_result-obj_name = lv_pre.
+
+      CLEAR ls_item.
+      ls_item-obj_type = lv_type.
+      ls_item-obj_name = lv_pre.
+
+      lt_files = lcl_objects=>serialize( ls_item ).
+
+      IF lt_files[] IS INITIAL.
+* item does not exist locally
+        ls_result-filename = <ls_file>-filename.
+        APPEND ls_result TO rt_results.
+        CONTINUE. " current loop
+      ENDIF.
+
+      LOOP AT lt_files ASSIGNING <ls_gen>.
+        ls_result-filename = <ls_gen>-filename.
+        ls_result-match = compare_files( it_repo = it_files
+                                         is_gen  = <ls_gen> ).
+        APPEND ls_result TO rt_results.
+      ENDLOOP.
+    ENDLOOP.
+
+* find files only existing remotely, including non abapGit related
+    LOOP AT it_files ASSIGNING <ls_file>.
+      READ TABLE rt_results WITH KEY filename = <ls_file>-filename
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        CLEAR ls_result.
+        ls_result-match    = abap_true.
+        ls_result-filename = <ls_file>-filename.
+        APPEND ls_result TO rt_results.
+      ENDIF.
+    ENDLOOP.
+
+* find objects only existing locally
+    lt_tadir = lcl_tadir=>read( iv_package ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      READ TABLE rt_results
+        WITH KEY obj_type = <ls_tadir>-object obj_name = <ls_tadir>-obj_name
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        CLEAR ls_result.
+        ls_result-match    = abap_true.
+        ls_result-obj_type = <ls_tadir>-object.
+        ls_result-obj_name = <ls_tadir>-obj_name.
+        APPEND ls_result TO rt_results.
+      ENDIF.
+    ENDLOOP.
+
+* add path information for files
+    LOOP AT it_files ASSIGNING <ls_file>.
+      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_file>-filename.
+      IF sy-subrc = 0.
+        <ls_result>-path = <ls_file>-path.
+      ENDIF.
+    ENDLOOP.
+
+* add package information
+    LOOP AT rt_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
+      ls_tadir = lcl_tadir=>read_single( iv_object   = <ls_result>-obj_type
+                                         iv_obj_name = <ls_result>-obj_name ).
+      <ls_result>-package = ls_tadir-devclass.
+    ENDLOOP.
+
+    SORT rt_results BY
+      obj_type ASCENDING
+      obj_name ASCENDING
+      filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_results
+      COMPARING obj_type obj_name filename.
+
+  ENDMETHOD.                    "status
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_package DEFINITION
 *----------------------------------------------------------------------*
@@ -9713,7 +9845,7 @@ CLASS lcl_sap_package DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      check IMPORTING it_results       TYPE lcl_objects=>ty_results_tt
+      check IMPORTING it_results       TYPE lcl_file_status=>ty_results_tt
                       iv_top           TYPE devclass
             RETURNING VALUE(rv_errors) TYPE string,
       create.
@@ -10137,120 +10269,13 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD status.
-
-    DATA: lv_pre    TYPE tadir-obj_name,
-          lt_files  TYPE ty_files_tt,
-          ls_result LIKE LINE OF rt_results,
-          lv_type   TYPE string,
-          ls_item   TYPE ty_item,
-          lt_tadir  TYPE lcl_tadir=>ty_tadir_tt,
-          ls_tadir  TYPE tadir,
-          lv_ext    TYPE string.
-
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF it_files,
-                   <ls_tadir>  LIKE LINE OF lt_tadir,
-                   <ls_result> LIKE LINE OF rt_results,
-                   <ls_gen>    LIKE LINE OF lt_files.
-
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
-      TRANSLATE lv_pre TO UPPER CASE.
-      TRANSLATE lv_type TO UPPER CASE.
-
-      IF lv_ext <> 'xml' OR strlen( lv_type ) <> 4.
-        CONTINUE. " current loop
-      ENDIF.
-
-* handle namespaces
-      REPLACE ALL OCCURRENCES OF '#' IN lv_pre WITH '/'.
-
-      CLEAR ls_result.
-      ls_result-obj_type = lv_type.
-      ls_result-obj_name = lv_pre.
-
-      CLEAR ls_item.
-      ls_item-obj_type = lv_type.
-      ls_item-obj_name = lv_pre.
-
-      lt_files = serialize( ls_item ).
-
-      IF lt_files[] IS INITIAL.
-* item does not exist locally
-        ls_result-filename = <ls_file>-filename.
-        APPEND ls_result TO rt_results.
-        CONTINUE. " current loop
-      ENDIF.
-
-      LOOP AT lt_files ASSIGNING <ls_gen>.
-        ls_result-filename = <ls_gen>-filename.
-        ls_result-match = compare_files( it_repo = it_files
-                                         is_gen  = <ls_gen> ).
-        APPEND ls_result TO rt_results.
-      ENDLOOP.
-    ENDLOOP.
-
-* find files only existing remotely, including non abapGit related
-    LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE rt_results WITH KEY filename = <ls_file>-filename
-        TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        CLEAR ls_result.
-        ls_result-match    = abap_true.
-        ls_result-filename = <ls_file>-filename.
-        APPEND ls_result TO rt_results.
-      ENDIF.
-    ENDLOOP.
-
-* find objects only existing locally
-    IF NOT iv_package IS INITIAL.
-      lt_tadir = lcl_tadir=>read( iv_package ).
-      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        READ TABLE rt_results
-          WITH KEY obj_type = <ls_tadir>-object obj_name = <ls_tadir>-obj_name
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          CLEAR ls_result.
-          ls_result-match    = abap_true.
-          ls_result-obj_type = <ls_tadir>-object.
-          ls_result-obj_name = <ls_tadir>-obj_name.
-          APPEND ls_result TO rt_results.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
-
-* add path information for files
-    LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_file>-filename.
-      IF sy-subrc = 0.
-        <ls_result>-path = <ls_file>-path.
-      ENDIF.
-    ENDLOOP.
-
-* add package information
-    LOOP AT rt_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
-      ls_tadir = lcl_tadir=>read_single( iv_object   = <ls_result>-obj_type
-                                         iv_obj_name = <ls_result>-obj_name ).
-      <ls_result>-package = ls_tadir-devclass.
-    ENDLOOP.
-
-    SORT rt_results BY
-      obj_type ASCENDING
-      obj_name ASCENDING
-      filename ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM rt_results
-      COMPARING obj_type obj_name filename.
-
-  ENDMETHOD.                    "status
-
   METHOD deserialize.
 
     DATA: ls_item       TYPE ty_item,
           lv_class_name TYPE string,
           lv_message    TYPE string,
           lv_cancel     TYPE abap_bool,
-          lt_results    TYPE ty_results_tt.
+          lt_results    TYPE lcl_file_status=>ty_results_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
@@ -10258,8 +10283,8 @@ CLASS lcl_objects IMPLEMENTATION.
     CLEAR lcl_objects_common=>gt_ddic[].
     CLEAR lcl_objects_common=>gt_programs[].
 
-    lt_results = status( it_files   = it_files
-                         iv_package = iv_package ).
+    lt_results = lcl_file_status=>status( it_files   = it_files
+                                         iv_package = iv_package ).
     DELETE lt_results WHERE match = abap_true.
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
@@ -10343,20 +10368,6 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "activate
-
-  METHOD compare_files.
-
-    READ TABLE it_repo WITH KEY path = is_gen-path
-                                filename = is_gen-filename
-                                data = is_gen-data
-      TRANSPORTING NO FIELDS.
-    IF sy-subrc <> 0.
-      rv_match = abap_false.
-    ELSE.
-      rv_match = abap_true.
-    ENDIF.
-
-  ENDMETHOD.                    "compare_files
 
 ENDCLASS.                    "lcl_object IMPLEMENTATION
 
@@ -11556,6 +11567,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo.
         RETURNING VALUE(rt_objects) TYPE lcl_git_pack=>ty_objects_tt,
       deserialize
         RAISING lcx_exception,
+      status
+        RETURNING VALUE(rt_results) TYPE lcl_file_status=>ty_results_tt
+        RAISING   lcx_exception,
       push
         IMPORTING is_comment TYPE ty_comment
                   it_files   TYPE ty_files_tt
@@ -11706,23 +11720,23 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS diff
-      IMPORTING is_result TYPE lcl_objects=>ty_result
+      IMPORTING is_result TYPE lcl_file_status=>ty_result
                 iv_key    TYPE lcl_repo=>ty_key
       RAISING   lcx_exception.
 
     CLASS-METHODS render_diff
-      IMPORTING is_result TYPE lcl_objects=>ty_result
+      IMPORTING is_result TYPE lcl_file_status=>ty_result
                 io_diff   TYPE REF TO lcl_diff.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_repo=>ty_key
-                is_file          TYPE lcl_objects=>ty_result
+                is_file          TYPE lcl_file_status=>ty_result
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
       IMPORTING iv_string TYPE clike
       EXPORTING ev_key    TYPE lcl_repo=>ty_key
-                es_file   TYPE lcl_objects=>ty_result
+                es_file   TYPE lcl_file_status=>ty_result
       RAISING   lcx_exception.
 
     CLASS-METHODS popup_comment
@@ -11814,6 +11828,13 @@ CLASS lcl_repo_online IMPLEMENTATION.
                         is_data = is_data ).
 
     refresh( ).
+
+  ENDMETHOD.
+
+  METHOD status.
+
+    rt_results = lcl_file_status=>status( it_files   = mt_files
+                                         iv_package = get_package( ) ).
 
   ENDMETHOD.
 
@@ -13720,7 +13741,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD commit.
 
-    DATA: lt_results TYPE lcl_objects=>ty_results_tt,
+    DATA: lt_results TYPE lcl_file_status=>ty_results_tt,
           lt_push    TYPE ty_files_tt,
           ls_item    TYPE ty_item,
           ls_comment TYPE ty_comment,
@@ -13731,11 +13752,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     lo_repo ?= lcl_repo_srv=>get( iv_key ).
-    lt_files = lo_repo->get_files( ).
-    lt_results = lcl_objects=>status( lt_files ).
+    lt_results = lo_repo->status( ).
 
-    CLEAR lt_files[].
-    LOOP AT lt_results ASSIGNING <ls_result> WHERE match = abap_false.
+    LOOP AT lt_results ASSIGNING <ls_result>
+        WHERE match = abap_false
+        AND filename <> ''.
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
@@ -13823,7 +13844,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD on_event.
 
     DATA: lx_exception TYPE REF TO lcx_exception,
-          ls_result    TYPE lcl_objects=>ty_result,
+          ls_result    TYPE lcl_file_status=>ty_result,
           lv_url       TYPE string,
           lv_key       TYPE lcl_repo=>ty_key,
           ls_item      TYPE ty_item.
@@ -14178,11 +14199,7 @@ CLASS lcl_gui IMPLEMENTATION.
       iv_url         = lv_url
       iv_branch_name = lv_branch_name
       iv_package     = lv_package ).
-
-* call status to check for errors
-    lcl_objects=>status( it_files   = lo_repo->get_files( )
-                         iv_package = lo_repo->get_package( ) ).
-
+    lo_repo->status( ). " check for errors
     lo_repo->deserialize( ).
 
     view( render( ) ).
@@ -14378,18 +14395,18 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_repo_online.
 
-    DATA: lt_files      TYPE ty_files_tt,
-          lv_link       TYPE string,
-          lv_status     TYPE string,
-          lv_package    TYPE string,
-          lv_object     TYPE string,
-          lv_index      LIKE sy-tabix,
-          lv_span       TYPE i,
-          lt_results    TYPE lcl_objects=>ty_results_tt,
-          ls_next       LIKE LINE OF lt_results,
-          ls_item       TYPE ty_item,
-          lv_class_name TYPE string,
-          lo_object     TYPE REF TO object.
+    DATA: lv_link        TYPE string,
+          lv_status      TYPE string,
+          lv_package     TYPE string,
+          lv_object      TYPE string,
+          lv_index       LIKE sy-tabix,
+          lv_file_encode TYPE string,
+          lv_span        TYPE i,
+          lt_results     TYPE lcl_file_status=>ty_results_tt,
+          ls_next        LIKE LINE OF lt_results,
+          ls_item        TYPE ty_item,
+          lv_class_name  TYPE string,
+          lo_object      TYPE REF TO object.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
@@ -14412,12 +14429,9 @@ CLASS lcl_gui IMPLEMENTATION.
       'uninstall' &&
       '</a><br>'.                                           "#EC NOTEXT
 
-    lt_files = io_repo->get_files( ).
-
     rv_html = rv_html && '<br>'.
 
-    lt_results = lcl_objects=>status( it_files   = lt_files
-                                      iv_package = io_repo->get_package( ) ).
+    lt_results = io_repo->status( ).
     IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
       lv_status = 'pull'.                                   "#EC NOTEXT
     ELSE.
@@ -14440,6 +14454,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
     LOOP AT lt_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
+      lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
+                                    is_file = <ls_result> ).
 
       CLEAR lv_link.
       IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
@@ -14447,16 +14463,12 @@ CLASS lcl_gui IMPLEMENTATION.
         lv_class_name = lcl_objects=>class_name( ls_item ).
         TRY.
             CREATE OBJECT lo_object TYPE (lv_class_name).
-            lv_link = '<a href="sapevent:add?' &&
-              file_encode( iv_key = io_repo->get_key( ) is_file = <ls_result> )
-              && '">add</a>'.
+            lv_link = '<a href="sapevent:add?' && lv_file_encode && '">add</a>'.
           CATCH cx_sy_create_object_error.
             lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
         ENDTRY.
       ELSEIF <ls_result>-match = abap_false.
-        lv_link = '<a href="sapevent:diff?' &&
-          file_encode( iv_key = io_repo->get_key( ) is_file = <ls_result> ) &&
-          '">diff</a>'.
+        lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
       ENDIF.
 
       IF lv_span = 0.
@@ -14473,16 +14485,14 @@ CLASS lcl_gui IMPLEMENTATION.
         ENDWHILE.
 
         IF <ls_result>-obj_type IS INITIAL.
-          lv_object = '<td rowspan="' &&
-            lv_span &&
-            '" valign="top">&nbsp;</td>'.
+          lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
 
           lv_package = lv_object.
         ELSE.
           lv_object = '<td rowspan="' &&
             lv_span &&
             '" valign="top"><a href="sapevent:jump?' &&
-            file_encode( iv_key = io_repo->get_key( ) is_file = <ls_result> ) &&
+            lv_file_encode &&
             '" class="plain">' &&
             <ls_result>-obj_type &&
             '&nbsp;' &&
