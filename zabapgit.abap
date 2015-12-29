@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.85'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.86'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2407,8 +2407,7 @@ CLASS lcl_objects_common IMPLEMENTATION.
       _raise 'error from RS_CORR_INSERT'.
     ENDIF.
 
-    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
-    ASSERT sy-subrc = 0.
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
     lv_title = ls_tpool-entry.
 
     SELECT SINGLE progname FROM reposrc INTO lv_progname
@@ -9656,7 +9655,7 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rv_class_name) TYPE string.
 
   PRIVATE SECTION.
-    CLASS-METHODS resolve_tabl
+    CLASS-METHODS resolve_ddic
       CHANGING ct_tadir TYPE lcl_tadir=>ty_tadir_tt
       RAISING  lcx_exception.
 
@@ -10088,9 +10087,7 @@ CLASS lcl_objects IMPLEMENTATION.
       CASE <ls_tadir>-object.
         WHEN 'SUSC'.
           <ls_tadir>-korrnum = '5000'.
-        WHEN 'TTYP'.
-          <ls_tadir>-korrnum = '6000'.
-        WHEN 'TABL' OR 'VIEW'.
+        WHEN 'TTYP' OR 'TABL' OR 'VIEW'.
           <ls_tadir>-korrnum = '7000'.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
@@ -10112,7 +10109,7 @@ CLASS lcl_objects IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-    resolve_tabl( CHANGING ct_tadir = lt_tadir ).
+    resolve_ddic( CHANGING ct_tadir = lt_tadir ).
 
     SORT lt_tadir BY korrnum ASCENDING.
 
@@ -10125,47 +10122,54 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD resolve_tabl.
+  METHOD resolve_ddic.
 * this will make sure the deletion sequence of structures/tables work
 * in case they have dependencies with .INCLUDE
 
     TYPES: BEGIN OF ty_edge,
-             from TYPE sobj_name,
-             to   TYPE sobj_name,
+             from TYPE ty_item,
+             to   TYPE ty_item,
            END OF ty_edge.
 
-    DATA: lt_nodes       TYPE TABLE OF sobj_name,
-          lt_edges       TYPE TABLE OF ty_edge,
-          lt_findstrings TYPE TABLE OF rsfind,
-          lv_plus        TYPE i VALUE 0,
-          lv_index       TYPE i,
-          lv_before      TYPE i,
-          lt_founds      TYPE TABLE OF rsfindlst,
-          lt_scope       TYPE STANDARD TABLE OF seu_obj.
+    DATA: lt_nodes        TYPE TABLE OF ty_item,
+          lt_edges        TYPE TABLE OF ty_edge,
+          lt_findstrings  TYPE TABLE OF rsfind,
+          lv_plus         TYPE i VALUE 1,
+          lv_find_obj_cls TYPE euobj-id,
+          lv_index        TYPE i,
+          lv_before       TYPE i,
+          lt_founds       TYPE TABLE OF rsfindlst,
+          lt_scope        TYPE STANDARD TABLE OF seu_obj.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir,
                    <ls_edge>  LIKE LINE OF lt_edges,
                    <ls_found> LIKE LINE OF lt_founds,
-                   <lv_node>  LIKE LINE OF lt_nodes.
+                   <ls_node>  LIKE LINE OF lt_nodes.
 
 
 * build nodes
-    LOOP AT ct_tadir ASSIGNING <ls_tadir> WHERE object = 'TABL'.
-      APPEND <ls_tadir>-obj_name TO lt_nodes.
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>
+        WHERE object = 'TABL'
+        OR object = 'TTYP'.
+      APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+      <ls_node>-obj_name = <ls_tadir>-obj_name.
+      <ls_node>-obj_type = <ls_tadir>-object.
     ENDLOOP.
 
     APPEND 'TABL' TO lt_scope.
     APPEND 'STRU' TO lt_scope.
+    APPEND 'TTYP' TO lt_scope.
 
 * build edges
-    LOOP AT lt_nodes ASSIGNING <lv_node>.
+    LOOP AT lt_nodes ASSIGNING <ls_node>.
 
       CLEAR lt_findstrings.
-      APPEND <lv_node> TO lt_findstrings.
+      APPEND <ls_node>-obj_name TO lt_findstrings.
+      lv_find_obj_cls = <ls_node>-obj_type.
 
       CALL FUNCTION 'RS_EU_CROSSREF'
         EXPORTING
-          i_find_obj_cls           = 'TABL'
+          i_find_obj_cls           = lv_find_obj_cls
         TABLES
           i_findstrings            = lt_findstrings
           o_founds                 = lt_founds
@@ -10186,24 +10190,39 @@ CLASS lcl_objects IMPLEMENTATION.
 
       LOOP AT lt_founds ASSIGNING <ls_found>.
         APPEND INITIAL LINE TO lt_edges ASSIGNING <ls_edge>.
-        <ls_edge>-from = <lv_node>.
-        <ls_edge>-to   = <ls_found>-object.
+        <ls_edge>-from = <ls_node>.
+
+        <ls_edge>-to-obj_name   = <ls_found>-object.
+        CASE <ls_found>-object_cls.
+          WHEN 'DS'.
+            <ls_edge>-to-obj_type = 'TABL'.
+          WHEN 'DA'.
+            <ls_edge>-to-obj_type = 'TTYP'.
+          WHEN OTHERS.
+            _raise 'resolve_ddic, unknown object_cls'.
+        ENDCASE.
       ENDLOOP.
 
     ENDLOOP.
 
     DO.
       lv_before = lines( lt_nodes ).
-      LOOP AT lt_nodes ASSIGNING <lv_node>.
+      LOOP AT lt_nodes ASSIGNING <ls_node>.
         lv_index = sy-tabix.
-        READ TABLE lt_edges WITH KEY from = <lv_node> TRANSPORTING NO FIELDS.
+        READ TABLE lt_edges WITH KEY
+          from-obj_name = <ls_node>-obj_name
+          from-obj_type = <ls_node>-obj_type
+          TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
           LOOP AT ct_tadir ASSIGNING <ls_tadir>
-              WHERE obj_name = <lv_node> AND object = 'TABL'.
+              WHERE obj_name = <ls_node>-obj_name
+              AND object = <ls_node>-obj_type.
             <ls_tadir>-korrnum = <ls_tadir>-korrnum + lv_plus.
             CONDENSE <ls_tadir>-korrnum.
           ENDLOOP.
-          DELETE lt_edges WHERE to = <lv_node>.
+          DELETE lt_edges
+            WHERE to-obj_name = <ls_node>-obj_name
+            AND to-obj_type = <ls_node>-obj_type.
           DELETE lt_nodes INDEX lv_index.
           EXIT. " make sure the sequence is fixed
         ENDIF.
@@ -10214,7 +10233,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_plus = lv_plus + 1.
     ENDDO.
 
-  ENDMETHOD.                    "resolve_tabl
+  ENDMETHOD.                    "resolve_ddic
 
   METHOD delete_obj.
 
