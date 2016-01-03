@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.86'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.87'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3694,7 +3694,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
            ls_vseoclass-createdon,
            ls_vseoclass-changedby,
            ls_vseoclass-changedon,
-           ls_vseoclass-r3release.
+           ls_vseoclass-r3release,
+           ls_vseoclass-chgdanyby,
+           ls_vseoclass-chgdanyon.
 
     CLEAR: ls_vseointerf-uuid,
            ls_vseointerf-author,
