@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.87'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.88'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3295,6 +3295,8 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_common FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
+    CLASS-DATA: gv_skip_testclass TYPE abap_bool.
+
     CLASS-METHODS deserialize_abap
       IMPORTING is_item    TYPE ty_item
                 it_files   TYPE ty_files_tt
@@ -3475,6 +3477,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_testclasses.
 
+    DATA: lv_line1 LIKE LINE OF rt_source,
+          lv_line2 LIKE LINE OF rt_source.
+
+
     CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
       EXPORTING
         clskey                       = is_clskey
@@ -3487,6 +3493,27 @@ CLASS lcl_object_clas IMPLEMENTATION.
         OTHERS                       = 3.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
       _raise 'Error from get_include_source, test'.
+    ENDIF.
+
+* when creating classes in Eclipse it automatically generates the
+* testclass include, but it is not needed, so skip to avoid
+* creating an extra file in the repository.
+* Also remove it if the content is manually removed, but
+* the class still thinks it contains tests
+    gv_skip_testclass = abap_false.
+    IF lines( rt_source ) = 2.
+      READ TABLE rt_source INDEX 1 INTO lv_line1.
+      READ TABLE rt_source INDEX 2 INTO lv_line2.
+      IF lv_line1(3) = '*"*' AND lv_line2 IS INITIAL.
+        gv_skip_testclass = abap_true.
+      ENDIF.
+    ELSEIF lines( rt_source ) = 1.
+      READ TABLE rt_source INDEX 1 INTO lv_line1.
+      IF lv_line1(3) = '*"*' OR lv_line1 IS INITIAL.
+        gv_skip_testclass = abap_true.
+      ENDIF.
+    ELSEIF lines( rt_source ) = 0.
+      gv_skip_testclass = abap_true.
     ENDIF.
 
   ENDMETHOD.                    "serialize_test
@@ -3632,7 +3659,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       ENDIF.
 
       lt_source = serialize_testclasses( ls_clskey ).
-      IF NOT lt_source[] IS INITIAL.
+      IF NOT lt_source[] IS INITIAL AND gv_skip_testclass = abap_false.
         ls_file = abap_to_file( is_item  = is_item
                                 iv_extra = 'testclasses'
                                 it_abap  = lt_source ).     "#EC NOTEXT
@@ -3697,6 +3724,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
            ls_vseoclass-r3release,
            ls_vseoclass-chgdanyby,
            ls_vseoclass-chgdanyon.
+
+    IF gv_skip_testclass = abap_true.
+      CLEAR ls_vseoclass-with_unit_tests.
+    ENDIF.
 
     CLEAR: ls_vseointerf-uuid,
            ls_vseointerf-author,
