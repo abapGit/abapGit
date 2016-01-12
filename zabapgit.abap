@@ -1440,7 +1440,7 @@ CLASS lcl_xml IMPLEMENTATION.
       li_parser = mi_ixml->create_parser( stream_factory = li_stream_factory
                                           istream        = li_istream
                                           document       = mi_xml_doc ).
-      li_parser->set_normalizing( is_normalizing = abap_false ).
+      li_parser->set_normalizing( abap_false ).
       IF li_parser->parse( ) <> 0.
         error( li_parser ).
       ENDIF.
@@ -2262,6 +2262,130 @@ INTERFACE lif_object.
 
 ENDINTERFACE.
 
+CLASS lcl_objects_activation DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS add
+      IMPORTING iv_type TYPE trobjtype
+                iv_name TYPE clike
+      RAISING   lcx_exception.
+
+    CLASS-METHODS add_item
+      IMPORTING is_item TYPE ty_item
+      RAISING   lcx_exception.
+
+    CLASS-METHODS activate
+      RAISING lcx_exception.
+
+    CLASS-METHODS clear.
+
+  PRIVATE SECTION.
+    CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
+                gt_programs TYPE TABLE OF dwinactiv.
+
+ENDCLASS.
+
+CLASS lcl_objects_activation IMPLEMENTATION.
+
+  METHOD add_item.
+    add( iv_type = is_item-obj_type
+         iv_name = is_item-obj_name ).
+  ENDMETHOD.
+
+  METHOD clear.
+    CLEAR: gt_ddic,
+           gt_programs.
+  ENDMETHOD.
+
+  METHOD activate.
+
+* ddic
+    IF NOT gt_ddic IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_true
+          with_popup             = abap_true
+        TABLES
+          objects                = gt_ddic
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          OTHERS                 = 4.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+* programs
+    IF NOT gt_programs IS INITIAL.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = abap_false
+          with_popup             = abap_true
+        TABLES
+          objects                = gt_programs
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          OTHERS                 = 4.
+      IF sy-subrc <> 0.
+        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.                    "activate
+
+  METHOD add.
+
+* function group SEWORKINGAREA
+* function module RS_INSERT_INTO_WORKING_AREA
+* class CL_WB_ACTIVATION_WORK_AREA
+
+    DATA: lt_objects  TYPE dwinactiv_tab,
+          lv_obj_name TYPE dwinactiv-obj_name.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
+
+
+    lv_obj_name = iv_name.
+
+* todo, refactoring
+    CASE iv_type.
+      WHEN 'CLAS' OR 'WDYN'.
+        CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
+          EXPORTING
+            obj_name         = lv_obj_name
+            object           = iv_type
+          TABLES
+            inactive_objects = lt_objects
+          EXCEPTIONS
+            object_not_found = 1
+            OTHERS           = 2.
+        IF sy-subrc <> 0.
+          _raise 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT'.
+        ENDIF.
+
+        APPEND LINES OF lt_objects TO gt_programs.
+      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'.
+* todo also insert_into_working_area?
+        APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
+        <ls_object>-object   = iv_type.
+        <ls_object>-obj_name = lv_obj_name.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO' OR 'TYPE'.
+* these seem to go into the workarea automatically
+        APPEND INITIAL LINE TO gt_programs ASSIGNING <ls_object>.
+        <ls_object>-object   = iv_type.
+        <ls_object>-obj_name = lv_obj_name.
+      WHEN OTHERS.
+        _raise 'activate, unknown type'.
+    ENDCASE.
+
+  ENDMETHOD.                    "activate
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_super DEFINITION
 *----------------------------------------------------------------------*
@@ -2272,10 +2396,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING is_item TYPE ty_item.
-
-* todo, move these to new activation class
-    CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
-                gt_programs TYPE TABLE OF dwinactiv.
 
   PROTECTED SECTION.
 
@@ -2342,12 +2462,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
                 iv_extra       TYPE clike OPTIONAL
                 it_abap        TYPE STANDARD TABLE
       RETURNING VALUE(rs_file) TYPE ty_file
-      RAISING   lcx_exception.
-
-* todo, change importing to is_item type instad?
-    CLASS-METHODS activation_add
-      IMPORTING iv_type TYPE trobjtype
-                iv_name TYPE clike
       RAISING   lcx_exception.
 
     CLASS-METHODS corr_insert
@@ -2526,8 +2640,8 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
     ENDIF.
 
-    activation_add( iv_type = 'REPS'
-                    iv_name = is_progdir-name ).
+    lcl_objects_activation=>add( iv_type = 'REPS'
+                                 iv_name = is_progdir-name ).
 
   ENDMETHOD.                    "deserialize_program
 
@@ -2847,53 +2961,6 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   ENDMETHOD.                    "filename
 
-  METHOD activation_add.
-
-* function group SEWORKINGAREA
-* function module RS_INSERT_INTO_WORKING_AREA
-* class CL_WB_ACTIVATION_WORK_AREA
-
-    DATA: lt_objects  TYPE dwinactiv_tab,
-          lv_obj_name TYPE dwinactiv-obj_name.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
-
-
-    lv_obj_name = iv_name.
-
-* todo, refactoring
-    CASE iv_type.
-      WHEN 'CLAS' OR 'WDYN'.
-        CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
-          EXPORTING
-            obj_name         = lv_obj_name
-            object           = iv_type
-          TABLES
-            inactive_objects = lt_objects
-          EXCEPTIONS
-            object_not_found = 1
-            OTHERS           = 2.
-        IF sy-subrc <> 0.
-          _raise 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT'.
-        ENDIF.
-
-        APPEND LINES OF lt_objects TO gt_programs.
-      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'.
-* todo also insert_into_working_area?
-        APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
-        <ls_object>-object   = iv_type.
-        <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO' OR 'TYPE'.
-* these seem to go into the workarea automatically
-        APPEND INITIAL LINE TO gt_programs ASSIGNING <ls_object>.
-        <ls_object>-object   = iv_type.
-        <ls_object>-obj_name = lv_obj_name.
-      WHEN OTHERS.
-        _raise 'activate, unknown type'.
-    ENDCASE.
-
-  ENDMETHOD.                    "activate
-
   METHOD read_abap.
 
     DATA: lv_filename TYPE string,
@@ -3122,8 +3189,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
       _raise 'error from DDIF_DOMA_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -3255,8 +3321,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       _raise 'error from DDIF_DTEL_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -3273,7 +3338,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
 
   PRIVATE SECTION.
-    DATA: gv_skip_testclass TYPE abap_bool.
+    DATA mv_skip_testclass TYPE abap_bool.
 
     METHODS deserialize_abap
       IMPORTING it_files   TYPE ty_files_tt
@@ -3282,11 +3347,11 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
-      IMPORTING io_xml  TYPE REF TO lcl_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     METHODS deserialize_docu
-      IMPORTING io_xml  TYPE REF TO lcl_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     METHODS exists
@@ -3474,20 +3539,20 @@ CLASS lcl_object_clas IMPLEMENTATION.
 * creating an extra file in the repository.
 * Also remove it if the content is manually removed, but
 * the class still thinks it contains tests
-    gv_skip_testclass = abap_false.
+    mv_skip_testclass = abap_false.
     IF lines( rt_source ) = 2.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
       READ TABLE rt_source INDEX 2 INTO lv_line2.
       IF lv_line1(3) = '*"*' AND lv_line2 IS INITIAL.
-        gv_skip_testclass = abap_true.
+        mv_skip_testclass = abap_true.
       ENDIF.
     ELSEIF lines( rt_source ) = 1.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
       IF lv_line1(3) = '*"*' OR lv_line1 IS INITIAL.
-        gv_skip_testclass = abap_true.
+        mv_skip_testclass = abap_true.
       ENDIF.
     ELSEIF lines( rt_source ) = 0.
-      gv_skip_testclass = abap_true.
+      mv_skip_testclass = abap_true.
     ENDIF.
 
   ENDMETHOD.                    "serialize_test
@@ -3633,7 +3698,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       ENDIF.
 
       lt_source = serialize_testclasses( ls_clskey ).
-      IF NOT lt_source[] IS INITIAL AND gv_skip_testclass = abap_false.
+      IF NOT lt_source[] IS INITIAL AND mv_skip_testclass = abap_false.
         ls_file = abap_to_file( is_item  = ms_item
                                 iv_extra = 'testclasses'
                                 it_abap  = lt_source ).     "#EC NOTEXT
@@ -3699,7 +3764,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
            ls_vseoclass-chgdanyby,
            ls_vseoclass-chgdanyon.
 
-    IF gv_skip_testclass = abap_true.
+    IF mv_skip_testclass = abap_true.
       CLEAR ls_vseoclass-with_unit_tests.
     ENDIF.
 
@@ -3826,8 +3891,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
       _raise 'error from INSERT TEXTPOOL'.
     ENDIF.
 
-    activation_add( iv_type = 'REPT'
-                    iv_name = lv_cp ).
+    lcl_objects_activation=>add( iv_type = 'REPT'
+                                 iv_name = lv_cp ).
 
   ENDMETHOD.                    "deserialize_textpool
 
@@ -3963,8 +4028,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         _raise 'save failure'.
     ENDTRY.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -4848,8 +4912,8 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PRIVATE SECTION.
 
     DATA:
-      gt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
-      gt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs.
+      mt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
+      mt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs.
 
     METHODS:
       get_limu_objects
@@ -4962,8 +5026,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_obj_new    TYPE svrs2_versionable_object,
           ls_obj_old    TYPE svrs2_versionable_object.
 
-    FIELD-SYMBOLS: <ls_component> LIKE LINE OF gt_components,
-                   <ls_source>    LIKE LINE OF gt_sources.
+    FIELD-SYMBOLS: <ls_component> LIKE LINE OF mt_components,
+                   <ls_source>    LIKE LINE OF mt_sources.
 
 
     ls_key-component_name = is_controller-definition-component_name.
@@ -4993,12 +5057,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     APPEND is_controller-definition TO ls_obj_old-wdyc-defin.
 
-    LOOP AT gt_components ASSIGNING <ls_component>
+    LOOP AT mt_components ASSIGNING <ls_component>
         WHERE component_name = ls_key-component_name
         AND controller_name = ls_key-controller_name.
       APPEND <ls_component> TO ls_obj_old-wdyc-ccomp.
     ENDLOOP.
-    LOOP AT gt_sources ASSIGNING <ls_source>
+    LOOP AT mt_sources ASSIGNING <ls_source>
         WHERE component_name = ls_key-component_name
         AND controller_name = ls_key-controller_name.
       APPEND <ls_source> TO ls_obj_old-wdyc-ccoms.
@@ -5197,8 +5261,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       _raise 'error from WDYC_GET_OBJECT'.
     ENDIF.
 
-    APPEND LINES OF lt_components TO gt_components.
-    APPEND LINES OF lt_sources TO gt_sources.
+    APPEND LINES OF lt_components TO mt_components.
+    APPEND LINES OF lt_sources TO mt_sources.
 
     READ TABLE lt_definition INDEX 1 INTO rs_controller-definition.
     IF sy-subrc <> 0.
@@ -5332,8 +5396,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
 
 
-    CLEAR gt_components.
-    CLEAR gt_sources.
+    CLEAR mt_components.
+    CLEAR mt_sources.
 
     lt_objects = get_limu_objects( ).
 
@@ -5357,12 +5421,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       definition-component_name ASCENDING
       definition-controller_name ASCENDING.
 
-    SORT gt_components BY
+    SORT mt_components BY
       component_name ASCENDING
       controller_name ASCENDING
       cmpname ASCENDING.
 
-    SORT gt_sources BY
+    SORT mt_sources BY
       component_name ASCENDING
       controller_name ASCENDING
       cmpname ASCENDING
@@ -5381,9 +5445,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     CREATE OBJECT lo_xml.
     lo_xml->structure_add( ls_component ).
-    lo_xml->table_add( it_table = gt_components
+    lo_xml->table_add( it_table = mt_components
                        iv_name  = 'COMPONENTS' ).
-    lo_xml->table_add( it_table = gt_sources
+    lo_xml->table_add( it_table = mt_sources
                        iv_name  = 'SOURCES' ).
     ls_file = xml_to_file( is_item = ms_item
                            io_xml  = lo_xml ).
@@ -5408,12 +5472,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXPORTING
         iv_name  = 'COMPONENTS'
       CHANGING
-        ct_table = gt_components ).
+        ct_table = mt_components ).
     lo_xml->table_read(
       EXPORTING
         iv_name  = 'SOURCES'
       CHANGING
-        ct_table = gt_sources ).
+        ct_table = mt_sources ).
 
     ls_component-comp_metadata-definition-author = sy-uname.
     ls_component-comp_metadata-definition-createdon = sy-datum.
@@ -5430,8 +5494,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       recover_view( <ls_view> ).
     ENDLOOP.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -6224,8 +6287,7 @@ CLASS lcl_object_type IMPLEMENTATION.
             it_source   = lt_source
             iv_devclass = iv_package ).
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -6808,8 +6870,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       _raise 'error from DDIF_TABL_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
 * handle indexes
     LOOP AT lt_dd12v INTO ls_dd12v.
@@ -6848,8 +6909,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         IMPORTING
           obj_name = lv_tname.
 
-      activation_add( iv_type = 'INDX'
-                      iv_name = lv_tname ).
+      lcl_objects_activation=>add( iv_type = 'INDX'
+                                   iv_name = lv_tname ).
 
     ENDLOOP.
 
@@ -6950,8 +7011,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         _raise 'Unsupported ENHO type'.
     ENDCASE.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -7174,8 +7234,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
       _raise 'error from DDIF_ENQU_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -7329,8 +7388,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
       _raise 'error from DDIF_SHLP_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -8016,8 +8074,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       INSERT REPORT lv_include FROM lt_source.
 
-      activation_add( iv_type = 'FUNC'
-                      iv_name = <ls_functab>-funcname ).
+      lcl_objects_activation=>add( iv_type = 'FUNC'
+                                   iv_name = <ls_functab>-funcname ).
 
     ENDLOOP.
 
@@ -8632,8 +8690,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       _raise 'error from DDIF_VIEW_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -8918,8 +8975,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
       _raise 'error from DDIF_TTYP_PUT'.
     ENDIF.
 
-    activation_add( iv_type = ms_item-obj_type
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -8941,7 +8997,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_super FINAL.
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
-      IMPORTING io_xml  TYPE REF TO lcl_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
@@ -9006,8 +9062,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
       _raise 'error from INSERT TEXTPOOL'.
     ENDIF.
 
-    activation_add( iv_type = 'REPT'
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add( iv_type = 'REPT'
+                                 iv_name = ms_item-obj_name ).
 
   ENDMETHOD.                    "deserialize_textpool
 
@@ -9096,8 +9152,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
       _raise 'error from RS_CUA_INTERNAL_WRITE'.
     ENDIF.
 
-    activation_add( iv_type = 'CUAD'
-                    iv_name = ms_item-obj_name ).
+    lcl_objects_activation=>add( iv_type = 'CUAD'
+                                 iv_name = ms_item-obj_name ).
 
   ENDMETHOD.                    "deserialize_cua
 
@@ -9191,8 +9247,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
       CONCATENATE ls_header-program ls_header-screen INTO lv_name RESPECTING BLANKS.
 
-      activation_add( iv_type = 'DYNP'
-                      iv_name = lv_name ).
+      lcl_objects_activation=>add( iv_type = 'DYNP'
+                                   iv_name = lv_name ).
 
     ENDDO.
 
@@ -9262,9 +9318,6 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING iv_current  TYPE i
                 iv_total    TYPE i
                 iv_obj_name TYPE tadir-obj_name.
-
-    CLASS-METHODS activate
-      RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_object DEFINITION
 
@@ -9847,8 +9900,8 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: li_obj     TYPE REF TO lif_object.
 
 
-        li_obj = create_object( is_item ).
-        li_obj->delete( ).
+    li_obj = create_object( is_item ).
+    li_obj->delete( ).
 
   ENDMETHOD.                    "delete
 
@@ -9882,8 +9935,7 @@ CLASS lcl_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 
-    CLEAR lcl_objects_super=>gt_ddic[].
-    CLEAR lcl_objects_super=>gt_programs[].
+    lcl_objects_activation=>clear( ).
 
     lt_results = lcl_file_status=>status( it_files   = it_files
                                           iv_package = iv_package ).
@@ -9914,51 +9966,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
     ENDLOOP.
 
-    activate( ).
+    lcl_objects_activation=>activate( ).
 
     update_package_tree( iv_package ).
 
   ENDMETHOD.                    "deserialize
-
-  METHOD activate.
-
-* ddic
-    IF NOT lcl_objects_super=>gt_ddic[] IS INITIAL.
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          activate_ddic_objects  = abap_true
-          with_popup             = abap_true
-        TABLES
-          objects                = lcl_objects_super=>gt_ddic
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
-      IF sy-subrc <> 0.
-        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
-      ENDIF.
-    ENDIF.
-
-* programs
-    IF NOT lcl_objects_super=>gt_programs[] IS INITIAL.
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          activate_ddic_objects  = abap_false
-          with_popup             = abap_true
-        TABLES
-          objects                = lcl_objects_super=>gt_programs
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
-      IF sy-subrc <> 0.
-        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.                    "activate
 
 ENDCLASS.                    "lcl_object IMPLEMENTATION
 
