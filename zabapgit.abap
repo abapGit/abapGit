@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.91'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.92'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -873,6 +873,10 @@ CLASS lcl_tadir DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS:
+      check_exists
+        IMPORTING it_tadir        TYPE ty_tadir_tt
+        RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
+        RAISING   lcx_exception,
       build
         IMPORTING iv_package      TYPE tadir-devclass
                   iv_parent       TYPE tadir-devclass
@@ -881,105 +885,6 @@ CLASS lcl_tadir DEFINITION FINAL.
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_tadir DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_tadir IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_tadir IMPLEMENTATION.
-
-  METHOD read_single.
-
-    DATA: lv_obj_name TYPE tadir-obj_name.
-
-
-    IF iv_object = 'SICF'.
-      CONCATENATE iv_obj_name '%' INTO lv_obj_name.
-    ELSE.
-      lv_obj_name = iv_obj_name.
-    ENDIF.
-
-    SELECT SINGLE * FROM tadir INTO rs_tadir
-      WHERE pgmid = iv_pgmid
-      AND object = iv_object
-      AND obj_name LIKE lv_obj_name.                      "#EC CI_SUBRC
-
-  ENDMETHOD.                    "read_single
-
-  METHOD read.
-
-* start recursion
-    rt_tadir = build( iv_package = iv_package
-                      iv_parent  = ''
-                      iv_path    = '' ).
-
-  ENDMETHOD.                    "read
-
-  METHOD build.
-
-    DATA: lv_index    TYPE i,
-          lt_tadir    TYPE ty_tadir_tt,
-          lt_tdevc    TYPE STANDARD TABLE OF tdevc,
-          lv_len      TYPE i,
-          lv_path     TYPE string,
-          lv_category TYPE seoclassdf-category.
-
-    FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
-                   <ls_tadir> LIKE LINE OF rt_tadir.
-
-
-    SELECT * FROM tadir
-      INTO CORRESPONDING FIELDS OF TABLE rt_tadir
-      WHERE devclass = iv_package
-      AND object <> 'DEVC'
-      AND object <> 'SOTR'
-      ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
-
-    LOOP AT rt_tadir ASSIGNING <ls_tadir>.
-      lv_index = sy-tabix.
-
-      <ls_tadir>-path = iv_path.
-
-      CASE <ls_tadir>-object.
-        WHEN 'SICF'.
-          <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
-        WHEN 'INTF'.
-          SELECT SINGLE category FROM seoclassdf INTO lv_category
-            WHERE clsname = <ls_tadir>-obj_name
-            AND ( version = '1' OR version = '0' ) ##warn_ok.
-          IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
-            DELETE rt_tadir INDEX lv_index.
-          ENDIF.
-      ENDCASE.
-    ENDLOOP.
-
-* look for subpackages
-    SELECT * FROM tdevc INTO TABLE lt_tdevc
-      WHERE parentcl = iv_package
-      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
-    LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
-      lv_len = strlen( iv_package ).
-      IF <ls_tdevc>-devclass(lv_len) <> iv_package.
-        _raise 'Unexpected package naming'.
-      ENDIF.
-
-      lv_path = <ls_tdevc>-devclass+lv_len.
-      IF lv_path(1) = '_'.
-        lv_path = lv_path+1.
-      ENDIF.
-      TRANSLATE lv_path TO LOWER CASE.
-      CONCATENATE iv_path lv_path '/' INTO lv_path.
-
-      lt_tadir = build( iv_package = <ls_tdevc>-devclass
-                        iv_parent  = iv_package
-                        iv_path    = lv_path ).
-      APPEND LINES OF lt_tadir TO rt_tadir.
-    ENDLOOP.
-
-  ENDMETHOD.                    "build
-
-ENDCLASS.                    "lcl_tadir IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_user DEFINITION
@@ -2255,6 +2160,9 @@ INTERFACE lif_object.
       RAISING   lcx_exception,
     delete
       RAISING lcx_exception,
+    exists
+      RETURNING VALUE(rv_bool) TYPE abap_bool
+      RAISING   lcx_exception,
     jump
       RAISING lcx_exception.
 
@@ -3112,6 +3020,23 @@ ENDCLASS.                    "lcl_object_doma DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_doma IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+
+    DATA: lv_domname TYPE dd01l-domname.
+
+
+    SELECT SINGLE domname FROM dd01l INTO lv_domname
+      WHERE domname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD lif_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DOMA'
@@ -3250,6 +3175,23 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_dtel IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+
+    DATA: lv_rollname TYPE dd04l-rollname.
+
+
+    SELECT SINGLE rollname FROM dd04l INTO lv_rollname
+      WHERE rollname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD lif_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DDTYPE'
@@ -3383,10 +3325,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING io_xml TYPE REF TO lcl_xml
       RAISING   lcx_exception.
 
-    METHODS exists
-      IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rv_exists) TYPE sap_bool.
-
     METHODS serialize_abap
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE ty_string_tt
@@ -3430,6 +3368,31 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_clas IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_clskey TYPE seoclskey.
+
+
+    ls_clskey-clsname = ms_item-obj_name.
+
+    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
+      EXPORTING
+        clskey        = ls_clskey
+      EXCEPTIONS
+        not_specified = 1
+        not_existing  = 2
+        is_interface  = 3
+        no_text       = 4
+        inconsistent  = 5
+        OTHERS        = 6.
+    IF sy-subrc = 2.
+      rv_bool = abap_false.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -3661,26 +3624,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "remove_signatures
 
-  METHOD exists.
-
-    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
-      EXPORTING
-        clskey        = is_clskey
-      EXCEPTIONS
-        not_specified = 1
-        not_existing  = 2
-        is_interface  = 3
-        no_text       = 4
-        inconsistent  = 5
-        OTHERS        = 6.
-    IF sy-subrc = 2.
-      rv_exists = abap_false.
-    ELSE.
-      rv_exists = abap_true.
-    ENDIF.
-
-  ENDMETHOD.                    "exists
-
   METHOD lif_object~serialize.
 
     DATA: lt_source TYPE seop_source_string,
@@ -3690,7 +3633,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
 
-    IF exists( ls_clskey ) = abap_false.
+    IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -4074,6 +4017,11 @@ ENDCLASS.                    "lcl_object_smim DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_smim IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD get_url_for_io.
 
     DATA: ls_io       TYPE skwf_io,
@@ -4387,6 +4335,11 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD lif_object~serialize.
 
@@ -4727,6 +4680,11 @@ ENDCLASS.                    "lcl_object_ssst DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssst IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD validate_font.
 
     DATA: lv_tdfamily TYPE tfo01-tdfamily.
@@ -4956,6 +4914,11 @@ ENDCLASS.                    "lcl_object_wdyn DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdyn IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD delta_definition.
 
@@ -5554,6 +5517,11 @@ ENDCLASS.                    "lcl_object_wdca DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdca IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD save.
 
     _raise 'WDCA, save, todo'.
@@ -5731,6 +5699,11 @@ ENDCLASS.                    "lcl_object_wdya DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdya IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD read.
 
     DATA: li_app  TYPE REF TO if_wdy_md_application,
@@ -5899,6 +5872,11 @@ ENDCLASS.                    "lcl_object_susc DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_suso IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml        TYPE REF TO lcl_xml,
@@ -6032,6 +6010,11 @@ ENDCLASS.                    "lcl_object_suso IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_object_susc IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml   TYPE REF TO lcl_xml,
@@ -6143,6 +6126,11 @@ ENDCLASS.                    "lcl_object_type DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_type IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD read.
 
@@ -6306,6 +6294,11 @@ ENDCLASS.                    "lcl_object_para DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_para IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml    TYPE REF TO lcl_xml,
@@ -6428,6 +6421,11 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssfo IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -6641,6 +6639,23 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_tabname TYPE dd02l-tabname.
+
+
+    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -6895,6 +6910,19 @@ ENDCLASS.                    "lcl_object_enho DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_enho IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+
+    DATA: ls_tadir TYPE tadir.
+
+    ls_tadir = lcl_tadir=>read_single(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lv_enh_id    TYPE enhname,
@@ -6903,15 +6931,11 @@ CLASS lcl_object_enho IMPLEMENTATION.
           lv_spot_name TYPE enhspotname,
           lo_xml       TYPE REF TO lcl_xml,
           lv_shorttext TYPE string,
-          ls_tadir     TYPE tadir,
           lt_impl      TYPE enh_badi_impl_data_it,
           li_enh_tool  TYPE REF TO if_enh_tool.
 
 
-    ls_tadir = lcl_tadir=>read_single(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name ).
-    IF ls_tadir IS INITIAL.
+    IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -7061,6 +7085,11 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_enqu IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-ENQU'
@@ -7200,6 +7229,11 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_shlp IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -7348,6 +7382,21 @@ ENDCLASS.                    "lcl_object_TRAN DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tran IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_tcode TYPE tstc-tcode.
+
+
+    SELECT SINGLE tcode FROM tstc INTO lv_tcode
+      WHERE tcode = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -7545,6 +7594,11 @@ ENDCLASS.                    "lcl_object_tobj DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tobj IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: ls_objh  TYPE objh,
@@ -7690,6 +7744,21 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_msag IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_arbgb TYPE t100a-arbgb.
+
+
+    SELECT SINGLE arbgb FROM t100a INTO lv_arbgb
+      WHERE arbgb = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -7874,6 +7943,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SEUF
 * function group SIFP
 * function group SUNI
+
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
 
   METHOD deserialize_functions.
 
@@ -8430,6 +8504,11 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_view IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-VIMA'
@@ -8598,6 +8677,11 @@ ENDCLASS.                    "lcl_object_nrob DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_nrob IMPLEMENTATION.
 
+  METHOD lif_object~exists.
+* todo, implement exists logic
+    rv_bool = abap_true.
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml        TYPE REF TO lcl_xml,
@@ -8736,6 +8820,22 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_ttyp IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_typename TYPE dd40l-typename.
+
+
+    SELECT SINGLE typename FROM dd40l INTO lv_typename
+      WHERE typename = ms_item-obj_name
+      AND as4local = 'A'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -8885,6 +8985,22 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_prog IMPLEMENTATION.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_progname TYPE reposrc-progname.
+
+
+    SELECT SINGLE progname FROM reposrc INTO lv_progname
+      WHERE progname = ms_item-obj_name
+      AND r3state = 'A'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -9158,6 +9274,10 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item        TYPE ty_item
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
+    CLASS-METHODS exists
+      IMPORTING is_item        TYPE ty_item
+      RETURNING VALUE(rv_bool) TYPE abap_bool.
+
   PRIVATE SECTION.
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item
@@ -9191,6 +9311,127 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_obj_name TYPE tadir-obj_name.
 
 ENDCLASS.                    "lcl_object DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_tadir IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_tadir IMPLEMENTATION.
+
+  METHOD read_single.
+
+    DATA: lv_obj_name TYPE tadir-obj_name.
+
+
+    IF iv_object = 'SICF'.
+      CONCATENATE iv_obj_name '%' INTO lv_obj_name.
+    ELSE.
+      lv_obj_name = iv_obj_name.
+    ENDIF.
+
+    SELECT SINGLE * FROM tadir INTO rs_tadir
+      WHERE pgmid = iv_pgmid
+      AND object = iv_object
+      AND obj_name LIKE lv_obj_name.                      "#EC CI_SUBRC
+
+  ENDMETHOD.                    "read_single
+
+  METHOD check_exists.
+
+    DATA: lv_exists TYPE abap_bool,
+          ls_item   TYPE ty_item.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+
+      lv_exists = lcl_objects=>exists( ls_item ).
+      IF lv_exists = abap_true.
+        APPEND <ls_tadir> TO rt_tadir.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD read.
+
+* start recursion
+    rt_tadir = build( iv_package = iv_package
+                      iv_parent  = ''
+                      iv_path    = '' ).
+
+    rt_tadir = check_exists( rt_tadir ).
+
+  ENDMETHOD.                    "read
+
+  METHOD build.
+
+    DATA: lv_index    TYPE i,
+          lt_tadir    TYPE ty_tadir_tt,
+          lt_tdevc    TYPE STANDARD TABLE OF tdevc,
+          lv_len      TYPE i,
+          lv_path     TYPE string,
+          lv_category TYPE seoclassdf-category.
+
+    FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
+                   <ls_tadir> LIKE LINE OF rt_tadir.
+
+
+    SELECT * FROM tadir
+      INTO CORRESPONDING FIELDS OF TABLE rt_tadir
+      WHERE devclass = iv_package
+      AND object <> 'DEVC'
+      AND object <> 'SOTR'
+      ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
+
+    LOOP AT rt_tadir ASSIGNING <ls_tadir>.
+      lv_index = sy-tabix.
+
+      <ls_tadir>-path = iv_path.
+
+      CASE <ls_tadir>-object.
+        WHEN 'SICF'.
+          <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
+        WHEN 'INTF'.
+          SELECT SINGLE category FROM seoclassdf INTO lv_category
+            WHERE clsname = <ls_tadir>-obj_name
+            AND ( version = '1' OR version = '0' ) ##warn_ok.
+          IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
+            DELETE rt_tadir INDEX lv_index.
+          ENDIF.
+      ENDCASE.
+    ENDLOOP.
+
+* look for subpackages
+    SELECT * FROM tdevc INTO TABLE lt_tdevc
+      WHERE parentcl = iv_package
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
+    LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
+      lv_len = strlen( iv_package ).
+      IF <ls_tdevc>-devclass(lv_len) <> iv_package.
+        _raise 'Unexpected package naming'.
+      ENDIF.
+
+      lv_path = <ls_tdevc>-devclass+lv_len.
+      IF lv_path(1) = '_'.
+        lv_path = lv_path+1.
+      ENDIF.
+      TRANSLATE lv_path TO LOWER CASE.
+      CONCATENATE iv_path lv_path '/' INTO lv_path.
+
+      lt_tadir = build( iv_package = <ls_tdevc>-devclass
+                        iv_parent  = iv_package
+                        iv_path    = lv_path ).
+      APPEND LINES OF lt_tadir TO rt_tadir.
+    ENDLOOP.
+
+  ENDMETHOD.                    "build
+
+ENDCLASS.                    "lcl_tadir IMPLEMENTATION
 
 CLASS lcl_file_status DEFINITION FINAL.
 
@@ -9579,6 +9820,21 @@ CLASS lcl_objects IMPLEMENTATION.
         rv_bool = abap_true.
       CATCH lcx_exception.
         rv_bool = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD exists.
+
+    DATA: li_obj TYPE REF TO lif_object.
+
+
+    TRY.
+        li_obj = create_object( is_item ).
+        rv_bool = li_obj->exists( ).
+      CATCH lcx_exception.
+* ignore all errors and assume the object exists
+        rv_bool = abap_true.
     ENDTRY.
 
   ENDMETHOD.
