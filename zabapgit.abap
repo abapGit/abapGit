@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.90'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.91'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2582,6 +2582,20 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
     DATA: ms_item  TYPE ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
+    METHODS:
+      corr_insert
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception,
+      jump_se11
+        IMPORTING iv_radio TYPE string
+                  iv_field TYPE string
+        RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_objects_super DEFINITION
+
+CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super .
+
+  PUBLIC SECTION.
     TYPES: BEGIN OF ty_progdir,
              name    TYPE progdir-name,
              state   TYPE progdir-state,
@@ -2615,27 +2629,16 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
              uccheck TYPE progdir-uccheck,
            END OF ty_progdir.
 
-    METHODS:
-      corr_insert
-        IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception.
-
-    CLASS-METHODS jump_se11
-      IMPORTING is_item  TYPE ty_item
-                iv_radio TYPE string
-                iv_field TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS read_progdir
-      IMPORTING iv_program        TYPE programm
-      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
-
     CLASS-METHODS serialize_program
       IMPORTING is_item    TYPE ty_item
                 io_files   TYPE REF TO lcl_objects_files
                 iv_program TYPE programm OPTIONAL
                 iv_extra   TYPE clike OPTIONAL
       RAISING   lcx_exception.
+
+    CLASS-METHODS read_progdir
+      IMPORTING iv_program        TYPE programm
+      RETURNING VALUE(rs_progdir) TYPE ty_progdir.
 
     CLASS-METHODS deserialize_program
       IMPORTING is_progdir TYPE ty_progdir
@@ -2645,7 +2648,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
-
     CLASS-METHODS serialize_dynpros
       IMPORTING iv_program_name TYPE programm
                 io_xml          TYPE REF TO lcl_xml
@@ -2655,19 +2657,72 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       IMPORTING iv_program_name TYPE programm
                 io_xml          TYPE REF TO lcl_xml
       RAISING   lcx_exception.
+ENDCLASS.
 
-ENDCLASS.                    "lcl_objects_super DEFINITION
+CLASS lcl_objects_program IMPLEMENTATION.
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_objects_super IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_objects_super IMPLEMENTATION.
+  METHOD serialize_program.
 
-  METHOD constructor.
-    ms_item  = is_item.
-  ENDMETHOD.
+    DATA: ls_progdir      TYPE ty_progdir,
+          lv_program_name TYPE programm,
+          lt_source       TYPE TABLE OF abaptxt255,
+          lt_tpool        TYPE textpool_table,
+          ls_tpool        LIKE LINE OF lt_tpool,
+          lo_xml          TYPE REF TO lcl_xml.
+
+    IF iv_program IS INITIAL.
+      lv_program_name = is_item-obj_name.
+    ELSE.
+      lv_program_name = iv_program.
+    ENDIF.
+
+    CALL FUNCTION 'RPY_PROGRAM_READ'
+      EXPORTING
+        program_name     = lv_program_name
+        with_lowercase   = abap_true
+      TABLES
+        source_extended  = lt_source
+        textelements     = lt_tpool
+      EXCEPTIONS
+        cancelled        = 1
+        not_found        = 2
+        permission_error = 3
+        OTHERS           = 4.
+    IF sy-subrc = 2.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      _raise 'Error reading program'.
+    ENDIF.
+
+    ls_progdir = read_progdir( lv_program_name ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ig_structure = ls_progdir
+                           iv_name      = 'PROGDIR' ).
+    IF ls_progdir-subc = '1'.
+      serialize_dynpros( iv_program_name = lv_program_name
+                         io_xml          = lo_xml ).
+      serialize_cua( iv_program_name = lv_program_name
+                     io_xml          = lo_xml ).
+    ENDIF.
+
+    IF lines( lt_tpool ) = 1.
+      READ TABLE lt_tpool INDEX 1 INTO ls_tpool.
+      ASSERT sy-subrc = 0.
+      IF ls_tpool-id = 'R' AND ls_tpool-key = '' AND ls_tpool-length = 0.
+        DELETE lt_tpool INDEX 1.
+      ENDIF.
+    ENDIF.
+
+    lo_xml->table_add( lt_tpool ).
+
+    io_files->add_xml( iv_extra = iv_extra
+                       io_xml   = lo_xml ).
+
+    io_files->add_abap( iv_extra = iv_extra
+                        it_abap  = lt_source ).
+
+  ENDMETHOD.                    "serialize_program
 
   METHOD deserialize_program.
 
@@ -2790,6 +2845,33 @@ CLASS lcl_objects_super IMPLEMENTATION.
                                  iv_name = is_progdir-name ).
 
   ENDMETHOD.                    "deserialize_program
+
+  METHOD read_progdir.
+
+    DATA: ls_sapdir TYPE progdir.
+
+
+    CALL FUNCTION 'READ_PROGDIR'
+      EXPORTING
+        i_progname = iv_program
+        i_state    = 'A'
+      IMPORTING
+        e_progdir  = ls_sapdir.
+    MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
+
+    CLEAR: rs_progdir-edtx,
+           rs_progdir-cnam,
+           rs_progdir-cdat,
+           rs_progdir-unam,
+           rs_progdir-udat,
+           rs_progdir-vern,
+           rs_progdir-rmand,
+           rs_progdir-sdate,
+           rs_progdir-stime,
+           rs_progdir-idate,
+           rs_progdir-itime.
+
+  ENDMETHOD.                    "read_progdir
 
   METHOD serialize_cua.
 
@@ -2925,95 +3007,18 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_dynpros
 
-  METHOD serialize_program.
+ENDCLASS.
 
-    DATA: ls_progdir      TYPE ty_progdir,
-          lv_program_name TYPE programm,
-          lt_source       TYPE TABLE OF abaptxt255,
-          lt_tpool        TYPE textpool_table,
-          ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO lcl_xml.
+*----------------------------------------------------------------------*
+*       CLASS lcl_objects_super IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_objects_super IMPLEMENTATION.
 
-    IF iv_program IS INITIAL.
-      lv_program_name = is_item-obj_name.
-    ELSE.
-      lv_program_name = iv_program.
-    ENDIF.
-
-    CALL FUNCTION 'RPY_PROGRAM_READ'
-      EXPORTING
-        program_name     = lv_program_name
-        with_lowercase   = abap_true
-      TABLES
-        source_extended  = lt_source
-        textelements     = lt_tpool
-      EXCEPTIONS
-        cancelled        = 1
-        not_found        = 2
-        permission_error = 3
-        OTHERS           = 4.
-    IF sy-subrc = 2.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      _raise 'Error reading program'.
-    ENDIF.
-
-    ls_progdir = read_progdir( lv_program_name ).
-
-    CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ig_structure = ls_progdir
-                           iv_name      = 'PROGDIR' ).
-    IF ls_progdir-subc = '1'.
-      serialize_dynpros( iv_program_name = lv_program_name
-                         io_xml          = lo_xml ).
-      serialize_cua( iv_program_name = lv_program_name
-                     io_xml          = lo_xml ).
-    ENDIF.
-
-    IF lines( lt_tpool ) = 1.
-      READ TABLE lt_tpool INDEX 1 INTO ls_tpool.
-      ASSERT sy-subrc = 0.
-      IF ls_tpool-id = 'R' AND ls_tpool-key = '' AND ls_tpool-length = 0.
-        DELETE lt_tpool INDEX 1.
-      ENDIF.
-    ENDIF.
-
-    lo_xml->table_add( lt_tpool ).
-
-    io_files->add_xml( iv_extra = iv_extra
-                       io_xml   = lo_xml ).
-
-    io_files->add_abap( iv_extra = iv_extra
-                        it_abap  = lt_source ).
-
-  ENDMETHOD.                    "serialize_program
-
-  METHOD read_progdir.
-
-    DATA: ls_sapdir TYPE progdir.
-
-
-    CALL FUNCTION 'READ_PROGDIR'
-      EXPORTING
-        i_progname = iv_program
-        i_state    = 'A'
-      IMPORTING
-        e_progdir  = ls_sapdir.
-    MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
-
-    CLEAR: rs_progdir-edtx,
-           rs_progdir-cnam,
-           rs_progdir-cdat,
-           rs_progdir-unam,
-           rs_progdir-udat,
-           rs_progdir-vern,
-           rs_progdir-rmand,
-           rs_progdir-sdate,
-           rs_progdir-stime,
-           rs_progdir-idate,
-           rs_progdir-itime.
-
-  ENDMETHOD.                    "read_progdir
+  METHOD constructor.
+    ms_item  = is_item.
+  ENDMETHOD.
 
   METHOD jump_se11.
 
@@ -3037,7 +3042,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
     <ls_bdcdata>-fnam = iv_field.
-    <ls_bdcdata>-fval = is_item-obj_name.
+    <ls_bdcdata>-fval = ms_item-obj_name.
 
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
@@ -3109,8 +3114,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-DOMA'
+    jump_se11( iv_radio = 'RSRD1-DOMA'
                iv_field = 'RSRD1-DOMA_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -3248,8 +3252,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-DDTYPE'
+    jump_se11( iv_radio = 'RSRD1-DDTYPE'
                iv_field = 'RSRD1-DDTYPE_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -5594,6 +5597,8 @@ CLASS lcl_object_wdca IMPLEMENTATION.
           lv_name   TYPE wdy_md_object_name.
 
 
+    CLEAR et_data.
+
     ls_key = ms_item-obj_name.
 
     TRY.
@@ -6275,8 +6280,7 @@ CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-TYMA'
+    jump_se11( iv_radio = 'RSRD1-TYMA'
                iv_field = 'RSRD1-TYMA_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -6640,8 +6644,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-DDTYPE'
+    jump_se11( iv_radio = 'RSRD1-DDTYPE'
                iv_field = 'RSRD1-DDTYPE_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -7060,8 +7063,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-ENQU'
+    jump_se11( iv_radio = 'RSRD1-ENQU'
                iv_field = 'RSRD1-ENQU_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -7201,8 +7203,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-SHMA'
+    jump_se11( iv_radio = 'RSRD1-SHMA'
                iv_field = 'RSRD1-SHMA_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -7821,7 +7822,7 @@ ENDCLASS.                    "lcl_object_view IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_super FINAL.
+CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
@@ -8431,8 +8432,7 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-VIMA'
+    jump_se11( iv_radio = 'RSRD1-VIMA'
                iv_field = 'RSRD1-VIMA_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -8739,8 +8739,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    jump_se11( is_item  = ms_item
-               iv_radio = 'RSRD1-DDTYPE'
+    jump_se11( iv_radio = 'RSRD1-DDTYPE'
                iv_field = 'RSRD1-DDTYPE_VAL' ).
 
   ENDMETHOD.                    "jump
@@ -8860,7 +8859,7 @@ ENDCLASS.                    "lcl_object_ttyp IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_super FINAL.
+CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
