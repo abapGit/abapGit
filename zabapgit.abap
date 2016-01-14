@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.92'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.93'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -4002,7 +4002,6 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_super FINAL.
       RETURNING VALUE(rv_filename) TYPE string.
 
     METHODS get_url_for_io
-      IMPORTING iv_loio      TYPE sdok_docid
       EXPORTING ev_url       TYPE string
                 ev_is_folder TYPE boole_d
       RAISING   lcx_not_found
@@ -4018,22 +4017,32 @@ ENDCLASS.                    "lcl_object_smim DEFINITION
 CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    TRY.
+        get_url_for_io( ).
+        rv_bool = abap_true.
+      CATCH lcx_not_found.
+        rv_bool = abap_false.
+    ENDTRY.
+
+
   ENDMETHOD.
 
   METHOD get_url_for_io.
 
     DATA: ls_io       TYPE skwf_io,
           lv_url      TYPE skwf_url,
-          ls_smimloio TYPE smimloio.
+          ls_smimloio TYPE smimloio,
+          lv_loio     TYPE sdok_docid.
 
+
+    lv_loio = ms_item-obj_name.
 
     CLEAR ev_url.
     CLEAR ev_is_folder.
 
     SELECT SINGLE * FROM smimloio INTO ls_smimloio
-      WHERE loio_id = iv_loio.                          "#EC CI_GENBUFF
+      WHERE loio_id = lv_loio.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
@@ -4104,8 +4113,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_io       TYPE sdok_docid,
-          lv_url      TYPE string,
+    DATA: lv_url      TYPE string,
           lv_folder   TYPE abap_bool,
           lv_filename TYPE string,
           ls_file     TYPE ty_file,
@@ -4114,13 +4122,8 @@ CLASS lcl_object_smim IMPLEMENTATION.
           li_api      TYPE REF TO if_mr_api.
 
 
-    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
-    lv_io = ms_item-obj_name.
-
     TRY.
         get_url_for_io(
-          EXPORTING
-            iv_loio      = lv_io
           IMPORTING
             ev_url       = lv_url
             ev_is_folder = lv_folder ).
@@ -4129,6 +4132,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     ENDTRY.
 
     IF lv_folder = abap_false.
+      li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
       li_api->get(
         EXPORTING
           i_url              = lv_url
@@ -4147,14 +4151,16 @@ CLASS lcl_object_smim IMPLEMENTATION.
       lv_filename = get_filename( lv_url ).
       CLEAR ls_file.
       ls_file-filename = build_filename( lv_filename ).
-      ls_file-path = '/'.
-      ls_file-data = lv_content.
+      ls_file-path     = '/'.
+      ls_file-data     = lv_content.
       mo_files->add( ls_file ).
     ENDIF.
 
     CREATE OBJECT lo_xml.
-    lo_xml->element_add( iv_name = 'URL' ig_element = lv_url ).
-    lo_xml->element_add( iv_name = 'FOLDER' ig_element = lv_folder ).
+    lo_xml->element_add( iv_name    = 'URL'
+                         ig_element = lv_url ).
+    lo_xml->element_add( iv_name    = 'FOLDER'
+                         ig_element = lv_folder ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -4236,24 +4242,18 @@ CLASS lcl_object_smim IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: li_api TYPE REF TO if_mr_api,
-          lv_url TYPE string,
-          lv_io  TYPE sdok_docid.
-
-
-    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
-    lv_io = ms_item-obj_name.
+          lv_url TYPE string.
 
 
     TRY.
         get_url_for_io(
-          EXPORTING
-            iv_loio = lv_io
           IMPORTING
             ev_url  = lv_url ).
       CATCH lcx_not_found.
         RETURN.
     ENDTRY.
 
+    li_api = cl_mime_repository_api=>if_mr_api~get_api( ).
     li_api->delete(
       EXPORTING
         i_url              = lv_url
@@ -4337,8 +4337,17 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 CLASS lcl_object_sicf IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: ls_icfservice TYPE icfservice.
+
+
+    read( IMPORTING es_icfservice = ls_icfservice ).
+    IF ls_icfservice IS INITIAL.
+      rv_bool = abap_false.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -4354,7 +4363,6 @@ CLASS lcl_object_sicf IMPLEMENTATION.
                     es_icfdocu    = ls_icfdocu
                     et_icfhandler = lt_icfhandler
                     ev_url        = lv_url ).
-
     IF ls_icfservice IS INITIAL.
       RETURN.
     ENDIF.
@@ -4366,7 +4374,8 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     lo_xml->element_add( lv_url ).
     lo_xml->structure_add( ls_icfservice ).
     lo_xml->structure_add( ls_icfdocu ).
-    lo_xml->table_add( iv_name = 'ICFHANDLER_TABLE' it_table = lt_icfhandler ).
+    lo_xml->table_add( iv_name  = 'ICFHANDLER_TABLE'
+                       it_table = lt_icfhandler ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -4681,8 +4690,18 @@ ENDCLASS.                    "lcl_object_ssst DEFINITION
 CLASS lcl_object_ssst IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_stylename TYPE stxsadm-stylename.
+
+
+    SELECT SINGLE stylename FROM stxsadm INTO lv_stylename
+      WHERE stylename = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD validate_font.
@@ -4916,8 +4935,20 @@ ENDCLASS.                    "lcl_object_wdyn DEFINITION
 CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_component_name TYPE wdy_component-component_name.
+
+
+    SELECT SINGLE component_name FROM wdy_component
+      INTO lv_component_name
+      WHERE component_name = ms_item-obj_name
+      AND version = 'A'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD delta_definition.
@@ -5518,8 +5549,17 @@ ENDCLASS.                    "lcl_object_wdca DEFINITION
 CLASS lcl_object_wdca IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: ls_outline TYPE wdy_cfg_outline_data.
+
+
+    read( IMPORTING es_outline = ls_outline ).
+    IF ls_outline IS INITIAL.
+      rv_bool = abap_false.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD save.
@@ -5700,8 +5740,23 @@ ENDCLASS.                    "lcl_object_wdya DEFINITION
 CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_name TYPE wdy_application_name.
+
+
+    lv_name = ms_item-obj_name.
+
+    TRY.
+        cl_wdy_md_application=>get_object_by_key(
+          name    = lv_name
+          version = 'A' ).
+        rv_bool = abap_true.
+      CATCH cx_wdy_md_not_existing.
+        rv_bool = abap_false.
+      CATCH cx_wdy_md_permission_failure.
+        _raise 'WDYA, permission failure'.
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD read.
@@ -5873,8 +5928,18 @@ ENDCLASS.                    "lcl_object_susc DEFINITION
 CLASS lcl_object_suso IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_objct TYPE tobj-objct.
+
+
+    SELECT SINGLE objct FROM tobj INTO lv_objct
+      WHERE objct = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -6011,8 +6076,18 @@ ENDCLASS.                    "lcl_object_suso IMPLEMENTATION
 CLASS lcl_object_susc IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_oclss TYPE tobc-oclss.
+
+
+    SELECT SINGLE oclss FROM tobc INTO lv_oclss
+      WHERE oclss = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -6128,8 +6203,14 @@ ENDCLASS.                    "lcl_object_type DEFINITION
 CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    TRY.
+        read( ).
+        rv_bool = abap_true.
+      CATCH lcx_not_found.
+        rv_bool = abap_false.
+    ENDTRY.
+
   ENDMETHOD.
 
   METHOD read.
@@ -6295,8 +6376,18 @@ ENDCLASS.                    "lcl_object_para DEFINITION
 CLASS lcl_object_para IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_paramid TYPE tpara-paramid.
+
+
+    SELECT SINGLE paramid FROM tpara INTO lv_paramid
+      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -6423,8 +6514,18 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_ssfo IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_formname TYPE stxfadm-formname.
+
+
+    SELECT SINGLE formname FROM stxfadm INTO lv_formname
+      WHERE formname = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~jump.
@@ -7086,8 +7187,20 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_enqu IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_viewname TYPE dd25l-viewname.
+
+
+    SELECT SINGLE viewname FROM dd25l INTO lv_viewname
+      WHERE viewname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~jump.
@@ -7231,8 +7344,19 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_shlp IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_shlpname TYPE dd30l-shlpname.
+
+
+    SELECT SINGLE shlpname FROM dd30l INTO lv_shlpname
+      WHERE shlpname = ms_item-obj_name
+      AND as4local = 'A'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~jump.
@@ -7595,8 +7719,19 @@ ENDCLASS.                    "lcl_object_tobj DEFINITION
 CLASS lcl_object_tobj IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_objectname TYPE objh-objectname.
+
+
+    SELECT SINGLE objectname FROM objh INTO lv_objectname
+      WHERE objectname = ms_item-obj_name(10)
+      AND objecttype = ms_item-obj_name+10.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -7945,8 +8080,22 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SUNI
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_pool  TYPE tlibg-area.
+
+
+    lv_pool = ms_item-obj_name.
+    CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
+      EXPORTING
+        function_pool   = lv_pool
+      EXCEPTIONS
+        pool_not_exists = 1.
+    IF sy-subrc = 1.
+      rv_bool = abap_false.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD deserialize_functions.
@@ -8412,16 +8561,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_pool  TYPE tlibg-area.
-
-
-    lv_pool = ms_item-obj_name.
-    CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
-      EXPORTING
-        function_pool   = lv_pool
-      EXCEPTIONS
-        pool_not_exists = 1.
-    IF sy-subrc = 1.
+    IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -8505,8 +8645,20 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_viewname TYPE dd25l-viewname.
+
+
+    SELECT SINGLE viewname FROM dd25l INTO lv_viewname
+      WHERE viewname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~jump.
@@ -8678,8 +8830,18 @@ ENDCLASS.                    "lcl_object_nrob DEFINITION
 CLASS lcl_object_nrob IMPLEMENTATION.
 
   METHOD lif_object~exists.
-* todo, implement exists logic
-    rv_bool = abap_true.
+
+    DATA: lv_object TYPE tnro-object.
+
+
+    SELECT SINGLE object FROM tnro INTO lv_object
+      WHERE object = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -9345,6 +9507,8 @@ CLASS lcl_tadir IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
 
+* rows from database table TADIR are not removed for
+* transportable objects until the transport is released
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
