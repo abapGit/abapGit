@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.93'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.94'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3029,11 +3029,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
       WHERE domname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -3184,11 +3180,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       WHERE rollname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -3386,11 +3378,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         no_text       = 4
         inconsistent  = 5
         OTHERS        = 6.
-    IF sy-subrc = 2.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = abap_true.
-    ENDIF.
+    rv_bool = boolc( sy-subrc <> 2 ).
 
   ENDMETHOD.
 
@@ -4025,7 +4013,6 @@ CLASS lcl_object_smim IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-
   ENDMETHOD.
 
   METHOD get_url_for_io.
@@ -4342,11 +4329,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
 
     read( IMPORTING es_icfservice = ls_icfservice ).
-    IF ls_icfservice IS INITIAL.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = abap_true.
-    ENDIF.
+    rv_bool = boolc( NOT ls_icfservice IS INITIAL ).
 
   ENDMETHOD.
 
@@ -4696,11 +4679,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
     SELECT SINGLE stylename FROM stxsadm INTO lv_stylename
       WHERE stylename = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -4943,11 +4922,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       INTO lv_component_name
       WHERE component_name = ms_item-obj_name
       AND version = 'A'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -5554,11 +5529,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
 
 
     read( IMPORTING es_outline = ls_outline ).
-    IF ls_outline IS INITIAL.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = abap_true.
-    ENDIF.
+    rv_bool = boolc( NOT ls_outline IS INITIAL ).
 
   ENDMETHOD.
 
@@ -5934,11 +5905,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
 
     SELECT SINGLE objct FROM tobj INTO lv_objct
       WHERE objct = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -6082,11 +6049,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
 
     SELECT SINGLE oclss FROM tobc INTO lv_oclss
       WHERE oclss = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -6382,11 +6345,7 @@ CLASS lcl_object_para IMPLEMENTATION.
 
     SELECT SINGLE paramid FROM tpara INTO lv_paramid
       WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -6520,11 +6479,7 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
 
     SELECT SINGLE formname FROM stxfadm INTO lv_formname
       WHERE formname = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -6750,11 +6705,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -7195,11 +7146,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
       WHERE viewname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -7351,11 +7298,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
     SELECT SINGLE shlpname FROM dd30l INTO lv_shlpname
       WHERE shlpname = ms_item-obj_name
       AND as4local = 'A'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -7514,11 +7457,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
     SELECT SINGLE tcode FROM tstc INTO lv_tcode
       WHERE tcode = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -7726,11 +7665,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     SELECT SINGLE objectname FROM objh INTO lv_objectname
       WHERE objectname = ms_item-obj_name(10)
       AND objecttype = ms_item-obj_name+10.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -7887,11 +7822,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     SELECT SINGLE arbgb FROM t100a INTO lv_arbgb
       WHERE arbgb = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -8090,11 +8021,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         function_pool   = lv_pool
       EXCEPTIONS
         pool_not_exists = 1.
-    IF sy-subrc = 1.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = abap_true.
-    ENDIF.
+    rv_bool = boolc( sy-subrc <> 1 ).
 
   ENDMETHOD.
 
@@ -8653,11 +8580,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       WHERE viewname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -8836,11 +8759,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
     SELECT SINGLE object FROM tnro INTO lv_object
       WHERE object = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -8991,11 +8910,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
     SELECT SINGLE typename FROM dd40l INTO lv_typename
       WHERE typename = ms_item-obj_name
       AND as4local = 'A'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -9156,11 +9071,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = ms_item-obj_name
       AND r3state = 'A'.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -10145,7 +10056,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
         <ls_edge>-to-obj_name   = <ls_found>-object.
         CASE <ls_found>-object_cls.
-          WHEN 'DS'.
+          WHEN 'DS'
+              OR 'DT'.
             <ls_edge>-to-obj_type = 'TABL'.
           WHEN 'DA'.
             <ls_edge>-to-obj_type = 'TTYP'.
