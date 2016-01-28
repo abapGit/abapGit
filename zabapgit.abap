@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.95'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.96'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13204,6 +13204,10 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           ls_commit TYPE lcl_git_pack=>ty_commit,
           lv_pack   TYPE xstring.
 
+
+    CLEAR et_files.
+    CLEAR et_objects.
+    CLEAR ev_branch.
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                     IMPORTING ev_pack = lv_pack
