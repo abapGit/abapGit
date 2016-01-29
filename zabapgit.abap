@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.97'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.98'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3001,6 +3001,121 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_objects_super IMPLEMENTATION
 
+CLASS lcl_object_acid DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    METHODS: create_object
+      RETURNING VALUE(ro_aab) TYPE REF TO cl_aab_id
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_acid IMPLEMENTATION.
+
+  METHOD create_object.
+
+    DATA: lv_name TYPE aab_id_name.
+
+
+    lv_name = ms_item-obj_name.
+
+    CREATE OBJECT ro_aab
+      EXPORTING
+        im_name          = lv_name
+      EXCEPTIONS
+        name_not_allowed = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      _raise 'error creating CL_AAB_ID object'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lo_xml         TYPE REF TO lcl_xml,
+          lv_description TYPE aab_id_descript,
+          lo_aab         TYPE REF TO cl_aab_id.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    create_object( )->get_descript( IMPORTING ex_descript = lv_description ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->element_add( lv_description ).
+    mo_files->add_xml( lo_xml ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: lo_xml         TYPE REF TO lcl_xml,
+          lv_description TYPE aab_id_descript,
+          lo_aab         TYPE REF TO cl_aab_id.
+
+
+    lo_xml = mo_files->read_xml( ).
+    lo_xml->element_read( CHANGING cg_element = lv_description ).
+
+    lo_aab = create_object( ).
+    lo_aab->set_descript( lv_description ).
+    lo_aab->save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: lo_aab TYPE REF TO cl_aab_id.
+
+
+    lo_aab = create_object( ).
+    lo_aab->enqueue( ).
+    lo_aab->delete(
+      EXCEPTIONS
+        prop_error       = 1
+        propt_error      = 2
+        act_error        = 3
+        cts_error        = 4
+        cts_devclass     = 5
+        id_not_found     = 6
+        no_authorization = 7
+        id_still_used    = 8
+        where_used_error = 9
+        OTHERS           = 10 ).
+    IF sy-subrc <> 0.
+      _raise 'error deleting ACID object'.
+    ENDIF.
+    lo_aab->dequeue( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_state TYPE flag,
+          lo_aab   TYPE REF TO cl_aab_id.
+
+
+    lo_aab = create_object( ).
+
+    lo_aab->get_state(
+      IMPORTING
+        ex_state = lv_state ).
+    rv_bool = boolc( lv_state = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'todo, jump, ACID'.
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
@@ -3016,7 +3131,8 @@ CLASS lcl_object_auth IMPLEMENTATION.
           ls_authx TYPE authx.
 
 
-    SELECT SINGLE * FROM authx INTO ls_authx WHERE fieldname = ms_item-obj_name.
+    SELECT SINGLE * FROM authx INTO ls_authx
+      WHERE fieldname = ms_item-obj_name.               "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
@@ -3084,7 +3200,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
     SELECT SINGLE fieldname FROM authx
       INTO lv_fieldname
-      WHERE fieldname = ms_item-obj_name.
+      WHERE fieldname = ms_item-obj_name.               "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -5017,7 +5133,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     SELECT SINGLE component_name FROM wdy_component
       INTO lv_component_name
       WHERE component_name = ms_item-obj_name
-      AND version = 'A'.
+      AND version = 'A'.                                "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -7396,7 +7512,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 
     SELECT SINGLE shlpname FROM dd30l INTO lv_shlpname
       WHERE shlpname = ms_item-obj_name
-      AND as4local = 'A'.
+      AND as4local = 'A'.                               "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -7555,7 +7671,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
 
     SELECT SINGLE tcode FROM tstc INTO lv_tcode
-      WHERE tcode = ms_item-obj_name.
+      WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -7763,7 +7879,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
 
     SELECT SINGLE objectname FROM objh INTO lv_objectname
       WHERE objectname = ms_item-obj_name(10)
-      AND objecttype = ms_item-obj_name+10.
+      AND objecttype = ms_item-obj_name+10.             "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -7920,7 +8036,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
 
     SELECT SINGLE arbgb FROM t100a INTO lv_arbgb
-      WHERE arbgb = ms_item-obj_name.
+      WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -9505,7 +9621,7 @@ CLASS lcl_tadir IMPLEMENTATION.
     SELECT SINGLE * FROM tadir INTO rs_tadir
       WHERE pgmid = iv_pgmid
       AND object = iv_object
-      AND obj_name LIKE lv_obj_name.                      "#EC CI_SUBRC
+      AND obj_name LIKE lv_obj_name.      "#EC CI_SUBRC "#EC CI_GENBUFF
 
   ENDMETHOD.                    "read_single
 
@@ -9573,7 +9689,8 @@ CLASS lcl_tadir IMPLEMENTATION.
         WHEN 'INTF'.
           SELECT SINGLE category FROM seoclassdf INTO lv_category
             WHERE clsname = <ls_tadir>-obj_name
-            AND ( version = '1' OR version = '0' ) ##warn_ok.
+            AND ( version = '1'
+            OR version = '0' ) ##warn_ok.               "#EC CI_GENBUFF
           IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
             DELETE rt_tadir INDEX lv_index.
           ENDIF.
@@ -9803,7 +9920,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
       rv_path = '/'.
     ELSE.
       SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
-        WHERE devclass = iv_package.                      "#EC CI_SUBRC
+        WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
       ASSERT sy-subrc = 0.
 
       IF lv_parentcl IS INITIAL.
