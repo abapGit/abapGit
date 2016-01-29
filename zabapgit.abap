@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.96'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.97'.       "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2501,7 +2501,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
 
-CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super .
+CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_progdir,
@@ -3000,6 +3000,102 @@ CLASS lcl_objects_super IMPLEMENTATION.
   ENDMETHOD.                    "corr_insert
 
 ENDCLASS.                    "lcl_objects_super IMPLEMENTATION
+
+CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.
+
+CLASS lcl_object_auth IMPLEMENTATION.
+
+  METHOD lif_object~serialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_authx TYPE authx.
+
+
+    SELECT SINGLE * FROM authx INTO ls_authx WHERE fieldname = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_authx ).
+    mo_files->add_xml( lo_xml ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+* see include LSAUT_FIELDF02
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_authx TYPE authx,
+          lo_auth  TYPE REF TO cl_auth_tools.
+
+
+
+    lo_xml = mo_files->read_xml( ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_authx ).
+
+    CREATE OBJECT lo_auth.
+
+    IF lo_auth->add_afield_to_trkorr( ls_authx-fieldname ) <> 0.
+      _raise 'Error deserializing AUTH'.
+    ENDIF.
+
+    MODIFY authx FROM ls_authx.
+    IF sy-subrc <> 0.
+      _raise 'Error deserializing AUTH'.
+    ENDIF.
+
+    CALL FUNCTION 'DB_COMMIT'.
+    lo_auth->set_authfld_info_from_db( ls_authx-fieldname ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: lv_fieldname TYPE authx-fieldname.
+
+
+    lv_fieldname = ms_item-obj_name.
+
+    CALL FUNCTION 'SUSR_AUTF_DELETE_FIELD'
+      EXPORTING
+        fieldname           = lv_fieldname
+      EXCEPTIONS
+        delete_not_possible = 1
+        field_in_use        = 2
+        not_existing        = 3
+        no_authority        = 4
+        OTHERS              = 5.
+    IF sy-subrc <> 0.
+      _raise 'error from SUSR_AUTF_DELETE_FIELD'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_fieldname TYPE authx-fieldname.
+
+
+    SELECT SINGLE fieldname FROM authx
+      INTO lv_fieldname
+      WHERE fieldname = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+
+    _raise 'todo, AUTH jump'.
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_doma DEFINITION
@@ -6966,11 +7062,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     DATA: ls_tadir TYPE tadir.
 
+* todo, this looks wrong
     ls_tadir = lcl_tadir=>read_single(
       iv_object   = ms_item-obj_type
       iv_obj_name = ms_item-obj_name ).
     IF ls_tadir IS INITIAL.
-      RETURN.
+      rv_bool = abap_false.
+    ELSE.
+      rv_bool = abap_true.
     ENDIF.
 
   ENDMETHOD.
