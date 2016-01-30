@@ -7155,7 +7155,7 @@ ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
-
+* For complete list of tool_type - see ENHTOOLS table
   PUBLIC SECTION.
     INTERFACES lif_object.
 
@@ -7164,7 +7164,17 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING io_xml     TYPE REF TO lcl_xml
                 iv_package TYPE devclass
       RAISING   lcx_exception.
+    METHODS deserialize_hook
+      IMPORTING io_xml     TYPE REF TO lcl_xml
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
 
+    METHODS serialize_badi
+      IMPORTING iv_tool     TYPE enhtooltype
+                ii_enh_tool TYPE REF TO if_enh_tool.
+    METHODS serialize_hook
+      IMPORTING iv_tool     TYPE enhtooltype
+                ii_enh_tool TYPE REF TO if_enh_tool.
 ENDCLASS.                    "lcl_object_enho DEFINITION
 
 *----------------------------------------------------------------------*
@@ -7178,16 +7188,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     DATA: ls_tadir TYPE tadir.
 
-* todo, this looks wrong
     ls_tadir = lcl_tadir=>read_single(
       iv_object   = ms_item-obj_type
       iv_obj_name = ms_item-obj_name ).
-    IF ls_tadir IS INITIAL.
-      rv_bool = abap_false.
-    ELSE.
+    IF ls_tadir IS NOT INITIAL.
       rv_bool = abap_true.
     ENDIF.
-
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -7213,22 +7219,25 @@ CLASS lcl_object_enho IMPLEMENTATION.
         _raise 'Error from CL_ENH_FACTORY'.
     ENDTRY.
     lv_tool = li_enh_tool->get_tool( ).
-    IF lv_tool <> cl_enh_tool_badi_impl=>tooltype.
-      _raise 'Unsupported ENHO type'.
-    ENDIF.
-    lo_badi_impl ?= li_enh_tool.
 
-    lv_shorttext = lo_badi_impl->if_enh_object_docu~get_shorttext( ).
-    lv_spot_name = lo_badi_impl->get_spot_name( ).
-    lt_impl      = lo_badi_impl->get_implementations( ).
+    CASE lv_tool.
+      WHEN cl_enh_tool_badi_impl=>tooltype.
+        serialize_badi( iv_tool = lv_tool
+                        ii_enh_tool = li_enh_tool ).
+      WHEN cl_enh_tool_hook_impl=>tooltype.
+        serialize_hook( iv_tool = lv_tool
+                        ii_enh_tool = li_enh_tool ).
+* ToDo:
+*      WHEN cl_enh_tool_class=>tooltype.
+*      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
+*      WHEN cl_enh_tool_intf=>tooltype.
+*      WHEN cl_wdr_cfg_enhancement=>tooltype.
+*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
+      WHEN OTHERS.
+        _raise 'Unsupported ENHO type'.
+    ENDCASE.
 
-    CREATE OBJECT lo_xml.
-    lo_xml->element_add( lv_tool ).
-    lo_xml->element_add( ig_element = lv_shorttext
-                         iv_name    = 'SHORTTEXT' ).
-    lo_xml->element_add( lv_spot_name ).
-    lo_xml->table_add( lt_impl ).
-    mo_files->add_xml( lo_xml ).
+
 
   ENDMETHOD.                    "serialize
 
@@ -7246,6 +7255,15 @@ CLASS lcl_object_enho IMPLEMENTATION.
       WHEN cl_enh_tool_badi_impl=>tooltype.
         deserialize_badi( io_xml     = lo_xml
                           iv_package = iv_package ).
+      WHEN cl_enh_tool_hook_impl=>tooltype.
+        deserialize_hook( io_xml     = lo_xml
+                          iv_package = iv_package ).
+* ToDo:
+*      WHEN cl_enh_tool_class=>tooltype.
+*      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
+*      WHEN cl_enh_tool_intf=>tooltype.
+*      WHEN cl_wdr_cfg_enhancement=>tooltype.
+*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
         _raise 'Unsupported ENHO type'.
     ENDCASE.
@@ -7299,6 +7317,139 @@ CLASS lcl_object_enho IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.                    "deserialize_badi
+
+  METHOD deserialize_hook.
+
+
+    DATA: lv_tool            TYPE enhtooltype,
+          lv_shorttext       TYPE string,
+          lo_xml             TYPE REF TO lcl_xml,
+          lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
+          li_tool            TYPE REF TO if_enh_tool,
+          lv_enhname         TYPE enhname,
+          lv_package         TYPE devclass,
+          ls_original_object TYPE enh_hook_admin,
+          lt_enhancements    TYPE enh_hook_impl_it.
+
+    FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
+
+    io_xml->element_read( EXPORTING iv_name   = 'SHORTTEXT'
+                          CHANGING cg_element = lv_shorttext ).
+    io_xml->structure_read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+                            CHANGING cg_structure = ls_original_object ).
+    io_xml->table_read( CHANGING ct_table = lt_enhancements ).
+
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname       = lv_enhname
+            enhtype       = cl_abstract_enh_tool_redef=>credefinition
+            enhtooltype   = cl_enh_tool_hook_impl=>tooltype
+          IMPORTING
+            enhancement   = li_tool
+          CHANGING
+            devclass      = lv_package ).
+        lo_hook_impl ?= li_tool.
+
+        lo_hook_impl->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        lo_hook_impl->set_original_object(
+          EXPORTING
+            pgmid       = ls_original_object-pgmid
+            obj_name    = ls_original_object-org_obj_name
+            obj_type    = ls_original_object-org_obj_type
+            program     = ls_original_object-programname
+            main_type   = ls_original_object-org_main_type
+            main_name   = ls_original_object-org_main_name
+        ).
+        lo_hook_impl->set_include_bound( ls_original_object-include_bound ).
+
+        LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.
+          lo_hook_impl->add_hook_impl(
+            EXPORTING
+              overwrite                 = <ls_enhancement>-overwrite
+              method                    = <ls_enhancement>-method
+              enhmode                   = <ls_enhancement>-enhmode
+              full_name                 = <ls_enhancement>-full_name
+              source                    = <ls_enhancement>-source
+              spot                      = <ls_enhancement>-spotname
+              parent_full_name          = <ls_enhancement>-parent_full_name
+          ).
+        ENDLOOP.
+        lo_hook_impl->if_enh_object~save( ).
+        lo_hook_impl->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        _raise 'error deserializing ENHO hook'.
+    ENDTRY.
+
+
+  ENDMETHOD.                    "deserialize_hook
+
+  METHOD serialize_badi.
+
+    DATA: lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
+          lv_spot_name TYPE enhspotname,
+          lo_xml       TYPE REF TO lcl_xml,
+          lv_shorttext TYPE string,
+          lt_impl      TYPE enh_badi_impl_data_it.
+
+    lo_badi_impl ?= ii_enh_tool.
+
+    lv_shorttext = lo_badi_impl->if_enh_object_docu~get_shorttext( ).
+    lv_spot_name = lo_badi_impl->get_spot_name( ).
+    lt_impl      = lo_badi_impl->get_implementations( ).
+
+    TRY.
+        CREATE OBJECT lo_xml.
+        lo_xml->element_add( iv_tool ).
+        lo_xml->element_add( ig_element = lv_shorttext
+                             iv_name    = 'SHORTTEXT' ).
+        lo_xml->element_add( lv_spot_name ).
+        lo_xml->table_add( lt_impl ).
+        mo_files->add_xml( lo_xml ).
+
+      CATCH lcx_exception.
+    ENDTRY.
+  ENDMETHOD.                    "serialize_badi
+
+  METHOD serialize_hook.
+    DATA: lv_tool            TYPE enhtooltype,
+          lv_shorttext       TYPE string,
+          lo_xml             TYPE REF TO lcl_xml,
+          lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
+          ls_original_object TYPE enh_hook_admin,
+          lt_enhancements    TYPE enh_hook_impl_it.
+
+    lo_hook_impl ?= ii_enh_tool.
+
+    lv_shorttext = lo_hook_impl->if_enh_object_docu~get_shorttext( ).
+    lo_hook_impl->get_original_object(
+      IMPORTING
+        pgmid     = ls_original_object-pgmid
+        obj_name  = ls_original_object-org_obj_name
+        obj_type  = ls_original_object-org_obj_type
+        main_type = ls_original_object-org_main_type
+        main_name = ls_original_object-org_main_name
+        program   = ls_original_object-programname
+    ).
+    ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
+    lt_enhancements = lo_hook_impl->get_hook_impls( ).
+
+    TRY.
+        CREATE OBJECT lo_xml.
+        lo_xml->element_add( iv_tool ).
+        lo_xml->element_add( ig_element = lv_shorttext
+                             iv_name    = 'SHORTTEXT' ).
+        lo_xml->structure_add( ig_structure = ls_original_object
+                               iv_name = 'ORIGINAL_OBJECT' ).
+        lo_xml->table_add( lt_enhancements ).
+        mo_files->add_xml( lo_xml ).
+
+      CATCH lcx_exception.
+    ENDTRY.
+
+  ENDMETHOD.                    "serialize_hook
 
   METHOD lif_object~delete.
 
