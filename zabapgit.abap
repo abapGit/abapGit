@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.99'.       "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.100'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -72,8 +72,8 @@ CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
 DEFINE _raise.
-  raise exception type lcx_exception
-    exporting
+  RAISE EXCEPTION TYPE lcx_exception
+    EXPORTING
       iv_text = &1.                                         "#EC NOTEXT
 END-OF-DEFINITION.
 
@@ -1997,11 +1997,11 @@ CLASS lcl_diff IMPLEMENTATION.
   METHOD render.
 
     DEFINE _append.
-      clear ls_diff.
+      CLEAR ls_diff.
       ls_diff-local = &1.
       ls_diff-result = &2.
       ls_diff-remote = &3.
-      append ls_diff to rt_diff.
+      APPEND ls_diff TO rt_diff.
     END-OF-DEFINITION.
 
     DATA: lv_rindex TYPE i VALUE 1,
@@ -3115,6 +3115,9 @@ CLASS lcl_object_acid IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+* todo, to be removed later
+INCLUDE zabapgit_gateway IF FOUND.
 
 CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
@@ -9818,6 +9821,7 @@ CLASS lcl_tadir IMPLEMENTATION.
       WHERE devclass = iv_package
       AND object <> 'DEVC'
       AND object <> 'SOTR'
+      AND delflag = abap_false
       ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
@@ -15014,19 +15018,19 @@ ENDCLASS.                    "ltcl_diff DEFINITION
 CLASS ltcl_diff IMPLEMENTATION.
 
   DEFINE _local.
-    append &1 to mt_local.
+    APPEND &1 TO mt_local.
   END-OF-DEFINITION.
 
   DEFINE _remote.
-    append &1 to mt_remote.
+    APPEND &1 TO mt_remote.
   END-OF-DEFINITION.
 
   DEFINE _expected.
-    clear ms_expected.
+    CLEAR ms_expected.
     ms_expected-local = &1.
     ms_expected-result = &2.
     ms_expected-remote = &3.
-    append ms_expected to mt_expected.
+    APPEND ms_expected TO mt_expected.
   END-OF-DEFINITION.
 
   METHOD setup.
