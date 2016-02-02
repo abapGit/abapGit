@@ -8,6 +8,6 @@
     "url": "git+https://github.com/larshp/abapGit.git"
   },  
   "devDependencies": {
-    "abaplint": ">0.0.16"
+    "abaplint": ">=0.0.16"
   }
 }
