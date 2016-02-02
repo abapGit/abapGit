@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "abaplint *.abap"
+  },
+  "devDependencies": {
+    "abaplint": ">0.0.16"
+  }
+}
