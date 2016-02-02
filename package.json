@@ -3,6 +3,10 @@
   "scripts": {
     "test": "abaplint *.abap"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larshp/abapGit.git"
+  },  
   "devDependencies": {
     "abaplint": ">0.0.16"
   }
