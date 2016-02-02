@@ -1,4 +1,5 @@
 {
+  "license": "MIT",
   "scripts": {
     "test": "abaplint *.abap"
   },
