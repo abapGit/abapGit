@@ -9852,7 +9852,7 @@ CLASS lcl_tadir IMPLEMENTATION.
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
 * if abapGit project is installed in package ZZZ, all subpackages should be named
 * ZZZ_something. This will define the folder name in the zip file to be "something",
-* similarily with online projects      
+* similarily with online projects
         MESSAGE 'Unexpected package naming(' && <ls_tdevc>-devclass && ')' TYPE 'I'.
         CONTINUE.
       ENDIF.
