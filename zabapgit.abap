@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.100'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.101'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9850,7 +9850,8 @@ CLASS lcl_tadir IMPLEMENTATION.
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
       lv_len = strlen( iv_package ).
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
-        _raise 'Unexpected package naming'.
+        MESSAGE 'Unexpected package naming(' && <ls_tdevc>-devclass && ')' TYPE 'I'.
+        CONTINUE.
       ENDIF.
 
       lv_path = <ls_tdevc>-devclass+lv_len.
