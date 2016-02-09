@@ -10200,6 +10200,7 @@ CLASS lcl_tadir IMPLEMENTATION.
           lt_tadir    TYPE ty_tadir_tt,
           lt_tdevc    TYPE STANDARD TABLE OF tdevc,
           lv_len      TYPE i,
+          lv_message  TYPE string,
           lv_path     TYPE string,
           lv_category TYPE seoclassdf-category.
 
@@ -10244,8 +10245,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 * if abapGit project is installed in package ZZZ, all subpackages should be named
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects
-        MESSAGE 'Unexpected package naming(' &&
-          <ls_tdevc>-devclass && ')' TYPE 'I' ##NO_TEXT.
+        lv_message = 'Unexpected package naming(' && <ls_tdevc>-devclass && ')'.
+        MESSAGE lv_message TYPE 'I' ##NO_TEXT.
         CONTINUE.
       ENDIF.
 
