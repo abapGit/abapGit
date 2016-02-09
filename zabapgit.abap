@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.102'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.103'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3368,7 +3368,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 ENDCLASS.                    "lcl_object_doma IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_object_karp DEFINITION
+*       CLASS lcl_object_iarp DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
@@ -3541,6 +3541,184 @@ CLASS lcl_object_iarp IMPLEMENTATION.
 
   METHOD lif_object~jump.
     _raise 'todo, IARP, jump'.
+  ENDMETHOD.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_iasp DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iasp DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    METHODS:
+      read
+        EXPORTING es_attr       TYPE w3servattr
+                  et_parameters TYPE w3servpara_tabletype
+        RAISING   lcx_exception,
+      save
+        IMPORTING is_attr       TYPE w3servattr
+                  it_parameters TYPE w3servpara_tabletype
+        RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_iasp IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iasp IMPLEMENTATION.
+
+  METHOD read.
+
+    DATA: li_service TYPE REF TO if_w3_api_service,
+          ls_name    TYPE itsappl.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_service=>if_w3_api_service~load(
+      EXPORTING
+        p_service_name     = ls_name
+      IMPORTING
+        p_service          = li_service
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from w3api_service~load'.
+    ENDIF.
+
+    li_service->get_attributes( IMPORTING p_attributes = es_attr ).
+
+    CLEAR: es_attr-chname,
+           es_attr-tdate,
+           es_attr-ttime,
+           es_attr-devclass.
+
+    li_service->get_parameters( IMPORTING p_parameters = et_parameters ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: ls_attr       TYPE w3servattr,
+          lo_xml        TYPE REF TO lcl_xml,
+          lt_parameters TYPE w3servpara_tabletype.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    read( IMPORTING es_attr       = ls_attr
+                    et_parameters = lt_parameters ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_attr ).
+    lo_xml->table_add( lt_parameters ).
+
+    mo_files->add_xml( lo_xml ).
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    DATA: li_service TYPE REF TO if_w3_api_service.
+
+
+    cl_w3_api_service=>if_w3_api_service~create_new(
+      EXPORTING p_service_data = is_attr
+      IMPORTING p_service = li_service ).
+
+    li_service->set_attributes( is_attr ).
+    li_service->set_parameters( it_parameters ).
+
+    li_service->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: ls_attr       TYPE w3servattr,
+          lo_xml        TYPE REF TO lcl_xml,
+          lt_parameters TYPE w3servpara_tabletype.
+
+
+    lo_xml = mo_files->read_xml( ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_attr ).
+    lo_xml->table_read( CHANGING ct_table = lt_parameters ).
+
+    ls_attr-devclass = iv_package.
+    save( is_attr       = ls_attr
+          it_parameters = lt_parameters ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: li_service TYPE REF TO if_w3_api_service,
+          ls_name    TYPE itsappl.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_service=>if_w3_api_service~load(
+      EXPORTING
+        p_service_name     = ls_name
+      IMPORTING
+        p_service          = li_service
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from if_w3_api_service~load'.
+    ENDIF.
+
+    li_service->if_w3_api_object~set_changeable( abap_true ).
+    li_service->if_w3_api_object~delete( ).
+    li_service->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_name TYPE itsappl.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_service=>if_w3_api_service~load(
+      EXPORTING
+        p_service_name      = ls_name
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc = 1.
+      rv_bool = abap_false.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from w3_api_service~load'.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'todo, IASP, jump'.
   ENDMETHOD.
 
 ENDCLASS.
@@ -4652,7 +4830,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    _raise 'todo, SMIM'.
+    _raise 'todo, SMIM, jump'.
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_smim IMPLEMENTATION
@@ -5036,7 +5214,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    _raise 'todo, SICF'.
+    _raise 'todo, SICF, jump'.
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_sicf IMPLEMENTATION
@@ -9854,6 +10032,36 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 
+CLASS lcl_file_status DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_result,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             match    TYPE sap_bool,
+             filename TYPE string,
+             package  TYPE devclass,
+             path     TYPE string,
+           END OF ty_result.
+    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
+
+    CLASS-METHODS status
+      IMPORTING it_files          TYPE ty_files_tt
+                iv_package        TYPE devclass
+      RETURNING VALUE(rt_results) TYPE ty_results_tt
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS compare_files
+      IMPORTING it_repo         TYPE ty_files_tt
+                is_gen          TYPE ty_file
+      RETURNING VALUE(rv_match) TYPE sap_bool
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_object DEFINITION
 *----------------------------------------------------------------------*
@@ -9894,6 +10102,11 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item       TYPE ty_item
       RETURNING VALUE(ri_obj) TYPE REF TO lif_object
       RAISING   lcx_exception.
+
+    CLASS-METHODS
+      prioritize_deser
+        IMPORTING it_results        TYPE lcl_file_status=>ty_results_tt
+        RETURNING VALUE(rt_results) TYPE lcl_file_status=>ty_results_tt.
 
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE ty_item
@@ -10031,7 +10244,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 * if abapGit project is installed in package ZZZ, all subpackages should be named
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects
-        MESSAGE 'Unexpected package naming(' && <ls_tdevc>-devclass && ')' TYPE 'I'.
+        MESSAGE 'Unexpected package naming(' &&
+          <ls_tdevc>-devclass && ')' TYPE 'I' ##NO_TEXT.
         CONTINUE.
       ENDIF.
 
@@ -10051,36 +10265,6 @@ CLASS lcl_tadir IMPLEMENTATION.
   ENDMETHOD.                    "build
 
 ENDCLASS.                    "lcl_tadir IMPLEMENTATION
-
-CLASS lcl_file_status DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    TYPES: BEGIN OF ty_result,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             match    TYPE sap_bool,
-             filename TYPE string,
-             package  TYPE devclass,
-             path     TYPE string,
-           END OF ty_result.
-    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
-
-    CLASS-METHODS status
-      IMPORTING it_files          TYPE ty_files_tt
-                iv_package        TYPE devclass
-      RETURNING VALUE(rt_results) TYPE ty_results_tt
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-
-    CLASS-METHODS compare_files
-      IMPORTING it_repo         TYPE ty_files_tt
-                is_gen          TYPE ty_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
-      RAISING   lcx_exception.
-
-ENDCLASS.
 
 CLASS lcl_file_status IMPLEMENTATION.
 
@@ -10681,6 +10865,22 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+  METHOD prioritize_deser.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+
+
+* ISAP has to be handled before ISRP
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IASP'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type <> 'IASP'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD deserialize.
 
     DATA: ls_item    TYPE ty_item,
@@ -10700,6 +10900,8 @@ CLASS lcl_objects IMPLEMENTATION.
     DELETE lt_results WHERE match = abap_true.
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
+
+    lt_results = prioritize_deser( lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result>.
       show_progress( iv_current  = sy-tabix
