@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.101'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.102'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3366,6 +3366,184 @@ CLASS lcl_object_doma IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 ENDCLASS.                    "lcl_object_doma IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_karp DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iarp DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    METHODS:
+      read
+        EXPORTING es_attr       TYPE w3resoattr
+                  et_parameters TYPE w3resopara_tabletype
+        RAISING   lcx_exception,
+      save
+        IMPORTING is_attr       TYPE w3resoattr
+                  it_parameters TYPE w3resopara_tabletype
+        RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_object_dtel DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_iarp IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iarp IMPLEMENTATION.
+
+  METHOD read.
+
+    DATA: li_resource TYPE REF TO if_w3_api_resource,
+          ls_name     TYPE w3resokey.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_resource=>if_w3_api_resource~load(
+      EXPORTING
+        p_resource_name     = ls_name
+      IMPORTING
+        p_resource          = li_resource
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from w3api_resource~load'.
+    ENDIF.
+
+    li_resource->get_attributes( IMPORTING p_attributes = es_attr ).
+
+    CLEAR: es_attr-chname,
+           es_attr-tdate,
+           es_attr-ttime,
+           es_attr-devclass.
+
+    li_resource->get_parameters( IMPORTING p_parameters = et_parameters ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: ls_attr       TYPE w3resoattr,
+          lo_xml        TYPE REF TO lcl_xml,
+          lt_parameters TYPE w3resopara_tabletype.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    read( IMPORTING es_attr       = ls_attr
+                    et_parameters = lt_parameters ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_attr ).
+    lo_xml->table_add( lt_parameters ).
+
+    mo_files->add_xml( lo_xml ).
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    DATA: li_resource TYPE REF TO if_w3_api_resource.
+
+
+    cl_w3_api_resource=>if_w3_api_resource~create_new(
+      EXPORTING p_resource_data = is_attr
+      IMPORTING p_resource = li_resource ).
+
+    li_resource->set_attributes( is_attr ).
+    li_resource->set_parameters( it_parameters ).
+
+    li_resource->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: ls_attr       TYPE w3resoattr,
+          lo_xml        TYPE REF TO lcl_xml,
+          lt_parameters TYPE w3resopara_tabletype.
+
+
+    lo_xml = mo_files->read_xml( ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_attr ).
+    lo_xml->table_read( CHANGING ct_table = lt_parameters ).
+
+    ls_attr-devclass = iv_package.
+    save( is_attr       = ls_attr
+          it_parameters = lt_parameters ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: li_resource TYPE REF TO if_w3_api_resource,
+          ls_name     TYPE w3resokey.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_resource=>if_w3_api_resource~load(
+      EXPORTING
+        p_resource_name     = ls_name
+      IMPORTING
+        p_resource          = li_resource
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from if_w3_api_resource~load'.
+    ENDIF.
+
+    li_resource->if_w3_api_object~set_changeable( abap_true ).
+    li_resource->if_w3_api_object~delete( ).
+    li_resource->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_name TYPE w3resokey.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_resource=>if_w3_api_resource~load(
+      EXPORTING
+        p_resource_name     = ls_name
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc = 1.
+      rv_bool = abap_false.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from w3_api_resource~load'.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'todo, IARP, jump'.
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel DEFINITION
@@ -7175,11 +7353,11 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS serialize_badi
       IMPORTING iv_tool     TYPE enhtooltype
                 ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
     METHODS serialize_hook
       IMPORTING iv_tool     TYPE enhtooltype
                 ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_enho DEFINITION
 
