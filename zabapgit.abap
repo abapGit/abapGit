@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.103'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.104'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2298,6 +2298,12 @@ CLASS lcl_objects_files DEFINITION FINAL.
     METHODS:
       constructor
         IMPORTING is_item TYPE ty_item,
+      add_html
+        IMPORTING iv_html TYPE string
+        RAISING   lcx_exception,
+      read_html
+        RETURNING VALUE(rv_html) TYPE string
+        RAISING   lcx_exception,
       add_xml
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO lcl_xml
@@ -2353,6 +2359,24 @@ CLASS lcl_objects_files IMPLEMENTATION.
     mt_files = it_files.
   ENDMETHOD.
 
+  METHOD read_html.
+
+    DATA: lv_filename TYPE string.
+
+    FIELD-SYMBOLS: <ls_html> LIKE LINE OF mt_files.
+
+
+    lv_filename = filename( 'html' ).                       "#EC NOTEXT
+
+    READ TABLE mt_files ASSIGNING <ls_html> WITH KEY filename = lv_filename.
+    IF sy-subrc <> 0.
+      _raise 'html not found'.
+    ENDIF.
+
+    rv_html = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
+
+  ENDMETHOD.
+
   METHOD read_abap.
 
     DATA: lv_filename TYPE string,
@@ -2395,6 +2419,19 @@ CLASS lcl_objects_files IMPLEMENTATION.
     APPEND ls_file TO mt_files.
 
   ENDMETHOD.                    "abap_to_file
+
+  METHOD add_html.
+
+    DATA: ls_file TYPE ty_file.
+
+
+    ls_file-path = '/'.
+    ls_file-filename = filename( 'html' ).                  "#EC NOTEXT
+    ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_html ).
+
+    APPEND ls_file TO mt_files.
+
+  ENDMETHOD.
 
   METHOD add_xml.
 
@@ -3037,8 +3074,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lo_xml         TYPE REF TO lcl_xml,
-          lv_description TYPE aab_id_descript,
-          lo_aab         TYPE REF TO cl_aab_id.
+          lv_description TYPE aab_id_descript.
 
 
     IF lif_object~exists( ) = abap_false.
@@ -3722,6 +3758,202 @@ CLASS lcl_object_iasp IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_iatu DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iatu DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    METHODS:
+      read
+        EXPORTING es_attr   TYPE w3tempattr
+                  ev_source TYPE string
+        RAISING   lcx_exception,
+      save
+        IMPORTING is_attr   TYPE w3tempattr
+                  iv_source TYPE string
+        RAISING   lcx_exception.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_iatu IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_iatu IMPLEMENTATION.
+
+  METHOD read.
+
+    DATA: li_template TYPE REF TO if_w3_api_template,
+          lt_source   TYPE w3htmltabtype,
+          ls_name     TYPE iacikeyt.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_template=>if_w3_api_template~load(
+      EXPORTING
+        p_template_name     = ls_name
+      IMPORTING
+        p_template          = li_template
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from w3api_template~load'.
+    ENDIF.
+
+    li_template->get_attributes( IMPORTING p_attributes = es_attr ).
+
+    CLEAR: es_attr-chname,
+           es_attr-tdate,
+           es_attr-ttime,
+           es_attr-devclass.
+
+    li_template->get_source( IMPORTING p_source = lt_source ).
+
+    CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: ls_attr   TYPE w3tempattr,
+          lv_source TYPE string,
+          lo_xml    TYPE REF TO lcl_xml.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    read( IMPORTING es_attr   = ls_attr
+                    ev_source = lv_source ).
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_attr ).
+    mo_files->add_xml( lo_xml ).
+
+    mo_files->add_html( lv_source ).
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    DATA: lt_source   TYPE w3htmltabtype,
+          lv_source   TYPE string,
+          li_template TYPE REF TO if_w3_api_template.
+
+
+    cl_w3_api_template=>if_w3_api_template~create_new(
+      EXPORTING p_template_data = is_attr
+                p_program_name = is_attr-programm
+      IMPORTING p_template = li_template ).
+
+    li_template->set_attributes( is_attr ).
+
+    lv_source = iv_source.
+    WHILE strlen( lv_source ) >= 255.
+      APPEND lv_source(255) TO lt_source.
+      lv_source = lv_source+255.
+    ENDWHILE.
+    IF NOT lv_source IS INITIAL.
+      APPEND lv_source TO lt_source.
+    ENDIF.
+
+    li_template->set_source( lt_source ).
+
+    li_template->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: ls_attr   TYPE w3tempattr,
+          lv_source TYPE string,
+          lo_xml    TYPE REF TO lcl_xml.
+
+
+    lo_xml = mo_files->read_xml( ).
+
+    lo_xml->structure_read( CHANGING cg_structure = ls_attr ).
+
+    lv_source = mo_files->read_html( ).
+
+    ls_attr-devclass = iv_package.
+    save( is_attr   = ls_attr
+          iv_source = lv_source ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: li_template TYPE REF TO if_w3_api_template,
+          ls_name     TYPE iacikeyt.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_template=>if_w3_api_template~load(
+      EXPORTING
+        p_template_name     = ls_name
+      IMPORTING
+        p_template          = li_template
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc <> 0.
+      _raise 'error from if_w3_api_template~load'.
+    ENDIF.
+
+    li_template->if_w3_api_object~set_changeable( abap_true ).
+    li_template->if_w3_api_object~delete( ).
+    li_template->if_w3_api_object~save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_name TYPE iacikeyt.
+
+
+    ls_name = ms_item-obj_name.
+
+    cl_w3_api_template=>if_w3_api_template~load(
+      EXPORTING
+        p_template_name     = ls_name
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3
+        OTHERS              = 4 ).
+    IF sy-subrc = 1.
+      rv_bool = abap_false.
+    ELSEIF sy-subrc <> 0.
+      _raise 'error from w3_api_template~load'.
+    ELSE.
+      rv_bool = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'todo, IATU, jump'.
+  ENDMETHOD.
+
+ENDCLASS.
+
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel DEFINITION
@@ -7564,11 +7796,6 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     DATA: lv_enh_id    TYPE enhname,
           lv_tool      TYPE enhtooltype,
-          lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
-          lv_spot_name TYPE enhspotname,
-          lo_xml       TYPE REF TO lcl_xml,
-          lv_shorttext TYPE string,
-          lt_impl      TYPE enh_badi_impl_data_it,
           li_enh_tool  TYPE REF TO if_enh_tool.
 
 
@@ -7682,10 +7909,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD deserialize_hook.
 
-
-    DATA: lv_tool            TYPE enhtooltype,
-          lv_shorttext       TYPE string,
-          lo_xml             TYPE REF TO lcl_xml,
+    DATA: lv_shorttext       TYPE string,
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
           li_tool            TYPE REF TO if_enh_tool,
           lv_enhname         TYPE enhname,
@@ -7694,6 +7918,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
+
 
     io_xml->element_read( EXPORTING iv_name   = 'SHORTTEXT'
                           CHANGING cg_element = lv_shorttext ).
@@ -7769,12 +7994,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD serialize_hook.
 
-    DATA: lv_tool            TYPE enhtooltype,
-          lv_shorttext       TYPE string,
+    DATA: lv_shorttext       TYPE string,
           lo_xml             TYPE REF TO lcl_xml,
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
           ls_original_object TYPE enh_hook_admin,
           lt_enhancements    TYPE enh_hook_impl_it.
+
 
     lo_hook_impl ?= ii_enh_tool.
 
@@ -10245,8 +10470,9 @@ CLASS lcl_tadir IMPLEMENTATION.
 * if abapGit project is installed in package ZZZ, all subpackages should be named
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects
-        lv_message = 'Unexpected package naming(' && <ls_tdevc>-devclass && ')'.
-        MESSAGE lv_message TYPE 'I' ##NO_TEXT.
+        lv_message = 'Unexpected package naming(' &&
+          <ls_tdevc>-devclass && ')' ##NO_TEXT.
+        MESSAGE lv_message TYPE 'I'.
         CONTINUE.
       ENDIF.
 
@@ -10676,6 +10902,12 @@ CLASS lcl_objects IMPLEMENTATION.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       CASE <ls_tadir>-object.
+        WHEN 'IATU'.
+          <ls_tadir>-korrnum = '5500'.
+        WHEN 'IARP'.
+          <ls_tadir>-korrnum = '5510'.
+        WHEN 'IASP'.
+          <ls_tadir>-korrnum = '5520'.
         WHEN 'SUSC'.
           <ls_tadir>-korrnum = '5000'.
         WHEN 'TTYP' OR 'TABL' OR 'VIEW'.
