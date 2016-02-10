@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See https://github.com/larshp/abapGit/
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.104'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.105'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2035,7 +2035,7 @@ CLASS lcl_diff IMPLEMENTATION.
             lv_lindex = lv_lindex + 1.
             lv_rindex = lv_rindex + 1.
           WHEN OTHERS.
-            ASSERT 1 = 1 + 1.
+            ASSERT 0 = 1.
         ENDCASE.
       ELSE.
         CLEAR ls_local.
@@ -2120,7 +2120,6 @@ CLASS lcl_git_pack DEFINITION FINAL.
 
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
-               c_debug_pack TYPE sap_bool VALUE abap_false,
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
                c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
@@ -3614,14 +3613,14 @@ CLASS lcl_object_iasp IMPLEMENTATION.
   METHOD read.
 
     DATA: li_service TYPE REF TO if_w3_api_service,
-          ls_name    TYPE itsappl.
+          lv_name    TYPE itsappl.
 
 
-    ls_name = ms_item-obj_name.
+    lv_name = ms_item-obj_name.
 
     cl_w3_api_service=>if_w3_api_service~load(
       EXPORTING
-        p_service_name     = ls_name
+        p_service_name     = lv_name
       IMPORTING
         p_service          = li_service
       EXCEPTIONS
@@ -3703,16 +3702,16 @@ CLASS lcl_object_iasp IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: li_service TYPE REF TO if_w3_api_service,
-          ls_name    TYPE itsappl.
+          lv_name    TYPE itsappl.
 
 
-    ls_name = ms_item-obj_name.
+    lv_name = ms_item-obj_name.
 
     cl_w3_api_service=>if_w3_api_service~load(
       EXPORTING
-        p_service_name     = ls_name
+        p_service_name      = lv_name
       IMPORTING
-        p_service          = li_service
+        p_service           = li_service
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -3730,14 +3729,14 @@ CLASS lcl_object_iasp IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: ls_name TYPE itsappl.
+    DATA: lv_name TYPE itsappl.
 
 
-    ls_name = ms_item-obj_name.
+    lv_name = ms_item-obj_name.
 
     cl_w3_api_service=>if_w3_api_service~load(
       EXPORTING
-        p_service_name      = ls_name
+        p_service_name      = lv_name
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -4537,7 +4536,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       WHEN 'INTF'.
         ro_xml->structure_add( ls_vseointerf ).
       WHEN OTHERS.
-        ASSERT 1 = 1 + 1.
+        ASSERT 0 = 1.
     ENDCASE.
 
     lv_object = ls_clskey-clsname.
@@ -4718,7 +4717,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         ENDIF.
 
       WHEN OTHERS.
-        ASSERT 1 = 1 + 1.
+        ASSERT 0 = 1.
     ENDCASE.
 
     IF ms_item-obj_type = 'CLAS'.
@@ -6178,7 +6177,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_view_key = <ls_object>-sub_name.
           APPEND read_view( ls_view_key ) TO rs_component-view_metadata.
         WHEN OTHERS.
-          ASSERT 1 = 1 + 1.
+          ASSERT 0 = 1.
       ENDCASE.
     ENDLOOP.
 
@@ -7256,6 +7255,110 @@ CLASS lcl_object_para IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_para IMPLEMENTATION
 
+CLASS lcl_object_splo DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.
+
+CLASS lcl_object_splo IMPLEMENTATION.
+
+  METHOD lif_object~serialize.
+
+    DATA: lo_xml   TYPE REF TO lcl_xml,
+          ls_tsp1t TYPE tsp1t,
+          ls_tsp1d TYPE tsp1d,
+          ls_tsp0p TYPE tsp0p.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tsp1t INTO ls_tsp1t
+      WHERE papart = ms_item-obj_name
+      AND spras = gc_english.                             "#EC CI_SUBRC
+    SELECT SINGLE * FROM tsp1d INTO ls_tsp1d
+      WHERE papart = ms_item-obj_name.                    "#EC CI_SUBRC
+    SELECT SINGLE * FROM tsp0p INTO ls_tsp0p
+      WHERE pdpaper = ms_item-obj_name.                   "#EC CI_SUBRC
+
+    CLEAR: ls_tsp1d-chgname1,
+           ls_tsp1d-chgtstmp1,
+           ls_tsp1d-chgsaprel1,
+           ls_tsp1d-chgsapsys1.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->structure_add( ls_tsp1t ).
+    lo_xml->structure_add( ls_tsp1d ).
+    lo_xml->structure_add( ls_tsp0p ).
+    mo_files->add_xml( lo_xml ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: lo_xml      TYPE REF TO lcl_xml,
+          lv_obj_name TYPE e071-obj_name,
+          ls_tsp1t    TYPE tsp1t,
+          ls_tsp1d    TYPE tsp1d,
+          ls_tsp0p    TYPE tsp0p.
+
+
+    lo_xml = mo_files->read_xml( ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tsp1t ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tsp1d ).
+    lo_xml->structure_read( CHANGING cg_structure = ls_tsp0p ).
+
+    MODIFY tsp1t FROM ls_tsp1t.                           "#EC CI_SUBRC
+    MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
+    MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
+
+    lv_obj_name = ms_item-obj_name.
+
+    CALL FUNCTION 'TR_TADIR_POPUP_ENTRY_E071'
+      EXPORTING
+        wi_e071_pgmid     = 'R3TR'
+        wi_e071_object    = ms_item-obj_type
+        wi_e071_obj_name  = lv_obj_name
+        wi_tadir_devclass = iv_package.
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DELETE FROM tsp1t WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
+    DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
+    DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_delete_tadir_entry = abap_true
+        wi_tadir_pgmid        = 'R3TR'
+        wi_tadir_object       = ms_item-obj_type
+        wi_tadir_obj_name     = ms_item-obj_name
+        wi_test_modus         = abap_false.
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_papart TYPE tsp1d-papart.
+
+
+    SELECT SINGLE papart INTO lv_papart FROM tsp1d
+      WHERE papart = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'todo, jump, SPLO'.
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_ssfo DEFINITION
 *----------------------------------------------------------------------*
@@ -7794,9 +7897,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_enh_id    TYPE enhname,
-          lv_tool      TYPE enhtooltype,
-          li_enh_tool  TYPE REF TO if_enh_tool.
+    DATA: lv_enh_id   TYPE enhname,
+          lv_tool     TYPE enhtooltype,
+          li_enh_tool TYPE REF TO if_enh_tool.
 
 
     IF lif_object~exists( ) = abap_false.
@@ -11368,26 +11471,14 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 
     lv_x = cv_data(1).
-    IF c_debug_pack = abap_true.
-      WRITE: / 'A:', lv_x, '(hex)'.                         "#EC NOTEXT
-    ENDIF.
     lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
-    IF c_debug_pack = abap_true.
-      WRITE: lv_bitbyte.
-    ENDIF.
 
     cv_data = cv_data+1.
     lv_length_bits = lv_bitbyte+4.
 
     WHILE lv_bitbyte(1) <> '0'.
       lv_x = cv_data(1).
-      IF c_debug_pack = abap_true.
-        WRITE: / 'x:', lv_x, '(hex)'.                       "#EC NOTEXT
-      ENDIF.
       lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
-      IF c_debug_pack = abap_true.
-        WRITE: lv_bitbyte.
-      ENDIF.
       cv_data = cv_data+1.
       CONCATENATE lv_bitbyte+1 lv_length_bits INTO lv_length_bits.
     ENDWHILE.
@@ -11888,10 +11979,6 @@ CLASS lcl_git_pack IMPLEMENTATION.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
       APPEND ls_object TO rt_objects.
-
-      IF c_debug_pack = abap_true.
-        WRITE: /.
-      ENDIF.
     ENDDO.
 
 * check SHA1 at end of pack
@@ -15496,7 +15583,7 @@ ENDFORM.                    "run
 *      -->##NEEDED       text
 *----------------------------------------------------------------------*
 FORM branch_popup TABLES   tt_fields STRUCTURE sval
-                  USING    pv_code
+                  USING    pv_code TYPE clike
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c
                   RAISING lcx_exception ##called ##needed.
