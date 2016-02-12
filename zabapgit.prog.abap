@@ -16233,3 +16233,6 @@ CLASS ltcl_git_pack IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
+
+INCLUDE zabapgit_saplink_bridge IF FOUND. "this implies you've got saplink installed on your server
+INCLUDE zabapgit_saplink_objects IF FOUND. "this include contains the activated SAPLink-Plugins
