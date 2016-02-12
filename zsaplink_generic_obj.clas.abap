@@ -15,7 +15,8 @@ CLASS zsaplink_generic_obj DEFINITION
 
     METHODS constructor
       IMPORTING
-        !name TYPE string .
+        !name TYPE string
+        include_last_changed type abap_bool OPTIONAL.
 
     METHODS checkexists
          REDEFINITION .
@@ -52,9 +53,12 @@ CLASS zsaplink_generic_obj DEFINITION
 
     METHODS deleteobject
          REDEFINITION .
+
   PRIVATE SECTION.
 
     DATA mo_xml_bridge TYPE REF TO lcl_tlogo_xml_bridge .
+    data include_last_changed type abap_bool.
+
     CONSTANTS co_xml_metadata TYPE string VALUE 'objMetaData' ##NO_TEXT.
 
     METHODS get_xml_bridge
@@ -120,6 +124,8 @@ CLASS ZSAPLINK_GENERIC_OBJ IMPLEMENTATION.
 *|   51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA          |
 *\---------------------------------------------------------------------/
     super->constructor( name = name ).
+
+    me->include_last_changed = include_last_changed.
 
   ENDMETHOD.
 
@@ -191,7 +197,9 @@ CLASS ZSAPLINK_GENERIC_OBJ IMPLEMENTATION.
   METHOD get_xml_bridge.
     IF mo_xml_bridge IS INITIAL.
 *    can't be called in the constructor as getObjectType is intended to be polymorphic
-      mo_xml_bridge = NEW lcl_tlogo_xml_bridge( i_tlogo = CONV #( me->getobjecttype( ) ) ).
+      mo_xml_bridge = NEW lcl_tlogo_xml_bridge(
+                            i_tlogo = CONV #( me->getobjecttype( ) )
+                            iv_include_last_changed = me->include_last_changed ).
     ENDIF.
 
     ro_xml_bridge = mo_xml_bridge.

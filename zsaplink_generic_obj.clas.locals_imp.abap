@@ -143,12 +143,14 @@ WITH UNIQUE KEY num.
     CLEAR l_value.
     l_r_element_transport = l_r_document->create_element( name = l_name ).
     l_rc = l_r_document->append_child( l_r_element_transport ).
-* XML: date (for comparison with object, last changed )
-    l_name = if_rso_object_xmic=>timestmp.
-    GET TIME STAMP FIELD l_timestmp.
-    l_value = cl_rso_repository=>timestamp_to_xml( l_timestmp ).
-    l_r_element = l_r_document->create_simple_element(
-      name = l_name value = l_value parent = l_r_element_transport ).
+* XML: date (for comparison with object, last changed ) - modified oj: Do not always include this element
+    IF mv_include_last_changed = abap_true.
+      l_name = if_rso_object_xmic=>timestmp.
+      GET TIME STAMP FIELD l_timestmp.
+      l_value = cl_rso_repository=>timestamp_to_xml( l_timestmp ).
+      l_r_element = l_r_document->create_simple_element(
+        name = l_name value = l_value parent = l_r_element_transport ).
+    ENDIF.
 
 * parse all tables of this TLOGO object
     LOOP AT p_ts_objsl ASSIGNING <l_s_objsl>.
@@ -345,6 +347,7 @@ WITH UNIQUE KEY num.
     p_tlogo = i_tlogo.
     CALL METHOD read_tlogo_prop.
 
+    mv_include_last_changed = iv_include_last_changed.
   ENDMETHOD.                    "
 
 

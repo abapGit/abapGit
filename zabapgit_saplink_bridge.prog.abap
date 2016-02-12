@@ -50,7 +50,13 @@ CLASS lcl_saplink_adapter IMPLEMENTATION.
     TRY.
         DATA(ixmldoc) = mo_saplink->createixmldocfromobject( ).
       CATCH zcx_saplink INTO DATA(lx_saplink).
-        RAISE EXCEPTION TYPE lcx_exception EXPORTING iv_text = lx_saplink->get_text( ).
+        IF lx_saplink->textid = zcx_saplink=>not_found.
+*            ABAPGit tries to serialize also locally non-existent objects which it found in a git repo=>
+*            don't create a file in this case, simply
+          RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>
+        ELSE.
+          RAISE EXCEPTION TYPE lcx_exception EXPORTING iv_text = lx_saplink->get_text( ).
+        ENDIF.
     ENDTRY.
 
     mo_files->add_xml( NEW lcl_xml( iv_xml = zsaplink=>convertixmldoctostring( ixmldoc ) ) ).

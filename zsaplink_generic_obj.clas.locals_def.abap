@@ -29,6 +29,7 @@ CLASS lcl_rso_tlogo_xml_bridge DEFINITION
     METHODS constructor
       IMPORTING
         !i_tlogo TYPE rstlogo
+        iv_include_last_changed type abap_bool optional
       EXCEPTIONS
         tlogo_doesnt_exist .
     METHODS parse_xml
@@ -92,6 +93,7 @@ CLASS lcl_rso_tlogo_xml_bridge DEFINITION
     DATA p_ts_objsl TYPE pt_ts_objsl .
     DATA p_ts_tlogo_tables TYPE pt_ts_tlogo_tables .
     DATA p_timestmp TYPE rstimestmp .
+    data mv_include_last_changed type abap_bool.
 
     METHODS read_tlogo_prop .
 ENDCLASS.
