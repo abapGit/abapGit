@@ -608,12 +608,13 @@ WITH UNIQUE KEY num.
             i_detlevel  = i_detlevel.
         e_subrc = 8.
       ELSE.
-* #CP-SUPPRESS: FP secure coding, no user input
-        DELETE FROM (<l_s_tlogo_tables>-tabname) WHERE (<l_s_tlogo_tables>-where_clause).
+        do_delete( iv_tlogo_table = <l_s_tlogo_tables>-tabname
+                   iv_where_clause = <l_s_tlogo_tables>-where_clause ).
       ENDIF.
 *   actual insert
       ASSIGN <l_s_tlogo_tables>-data->* TO <l_t_data>.
-      INSERT (<l_s_tlogo_tables>-tabname) FROM TABLE <l_t_data>.
+      do_insert(    iv_tlogo_table  = <l_s_tlogo_tables>-tabname
+                    it_data         = <l_t_data> ).
       IF sy-subrc <> 0.
         MESSAGE e221(rsoxml) WITH p_objnm p_tlogo <l_s_tlogo_tables>-tabname INTO l_dummy.
         CALL METHOD cl_rso_application_log=>if_rso_application_log~add_message_level
@@ -625,6 +626,21 @@ WITH UNIQUE KEY num.
     ENDLOOP.
 
   ENDMETHOD.                    "
+
+  METHOD do_delete.
+
+* #CP-SUPPRESS: FP secure coding, no user input
+    DELETE FROM (iv_tlogo_table) WHERE (iv_where_clause).
+
+  ENDMETHOD.
+
+
+  METHOD do_insert.
+
+    INSERT (iv_tlogo_table) FROM TABLE it_data.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_tlogo_xml_bridge IMPLEMENTATION.
@@ -694,8 +710,8 @@ CLASS lcl_tlogo_xml_bridge IMPLEMENTATION.
 *        Some sanity checks
         ASSERT lv_where_clause IS NOT INITIAL.
 
-        DELETE FROM (<ls_objsl>-tobj_name) WHERE (lv_where_clause).
-
+        do_delete(  iv_tlogo_table  = conv #( <ls_objsl>-tobj_name )
+                    iv_where_clause = lv_where_clause ).
         IF <ls_objsl>-prim_table = abap_true.
           DATA(lv_dbcnt) = sy-dbcnt.
           validate_count_prim_table( iv_dbcount = lv_dbcnt  iv_objname = iv_objname ).

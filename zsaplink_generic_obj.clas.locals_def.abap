@@ -47,6 +47,7 @@ CLASS lcl_rso_tlogo_xml_bridge DEFINITION
     METHODS get_timestmp_of_data
       RETURNING
         VALUE(r_timestmp) TYPE rstimestmp .
+
   PROTECTED SECTION.
 *"* protected components of class CL_RSO_TLOGO_XML_BRIDGE
 *"* do not include other source files here!!!
@@ -96,6 +97,16 @@ CLASS lcl_rso_tlogo_xml_bridge DEFINITION
     data mv_include_last_changed type abap_bool.
 
     METHODS read_tlogo_prop .
+
+    METHODS do_delete
+      IMPORTING
+        iv_tlogo_table  TYPE lcl_rso_tlogo_xml_bridge=>pt_s_tlogo_tables-tabname
+        iv_where_clause type lcl_rso_tlogo_xml_bridge=>pt_s_tlogo_tables-where_clause.
+
+    METHODS do_insert
+      IMPORTING
+        iv_tlogo_table  TYPE lcl_rso_tlogo_xml_bridge=>pt_s_tlogo_tables-tabname
+        it_data         TYPE STANDARD TABLE.
 ENDCLASS.
 
 CLASS lcl_tlogo_xml_bridge DEFINITION INHERITING FROM lcl_rso_tlogo_xml_bridge

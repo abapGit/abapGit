@@ -54,7 +54,7 @@ CLASS zsaplink_generic_obj DEFINITION
     METHODS deleteobject
          REDEFINITION .
 
-  PRIVATE SECTION.
+ PRIVATE SECTION.
 
     DATA mo_xml_bridge TYPE REF TO lcl_tlogo_xml_bridge .
     data include_last_changed type abap_bool.
@@ -64,6 +64,7 @@ CLASS zsaplink_generic_obj DEFINITION
     METHODS get_xml_bridge
       RETURNING
         VALUE(ro_xml_bridge) TYPE REF TO lcl_tlogo_xml_bridge .
+
     METHODS metadata_to_xml
       IMPORTING
         !it_metadata               TYPE lcl_tlogo_xml_bridge=>tt_obj_metadata
