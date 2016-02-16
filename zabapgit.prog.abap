@@ -16538,7 +16538,8 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
   METHOD find_types.
 
-    DATA: lt_snode TYPE TABLE OF snode.
+    DATA: lv_type  LIKE LINE OF rt_types,
+          lt_snode TYPE TABLE OF snode.
 
     FIELD-SYMBOLS: <ls_snode> LIKE LINE OF lt_snode.
 
@@ -16555,7 +16556,8 @@ CLASS ltcl_object_types IMPLEMENTATION.
       OR name NP 'LCL_OBJECT_++++'.
 
     LOOP AT lt_snode ASSIGNING <ls_snode>.
-      APPEND <ls_snode>-name+11 TO rt_types.
+      lv_type = <ls_snode>-name+11.
+      APPEND lv_type TO rt_types.
     ENDLOOP.
 
   ENDMETHOD.
