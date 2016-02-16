@@ -99,7 +99,11 @@ CLASS lcx_exception DEFINITION INHERITING FROM cx_static_check FINAL.
     DATA mv_text TYPE string.
 
     METHODS constructor
-      IMPORTING iv_text TYPE string.
+      IMPORTING iv_text  TYPE string
+                previous TYPE REF TO cx_root OPTIONAL.
+
+  PRIVATE SECTION.
+    DATA mx_previous TYPE REF TO cx_root.
 
 ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
 
@@ -113,6 +117,7 @@ CLASS lcx_exception IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     mv_text = iv_text.
+    mx_previous = previous.
   ENDMETHOD.                    "CONSTRUCTOR
 
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
@@ -1053,7 +1058,7 @@ ENDCLASS.                    "lcl_user IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_xml DEFINITION FINAL.
+CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
     DATA: mi_xml_doc TYPE REF TO if_ixml_document.
@@ -2308,6 +2313,11 @@ CLASS lcl_objects_files DEFINITION FINAL.
                   io_xml       TYPE REF TO lcl_xml
                   iv_normalize TYPE sap_bool DEFAULT abap_true
         RAISING   lcx_exception,
+      add_xml_from_plugin "needed since type-check during dynamic call fails even if the object is compatible
+        IMPORTING iv_extra     TYPE clike OPTIONAL
+                  io_xml       TYPE REF TO object
+                  iv_normalize TYPE sap_bool DEFAULT abap_true
+        RAISING   lcx_exception,
       read_xml
         IMPORTING iv_extra      TYPE clike OPTIONAL
         RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
@@ -2503,6 +2513,21 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   ENDMETHOD.                    "filename
 
+  METHOD add_xml_from_plugin.
+*    this method wraps add_xml as in the plugin. This is necessary as the wrapped
+*    xml-object in the plugin can only be typed to object.
+*    ABAP does not perform implicit type casts (also if compatible) in signatures,
+*    therefore this method's signature is typed ref to object
+    DATA lo_xml TYPE REF TO lcl_xml.
+    lo_xml ?= io_xml.
+    me->add_xml(
+      EXPORTING
+        iv_extra      = iv_extra
+        io_xml        = lo_xml
+        iv_normalize  = iv_normalize
+    ).
+  ENDMETHOD.
+
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -2536,6 +2561,128 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
+
+**********************************************************************
+* Enable plugins
+
+CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING is_item TYPE ty_item
+      RAISING   cx_sy_create_object_error.
+
+    METHODS set_files REDEFINITION.
+
+    INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    DATA: mo_plugin TYPE REF TO object.
+
+ENDCLASS.
+
+CLASS lcl_objects_bridge IMPLEMENTATION.
+
+  METHOD constructor.
+
+    DATA: lv_name TYPE string.
+
+    super->constructor( is_item ).
+
+    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO lv_name.
+
+    CREATE OBJECT mo_plugin TYPE (lv_name)
+      EXPORTING
+        iv_obj_name = is_item-obj_name.
+
+  ENDMETHOD.
+
+  METHOD set_files.
+    CALL METHOD mo_plugin->('SET_FILES')
+      EXPORTING
+        io_objects_files = io_files.
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_count TYPE i,
+          ls_file  TYPE ty_file,
+          lo_files TYPE REF TO object.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~SERIALIZE').
+
+    CALL METHOD mo_plugin->('GET_FILES')
+      RECEIVING
+        ro_files_proxy = lo_files. "Returns a proxy wrapping a files-object
+
+    DATA lo_wrapped_files TYPE REF TO object.
+    CALL METHOD lo_files->('GET_WRAPPED_OBJECT')
+      RECEIVING
+        ro_objects_files = lo_wrapped_files.
+
+    mo_files ?= lo_wrapped_files.
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: lo_files  TYPE REF TO object,
+          lt_files  TYPE ty_files_tt,
+          lx_plugin TYPE REF TO cx_static_check.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+
+
+    CALL METHOD mo_plugin->('GET_FILES')
+      RECEIVING
+        ro_files = lo_files.
+
+    CALL METHOD lo_files->('CLEAR').
+
+* transfer files from mo_files to external
+    lt_files = mo_files->get_files( ).
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      CALL METHOD lo_files->('PUSH')
+        EXPORTING
+          iv_filename = <ls_file>-filename
+          iv_data     = <ls_file>-data.
+    ENDLOOP.
+
+    TRY.
+        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE').
+      CATCH zcx_abapgit_object INTO lx_plugin.
+        RAISE EXCEPTION TYPE lcx_exception EXPORTING previous = lx_plugin iv_text = lx_plugin->get_text( ).
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+    DATA lx_plugin TYPE REF TO cx_static_check.
+
+    TRY.
+        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DELETE').
+      CATCH zcx_abapgit_object INTO lx_plugin.
+        RAISE EXCEPTION TYPE lcx_exception EXPORTING previous = lx_plugin iv_text = lx_plugin->get_text( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~EXISTS')
+      RECEIVING
+        rv_bool = rv_bool.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~JUMP').
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+**********************************************************************
 
 CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
@@ -3187,7 +3334,6 @@ CLASS lcl_object_auth IMPLEMENTATION.
     DATA: lo_xml   TYPE REF TO lcl_xml,
           ls_authx TYPE authx,
           lo_auth  TYPE REF TO cl_auth_tools.
-
 
 
     lo_xml = mo_files->read_xml( ).
@@ -10936,12 +11082,20 @@ CLASS lcl_objects IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
-            is_item = is_item.
+            is_item = is_item
+            .
       CATCH cx_sy_create_object_error.
-        CONCATENATE 'Object type' is_item-obj_type 'not supported, serialize'
-          INTO lv_message
-          SEPARATED BY space.                               "#EC NOTEXT
-        _raise lv_message.
+        TRY.
+* 2nd step, try looking for plugins
+            CREATE OBJECT ri_obj TYPE lcl_objects_bridge
+              EXPORTING
+                is_item = is_item.
+          CATCH cx_sy_create_object_error.
+            CONCATENATE 'Object type' is_item-obj_type 'not supported, serialize'
+              INTO lv_message
+              SEPARATED BY space.                           "#EC NOTEXT
+            _raise lv_message.
+        ENDTRY.
     ENDTRY.
 
   ENDMETHOD.
