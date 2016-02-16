@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.106'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.107'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3257,6 +3257,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
     lo_xml->element_read( CHANGING cg_element = lv_description ).
 
     lo_aab = create_object( ).
+    lo_aab->enqueue( ).
     lo_aab->set_descript( lv_description ).
     lo_aab->save( ).
 
@@ -10560,6 +10561,7 @@ ENDCLASS.
 CLASS lcl_objects DEFINITION FINAL.
 
   PUBLIC SECTION.
+    TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
@@ -10586,6 +10588,9 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS exists
       IMPORTING is_item        TYPE ty_item
       RETURNING VALUE(rv_bool) TYPE abap_bool.
+
+    CLASS-METHODS supported_list
+      RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
   PRIVATE SECTION.
     CLASS-METHODS create_object
@@ -11123,6 +11128,32 @@ CLASS lcl_objects IMPLEMENTATION.
       CATCH lcx_exception.
         rv_bool = abap_false.
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD supported_list.
+
+    DATA: lv_type  LIKE LINE OF rt_types,
+          lt_snode TYPE TABLE OF snode.
+
+    FIELD-SYMBOLS: <ls_snode> LIKE LINE OF lt_snode.
+
+
+    CALL FUNCTION 'WB_TREE_ACTUALIZE'
+      EXPORTING
+        tree_name              = 'PG_ZABAPGIT'
+        without_crossreference = abap_true
+        with_tcode_index       = abap_true
+      TABLES
+        p_tree                 = lt_snode.
+
+    DELETE lt_snode WHERE type <> 'OPL'
+      OR name NP 'LCL_OBJECT_++++'.
+
+    LOOP AT lt_snode ASSIGNING <ls_snode>.
+      lv_type = <ls_snode>-name+11.
+      APPEND lv_type TO rt_types.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -12891,7 +12922,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD status.
 
     rt_results = lcl_file_status=>status( it_files   = mt_files
-                                         iv_package = get_package( ) ).
+                                          iv_package = get_package( ) ).
 
   ENDMETHOD.
 
@@ -12901,7 +12932,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
                               iv_package = get_package( ) ).
 
     lcl_repo_srv=>add( me ).
-
     set_sha1( mv_branch ).
 
   ENDMETHOD.
@@ -16525,10 +16555,7 @@ ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
 CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
-
     METHODS:
-      find_types RETURNING VALUE(rt_types) TYPE ty_types_tt,
       is_supported FOR TESTING,
       not_exist FOR TESTING RAISING lcx_exception.
 
@@ -16536,42 +16563,16 @@ ENDCLASS.
 
 CLASS ltcl_object_types IMPLEMENTATION.
 
-  METHOD find_types.
-
-    DATA: lv_type  LIKE LINE OF rt_types,
-          lt_snode TYPE TABLE OF snode.
-
-    FIELD-SYMBOLS: <ls_snode> LIKE LINE OF lt_snode.
-
-
-    CALL FUNCTION 'WB_TREE_ACTUALIZE'
-      EXPORTING
-        tree_name              = 'PG_ZABAPGIT'
-        without_crossreference = abap_true
-        with_tcode_index       = abap_true
-      TABLES
-        p_tree                 = lt_snode.
-
-    DELETE lt_snode WHERE type <> 'OPL'
-      OR name NP 'LCL_OBJECT_++++'.
-
-    LOOP AT lt_snode ASSIGNING <ls_snode>.
-      lv_type = <ls_snode>-name+11.
-      APPEND lv_type TO rt_types.
-    ENDLOOP.
-
-  ENDMETHOD.
-
   METHOD is_supported.
 
     DATA: ls_item      TYPE ty_item,
           lv_supported TYPE abap_bool,
-          lt_types     TYPE ty_types_tt.
+          lt_types     TYPE lcl_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
 
 
-    lt_types = find_types( ).
+    lt_types = lcl_objects=>supported_list( ).
 
     LOOP AT lt_types ASSIGNING <lv_type>.
       CLEAR ls_item.
@@ -16591,12 +16592,12 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
     DATA: ls_item   TYPE ty_item,
           lv_exists TYPE abap_bool,
-          lt_types  TYPE ty_types_tt.
+          lt_types  TYPE lcl_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
 
 
-    lt_types = find_types( ).
+    lt_types = lcl_objects=>supported_list( ).
 
     LOOP AT lt_types ASSIGNING <lv_type>.
       CLEAR ls_item.
@@ -16651,5 +16652,120 @@ CLASS ltcl_zlib IMPLEMENTATION.
                                         exp = lc_raw ).
 
   ENDMETHOD.                    "decompress
+
+ENDCLASS.
+
+CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FINAL.
+* if this test class does not run, parameters in transaction SAUNIT_CLIENT_SETUP
+* might need to be adjusted
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS:
+      class_setup.
+
+    METHODS:
+      run FOR TESTING
+        RAISING lcx_exception,
+      check_empty_package
+        RAISING lcx_exception.
+
+    CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
+
+ENDCLASS.
+
+CLASS ltcl_dangerous IMPLEMENTATION.
+
+  METHOD class_setup.
+
+    DATA: lv_text   TYPE c LENGTH 100,
+          lv_answer TYPE c LENGTH 1.
+
+
+    lv_text = 'Objects will be created and deleted, do not run in customer system!'.
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Warning'
+        text_question         = lv_text
+        text_button_1         = 'Run'
+        text_button_2         = 'Cancel'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer.
+
+    IF lv_answer = '2'.
+      cl_abap_unit_assert=>fail( 'Cancelled' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD check_empty_package.
+
+    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt.
+
+
+    lt_tadir = lcl_tadir=>read( c_package ).
+    IF lines( lt_tadir ) > 0.
+      cl_abap_unit_assert=>fail( 'Prerequsite: package should be empty' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lo_repo    TYPE REF TO lcl_repo_online,
+          lt_tadir   TYPE lcl_tadir=>ty_tadir_tt,
+          lv_msg     TYPE string,
+          lt_results TYPE lcl_file_status=>ty_results_tt,
+          lt_types   TYPE lcl_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
+                   <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <lv_type>   LIKE LINE OF lt_types.
+
+
+    lt_types = lcl_objects=>supported_list( ).
+
+    lo_repo = lcl_repo_srv=>new_online(
+      iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
+      iv_branch_name = 'refs/heads/master'
+      iv_package     = c_package ).
+    lo_repo->status( ).
+    lo_repo->deserialize( ).
+
+    lt_tadir = lcl_tadir=>read( c_package ).
+    LOOP AT lt_types ASSIGNING <lv_type>.
+      READ TABLE lt_tadir WITH KEY object = <lv_type> TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        lv_msg = |Missing object type { <lv_type> }|.
+        cl_abap_unit_assert=>fail(
+            msg   = lv_msg
+            level = if_aunit_constants=>tolerable
+            quit  = if_aunit_constants=>no ).
+      ENDIF.
+    ENDLOOP.
+
+    lt_results = lo_repo->status( ).
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE match = abap_false.
+      lv_msg = |Does not match { <ls_result>-obj_type } { <ls_result>-obj_name }|.
+      cl_abap_unit_assert=>fail(
+          msg  = lv_msg
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+    lcl_objects=>delete( lt_tadir ).
+    lt_tadir = lcl_tadir=>read( c_package ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.
+      cl_abap_unit_assert=>fail(
+          msg  = lv_msg
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+    lcl_repo_srv=>delete( lo_repo ).
+
+  ENDMETHOD.
 
 ENDCLASS.
