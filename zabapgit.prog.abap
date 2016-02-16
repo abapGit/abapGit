@@ -6558,12 +6558,14 @@ CLASS lcl_object_wdca IMPLEMENTATION.
           IMPORTING
             e_is_existent        = lv_exists ).
         IF lv_exists = abap_false.
+          CLEAR es_outline.
           RETURN.
         ENDIF.
 
         es_outline = lo_cfg->read_outline_data( ).
       CATCH cx_wd_configuration INTO lx_err.
         IF lx_err->textid = cx_wd_configuration=>conf_config_not_exist.
+          CLEAR es_outline.
           RETURN.
         ELSE.
           _raise 'WDCA, read error'.
@@ -16067,10 +16069,23 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
   PRIVATE SECTION.
 
-    METHODS serialize_tabl FOR TESTING RAISING lcx_exception.
-    METHODS serialize_enqu FOR TESTING RAISING lcx_exception.
-    METHODS serialize_shlp FOR TESTING RAISING lcx_exception.
-    METHODS serialize_view FOR TESTING RAISING lcx_exception.
+    METHODS:
+      check
+        IMPORTING is_item TYPE ty_item
+        RAISING   lcx_exception,
+      serialize_tabl FOR TESTING RAISING lcx_exception,
+      serialize_enqu FOR TESTING RAISING lcx_exception,
+      serialize_shlp FOR TESTING RAISING lcx_exception,
+      serialize_view FOR TESTING RAISING lcx_exception,
+      serialize_auth FOR TESTING RAISING lcx_exception,
+      serialize_clas FOR TESTING RAISING lcx_exception,
+      serialize_doma FOR TESTING RAISING lcx_exception,
+      serialize_dtel FOR TESTING RAISING lcx_exception,
+      serialize_fugr FOR TESTING RAISING lcx_exception,
+      serialize_msag FOR TESTING RAISING lcx_exception,
+      serialize_prog FOR TESTING RAISING lcx_exception,
+      serialize_tran FOR TESTING RAISING lcx_exception,
+      serialize_ttyp FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.                    "ltcl_serialize DEFINITION
 
@@ -16129,63 +16144,169 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_enqu.
 
-    DATA: ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+    DATA: ls_item  TYPE ty_item.
 
 
     ls_item-obj_type = 'ENQU'.
     ls_item-obj_name = 'E_USR04'.
 
-    lt_files = lcl_objects=>serialize( ls_item ).
-
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    check( ls_item ).
 
   ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_shlp.
 
-    DATA: ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+    DATA: ls_item  TYPE ty_item.
 
 
     ls_item-obj_type = 'SHLP'.
     ls_item-obj_name = 'USER_LOGON'.
 
-    lt_files = lcl_objects=>serialize( ls_item ).
-
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    check( ls_item ).
 
   ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_view.
 
-    DATA: ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+    DATA: ls_item  TYPE ty_item.
 
 
     ls_item-obj_type = 'VIEW'.
     ls_item-obj_name = 'VUSR02_HEADER'.
 
-    lt_files = lcl_objects=>serialize( ls_item ).
-
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    check( ls_item ).
 
   ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_tabl.
 
-    DATA: ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+    DATA: ls_item  TYPE ty_item.
 
 
     ls_item-obj_type = 'TABL'.
     ls_item-obj_name = 'USR02'.
 
-    lt_files = lcl_objects=>serialize( ls_item ).
+    check( ls_item ).
+
+  ENDMETHOD.                    "serialize_table
+
+  METHOD serialize_auth.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'AUTH'.
+    ls_item-obj_name = 'AREA'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_clas.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'CLAS'.
+    ls_item-obj_name = 'CL_GUI_FRONTEND_SERVICES'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_doma.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'DOMA'.
+    ls_item-obj_name = 'PGMID'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_dtel.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'DTEL'.
+    ls_item-obj_name = 'PGMID'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_fugr.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'FUGR'.
+    ls_item-obj_name = 'SRFC'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_msag.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'MSAG'.
+    ls_item-obj_name = '00'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_prog.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'PROG'.
+    ls_item-obj_name = 'SAPLWBABAP'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_tran.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'TRAN'.
+    ls_item-obj_name = 'SE38'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD serialize_ttyp.
+
+    DATA: ls_item  TYPE ty_item.
+
+
+    ls_item-obj_type = 'TTYP'.
+    ls_item-obj_name = 'ABAPPROG'.
+
+    check( ls_item ).
+
+  ENDMETHOD.
+
+  METHOD check.
+
+    DATA: lt_files TYPE ty_files_tt.
+
+    lt_files = lcl_objects=>serialize( is_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
-  ENDMETHOD.                    "serialize_table
+  ENDMETHOD.
 
 ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
 
@@ -16400,3 +16521,133 @@ CLASS ltcl_git_pack IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
+
+CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
+
+    METHODS:
+      find_types RETURNING VALUE(rt_types) TYPE ty_types_tt,
+      is_supported FOR TESTING,
+      not_exist FOR TESTING RAISING lcx_exception.
+
+ENDCLASS.
+
+CLASS ltcl_object_types IMPLEMENTATION.
+
+  METHOD find_types.
+
+    DATA: lt_snode TYPE TABLE OF snode.
+
+    FIELD-SYMBOLS: <ls_snode> LIKE LINE OF lt_snode.
+
+
+    CALL FUNCTION 'WB_TREE_ACTUALIZE'
+      EXPORTING
+        tree_name              = 'PG_ZABAPGIT'
+        without_crossreference = abap_true
+        with_tcode_index       = abap_true
+      TABLES
+        p_tree                 = lt_snode.
+
+    DELETE lt_snode WHERE type <> 'OPL'
+      OR name NP 'LCL_OBJECT_++++'.
+
+    LOOP AT lt_snode ASSIGNING <ls_snode>.
+      APPEND <ls_snode>-name+11 TO rt_types.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD is_supported.
+
+    DATA: ls_item      TYPE ty_item,
+          lv_supported TYPE abap_bool,
+          lt_types     TYPE ty_types_tt.
+
+    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
+
+
+    lt_types = find_types( ).
+
+    LOOP AT lt_types ASSIGNING <lv_type>.
+      CLEAR ls_item.
+      ls_item-obj_type = <lv_type>.
+      lv_supported = lcl_objects=>is_supported( ls_item ).
+
+      cl_abap_unit_assert=>assert_equals(
+          act  = lv_supported
+          exp  = abap_true
+          msg  = ls_item-obj_type
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD not_exist.
+
+    DATA: ls_item   TYPE ty_item,
+          lv_exists TYPE abap_bool,
+          lt_types  TYPE ty_types_tt.
+
+    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
+
+
+    lt_types = find_types( ).
+
+    LOOP AT lt_types ASSIGNING <lv_type>.
+      CLEAR ls_item.
+      ls_item-obj_name = 'ZABAPGIT_FOOBAR'.
+      ls_item-obj_type = <lv_type>.
+      lv_exists = lcl_objects=>exists( ls_item ).
+
+      cl_abap_unit_assert=>assert_equals(
+          act  = lv_exists
+          exp  = abap_false
+          msg  = ls_item-obj_type
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS ltcl_zlib DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_zlib DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      decompress FOR TESTING RAISING cx_dynamic_check.
+
+ENDCLASS.                    "ltcl_zlib DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS ltcl_zlib IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_zlib IMPLEMENTATION.
+
+  METHOD decompress.
+
+    DATA: ls_data TYPE lcl_zlib=>ty_decompress.
+
+    CONSTANTS:
+      lc_raw        TYPE xstring VALUE '48656C6C6F20576F726C64210D0A',
+      lc_compressed TYPE xstring VALUE 'F348CDC9C95708CF2FCA4951E4E5020024E90455'.
+
+
+    ls_data = lcl_zlib=>decompress( lc_compressed ).
+
+    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
+    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
+                                        exp = lc_raw ).
+
+  ENDMETHOD.                    "decompress
+
+ENDCLASS.
