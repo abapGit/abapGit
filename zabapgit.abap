@@ -1,9 +1,9 @@
 REPORT zabapgit.
 
-* See https://github.com/larshp/abapGit/
+* See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.105'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.106'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -99,8 +99,8 @@ CLASS lcx_exception DEFINITION INHERITING FROM cx_static_check FINAL.
     DATA mv_text TYPE string.
 
     METHODS constructor
-      IMPORTING iv_text  TYPE string
-                previous TYPE REF TO cx_root OPTIONAL.
+      IMPORTING iv_text     TYPE string
+                ix_previous TYPE REF TO cx_root OPTIONAL.
 
   PRIVATE SECTION.
     DATA mx_previous TYPE REF TO cx_root.
@@ -2313,7 +2313,8 @@ CLASS lcl_objects_files DEFINITION FINAL.
                   io_xml       TYPE REF TO lcl_xml
                   iv_normalize TYPE sap_bool DEFAULT abap_true
         RAISING   lcx_exception,
-      add_xml_from_plugin "needed since type-check during dynamic call fails even if the object is compatible
+* needed since type-check during dynamic call fails even if the object is compatible
+      add_xml_from_plugin
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO object
                   iv_normalize TYPE sap_bool DEFAULT abap_true
@@ -2519,13 +2520,14 @@ CLASS lcl_objects_files IMPLEMENTATION.
 *    ABAP does not perform implicit type casts (also if compatible) in signatures,
 *    therefore this method's signature is typed ref to object
     DATA lo_xml TYPE REF TO lcl_xml.
+
     lo_xml ?= io_xml.
+
     me->add_xml(
-      EXPORTING
-        iv_extra      = iv_extra
-        io_xml        = lo_xml
-        iv_normalize  = iv_normalize
-    ).
+      iv_extra     = iv_extra
+      io_xml       = lo_xml
+      iv_normalize = iv_normalize ).
+
   ENDMETHOD.
 
 ENDCLASS.
@@ -2605,9 +2607,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_count TYPE i,
-          ls_file  TYPE ty_file,
-          lo_files TYPE REF TO object.
+    DATA: lv_count         TYPE i,
+          ls_file          TYPE ty_file,
+          lo_files         TYPE REF TO object,
+          lo_wrapped_files TYPE REF TO object.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~SERIALIZE').
 
@@ -2615,7 +2618,6 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
       RECEIVING
         ro_files_proxy = lo_files. "Returns a proxy wrapping a files-object
 
-    DATA lo_wrapped_files TYPE REF TO object.
     CALL METHOD lo_files->('GET_WRAPPED_OBJECT')
       RECEIVING
         ro_objects_files = lo_wrapped_files.
@@ -2650,8 +2652,11 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
     TRY.
         CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE').
-      CATCH zcx_abapgit_object INTO lx_plugin.
-        RAISE EXCEPTION TYPE lcx_exception EXPORTING previous = lx_plugin iv_text = lx_plugin->get_text( ).
+      CATCH cx_static_check INTO lx_plugin.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            ix_previous = lx_plugin
+            iv_text     = lx_plugin->get_text( ).
     ENDTRY.
   ENDMETHOD.
 
@@ -2660,8 +2665,11 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
     TRY.
         CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DELETE').
-      CATCH zcx_abapgit_object INTO lx_plugin.
-        RAISE EXCEPTION TYPE lcx_exception EXPORTING previous = lx_plugin iv_text = lx_plugin->get_text( ).
+      CATCH cx_static_check INTO lx_plugin.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            ix_previous = lx_plugin
+            iv_text     = lx_plugin->get_text( ).
     ENDTRY.
 
   ENDMETHOD.
@@ -4470,12 +4478,15 @@ CLASS lcl_object_clas IMPLEMENTATION.
     mv_skip_testclass = abap_false.
     IF lines( rt_source ) = 2.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
+      ASSERT sy-subrc = 0.
       READ TABLE rt_source INDEX 2 INTO lv_line2.
+      ASSERT sy-subrc = 0.
       IF lv_line1(3) = '*"*' AND lv_line2 IS INITIAL.
         mv_skip_testclass = abap_true.
       ENDIF.
     ELSEIF lines( rt_source ) = 1.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
+      ASSERT sy-subrc = 0.
       IF lv_line1(3) = '*"*' OR lv_line1 IS INITIAL.
         mv_skip_testclass = abap_true.
       ENDIF.
@@ -11082,8 +11093,7 @@ CLASS lcl_objects IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
-            is_item = is_item
-            .
+            is_item = is_item.
       CATCH cx_sy_create_object_error.
         TRY.
 * 2nd step, try looking for plugins
