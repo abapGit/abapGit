@@ -3228,6 +3228,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lo_xml         TYPE REF TO lcl_xml,
+          lo_aab         TYPE REF TO cl_aab_id,
           lv_description TYPE aab_id_descript.
 
 
@@ -3235,7 +3236,9 @@ CLASS lcl_object_acid IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    create_object( )->get_descript( IMPORTING ex_descript = lv_description ).
+    lo_aab = create_object( ).
+
+    lo_aab->get_descript( IMPORTING ex_descript = lv_description ).
 
     CREATE OBJECT lo_xml.
     lo_xml->element_add( lv_description ).
