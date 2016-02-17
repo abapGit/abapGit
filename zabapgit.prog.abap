@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.107'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.108'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3374,6 +3374,8 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
     lv_fieldname = ms_item-obj_name.
 
+* there is a bug in SAP standard, the TADIR entries are not deleted
+* when the AUTH object is deleted in transaction SU20
     CALL FUNCTION 'SUSR_AUTF_DELETE_FIELD'
       EXPORTING
         fieldname           = lv_fieldname
@@ -7257,20 +7259,25 @@ CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_typename TYPE typegroup.
+    DATA: lv_objname TYPE rsedd0-ddobjname.
 
 
-    lv_typename = ms_item-obj_name.
+    lv_objname = ms_item-obj_name.
 
-    CALL FUNCTION 'TYPD_INTERNAL_SERVICE'
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
       EXPORTING
-        i_typename        = lv_typename
-        i_operation       = swbm_c_op_delete
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'G'
       EXCEPTIONS
-        illegal_operation = 1
-        OTHERS            = 2.
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4
+        dialog_needed        = 5
+        OTHERS               = 6.
     IF sy-subrc <> 0.
-      _raise 'error from TYPD_INTERNAL_SERVICE'.
+      _raise 'error deleting TYPE'.
     ENDIF.
 
   ENDMETHOD.                    "delete
