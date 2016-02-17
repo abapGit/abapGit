@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.109'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.110'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13872,16 +13872,18 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD show_progress.
 
-    DATA: lv_pct TYPE i,
-          lv_f   TYPE f.
+    DATA: lv_pct  TYPE i,
+          lv_text TYPE string,
+          lv_f    TYPE f.
 
 
     lv_f = ( iv_current / iv_total ) * 100.
     lv_pct = lv_f.
+    lv_text = |{ iv_obj_name } ({ iv_current }/{ iv_total })|.
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
       EXPORTING
         percentage = lv_pct
-        text       = iv_obj_name.
+        text       = lv_text.
 
   ENDMETHOD.                    "show_progress
 
@@ -13894,7 +13896,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname = 'ABAPTXT255'.
+    <ls_field>-tabname   = 'ABAPTXT255'.
     <ls_field>-fieldname = 'LINE'.
     <ls_field>-fieldtext = 'Commit message'.                "#EC NOTEXT
     <ls_field>-field_obl = abap_true.
@@ -14184,10 +14186,12 @@ CLASS lcl_zip IMPLEMENTATION.
 
     DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
           ls_item  TYPE ty_item,
+          lt_msg   TYPE rs_t_msg,
           lt_files TYPE ty_files_tt,
           lt_zip   TYPE ty_files_tt.
 
     FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
+                   <ls_msg>   LIKE LINE OF lt_msg,
                    <ls_tadir> LIKE LINE OF lt_tadir.
 
 
@@ -14205,14 +14209,33 @@ CLASS lcl_zip IMPLEMENTATION.
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
-      lt_files = lcl_objects=>serialize( ls_item ).
-
-      LOOP AT lt_files ASSIGNING <ls_file>.
-        <ls_file>-path = <ls_tadir>-path.
-      ENDLOOP.
-
-      APPEND LINES OF lt_files TO lt_zip.
+      IF lcl_objects=>is_supported( ls_item ) = abap_false.
+        APPEND INITIAL LINE TO lt_msg ASSIGNING <ls_msg>.
+        <ls_msg>-msgty = 'W'.
+        <ls_msg>-msgid = '00'.
+        <ls_msg>-msgno = '001'.
+        <ls_msg>-msgv1 = 'Object type ignored, not supported:'.
+        <ls_msg>-msgv2 = ls_item-obj_type.
+        <ls_msg>-msgv3 = '-'.
+        <ls_msg>-msgv4 = ls_item-obj_name.
+      ELSE.
+        lt_files = lcl_objects=>serialize( ls_item ).
+        LOOP AT lt_files ASSIGNING <ls_file>.
+          <ls_file>-path = <ls_tadir>-path.
+        ENDLOOP.
+        APPEND LINES OF lt_files TO lt_zip.
+      ENDIF.
     ENDLOOP.
+
+    IF lines( lt_msg ) > 0.
+      CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
+        EXPORTING
+          i_t_msg           = lt_msg
+          i_txt             = 'Warning'
+          i_with_s_on_empty = abap_false
+          i_one_msg_direct  = abap_false
+          i_one_msg_type_s  = abap_false.
+    ENDIF.
 
     IF iv_zip = abap_true.
       file_download( iv_package = iv_package
