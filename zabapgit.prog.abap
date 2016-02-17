@@ -1075,10 +1075,11 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RAISING   lcx_exception.
 
     METHODS element_read
-      IMPORTING ii_root    TYPE REF TO if_ixml_element OPTIONAL
-                iv_name    TYPE string OPTIONAL
-      EXPORTING ev_success TYPE abap_bool
-      CHANGING  cg_element TYPE data
+      IMPORTING ii_root      TYPE REF TO if_ixml_element OPTIONAL
+                iv_name      TYPE string OPTIONAL
+      EXPORTING ev_success   TYPE abap_bool
+                eo_elemdescr TYPE REF TO cl_abap_elemdescr
+      CHANGING  cg_element   TYPE data
       RAISING   lcx_exception.
 
     METHODS structure_add
@@ -1088,10 +1089,11 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RAISING   lcx_exception.
 
     METHODS structure_read
-      IMPORTING ii_root      TYPE REF TO if_ixml_element OPTIONAL
-                iv_name      TYPE string OPTIONAL
-      EXPORTING ev_success   TYPE abap_bool
-      CHANGING  cg_structure TYPE data
+      IMPORTING ii_root        TYPE REF TO if_ixml_element OPTIONAL
+                iv_name        TYPE string OPTIONAL
+      EXPORTING ev_success     TYPE abap_bool
+                eo_structdescr TYPE REF TO cl_abap_structdescr
+      CHANGING  cg_structure   TYPE data
       RAISING   lcx_exception.
 
     METHODS table_add
@@ -1101,9 +1103,10 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RAISING   lcx_exception.
 
     METHODS table_read
-      IMPORTING ii_root  TYPE REF TO if_ixml_element OPTIONAL
-                iv_name  TYPE string OPTIONAL
-      CHANGING  ct_table TYPE STANDARD TABLE
+      IMPORTING ii_root       TYPE REF TO if_ixml_element OPTIONAL
+                iv_name       TYPE string OPTIONAL
+      EXPORTING eo_tabledescr TYPE REF TO cl_abap_tabledescr
+      CHANGING  ct_table      TYPE STANDARD TABLE
       RAISING   lcx_exception.
 
     METHODS xml_render
@@ -1183,19 +1186,18 @@ CLASS lcl_xml IMPLEMENTATION.
 
     DATA: lv_name      TYPE string,
           li_struct    TYPE REF TO if_ixml_element,
-          lo_typedescr TYPE REF TO cl_abap_typedescr,
-          lo_descr_ref TYPE REF TO cl_abap_structdescr.
+          lo_typedescr TYPE REF TO cl_abap_typedescr.
 
     FIELD-SYMBOLS: <lg_any>  TYPE any,
-                   <ls_comp> LIKE LINE OF lo_descr_ref->components.
+                   <ls_comp> LIKE LINE OF eo_structdescr->components.
 
 
     CLEAR cg_structure.
     ev_success = abap_true.
 
-    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( cg_structure ).
+    eo_structdescr ?= cl_abap_typedescr=>describe_by_data( cg_structure ).
     IF iv_name IS INITIAL.
-      lv_name = lo_descr_ref->get_relative_name( ).
+      lv_name = eo_structdescr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, structure read'.
       ENDIF.
@@ -1210,7 +1212,7 @@ CLASS lcl_xml IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
+    LOOP AT eo_structdescr->components ASSIGNING <ls_comp>.
       ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE cg_structure TO <lg_any>.
       ASSERT sy-subrc = 0.
 
@@ -1242,21 +1244,20 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_read.
 
-    DATA: lv_name        TYPE string,
-          li_root        TYPE REF TO if_ixml_element,
-          lv_kind        TYPE abap_typecategory,
-          lv_index       TYPE i,
-          lv_success     TYPE abap_bool,
-          lo_data_descr  TYPE REF TO cl_abap_datadescr,
-          lo_table_descr TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name       TYPE string,
+          li_root       TYPE REF TO if_ixml_element,
+          lv_kind       TYPE abap_typecategory,
+          lv_index      TYPE i,
+          lv_success    TYPE abap_bool,
+          lo_data_descr TYPE REF TO cl_abap_datadescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
 
     CLEAR ct_table[].
 
-    lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
-    lv_name = lo_table_descr->get_relative_name( ).
+    eo_tabledescr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
+    lv_name = eo_tabledescr->get_relative_name( ).
 
     IF lv_name IS INITIAL.
       lv_name = iv_name.
@@ -1272,7 +1273,7 @@ CLASS lcl_xml IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_data_descr = lo_table_descr->get_table_line_type( ).
+    lo_data_descr = eo_tabledescr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
     DO.
@@ -1454,17 +1455,16 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD element_read.
 
-    DATA: lo_descr   TYPE REF TO cl_abap_elemdescr,
-          li_element TYPE REF TO if_ixml_element,
+    DATA: li_element TYPE REF TO if_ixml_element,
           lv_name    TYPE string.
 
 
     ev_success = abap_true.
 
-    lo_descr ?= cl_abap_typedescr=>describe_by_data( cg_element ).
+    eo_elemdescr ?= cl_abap_typedescr=>describe_by_data( cg_element ).
 
     IF iv_name IS INITIAL.
-      lv_name = lo_descr->get_relative_name( ).
+      lv_name = eo_elemdescr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, element read'.
       ENDIF.
