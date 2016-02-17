@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.108'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.109'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -11412,13 +11412,18 @@ CLASS lcl_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
+* PROG before internet services, as the services might use the screens
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PROG'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
 
 * ISAP has to be handled before ISRP
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IASP'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type <> 'IASP'.
+    LOOP AT it_results ASSIGNING <ls_result>
+        WHERE obj_type <> 'IASP' AND obj_type <> 'PROG'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
