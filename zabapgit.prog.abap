@@ -1095,7 +1095,7 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RAISING   lcx_exception.
 
     METHODS table_add
-      IMPORTING it_table TYPE STANDARD TABLE
+      IMPORTING it_table TYPE ANY TABLE
                 iv_name  TYPE string OPTIONAL
                 ii_root  TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
@@ -1122,11 +1122,29 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       IMPORTING ii_root           TYPE REF TO if_ixml_element OPTIONAL
                 iv_name           TYPE string
       RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
+  PROTECTED SECTION.
+    TYPES: BEGIN OF ty_s_ecape_map,
+             forbidden_char  TYPE c LENGTH 1,
+             escape_sequence TYPE string, "in order to allow longer (thus unique) escape sequences
+           END OF ty_s_ecape_map,
+           ty_t_escape_map TYPE SORTED TABLE OF ty_s_ecape_map WITH UNIQUE KEY forbidden_char
+         WITH UNIQUE SORTED KEY escape_sequence COMPONENTS escape_sequence. "to prevent ambiguity
+
+    DATA mt_escape_map TYPE ty_t_escape_map.
+
+    METHODS name_escape
+      IMPORTING
+                iv_revert TYPE abap_bool DEFAULT abap_false
+      CHANGING
+                cv_text   TYPE string
+      RAISING   lcx_exception.
 
   PRIVATE SECTION.
 
     DATA: mi_ixml TYPE REF TO if_ixml,
           mi_root TYPE REF TO if_ixml_element.
+
+    CONSTANTS co_suffix_table_line_struc TYPE string VALUE '_table_line_structure'. "_item'.
 
     METHODS special_names
       CHANGING cv_name TYPE string.
@@ -1203,6 +1221,8 @@ CLASS lcl_xml IMPLEMENTATION.
       lv_name = iv_name.
     ENDIF.
 
+    name_escape( CHANGING cv_text = lv_name ).
+
     li_struct = xml_find( ii_root = ii_root
                           iv_name = lv_name ).
     IF NOT li_struct IS BOUND.
@@ -1242,13 +1262,14 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_read.
 
-    DATA: lv_name        TYPE string,
-          li_root        TYPE REF TO if_ixml_element,
-          lv_kind        TYPE abap_typecategory,
-          lv_index       TYPE i,
-          lv_success     TYPE abap_bool,
-          lo_data_descr  TYPE REF TO cl_abap_datadescr,
-          lo_table_descr TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name            TYPE string,
+          lv_table_line_name TYPE string,
+          li_root            TYPE REF TO if_ixml_element,
+          lv_kind            TYPE abap_typecategory,
+          lv_index           TYPE i,
+          lv_success         TYPE abap_bool,
+          lo_data_descr      TYPE REF TO cl_abap_datadescr,
+          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
@@ -1256,15 +1277,17 @@ CLASS lcl_xml IMPLEMENTATION.
     CLEAR ct_table[].
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
-    lv_name = lo_table_descr->get_relative_name( ).
-
-    IF lv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
       lv_name = iv_name.
+    ELSE.
+      lv_name = lo_table_descr->get_relative_name( ).
+
+      IF lv_name IS INITIAL.
+        _raise 'no name, table read'.
+      ENDIF.
     ENDIF.
 
-    IF lv_name IS INITIAL.
-      _raise 'no name, table read'.
-    ENDIF.
+    name_escape( CHANGING cv_text = lv_name ).
 
     li_root = xml_find( ii_root   = ii_root
                         iv_name   = lv_name ).
@@ -1275,11 +1298,16 @@ CLASS lcl_xml IMPLEMENTATION.
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
+    IF iv_name IS NOT INITIAL.
+      lv_table_line_name = |{ iv_name }{ co_suffix_table_line_struc }|.
+    ENDIF.
+
     DO.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_read( EXPORTING ii_root    = li_root
+                                    iv_name    = lv_table_line_name
                           IMPORTING ev_success = lv_success
                           CHANGING cg_structure = <lg_line> ).
         WHEN cl_abap_typedescr=>kind_elem.
@@ -1364,38 +1392,53 @@ CLASS lcl_xml IMPLEMENTATION.
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
 
+*    define characters to be escaped
+    DATA ls_escape_map LIKE LINE OF mt_escape_map.
+    ls_escape_map-forbidden_char = |/|.
+    ls_escape_map-escape_sequence = |zyx_1|. "custom escape sequence as the fraction slash (&#8260) is a unicode-character and ABAPGit should also run on non-unicode)
+    INSERT ls_escape_map INTO TABLE mt_escape_map.
+
   ENDMETHOD.                    "xml_root
 
   METHOD table_add.
 
-    DATA: lv_name        TYPE string,
-          li_table       TYPE REF TO if_ixml_element,
-          lv_kind        TYPE abap_typecategory,
-          lo_data_descr  TYPE REF TO cl_abap_datadescr,
-          lo_table_descr TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name            TYPE string,
+          lv_table_line_name TYPE string,
+          li_table           TYPE REF TO if_ixml_element,
+          lv_kind            TYPE abap_typecategory,
+          lo_data_descr      TYPE REF TO cl_abap_datadescr,
+          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
-
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
-    lv_name = lo_table_descr->get_relative_name( ).
 
-    IF lv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
       lv_name = iv_name.
+    ELSE.
+      lv_name = lo_table_descr->get_relative_name( ).
+
+      IF lv_name IS INITIAL.
+        _raise 'no name, table add'.
+      ENDIF.
     ENDIF.
 
-    IF lv_name IS INITIAL.
-      _raise 'no name, table add'.
-    ENDIF.
+    name_escape( CHANGING cv_text = lv_name ).
 
     li_table = mi_xml_doc->create_element( lv_name ).
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
+*    provide a stable name for the line structure if a table name was provided previously
+    IF iv_name IS NOT INITIAL.
+      lv_table_line_name = |{ iv_name }{ co_suffix_table_line_struc }|.
+    ENDIF.
+
     LOOP AT it_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_add( ig_structure = <lg_line>
+                         iv_name      = lv_table_line_name
                          ii_root      = li_table ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_add( ig_element = <lg_line>
@@ -1428,17 +1471,18 @@ CLASS lcl_xml IMPLEMENTATION.
           li_text    TYPE REF TO if_ixml_text,
           lv_name    TYPE string.
 
-
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_element ).
 
-    IF iv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
+      lv_name = iv_name.
+    ELSE.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, element add'.
       ENDIF.
-    ELSE.
-      lv_name = iv_name.
     ENDIF.
+
+    name_escape( CHANGING cv_text = lv_name ).
 
     li_element = mi_xml_doc->create_element( lv_name ).
 
@@ -1472,6 +1516,8 @@ CLASS lcl_xml IMPLEMENTATION.
       lv_name = iv_name.
     ENDIF.
 
+    name_escape( CHANGING cv_text = lv_name ).
+
     li_element = xml_find( ii_root = ii_root
                            iv_name = lv_name ).
     IF NOT li_element IS BOUND.
@@ -1493,17 +1539,19 @@ CLASS lcl_xml IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
                    <lg_any>  TYPE any.
 
-
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+    IF iv_name IS NOT INITIAL.
+      lv_name = iv_name.
+    ELSE.
 
-    IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, structure add'.
       ENDIF.
-    ELSE.
-      lv_name = iv_name.
     ENDIF.
+
+    name_escape( CHANGING cv_text = lv_name ).
+
     li_structure = mi_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr->components ASSIGNING <ls_comp>.
@@ -1560,6 +1608,27 @@ CLASS lcl_xml IMPLEMENTATION.
     li_renderer->render( ).
 
   ENDMETHOD.                    "xml_render
+
+
+  METHOD name_escape.
+*    Besides the XML-reserved character ( <, >, &, % ) there are other characters which should be replaced
+*    in order to create a valid xml. One of them e. g. is the forward-slash at the beginning contained
+*    in namespaces. Included e. g. in a table's name, this will screw-up the xml.
+    DATA ls_escape_map LIKE LINE OF mt_escape_map.
+
+    LOOP AT mt_escape_map INTO ls_escape_map.
+      IF iv_revert = abap_false.
+*      check whether the original text contains an escape sequence. If this was the case, the reading of the data would be corrupted
+        IF cv_text CS ls_escape_map-escape_sequence.
+          RAISE EXCEPTION TYPE lcx_exception EXPORTING iv_text = |Text to be escaped contains escape-sequence { ls_escape_map-escape_sequence }|.
+        ENDIF.
+        REPLACE ALL OCCURRENCES OF ls_escape_map-forbidden_char IN cv_text WITH ls_escape_map-escape_sequence.
+      ELSE.
+        REPLACE ALL OCCURRENCES OF ls_escape_map-escape_sequence IN cv_text WITH ls_escape_map-forbidden_char.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
@@ -2586,16 +2655,25 @@ ENDCLASS.
 CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD constructor.
-
+    DATA: lx_create_object_error TYPE REF TO cx_sy_create_object_error.
     DATA: lv_name TYPE string.
 
     super->constructor( is_item ).
 
     CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO lv_name.
 
-    CREATE OBJECT mo_plugin TYPE (lv_name)
-      EXPORTING
-        iv_obj_name = is_item-obj_name.
+    TRY.
+        CREATE OBJECT mo_plugin TYPE (lv_name)
+          EXPORTING
+            iv_object   = is_item-obj_type
+            iv_obj_name = is_item-obj_name.
+      CATCH cx_sy_create_object_error INTO lx_create_object_error.
+*        Fallback: Try the generic plugin
+        CREATE OBJECT mo_plugin TYPE ('ZCL_ABAPGIT_OBJECT_BY_SOBJ')
+              EXPORTING
+                iv_obj_type = is_item-obj_type
+                iv_obj_name = is_item-obj_name.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -2628,30 +2706,36 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_files  TYPE REF TO object,
-          lt_files  TYPE ty_files_tt,
-          lx_plugin TYPE REF TO cx_static_check.
+    DATA: lo_files         TYPE REF TO object,
+          lo_wrapped_files TYPE REF TO object,
+          lt_files         TYPE ty_files_tt,
+          lx_plugin        TYPE REF TO cx_static_check.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
+*
+*    CALL METHOD mo_plugin->('GET_FILES')
+*      RECEIVING
+*        ro_files_proxy = lo_files. "Returns a proxy wrapping a files-object
+*
+*    CALL METHOD lo_files->('GET_WRAPPED_OBJECT')
+*      RECEIVING
+*        ro_objects_files = lo_wrapped_files.
 
-    CALL METHOD mo_plugin->('GET_FILES')
-      RECEIVING
-        ro_files = lo_files.
-
-    CALL METHOD lo_files->('CLEAR').
-
-* transfer files from mo_files to external
-    lt_files = mo_files->get_files( ).
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      CALL METHOD lo_files->('PUSH')
-        EXPORTING
-          iv_filename = <ls_file>-filename
-          iv_data     = <ls_file>-data.
-    ENDLOOP.
+* Why did Lars insert this?
+*************** transfer files from mo_files to external - that has already been done in lcl_objects_bridge->set_files()
+**************    lt_files = mo_files->get_files( ).
+**************    LOOP AT lt_files ASSIGNING <ls_file>.
+**************      CALL METHOD lo_wrapped_files->('PUSH')
+**************        EXPORTING
+**************          iv_filename = <ls_file>-filename
+**************          iv_data     = <ls_file>-data.
+**************    ENDLOOP.
 
     TRY.
-        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE').
+        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE')
+          EXPORTING
+            iv_package = iv_package.
       CATCH cx_static_check INTO lx_plugin.
         RAISE EXCEPTION TYPE lcx_exception
           EXPORTING
@@ -15901,7 +15985,6 @@ ENDCLASS.
 CLASS ltcl_convert IMPLEMENTATION.
 
   METHOD convert_int.
-
     DATA: lv_xstring TYPE xstring,
           lv_input   TYPE i,
           lv_result  TYPE i.
