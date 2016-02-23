@@ -1299,7 +1299,7 @@ CLASS lcl_xml IMPLEMENTATION.
     lv_kind = lo_data_descr->kind.
 
     IF iv_name IS NOT INITIAL.
-      lv_table_line_name = iv_name.
+      lv_table_line_name = lv_name.
     ENDIF.
 
     DO.
@@ -1637,7 +1637,8 @@ CLASS lcl_xml IMPLEMENTATION.
     LOOP AT mt_escape_map INTO ls_escape_map.
       IF iv_revert = abap_false.
 *      check whether the original text contains an escape sequence. If this was the case, the reading of the data would be corrupted
-        IF cv_text CS ls_escape_map-escape_sequence.
+        IF cv_text CS ls_escape_map-forbidden_char
+            AND cv_text CS ls_escape_map-escape_sequence.
           RAISE EXCEPTION TYPE lcx_exception EXPORTING iv_text = |Text to be escaped contains escape-sequence { ls_escape_map-escape_sequence }|.
         ENDIF.
         REPLACE ALL OCCURRENCES OF ls_escape_map-forbidden_char IN cv_text WITH ls_escape_map-escape_sequence.
