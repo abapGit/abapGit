@@ -2991,41 +2991,41 @@ CLASS lcl_objects_program IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      CALL FUNCTION 'READ_PROGDIR'
-        EXPORTING
-          i_progname = is_progdir-name
-          i_state    = 'I'
-        IMPORTING
-          e_progdir  = ls_progdir_new
-        EXCEPTIONS
-          not_exists = 1
-          OTHERS     = 2.
-      IF sy-subrc <> 0.
-        _raise 'not found in PROGDIR'.
-      ENDIF.
+    ENDIF.
+
+    CALL FUNCTION 'READ_PROGDIR'
+      EXPORTING
+        i_progname = is_progdir-name
+        i_state    = 'I'
+      IMPORTING
+        e_progdir  = ls_progdir_new
+      EXCEPTIONS
+        not_exists = 1
+        OTHERS     = 2.
+    IF sy-subrc <> 0.
+      _raise 'not found in PROGDIR'.
+    ENDIF.
 
 * todo, package?
 
-      ls_progdir_new-ldbname = is_progdir-ldbname.
-      ls_progdir_new-dbna    = is_progdir-dbna.
-      ls_progdir_new-dbapl   = is_progdir-dbapl.
-      ls_progdir_new-rload   = is_progdir-rload.
-      ls_progdir_new-fixpt   = is_progdir-fixpt.
-      ls_progdir_new-varcl   = is_progdir-varcl.
-      ls_progdir_new-appl    = is_progdir-appl.
+    ls_progdir_new-ldbname = is_progdir-ldbname.
+    ls_progdir_new-dbna    = is_progdir-dbna.
+    ls_progdir_new-dbapl   = is_progdir-dbapl.
+    ls_progdir_new-rload   = is_progdir-rload.
+    ls_progdir_new-fixpt   = is_progdir-fixpt.
+    ls_progdir_new-varcl   = is_progdir-varcl.
+    ls_progdir_new-appl    = is_progdir-appl.
 
-      CALL FUNCTION 'UPDATE_PROGDIR'
-        EXPORTING
-          i_progdir    = ls_progdir_new
-          i_progname   = ls_progdir_new-name
-          i_state      = ls_progdir_new-state
-        EXCEPTIONS
-          not_executed = 1
-          OTHERS       = 2.
-      IF sy-subrc <> 0.
-        _raise 'PROG, error inserting'.
-      ENDIF.
-
+    CALL FUNCTION 'UPDATE_PROGDIR'
+      EXPORTING
+        i_progdir    = ls_progdir_new
+        i_progname   = ls_progdir_new-name
+        i_state      = ls_progdir_new-state
+      EXCEPTIONS
+        not_executed = 1
+        OTHERS       = 2.
+    IF sy-subrc <> 0.
+      _raise 'PROG, error inserting'.
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'
