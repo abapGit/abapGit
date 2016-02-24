@@ -1097,6 +1097,7 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
     METHODS table_add
       IMPORTING it_table TYPE STANDARD TABLE
                 iv_name  TYPE string OPTIONAL
+                iv_stable TYPE abap_bool DEFAULT abap_false
                 ii_root  TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
 
@@ -1398,6 +1399,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
+
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
 
     IF iv_name IS NOT INITIAL.
@@ -1414,8 +1416,8 @@ CLASS lcl_xml IMPLEMENTATION.
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
-*    provide a stable name for the line structure if a table name was provided previously
-    IF iv_name IS NOT INITIAL.
+* provide a stable name for the line structure if a table name was provided previously
+    IF iv_stable = abap_true AND iv_name IS NOT INITIAL.
       lv_table_line_name = iv_name.
     ENDIF.
 
