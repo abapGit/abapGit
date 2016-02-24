@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.110'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.111'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1124,7 +1124,6 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
 
   PRIVATE SECTION.
-
     DATA: mi_ixml TYPE REF TO if_ixml,
           mi_root TYPE REF TO if_ixml_element.
 
@@ -1242,13 +1241,14 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_read.
 
-    DATA: lv_name        TYPE string,
-          li_root        TYPE REF TO if_ixml_element,
-          lv_kind        TYPE abap_typecategory,
-          lv_index       TYPE i,
-          lv_success     TYPE abap_bool,
-          lo_data_descr  TYPE REF TO cl_abap_datadescr,
-          lo_table_descr TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name            TYPE string,
+          lv_table_line_name TYPE string,
+          li_root            TYPE REF TO if_ixml_element,
+          lv_kind            TYPE abap_typecategory,
+          lv_index           TYPE i,
+          lv_success         TYPE abap_bool,
+          lo_data_descr      TYPE REF TO cl_abap_datadescr,
+          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
@@ -1256,14 +1256,14 @@ CLASS lcl_xml IMPLEMENTATION.
     CLEAR ct_table[].
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
-    lv_name = lo_table_descr->get_relative_name( ).
-
-    IF lv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
       lv_name = iv_name.
-    ENDIF.
+    ELSE.
+      lv_name = lo_table_descr->get_relative_name( ).
 
-    IF lv_name IS INITIAL.
-      _raise 'no name, table read'.
+      IF lv_name IS INITIAL.
+        _raise 'no name, table read'.
+      ENDIF.
     ENDIF.
 
     li_root = xml_find( ii_root   = ii_root
@@ -1275,15 +1275,21 @@ CLASS lcl_xml IMPLEMENTATION.
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
+    IF iv_name IS NOT INITIAL.
+      lv_table_line_name = lv_name.
+    ENDIF.
+
     DO.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_read( EXPORTING ii_root    = li_root
+                                    iv_name    = lv_table_line_name
                           IMPORTING ev_success = lv_success
                           CHANGING cg_structure = <lg_line> ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_read( EXPORTING ii_root    = li_root
+                                  iv_name    = lv_table_line_name
                         IMPORTING ev_success = lv_success
                         CHANGING  cg_element = <lg_line> ).
         WHEN OTHERS.
@@ -1291,11 +1297,27 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDCASE.
 
       IF lv_success = abap_false.
-        lv_index = lines( ct_table ).
-        DELETE ct_table INDEX lv_index.
-        ASSERT sy-subrc = 0.
-        EXIT. " current loop
-      ENDIF.
+*        Fallback to the previous implementation: the table's name was not always propagated
+*        the reading of the line. Thus, read again without the name (of the table) being passed
+        CASE lv_kind.
+          WHEN cl_abap_typedescr=>kind_struct.
+            structure_read( EXPORTING ii_root    = li_root
+                            IMPORTING ev_success = lv_success
+                            CHANGING cg_structure = <lg_line> ).
+          WHEN cl_abap_typedescr=>kind_elem.
+            element_read( EXPORTING ii_root    = li_root
+                          IMPORTING ev_success = lv_success
+                          CHANGING  cg_element = <lg_line> ).
+          WHEN OTHERS.
+            _raise 'unknown kind'.
+        ENDCASE.
+        IF lv_success = abap_false.
+          lv_index = lines( ct_table ).
+          DELETE ct_table INDEX lv_index.
+          ASSERT sy-subrc = 0.
+          EXIT. " current loop
+        ENDIF. "Fallback also not successful
+      ENDIF." Fallback
     ENDDO.
 
   ENDMETHOD.                    "table_read
@@ -1363,42 +1385,49 @@ CLASS lcl_xml IMPLEMENTATION.
       mi_root->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
-
   ENDMETHOD.                    "xml_root
 
   METHOD table_add.
 
-    DATA: lv_name        TYPE string,
-          li_table       TYPE REF TO if_ixml_element,
-          lv_kind        TYPE abap_typecategory,
-          lo_data_descr  TYPE REF TO cl_abap_datadescr,
-          lo_table_descr TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name            TYPE string,
+          lv_table_line_name TYPE string,
+          li_table           TYPE REF TO if_ixml_element,
+          lv_kind            TYPE abap_typecategory,
+          lo_data_descr      TYPE REF TO cl_abap_datadescr,
+          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
-
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
-    lv_name = lo_table_descr->get_relative_name( ).
 
-    IF lv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
       lv_name = iv_name.
-    ENDIF.
+    ELSE.
+      lv_name = lo_table_descr->get_relative_name( ).
 
-    IF lv_name IS INITIAL.
-      _raise 'no name, table add'.
+      IF lv_name IS INITIAL.
+        _raise 'no name, table add'.
+      ENDIF.
     ENDIF.
 
     li_table = mi_xml_doc->create_element( lv_name ).
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
+*    provide a stable name for the line structure if a table name was provided previously
+    IF iv_name IS NOT INITIAL.
+      lv_table_line_name = iv_name.
+    ENDIF.
+
     LOOP AT it_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_add( ig_structure = <lg_line>
+                         iv_name      = lv_table_line_name
                          ii_root      = li_table ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_add( ig_element = <lg_line>
+                       iv_name    = lv_table_line_name
                        ii_root    = li_table ).
         WHEN OTHERS.
           _raise 'unknown kind'.
@@ -1428,16 +1457,15 @@ CLASS lcl_xml IMPLEMENTATION.
           li_text    TYPE REF TO if_ixml_text,
           lv_name    TYPE string.
 
-
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_element ).
 
-    IF iv_name IS INITIAL.
+    IF iv_name IS NOT INITIAL.
+      lv_name = iv_name.
+    ELSE.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, element add'.
       ENDIF.
-    ELSE.
-      lv_name = iv_name.
     ENDIF.
 
     li_element = mi_xml_doc->create_element( lv_name ).
@@ -1493,17 +1521,17 @@ CLASS lcl_xml IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
                    <lg_any>  TYPE any.
 
-
     lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+    IF iv_name IS NOT INITIAL.
+      lv_name = iv_name.
+    ELSE.
 
-    IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, structure add'.
       ENDIF.
-    ELSE.
-      lv_name = iv_name.
     ENDIF.
+
     li_structure = mi_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr->components ASSIGNING <ls_comp>.
@@ -1560,6 +1588,9 @@ CLASS lcl_xml IMPLEMENTATION.
     li_renderer->render( ).
 
   ENDMETHOD.                    "xml_render
+
+
+
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
@@ -2570,6 +2601,9 @@ ENDCLASS.                    "lcl_objects_super DEFINITION
 CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
+
+    CLASS-METHODS class_constructor.
+
     METHODS constructor
       IMPORTING is_item TYPE ty_item
       RAISING   cx_sy_create_object_error.
@@ -2581,22 +2615,38 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
 
+    TYPES: BEGIN OF ty_s_objtype_map,
+             obj_typ      TYPE trobjtype,
+             plugin_class TYPE seoclsname,
+           END OF ty_s_objtype_map,
+           ty_t_objtype_map TYPE SORTED TABLE OF ty_s_objtype_map WITH UNIQUE KEY obj_typ.
+
+    CLASS-DATA gt_objtype_map TYPE ty_t_objtype_map.
+
 ENDCLASS.
 
 CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD constructor.
-
-    DATA: lv_name TYPE string.
+    DATA: lx_create_object_error TYPE REF TO cx_sy_create_object_error.
+    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
     super->constructor( is_item ).
 
-    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO lv_name.
+*    determine the responsible plugin
+    READ TABLE gt_objtype_map INTO ls_objtype_map WITH TABLE KEY obj_typ = is_item-obj_type.
+    IF sy-subrc = 0.
+      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
 
-    CREATE OBJECT mo_plugin TYPE (lv_name)
-      EXPORTING
-        iv_obj_name = is_item-obj_name.
-
+      CALL METHOD mo_plugin->('SET_ITEM')
+        EXPORTING
+          iv_obj_type = is_item-obj_type
+          iv_obj_name = is_item-obj_name.
+    ELSE.
+      RAISE EXCEPTION TYPE cx_sy_create_object_error
+        EXPORTING
+          classname = 'LCL_OBJECTS_BRIDGE'.
+    ENDIF.
   ENDMETHOD.
 
   METHOD set_files.
@@ -2628,30 +2678,17 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_files  TYPE REF TO object,
-          lt_files  TYPE ty_files_tt,
-          lx_plugin TYPE REF TO cx_static_check.
+    DATA: lo_files         TYPE REF TO object,
+          lo_wrapped_files TYPE REF TO object,
+          lt_files         TYPE ty_files_tt,
+          lx_plugin        TYPE REF TO cx_static_check.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
-
-    CALL METHOD mo_plugin->('GET_FILES')
-      RECEIVING
-        ro_files = lo_files.
-
-    CALL METHOD lo_files->('CLEAR').
-
-* transfer files from mo_files to external
-    lt_files = mo_files->get_files( ).
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      CALL METHOD lo_files->('PUSH')
-        EXPORTING
-          iv_filename = <ls_file>-filename
-          iv_data     = <ls_file>-data.
-    ENDLOOP.
-
     TRY.
-        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE').
+        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE')
+          EXPORTING
+            iv_package = iv_package.
       CATCH cx_static_check INTO lx_plugin.
         RAISE EXCEPTION TYPE lcx_exception
           EXPORTING
@@ -2685,6 +2722,58 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
   METHOD lif_object~jump.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~JUMP').
+
+  ENDMETHOD.
+
+  METHOD class_constructor.
+    DATA lt_plugin_class    TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY.
+    DATA lv_plugin_class    LIKE LINE OF lt_plugin_class.
+    DATA lo_plugin          TYPE REF TO object.
+    DATA lt_plugin_obj_type TYPE objtyptable.
+    DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
+
+    SELECT ext~clsname FROM vseoextend AS ext
+                        INTO TABLE lt_plugin_class
+      WHERE ext~refclsname LIKE 'ZCL_ABAPGIT_OBJECT%'
+        AND ext~version = '1'.
+
+    CLEAR gt_objtype_map.
+    LOOP AT lt_plugin_class INTO lv_plugin_class
+        WHERE table_line NE 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
+      TRY.
+          CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
+        CATCH cx_sy_create_object_error.
+          CONTINUE. ">>>>>>>>>>>>>>
+      ENDTRY.
+
+      CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
+        IMPORTING
+          rt_obj_type = lt_plugin_obj_type.
+
+      ls_objtype_map-plugin_class = lv_plugin_class.
+      LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
+        INSERT ls_objtype_map INTO TABLE gt_objtype_map.
+        IF sy-subrc NE 0.
+          "No exception in class-contructor possible. Anyway, a shortdump is more appropriate in this case
+          ASSERT 'There must not be' = |multiple ABAPGit-Plugins for the same object type { ls_objtype_map-obj_typ }|.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP. "at plugins
+
+*   and the same for the generic plugin if exists
+    LOOP AT lt_plugin_class INTO lv_plugin_class
+         WHERE table_line EQ 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
+      CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
+
+      CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
+        RECEIVING
+          rt_obj_type = lt_plugin_obj_type.
+
+      ls_objtype_map-plugin_class = lv_plugin_class.
+      LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
+        INSERT ls_objtype_map INTO TABLE gt_objtype_map. "knowingly ignore the subrc
+      ENDLOOP.
+    ENDLOOP. "at plugins
 
   ENDMETHOD.
 
@@ -15901,7 +15990,6 @@ ENDCLASS.
 CLASS ltcl_convert IMPLEMENTATION.
 
   METHOD convert_int.
-
     DATA: lv_xstring TYPE xstring,
           lv_input   TYPE i,
           lv_result  TYPE i.
