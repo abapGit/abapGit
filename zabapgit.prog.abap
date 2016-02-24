@@ -1122,29 +1122,10 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       IMPORTING ii_root           TYPE REF TO if_ixml_element OPTIONAL
                 iv_name           TYPE string
       RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element.
-  PROTECTED SECTION.
-    TYPES: BEGIN OF ty_s_ecape_map,
-             forbidden_char  TYPE c LENGTH 1,
-             escape_sequence TYPE string, "in order to allow longer (thus unique) escape sequences
-           END OF ty_s_ecape_map,
-           ty_t_escape_map TYPE SORTED TABLE OF ty_s_ecape_map WITH UNIQUE KEY forbidden_char
-WITH UNIQUE SORTED KEY escape_sequence COMPONENTS escape_sequence. "to prevent ambiguity
-
-    DATA mt_escape_map TYPE ty_t_escape_map.
-
-    METHODS name_escape
-      IMPORTING
-                iv_revert TYPE abap_bool DEFAULT abap_false
-      CHANGING
-                cv_text   TYPE string
-      RAISING   lcx_exception.
 
   PRIVATE SECTION.
-
     DATA: mi_ixml TYPE REF TO if_ixml,
           mi_root TYPE REF TO if_ixml_element.
-
-*    CONSTANTS co_suffix_table_line_struc TYPE string VALUE '_item'.
 
     METHODS special_names
       CHANGING cv_name TYPE string.
@@ -1221,8 +1202,6 @@ CLASS lcl_xml IMPLEMENTATION.
       lv_name = iv_name.
     ENDIF.
 
-    name_escape( CHANGING cv_text = lv_name ).
-
     li_struct = xml_find( ii_root = ii_root
                           iv_name = lv_name ).
     IF NOT li_struct IS BOUND.
@@ -1287,8 +1266,6 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    name_escape( CHANGING cv_text = lv_name ).
-
     li_root = xml_find( ii_root   = ii_root
                         iv_name   = lv_name ).
     IF NOT li_root IS BOUND.
@@ -1321,7 +1298,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
       IF lv_success = abap_false.
 *        Fallback to the previous implementation: the table's name was not always propagated
-*        the reading of the line.
+*        the reading of the line. Thus, read again without the name (of the table) being passed
         CASE lv_kind.
           WHEN cl_abap_typedescr=>kind_struct.
             structure_read( EXPORTING ii_root    = li_root
@@ -1408,13 +1385,6 @@ CLASS lcl_xml IMPLEMENTATION.
       mi_root->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
-
-*    define characters to be escaped
-    DATA ls_escape_map LIKE LINE OF mt_escape_map.
-    ls_escape_map-forbidden_char = |/|.
-    ls_escape_map-escape_sequence = |zyx_1|. "custom escape sequence as the fraction slash (&#8260) is a unicode-character and ABAPGit should also run on non-unicode)
-    INSERT ls_escape_map INTO TABLE mt_escape_map.
-
   ENDMETHOD.                    "xml_root
 
   METHOD table_add.
@@ -1439,8 +1409,6 @@ CLASS lcl_xml IMPLEMENTATION.
         _raise 'no name, table add'.
       ENDIF.
     ENDIF.
-
-    name_escape( CHANGING cv_text = lv_name ).
 
     li_table = mi_xml_doc->create_element( lv_name ).
     lo_data_descr = lo_table_descr->get_table_line_type( ).
@@ -1500,8 +1468,6 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    name_escape( CHANGING cv_text = lv_name ).
-
     li_element = mi_xml_doc->create_element( lv_name ).
 
     lv_string  = ig_element.
@@ -1534,8 +1500,6 @@ CLASS lcl_xml IMPLEMENTATION.
       lv_name = iv_name.
     ENDIF.
 
-    name_escape( CHANGING cv_text = lv_name ).
-
     li_element = xml_find( ii_root = ii_root
                            iv_name = lv_name ).
     IF NOT li_element IS BOUND.
@@ -1567,8 +1531,6 @@ CLASS lcl_xml IMPLEMENTATION.
         _raise 'no name, structure add'.
       ENDIF.
     ENDIF.
-
-    name_escape( CHANGING cv_text = lv_name ).
 
     li_structure = mi_xml_doc->create_element( lv_name ).
 
@@ -1628,26 +1590,7 @@ CLASS lcl_xml IMPLEMENTATION.
   ENDMETHOD.                    "xml_render
 
 
-  METHOD name_escape.
-*    Besides the XML-reserved character ( <, >, &, % ) there are other characters which should be replaced
-*    in order to create a valid xml. One of them e. g. is the forward-slash at the beginning contained
-*    in namespaces. Included e. g. in a table's name, this will screw-up the xml.
-    DATA ls_escape_map LIKE LINE OF mt_escape_map.
 
-    LOOP AT mt_escape_map INTO ls_escape_map.
-      IF iv_revert = abap_false.
-*      check whether the original text contains an escape sequence. If this was the case, the reading of the data would be corrupted
-        IF cv_text CS ls_escape_map-forbidden_char
-            AND cv_text CS ls_escape_map-escape_sequence.
-          RAISE EXCEPTION TYPE lcx_exception EXPORTING iv_text = |Text to be escaped contains escape-sequence { ls_escape_map-escape_sequence }|.
-        ENDIF.
-        REPLACE ALL OCCURRENCES OF ls_escape_map-forbidden_char IN cv_text WITH ls_escape_map-escape_sequence.
-      ELSE.
-        REPLACE ALL OCCURRENCES OF ls_escape_map-escape_sequence IN cv_text WITH ls_escape_map-forbidden_char.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
