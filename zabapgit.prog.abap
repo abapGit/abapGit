@@ -1589,9 +1589,6 @@ CLASS lcl_xml IMPLEMENTATION.
 
   ENDMETHOD.                    "xml_render
 
-
-
-
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
 
 *----------------------------------------------------------------------*
