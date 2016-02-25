@@ -1131,6 +1131,9 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
     METHODS special_names
       CHANGING cv_name TYPE string.
 
+    METHODS display_xml_error
+      RAISING lcx_exception.
+
     METHODS error
       IMPORTING ii_parser TYPE REF TO if_ixml_parser
       RAISING   lcx_exception.
@@ -1336,8 +1339,11 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD constructor.
 
+    CONSTANTS: c_abapgit_tag TYPE string VALUE 'abapGit'.
+
     DATA: li_stream_factory TYPE REF TO if_ixml_stream_factory,
           li_istream        TYPE REF TO if_ixml_istream,
+          li_version        TYPE REF TO if_ixml_node,
           li_parser         TYPE REF TO if_ixml_parser.
 
 
@@ -1357,13 +1363,36 @@ CLASS lcl_xml IMPLEMENTATION.
 
       li_istream->close( ).
 
-      mi_root = mi_xml_doc->find_from_name( depth = 0 name = 'abapGit' ).
+      mi_root = mi_xml_doc->find_from_name( depth = 0 name = c_abapgit_tag ).
+
+      li_version = mi_root->if_ixml_node~get_attributes( )->get_named_item_ns( 'version' ).
+      IF li_version->get_value( ) <> gc_xml_version.
+        display_xml_error( ).
+      ENDIF.
     ELSEIF iv_empty = abap_false.
-      mi_root = mi_xml_doc->create_element( 'abapGit' ).
+      mi_root = mi_xml_doc->create_element( c_abapgit_tag ).
       mi_root->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
   ENDMETHOD.                    "xml_root
+
+  METHOD display_xml_error.
+
+    DATA: lv_version TYPE string.
+
+
+    lv_version = |abapGit version: { gc_abap_version }|.
+
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = 'abapGit XML version mismatch'
+        txt1  = 'abapGit XML version mismatch'
+        txt2  = 'See https://github.com/larshp/abapGit/wiki/XML-Mismatch'
+        txt3  = lv_version. "#EC NOTEXT
+
+    _raise 'XML error'.
+
+  ENDMETHOD.
 
   METHOD table_add.
 
