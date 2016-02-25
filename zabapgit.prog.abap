@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.111'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.112'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1095,10 +1095,10 @@ CLASS lcl_xml DEFINITION FINAL CREATE PUBLIC.
       RAISING   lcx_exception.
 
     METHODS table_add
-      IMPORTING it_table TYPE STANDARD TABLE
-                iv_name  TYPE string OPTIONAL
+      IMPORTING it_table  TYPE STANDARD TABLE
+                iv_name   TYPE string OPTIONAL
                 iv_stable TYPE abap_bool DEFAULT abap_false
-                ii_root  TYPE REF TO if_ixml_element OPTIONAL
+                ii_root   TYPE REF TO if_ixml_element OPTIONAL
       RAISING   lcx_exception.
 
     METHODS table_read
@@ -1242,14 +1242,13 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_read.
 
-    DATA: lv_name            TYPE string,
-          lv_table_line_name TYPE string,
-          li_root            TYPE REF TO if_ixml_element,
-          lv_kind            TYPE abap_typecategory,
-          lv_index           TYPE i,
-          lv_success         TYPE abap_bool,
-          lo_data_descr      TYPE REF TO cl_abap_datadescr,
-          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name        TYPE string,
+          li_root        TYPE REF TO if_ixml_element,
+          lv_kind        TYPE abap_typecategory,
+          lv_index       TYPE i,
+          lv_success     TYPE abap_bool,
+          lo_data_descr  TYPE REF TO cl_abap_datadescr,
+          lo_table_descr TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
@@ -1257,14 +1256,14 @@ CLASS lcl_xml IMPLEMENTATION.
     CLEAR ct_table[].
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( ct_table ).
-    IF iv_name IS NOT INITIAL.
-      lv_name = iv_name.
-    ELSE.
-      lv_name = lo_table_descr->get_relative_name( ).
+    lv_name = lo_table_descr->get_relative_name( ).
 
-      IF lv_name IS INITIAL.
-        _raise 'no name, table read'.
-      ENDIF.
+    IF lv_name IS INITIAL.
+      lv_name = iv_name.
+    ENDIF.
+
+    IF lv_name IS INITIAL.
+      _raise 'no name, table read'.
     ENDIF.
 
     li_root = xml_find( ii_root   = ii_root
@@ -1276,21 +1275,15 @@ CLASS lcl_xml IMPLEMENTATION.
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
-    IF iv_name IS NOT INITIAL.
-      lv_table_line_name = lv_name.
-    ENDIF.
-
     DO.
       APPEND INITIAL LINE TO ct_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_read( EXPORTING ii_root    = li_root
-                                    iv_name    = lv_table_line_name
                           IMPORTING ev_success = lv_success
                           CHANGING cg_structure = <lg_line> ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_read( EXPORTING ii_root    = li_root
-                                  iv_name    = lv_table_line_name
                         IMPORTING ev_success = lv_success
                         CHANGING  cg_element = <lg_line> ).
         WHEN OTHERS.
@@ -1298,27 +1291,11 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDCASE.
 
       IF lv_success = abap_false.
-*        Fallback to the previous implementation: the table's name was not always propagated
-*        the reading of the line. Thus, read again without the name (of the table) being passed
-        CASE lv_kind.
-          WHEN cl_abap_typedescr=>kind_struct.
-            structure_read( EXPORTING ii_root    = li_root
-                            IMPORTING ev_success = lv_success
-                            CHANGING cg_structure = <lg_line> ).
-          WHEN cl_abap_typedescr=>kind_elem.
-            element_read( EXPORTING ii_root    = li_root
-                          IMPORTING ev_success = lv_success
-                          CHANGING  cg_element = <lg_line> ).
-          WHEN OTHERS.
-            _raise 'unknown kind'.
-        ENDCASE.
-        IF lv_success = abap_false.
-          lv_index = lines( ct_table ).
-          DELETE ct_table INDEX lv_index.
-          ASSERT sy-subrc = 0.
-          EXIT. " current loop
-        ENDIF. "Fallback also not successful
-      ENDIF." Fallback
+        lv_index = lines( ct_table ).
+        DELETE ct_table INDEX lv_index.
+        ASSERT sy-subrc = 0.
+        EXIT. " current loop
+      ENDIF.
     ENDDO.
 
   ENDMETHOD.                    "table_read
@@ -1390,46 +1367,37 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD table_add.
 
-    DATA: lv_name            TYPE string,
-          lv_table_line_name TYPE string,
-          li_table           TYPE REF TO if_ixml_element,
-          lv_kind            TYPE abap_typecategory,
-          lo_data_descr      TYPE REF TO cl_abap_datadescr,
-          lo_table_descr     TYPE REF TO cl_abap_tabledescr.
+    DATA: lv_name        TYPE string,
+          li_table       TYPE REF TO if_ixml_element,
+          lv_kind        TYPE abap_typecategory,
+          lo_data_descr  TYPE REF TO cl_abap_datadescr,
+          lo_table_descr TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS: <lg_line> TYPE any.
 
 
     lo_table_descr ?= cl_abap_typedescr=>describe_by_data( it_table ).
+    lv_name = lo_table_descr->get_relative_name( ).
 
-    IF iv_name IS NOT INITIAL.
+    IF lv_name IS INITIAL.
       lv_name = iv_name.
-    ELSE.
-      lv_name = lo_table_descr->get_relative_name( ).
+    ENDIF.
 
-      IF lv_name IS INITIAL.
-        _raise 'no name, table add'.
-      ENDIF.
+    IF lv_name IS INITIAL.
+      _raise 'no name, table add'.
     ENDIF.
 
     li_table = mi_xml_doc->create_element( lv_name ).
     lo_data_descr = lo_table_descr->get_table_line_type( ).
     lv_kind = lo_data_descr->kind.
 
-* provide a stable name for the line structure if a table name was provided previously
-    IF iv_stable = abap_true AND iv_name IS NOT INITIAL.
-      lv_table_line_name = iv_name.
-    ENDIF.
-
     LOOP AT it_table ASSIGNING <lg_line>.
       CASE lv_kind.
         WHEN cl_abap_typedescr=>kind_struct.
           structure_add( ig_structure = <lg_line>
-                         iv_name      = lv_table_line_name
                          ii_root      = li_table ).
         WHEN cl_abap_typedescr=>kind_elem.
           element_add( ig_element = <lg_line>
-                       iv_name    = lv_table_line_name
                        ii_root    = li_table ).
         WHEN OTHERS.
           _raise 'unknown kind'.
@@ -1523,17 +1491,17 @@ CLASS lcl_xml IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr->components,
                    <lg_any>  TYPE any.
 
-    lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
-    IF iv_name IS NOT INITIAL.
-      lv_name = iv_name.
-    ELSE.
 
+    lo_descr ?= cl_abap_typedescr=>describe_by_data( ig_structure ).
+
+    IF iv_name IS INITIAL.
       lv_name = lo_descr->get_relative_name( ).
       IF lv_name IS INITIAL.
         _raise 'no name, structure add'.
       ENDIF.
+    ELSE.
+      lv_name = iv_name.
     ENDIF.
-
     li_structure = mi_xml_doc->create_element( lv_name ).
 
     LOOP AT lo_descr->components ASSIGNING <ls_comp>.
