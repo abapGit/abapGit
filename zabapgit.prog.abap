@@ -6585,35 +6585,32 @@ CLASS lcl_object_wdca IMPLEMENTATION.
 
   METHOD save.
 
-    _raise 'WDCA, save, todo'.
+    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
+          ls_key       TYPE wdy_config_key,
+          ls_data      LIKE LINE OF it_data,
+          lv_operation TYPE i,
+          lv_name      TYPE wdy_md_object_name.
 
-*    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
-*          ls_key       TYPE wdy_config_key,
-*          ls_data      LIKE LINE OF it_data,
-*          lv_operation TYPE i,
-*          lv_name      TYPE wdy_md_object_name.
-*
-*
-*    MOVE-CORRESPONDING is_outline TO ls_key.
-*
-*    TRY.
-*        CREATE OBJECT lo_cfg
-*          EXPORTING
-*            config_key  = ls_key
-*            object_name = lv_name.
-*
-*        READ TABLE it_data INDEX 1 INTO ls_data.
-*        ASSERT sy-subrc = 0.
-*
-*        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
-*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
-*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
-*
-*        lo_cfg->set_save_data( ls_data ).
-*
-*      CATCH cx_wd_configuration.
-*        _raise 'WDCA, save error'.
-*    ENDTRY.
+
+    MOVE-CORRESPONDING is_outline TO ls_key.
+
+    TRY.
+        CREATE OBJECT lo_cfg
+          EXPORTING
+            config_key  = ls_key
+            object_name = lv_name.
+
+        READ TABLE it_data INDEX 1 INTO ls_data.
+        ASSERT sy-subrc = 0.
+
+        lo_cfg->set_save_data( ls_data ).
+
+        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
+        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
+
+      CATCH cx_wd_configuration.
+        _raise 'WDCA, save error'.
+    ENDTRY.
 
   ENDMETHOD.                    "save
 
