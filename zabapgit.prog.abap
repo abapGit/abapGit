@@ -1339,7 +1339,8 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD constructor.
 
-    CONSTANTS: c_abapgit_tag TYPE string VALUE 'abapGit'.
+    CONSTANTS: c_version TYPE string VALUE 'version' ##NO_TEXT,
+               c_abapgit_tag TYPE string VALUE 'abapGit'.
 
     DATA: li_stream_factory TYPE REF TO if_ixml_stream_factory,
           li_istream        TYPE REF TO if_ixml_istream,
@@ -1365,13 +1366,13 @@ CLASS lcl_xml IMPLEMENTATION.
 
       mi_root = mi_xml_doc->find_from_name( depth = 0 name = c_abapgit_tag ).
 
-      li_version = mi_root->if_ixml_node~get_attributes( )->get_named_item_ns( 'version' ).
+      li_version = mi_root->if_ixml_node~get_attributes( )->get_named_item_ns( c_version ).
       IF li_version->get_value( ) <> gc_xml_version.
         display_xml_error( ).
       ENDIF.
     ELSEIF iv_empty = abap_false.
       mi_root = mi_xml_doc->create_element( c_abapgit_tag ).
-      mi_root->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
+      mi_root->set_attribute( name = c_version value = gc_xml_version ). "#EC NOTEXT
       mi_xml_doc->append_child( mi_root ).
     ENDIF.
   ENDMETHOD.                    "xml_root
@@ -2345,7 +2346,7 @@ CLASS lcl_objects_files DEFINITION FINAL.
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO object
                   iv_normalize TYPE sap_bool DEFAULT abap_true
-        RAISING   lcx_exception,
+        RAISING   lcx_exception ##CALLED,
       read_xml
         IMPORTING iv_extra      TYPE clike OPTIONAL
         RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml
@@ -2624,7 +2625,7 @@ ENDCLASS.
 CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD constructor.
-    DATA: lx_create_object_error TYPE REF TO cx_sy_create_object_error.
+
     DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
     super->constructor( is_item ).
@@ -2653,9 +2654,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_count         TYPE i,
-          ls_file          TYPE ty_file,
-          lo_files         TYPE REF TO object,
+    DATA: lo_files         TYPE REF TO object,
           lo_wrapped_files TYPE REF TO object.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~SERIALIZE').
@@ -2674,12 +2673,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_files         TYPE REF TO object,
-          lo_wrapped_files TYPE REF TO object,
-          lt_files         TYPE ty_files_tt,
-          lx_plugin        TYPE REF TO cx_static_check.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+    DATA: lx_plugin        TYPE REF TO cx_static_check.
 
     TRY.
         CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE')
@@ -12211,31 +12205,12 @@ CLASS lcl_git_pack IMPLEMENTATION.
         ENDIF.
 
         lv_data = lv_data+lv_compressed_len.
-        lv_data = lv_data+4. " skip adler checksum
 
       ELSEIF lv_zlib = c_zlib_hmm.
-* this takes some processing. When time permits: implement DEFLATE algorithm
-* cl_abap_gzip copmression works for '789C', but does not produce the same
-* result when '7801'
-* compressed data might be larger than origial so add 10, adding 10 is safe
-* as package always ends with SHA1 checksum
-*        DO lv_expected + 10 TIMES.
-*          lv_compressed_len = sy-index.
-*
-*          cl_abap_gzip=>decompress_binary(
-*            EXPORTING
-*              gzip_in     = lv_data
-*              gzip_in_len = lv_compressed_len
-*            IMPORTING
-*              raw_out     = lv_decompressed
-*              raw_out_len = lv_decompress_len ).
-*
-*          IF lv_decompress_len = lv_expected.
-*            EXIT.
-*          ELSE.
-*            CLEAR lv_compressed_len.
-*          ENDIF.
-*        ENDDO.
+* cl_abap_gzip copmression works for header '789C', but does not work for
+* '7801', call custom implementation of DEFLATE algorithm.
+* The custom implementation could handle both, but most likely the kernel
+* implementation runs faster than the custom ABAP.
         ls_data = lcl_zlib=>decompress( lv_data ).
         lv_compressed_len = ls_data-compressed_len.
         lv_decompressed = ls_data-raw.
@@ -12257,9 +12232,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
           _raise 'Wrong Adler checksum'.
         ENDIF.
 
-        lv_data = lv_data+4. " skip adler checksum
-
       ENDIF.
+
+      lv_data = lv_data+4. " skip adler checksum
 
 *************************
 
@@ -14296,7 +14271,7 @@ CLASS lcl_zip IMPLEMENTATION.
         <ls_msg>-msgty = 'W'.
         <ls_msg>-msgid = '00'.
         <ls_msg>-msgno = '001'.
-        <ls_msg>-msgv1 = 'Object type ignored, not supported:'.
+        <ls_msg>-msgv1 = 'Object type ignored, not supported:' ##NO_TEXT.
         <ls_msg>-msgv2 = ls_item-obj_type.
         <ls_msg>-msgv3 = '-'.
         <ls_msg>-msgv4 = ls_item-obj_name.
@@ -14316,7 +14291,7 @@ CLASS lcl_zip IMPLEMENTATION.
           i_txt             = 'Warning'
           i_with_s_on_empty = abap_false
           i_one_msg_direct  = abap_false
-          i_one_msg_type_s  = abap_false.
+          i_one_msg_type_s  = abap_false ##NO_TEXT.
     ENDIF.
 
     IF iv_zip = abap_true.
