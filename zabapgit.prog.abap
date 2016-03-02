@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v0.2-alpha',  "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v0.112'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v0.113'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1339,7 +1339,7 @@ CLASS lcl_xml IMPLEMENTATION.
 
   METHOD constructor.
 
-    CONSTANTS: c_version TYPE string VALUE 'version' ##NO_TEXT,
+    CONSTANTS: c_version     TYPE string VALUE 'version' ##NO_TEXT,
                c_abapgit_tag TYPE string VALUE 'abapGit'.
 
     DATA: li_stream_factory TYPE REF TO if_ixml_stream_factory,
@@ -6546,6 +6546,11 @@ CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+    METHODS constructor
+      IMPORTING
+        is_item TYPE ty_item
+      RAISING cx_sy_create_object_error. "Curious: Though the exception is a dynamic one, it needs to be declared so that it can be caught...
+
   PRIVATE SECTION.
     METHODS read
       EXPORTING es_outline TYPE wdy_cfg_outline_data
@@ -6567,6 +6572,13 @@ ENDCLASS.                    "lcl_object_wdca DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdca IMPLEMENTATION.
 
+  METHOD constructor.
+    super->constructor( is_item = is_item ).
+    RAISE EXCEPTION TYPE cx_sy_create_object_error.
+*    This serializer is currently not yet functional.
+*    Prevent instantiation in order to enable handling of WDCA by plugins
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: ls_outline TYPE wdy_cfg_outline_data.
@@ -6578,33 +6590,35 @@ CLASS lcl_object_wdca IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD save.
+    _raise 'WDCA, save not implemented'.
 
-    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
-          ls_key       TYPE wdy_config_key,
-          ls_data      LIKE LINE OF it_data,
-          lv_operation TYPE i,
-          lv_name      TYPE wdy_md_object_name.
-
-
-    MOVE-CORRESPONDING is_outline TO ls_key.
-
-    TRY.
-        CREATE OBJECT lo_cfg
-          EXPORTING
-            config_key  = ls_key
-            object_name = lv_name.
-
-        READ TABLE it_data INDEX 1 INTO ls_data.
-        ASSERT sy-subrc = 0.
-
-        lo_cfg->set_save_data( ls_data ).
-
-        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
-        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
-
-      CATCH cx_wd_configuration.
-        _raise 'WDCA, save error'.
-    ENDTRY.
+*   below code are ideas, does not seem to work though
+*    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
+*          ls_key       TYPE wdy_config_key,
+*          ls_data      LIKE LINE OF it_data,
+*          lv_operation TYPE i,
+*          lv_name      TYPE wdy_md_object_name.
+*
+*
+*    MOVE-CORRESPONDING is_outline TO ls_key.
+*
+*    TRY.
+*        CREATE OBJECT lo_cfg
+*          EXPORTING
+*            config_key  = ls_key
+*            object_name = lv_name.
+*
+*        READ TABLE it_data INDEX 1 INTO ls_data.
+*        ASSERT sy-subrc = 0.
+*
+*        lo_cfg->set_save_data( ls_data ).
+*
+*        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
+*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
+*
+*      CATCH cx_wd_configuration.
+*        _raise 'WDCA, save error'.
+*    ENDTRY.
 
   ENDMETHOD.                    "save
 
