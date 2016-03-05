@@ -6549,7 +6549,7 @@ CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS constructor
       IMPORTING
         is_item TYPE ty_item
-      RAISING cx_sy_create_object_error. "Curious: Though the exception is a dynamic one, it needs to be declared so that it can be caught...
+      RAISING cx_sy_create_object_error.
 
   PRIVATE SECTION.
     METHODS read
