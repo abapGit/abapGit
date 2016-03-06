@@ -1212,8 +1212,7 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RETURNING VALUE(rv_xml) TYPE string.
 
   PRIVATE SECTION.
-    DATA: mi_raw  TYPE REF TO if_ixml_element,
-          mt_stab TYPE abap_trans_srcbind_tab.
+    DATA: mi_raw  TYPE REF TO if_ixml_element.
 
 ENDCLASS.
 
@@ -1225,19 +1224,32 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
   METHOD add.
 
-    FIELD-SYMBOLS: <ls_stab> LIKE LINE OF mt_stab.
+    DATA: li_node TYPE REF TO if_ixml_node,
+          li_doc  TYPE REF TO if_ixml_document,
+          lt_stab TYPE abap_trans_srcbind_tab.
+
+    FIELD-SYMBOLS: <ls_stab> LIKE LINE OF lt_stab.
 
 
     ASSERT NOT iv_name IS INITIAL.
 
-    READ TABLE mt_stab WITH KEY name = iv_name TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      _raise 'XML mt_stab name already exists'.
-    ENDIF.
-
-    APPEND INITIAL LINE TO mt_stab ASSIGNING <ls_stab>.
+    APPEND INITIAL LINE TO lt_stab ASSIGNING <ls_stab>.
     <ls_stab>-name = iv_name.
     GET REFERENCE OF ig_data INTO <ls_stab>-value.
+
+    li_doc = cl_ixml=>create( )->create_document( ).
+
+    CALL TRANSFORMATION id
+      SOURCE (lt_stab)
+      RESULT XML li_doc.
+
+    li_node = mi_xml_doc->get_root( )->get_first_child( ).
+    IF li_node IS BOUND.
+      mi_xml_doc->get_root( )->get_first_child( )->get_first_child( )->append_child(
+        li_doc->get_root( )->get_first_child( )->get_first_child( )->get_first_child( ) ).
+    ELSE.
+      mi_xml_doc->get_root( )->append_child( li_doc->get_root( )->get_first_child( ) ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1248,10 +1260,6 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
 
     IF mi_raw IS INITIAL.
-      CALL TRANSFORMATION id
-        SOURCE (mt_stab)
-        RESULT XML mi_xml_doc.
-
       li_abap ?= mi_xml_doc->get_root( )->get_first_child( ).
       mi_xml_doc->get_root( )->remove_child( li_abap ).
     ELSE.
@@ -2127,7 +2135,7 @@ INTERFACE lif_object.
       RAISING lcx_exception,
     deserialize
       IMPORTING iv_package TYPE devclass
-                io_xml     type ref to lcl_xml_input
+                io_xml     TYPE REF TO lcl_xml_input
       RAISING   lcx_exception,
     delete
       RAISING lcx_exception,
