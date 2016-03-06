@@ -1756,6 +1756,9 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_stab> LIKE LINE OF mt_stab.
 
+
+    ASSERT NOT iv_name IS INITIAL.
+
     APPEND INITIAL LINE TO mt_stab ASSIGNING <ls_stab>.
     <ls_stab>-name = iv_name.
     GET REFERENCE OF ig_data INTO <ls_stab>-value.
@@ -3090,7 +3093,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-  PRIVATE SECTION.
+  PROTECTED SECTION.
     TYPES: BEGIN OF ty_dynpro,
              header     TYPE rpy_dyhead,
              containers TYPE dycatt_tab,
@@ -3099,6 +3102,8 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
            END OF ty_dynpro.
 
     TYPES: ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY.
+
+  PRIVATE SECTION.
 
     CLASS-METHODS serialize_dynpros
       IMPORTING iv_program_name TYPE programm
@@ -8242,7 +8247,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
-          lo_xml   TYPE REF TO lcl_xml,
+          lo_xml   TYPE REF TO lcl_xml_output,
           ls_dd02v TYPE dd02v,
           ls_dd09l TYPE dd09l,
           lt_dd03p TYPE TABLE OF dd03p,
@@ -8309,19 +8314,24 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     ENDLOOP.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_dd02v ).
-    lo_xml->structure_add( ls_dd09l ).
-    lo_xml->table_add( it_table = lt_dd03p
-                       iv_name  = 'DD03P_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd05m
-                       iv_name  = 'DD05M_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd08v
-                       iv_name  = 'DD08V_TABLE' ).
-    lo_xml->table_add( lt_dd12v ).
-    lo_xml->table_add( lt_dd17v ).
-    lo_xml->table_add( it_table = lt_dd35v
-                       iv_name  = 'DD35V_TALE' ).
-    lo_xml->table_add( lt_dd36m ).
+    lo_xml->add( iv_name = 'DD02V'
+                 ig_data = ls_dd02v ).
+    lo_xml->add( iv_name = 'DD09L'
+                 ig_data = ls_dd09l ).
+    lo_xml->add( ig_data = lt_dd03p
+                 iv_name = 'DD03P_TABLE' ).
+    lo_xml->add( ig_data = lt_dd05m
+                 iv_name = 'DD05M_TABLE' ).
+    lo_xml->add( ig_data = lt_dd08v
+                 iv_name = 'DD08V_TABLE' ).
+    lo_xml->add( iv_name = 'DD12V'
+                 ig_data = lt_dd12v ).
+    lo_xml->add( iv_name = 'DD17V'
+                 ig_data = lt_dd17v ).
+    lo_xml->add( ig_data = lt_dd35v
+                 iv_name = 'DD35V_TALE' ).
+    lo_xml->add( iv_name = 'DD36M'
+                 ig_data = lt_dd36m ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -8331,7 +8341,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     DATA: lv_name      TYPE ddobjname,
           lv_tname     TYPE trobj_name,
-          lo_xml       TYPE REF TO lcl_xml,
+          lo_xml       TYPE REF TO lcl_xml_input,
           ls_dd02v     TYPE dd02v,
           ls_dd09l     TYPE dd09l,
           lt_dd03p     TYPE TABLE OF dd03p,
@@ -8348,20 +8358,24 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd02v ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
-
-    lo_xml->table_read( EXPORTING iv_name  = 'DD03P_TABLE'
-                        CHANGING ct_table = lt_dd03p ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD05M_TABLE'
-                        CHANGING ct_table = lt_dd05m ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD08V_TABLE'
-                        CHANGING ct_table = lt_dd08v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd12v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd17v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD35V_TALE'
-                        CHANGING ct_table = lt_dd35v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd36m ).
+    lo_xml->read( EXPORTING iv_name = 'DD02V'
+                  CHANGING cg_data = ls_dd02v ).
+    lo_xml->read( EXPORTING iv_name = 'DD09L'
+                  CHANGING cg_data = ls_dd09l ).
+    lo_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
+                  CHANGING cg_data = lt_dd03p ).
+    lo_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
+                  CHANGING cg_data = lt_dd05m ).
+    lo_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
+                  CHANGING cg_data = lt_dd08v ).
+    lo_xml->read( EXPORTING iv_name = 'DD12V'
+                  CHANGING cg_data = lt_dd12v ).
+    lo_xml->read( EXPORTING iv_name = 'DD17V'
+                  CHANGING cg_data = lt_dd17v ).
+    lo_xml->read( EXPORTING iv_name = 'DD35V_TALE'
+                  CHANGING cg_data = lt_dd35v ).
+    lo_xml->read( EXPORTING iv_name = 'DD36M'
+                  CHANGING cg_data = lt_dd36m ).
 
     corr_insert( iv_package ).
 
@@ -8449,11 +8463,11 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PRIVATE SECTION.
     METHODS deserialize_badi
-      IMPORTING io_xml     TYPE REF TO lcl_xml
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
       RAISING   lcx_exception.
     METHODS deserialize_hook
-      IMPORTING io_xml     TYPE REF TO lcl_xml
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
@@ -8529,13 +8543,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml  TYPE REF TO lcl_xml,
+    DATA: lo_xml  TYPE REF TO lcl_xml_input,
           lv_tool TYPE enhtooltype.
 
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->element_read( CHANGING cg_element = lv_tool ).
+    lo_xml->read( EXPORTING iv_name = 'TOOL'
+                  CHANGING cg_data = lv_tool ).
 
     CASE lv_tool.
       WHEN cl_enh_tool_badi_impl=>tooltype.
@@ -8571,11 +8586,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
 
 
-    io_xml->element_read( EXPORTING iv_name   = 'SHORTTEXT'
-                          CHANGING cg_element = lv_shorttext ).
-    io_xml->element_read( CHANGING cg_element = lv_spot_name ).
-    io_xml->table_read( CHANGING ct_table = lt_impl ).
-
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'SPOT_NAME'
+                  CHANGING cg_data = lv_spot_name ).
+    io_xml->read( EXPORTING iv_name = 'IMPL'
+                  CHANGING cg_data = lt_impl ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
@@ -8617,11 +8633,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
 
 
-    io_xml->element_read( EXPORTING iv_name   = 'SHORTTEXT'
-                          CHANGING cg_element = lv_shorttext ).
-    io_xml->structure_read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
-                            CHANGING cg_structure = ls_original_object ).
-    io_xml->table_read( CHANGING ct_table = lt_enhancements ).
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+                  CHANGING cg_data = ls_original_object ).
+    io_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
+                  CHANGING cg_data = lt_enhancements ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
@@ -8669,7 +8686,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     DATA: lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
           lv_spot_name TYPE enhspotname,
-          lo_xml       TYPE REF TO lcl_xml,
+          lo_xml       TYPE REF TO lcl_xml_output,
           lv_shorttext TYPE string,
           lt_impl      TYPE enh_badi_impl_data_it.
 
@@ -8680,11 +8697,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
     lt_impl      = lo_badi_impl->get_implementations( ).
 
     CREATE OBJECT lo_xml.
-    lo_xml->element_add( iv_tool ).
-    lo_xml->element_add( ig_element = lv_shorttext
-                         iv_name    = 'SHORTTEXT' ).
-    lo_xml->element_add( lv_spot_name ).
-    lo_xml->table_add( lt_impl ).
+    lo_xml->add( iv_name = 'TOOL'
+                 ig_data = iv_tool ).
+    lo_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    lo_xml->add( iv_name = 'SPOT_NAME'
+                 ig_data = lv_spot_name ).
+    lo_xml->add( iv_name = 'IMPL'
+                 ig_data = lt_impl ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize_badi
@@ -8692,7 +8712,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
   METHOD serialize_hook.
 
     DATA: lv_shorttext       TYPE string,
-          lo_xml             TYPE REF TO lcl_xml,
+          lo_xml             TYPE REF TO lcl_xml_output,
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
           ls_original_object TYPE enh_hook_admin,
           lt_enhancements    TYPE enh_hook_impl_it.
@@ -8713,12 +8733,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
 
     CREATE OBJECT lo_xml.
-    lo_xml->element_add( iv_tool ).
-    lo_xml->element_add( ig_element = lv_shorttext
-                         iv_name    = 'SHORTTEXT' ).
-    lo_xml->structure_add( ig_structure = ls_original_object
-                           iv_name = 'ORIGINAL_OBJECT' ).
-    lo_xml->table_add( lt_enhancements ).
+    lo_xml->add( iv_name = 'TOOL'
+                 ig_data = iv_tool ).
+    lo_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    lo_xml->add( ig_data = ls_original_object
+                 iv_name = 'ORIGINAL_OBJECT' ).
+    lo_xml->add( iv_name = 'ENHANCEMENTS'
+                 ig_data = lt_enhancements ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize_hook
@@ -8821,7 +8843,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
-          lo_xml   TYPE REF TO lcl_xml,
+          lo_xml   TYPE REF TO lcl_xml_output,
           ls_dd25v TYPE dd25v,
           lt_dd26e TYPE TABLE OF dd26e,
           lt_dd27p TYPE TABLE OF dd27p.
@@ -8854,11 +8876,12 @@ CLASS lcl_object_enqu IMPLEMENTATION.
            ls_dd25v-as4time.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_dd25v ).
-    lo_xml->table_add( it_table = lt_dd26e
-                       iv_name = 'DD26E_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd27p
-                       iv_name = 'DD27P_TABLE' ).
+    lo_xml->add( iv_name = 'DD25V'
+                 ig_data = ls_dd25v ).
+    lo_xml->add( ig_data = lt_dd26e
+                 iv_name = 'DD26E_TABLE' ).
+    lo_xml->add( ig_data = lt_dd27p
+                 iv_name = 'DD27P_TABLE' ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -8866,7 +8889,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_input,
           lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
           lt_dd26e TYPE TABLE OF dd26e,
@@ -8875,11 +8898,12 @@ CLASS lcl_object_enqu IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd25v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD26E_TABLE'
-                        CHANGING ct_table = lt_dd26e ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD27P_TABLE'
-                        CHANGING ct_table = lt_dd27p ).
+    lo_xml->read( EXPORTING iv_name = 'DD25V'
+                  CHANGING cg_data = ls_dd25v ).
+    lo_xml->read( EXPORTING iv_name = 'DD26E_TABLE'
+                  CHANGING cg_data = lt_dd26e ).
+    lo_xml->read( EXPORTING iv_name = 'DD27P_TABLE'
+                  CHANGING cg_data = lt_dd27p ).
 
     corr_insert( iv_package ).
 
@@ -8973,7 +8997,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
-          lo_xml   TYPE REF TO lcl_xml,
+          lo_xml   TYPE REF TO lcl_xml_output,
           ls_dd30v TYPE dd30v,
           lt_dd31v TYPE TABLE OF dd31v,
           lt_dd32p TYPE TABLE OF dd32p,
@@ -9008,13 +9032,14 @@ CLASS lcl_object_shlp IMPLEMENTATION.
            ls_dd30v-as4time.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_dd30v ).
-    lo_xml->table_add( it_table = lt_dd31v
-                       iv_name  = 'DD31V_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd32p
-                       iv_name  = 'DD32P_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd33v
-                       iv_name  = 'DD33V_TABLE' ).
+    lo_xml->add( iv_name = 'DD30V'
+                 ig_data = ls_dd30v ).
+    lo_xml->add( ig_data = lt_dd31v
+                 iv_name = 'DD31V_TABLE' ).
+    lo_xml->add( ig_data = lt_dd32p
+                 iv_name = 'DD32P_TABLE' ).
+    lo_xml->add( ig_data = lt_dd33v
+                 iv_name = 'DD33V_TABLE' ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -9022,7 +9047,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_input,
           lv_name  TYPE ddobjname,
           ls_dd30v TYPE dd30v,
           lt_dd31v TYPE TABLE OF dd31v,
@@ -9032,13 +9057,14 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd30v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD31V_TABLE'
-                        CHANGING ct_table = lt_dd31v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD32P_TABLE'
-                        CHANGING ct_table = lt_dd32p ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD33V_TABLE'
-                        CHANGING ct_table = lt_dd33v ).
+    lo_xml->read( EXPORTING iv_name = 'DD30V'
+                  CHANGING cg_data = ls_dd30v ).
+    lo_xml->read( EXPORTING iv_name = 'DD31V_TABLE'
+                  CHANGING cg_data = lt_dd31v ).
+    lo_xml->read( EXPORTING iv_name = 'DD32P_TABLE'
+                  CHANGING cg_data = lt_dd32p ).
+    lo_xml->read( EXPORTING iv_name = 'DD33V_TABLE'
+                  CHANGING cg_data = lt_dd33v ).
 
     corr_insert( iv_package ).
 
@@ -9166,7 +9192,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 *               c_hex_enq TYPE x VALUE '20'.
 
     DATA: lv_dynpro TYPE d020s-dnum,
-          lo_xml    TYPE REF TO lcl_xml,
+          lo_xml    TYPE REF TO lcl_xml_input,
           ls_tstc   TYPE tstc,
           lv_type   TYPE rglif-docutype,
           ls_tstct  TYPE tstct,
@@ -9175,9 +9201,12 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_tstc ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tstcc ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tstct ).
+    lo_xml->read( EXPORTING iv_name = 'TSTC'
+                  CHANGING cg_data = ls_tstc ).
+    lo_xml->read( EXPORTING iv_name = 'TSTCC'
+                  CHANGING cg_data = ls_tstcc ).
+    lo_xml->read( EXPORTING iv_name = 'TSTCT'
+                  CHANGING cg_data = ls_tstct ).
 
     lv_dynpro = ls_tstc-dypno.
 
@@ -9228,7 +9257,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
           ls_tcode       LIKE LINE OF lt_tcodes,
           ls_tstct       TYPE tstct,
           lt_gui_attr    TYPE TABLE OF tstcc,
-          lo_xml         TYPE REF TO lcl_xml,
+          lo_xml         TYPE REF TO lcl_xml_output,
           ls_gui_attr    LIKE LINE OF lt_gui_attr.
 
 
@@ -9266,9 +9295,12 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_tcode ).
-    lo_xml->structure_add( ls_gui_attr ).
-    lo_xml->structure_add( ls_tstct ).
+    lo_xml->add( iv_name = 'TSTC'
+                 ig_data = ls_tcode ).
+    lo_xml->add( iv_name = 'TSTCC'
+                 ig_data = ls_gui_attr ).
+    lo_xml->add( iv_name = 'TSTCT'
+                 ig_data = ls_tstct ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -9314,7 +9346,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
           lt_objs  TYPE tt_objs,
           lt_objsl TYPE tt_objsl,
           lt_objm  TYPE tt_objm,
-          lo_xml   TYPE REF TO lcl_xml.
+          lo_xml   TYPE REF TO lcl_xml_output.
 
 
     ls_objh-objectname = ms_item-obj_name(10).
@@ -9349,11 +9381,16 @@ CLASS lcl_object_tobj IMPLEMENTATION.
            ls_objh-ldate.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_objh ).
-    lo_xml->structure_add( ls_objt ).
-    lo_xml->table_add( lt_objs ).
-    lo_xml->table_add( lt_objsl ).
-    lo_xml->table_add( lt_objm ).
+    lo_xml->add( iv_name = 'OBJH'
+                 ig_data = ls_objh ).
+    lo_xml->add( iv_name = 'OBJT'
+                 ig_data = ls_objt ).
+    lo_xml->add( iv_name = 'OBJS'
+                 ig_data = lt_objs ).
+    lo_xml->add( iv_name = 'OBJSL'
+                 ig_data = lt_objsl ).
+    lo_xml->add( iv_name = 'OBJM'
+                 ig_data = lt_objm ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -9366,15 +9403,20 @@ CLASS lcl_object_tobj IMPLEMENTATION.
           lt_objs  TYPE tt_objs,
           lt_objsl TYPE tt_objsl,
           lt_objm  TYPE tt_objm,
-          lo_xml   TYPE REF TO lcl_xml.
+          lo_xml   TYPE REF TO lcl_xml_input.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_objh ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_objt ).
-    lo_xml->table_read( CHANGING ct_table = lt_objs ).
-    lo_xml->table_read( CHANGING ct_table = lt_objsl ).
-    lo_xml->table_read( CHANGING ct_table = lt_objm ).
+    lo_xml->read( EXPORTING iv_name = 'OBJH'
+                  CHANGING cg_data = ls_objh ).
+    lo_xml->read( EXPORTING iv_name = 'OBJT'
+                  CHANGING cg_data = ls_objt ).
+    lo_xml->read( EXPORTING iv_name = 'OBJS'
+                  CHANGING cg_data = lt_objs ).
+    lo_xml->read( EXPORTING iv_name = 'OBJSL'
+                  CHANGING cg_data = lt_objsl ).
+    lo_xml->read( EXPORTING iv_name = 'OBJM'
+                  CHANGING cg_data = lt_objm ).
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
@@ -9495,7 +9537,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
   METHOD lif_object~deserialize.
 * fm RPY_MESSAGE_ID_INSERT almost works, but not in older versions
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_input,
           ls_t100a TYPE t100a,
           ls_t100t TYPE t100t,
           ls_t100u TYPE t100u,
@@ -9505,9 +9547,10 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_t100a ).
-    lo_xml->table_read( EXPORTING iv_name = 'T100'
-                        CHANGING ct_table = lt_t100 ).
+    lo_xml->read( EXPORTING iv_name = 'T100A'
+                  CHANGING cg_data = ls_t100a ).
+    lo_xml->read( EXPORTING iv_name = 'T100'
+                  CHANGING cg_data = lt_t100 ).
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -9558,7 +9601,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     DATA: lv_msg_id TYPE rglif-message_id,
           ls_inf    TYPE t100a,
           lt_source TYPE TABLE OF t100,
-          lo_xml    TYPE REF TO lcl_xml.
+          lo_xml    TYPE REF TO lcl_xml_output.
 
 
     lv_msg_id = ms_item-obj_name.
@@ -9580,9 +9623,10 @@ CLASS lcl_object_msag IMPLEMENTATION.
            ls_inf-ltime.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_inf ).
-    lo_xml->table_add( it_table = lt_source
-                       iv_name  = 'T100' ).
+    lo_xml->add( iv_name = 'T100A'
+                 ig_data = ls_inf ).
+    lo_xml->add( ig_data = lt_source
+                 iv_name = 'T100' ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -9667,7 +9711,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include       TYPE rs38l-include,
           lv_area          TYPE rs38l-area,
-          lo_xml           TYPE REF TO lcl_xml,
+          lo_xml           TYPE REF TO lcl_xml_input,
           lt_functab       TYPE ty_rs38l_incl_tt,
           lt_import        TYPE TABLE OF rsimp,
           lt_changing      TYPE TABLE OF rscha,
@@ -9687,7 +9731,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->table_read( CHANGING  ct_table = lt_functab ).
+    lo_xml->read( EXPORTING iv_name = 'FUNCTAB'
+                  CHANGING cg_data = lt_functab ).
 
     LOOP AT lt_functab ASSIGNING <ls_functab>.
 
@@ -9695,24 +9740,29 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       lo_xml = mo_files->read_xml( iv_extra = <ls_functab>-funcname ).
 
-      lo_xml->element_read( CHANGING cg_element = lv_global_flag ).
-      lo_xml->element_read( CHANGING cg_element = lv_remote_call ).
-      lo_xml->element_read( CHANGING cg_element = lv_update_task ).
-      lo_xml->element_read( CHANGING cg_element = lv_short_text ).
-      lo_xml->element_read( CHANGING cg_element = lv_remote_basxml ).
+      lo_xml->read( EXPORTING iv_name = 'GLOBAL_FLAG'
+                    CHANGING cg_data = lv_global_flag ).
+      lo_xml->read( EXPORTING iv_name = 'REMOTE_CALL'
+                    CHANGING cg_data = lv_remote_call ).
+      lo_xml->read( EXPORTING iv_name = 'UPDATE_TASK'
+                    CHANGING cg_data = lv_update_task ).
+      lo_xml->read( EXPORTING iv_name = 'SHORT_TEXT'
+                    CHANGING cg_data = lv_short_text ).
+      lo_xml->read( EXPORTING iv_name = 'REMOTE_BASXML'
+                    CHANGING cg_data = lv_remote_basxml ).
 
-      lo_xml->table_read( EXPORTING iv_name = 'IMPORT'
-                          CHANGING ct_table = lt_import ).
-      lo_xml->table_read( EXPORTING iv_name = 'CHANGING'
-                          CHANGING ct_table = lt_changing ).
-      lo_xml->table_read( EXPORTING iv_name = 'EXPORT'
-                          CHANGING ct_table = lt_export ).
-      lo_xml->table_read( EXPORTING iv_name = 'TABLES'
-                          CHANGING ct_table = lt_tables ).
-      lo_xml->table_read( EXPORTING iv_name = 'EXCEPTION'
-                          CHANGING ct_table = lt_exception ).
-      lo_xml->table_read( EXPORTING iv_name = 'DOCUMENTATION'
-                          CHANGING ct_table = lt_documentation ).
+      lo_xml->read( EXPORTING iv_name = 'IMPORT'
+                    CHANGING cg_data = lt_import ).
+      lo_xml->read( EXPORTING iv_name = 'CHANGING'
+                    CHANGING cg_data = lt_changing ).
+      lo_xml->read( EXPORTING iv_name = 'EXPORT'
+                    CHANGING cg_data = lt_export ).
+      lo_xml->read( EXPORTING iv_name = 'TABLES'
+                    CHANGING cg_data = lt_tables ).
+      lo_xml->read( EXPORTING iv_name = 'EXCEPTION'
+                    CHANGING cg_data = lt_exception ).
+      lo_xml->read( EXPORTING iv_name = 'DOCUMENTATION'
+                    CHANGING cg_data = lt_documentation ).
 
       lv_area = ms_item-obj_name.
 
@@ -9783,7 +9833,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_includes.
 
-    DATA: lo_xml      TYPE REF TO lcl_xml,
+    DATA: lo_xml      TYPE REF TO lcl_xml_input,
           ls_progdir  TYPE ty_progdir,
           lt_includes TYPE rso_t_objnm,
           lt_tpool    TYPE textpool_table,
@@ -9793,7 +9843,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->table_read( CHANGING ct_table = lt_includes ).
+    lo_xml->read( EXPORTING iv_name = 'INCLUDES'
+                  CHANGING cg_data = lt_includes ).
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
@@ -9801,10 +9852,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       lo_xml = mo_files->read_xml( iv_extra = <lv_include> ).
 
-      lo_xml->structure_read( EXPORTING iv_name     = 'PROGDIR'
-                              CHANGING cg_structure = ls_progdir ).
+      lo_xml->read( EXPORTING iv_name = 'PROGDIR'
+                    CHANGING cg_data = ls_progdir ).
 
-      lo_xml->table_read( CHANGING ct_table = lt_tpool ).
+      lo_xml->read( EXPORTING iv_name = 'TPOOL'
+                    CHANGING cg_data = lt_tpool ).
 
       deserialize_program( is_progdir = ls_progdir
                            it_source  = lt_source
@@ -9818,7 +9870,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   METHOD deserialize_xml.
 
     DATA: lv_complete  TYPE rs38l-area,
-          lo_xml       TYPE REF TO lcl_xml,
+          lo_xml       TYPE REF TO lcl_xml_input,
           lv_namespace TYPE rs38l-namespace,
           lv_areat     TYPE tlibt-areat,
           lv_stext     TYPE tftit-stext,
@@ -9851,7 +9903,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     ENDIF.
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->element_read( CHANGING cg_element = lv_areat ).
+    lo_xml->read( EXPORTING iv_name = 'AREAT'
+                  CHANGING cg_data = lv_areat ).
     lv_stext = lv_areat.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_INSERT'
@@ -9882,7 +9935,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: lo_xml      TYPE REF TO lcl_xml,
+    DATA: lo_xml      TYPE REF TO lcl_xml_output,
           lt_functab  TYPE ty_rs38l_incl_tt,
           lt_includes TYPE rso_t_objnm,
           lv_areat    TYPE tlibt-areat.
@@ -9902,9 +9955,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * todo, dynpros
 
     CREATE OBJECT lo_xml.
-    lo_xml->element_add( lv_areat ).
-    lo_xml->table_add( it_table = lt_functab ).
-    lo_xml->table_add( it_table = lt_includes ).
+    lo_xml->add( iv_name = 'AREAT'
+                 ig_data = lv_areat ).
+    lo_xml->add( iv_name = 'FUNCTAB'
+                 ig_data = lt_functab ).
+    lo_xml->add( iv_name = 'INCLUDES'
+                 ig_data = lt_includes ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -10017,7 +10073,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   METHOD serialize_functions.
 
     DATA: lt_import        TYPE TABLE OF rsimp,
-          lo_xml           TYPE REF TO lcl_xml,
+          lo_xml           TYPE REF TO lcl_xml_output,
           lt_changing      TYPE TABLE OF rscha,
           lt_export        TYPE TABLE OF rsexp,
           lt_tables        TYPE TABLE OF rstbl,
@@ -10069,24 +10125,29 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       ENDIF.
 
       CREATE OBJECT lo_xml.
-      lo_xml->element_add( lv_global_flag ).
-      lo_xml->element_add( lv_remote_call ).
-      lo_xml->element_add( lv_update_task ).
-      lo_xml->element_add( lv_short_text ).
-      lo_xml->element_add( lv_remote_basxml ).
+      lo_xml->add( iv_name = 'GLOBAL_FLAG'
+                   ig_data = lv_global_flag ).
+      lo_xml->add( iv_name = 'REMOTE_CALL'
+                   ig_data = lv_remote_call ).
+      lo_xml->add( iv_name = 'UPDATE_TASK'
+                   ig_data = lv_update_task ).
+      lo_xml->add( iv_name = 'SHORT_TEXT'
+                   ig_data = lv_short_text ).
+      lo_xml->add( iv_name = 'REMOTE_BASXML'
+                   ig_data = lv_remote_basxml ).
 
-      lo_xml->table_add( it_table = lt_import
-                         iv_name  = 'IMPORT' ).
-      lo_xml->table_add( it_table = lt_changing
-                         iv_name  = 'CHANGING' ).
-      lo_xml->table_add( it_table = lt_export
-                         iv_name  = 'EXPORT' ).
-      lo_xml->table_add( it_table = lt_tables
-                         iv_name  = 'TABLES' ).
-      lo_xml->table_add( it_table = lt_exception
-                         iv_name  = 'EXCEPTION' ).
-      lo_xml->table_add( it_table = lt_documentation
-                         iv_name  = 'DOCUMENTATION' ).
+      lo_xml->add( ig_data = lt_import
+                   iv_name = 'IMPORT' ).
+      lo_xml->add( ig_data = lt_changing
+                   iv_name = 'CHANGING' ).
+      lo_xml->add( ig_data = lt_export
+                   iv_name = 'EXPORT' ).
+      lo_xml->add( ig_data = lt_tables
+                   iv_name = 'TABLES' ).
+      lo_xml->add( ig_data = lt_exception
+                   iv_name = 'EXCEPTION' ).
+      lo_xml->add( ig_data = lt_documentation
+                   iv_name = 'DOCUMENTATION' ).
 
       mo_files->add_xml( iv_extra = <ls_func>-funcname
                          io_xml   = lo_xml ).
@@ -10254,7 +10315,7 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_output,
           lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
           ls_dd09l TYPE dd09l,
@@ -10298,17 +10359,19 @@ CLASS lcl_object_view IMPLEMENTATION.
            ls_dd09l-as4time.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_dd25v ).
-    lo_xml->structure_add( ls_dd09l ).
+    lo_xml->add( iv_name = 'DD25V'
+                 ig_data = ls_dd25v ).
+    lo_xml->add( iv_name = 'DD09L'
+                 ig_data = ls_dd09l ).
 
-    lo_xml->table_add( it_table = lt_dd26v
-                       iv_name = 'DD26V_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd27p
-                       iv_name = 'DD27P_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd28j
-                       iv_name = 'DD28J_TABLE' ).
-    lo_xml->table_add( it_table = lt_dd28v
-                       iv_name = 'DD28V_TABLE' ).
+    lo_xml->add( ig_data = lt_dd26v
+                 iv_name = 'DD26V_TABLE' ).
+    lo_xml->add( ig_data = lt_dd27p
+                 iv_name = 'DD27P_TABLE' ).
+    lo_xml->add( ig_data = lt_dd28j
+                 iv_name = 'DD28J_TABLE' ).
+    lo_xml->add( ig_data = lt_dd28v
+                 iv_name = 'DD28V_TABLE' ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -10316,7 +10379,7 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_input,
           lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
           ls_dd09l TYPE dd09l,
@@ -10328,17 +10391,19 @@ CLASS lcl_object_view IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd25v ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd09l ).
+    lo_xml->read( EXPORTING iv_name = 'DD25V'
+                  CHANGING cg_data = ls_dd25v ).
+    lo_xml->read( EXPORTING iv_name = 'DD09L'
+                  CHANGING cg_data = ls_dd09l ).
 
-    lo_xml->table_read( EXPORTING iv_name = 'DD26V_TABLE'
-                        CHANGING ct_table = lt_dd26v ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD27P_TABLE'
-                        CHANGING ct_table = lt_dd27p ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD28J_TABLE'
-                        CHANGING ct_table = lt_dd28j ).
-    lo_xml->table_read( EXPORTING iv_name = 'DD28V_TABLE'
-                        CHANGING ct_table = lt_dd28v ).
+    lo_xml->read( EXPORTING iv_name = 'DD26V_TABLE'
+                  CHANGING cg_data = lt_dd26v ).
+    lo_xml->read( EXPORTING iv_name = 'DD27P_TABLE'
+                  CHANGING cg_data = lt_dd27p ).
+    lo_xml->read( EXPORTING iv_name = 'DD28J_TABLE'
+                  CHANGING cg_data = lt_dd28j ).
+    lo_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
+                  CHANGING cg_data = lt_dd28v ).
 
     corr_insert( iv_package ).
 
@@ -10403,7 +10468,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_output,
           lv_object     TYPE tnro-object,
           ls_attributes TYPE tnro,
           ls_text       TYPE tnrot.
@@ -10428,23 +10493,27 @@ CLASS lcl_object_nrob IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_attributes ).
-    lo_xml->structure_add( ls_text ).
+    lo_xml->add( iv_name = 'ATTRIBUTES'
+                 ig_data = ls_attributes ).
+    lo_xml->add( iv_name = 'TEXT'
+                 ig_data = ls_text ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_input,
           lt_errors     TYPE TABLE OF inoer,
           ls_attributes TYPE tnro,
           ls_text       TYPE tnrot.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_attributes ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_text ).
+    lo_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING cg_data = ls_attributes ).
+    lo_xml->read( EXPORTING iv_name = 'TEXT'
+                  CHANGING cg_data = ls_text ).
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_UPDATE'
       EXPORTING
@@ -10584,7 +10653,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_output,
           lv_name  TYPE ddobjname,
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
@@ -10618,9 +10687,12 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
            ls_dd40v-as4time.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_dd40v ).
-    lo_xml->table_add( lt_dd42v ).
-    lo_xml->table_add( lt_dd43v ).
+    lo_xml->add( iv_name = 'DD40V'
+                 ig_data = ls_dd40v ).
+    lo_xml->add( iv_name = 'DD42V'
+                 ig_data = lt_dd42v ).
+    lo_xml->add( iv_name = 'DD43V'
+                 ig_data = lt_dd43v ).
 
     mo_files->add_xml( lo_xml ).
 
@@ -10628,7 +10700,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_input,
           lv_name  TYPE ddobjname,
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
@@ -10637,9 +10709,12 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_dd40v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd42v ).
-    lo_xml->table_read( CHANGING ct_table = lt_dd43v ).
+    lo_xml->read( EXPORTING iv_name = 'DD40V'
+                  CHANGING cg_data = ls_dd40v ).
+    lo_xml->read( EXPORTING iv_name = 'DD42V'
+                  CHANGING cg_data = lt_dd42v ).
+    lo_xml->read( EXPORTING iv_name = 'DD43V'
+                  CHANGING cg_data = lt_dd43v ).
 
     corr_insert( iv_package ).
 
@@ -10681,11 +10756,11 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PRIVATE SECTION.
     METHODS deserialize_dynpros
-      IMPORTING io_xml TYPE REF TO lcl_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
-      IMPORTING io_xml TYPE REF TO lcl_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
@@ -10784,33 +10859,34 @@ CLASS lcl_object_prog IMPLEMENTATION.
           lt_biv    TYPE TABLE OF rsmpe_buts.
 
 
-    io_xml->structure_read( CHANGING cg_structure = ls_adm ).
+    io_xml->read( EXPORTING iv_name = 'ADM'
+                  CHANGING cg_data = ls_adm ).
     IF ls_adm IS INITIAL.
       RETURN.
     ENDIF.
 
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_STAT_TABLE'
-                        CHANGING ct_table = lt_sta ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_FUNT_TABLE'
-                        CHANGING ct_table = lt_fun ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_MEN_TABLE'
-                        CHANGING ct_table = lt_men ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_MNLT_TABLE'
-                        CHANGING ct_table = lt_mtx ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_ACT_TABLE'
-                        CHANGING ct_table = lt_act ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_BUT_TABLE'
-                        CHANGING ct_table = lt_but ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_PFK_TABLE'
-                        CHANGING ct_table = lt_pfk ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_STAF_TABLE'
-                        CHANGING ct_table = lt_set ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_ATRT_TABLE'
-                        CHANGING ct_table = lt_doc ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_TITT_TABLE'
-                        CHANGING ct_table = lt_tit ).
-    io_xml->table_read( EXPORTING iv_name = 'RSMPE_BUTS_TABLE'
-                        CHANGING ct_table = lt_biv ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_STAT_TABLE'
+                  CHANGING cg_data = lt_sta ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_FUNT_TABLE'
+                  CHANGING cg_data = lt_fun ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_MEN_TABLE'
+                  CHANGING cg_data = lt_men ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_MNLT_TABLE'
+                  CHANGING cg_data = lt_mtx ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_ACT_TABLE'
+                  CHANGING cg_data = lt_act ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_BUT_TABLE'
+                  CHANGING cg_data = lt_but ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_PFK_TABLE'
+                  CHANGING cg_data = lt_pfk ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_STAF_TABLE'
+                  CHANGING cg_data = lt_set ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_ATRT_TABLE'
+                  CHANGING cg_data = lt_doc ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_TITT_TABLE'
+                  CHANGING cg_data = lt_tit ).
+    io_xml->read( EXPORTING iv_name = 'RSMPE_BUTS_TABLE'
+                  CHANGING cg_data = lt_biv ).
 
     SELECT SINGLE devclass INTO ls_tr_key-devclass
       FROM tadir
@@ -10866,7 +10942,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml     TYPE REF TO lcl_xml,
+    DATA: lo_xml     TYPE REF TO lcl_xml_input,
           ls_progdir TYPE ty_progdir,
           lt_tpool   TYPE textpool_table,
           lt_source  TYPE abaptxt255_tab.
@@ -10876,10 +10952,11 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     lt_source = mo_files->read_abap( ).
 
-    lo_xml->table_read( CHANGING ct_table = lt_tpool ).
+    lo_xml->read( EXPORTING iv_name = 'TPOOL'
+                  CHANGING cg_data = lt_tpool ).
 
-    lo_xml->structure_read( EXPORTING iv_name = 'PROGDIR'
-                            CHANGING cg_structure = ls_progdir ).
+    lo_xml->read( EXPORTING iv_name = 'PROGDIR'
+                  CHANGING cg_data = ls_progdir ).
     deserialize_program( is_progdir = ls_progdir
                          it_source  = lt_source
                          it_tpool   = lt_tpool
@@ -10895,38 +10972,25 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_dynpros.
 
-    DATA: li_element              TYPE REF TO if_ixml_element,
-          ls_header               TYPE rpy_dyhead,
-          lt_containers           TYPE dycatt_tab,
-          lv_name                 TYPE dwinactiv-obj_name,
-          lt_fields_to_containers TYPE dyfatc_tab,
-          lt_flow_logic           TYPE swydyflow.
+    DATA: lv_name    TYPE dwinactiv-obj_name,
+          lt_dynpros TYPE ty_dynpro_tt.
+
+    FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF lt_dynpros.
 
 
-    DO.
-      li_element = io_xml->xml_find( 'SCREEN' ).
-      IF NOT li_element IS BOUND.
-        EXIT. " current loop
-      ENDIF.
+    io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
 
-      io_xml->structure_read( EXPORTING ii_root     = li_element
-                              CHANGING cg_structure = ls_header ).
-
-      io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING  ct_table = lt_containers ).
-      io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING  ct_table = lt_fields_to_containers ).
-      io_xml->table_read( EXPORTING ii_root  = li_element
-                          CHANGING  ct_table = lt_flow_logic ).
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'
         EXPORTING
-          header                 = ls_header
+          header                 = <ls_dynpro>-header
           suppress_exist_checks  = abap_true
         TABLES
-          containers             = lt_containers
-          fields_to_containers   = lt_fields_to_containers
-          flow_logic             = lt_flow_logic
+          containers             = <ls_dynpro>-containers
+          fields_to_containers   = <ls_dynpro>-fields
+          flow_logic             = <ls_dynpro>-flow_logic
         EXCEPTIONS
           cancelled              = 1
           already_exists         = 2
@@ -10943,12 +11007,14 @@ CLASS lcl_object_prog IMPLEMENTATION.
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
-      CONCATENATE ls_header-program ls_header-screen INTO lv_name RESPECTING BLANKS.
+      CONCATENATE <ls_dynpro>-header-program <ls_dynpro>-header-screen
+        INTO lv_name RESPECTING BLANKS.
+      ASSERT NOT lv_name IS INITIAL.
 
       lcl_objects_activation=>add( iv_type = 'DYNP'
                                    iv_name = lv_name ).
 
-    ENDDO.
+    ENDLOOP.
 
   ENDMETHOD.                    "deserialize_dynpros
 
@@ -16557,52 +16623,6 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_ttyp FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.                    "ltcl_serialize DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS ltcl_xml DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
-
-  PRIVATE SECTION.
-
-    METHODS xml FOR TESTING RAISING lcx_exception.
-
-ENDCLASS.                    "ltcl_xml DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS test IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_xml IMPLEMENTATION.
-
-  METHOD xml.
-
-    DATA: lo_xml           TYPE REF TO lcl_xml,
-          lv_xml           TYPE string,
-          ls_component_in  TYPE wdy_component_metadata,
-          ls_component_out TYPE wdy_component_metadata.
-
-
-    ls_component_in-comp_metadata-definition-component_name = 'FOOBAR'.
-
-    CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_component_in ).
-    lv_xml = lo_xml->xml_render( ).
-
-    CREATE OBJECT lo_xml
-      EXPORTING
-        iv_xml = lv_xml.
-    lo_xml->structure_read( CHANGING cg_structure = ls_component_out ).
-
-    cl_abap_unit_assert=>assert_equals( act = ls_component_out
-                                        exp = ls_component_in ).
-
-  ENDMETHOD.                    "xml
-
-ENDCLASS.                    "ltcl_xml IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize IMPLEMENTATION
