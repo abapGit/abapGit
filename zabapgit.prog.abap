@@ -55,6 +55,11 @@ TYPES: BEGIN OF ty_item,
          obj_name TYPE tadir-obj_name,
        END OF ty_item.
 
+TYPES: BEGIN OF ty_metadata,
+         class   TYPE string,
+         version TYPE string,
+       END OF ty_metadata.
+
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
              tree   TYPE ty_type VALUE 'tree',              "#EC NOTEXT
@@ -1209,6 +1214,7 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         IMPORTING ii_raw TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
+                  is_metadata   TYPE ty_metadata OPTIONAL
         RETURNING VALUE(rv_xml) TYPE string.
 
   PRIVATE SECTION.
@@ -1268,6 +1274,10 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
     li_git->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
+    IF NOT is_metadata IS INITIAL.
+      li_git->set_attribute( name = 'serializer' value = is_metadata-class ). "#EC NOTEXT
+      li_git->set_attribute( name = 'serializer_version' value = is_metadata-version ). "#EC NOTEXT
+    ENDIF.
     li_git->append_child( li_abap ).
     mi_xml_doc->get_root( )->append_child( li_git ).
 
@@ -2084,6 +2094,7 @@ CLASS lcl_objects_files DEFINITION FINAL.
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO lcl_xml_output
                   iv_normalize TYPE sap_bool DEFAULT abap_true
+                  is_metadata  TYPE ty_metadata OPTIONAL
         RAISING   lcx_exception,
 * needed since type-check during dynamic call fails even if the object is compatible
       add_xml_from_plugin
@@ -2124,11 +2135,6 @@ CLASS lcl_objects_files DEFINITION FINAL.
 ENDCLASS.
 
 INTERFACE lif_object.
-
-  TYPES: BEGIN OF ty_metadata,
-           class   TYPE string,
-           version TYPE string,
-         END OF ty_metadata.
 
   METHODS:
     serialize
@@ -2250,7 +2256,8 @@ CLASS lcl_objects_files IMPLEMENTATION.
           ls_file TYPE ty_file.
 
 
-    lv_xml = io_xml->render( iv_normalize = iv_normalize ).
+    lv_xml = io_xml->render( iv_normalize = iv_normalize
+                             is_metadata = is_metadata ).
     ls_file-path = '/'.
 
     ls_file-filename = filename( iv_extra = iv_extra
@@ -2352,7 +2359,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
     METHODS:
       get_metadata
-        RETURNING VALUE(rs_metadata) TYPE lif_object=>ty_metadata,
+        RETURNING VALUE(rs_metadata) TYPE ty_metadata,
       corr_insert
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
@@ -3011,7 +3018,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
   ENDMETHOD.                                                "jump_se11
 
   METHOD get_metadata.
-    rs_metadata-class = cl_abap_classdescr=>describe_by_object_ref( me )->absolute_name.
+    rs_metadata-class = cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
     rs_metadata-version = 'v1.0.0' ##NO_TEXT.
   ENDMETHOD.
 
@@ -11314,8 +11321,8 @@ CLASS lcl_objects IMPLEMENTATION.
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
     li_obj->serialize( lo_xml ).
-* todo, metadata can be added to the xml here:
-    lo_files->add_xml( lo_xml ).
+    lo_files->add_xml( io_xml      = lo_xml
+                       is_metadata = li_obj->get_metadata( ) ).
 
     rt_files = lo_files->get_files( ).
 
