@@ -1740,7 +1740,8 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
     METHODS:
       add
         IMPORTING iv_name TYPE clike
-                  ig_data TYPE any,
+                  ig_data TYPE any
+        RAISING   lcx_exception,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
         RETURNING VALUE(rv_xml) TYPE string.
@@ -1758,6 +1759,11 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
 
     ASSERT NOT iv_name IS INITIAL.
+
+    READ TABLE mt_stab WITH KEY name = iv_name TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      _raise 'XML mt_stab name already exists'.
+    ENDIF.
 
     APPEND INITIAL LINE TO mt_stab ASSIGNING <ls_stab>.
     <ls_stab>-name = iv_name.
