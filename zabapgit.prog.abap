@@ -4664,8 +4664,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
       RAISING   lcx_exception.
 
     METHODS serialize_xml
-      RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml_output
-      RAISING   lcx_exception.
+      RAISING lcx_exception.
 
     METHODS remove_signatures
       CHANGING ct_source TYPE ty_string_tt.
@@ -4939,7 +4938,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lt_source TYPE seop_source_string,
-          lo_xml    TYPE REF TO lcl_xml_output,
           ls_clskey TYPE seoclskey.
 
 
@@ -4987,10 +4985,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    lo_xml = serialize_xml( ).
-    IF lo_xml IS BOUND.
-      mo_files->add_xml( lo_xml ).
-    ENDIF.
+    serialize_xml( ).
 
   ENDMETHOD.                    "serialize
 
@@ -4999,6 +4994,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     DATA: ls_vseoclass  TYPE vseoclass,
           lv_cp         TYPE program,
           lt_tpool      TYPE textpool_table,
+          lo_xml        TYPE REF TO lcl_xml_output,
           lv_object     TYPE dokhl-object,
           lv_state      TYPE dokhl-dokstate,
           ls_vseointerf TYPE vseointerf,
@@ -5046,19 +5042,19 @@ CLASS lcl_object_clas IMPLEMENTATION.
            ls_vseointerf-changedon,
            ls_vseointerf-r3release.
 
-    CREATE OBJECT ro_xml.
+    CREATE OBJECT lo_xml.
 
     CASE ms_item-obj_type.
       WHEN 'CLAS'.
-        ro_xml->add( iv_name = 'VSEOCLASS'
+        lo_xml->add( iv_name = 'VSEOCLASS'
                      ig_data = ls_vseoclass ).
 
         lv_cp = cl_oo_classname_service=>get_classpool_name( ls_clskey-clsname ).
         READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE gc_english. "#EC CI_READ_REP
-        ro_xml->add( iv_name = 'TPOOL'
+        lo_xml->add( iv_name = 'TPOOL'
                      ig_data = lt_tpool ).
       WHEN 'INTF'.
-        ro_xml->add( iv_name = 'VSEOINTERF'
+        lo_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -5081,9 +5077,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
         ret_code          = 4
         OTHERS            = 5.
     IF sy-subrc = 0 AND lv_state = 'R'.
-      ro_xml->add( iv_name = 'LINES'
+      lo_xml->add( iv_name = 'LINES'
                    ig_data = lt_lines ).
     ENDIF.
+
+    mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize_xml
 
