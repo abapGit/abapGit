@@ -7010,7 +7010,7 @@ CLASS lcl_object_wdca IMPLEMENTATION.
     lo_xml = mo_files->read_xml( ).
 
     lo_xml->read( EXPORTING iv_name = 'OUTLINE'
-                  CHANGING data = ls_outline ).
+                  CHANGING cg_data = ls_outline ).
     lo_xml->read( EXPORTING iv_name = 'DATA'
                   CHANGING cg_data = lt_data ).
 
@@ -7135,7 +7135,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_output,
           ls_app        TYPE wdy_application,
           lt_properties TYPE wdy_app_property_table.
 
@@ -7144,8 +7144,10 @@ CLASS lcl_object_wdya IMPLEMENTATION.
                     et_properties = lt_properties ).
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_app ).
-    lo_xml->table_add( lt_properties ).
+    lo_xml->add( iv_name = 'APP'
+                 ig_data = ls_app ).
+    lo_xml->add( iv_name = 'PROPERTIES'
+                 ig_data = lt_properties ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -7179,15 +7181,17 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_input,
           ls_app        TYPE wdy_application,
           lt_properties TYPE wdy_app_property_table.
 
 
     lo_xml = mo_files->read_xml( ).
 
-    lo_xml->structure_read( CHANGING cg_structure = ls_app ).
-    lo_xml->table_read( CHANGING ct_table = lt_properties ).
+    lo_xml->read( EXPORTING iv_name = 'APP'
+                  CHANGING cg_data = ls_app ).
+    lo_xml->read( EXPORTING iv_name = 'PROPERTIES'
+                  CHANGING cg_data = lt_properties ).
 
     save( is_app        = ls_app
           it_properties = lt_properties
@@ -7276,7 +7280,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_output,
           ls_tobj       TYPE tobj,
           ls_tobjt      TYPE tobjt,
           ls_tobjvorflg TYPE tobjvorflg,
@@ -7315,15 +7319,18 @@ CLASS lcl_object_suso IMPLEMENTATION.
       ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_tobj ).
-    lo_xml->structure_add( ls_tobjt ).
-    lo_xml->structure_add( ls_tobjvorflg ).
-    lo_xml->table_add( it_table = lt_tactz
-                       iv_name = 'TACTZ' ).
-    lo_xml->table_add( it_table = lt_tobjvordat
-                       iv_name = 'TOBJVORDAT' ).
-    lo_xml->table_add( it_table = lt_tobjvor
-                       iv_name = 'TOBJVOR' ).
+    lo_xml->add( iv_name = 'TOBJ'
+                 ig_data = ls_tobj ).
+    lo_xml->add( iv_name = 'TOBJT'
+                 ig_data = ls_tobjt ).
+    lo_xml->add( iv_name = 'TOBJVOFFLG'
+                 ig_data = ls_tobjvorflg ).
+    lo_xml->add( ig_data = lt_tactz
+                 iv_name = 'TACTZ' ).
+    lo_xml->add( ig_data = lt_tobjvordat
+                 iv_name = 'TOBJVORDAT' ).
+    lo_xml->add( ig_data = lt_tobjvor
+                 iv_name = 'TOBJVOR' ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -7331,7 +7338,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
   METHOD lif_object~deserialize.
 * see function group SUSA
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_input,
           lv_objectname TYPE e071-obj_name,
           ls_tobj       TYPE tobj,
           ls_tobjt      TYPE tobjt,
@@ -7344,16 +7351,19 @@ CLASS lcl_object_suso IMPLEMENTATION.
     ASSERT NOT ms_item-obj_name IS INITIAL.
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tobj ).
+    lo_xml->read( EXPORTING iv_name = 'TOBJ'
+                  CHANGING cg_data = ls_tobj ).
     ls_tobj-bname = sy-uname.
-    lo_xml->structure_read( CHANGING cg_structure = ls_tobjt ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tobjvorflg ).
-    lo_xml->table_read( EXPORTING iv_name  = 'TACTZ'
-                        CHANGING  ct_table = lt_tactz ).
-    lo_xml->table_read( EXPORTING iv_name  = 'TOBJVORDAT'
-                        CHANGING  ct_table = lt_tobjvordat ).
-    lo_xml->table_read( EXPORTING iv_name  = 'TOBJVOR'
-                        CHANGING  ct_table = lt_tobjvor ).
+    lo_xml->read( EXPORTING iv_name = 'TOBJT'
+                  CHANGING cg_data = ls_tobjt ).
+    lo_xml->read( EXPORTING iv_name = 'TOBJVORFLG'
+                  CHANGING cg_data = ls_tobjvorflg ).
+    lo_xml->read( EXPORTING iv_name = 'TACTZ'
+                  CHANGING  cg_data = lt_tactz ).
+    lo_xml->read( EXPORTING iv_name = 'TOBJVORDAT'
+                  CHANGING  cg_data = lt_tobjvordat ).
+    lo_xml->read( EXPORTING iv_name = 'TOBJVOR'
+                  CHANGING  cg_data = lt_tobjvor ).
 
     lv_objectname = ms_item-obj_name.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
@@ -7420,7 +7430,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_output,
           ls_tobc  TYPE tobc,
           ls_tobct TYPE tobct.
 
@@ -7439,8 +7449,10 @@ CLASS lcl_object_susc IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_tobc ).
-    lo_xml->structure_add( ls_tobct ).
+    lo_xml->add( iv_name = 'TOBC'
+                 ig_data = ls_tobc ).
+    lo_xml->add( iv_name = 'TOBCT'
+                 ig_data = ls_tobct ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -7448,15 +7460,17 @@ CLASS lcl_object_susc IMPLEMENTATION.
   METHOD lif_object~deserialize.
 * see function group SUSA
 
-    DATA: lo_xml        TYPE REF TO lcl_xml,
+    DATA: lo_xml        TYPE REF TO lcl_xml_input,
           ls_tobc       TYPE tobc,
           lv_objectname TYPE e071-obj_name,
           ls_tobct      TYPE tobct.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tobc ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tobct ).
+    lo_xml->read( EXPORTING iv_name = 'TOBC'
+                  CHANGING cg_data = ls_tobc ).
+    lo_xml->read( EXPORTING iv_name = 'TOBCT'
+                  CHANGING cg_data = ls_tobct ).
 
     lv_objectname = ms_item-obj_name.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
@@ -7578,7 +7592,7 @@ CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml    TYPE REF TO lcl_xml,
+    DATA: lo_xml    TYPE REF TO lcl_xml_output,
           lv_ddtext TYPE ddtypet-ddtext,
           lt_source TYPE abaptxt255_tab.
 
@@ -7592,7 +7606,8 @@ CLASS lcl_object_type IMPLEMENTATION.
     ENDTRY.
 
     CREATE OBJECT lo_xml.
-    lo_xml->element_add( lv_ddtext ).
+    lo_xml->add( iv_name = 'DDTEXT'
+                 ig_data = lv_ddtext ).
     mo_files->add_xml( lo_xml ).
 
     mo_files->add_abap( lt_source ).
@@ -7637,13 +7652,14 @@ CLASS lcl_object_type IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml    TYPE REF TO lcl_xml,
+    DATA: lo_xml    TYPE REF TO lcl_xml_input,
           lv_ddtext TYPE ddtypet-ddtext,
           lt_source TYPE abaptxt255_tab.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->element_read( CHANGING cg_element = lv_ddtext ).
+    lo_xml->read( EXPORTING iv_name = 'DDTEXT'
+                  CHANGING cg_data = lv_ddtext ).
 
     lt_source = mo_files->read_abap( ).
 
@@ -7721,7 +7737,7 @@ CLASS lcl_object_para IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml    TYPE REF TO lcl_xml,
+    DATA: lo_xml    TYPE REF TO lcl_xml_output,
           ls_tpara  TYPE tpara,
           ls_tparat TYPE tparat.
 
@@ -7740,8 +7756,10 @@ CLASS lcl_object_para IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_tpara ).
-    lo_xml->structure_add( ls_tparat ).
+    lo_xml->add( iv_name = 'TPARA'
+                 ig_data = ls_tpara ).
+    lo_xml->add( iv_name = 'TPARAT'
+                 ig_data = ls_tparat ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.                    "serialize
@@ -7749,7 +7767,7 @@ CLASS lcl_object_para IMPLEMENTATION.
   METHOD lif_object~deserialize.
 * see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
 
-    DATA: lo_xml    TYPE REF TO lcl_xml,
+    DATA: lo_xml    TYPE REF TO lcl_xml_input,
           lv_mode   TYPE c LENGTH 1,
           ls_tpara  TYPE tpara,
           ls_tparat TYPE tparat.
@@ -7764,8 +7782,10 @@ CLASS lcl_object_para IMPLEMENTATION.
     ENDIF.
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tpara ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tparat ).
+    lo_xml->read( EXPORTING iv_name = 'TPARA'
+                  CHANGING cg_data = ls_tpara ).
+    lo_xml->read( EXPORTING iv_name = 'TPARAT'
+                  CHANGING cg_data = ls_tparat ).
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -7834,7 +7854,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_xml   TYPE REF TO lcl_xml,
+    DATA: lo_xml   TYPE REF TO lcl_xml_output,
           ls_tsp1t TYPE tsp1t,
           ls_tsp1d TYPE tsp1d,
           ls_tsp0p TYPE tsp0p.
@@ -7858,16 +7878,19 @@ CLASS lcl_object_splo IMPLEMENTATION.
            ls_tsp1d-chgsapsys1.
 
     CREATE OBJECT lo_xml.
-    lo_xml->structure_add( ls_tsp1t ).
-    lo_xml->structure_add( ls_tsp1d ).
-    lo_xml->structure_add( ls_tsp0p ).
+    lo_xml->add( iv_name = 'TSPLT'
+                 ig_data = ls_tsp1t ).
+    lo_xml->add( iv_name = 'TSPLD'
+                 ig_data = ls_tsp1d ).
+    lo_xml->add( iv_name = 'TSP0P'
+                 ig_data = ls_tsp0p ).
     mo_files->add_xml( lo_xml ).
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-    DATA: lo_xml      TYPE REF TO lcl_xml,
+    DATA: lo_xml      TYPE REF TO lcl_xml_input,
           lv_obj_name TYPE e071-obj_name,
           ls_tsp1t    TYPE tsp1t,
           ls_tsp1d    TYPE tsp1d,
@@ -7875,9 +7898,12 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
 
     lo_xml = mo_files->read_xml( ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tsp1t ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tsp1d ).
-    lo_xml->structure_read( CHANGING cg_structure = ls_tsp0p ).
+    lo_xml->read( EXPORTING iv_name = 'TSPLT'
+                  CHANGING cg_data = ls_tsp1t ).
+    lo_xml->read( EXPORTING iv_name = 'TSPLD'
+                  CHANGING cg_data = ls_tsp1d ).
+    lo_xml->read( EXPORTING iv_name = 'TSP0P'
+                  CHANGING cg_data = ls_tsp0p ).
 
     MODIFY tsp1t FROM ls_tsp1t.                           "#EC CI_SUBRC
     MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
@@ -7932,224 +7958,224 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_super FINAL.
-
-  PUBLIC SECTION.
-    INTERFACES lif_object.
-
-ENDCLASS.                    "lcl_object_dtel DEFINITION
+*CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_super FINAL.
+*
+*  PUBLIC SECTION.
+*    INTERFACES lif_object.
+*
+*ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_ssfo IMPLEMENTATION.
-
-  METHOD lif_object~exists.
-
-    DATA: lv_formname TYPE stxfadm-formname.
-
-
-    SELECT SINGLE formname FROM stxfadm INTO lv_formname
-      WHERE formname = ms_item-obj_name.
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-  METHOD lif_object~jump.
-
-    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPMSSFO'.
-    <ls_bdcdata>-dynpro   = '0100'.
-    <ls_bdcdata>-dynbegin = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
-    <ls_bdcdata>-fval = '=DISPLAY'.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'RB_SF'.
-    <ls_bdcdata>-fval = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'SSFSCREEN-FNAME'.
-    <ls_bdcdata>-fval = ms_item-obj_name.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                 = 'SMARTFORMS'
-        mode_val              = 'E'
-      TABLES
-        using_tab             = lt_bdcdata
-      EXCEPTIONS
-        system_failure        = 1
-        communication_failure = 2
-        resource_failure      = 3
-        OTHERS                = 4 ##fm_subrc_ok. "#EC CI_SUBRC
-
-  ENDMETHOD.                    "jump
-
-  METHOD lif_object~delete.
-
-    DATA: lv_formname TYPE tdsfname.
-
-
-    lv_formname = ms_item-obj_name.
-
-    CALL FUNCTION 'FB_DELETE_FORM'
-      EXPORTING
-        i_formname            = lv_formname
-        i_with_dialog         = abap_false
-        i_with_confirm_dialog = abap_false
-      EXCEPTIONS
-        no_name               = 1
-        no_form               = 2
-        form_locked           = 3
-        no_access_permission  = 4
-        illegal_language      = 5
-        illegal_formtype      = 6
-        OTHERS                = 7.
-    IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from FB_DELETE_FORM'.
-    ENDIF.
-
-  ENDMETHOD.                    "delete
-
-  METHOD lif_object~serialize.
-* see function module FB_DOWNLOAD_FORM
-
-    DATA: lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
-          lo_xml      TYPE REF TO lcl_xml,
-          lv_name     TYPE string,
-          li_node     TYPE REF TO if_ixml_node,
-          li_element  TYPE REF TO if_ixml_element,
-          li_iterator TYPE REF TO if_ixml_node_iterator,
-          li_attr     TYPE REF TO if_ixml_named_node_map,
-          lv_formname TYPE tdsfname.
-
-
-    CREATE OBJECT lo_xml
-      EXPORTING
-        iv_empty = abap_true.
-
-    CREATE OBJECT lo_sf.
-    lv_formname = ms_item-obj_name. " convert type
-    TRY.
-        lo_sf->load( im_formname = lv_formname
-                     im_language = '' ).
-      CATCH cx_ssf_fb.
-* the smartform is not present in system, or other error occured
-        RETURN.
-    ENDTRY.
-
-    lo_sf->xml_download( EXPORTING parent   = lo_xml->mi_xml_doc
-                         CHANGING  document = lo_xml->mi_xml_doc ).
-
-    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
-    li_node = li_iterator->get_next( ).
-    WHILE NOT li_node IS INITIAL.
-
-      lv_name = li_node->get_name( ).
-      IF lv_name = 'DEVCLASS'
-          OR lv_name = 'LASTDATE'
-          OR lv_name = 'LASTTIME'.
-        li_node->set_value( '' ).
-      ENDIF.
-      IF lv_name = 'FIRSTUSER'
-          OR lv_name = 'LASTUSER'.
-        li_node->set_value( 'DUMMY' ).
-      ENDIF.
-
-* remove IDs it seems that they are not used for anything
-* the IDs are "random" so it caused diff files
-      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
-        li_attr = li_node->get_attributes( ).
-        li_attr->remove_named_item( 'ID' ).
-      ENDIF.
-
-      li_node = li_iterator->get_next( ).
-    ENDWHILE.
-
-    li_element = lo_xml->mi_xml_doc->get_root_element( ).
-    li_element->set_attribute(
-      name      = 'sf'
-      namespace = 'xmlns'
-      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). "#EC NOTEXT
-    li_element->set_attribute(
-      name  = 'xmlns'
-      value = 'urn:sap-com:sdixml-ifr:2000' ).              "#EC NOTEXT
-
-* the upload fails when the smartform is normalized
-    mo_files->add_xml( io_xml       = lo_xml
-                       iv_normalize = abap_false ).
-
-  ENDMETHOD.                    "serialize
-
-  METHOD lif_object~deserialize.
-* see function module FB_UPLOAD_FORM
-
-    DATA: lo_xml      TYPE REF TO lcl_xml,
-          li_node     TYPE REF TO if_ixml_node,
-          lv_formname TYPE tdsfname,
-          lv_name     TYPE string,
-          li_iterator TYPE REF TO if_ixml_node_iterator,
-          lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
-          lo_res      TYPE REF TO cl_ssf_fb_smart_form.
-
-
-    CREATE OBJECT lo_sf.
-
-    lo_xml = mo_files->read_xml( ).
-
-* set "created by" and "changed by" to current user
-    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
-    li_node = li_iterator->get_next( ).
-    WHILE NOT li_node IS INITIAL.
-      lv_name = li_node->get_name( ).
-      CASE lv_name.
-        WHEN 'LASTDATE'.
-          li_node->set_value(
-            sy-datum(4) && '-' && sy-datum+4(2) && '-' && sy-datum+6(2) ).
-        WHEN 'LASTTIME'.
-          li_node->set_value(
-            sy-uzeit(2) && ':' && sy-uzeit+2(2) && ':' && sy-uzeit+4(2) ).
-        WHEN 'FIRSTUSER' OR 'LASTUSER'.
-          li_node->set_value( sy-uname && '' ).
-      ENDCASE.
-
-      li_node = li_iterator->get_next( ).
-    ENDWHILE.
-
-    li_node = lo_xml->mi_xml_doc->get_root_element( ).
-    lv_formname = ms_item-obj_name.
-
-* todo, iv_package?
-    lo_sf->enqueue( suppress_corr_check = space
-                    master_language     = gc_english
-                    mode                = 'INSERT'
-                    formname            = lv_formname ).
-
-    lo_sf->xml_upload( EXPORTING dom      = li_node
-                                 formname = lv_formname
-                                 language = gc_english
-                       CHANGING  sform    = lo_res ).
-
-    lo_res->store( im_formname = lo_res->header-formname
-                   im_language = gc_english
-                   im_active   = abap_true ).
-
-    lo_sf->dequeue( lv_formname ).
-
-  ENDMETHOD.                    "deserialize
-
-ENDCLASS.                    "lcl_object_ssfo IMPLEMENTATION
+*CLASS lcl_object_ssfo IMPLEMENTATION.
+*
+*  METHOD lif_object~exists.
+*
+*    DATA: lv_formname TYPE stxfadm-formname.
+*
+*
+*    SELECT SINGLE formname FROM stxfadm INTO lv_formname
+*      WHERE formname = ms_item-obj_name.
+*    rv_bool = boolc( sy-subrc = 0 ).
+*
+*  ENDMETHOD.
+*
+*  METHOD lif_object~jump.
+*
+*    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+*
+*    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+*
+*
+*    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+*    <ls_bdcdata>-program  = 'SAPMSSFO'.
+*    <ls_bdcdata>-dynpro   = '0100'.
+*    <ls_bdcdata>-dynbegin = abap_true.
+*
+*    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+*    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+*    <ls_bdcdata>-fval = '=DISPLAY'.
+*
+*    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+*    <ls_bdcdata>-fnam = 'RB_SF'.
+*    <ls_bdcdata>-fval = abap_true.
+*
+*    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+*    <ls_bdcdata>-fnam = 'SSFSCREEN-FNAME'.
+*    <ls_bdcdata>-fval = ms_item-obj_name.
+*
+*    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+*      STARTING NEW TASK 'GIT'
+*      EXPORTING
+*        tcode                 = 'SMARTFORMS'
+*        mode_val              = 'E'
+*      TABLES
+*        using_tab             = lt_bdcdata
+*      EXCEPTIONS
+*        system_failure        = 1
+*        communication_failure = 2
+*        resource_failure      = 3
+*        OTHERS                = 4 ##fm_subrc_ok. "#EC CI_SUBRC
+*
+*  ENDMETHOD.                    "jump
+*
+*  METHOD lif_object~delete.
+*
+*    DATA: lv_formname TYPE tdsfname.
+*
+*
+*    lv_formname = ms_item-obj_name.
+*
+*    CALL FUNCTION 'FB_DELETE_FORM'
+*      EXPORTING
+*        i_formname            = lv_formname
+*        i_with_dialog         = abap_false
+*        i_with_confirm_dialog = abap_false
+*      EXCEPTIONS
+*        no_name               = 1
+*        no_form               = 2
+*        form_locked           = 3
+*        no_access_permission  = 4
+*        illegal_language      = 5
+*        illegal_formtype      = 6
+*        OTHERS                = 7.
+*    IF sy-subrc <> 0 AND sy-subrc <> 2.
+*      _raise 'Error from FB_DELETE_FORM'.
+*    ENDIF.
+*
+*  ENDMETHOD.                    "delete
+*
+*  METHOD lif_object~serialize.
+** see function module FB_DOWNLOAD_FORM
+*
+*    DATA: lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+*          lo_xml      TYPE REF TO lcl_xml,
+*          lv_name     TYPE string,
+*          li_node     TYPE REF TO if_ixml_node,
+*          li_element  TYPE REF TO if_ixml_element,
+*          li_iterator TYPE REF TO if_ixml_node_iterator,
+*          li_attr     TYPE REF TO if_ixml_named_node_map,
+*          lv_formname TYPE tdsfname.
+*
+*
+*    CREATE OBJECT lo_xml
+*      EXPORTING
+*        iv_empty = abap_true.
+*
+*    CREATE OBJECT lo_sf.
+*    lv_formname = ms_item-obj_name. " convert type
+*    TRY.
+*        lo_sf->load( im_formname = lv_formname
+*                     im_language = '' ).
+*      CATCH cx_ssf_fb.
+** the smartform is not present in system, or other error occured
+*        RETURN.
+*    ENDTRY.
+*
+*    lo_sf->xml_download( EXPORTING parent   = lo_xml->mi_xml_doc
+*                         CHANGING  document = lo_xml->mi_xml_doc ).
+*
+*    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
+*    li_node = li_iterator->get_next( ).
+*    WHILE NOT li_node IS INITIAL.
+*
+*      lv_name = li_node->get_name( ).
+*      IF lv_name = 'DEVCLASS'
+*          OR lv_name = 'LASTDATE'
+*          OR lv_name = 'LASTTIME'.
+*        li_node->set_value( '' ).
+*      ENDIF.
+*      IF lv_name = 'FIRSTUSER'
+*          OR lv_name = 'LASTUSER'.
+*        li_node->set_value( 'DUMMY' ).
+*      ENDIF.
+*
+** remove IDs it seems that they are not used for anything
+** the IDs are "random" so it caused diff files
+*      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
+*        li_attr = li_node->get_attributes( ).
+*        li_attr->remove_named_item( 'ID' ).
+*      ENDIF.
+*
+*      li_node = li_iterator->get_next( ).
+*    ENDWHILE.
+*
+*    li_element = lo_xml->mi_xml_doc->get_root_element( ).
+*    li_element->set_attribute(
+*      name      = 'sf'
+*      namespace = 'xmlns'
+*      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). "#EC NOTEXT
+*    li_element->set_attribute(
+*      name  = 'xmlns'
+*      value = 'urn:sap-com:sdixml-ifr:2000' ).              "#EC NOTEXT
+*
+** the upload fails when the smartform is normalized
+*    mo_files->add_xml( io_xml       = lo_xml
+*                       iv_normalize = abap_false ).
+*
+*  ENDMETHOD.                    "serialize
+*
+*  METHOD lif_object~deserialize.
+** see function module FB_UPLOAD_FORM
+*
+*    DATA: lo_xml      TYPE REF TO lcl_xml,
+*          li_node     TYPE REF TO if_ixml_node,
+*          lv_formname TYPE tdsfname,
+*          lv_name     TYPE string,
+*          li_iterator TYPE REF TO if_ixml_node_iterator,
+*          lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
+*          lo_res      TYPE REF TO cl_ssf_fb_smart_form.
+*
+*
+*    CREATE OBJECT lo_sf.
+*
+*    lo_xml = mo_files->read_xml( ).
+*
+** set "created by" and "changed by" to current user
+*    li_iterator = lo_xml->mi_xml_doc->create_iterator( ).
+*    li_node = li_iterator->get_next( ).
+*    WHILE NOT li_node IS INITIAL.
+*      lv_name = li_node->get_name( ).
+*      CASE lv_name.
+*        WHEN 'LASTDATE'.
+*          li_node->set_value(
+*            sy-datum(4) && '-' && sy-datum+4(2) && '-' && sy-datum+6(2) ).
+*        WHEN 'LASTTIME'.
+*          li_node->set_value(
+*            sy-uzeit(2) && ':' && sy-uzeit+2(2) && ':' && sy-uzeit+4(2) ).
+*        WHEN 'FIRSTUSER' OR 'LASTUSER'.
+*          li_node->set_value( sy-uname && '' ).
+*      ENDCASE.
+*
+*      li_node = li_iterator->get_next( ).
+*    ENDWHILE.
+*
+*    li_node = lo_xml->mi_xml_doc->get_root_element( ).
+*    lv_formname = ms_item-obj_name.
+*
+** todo, iv_package?
+*    lo_sf->enqueue( suppress_corr_check = space
+*                    master_language     = gc_english
+*                    mode                = 'INSERT'
+*                    formname            = lv_formname ).
+*
+*    lo_sf->xml_upload( EXPORTING dom      = li_node
+*                                 formname = lv_formname
+*                                 language = gc_english
+*                       CHANGING  sform    = lo_res ).
+*
+*    lo_res->store( im_formname = lo_res->header-formname
+*                   im_language = gc_english
+*                   im_active   = abap_true ).
+*
+*    lo_sf->dequeue( lv_formname ).
+*
+*  ENDMETHOD.                    "deserialize
+*
+*ENDCLASS.                    "lcl_object_ssfo IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel DEFINITION
