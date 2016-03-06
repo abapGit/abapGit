@@ -3103,16 +3103,31 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
     TYPES: ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_cua,
+             adm TYPE rsmpe_adm,
+             sta TYPE STANDARD TABLE OF rsmpe_stat WITH DEFAULT KEY,
+             fun TYPE STANDARD TABLE OF rsmpe_funt WITH DEFAULT KEY,
+             men TYPE STANDARD TABLE OF rsmpe_men WITH DEFAULT KEY,
+             mtx TYPE STANDARD TABLE OF rsmpe_mnlt WITH DEFAULT KEY,
+             act TYPE STANDARD TABLE OF rsmpe_act WITH DEFAULT KEY,
+             but TYPE STANDARD TABLE OF rsmpe_but WITH DEFAULT KEY,
+             pfk TYPE STANDARD TABLE OF rsmpe_pfk WITH DEFAULT KEY,
+             set TYPE STANDARD TABLE OF rsmpe_staf WITH DEFAULT KEY,
+             doc TYPE STANDARD TABLE OF rsmpe_atrt WITH DEFAULT KEY,
+             tit TYPE STANDARD TABLE OF rsmpe_titt WITH DEFAULT KEY,
+             biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
+           END OF ty_cua.
+
   PRIVATE SECTION.
 
     CLASS-METHODS serialize_dynpros
-      IMPORTING iv_program_name TYPE programm
-                io_xml          TYPE REF TO lcl_xml_output
+      IMPORTING iv_program_name  TYPE programm
+      RETURNING VALUE(rt_dynpro) TYPE ty_dynpro_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS serialize_cua
       IMPORTING iv_program_name TYPE programm
-                io_xml          TYPE REF TO lcl_xml_output
+      RETURNING VALUE(rs_cua)   TYPE ty_cua
       RAISING   lcx_exception.
 ENDCLASS.
 
@@ -3122,6 +3137,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     DATA: ls_progdir      TYPE ty_progdir,
           lv_program_name TYPE programm,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua,
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
@@ -3154,13 +3171,16 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ls_progdir = read_progdir( lv_program_name ).
 
     CREATE OBJECT lo_xml.
-    lo_xml->add( ig_data = ls_progdir
-                 iv_name = 'PROGDIR' ).
+    lo_xml->add( iv_name = 'PROGDIR'
+                 ig_data = ls_progdir ).
     IF ls_progdir-subc = '1'.
-      serialize_dynpros( iv_program_name = lv_program_name
-                         io_xml          = lo_xml ).
-      serialize_cua( iv_program_name = lv_program_name
-                     io_xml          = lo_xml ).
+      lt_dynpros = serialize_dynpros( lv_program_name ).
+      lo_xml->add( iv_name = 'DYNPROS'
+                   ig_data = lt_dynpros ).
+
+      ls_cua = serialize_cua( lv_program_name ).
+      lo_xml->add( iv_name = 'CUA'
+                   ig_data = ls_cua ).
     ENDIF.
 
     IF lines( lt_tpool ) = 1.
@@ -3333,39 +3353,25 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   METHOD serialize_cua.
 
-    DATA: ls_adm TYPE rsmpe_adm,
-          lt_sta TYPE TABLE OF rsmpe_stat,
-          lt_fun TYPE TABLE OF rsmpe_funt,
-          lt_men TYPE TABLE OF rsmpe_men,
-          lt_mtx TYPE TABLE OF rsmpe_mnlt,
-          lt_act TYPE TABLE OF rsmpe_act,
-          lt_but TYPE TABLE OF rsmpe_but,
-          lt_pfk TYPE TABLE OF rsmpe_pfk,
-          lt_set TYPE TABLE OF rsmpe_staf,
-          lt_doc TYPE TABLE OF rsmpe_atrt,
-          lt_tit TYPE TABLE OF rsmpe_titt,
-          lt_biv TYPE TABLE OF rsmpe_buts.
-
-
     CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
       EXPORTING
         program         = iv_program_name
         language        = gc_english
         state           = 'A'
       IMPORTING
-        adm             = ls_adm
+        adm             = rs_cua-adm
       TABLES
-        sta             = lt_sta
-        fun             = lt_fun
-        men             = lt_men
-        mtx             = lt_mtx
-        act             = lt_act
-        but             = lt_but
-        pfk             = lt_pfk
-        set             = lt_set
-        doc             = lt_doc
-        tit             = lt_tit
-        biv             = lt_biv
+        sta             = rs_cua-sta
+        fun             = rs_cua-fun
+        men             = rs_cua-men
+        mtx             = rs_cua-mtx
+        act             = rs_cua-act
+        but             = rs_cua-but
+        pfk             = rs_cua-pfk
+        set             = rs_cua-set
+        doc             = rs_cua-doc
+        tit             = rs_cua-tit
+        biv             = rs_cua-biv
       EXCEPTIONS
         not_found       = 1
         unknown_version = 2
@@ -3374,44 +3380,18 @@ CLASS lcl_objects_program IMPLEMENTATION.
       _raise 'error from RS_CUA_INTERNAL_FETCH'.
     ENDIF.
 
-    io_xml->add( iv_name = 'ADM'
-                 ig_data = ls_adm ).
-    io_xml->add( ig_data = lt_sta
-                 iv_name = 'RSMPE_STAT_TABLE' ).
-    io_xml->add( ig_data = lt_fun
-                 iv_name = 'RSMPE_FUNT_TABLE' ).
-    io_xml->add( ig_data = lt_men
-                 iv_name = 'RSMPE_MEN_TABLE' ).
-    io_xml->add( ig_data = lt_mtx
-                 iv_name = 'RSMPE_MNLT_TABLE' ).
-    io_xml->add( ig_data = lt_act
-                 iv_name = 'RSMPE_ACT_TABLE' ).
-    io_xml->add( ig_data = lt_but
-                 iv_name = 'RSMPE_BUT_TABLE' ).
-    io_xml->add( ig_data = lt_pfk
-                 iv_name = 'RSMPE_PFK_TABLE' ).
-    io_xml->add( ig_data = lt_set
-                 iv_name = 'RSMPE_STAF_TABLE' ).
-    io_xml->add( ig_data = lt_doc
-                 iv_name = 'RSMPE_ATRT_TABLE' ).
-    io_xml->add( ig_data = lt_tit
-                 iv_name = 'RSMPE_TITT_TABLE' ).
-    io_xml->add( ig_data = lt_biv
-                 iv_name = 'RSMPE_BUTS_TABLE' ).
-
   ENDMETHOD.                    "serialize_cua
 
   METHOD serialize_dynpros.
 
-    DATA: lt_dynpro               TYPE ty_dynpro_tt,
-          ls_header               TYPE rpy_dyhead,
+    DATA: ls_header               TYPE rpy_dyhead,
           lt_containers           TYPE dycatt_tab,
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow,
           lt_d020s                TYPE TABLE OF d020s.
 
     FIELD-SYMBOLS: <ls_d020s>  LIKE LINE OF lt_d020s,
-                   <ls_dynpro> LIKE LINE OF lt_dynpro.
+                   <ls_dynpro> LIKE LINE OF rt_dynpro.
 
 
     CALL FUNCTION 'RS_SCREEN_LIST'
@@ -3449,16 +3429,13 @@ CLASS lcl_objects_program IMPLEMENTATION.
         _raise 'Error while reading dynpro'.
       ENDIF.
 
-      APPEND INITIAL LINE TO lt_dynpro ASSIGNING <ls_dynpro>.
-      <ls_dynpro>-header = ls_header.
+      APPEND INITIAL LINE TO rt_dynpro ASSIGNING <ls_dynpro>.
+      <ls_dynpro>-header     = ls_header.
       <ls_dynpro>-containers = lt_containers.
-      <ls_dynpro>-fields = lt_fields_to_containers.
+      <ls_dynpro>-fields     = lt_fields_to_containers.
       <ls_dynpro>-flow_logic = lt_flow_logic.
 
     ENDLOOP.
-
-    io_xml->add( iv_name = 'DYNPROS'
-                 ig_data = lt_dynpro ).
 
   ENDMETHOD.                    "serialize_dynpros
 
@@ -10756,11 +10733,11 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PRIVATE SECTION.
     METHODS deserialize_dynpros
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      IMPORTING it_dynpros TYPE ty_dynpro_tt
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      IMPORTING is_cua TYPE ty_cua
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
@@ -10844,49 +10821,12 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_cua.
 
-    DATA: ls_tr_key TYPE trkey,
-          ls_adm    TYPE rsmpe_adm,
-          lt_sta    TYPE TABLE OF rsmpe_stat,
-          lt_fun    TYPE TABLE OF rsmpe_funt,
-          lt_men    TYPE TABLE OF rsmpe_men,
-          lt_mtx    TYPE TABLE OF rsmpe_mnlt,
-          lt_act    TYPE TABLE OF rsmpe_act,
-          lt_but    TYPE TABLE OF rsmpe_but,
-          lt_pfk    TYPE TABLE OF rsmpe_pfk,
-          lt_set    TYPE TABLE OF rsmpe_staf,
-          lt_doc    TYPE TABLE OF rsmpe_atrt,
-          lt_tit    TYPE TABLE OF rsmpe_titt,
-          lt_biv    TYPE TABLE OF rsmpe_buts.
+    DATA: ls_tr_key TYPE trkey.
 
 
-    io_xml->read( EXPORTING iv_name = 'ADM'
-                  CHANGING cg_data = ls_adm ).
-    IF ls_adm IS INITIAL.
+    IF is_cua-adm IS INITIAL.
       RETURN.
     ENDIF.
-
-    io_xml->read( EXPORTING iv_name = 'RSMPE_STAT_TABLE'
-                  CHANGING cg_data = lt_sta ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_FUNT_TABLE'
-                  CHANGING cg_data = lt_fun ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_MEN_TABLE'
-                  CHANGING cg_data = lt_men ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_MNLT_TABLE'
-                  CHANGING cg_data = lt_mtx ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_ACT_TABLE'
-                  CHANGING cg_data = lt_act ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_BUT_TABLE'
-                  CHANGING cg_data = lt_but ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_PFK_TABLE'
-                  CHANGING cg_data = lt_pfk ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_STAF_TABLE'
-                  CHANGING cg_data = lt_set ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_ATRT_TABLE'
-                  CHANGING cg_data = lt_doc ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_TITT_TABLE'
-                  CHANGING cg_data = lt_tit ).
-    io_xml->read( EXPORTING iv_name = 'RSMPE_BUTS_TABLE'
-                  CHANGING cg_data = lt_biv ).
 
     SELECT SINGLE devclass INTO ls_tr_key-devclass
       FROM tadir
@@ -10907,20 +10847,20 @@ CLASS lcl_object_prog IMPLEMENTATION.
         program   = ms_item-obj_name
         language  = gc_english
         tr_key    = ls_tr_key
-        adm       = ls_adm
+        adm       = is_cua-adm
         state     = 'I'
       TABLES
-        sta       = lt_sta
-        fun       = lt_fun
-        men       = lt_men
-        mtx       = lt_mtx
-        act       = lt_act
-        but       = lt_but
-        pfk       = lt_pfk
-        set       = lt_set
-        doc       = lt_doc
-        tit       = lt_tit
-        biv       = lt_biv
+        sta       = is_cua-sta
+        fun       = is_cua-fun
+        men       = is_cua-men
+        mtx       = is_cua-mtx
+        act       = is_cua-act
+        but       = is_cua-but
+        pfk       = is_cua-pfk
+        set       = is_cua-set
+        doc       = is_cua-doc
+        tit       = is_cua-tit
+        biv       = is_cua-biv
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
@@ -10945,6 +10885,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
     DATA: lo_xml     TYPE REF TO lcl_xml_input,
           ls_progdir TYPE ty_progdir,
           lt_tpool   TYPE textpool_table,
+          lt_dynpros TYPE ty_dynpro_tt,
+          ls_cua     TYPE ty_cua,
           lt_source  TYPE abaptxt255_tab.
 
 
@@ -10954,7 +10896,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     lo_xml->read( EXPORTING iv_name = 'TPOOL'
                   CHANGING cg_data = lt_tpool ).
-
     lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data = ls_progdir ).
     deserialize_program( is_progdir = ls_progdir
@@ -10962,9 +10903,13 @@ CLASS lcl_object_prog IMPLEMENTATION.
                          it_tpool   = lt_tpool
                          iv_package = iv_package ).
 
-    deserialize_dynpros( lo_xml ).
+    lo_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
+    deserialize_dynpros( lt_dynpros ).
 
-    deserialize_cua( lo_xml ).
+    lo_xml->read( EXPORTING iv_name = 'CUA'
+                  CHANGING cg_data = ls_cua ).
+    deserialize_cua( ls_cua ).
 
     deserialize_textpool( lt_tpool ).
 
@@ -10972,16 +10917,12 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_dynpros.
 
-    DATA: lv_name    TYPE dwinactiv-obj_name,
-          lt_dynpros TYPE ty_dynpro_tt.
+    DATA: lv_name    TYPE dwinactiv-obj_name.
 
-    FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF lt_dynpros.
+    FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF it_dynpros.
 
 
-    io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                  CHANGING cg_data = lt_dynpros ).
-
-    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+    LOOP AT it_dynpros ASSIGNING <ls_dynpro>.
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'
         EXPORTING
