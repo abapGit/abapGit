@@ -7309,7 +7309,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
                  ig_data = ls_tobj ).
     lo_xml->add( iv_name = 'TOBJT'
                  ig_data = ls_tobjt ).
-    lo_xml->add( iv_name = 'TOBJVOFFLG'
+    lo_xml->add( iv_name = 'TOBJVORFLG'
                  ig_data = ls_tobjvorflg ).
     lo_xml->add( ig_data = lt_tactz
                  iv_name = 'TACTZ' ).
@@ -10921,21 +10921,22 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_dynpros.
 
-    DATA: lv_name    TYPE dwinactiv-obj_name.
+    DATA: lv_name   TYPE dwinactiv-obj_name,
+          ls_dynpro LIKE LINE OF it_dynpros.
 
-    FIELD-SYMBOLS: <ls_dynpro> LIKE LINE OF it_dynpros.
 
-
-    LOOP AT it_dynpros ASSIGNING <ls_dynpro>.
+* ls_dynpro is changed by the function module, a field-symbol will cause
+* the program to dump since it_dynpros cannot be changed
+    LOOP AT it_dynpros INTO ls_dynpro.
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'
         EXPORTING
-          header                 = <ls_dynpro>-header
+          header                 = ls_dynpro-header
           suppress_exist_checks  = abap_true
         TABLES
-          containers             = <ls_dynpro>-containers
-          fields_to_containers   = <ls_dynpro>-fields
-          flow_logic             = <ls_dynpro>-flow_logic
+          containers             = ls_dynpro-containers
+          fields_to_containers   = ls_dynpro-fields
+          flow_logic             = ls_dynpro-flow_logic
         EXCEPTIONS
           cancelled              = 1
           already_exists         = 2
@@ -10952,7 +10953,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
-      CONCATENATE <ls_dynpro>-header-program <ls_dynpro>-header-screen
+      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
         INTO lv_name RESPECTING BLANKS.
       ASSERT NOT lv_name IS INITIAL.
 
