@@ -1936,24 +1936,6 @@ CLASS lcl_git_pack DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_pack DEFINITION
 
-INTERFACE lif_object.
-
-  METHODS:
-    serialize
-      RAISING lcx_exception,
-    deserialize
-      IMPORTING iv_package TYPE devclass
-      RAISING   lcx_exception,
-    delete
-      RAISING lcx_exception,
-    exists
-      RETURNING VALUE(rv_bool) TYPE abap_bool
-      RAISING   lcx_exception,
-    jump
-      RAISING lcx_exception.
-
-ENDINTERFACE.
-
 CLASS lcl_objects_activation DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -2132,6 +2114,26 @@ CLASS lcl_objects_files DEFINITION FINAL.
         RETURNING VALUE(rv_filename) TYPE string.
 
 ENDCLASS.
+
+INTERFACE lif_object.
+
+  METHODS:
+    serialize
+      RAISING lcx_exception,
+    deserialize
+      IMPORTING iv_package TYPE devclass
+      RAISING   lcx_exception,
+    delete
+      RAISING lcx_exception,
+    exists
+      RETURNING VALUE(rv_bool) TYPE abap_bool
+      RAISING   lcx_exception,
+    jump
+      RAISING lcx_exception.
+
+  DATA: mo_files TYPE REF TO lcl_objects_files.
+
+ENDINTERFACE.
 
 CLASS lcl_objects_files IMPLEMENTATION.
 
@@ -2325,15 +2327,11 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
     METHODS:
       constructor
         IMPORTING
-          is_item TYPE ty_item,
-      set_files
-        IMPORTING
-          io_files TYPE REF TO lcl_objects_files.
+          is_item TYPE ty_item.
 
   PROTECTED SECTION.
 
-    DATA: ms_item  TYPE ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE ty_item.
 
     METHODS:
       corr_insert
@@ -2359,9 +2357,8 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING is_item TYPE ty_item
       RAISING   cx_sy_create_object_error.
 
-    METHODS set_files REDEFINITION.
-
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
@@ -2400,12 +2397,6 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD set_files.
-    CALL METHOD mo_plugin->('SET_FILES')
-      EXPORTING
-        io_objects_files = io_files.
-  ENDMETHOD.
-
   METHOD lif_object~serialize.
 
     DATA: lo_files         TYPE REF TO object,
@@ -2430,6 +2421,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     DATA: lx_plugin        TYPE REF TO cx_static_check.
 
     TRY.
+        CALL METHOD mo_plugin->('SET_FILES')
+          EXPORTING
+            io_objects_files = mo_files.
+
         CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE')
           EXPORTING
             iv_package = iv_package.
@@ -2980,10 +2975,6 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   ENDMETHOD.                                                "jump_se11
 
-  METHOD set_files.
-    mo_files = io_files.
-  ENDMETHOD.
-
   METHOD corr_insert.
 
     DATA: ls_object TYPE ddenqs.
@@ -3018,6 +3009,7 @@ CLASS lcl_object_acid DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS: create_object
@@ -3141,6 +3133,7 @@ CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.
 
@@ -3246,6 +3239,7 @@ CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_doma DEFINITION
 
@@ -3399,6 +3393,7 @@ CLASS lcl_object_iarp DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -3581,6 +3576,7 @@ CLASS lcl_object_iasp DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -3763,6 +3759,7 @@ CLASS lcl_object_iatu DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -3961,6 +3958,7 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -4104,6 +4102,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
@@ -4787,6 +4786,7 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS get_filename
@@ -5086,6 +5086,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: ty_icfhandler_tt TYPE STANDARD TABLE OF icfhandler WITH DEFAULT KEY.
@@ -5476,6 +5477,7 @@ CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS validate_font
@@ -5666,6 +5668,7 @@ CLASS lcl_object_suso DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_suso DEFINITION
 
@@ -5678,6 +5681,7 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -6318,6 +6322,7 @@ CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -6522,6 +6527,7 @@ CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS read
@@ -6726,6 +6732,7 @@ CLASS lcl_object_susc DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_susc DEFINITION
 
@@ -6990,6 +6997,7 @@ CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS read
@@ -7183,6 +7191,7 @@ CLASS lcl_object_para DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_para DEFINITION
 
@@ -7316,6 +7325,7 @@ CLASS lcl_object_splo DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.
 
@@ -7431,6 +7441,7 @@ CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -7656,6 +7667,7 @@ CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -7925,6 +7937,7 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 * For complete list of tool_type - see ENHTOOLS table
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS deserialize_badi
@@ -8252,6 +8265,7 @@ CLASS lcl_object_enqu DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -8407,6 +8421,7 @@ CLASS lcl_object_shlp DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -8569,6 +8584,7 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
@@ -8782,6 +8798,7 @@ CLASS lcl_object_tobj DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_tobj DEFINITION
 
@@ -8950,6 +8967,7 @@ CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_msag DEFINITION
 
@@ -9108,6 +9126,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
@@ -9725,6 +9744,7 @@ CLASS lcl_object_view DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -9910,6 +9930,7 @@ CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_nrob DEFINITION
 
@@ -10064,6 +10085,7 @@ CLASS lcl_object_ttyp DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -10218,6 +10240,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
     METHODS deserialize_dynpros
@@ -11303,8 +11326,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: lt_files TYPE ty_files_tt,
           li_obj   TYPE REF TO lif_object,
-          lo_files TYPE REF TO lcl_objects_files,
-          lo_obj   TYPE REF TO lcl_objects_super.
+          lo_files TYPE REF TO lcl_objects_files.
 
 
     CREATE OBJECT lo_files
@@ -11312,8 +11334,7 @@ CLASS lcl_objects IMPLEMENTATION.
         is_item = is_item.
 
     li_obj = create_object( is_item ).
-    lo_obj ?= li_obj.
-    lo_obj->set_files( lo_files ).
+    li_obj->mo_files = lo_files.
     li_obj->serialize( ).
 
     rt_files = lo_files->get_files( ).
@@ -11355,7 +11376,6 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_cancel  TYPE abap_bool,
           li_obj     TYPE REF TO lif_object,
           lo_files   TYPE REF TO lcl_objects_files,
-          lo_obj     TYPE REF TO lcl_objects_super,
           lt_results TYPE lcl_file_status=>ty_results_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
@@ -11393,8 +11413,7 @@ CLASS lcl_objects IMPLEMENTATION.
           is_item = ls_item.
       lo_files->set_files( it_files ).
       li_obj = create_object( ls_item ).
-      lo_obj ?= li_obj.
-      lo_obj->set_files( lo_files ).
+      li_obj->mo_files = lo_files.
       li_obj->deserialize( iv_package ).
 
     ENDLOOP.
