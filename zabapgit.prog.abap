@@ -2117,6 +2117,11 @@ ENDCLASS.
 
 INTERFACE lif_object.
 
+  TYPES: BEGIN OF ty_metadata,
+           class   TYPE string,
+           version TYPE string,
+         END OF ty_metadata.
+
   METHODS:
     serialize
       RAISING lcx_exception,
@@ -2129,7 +2134,9 @@ INTERFACE lif_object.
       RETURNING VALUE(rv_bool) TYPE abap_bool
       RAISING   lcx_exception,
     jump
-      RAISING lcx_exception.
+      RAISING lcx_exception,
+    get_metadata
+      RETURNING VALUE(rs_metadata) TYPE ty_metadata.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -2334,6 +2341,8 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
     DATA: ms_item  TYPE ty_item.
 
     METHODS:
+      get_metadata
+        RETURNING VALUE(rs_metadata) TYPE lif_object=>ty_metadata,
       corr_insert
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
@@ -2374,6 +2383,14 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
 ENDCLASS.
 
 CLASS lcl_objects_bridge IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~GET_METADATA')
+      RECEIVING
+        rs_metadata = rs_metadata.
+
+  ENDMETHOD.
 
   METHOD constructor.
 
@@ -2975,6 +2992,11 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   ENDMETHOD.                                                "jump_se11
 
+  METHOD get_metadata.
+    rs_metadata-class = cl_abap_classdescr=>describe_by_object_ref( me )->absolute_name.
+    rs_metadata-version = 'v1.0.0'.
+  ENDMETHOD.
+
   METHOD corr_insert.
 
     DATA: ls_object TYPE ddenqs.
@@ -3019,6 +3041,10 @@ CLASS lcl_object_acid DEFINITION INHERITING FROM lcl_objects_super FINAL.
 ENDCLASS.
 
 CLASS lcl_object_acid IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD create_object.
 
@@ -3139,6 +3165,10 @@ ENDCLASS.
 
 CLASS lcl_object_auth IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml   TYPE REF TO lcl_xml_output,
@@ -3249,6 +3279,10 @@ ENDCLASS.                    "lcl_object_doma DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_doma IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -3414,6 +3448,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_iarp IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD read.
 
@@ -3598,6 +3636,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_iasp IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD read.
 
     DATA: li_service TYPE REF TO if_w3_api_service,
@@ -3780,6 +3822,10 @@ ENDCLASS.
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_iatu IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD read.
 
@@ -3968,6 +4014,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_dtel IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -4162,6 +4212,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_clas IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -4817,6 +4871,10 @@ ENDCLASS.                    "lcl_object_smim DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_smim IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     TRY.
@@ -5136,6 +5194,10 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -5493,6 +5555,10 @@ ENDCLASS.                    "lcl_object_ssst DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssst IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_stylename TYPE stxsadm-stylename.
@@ -5737,6 +5803,10 @@ ENDCLASS.                    "lcl_object_wdyn DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdyn IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -6350,6 +6420,10 @@ ENDCLASS.                    "lcl_object_wdca DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdca IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD constructor.
     super->constructor( is_item = is_item ).
     RAISE EXCEPTION TYPE cx_sy_create_object_error.
@@ -6550,6 +6624,10 @@ ENDCLASS.                    "lcl_object_wdya DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdya IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_name TYPE wdy_application_name.
@@ -6743,6 +6821,10 @@ ENDCLASS.                    "lcl_object_susc DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_suso IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_objct TYPE tobj-objct.
@@ -6893,6 +6975,10 @@ ENDCLASS.                    "lcl_object_suso IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_object_susc IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_oclss TYPE tobc-oclss.
@@ -7020,6 +7106,10 @@ ENDCLASS.                    "lcl_object_type DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_type IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -7202,6 +7292,10 @@ ENDCLASS.                    "lcl_object_para DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_para IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_paramid TYPE tpara-paramid.
@@ -7331,6 +7425,10 @@ ENDCLASS.
 
 CLASS lcl_object_splo IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lo_xml   TYPE REF TO lcl_xml_output,
@@ -7451,6 +7549,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssfo IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -7677,6 +7779,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -7966,6 +8072,10 @@ ENDCLASS.                    "lcl_object_enho DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_enho IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -8276,6 +8386,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_enqu IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_viewname TYPE dd25l-viewname.
@@ -8431,6 +8545,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_shlp IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -8594,6 +8712,10 @@ ENDCLASS.                    "lcl_object_TRAN DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tran IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -8809,6 +8931,10 @@ ENDCLASS.                    "lcl_object_tobj DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tobj IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_objectname TYPE objh-objectname.
@@ -8977,6 +9103,10 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_msag IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -9175,6 +9305,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SEUF
 * function group SIFP
 * function group SUNI
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -9755,6 +9889,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_view IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_viewname TYPE dd25l-viewname.
@@ -9941,6 +10079,10 @@ ENDCLASS.                    "lcl_object_nrob DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_nrob IMPLEMENTATION.
 
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: lv_object TYPE tnro-object.
@@ -10095,6 +10237,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_ttyp IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
@@ -10263,6 +10409,10 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_prog IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
