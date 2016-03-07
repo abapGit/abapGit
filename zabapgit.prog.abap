@@ -2436,17 +2436,9 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     DATA: lo_files         TYPE REF TO object,
           lo_wrapped_files TYPE REF TO object.
 
-    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~SERIALIZE').
-
-    CALL METHOD mo_plugin->('GET_FILES')
-      RECEIVING
-        ro_files_proxy = lo_files. "Returns a proxy wrapping a files-object
-
-    CALL METHOD lo_files->('GET_WRAPPED_OBJECT')
-      RECEIVING
-        ro_objects_files = lo_wrapped_files.
-
-    mo_files ?= lo_wrapped_files.
+    CALL METHOD mo_plugin->('WRAP_SERIALIZE')
+        EXPORTING
+            io_xml = io_xml.
 
   ENDMETHOD.
 
@@ -2455,13 +2447,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     DATA: lx_plugin        TYPE REF TO cx_static_check.
 
     TRY.
-        CALL METHOD mo_plugin->('SET_FILES')
+        CALL METHOD mo_plugin->('WRAP_DESERIALIZE')
           EXPORTING
-            io_objects_files = mo_files.
-
-        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DESERIALIZE')
-          EXPORTING
-            iv_package = iv_package.
+            iv_package = iv_package
+            io_xml     = io_xml.
       CATCH cx_static_check INTO lx_plugin.
         RAISE EXCEPTION TYPE lcx_exception
           EXPORTING
