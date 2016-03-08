@@ -4118,7 +4118,7 @@ ENDCLASS.                    "lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
+CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
@@ -4176,6 +4176,11 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super FINAL.
       CHANGING ct_source TYPE ty_string_tt.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
+
+CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas.
+* todo, CLAS + INTF to be refactored, see:
+* https://github.com/larshp/abapGit/issues/21
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_dtel IMPLEMENTATION
@@ -11097,9 +11102,6 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD class_name.
 
     CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
-    IF rv_class_name = 'LCL_OBJECT_INTF'.
-      rv_class_name = 'LCL_OBJECT_CLAS'.
-    ENDIF.
 
   ENDMETHOD.                    "class_name
 
