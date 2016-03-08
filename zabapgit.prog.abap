@@ -1066,9 +1066,13 @@ CLASS lcl_xml DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
     DATA: mi_ixml    TYPE REF TO if_ixml,
-          mi_xml_doc TYPE REF TO if_ixml_document.
+          mi_xml_doc TYPE REF TO if_ixml_document,
+          ms_metadata type ty_metadata.
 
-    CONSTANTS: c_abapgit_tag TYPE string VALUE 'abapGit'.
+    CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit',
+               c_attr_version            TYPE string VALUE 'version',
+               c_attr_serializer         TYPE string VALUE 'serializer',
+               c_attr_serializer_version TYPE string VALUE 'serializer_version'.
 
     METHODS to_xml
       IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
@@ -1119,12 +1123,17 @@ CLASS lcl_xml IMPLEMENTATION.
 
     li_istream->close( ).
 
-    li_element = mi_xml_doc->find_from_name( depth = 0 name = c_abapgit_tag ).
+
+    li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
-      )->get_named_item_ns( 'version' ) ##NO_TEXT.
+      )->get_named_item_ns( c_attr_version ) ##NO_TEXT.
     IF li_version->get_value( ) <> gc_xml_version.
       display_xml_error( ).
     ENDIF.
+
+*    buffer serializer metadata. Git node will be removed lateron
+    ms_metadata-class = li_element->get_attribute_ns( c_attr_serializer ).
+    ms_metadata-version = li_element->get_attribute_ns( c_attr_serializer_version ).
 
   ENDMETHOD.
 
@@ -1273,10 +1282,10 @@ CLASS lcl_xml_output IMPLEMENTATION.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = 'version' value = gc_xml_version ). "#EC NOTEXT
+    li_git->set_attribute( name = c_attr_version value = gc_xml_version ). "#EC NOTEXT
     IF NOT is_metadata IS INITIAL.
-      li_git->set_attribute( name = 'serializer' value = is_metadata-class ). "#EC NOTEXT
-      li_git->set_attribute( name = 'serializer_version' value = is_metadata-version ). "#EC NOTEXT
+      li_git->set_attribute( name = c_attr_serializer value = is_metadata-class ). "#EC NOTEXT
+      li_git->set_attribute( name = c_attr_serializer_version value = is_metadata-version ). "#EC NOTEXT
     ENDIF.
     li_git->append_child( li_abap ).
     mi_xml_doc->get_root( )->append_child( li_git ).
@@ -1299,7 +1308,9 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         CHANGING  cg_data TYPE any
         RAISING   lcx_exception,
       get_raw
-        RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_node.
+        RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_node,
+      get_metadata
+        RETURNING VALUE(rs_metadata) TYPE ty_metadata.
 
   PRIVATE SECTION.
     METHODS: fix_xml.
@@ -1359,6 +1370,10 @@ CLASS lcl_xml_input IMPLEMENTATION.
         _raise lv_text.
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD get_metadata.
+    rs_metadata = ms_metadata.
   ENDMETHOD.
 
 ENDCLASS.
@@ -9147,7 +9162,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING   lcx_exception.
 
     METHODS deserialize_functions
-      IMPORTING it_functions type ty_function_tt
+      IMPORTING it_functions TYPE ty_function_tt
       RAISING   lcx_exception.
 
     METHODS serialize_xml
@@ -9201,9 +9216,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_functions.
 
-    DATA: lv_include       TYPE rs38l-include,
-          lv_area          TYPE rs38l-area,
-          lt_source        TYPE TABLE OF rssource.
+    DATA: lv_include TYPE rs38l-include,
+          lv_area    TYPE rs38l-area,
+          lt_source  TYPE TABLE OF rssource.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
@@ -10471,6 +10486,8 @@ CLASS lcl_objects DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item
+                is_metadata   TYPE ty_metadata OPTIONAL
+                  PREFERRED PARAMETER is_item
       RETURNING VALUE(ri_obj) TYPE REF TO lif_object
       RAISING   lcx_exception.
 
@@ -10970,11 +10987,33 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD create_object.
 
-    DATA: lv_message    TYPE string,
-          lv_class_name TYPE string.
+    TYPES: BEGIN OF ty_obj_serializer_map,
+             item     LIKE is_item,
+             metadata LIKE is_metadata,
+           END OF ty_obj_serializer_map.
+    STATICS st_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
 
+    DATA: lv_message            TYPE string,
+          lv_class_name         TYPE string,
+          ls_obj_serializer_map TYPE ty_obj_serializer_map.
 
-    lv_class_name = class_name( is_item ).
+    READ TABLE st_obj_serializer_map INTO ls_obj_serializer_map WITH KEY item = is_item.
+    IF sy-subrc = 0.
+      lv_class_name = ls_obj_serializer_map-metadata-class.
+    ELSE.
+      IF is_metadata IS NOT INITIAL.
+*        Metadata is provided only on serialization
+*        Once this has been triggered, the same serializer shall be used for subsequent processes.
+*        Thus, buffer the metadata afterwards
+        ls_obj_serializer_map-item      = is_item.
+        ls_obj_serializer_map-metadata  = is_metadata.
+        INSERT ls_obj_serializer_map INTO TABLE st_obj_serializer_map.
+
+        lv_class_name = is_metadata-class.
+      ELSE.
+        lv_class_name = class_name( is_item ).
+      ENDIF.
+    ENDIF.
 
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
@@ -11340,10 +11379,15 @@ CLASS lcl_objects IMPLEMENTATION.
         EXPORTING
           is_item = ls_item.
       lo_files->set_files( it_files ).
-      li_obj = create_object( ls_item ).
-      li_obj->mo_files = lo_files.
+
+*      Analyze XML in order to instantiate the proper serializer
       lo_xml = lo_files->read_xml( ).
-* todo, validate serializer metadata
+
+      li_obj = create_object( is_item       = ls_item
+                              is_metadata   = lo_xml->get_metadata( ) ).
+
+      li_obj->mo_files = lo_files.
+
       li_obj->deserialize( iv_package = iv_package
                            io_xml     = lo_xml ).
 
@@ -16569,7 +16613,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lo_repo = lcl_repo_srv=>new_online(
       iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
-      iv_branch_name = 'refs/heads/master'
+      iv_branch_name = 'refs/heads/next-gen-xml'
       iv_package     = c_package ).
     lo_repo->status( ).
     lo_repo->deserialize( ).
