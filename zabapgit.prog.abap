@@ -2437,8 +2437,8 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
           lo_wrapped_files TYPE REF TO object.
 
     CALL METHOD mo_plugin->('WRAP_SERIALIZE')
-        EXPORTING
-            io_xml = io_xml.
+      EXPORTING
+        io_xml = io_xml.
 
   ENDMETHOD.
 
@@ -9112,6 +9112,24 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
   PRIVATE SECTION.
     TYPES: ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_function,
+             funcname      TYPE rs38l_fnam,
+             include       TYPE progname,
+             global_flag   TYPE rs38l-global,
+             remote_call   TYPE rs38l-remote,
+             update_task   TYPE rs38l-utask,
+             short_text    TYPE tftit-stext,
+             remote_basxml TYPE rs38l-basxml_enabled,
+             import        TYPE STANDARD TABLE OF rsimp WITH DEFAULT KEY,
+             changing      TYPE STANDARD TABLE OF rscha WITH DEFAULT KEY,
+             export        TYPE STANDARD TABLE OF rsexp WITH DEFAULT KEY,
+             tables        TYPE STANDARD TABLE OF rstbl WITH DEFAULT KEY,
+             exception     TYPE STANDARD TABLE OF rsexc WITH DEFAULT KEY,
+             documentation TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
+           END OF ty_function.
+
+    TYPES: ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY.
+
     METHODS main_name
       RETURNING VALUE(rv_program) TYPE program
       RAISING   lcx_exception.
@@ -9125,10 +9143,11 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING   lcx_exception.
 
     METHODS serialize_functions
-      RAISING lcx_exception.
+      RETURNING VALUE(rt_functions) TYPE ty_function_tt
+      RAISING   lcx_exception.
 
     METHODS deserialize_functions
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      IMPORTING it_functions type ty_function_tt
       RAISING   lcx_exception.
 
     METHODS serialize_xml
@@ -9184,62 +9203,20 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include       TYPE rs38l-include,
           lv_area          TYPE rs38l-area,
-          lt_functab       TYPE ty_rs38l_incl_tt,
-          lt_import        TYPE TABLE OF rsimp,
-          lt_changing      TYPE TABLE OF rscha,
-          lt_export        TYPE TABLE OF rsexp,
-          lt_tables        TYPE TABLE OF rstbl,
-          lt_exception     TYPE TABLE OF rsexc,
-          lt_documentation TYPE TABLE OF rsfdo,
-          lt_source        TYPE TABLE OF rssource,
-          lv_global_flag   TYPE rs38l-global,
-          lv_remote_call   TYPE rs38l-remote,
-          lv_update_task   TYPE rs38l-utask,
-          lv_short_text    TYPE tftit-stext,
-          lo_xml           TYPE REF TO lcl_xml_input,
-          lv_remote_basxml TYPE rs38l-basxml_enabled.
+          lt_source        TYPE TABLE OF rssource.
 
-    FIELD-SYMBOLS: <ls_functab> LIKE LINE OF lt_functab.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
 
-    io_xml->read( EXPORTING iv_name = 'FUNCTAB'
-                  CHANGING cg_data = lt_functab ).
+    LOOP AT it_functions ASSIGNING <ls_func>.
 
-    LOOP AT lt_functab ASSIGNING <ls_functab>.
-
-      lt_source = mo_files->read_abap( iv_extra = <ls_functab>-funcname ).
-
-      lo_xml = mo_files->read_xml( iv_extra = <ls_functab>-funcname ).
-
-      lo_xml->read( EXPORTING iv_name = 'GLOBAL_FLAG'
-                    CHANGING cg_data = lv_global_flag ).
-      lo_xml->read( EXPORTING iv_name = 'REMOTE_CALL'
-                    CHANGING cg_data = lv_remote_call ).
-      lo_xml->read( EXPORTING iv_name = 'UPDATE_TASK'
-                    CHANGING cg_data = lv_update_task ).
-      lo_xml->read( EXPORTING iv_name = 'SHORT_TEXT'
-                    CHANGING cg_data = lv_short_text ).
-      lo_xml->read( EXPORTING iv_name = 'REMOTE_BASXML'
-                    CHANGING cg_data = lv_remote_basxml ).
-
-      lo_xml->read( EXPORTING iv_name = 'IMPORT'
-                    CHANGING cg_data = lt_import ).
-      lo_xml->read( EXPORTING iv_name = 'CHANGING'
-                    CHANGING cg_data = lt_changing ).
-      lo_xml->read( EXPORTING iv_name = 'EXPORT'
-                    CHANGING cg_data = lt_export ).
-      lo_xml->read( EXPORTING iv_name = 'TABLES'
-                    CHANGING cg_data = lt_tables ).
-      lo_xml->read( EXPORTING iv_name = 'EXCEPTION'
-                    CHANGING cg_data = lt_exception ).
-      lo_xml->read( EXPORTING iv_name = 'DOCUMENTATION'
-                    CHANGING cg_data = lt_documentation ).
+      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
-          funcname           = <ls_functab>-funcname
+          funcname           = <ls_func>-funcname
         IMPORTING
           include            = lv_include
         EXCEPTIONS
@@ -9249,7 +9226,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * havent found a nice way to update the paramters
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
-            funcname                 = <ls_functab>-funcname
+            funcname                 = <ls_func>-funcname
             suppress_success_message = abap_true
           EXCEPTIONS
             error_message            = 1
@@ -9261,22 +9238,22 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       CALL FUNCTION 'RS_FUNCTIONMODULE_INSERT'
         EXPORTING
-          funcname                = <ls_functab>-funcname
+          funcname                = <ls_func>-funcname
           function_pool           = lv_area
-          interface_global        = lv_global_flag
-          remote_call             = lv_remote_call
-          short_text              = lv_short_text
+          interface_global        = <ls_func>-global_flag
+          remote_call             = <ls_func>-remote_call
+          short_text              = <ls_func>-short_text
 *         NAMESPACE               = ' ' todo
-          remote_basxml_supported = lv_remote_basxml
+          remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
-          function_include        = lv_include
+          function_include        = <ls_func>-include
         TABLES
-          import_parameter        = lt_import
-          export_parameter        = lt_export
-          tables_parameter        = lt_tables
-          changing_parameter      = lt_changing
-          exception_list          = lt_exception
-          parameter_docu          = lt_documentation
+          import_parameter        = <ls_func>-import
+          export_parameter        = <ls_func>-export
+          tables_parameter        = <ls_func>-tables
+          changing_parameter      = <ls_func>-changing
+          exception_list          = <ls_func>-exception
+          parameter_docu          = <ls_func>-documentation
         EXCEPTIONS
           double_task             = 1
           error_message           = 2
@@ -9296,7 +9273,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       INSERT REPORT lv_include FROM lt_source.
 
       lcl_objects_activation=>add( iv_type = 'FUNC'
-                                   iv_name = <ls_functab>-funcname ).
+                                   iv_name = <ls_func>-funcname ).
 
     ENDLOOP.
 
@@ -9423,8 +9400,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     io_xml->add( iv_name = 'AREAT'
                  ig_data = lv_areat ).
-    io_xml->add( iv_name = 'FUNCTAB'
-                 ig_data = lt_functab ).
     io_xml->add( iv_name = 'INCLUDES'
                  ig_data = lt_includes ).
 
@@ -9536,23 +9511,13 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD serialize_functions.
 
-    DATA: lt_import        TYPE TABLE OF rsimp,
-          lo_xml           TYPE REF TO lcl_xml_output,
-          lt_changing      TYPE TABLE OF rscha,
-          lt_export        TYPE TABLE OF rsexp,
-          lt_tables        TYPE TABLE OF rstbl,
-          lt_exception     TYPE TABLE OF rsexc,
-          lt_documentation TYPE TABLE OF rsfdo,
-          lt_source        TYPE TABLE OF rssource,
-          lv_global_flag   TYPE rs38l-global,
-          lv_remote_call   TYPE rs38l-remote,
-          lv_update_task   TYPE rs38l-utask,
-          lv_short_text    TYPE tftit-stext,
-          lt_functab       TYPE ty_rs38l_incl_tt,
-          lt_new_source    TYPE rsfb_source,
-          lv_remote_basxml TYPE rs38l-basxml_enabled.
+    DATA:
+      lt_source     TYPE TABLE OF rssource,
+      lt_functab    TYPE ty_rs38l_incl_tt,
+      lt_new_source TYPE rsfb_source.
 
-    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab,
+                   <ls_ret>  LIKE LINE OF rt_functions.
 
 
     lt_functab = functions( ).
@@ -9560,22 +9525,25 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     LOOP AT lt_functab ASSIGNING <ls_func>.
 * fm RPY_FUNCTIONMODULE_READ does not support source code
 * lines longer than 72 characters
+      APPEND INITIAL LINE TO rt_functions ASSIGNING <ls_ret>.
+      MOVE-CORRESPONDING <ls_func> TO <ls_ret>.
+
       CALL FUNCTION 'RPY_FUNCTIONMODULE_READ_NEW'
         EXPORTING
           functionname            = <ls_func>-funcname
         IMPORTING
-          global_flag             = lv_global_flag
-          remote_call             = lv_remote_call
-          update_task             = lv_update_task
-          short_text              = lv_short_text
-          remote_basxml_supported = lv_remote_basxml
+          global_flag             = <ls_ret>-global_flag
+          remote_call             = <ls_ret>-remote_call
+          update_task             = <ls_ret>-update_task
+          short_text              = <ls_ret>-short_text
+          remote_basxml_supported = <ls_ret>-remote_basxml
         TABLES
-          import_parameter        = lt_import
-          changing_parameter      = lt_changing
-          export_parameter        = lt_export
-          tables_parameter        = lt_tables
-          exception_list          = lt_exception
-          documentation           = lt_documentation
+          import_parameter        = <ls_ret>-import
+          changing_parameter      = <ls_ret>-changing
+          export_parameter        = <ls_ret>-export
+          tables_parameter        = <ls_ret>-tables
+          exception_list          = <ls_ret>-exception
+          documentation           = <ls_ret>-documentation
           source                  = lt_source
         CHANGING
           new_source              = lt_new_source
@@ -9587,34 +9555,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       IF sy-subrc <> 0.
         _raise 'Error from RPY_FUNCTIONMODULE_READ_NEW'.
       ENDIF.
-
-      CREATE OBJECT lo_xml.
-      lo_xml->add( iv_name = 'GLOBAL_FLAG'
-                   ig_data = lv_global_flag ).
-      lo_xml->add( iv_name = 'REMOTE_CALL'
-                   ig_data = lv_remote_call ).
-      lo_xml->add( iv_name = 'UPDATE_TASK'
-                   ig_data = lv_update_task ).
-      lo_xml->add( iv_name = 'SHORT_TEXT'
-                   ig_data = lv_short_text ).
-      lo_xml->add( iv_name = 'REMOTE_BASXML'
-                   ig_data = lv_remote_basxml ).
-
-      lo_xml->add( ig_data = lt_import
-                   iv_name = 'IMPORT' ).
-      lo_xml->add( ig_data = lt_changing
-                   iv_name = 'CHANGING' ).
-      lo_xml->add( ig_data = lt_export
-                   iv_name = 'EXPORT' ).
-      lo_xml->add( ig_data = lt_tables
-                   iv_name = 'TABLES' ).
-      lo_xml->add( ig_data = lt_exception
-                   iv_name = 'EXCEPTION' ).
-      lo_xml->add( ig_data = lt_documentation
-                   iv_name = 'DOCUMENTATION' ).
-
-      mo_files->add_xml( iv_extra = <ls_func>-funcname
-                         io_xml   = lo_xml ).
 
       IF NOT lt_new_source IS INITIAL.
         mo_files->add_abap( iv_extra = <ls_func>-funcname
@@ -9651,13 +9591,17 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
+    DATA: lt_functions TYPE ty_function_tt.
+
     IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
     serialize_xml( io_xml ).
 
-    serialize_functions( ).
+    lt_functions = serialize_functions( ).
+    io_xml->add( iv_name = 'FUNCTIONS'
+                 ig_data = lt_functions ).
 
     serialize_includes( ).
 
@@ -9665,11 +9609,16 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
+    DATA: lt_functions TYPE ty_function_tt.
+
+
     deserialize_xml(
       io_xml     = io_xml
       iv_package = iv_package ).
 
-    deserialize_functions( io_xml ).
+    io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
+                  CHANGING cg_data = lt_functions ).
+    deserialize_functions( lt_functions ).
 
     deserialize_includes(
       io_xml     = io_xml
