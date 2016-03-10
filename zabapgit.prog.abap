@@ -1065,9 +1065,9 @@ CLASS lcl_xml DEFINITION ABSTRACT.
       constructor.
 
   PROTECTED SECTION.
-    DATA: mi_ixml    TYPE REF TO if_ixml,
-          mi_xml_doc TYPE REF TO if_ixml_document,
-          ms_metadata type ty_metadata.
+    DATA: mi_ixml     TYPE REF TO if_ixml,
+          mi_xml_doc  TYPE REF TO if_ixml_document,
+          ms_metadata TYPE ty_metadata.
 
     CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit',
                c_attr_version            TYPE string VALUE 'version',
@@ -2370,6 +2370,13 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
 
+    TYPES: BEGIN OF ty_tpool.
+        INCLUDE TYPE textpool.
+    TYPES:   split TYPE c LENGTH 8.
+    TYPES: END OF ty_tpool.
+
+    TYPES: ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
+
     DATA: ms_item  TYPE ty_item.
 
     METHODS:
@@ -2382,6 +2389,14 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
         RAISING   lcx_exception.
+
+    CLASS-METHODS:
+      add_tpool
+        IMPORTING it_tpool        TYPE textpool_table
+        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt,
+      read_tpool
+        IMPORTING it_tpool        TYPE ty_tpool_tt
+        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
 
@@ -2720,7 +2735,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     lo_xml->add( iv_name = 'TPOOL'
-                 ig_data = lt_tpool ).
+                 ig_data = add_tpool( lt_tpool ) ).
 
     IF NOT io_xml IS BOUND.
       io_files->add_xml( iv_extra = iv_extra
@@ -3024,6 +3039,41 @@ CLASS lcl_objects_super IMPLEMENTATION.
   METHOD get_metadata.
     rs_metadata-class = cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
     rs_metadata-version = 'v1.0.0' ##NO_TEXT.
+  ENDMETHOD.
+
+  METHOD add_tpool.
+
+    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
+                   <ls_tpool_out> LIKE LINE OF rt_tpool.
+
+
+    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
+      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
+      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
+      IF <ls_tpool_out>-id = 'S'.
+        <ls_tpool_out>-split = <ls_tpool_out>-entry.
+        <ls_tpool_out>-entry = <ls_tpool_out>-entry+8.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD read_tpool.
+
+    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
+                   <ls_tpool_out> LIKE LINE OF rt_tpool.
+
+
+    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
+      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
+      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
+      IF <ls_tpool_out>-id = 'S'.
+        CONCATENATE <ls_tpool_in>-split <ls_tpool_in>-entry
+          INTO <ls_tpool_out>-entry
+          RESPECTING BLANKS.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD corr_insert.
@@ -4576,7 +4626,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         lv_cp = cl_oo_classname_service=>get_classpool_name( ls_clskey-clsname ).
         READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE gc_english. "#EC CI_READ_REP
         io_xml->add( iv_name = 'TPOOL'
-                     ig_data = lt_tpool ).
+                     ig_data = add_tpool( lt_tpool ) ).
       WHEN 'INTF'.
         io_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
@@ -4658,13 +4708,15 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_textpool.
 
-    DATA: lv_cp      TYPE program,
-          lv_clsname TYPE seoclsname,
-          lt_tpool   TYPE textpool_table.
+    DATA: lv_cp        TYPE program,
+          lv_clsname   TYPE seoclsname,
+          lt_tpool_ext TYPE ty_tpool_tt,
+          lt_tpool     TYPE textpool_table.
 
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
-                  CHANGING cg_data = lt_tpool ).
+                  CHANGING cg_data = lt_tpool_ext ).
+    lt_tpool = read_tpool( lt_tpool_ext ).
 
     IF lt_tpool[] IS INITIAL.
       RETURN.
@@ -9296,11 +9348,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_includes.
 
-    DATA: lo_xml      TYPE REF TO lcl_xml_input,
-          ls_progdir  TYPE ty_progdir,
-          lt_includes TYPE rso_t_objnm,
-          lt_tpool    TYPE textpool_table,
-          lt_source   TYPE TABLE OF abaptxt255.
+    DATA: lo_xml       TYPE REF TO lcl_xml_input,
+          ls_progdir   TYPE ty_progdir,
+          lt_includes  TYPE rso_t_objnm,
+          lt_tpool     TYPE textpool_table,
+          lt_tpool_ext TYPE ty_tpool_tt,
+          lt_source    TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
@@ -9318,7 +9371,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
                     CHANGING cg_data = ls_progdir ).
 
       lo_xml->read( EXPORTING iv_name = 'TPOOL'
-                    CHANGING cg_data = lt_tpool ).
+                    CHANGING cg_data = lt_tpool_ext ).
+      lt_tpool = read_tpool( lt_tpool_ext ).
 
       deserialize_program( is_progdir = ls_progdir
                            it_source  = lt_source
@@ -10337,17 +10391,20 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_progdir TYPE ty_progdir,
-          lt_tpool   TYPE textpool_table,
-          lt_dynpros TYPE ty_dynpro_tt,
-          ls_cua     TYPE ty_cua,
-          lt_source  TYPE abaptxt255_tab.
+    DATA: ls_progdir   TYPE ty_progdir,
+          lt_tpool     TYPE textpool_table,
+          lt_dynpros   TYPE ty_dynpro_tt,
+          lt_tpool_ext TYPE ty_tpool_tt,
+          ls_cua       TYPE ty_cua,
+          lt_source    TYPE abaptxt255_tab.
 
 
     lt_source = mo_files->read_abap( ).
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
-                  CHANGING cg_data = lt_tpool ).
+                  CHANGING cg_data = lt_tpool_ext ).
+    lt_tpool = read_tpool( lt_tpool_ext ).
+
     io_xml->read( EXPORTING iv_name = 'PROGDIR'
                   CHANGING cg_data = ls_progdir ).
     deserialize_program( is_progdir = ls_progdir
@@ -10487,7 +10544,6 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item
                 is_metadata   TYPE ty_metadata OPTIONAL
-                  PREFERRED PARAMETER is_item
       RETURNING VALUE(ri_obj) TYPE REF TO lif_object
       RAISING   lcx_exception.
 

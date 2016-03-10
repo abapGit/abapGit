@@ -57,12 +57,13 @@
     <BIV/>
    </CUA>
    <TPOOL>
-    <TEXTPOOL>
+    <item>
      <ID>R</ID>
      <KEY/>
      <ENTRY>abapGit</ENTRY>
      <LENGTH>7</LENGTH>
-    </TEXTPOOL>
+     <SPLIT/>
+    </item>
    </TPOOL>
   </asx:values>
  </asx:abap>
