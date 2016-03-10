@@ -2371,7 +2371,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -14652,13 +14652,15 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render_diff.
 
-    DATA: lv_html    TYPE string,
-          lv_local   TYPE string,
-          lv_remote  TYPE string,
-          lv_clocal  TYPE string,
-          lv_cremote TYPE string,
-          ls_count   TYPE lcl_diff=>ty_count,
-          lt_diffs   TYPE lcl_diff=>ty_diffs_tt.
+    DATA: lv_html         TYPE string,
+          lv_local        TYPE string,
+          lv_remote       TYPE string,
+          lv_clocal       TYPE string,
+          lv_cremote      TYPE string,
+          ls_count        TYPE lcl_diff=>ty_count,
+          lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
+          lv_anchor_count LIKE sy-tabix,
+          lv_anchor_name  TYPE string.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
 
@@ -14694,14 +14696,15 @@ CLASS lcl_gui IMPLEMENTATION.
               '</table><br>'       && gc_newline.
 
     lv_html = lv_html &&
-              '<table border="0">'       && gc_newline &&
-              '<tr>'                     && gc_newline &&
-              '<td><h2>Local</h2></td>'  && gc_newline &&
-              '<td></td>'                && gc_newline &&
-              '<td><h2>Remote</h2></td>' && gc_newline &&
+              '<table border="0">'                      && gc_newline &&
+              '<tr>'                                    && gc_newline &&
+              '<th><h2>Local</h2></th>'                 && gc_newline &&
+              |<th><a href=#diff_1>&gt;</a></th>|       && gc_newline && "Type of change & Navigation to next difference
+              '<th><h2>Remote</h2></th>'                && gc_newline &&
               '</tr>'.
 
     lt_diffs = io_diff->get( ).
+
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       lv_local = escape( val = <ls_diff>-local format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
@@ -14721,11 +14724,20 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_cremote = ''.
       ENDCASE.
 
+      IF    <ls_diff>-result EQ lcl_diff=>c_diff-delete
+        OR  <ls_diff>-result EQ lcl_diff=>c_diff-insert
+        OR  <ls_diff>-result EQ lcl_diff=>c_diff-update.
+        ADD 1 TO lv_anchor_count.
+        lv_anchor_name = | name="diff_{ lv_anchor_count }"|.
+      ELSE.
+        CLEAR lv_anchor_name.
+      ENDIF.
+
       lv_html = lv_html &&
-        '<tr>' && gc_newline &&
+        |<tr>| && gc_newline &&
         '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
         gc_newline &&
-        '<td>&nbsp;' && <ls_diff>-result && '&nbsp;</td>' &&
+        '<td>&nbsp;' && |<a{ lv_anchor_name } href="#diff_{ lv_anchor_count + 1 }">{ <ls_diff>-result }</a>| && '&nbsp;</td>' &&
         gc_newline &&
         '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
         gc_newline &&
