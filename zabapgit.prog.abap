@@ -14727,7 +14727,7 @@ CLASS lcl_gui IMPLEMENTATION.
       IF    <ls_diff>-result EQ lcl_diff=>c_diff-delete
         OR  <ls_diff>-result EQ lcl_diff=>c_diff-insert
         OR  <ls_diff>-result EQ lcl_diff=>c_diff-update.
-        ADD 1 TO lv_anchor_count.
+        lv_anchor_count = lv_anchor_count + 1.
         lv_anchor_name = | name="diff_{ lv_anchor_count }"|.
       ELSE.
         CLEAR lv_anchor_name.
@@ -14737,7 +14737,9 @@ CLASS lcl_gui IMPLEMENTATION.
         |<tr>| && gc_newline &&
         '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
         gc_newline &&
-        '<td>&nbsp;' && |<a{ lv_anchor_name } href="#diff_{ lv_anchor_count + 1 }">{ <ls_diff>-result }</a>| && '&nbsp;</td>' &&
+        '<td>&nbsp;' &&
+        |<a{ lv_anchor_name } href="#diff_{ lv_anchor_count + 1 }">{ <ls_diff>-result }</a>| &&
+        '&nbsp;</td>' &&
         gc_newline &&
         '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
         gc_newline &&
