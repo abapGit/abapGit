@@ -14666,7 +14666,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     lv_html = render_header( ) &&
-              '<h1>diff</h1>&nbsp;<a href="javascript:goBack()">Back</a>' &&
+              '<h1>diff</h1>&nbsp;<a href="sapevent:render">Back</a>' &&
               '<hr><h3>' &&
               is_result-obj_type && '&nbsp;' &&
               is_result-obj_name && '&nbsp;' &&
@@ -14989,6 +14989,8 @@ CLASS lcl_gui IMPLEMENTATION.
             pull( lv_key ).
           WHEN 'newoffline'.
             newoffline( ).
+          WHEN 'render'.
+            view( render( ) ).
           WHEN 'zipimport'.
             lv_key = getdata.
             lcl_zip=>import( lv_key ).
