@@ -12800,6 +12800,23 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS zipexport
       RAISING lcx_exception.
 
+    CLASS-METHODS abapgit_installation
+      RAISING lcx_exception.
+
+    CLASS-METHODS is_repo_installed
+      IMPORTING
+                iv_url              TYPE string
+                iv_target_package   TYPE devclass OPTIONAL
+      RETURNING VALUE(rv_installed) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    CLASS-METHODS create_package
+      IMPORTING
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    CLASS-METHODS needs_installation
+      RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
 ENDCLASS.                    "lcl_gui DEFINITION
 
 CLASS lcl_repo_offline IMPLEMENTATION.
@@ -14699,7 +14716,7 @@ CLASS lcl_gui IMPLEMENTATION.
               '<table border="0">'                      && gc_newline &&
               '<tr>'                                    && gc_newline &&
               '<th><h2>Local</h2></th>'                 && gc_newline &&
-              |<th><a href=#diff_1>&gt;</a></th>|       && gc_newline && "Type of change & Navigation to next difference
+              |<th><a href=#diff_1>&lt;&gt;</a></th>|       && gc_newline && "Type of change & Navigation to next difference
               '<th><h2>Remote</h2></th>'                && gc_newline &&
               '</tr>'.
 
@@ -15006,6 +15023,8 @@ CLASS lcl_gui IMPLEMENTATION.
             view( render( ) ).
           WHEN 'zipexport_gui'.
             zipexport( ).
+          WHEN 'abapgit_installation'.
+            abapgit_installation( ).
           WHEN OTHERS.
             _raise 'Unknown action'.
         ENDCASE.
@@ -15370,13 +15389,18 @@ CLASS lcl_gui IMPLEMENTATION.
     rv_html =
       |<img src="{ get_logo_src( ) }" height="50px">|
       && gc_newline &&
-      '<h1>abapGit</h1>&nbsp;'                                  && gc_newline &&
-      '<a href="sapevent:refresh">Refresh</a>&nbsp;'            && gc_newline &&
-      '<a href="sapevent:install">Clone</a>&nbsp;'              && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>&nbsp;'            && gc_newline &&
-      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;' && gc_newline &&
-      '<a href="sapevent:newoffline">New offline project</a>&nbsp;' && gc_newline &&
-      '<hr>'                                                    && gc_newline.
+      '<h1>abapGit</h1>&nbsp;'                                          && gc_newline &&
+      '<a href="sapevent:refresh">Refresh</a>&nbsp;'                    && gc_newline &&
+      '<a href="sapevent:install">Clone</a>&nbsp;'                      && gc_newline &&
+      '<a href="sapevent:explore">Explore</a>&nbsp;'                    && gc_newline &&
+      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;'         && gc_newline &&
+      '<a href="sapevent:newoffline">New offline project</a>&nbsp;'     && gc_newline.
+
+    IF needs_installation( ) = abap_true.
+      rv_html = rv_html &&  '<a href="sapevent:abapgit_installation">Install</a>&nbsp;' && gc_newline.
+    ENDIF.
+
+    rv_html = rv_html && '<hr>'                                      && gc_newline.
 
   ENDMETHOD.                    "render_menu
 
@@ -15732,6 +15756,191 @@ CLASS lcl_gui IMPLEMENTATION.
       'KtbiAAAAAElFTkSuQmCC'.
 
   ENDMETHOD.                    "base64_logo
+
+  METHOD abapgit_installation.
+    CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
+    CONSTANTS c_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
+
+    DATA lv_text            TYPE c LENGTH 100.
+    DATA lv_answer          TYPE c LENGTH 1.
+    DATA lo_repo            TYPE REF TO lcl_repo_online.
+    DATA lv_url             TYPE string.
+    DATA lv_target_package  TYPE devclass.
+
+    lv_text = |Installing current version ABAPGit to package { c_package_abapgit } |
+            && |and plugins to { c_package_plugins }|.
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Install ABAPGit'
+        text_question         = lv_text
+        text_button_1         = 'Continue'
+        text_button_2         = 'Cancel'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer.
+    IF lv_answer NE '1'.
+      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    ENDIF.
+
+    DO 2 TIMES.
+      CASE sy-index.
+        WHEN 1.
+          lv_url              = 'https://github.com/larshp/abapGit.git'.
+          lv_target_package   = c_package_abapgit.
+        WHEN 2.
+          lv_url              = 'https://github.com/larshp/abapGit-plugins.git'.
+          lv_target_package   = c_package_plugins.
+      ENDCASE.
+
+      IF abap_false EQ is_repo_installed(
+          iv_url              = lv_url
+          iv_target_package   = lv_target_package ) .
+
+        create_package( iv_package = lv_target_package ).
+
+        lo_repo = lcl_repo_srv=>new_online(
+                                  iv_url         = lv_url
+                                  iv_branch_name = 'refs/heads/master'
+                                  iv_package     = lv_target_package ).
+
+        lo_repo->status( ). " check for errors
+        lo_repo->deserialize( ).
+      ENDIF.
+    ENDDO.
+
+    view( render( ) ).
+  ENDMETHOD. "abapgit_installation
+
+  METHOD is_repo_installed.
+
+    DATA lt_repo                TYPE lcl_repo_srv=>ty_repo_tt.
+    DATA lo_repo                TYPE REF TO lcl_repo.
+    DATA lv_url                 TYPE string.
+    DATA lv_package             TYPE devclass.
+    DATA lo_repo_online         TYPE REF TO lcl_repo_online.
+    DATA lv_branch_name         TYPE string.
+
+    lt_repo = lcl_repo_srv=>list( ).
+
+*    find abapgit and abapgit-plugins-repos and validate bindings
+    LOOP AT lt_repo INTO lo_repo.
+      TRY.
+          lo_repo_online ?= lo_repo.
+          lv_url            = lo_repo_online->get_url( ).
+          lv_branch_name    = lo_repo_online->get_branch_name( ).
+          lv_package        = lo_repo_online->get_package( ).
+          IF to_upper( lv_url ) NE to_upper( iv_url ).
+            CONTINUE.
+          ENDIF.
+
+          IF    iv_target_package IS NOT INITIAL
+            AND iv_target_package NE lv_package.
+            DATA lv_err TYPE string.
+            lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
+            _raise lv_err.
+          ENDIF.
+
+          rv_installed = abap_true.
+
+        CATCH cx_sy_move_cast_error.
+          CONTINUE. "the repositories we're looking for are online-repositories
+      ENDTRY.
+    ENDLOOP.
+
+  ENDMETHOD. "is_repo_installed
+
+  METHOD create_package.
+    DATA lv_err TYPE string.
+    DATA ls_package TYPE scompkdtln.
+    DATA lo_package TYPE REF TO if_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+    ).
+    IF sy-subrc EQ 0.
+      RETURN. "Package already exists. We assume this is fine
+    ENDIF.
+
+    ls_package-devclass = iv_package.
+    ls_package-ctext = iv_package.
+    ls_package-pdevclass = '$TMP'.
+    ls_package-component = 'LOCAL'.
+    ls_package-as4user  = sy-uname.
+
+    cl_package_factory=>create_new_package(
+      EXPORTING
+        i_reuse_deleted_object     = abap_true    " Allows reuse of objects deleted from buffer
+        i_suppress_dialog          = abap_true    " Controls whether popups can be transmitted
+      IMPORTING
+        e_package                  = lo_package
+      CHANGING
+        c_package_data             = ls_package    " Package Data
+      EXCEPTIONS
+        object_already_existing    = 1
+        object_just_created        = 2
+        not_authorized             = 3
+        wrong_name_prefix          = 4
+        undefined_name             = 5
+        reserved_local_name        = 6
+        invalid_package_name       = 7
+        short_text_missing         = 8
+        software_component_invalid = 9
+        layer_invalid              = 10
+        author_not_existing        = 11
+        component_not_existing     = 12
+        component_missing          = 13
+        prefix_in_use              = 14
+        unexpected_error           = 15
+        intern_err                 = 16
+        no_access                  = 17
+        invalid_translation_depth  = 18
+        wrong_mainpack_value       = 19
+        superpackage_invalid       = 20
+        error_in_cts_checks        = 21
+    ).
+    IF sy-subrc NE 0.
+      lv_err = |Package { iv_package } could not be created|.
+      _raise lv_err.
+    ENDIF.
+
+    lo_package->save(
+      EXPORTING
+        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        cancelled_in_corr     = 3
+        permission_failure    = 4
+        unexpected_error      = 5
+        intern_err            = 6
+        OTHERS                = 7 ).
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                 WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
+      _raise lv_err.
+    ENDIF.
+  ENDMETHOD. "create_package
+
+  METHOD needs_installation.
+    TRY.
+        IF      is_repo_installed( 'https://github.com/larshp/abapGit.git' ) = abap_false
+          OR    is_repo_installed( 'https://github.com/larshp/abapGit-plugins.git' ) = abap_false.
+          rv_not_completely_installed = abap_true.
+        ENDIF.
+      CATCH lcx_exception.  "
+        rv_not_completely_installed = abap_false. "cannot be installed anyway in this case, e.g. no connection
+    ENDTRY.
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_gui IMPLEMENTATION
 
 *&---------------------------------------------------------------------*
