@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.0.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.0.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2371,7 +2371,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
 
     TYPES: BEGIN OF ty_tpool.
-            INCLUDE TYPE textpool.
+        INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -13451,6 +13451,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
         _raise 'No branches, create branch manually by adding file'.
       ELSE.
+        CONTINUE.
+      ENDIF.
+
+      IF lv_name CP 'refs/pull/*'.
         CONTINUE.
       ENDIF.
 
