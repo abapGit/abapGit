@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.0.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.0.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -15883,7 +15883,7 @@ CLASS lcl_gui IMPLEMENTATION.
     cl_package_factory=>create_new_package(
       EXPORTING
         i_reuse_deleted_object     = abap_true
-        i_suppress_dialog          = abap_true
+*        i_suppress_dialog          = abap_true " does not exist in 730
       IMPORTING
         e_package                  = lo_package
       CHANGING
@@ -15906,18 +15906,19 @@ CLASS lcl_gui IMPLEMENTATION.
         unexpected_error           = 15
         intern_err                 = 16
         no_access                  = 17
-        invalid_translation_depth  = 18
-        wrong_mainpack_value       = 19
-        superpackage_invalid       = 20
-        error_in_cts_checks        = 21 ).
+*        invalid_translation_depth  = 18
+*        wrong_mainpack_value       = 19
+*        superpackage_invalid       = 20
+*        error_in_cts_checks        = 21
+        OTHERS                     = 18 ).
     IF sy-subrc <> 0.
       lv_err = |Package { iv_package } could not be created|.
       _raise lv_err.
     ENDIF.
 
     lo_package->save(
-      EXPORTING
-        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
+*      EXPORTING
+*        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
       EXCEPTIONS
         object_invalid        = 1
         object_not_changeable = 2
