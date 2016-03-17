@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.0.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.0.5'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1284,8 +1284,10 @@ CLASS lcl_xml_output IMPLEMENTATION.
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
     li_git->set_attribute( name = c_attr_version value = gc_xml_version ). "#EC NOTEXT
     IF NOT is_metadata IS INITIAL.
-      li_git->set_attribute( name = c_attr_serializer value = is_metadata-class ). "#EC NOTEXT
-      li_git->set_attribute( name = c_attr_serializer_version value = is_metadata-version ). "#EC NOTEXT
+      li_git->set_attribute( name  = c_attr_serializer
+                             value = is_metadata-class ).   "#EC NOTEXT
+      li_git->set_attribute( name  = c_attr_serializer_version
+                             value = is_metadata-version ). "#EC NOTEXT
     ENDIF.
     li_git->append_child( li_abap ).
     mi_xml_doc->get_root( )->append_child( li_git ).
@@ -2446,7 +2448,8 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     super->constructor( is_item ).
 
 *    determine the responsible plugin
-    READ TABLE gt_objtype_map INTO ls_objtype_map WITH TABLE KEY obj_typ = is_item-obj_type.
+    READ TABLE gt_objtype_map INTO ls_objtype_map
+      WITH TABLE KEY obj_typ = is_item-obj_type.
     IF sy-subrc = 0.
       CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
 
@@ -2462,9 +2465,6 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~serialize.
-
-    DATA: lo_files         TYPE REF TO object,
-          lo_wrapped_files TYPE REF TO object.
 
     CALL METHOD mo_plugin->('WRAP_SERIALIZE')
       EXPORTING
@@ -2534,7 +2534,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class
-        WHERE table_line NE 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
+        WHERE table_line <> 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
       TRY.
           CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
         CATCH cx_sy_create_object_error.
@@ -2549,15 +2549,16 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
       LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
         INSERT ls_objtype_map INTO TABLE gt_objtype_map.
         IF sy-subrc <> 0.
-          "No exception in class-contructor possible. Anyway, a shortdump is more appropriate in this case
+* No exception in class-contructor possible. Anyway, a shortdump is more appropriate in this case
           ASSERT 'There must not be' = |multiple ABAPGit-Plugins for the same object type { ls_objtype_map-obj_typ }|.
         ENDIF.
       ENDLOOP.
     ENDLOOP. "at plugins
 
-*   and the same for the generic plugin if exists
+* and the same for the generic plugin if exists
+* have the generic plugin only as fallback
     LOOP AT lt_plugin_class INTO lv_plugin_class
-        WHERE table_line = 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
+        WHERE table_line = 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'.
       CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
 
       CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
@@ -4242,7 +4243,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
-CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas.
+CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
 * todo, CLAS + INTF to be refactored, see:
 * https://github.com/larshp/abapGit/issues/21
 ENDCLASS.
@@ -10845,10 +10846,13 @@ CLASS lcl_sap_package DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      check IMPORTING it_results       TYPE lcl_file_status=>ty_results_tt
-                      iv_top           TYPE devclass
-            RETURNING VALUE(rv_errors) TYPE string,
-      create.
+      check
+        IMPORTING it_results       TYPE lcl_file_status=>ty_results_tt
+                  iv_top           TYPE devclass
+        RETURNING VALUE(rv_errors) TYPE string,
+      create
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -10959,7 +10963,83 @@ CLASS lcl_sap_package IMPLEMENTATION.
   ENDMETHOD.                    "check
 
   METHOD create.
-* todo, see https://github.com/larshp/abapGit/issues/5
+
+    DATA lv_err TYPE string.
+    DATA ls_package TYPE scompkdtln.
+    DATA li_package TYPE REF TO if_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5 ).
+    IF sy-subrc = 0.
+      RETURN. "Package already exists. We assume this is fine
+    ENDIF.
+
+    ls_package-devclass  = iv_package.
+    ls_package-ctext     = iv_package.
+    ls_package-pdevclass = '$TMP'.
+    ls_package-component = 'LOCAL'.
+    ls_package-as4user   = sy-uname.
+
+    cl_package_factory=>create_new_package(
+      EXPORTING
+        i_reuse_deleted_object     = abap_true
+*        i_suppress_dialog          = abap_true " does not exist in 730
+      IMPORTING
+        e_package                  = li_package
+      CHANGING
+        c_package_data             = ls_package
+      EXCEPTIONS
+        object_already_existing    = 1
+        object_just_created        = 2
+        not_authorized             = 3
+        wrong_name_prefix          = 4
+        undefined_name             = 5
+        reserved_local_name        = 6
+        invalid_package_name       = 7
+        short_text_missing         = 8
+        software_component_invalid = 9
+        layer_invalid              = 10
+        author_not_existing        = 11
+        component_not_existing     = 12
+        component_missing          = 13
+        prefix_in_use              = 14
+        unexpected_error           = 15
+        intern_err                 = 16
+        no_access                  = 17
+*        invalid_translation_depth  = 18
+*        wrong_mainpack_value       = 19
+*        superpackage_invalid       = 20
+*        error_in_cts_checks        = 21
+        OTHERS                     = 18 ).
+    IF sy-subrc <> 0.
+      lv_err = |Package { iv_package } could not be created|.
+      _raise lv_err.
+    ENDIF.
+
+    li_package->save(
+*      EXPORTING
+*        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        cancelled_in_corr     = 3
+        permission_failure    = 4
+        unexpected_error      = 5
+        intern_err            = 6
+        OTHERS                = 7 ).
+    IF sy-subrc <> 0.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+        WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
+      _raise lv_err.
+    ENDIF.
+
   ENDMETHOD.                    "create
 
 ENDCLASS.                    "lcl_package IMPLEMENTATION
@@ -11052,24 +11132,22 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
-          ls_obj_serializer_map TYPE ty_obj_serializer_map.
+          ls_obj_serializer_map LIKE LINE OF st_obj_serializer_map.
 
     READ TABLE st_obj_serializer_map INTO ls_obj_serializer_map WITH KEY item = is_item.
     IF sy-subrc = 0.
       lv_class_name = ls_obj_serializer_map-metadata-class.
-    ELSE.
-      IF is_metadata IS NOT INITIAL.
+    ELSEIF is_metadata IS NOT INITIAL.
 *        Metadata is provided only on serialization
 *        Once this has been triggered, the same serializer shall be used for subsequent processes.
 *        Thus, buffer the metadata afterwards
-        ls_obj_serializer_map-item      = is_item.
-        ls_obj_serializer_map-metadata  = is_metadata.
-        INSERT ls_obj_serializer_map INTO TABLE st_obj_serializer_map.
+      ls_obj_serializer_map-item      = is_item.
+      ls_obj_serializer_map-metadata  = is_metadata.
+      INSERT ls_obj_serializer_map INTO TABLE st_obj_serializer_map.
 
-        lv_class_name = is_metadata-class.
-      ELSE.
-        lv_class_name = class_name( is_item ).
-      ENDIF.
+      lv_class_name = is_metadata-class.
+    ELSE.
+      lv_class_name = class_name( is_item ).
     ENDIF.
 
     TRY.
@@ -12811,13 +12889,9 @@ CLASS lcl_gui DEFINITION FINAL.
       RETURNING VALUE(rv_installed) TYPE abap_bool
       RAISING   lcx_exception.
 
-    CLASS-METHODS create_package
-      IMPORTING
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
-
     CLASS-METHODS needs_installation
       RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+
 ENDCLASS.                    "lcl_gui DEFINITION
 
 CLASS lcl_repo_offline IMPLEMENTATION.
@@ -14746,9 +14820,9 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_cremote = ''.
       ENDCASE.
 
-      IF    <ls_diff>-result EQ lcl_diff=>c_diff-delete
-        OR  <ls_diff>-result EQ lcl_diff=>c_diff-insert
-        OR  <ls_diff>-result EQ lcl_diff=>c_diff-update.
+      IF <ls_diff>-result = lcl_diff=>c_diff-delete
+          OR <ls_diff>-result = lcl_diff=>c_diff-insert
+          OR <ls_diff>-result = lcl_diff=>c_diff-update.
         lv_anchor_count = lv_anchor_count + 1.
         lv_anchor_name = | name="diff_{ lv_anchor_count }"|.
       ELSE.
@@ -15763,8 +15837,9 @@ CLASS lcl_gui IMPLEMENTATION.
   ENDMETHOD.                    "base64_logo
 
   METHOD abapgit_installation.
-    CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
-    CONSTANTS c_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
+
+    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
+    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
 
     DATA lv_text            TYPE c LENGTH 100.
     DATA lv_answer          TYPE c LENGTH 1.
@@ -15772,8 +15847,8 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA lv_url             TYPE string.
     DATA lv_target_package  TYPE devclass.
 
-    lv_text = |Installing current version ABAPGit to package { c_package_abapgit } |
-            && |and plugins to { c_package_plugins }|.
+    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
+            && |and plugins to { lc_package_plugins }|.
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
@@ -15785,25 +15860,25 @@ CLASS lcl_gui IMPLEMENTATION.
         display_cancel_button = abap_false
       IMPORTING
         answer                = lv_answer.
-    IF lv_answer NE '1'.
+    IF lv_answer <> '1'.
       RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ENDIF.
 
     DO 2 TIMES.
       CASE sy-index.
         WHEN 1.
-          lv_url              = 'https://github.com/larshp/abapGit.git'.
-          lv_target_package   = c_package_abapgit.
+          lv_url            = 'https://github.com/larshp/abapGit.git'.
+          lv_target_package = lc_package_abapgit.
         WHEN 2.
-          lv_url              = 'https://github.com/larshp/abapGit-plugins.git'.
-          lv_target_package   = c_package_plugins.
+          lv_url            = 'https://github.com/larshp/abapGit-plugins.git'.
+          lv_target_package = lc_package_plugins.
       ENDCASE.
 
-      IF abap_false EQ is_repo_installed(
+      IF abap_false = is_repo_installed(
           iv_url              = lv_url
-          iv_target_package   = lv_target_package ) .
+          iv_target_package   = lv_target_package ).
 
-        create_package( iv_package = lv_target_package ).
+        lcl_sap_package=>create( iv_package = lv_target_package ).
 
         lo_repo = lcl_repo_srv=>new_online(
                                   iv_url         = lv_url
@@ -15816,6 +15891,7 @@ CLASS lcl_gui IMPLEMENTATION.
     ENDDO.
 
     view( render( ) ).
+
   ENDMETHOD. "abapgit_installation
 
   METHOD is_repo_installed.
@@ -15842,7 +15918,7 @@ CLASS lcl_gui IMPLEMENTATION.
             CONTINUE.
           ENDIF.
 
-          IF iv_target_package IS NOT INITIAL AND iv_target_package NE lv_package.
+          IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
             lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
             _raise lv_err.
           ENDIF.
@@ -15856,91 +15932,13 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD. "is_repo_installed
 
-  METHOD create_package.
-    DATA lv_err TYPE string.
-    DATA ls_package TYPE scompkdtln.
-    DATA lo_package TYPE REF TO if_package.
-
-    cl_package_factory=>load_package(
-      EXPORTING
-        i_package_name             = iv_package
-      EXCEPTIONS
-        object_not_existing        = 1
-        unexpected_error           = 2
-        intern_err                 = 3
-        no_access                  = 4
-        object_locked_and_modified = 5 ).
-    IF sy-subrc EQ 0.
-      RETURN. "Package already exists. We assume this is fine
-    ENDIF.
-
-    ls_package-devclass = iv_package.
-    ls_package-ctext = iv_package.
-    ls_package-pdevclass = '$TMP'.
-    ls_package-component = 'LOCAL'.
-    ls_package-as4user  = sy-uname.
-
-    cl_package_factory=>create_new_package(
-      EXPORTING
-        i_reuse_deleted_object     = abap_true
-*        i_suppress_dialog          = abap_true " does not exist in 730
-      IMPORTING
-        e_package                  = lo_package
-      CHANGING
-        c_package_data             = ls_package
-      EXCEPTIONS
-        object_already_existing    = 1
-        object_just_created        = 2
-        not_authorized             = 3
-        wrong_name_prefix          = 4
-        undefined_name             = 5
-        reserved_local_name        = 6
-        invalid_package_name       = 7
-        short_text_missing         = 8
-        software_component_invalid = 9
-        layer_invalid              = 10
-        author_not_existing        = 11
-        component_not_existing     = 12
-        component_missing          = 13
-        prefix_in_use              = 14
-        unexpected_error           = 15
-        intern_err                 = 16
-        no_access                  = 17
-*        invalid_translation_depth  = 18
-*        wrong_mainpack_value       = 19
-*        superpackage_invalid       = 20
-*        error_in_cts_checks        = 21
-        OTHERS                     = 18 ).
-    IF sy-subrc <> 0.
-      lv_err = |Package { iv_package } could not be created|.
-      _raise lv_err.
-    ENDIF.
-
-    lo_package->save(
-*      EXPORTING
-*        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
-      EXCEPTIONS
-        object_invalid        = 1
-        object_not_changeable = 2
-        cancelled_in_corr     = 3
-        permission_failure    = 4
-        unexpected_error      = 5
-        intern_err            = 6
-        OTHERS                = 7 ).
-    IF sy-subrc <> 0.
-      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                 WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
-      _raise lv_err.
-    ENDIF.
-  ENDMETHOD. "create_package
-
   METHOD needs_installation.
     TRY.
-        IF      is_repo_installed( 'https://github.com/larshp/abapGit.git' ) = abap_false
-          OR    is_repo_installed( 'https://github.com/larshp/abapGit-plugins.git' ) = abap_false.
+        IF is_repo_installed( 'https://github.com/larshp/abapGit.git' ) = abap_false
+            OR is_repo_installed( 'https://github.com/larshp/abapGit-plugins.git' ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
-      CATCH lcx_exception.  "
+      CATCH lcx_exception.
         rv_not_completely_installed = abap_false. "cannot be installed anyway in this case, e.g. no connection
     ENDTRY.
   ENDMETHOD.
