@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.0.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.0.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14713,11 +14713,11 @@ CLASS lcl_gui IMPLEMENTATION.
               '</table><br>'       && gc_newline.
 
     lv_html = lv_html &&
-              '<table border="0">'                      && gc_newline &&
-              '<tr>'                                    && gc_newline &&
-              '<th><h2>Local</h2></th>'                 && gc_newline &&
-              |<th><a href=#diff_1>&lt;&gt;</a></th>|       && gc_newline && "Type of change & Navigation to next difference
-              '<th><h2>Remote</h2></th>'                && gc_newline &&
+              '<table border="0">'                    && gc_newline &&
+              '<tr>'                                  && gc_newline &&
+              '<th><h2>Local</h2></th>'               && gc_newline &&
+              |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
+              '<th><h2>Remote</h2></th>'              && gc_newline &&
               '</tr>'.
 
     lt_diffs = io_diff->get( ).
@@ -15821,23 +15821,23 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA lv_package             TYPE devclass.
     DATA lo_repo_online         TYPE REF TO lcl_repo_online.
     DATA lv_branch_name         TYPE string.
+    DATA lv_err                 TYPE string.
+
 
     lt_repo = lcl_repo_srv=>list( ).
 
-*    find abapgit and abapgit-plugins-repos and validate bindings
+* find abapgit and abapgit-plugins-repos and validate bindings
     LOOP AT lt_repo INTO lo_repo.
       TRY.
           lo_repo_online ?= lo_repo.
-          lv_url            = lo_repo_online->get_url( ).
-          lv_branch_name    = lo_repo_online->get_branch_name( ).
-          lv_package        = lo_repo_online->get_package( ).
-          IF to_upper( lv_url ) NE to_upper( iv_url ).
+          lv_url          = lo_repo_online->get_url( ).
+          lv_branch_name  = lo_repo_online->get_branch_name( ).
+          lv_package      = lo_repo_online->get_package( ).
+          IF to_upper( lv_url ) <> to_upper( iv_url ).
             CONTINUE.
           ENDIF.
 
-          IF    iv_target_package IS NOT INITIAL
-            AND iv_target_package NE lv_package.
-            DATA lv_err TYPE string.
+          IF iv_target_package IS NOT INITIAL AND iv_target_package NE lv_package.
             lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
             _raise lv_err.
           ENDIF.
@@ -15864,8 +15864,7 @@ CLASS lcl_gui IMPLEMENTATION.
         unexpected_error           = 2
         intern_err                 = 3
         no_access                  = 4
-        object_locked_and_modified = 5
-    ).
+        object_locked_and_modified = 5 ).
     IF sy-subrc EQ 0.
       RETURN. "Package already exists. We assume this is fine
     ENDIF.
@@ -15878,12 +15877,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
     cl_package_factory=>create_new_package(
       EXPORTING
-        i_reuse_deleted_object     = abap_true    " Allows reuse of objects deleted from buffer
-        i_suppress_dialog          = abap_true    " Controls whether popups can be transmitted
+        i_reuse_deleted_object     = abap_true
+        i_suppress_dialog          = abap_true
       IMPORTING
         e_package                  = lo_package
       CHANGING
-        c_package_data             = ls_package    " Package Data
+        c_package_data             = ls_package
       EXCEPTIONS
         object_already_existing    = 1
         object_just_created        = 2
@@ -15905,9 +15904,8 @@ CLASS lcl_gui IMPLEMENTATION.
         invalid_translation_depth  = 18
         wrong_mainpack_value       = 19
         superpackage_invalid       = 20
-        error_in_cts_checks        = 21
-    ).
-    IF sy-subrc NE 0.
+        error_in_cts_checks        = 21 ).
+    IF sy-subrc <> 0.
       lv_err = |Package { iv_package } could not be created|.
       _raise lv_err.
     ENDIF.
