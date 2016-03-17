@@ -16892,7 +16892,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lo_repo = lcl_repo_srv=>new_online(
       iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
-      iv_branch_name = 'refs/heads/next-gen-xml'
+      iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
     lo_repo->status( ).
     lo_repo->deserialize( ).
