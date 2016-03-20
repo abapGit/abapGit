@@ -2077,7 +2077,8 @@ CLASS lcl_objects_activation IMPLEMENTATION.
         ENDIF.
 
         APPEND LINES OF lt_objects TO gt_programs.
-      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'.
+      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'
+        OR 'SFSW' OR 'SFBF' OR 'SFBS' OR 'VCLS'.
 * todo also insert_into_working_area?
         APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -2373,7 +2374,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -8632,7 +8633,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 ENDCLASS.                    "lcl_object_shlp IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_object_TRAN DEFINITION
+*       CLASS lcl_object_tran DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
@@ -8642,6 +8643,41 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
+  PRIVATE SECTION.
+    DATA: hex_tra TYPE x VALUE '00',               " Transaktion         T
+          hex_men TYPE x VALUE '01',               " Bereichsmenь        M
+          hex_par TYPE x VALUE '02',               " Parametertrans.     P
+          hex_rep TYPE x VALUE '80',               " Report              R
+          hex_rpv TYPE x VALUE '10',               " Report  mit Variante
+          hex_obj TYPE x VALUE '08',               " Objekttransaktionen
+          hex_chk TYPE x VALUE '04',               " mit Prьfobjekt
+          hex_enq TYPE x VALUE '20'.               " Gesperrt ьber SM01
+    CONSTANTS: c_oo_program(9)    VALUE '\PROGRAM=',
+               c_oo_class(7)      VALUE '\CLASS=',
+               c_oo_method(8)     VALUE '\METHOD=',
+               c_oo_tcode         TYPE tcode VALUE 'OS_APPLICATION',
+               c_oo_frclass(30)   VALUE 'CLASS',
+               c_oo_frmethod(30)  VALUE 'METHOD',
+               c_oo_frupdtask(30) VALUE 'UPDATE_MODE',
+               c_oo_synchron      VALUE 'S',
+               c_oo_asynchron     VALUE 'U',
+               c_oo_lokal         VALUE 'L',
+               c_true             TYPE c VALUE 'X',
+               c_false            TYPE c VALUE space.
+
+    METHODS:
+      split_parameters
+        CHANGING !et_rsparam TYPE s_param
+                 !es_rsstcd  TYPE rsstcd
+                 !is_tstcp   TYPE tstcp
+                 !es_tstc    TYPE tstc,
+
+      split_parameters_comp
+        IMPORTING !iv_type  TYPE any
+                  !iv_param TYPE any
+        CHANGING
+                  !ic_value TYPE any.
+
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
 *----------------------------------------------------------------------*
@@ -8650,9 +8686,146 @@ ENDCLASS.                    "lcl_object_TRAN DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tran IMPLEMENTATION.
-
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD split_parameters_comp.
+    DATA: off TYPE i.
+
+    IF iv_param CS iv_type.
+      off = sy-fdpos + strlen( iv_type ).
+      ic_value = iv_param+off.
+      IF ic_value CA '\'. CLEAR ic_value+sy-fdpos. ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD split_parameters.
+    "this is a copy of subroutine split_parameters from LSEUKF01
+    FIELD-SYMBOLS <f> TYPE any.
+    DATA: off       TYPE i,
+          param_beg TYPE i,
+          l_length  TYPE i.
+    DATA: ls_param TYPE rsparam.
+
+    CLEAR es_rsstcd-s_vari.
+
+    IF is_tstcp-param(1) = '\'.             " OO-Transaktion ohne FR
+      split_parameters_comp( EXPORTING iv_type = c_oo_program
+                                       iv_param = is_tstcp-param
+                             CHANGING  ic_value = es_tstc-pgmna ).
+      split_parameters_comp( EXPORTING iv_type = c_oo_class
+                                       iv_param = is_tstcp-param
+                             CHANGING  ic_value = es_rsstcd-classname ).
+      split_parameters_comp( EXPORTING iv_type = c_oo_method
+                                       iv_param = is_tstcp-param
+                             CHANGING  ic_value = es_rsstcd-method ).
+
+      IF NOT es_tstc-pgmna IS INITIAL.
+        es_rsstcd-s_local = c_true.
+      ENDIF.
+      RETURN.
+    ELSEIF is_tstcp-param(1) = '@'.         " Transaktionsvariante
+      es_rsstcd-s_vari = c_true.
+      IF is_tstcp-param(2) = '@@'.
+        es_rsstcd-s_ind_vari = c_true. off = 2.
+      ELSE.
+        CLEAR es_rsstcd-s_ind_vari. off = 1.
+      ENDIF.
+      IF is_tstcp-param CA ' '. ENDIF.
+      sy-fdpos = sy-fdpos - off.
+      IF sy-fdpos GT 0.
+        es_rsstcd-call_tcode = is_tstcp-param+off(sy-fdpos).
+        sy-fdpos = sy-fdpos + 1 + off.
+        es_rsstcd-variant = is_tstcp-param+sy-fdpos.
+      ENDIF.
+    ELSEIF is_tstcp-param(1) = '/'.
+      es_rsstcd-st_tcode = c_true.
+      es_rsstcd-st_prog  = space.
+      IF is_tstcp-param+1(1) = '*'.
+        es_rsstcd-st_skip_1 = c_true.
+      ELSE.
+        CLEAR es_rsstcd-st_skip_1.
+      ENDIF.
+      IF is_tstcp-param CA ' '. ENDIF.
+      param_beg = sy-fdpos + 1.
+      SUBTRACT 2 FROM sy-fdpos.
+      IF sy-fdpos GT 0.
+        es_rsstcd-call_tcode = is_tstcp-param+2(sy-fdpos).
+      ENDIF.
+*      SELECT SINGLE * FROM tstc INTO *tstc
+*                      WHERE tcode = rsstcd-call_tcode.
+*      IF sy-subrc = 0.
+*        IF *tstc-cinfo O hex_rep.
+*          PERFORM fill_tfields_report USING *tstc-pgmna.
+*        ELSEIF *tstc-cinfo O hex_men OR *tstc-cinfo O hex_par.
+*        ELSE.
+*          PERFORM fill_tfields_dynpro USING *tstc-pgmna *tstc-dypno.
+*        ENDIF.
+*      ENDIF.
+      SHIFT is_tstcp-param BY param_beg PLACES.
+    ELSE.
+      es_rsstcd-st_tcode = space.
+      es_rsstcd-st_prog  = c_true.
+*      PERFORM fill_tfields_dynpro USING tstc-pgmna tstc-dypno.
+    ENDIF.
+
+    DO 254 TIMES.
+      IF is_tstcp-param = space. EXIT. ENDIF.
+      CLEAR ls_param.
+*        condense tstcp-param no-gaps.
+      IF is_tstcp-param CA '='.
+        CHECK sy-fdpos NE 0.
+        ASSIGN is_tstcp-param(sy-fdpos) TO <f>.
+        ls_param-field = <f>.
+        IF ls_param-field(1) = space. SHIFT  ls_param-field. ENDIF.
+        sy-fdpos = sy-fdpos + 1.
+        SHIFT is_tstcp-param BY sy-fdpos PLACES.
+        IF is_tstcp-param CA ';'.
+          IF sy-fdpos NE 0.
+            ASSIGN is_tstcp-param(sy-fdpos) TO <f>.
+            ls_param-value = <f>.
+            IF ls_param-value(1) = space. SHIFT  ls_param-value. ENDIF.
+          ENDIF.
+          sy-fdpos = sy-fdpos + 1.
+          SHIFT is_tstcp-param BY sy-fdpos PLACES.
+          APPEND ls_param TO et_rsparam.
+        ELSE.       " Da _____; mцglich
+          l_length = strlen( is_tstcp-param ).
+          CHECK l_length > 0.
+          ASSIGN is_tstcp-param(l_length) TO <f>.
+          ls_param-value = <f>.
+          IF ls_param-value(1) = space. SHIFT  ls_param-value. ENDIF.
+          ADD 1 TO l_length.
+          SHIFT is_tstcp-param BY l_length PLACES.
+          APPEND ls_param TO et_rsparam.
+        ENDIF.
+      ENDIF.
+    ENDDO.
+* oo-Transaktion mit Framework
+    IF es_rsstcd-call_tcode = c_oo_tcode.
+      es_rsstcd-s_trframe = c_true.
+      LOOP AT et_rsparam INTO ls_param.
+        CASE ls_param-field.
+          WHEN c_oo_frclass. es_rsstcd-classname = ls_param-value.
+          WHEN c_oo_frmethod. es_rsstcd-method   = ls_param-value.
+          WHEN c_oo_frupdtask.
+            IF ls_param-value = c_oo_synchron.
+              es_rsstcd-s_upddir  = c_true.
+              es_rsstcd-s_updtask = c_false.
+              es_rsstcd-s_updlok  = c_false.
+            ELSEIF ls_param-value = c_oo_asynchron.
+              es_rsstcd-s_upddir  = c_false.
+              es_rsstcd-s_updtask = c_true.
+              es_rsstcd-s_updlok  = c_false.
+            ELSE.
+              es_rsstcd-s_upddir  = c_false.
+              es_rsstcd-s_updtask = c_false.
+              es_rsstcd-s_updlok  = c_true.
+            ENDIF.
+        ENDCASE.
+      ENDLOOP.
+    ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -8732,12 +8905,15 @@ CLASS lcl_object_tran IMPLEMENTATION.
 *               c_hex_chk TYPE x VALUE '04',
 *               c_hex_enq TYPE x VALUE '20'.
 
-    DATA: lv_dynpro TYPE d020s-dnum,
-          ls_tstc   TYPE tstc,
-          lv_type   TYPE rglif-docutype,
-          ls_tstct  TYPE tstct,
-          ls_tstcc  TYPE tstcc.
-
+    DATA: lv_dynpro       TYPE d020s-dnum,
+          lo_xml          TYPE REF TO lcl_xml,
+          ls_tstc         TYPE tstc,
+          lv_type         TYPE rglif-docutype,
+          ls_tstct        TYPE tstct,
+          ls_tstcc        TYPE tstcc,
+          ls_tstcp        TYPE tstcp,
+          lt_param_values TYPE TABLE OF rsparam,
+          ls_rsstcd       TYPE rsstcd.
 
     io_xml->read( EXPORTING iv_name = 'TSTC'
                   CHANGING cg_data = ls_tstc ).
@@ -8745,6 +8921,8 @@ CLASS lcl_object_tran IMPLEMENTATION.
                   CHANGING cg_data = ls_tstcc ).
     io_xml->read( EXPORTING iv_name = 'TSTCT'
                   CHANGING cg_data = ls_tstct ).
+    io_xml->read( EXPORTING iv_name = 'TSTCP'
+                  CHANGING cg_data = ls_tstcp ).
 
     lv_dynpro = ls_tstc-dypno.
 
@@ -8760,28 +8938,43 @@ CLASS lcl_object_tran IMPLEMENTATION.
         _raise 'Transaction, unknown CINFO'.
     ENDCASE.
 
+    IF ls_tstcp IS NOT INITIAL.
+      split_parameters(
+        CHANGING
+          et_rsparam = lt_param_values
+          es_rsstcd  = ls_rsstcd
+          is_tstcp   = ls_tstcp
+          es_tstc    = ls_tstc ).
+    ENDIF.
+
     CALL FUNCTION 'RPY_TRANSACTION_INSERT'
       EXPORTING
-        transaction         = ls_tstc-tcode
-        program             = ls_tstc-pgmna
-        dynpro              = lv_dynpro
-        language            = gc_english
-        development_class   = iv_package
-        transaction_type    = lv_type
-        shorttext           = ls_tstct-ttext
-        html_enabled        = ls_tstcc-s_webgui
-        java_enabled        = ls_tstcc-s_platin
-        wingui_enabled      = ls_tstcc-s_win32
+        transaction             = ls_tstc-tcode
+        program                 = ls_tstc-pgmna
+        dynpro                  = lv_dynpro
+        language                = gc_english
+        development_class       = iv_package
+        transaction_type        = lv_type
+        shorttext               = ls_tstct-ttext
+        called_transaction      = ls_rsstcd-call_tcode
+        called_transaction_skip = ls_rsstcd-st_skip_1
+        variant                 = ls_rsstcd-variant
+        cl_independend          = ls_rsstcd-s_ind_vari
+        html_enabled            = ls_tstcc-s_webgui
+        java_enabled            = ls_tstcc-s_platin
+        wingui_enabled          = ls_tstcc-s_win32
+      TABLES
+        param_values            = lt_param_values
       EXCEPTIONS
-        cancelled           = 1
-        already_exist       = 2
-        permission_error    = 3
-        name_not_allowed    = 4
-        name_conflict       = 5
-        illegal_type        = 6
-        object_inconsistent = 7
-        db_access_error     = 8
-        OTHERS              = 9.
+        cancelled               = 1
+        already_exist           = 2
+        permission_error        = 3
+        name_not_allowed        = 4
+        name_conflict           = 5
+        illegal_type            = 6
+        object_inconsistent     = 7
+        db_access_error         = 8
+        OTHERS                  = 9.
     IF sy-subrc <> 0.
       _raise 'Error from RPY_TRANSACTION_INSERT'.
     ENDIF.
@@ -8794,7 +8987,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
           lt_tcodes      TYPE TABLE OF tstc,
           ls_tcode       LIKE LINE OF lt_tcodes,
           ls_tstct       TYPE tstct,
+          ls_tstcp       TYPE tstcp, " <<<<< temp
           lt_gui_attr    TYPE TABLE OF tstcc,
+          lo_xml         TYPE REF TO lcl_xml,
           ls_gui_attr    LIKE LINE OF lt_gui_attr.
 
 
@@ -8826,6 +9021,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
       _raise 'Transaction description not found'.
     ENDIF.
 
+    SELECT SINGLE * FROM tstcp INTO ls_tstcp
+      WHERE tcode = lv_transaction.
+
     READ TABLE lt_tcodes INDEX 1 INTO ls_tcode.
     ASSERT sy-subrc = 0.
     READ TABLE lt_gui_attr INDEX 1 INTO ls_gui_attr.
@@ -8837,10 +9035,14 @@ CLASS lcl_object_tran IMPLEMENTATION.
                  ig_data = ls_gui_attr ).
     io_xml->add( iv_name = 'TSTCT'
                  ig_data = ls_tstct ).
+    IF ls_tstcp IS NOT INITIAL.
+      io_xml->add( iv_name = 'TSTCP'
+                   ig_data = ls_tstcp ).
+    ENDIF.
 
   ENDMETHOD.                    "serialize
 
-ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
+ENDCLASS.                    "lcl_object_tran IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_tobj DEFINITION
@@ -8868,27 +9070,31 @@ CLASS lcl_object_tobj IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: lv_objectname TYPE objh-objectname.
+    DATA: lv_objectname TYPE objh-objectname,
+          lv_type_pos   TYPE i.
 
+    lv_type_pos = strlen( ms_item-obj_name ) - 1.
 
     SELECT SINGLE objectname FROM objh INTO lv_objectname
-      WHERE objectname = ms_item-obj_name(10)
-      AND objecttype = ms_item-obj_name+10.             "#EC CI_GENBUFF
+      WHERE objectname = ms_item-obj_name(lv_type_pos)
+      AND objecttype = ms_item-obj_name+lv_type_pos.    "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-    DATA: ls_objh  TYPE objh,
-          ls_objt  TYPE objt,
-          lt_objs  TYPE tt_objs,
-          lt_objsl TYPE tt_objsl,
-          lt_objm  TYPE tt_objm.
+    DATA: ls_objh     TYPE objh,
+          ls_objt     TYPE objt,
+          lt_objs     TYPE tt_objs,
+          lt_objsl    TYPE tt_objsl,
+          lt_objm     TYPE tt_objm,
+          lv_type_pos TYPE i.
 
+    lv_type_pos = strlen( ms_item-obj_name ) - 1.
 
-    ls_objh-objectname = ms_item-obj_name(10).
-    ls_objh-objecttype = ms_item-obj_name+10.
+    ls_objh-objectname = ms_item-obj_name(lv_type_pos).
+    ls_objh-objecttype = ms_item-obj_name+lv_type_pos.
 
     CALL FUNCTION 'CTO_OBJECT_GET'
       EXPORTING
@@ -8979,11 +9185,13 @@ CLASS lcl_object_tobj IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: ls_objh TYPE objh.
+    DATA: ls_objh     TYPE objh,
+          lv_type_pos TYPE i.
 
+    lv_type_pos = strlen( ms_item-obj_name ) - 1.
 
-    ls_objh-objectname = ms_item-obj_name(10).
-    ls_objh-objecttype = ms_item-obj_name+10.
+    ls_objh-objectname = ms_item-obj_name(lv_type_pos).
+    ls_objh-objecttype = ms_item-obj_name+lv_type_pos.
 
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
@@ -10473,6 +10681,749 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_vcls DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_vcls DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.                    "lcl_object_vcls DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_vcls IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+INCLUDE mtobjcon.
+CLASS lcl_object_vcls IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+    DATA lv_vclname TYPE vcl_name.
+
+    SELECT SINGLE vclname INTO lv_vclname FROM vcldir WHERE vclname = ms_item-obj_name.
+
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lo_xml          TYPE REF TO lcl_xml,
+          lv_vclname      TYPE  vcl_name,
+          ls_vcldir_entry TYPE  v_vcldir,
+          lt_vclstruc     TYPE TABLE OF  v_vclstruc,
+          lt_vclstrudep   TYPE TABLE OF  v_vclstdep,
+          lt_vclmf        TYPE TABLE OF  v_vclmf.
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_vclname = ms_item-obj_name.
+
+    CALL FUNCTION 'VIEWCLUSTER_GET_DEFINITION'
+      EXPORTING
+        vclname                = lv_vclname
+      IMPORTING
+        vcldir_entry           = ls_vcldir_entry
+      TABLES
+        vclstruc_tab           = lt_vclstruc
+        vclstrudep_tab         = lt_vclstrudep
+        vclmf_tab              = lt_vclmf
+      EXCEPTIONS
+        viewcluster_not_found  = 1
+        incomplete_viewcluster = 2
+        OTHERS                 = 3.
+    IF sy-subrc <> 0.
+      _raise 'error in VIEWCLUSTER_GET_DEFINITION'.
+    ENDIF.
+
+    CLEAR ls_vcldir_entry-author.
+
+    io_xml->add( iv_name = 'VCLDIR'
+                 ig_data = ls_vcldir_entry ).
+    io_xml->add( iv_name = 'VLCSTRUC_TAB'
+                 ig_data = lt_vclstruc ).
+    io_xml->add( iv_name = 'VCLSTRUDEP_TAB'
+                 ig_data = lt_vclstrudep ).
+    io_xml->add( iv_name = 'VCLMF_TAB'
+                 ig_data = lt_vclmf ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD lif_object~deserialize.
+
+    DATA: lo_xml          TYPE REF TO lcl_xml,
+          lv_vclname      TYPE  vcl_name,
+          ls_vcldir_entry TYPE  v_vcldir,
+          lt_vclstruc     TYPE TABLE OF  v_vclstruc,
+          lt_vclstrudep   TYPE TABLE OF  v_vclstdep,
+          lt_vclmf        TYPE TABLE OF  v_vclmf.
+    DATA: lv_objectname TYPE ob_object.
+
+    io_xml->read( EXPORTING iv_name = 'VCLDIR'
+                 CHANGING cg_data = ls_vcldir_entry ).
+    io_xml->read( EXPORTING iv_name = 'VLCSTRUC_TAB'
+                 CHANGING cg_data = lt_vclstruc ).
+    io_xml->read( EXPORTING iv_name = 'VCLSTRUDEP_TAB'
+                 CHANGING cg_data = lt_vclstrudep ).
+    io_xml->read( EXPORTING iv_name = 'lt_vclstrudep'
+                 CHANGING cg_data = lt_vclmf ).
+
+    lv_vclname = ms_item-obj_name.
+    ls_vcldir_entry-author = sy-uname.
+
+    CALL FUNCTION 'VIEWCLUSTER_SAVE_DEFINITION'
+      EXPORTING
+        vcldir_entry   = ls_vcldir_entry
+      TABLES
+        vclstruc_tab   = lt_vclstruc
+        vclstrudep_tab = lt_vclstrudep
+        vclmf_tab      = lt_vclmf.
+
+    lv_objectname = ls_vcldir_entry-vclname.
+    CALL FUNCTION 'OBJ_GENERATE'
+      EXPORTING
+        iv_objectname         = lv_objectname
+        iv_objecttype         = gc_cluster_type
+        iv_maint_mode         = gc_mode_insert
+        iv_devclass           = iv_package " <<< temp
+      EXCEPTIONS
+        illegal_call          = 1
+        object_not_found      = 2
+        generate_error        = 3
+        transport_error       = 4
+        object_enqueue_failed = 5
+        OTHERS                = 6.
+    IF sy-subrc <> 0.
+      _raise 'error in OBJ_GENERATE for VCLS'.
+    ENDIF.
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~delete.
+    " temp
+* Do the same as in VIEWCLUSTER_SAVE_DEFINITION
+    DATA: lv_vclname      TYPE  vcl_name.
+
+    DELETE FROM vcldir WHERE vclname = lv_vclname.
+    DELETE FROM vcldirt WHERE vclname = lv_vclname.     "#EC CI_NOFIRST
+    DELETE FROM vclstruc WHERE vclname = lv_vclname.
+    DELETE FROM vclstruct WHERE vclname = lv_vclname.   "#EC CI_NOFIRST
+    DELETE FROM vclstrudep WHERE vclname = lv_vclname.
+    DELETE FROM vclmf WHERE vclname = lv_vclname.
+  ENDMETHOD.                    "delete
+
+  METHOD lif_object~jump.
+
+    DATA: lv_vclname      TYPE  vcl_name.
+
+    lv_vclname = ms_item-obj_name.
+    CALL FUNCTION 'VIEWCLUSTER_MAINTENANCE_CALL'
+      EXPORTING
+        viewcluster_name             = lv_vclname
+        maintenance_action           = 'S'
+      EXCEPTIONS
+        client_reference             = 1
+        foreign_lock                 = 2
+        viewcluster_not_found        = 3
+        viewcluster_is_inconsistent  = 4
+        missing_generated_function   = 5
+        no_upd_auth                  = 6
+        no_show_auth                 = 7
+        object_not_found             = 8
+        no_tvdir_entry               = 9
+        no_clientindep_auth          = 10
+        invalid_action               = 11
+        saving_correction_failed     = 12
+        system_failure               = 13
+        unknown_field_in_dba_sellist = 14
+        missing_corr_number          = 15
+        OTHERS                       = 16.
+    IF sy-subrc <> 0.
+      _raise 'error in VIEWCLUSTER_MAINTENANCE_CALL'.
+    ENDIF.
+
+  ENDMETHOD.                    "jump
+
+ENDCLASS.                    "lcl_object_vcls IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_sfsw DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfsw DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.                    "lcl_object_sfsw DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_sfsw IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfsw IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_tadir     TYPE tadir,
+          lv_switch_id TYPE sfw_switch_id.
+
+    lv_switch_id = ms_item-obj_name.
+    IF cl_sfw_sw=>check_existence( lv_switch_id ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_tadir = lcl_tadir=>read_single(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_switch_id TYPE sfw_switch_id,
+          lo_xml       TYPE REF TO lcl_xml,
+          li_switch    TYPE REF TO cl_sfw_sw,
+          ls_header    TYPE sfw_switch,
+          lv_name_32   TYPE sfw_name32,
+          lv_name_80   TYPE sfw_name80,
+*          lt_packages  TYPE cl_sfw_sw=>tty_outtab,
+          lt_parent_bf TYPE sfw_bf_sw_outtab,
+          lt_conflicts TYPE sfw_confl_outtab.
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_switch_id = ms_item-obj_name.
+
+    TRY.
+        li_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error from CL_SFW_SW=>GET_SWITCH'.
+    ENDTRY.
+
+    ls_header = li_switch->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    li_switch->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_parent_bf = li_switch->get_parent_bf( ).
+    lt_conflicts = li_switch->get_conflicts( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name    = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name    = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_parent_bf
+                 iv_name = 'PARENT_BF' ).
+    io_xml->add( ig_data = lt_conflicts
+                 iv_name = 'CONFLICTS' ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD lif_object~deserialize.
+
+    DATA: lo_xml       TYPE REF TO lcl_xml,
+          li_switch    TYPE REF TO cl_sfw_sw,
+          lv_switch_id TYPE sfw_switch_id,
+          ls_header    TYPE sfw_switch,
+          lv_name_32   TYPE sfw_name32,
+          lv_name_80   TYPE sfw_name80,
+*          lt_packages  TYPE cl_sfw_sw=>tty_outtab,
+          lt_parent_bf TYPE sfw_bf_sw_outtab,
+          lt_conflicts TYPE sfw_confl_outtab.
+
+
+
+    io_xml->read( EXPORTING iv_name = 'HEADER'
+                  CHANGING cg_data = ls_header ).
+    io_xml->read( EXPORTING iv_name    = 'NAME32'
+                  CHANGING cg_data = lv_name_32 ).
+    io_xml->read( EXPORTING iv_name    = 'NAME80'
+                  CHANGING cg_data = lv_name_80 ).
+
+    io_xml->read( EXPORTING iv_name = 'PARENT_BF'
+                  CHANGING cg_data = lt_parent_bf ).
+    io_xml->read( EXPORTING iv_name = 'CONFLICTS'
+                  CHANGING cg_data = lt_conflicts ).
+
+    lv_switch_id = ms_item-obj_name.
+    TRY.
+        li_switch = cl_sfw_sw=>create_switch( lv_switch_id ).
+      CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
+        _raise 'error in CL_SFW_SW=>CREATE_SWITCH'.
+    ENDTRY.
+
+    ls_header-author = sy-uname.
+    ls_header-createdon = sy-datum.
+    li_switch->set_header_data( ls_header ).
+
+    li_switch->set_texts( p_32 = lv_name_32 p_80 = lv_name_80 ).
+
+    li_switch->set_parent_bf( lt_parent_bf ).
+    li_switch->set_conflicts( lt_conflicts ).
+
+    li_switch->save_all(
+      EXCEPTIONS
+        not_saved = 1
+        OTHERS    = 2 ).
+    IF sy-subrc <> 0.
+      _raise 'error in CL_SFW_SW->SAVE_ALL'.
+    ENDIF.
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~delete.
+
+    DATA: lv_switch_id TYPE sfw_switch_id,
+          li_switch    TYPE REF TO cl_sfw_sw.
+
+
+    lv_switch_id = ms_item-obj_name.
+    TRY.
+        li_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
+        li_switch->set_delete_flag( lv_switch_id ).
+        li_switch->save_all( ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error deleting Switch'.
+    ENDTRY.
+
+  ENDMETHOD.                    "delete
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'SFSW'
+        in_new_window = abap_true.
+
+  ENDMETHOD.                    "jump
+
+ENDCLASS.                    "lcl_object_sfsw IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_SFBF DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfbf DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.                    "lcl_object_SFBF DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_SFBF IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfbf IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_tadir TYPE tadir,
+          lv_bf    TYPE sfw_bfunction.
+
+    lv_bf = ms_item-obj_name.
+    IF cl_sfw_bf=>check_existence( lv_bf ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_tadir = lcl_tadir=>read_single(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_bf                TYPE sfw_bfunction,
+          lo_xml               TYPE REF TO lcl_xml,
+          li_bf                TYPE REF TO cl_sfw_bf,
+          ls_header            TYPE sfw_bf,
+          lv_name_32           TYPE sfw_name32,
+          lv_name_80           TYPE sfw_name80,
+          lt_assigned_switches TYPE sfw_swbf_outtab,
+          lt_dependancies      TYPE sfw_depend_outtab,
+          ls_sfw_bfc_kw        TYPE sfw_bfc_kw,
+          ls_sfw_bfc_tc        TYPE sfw_bfc_tc,
+          ls_sfw_bfc_rn        TYPE sfw_bfc_rn,
+          lt_parent_bfs        TYPE sfw_bs_bf_outtab.
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_bf = ms_item-obj_name.
+
+    TRY.
+        li_bf = cl_sfw_bf=>get_bf( lv_bf ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error from CL_SFW_BF=>GET_BF'.
+    ENDTRY.
+
+    ls_header = li_bf->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    li_bf->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_assigned_switches = li_bf->get_assigned_switches( ).
+    lt_dependancies = li_bf->get_excluded_bf( ).
+    li_bf->get_content_data(
+      IMPORTING
+        ex_sfw_bfc_kw = ls_sfw_bfc_kw
+        ex_sfw_bfc_tc = ls_sfw_bfc_tc
+        ex_sfw_bfc_rn = ls_sfw_bfc_rn ).
+    lt_parent_bfs = li_bf->get_parent_bfs( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name    = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name    = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_assigned_switches
+                 iv_name = 'ASSIGNED_SWITCHES' ).
+    io_xml->add( ig_data = lt_dependancies
+                 iv_name = 'DEPENDANCIES' ).
+    io_xml->add( ig_data = ls_sfw_bfc_kw
+                 iv_name = 'CONTENT_KW' ).
+    io_xml->add( ig_data = ls_sfw_bfc_tc
+                 iv_name = 'CONTENT_TC' ).
+    io_xml->add( ig_data = ls_sfw_bfc_rn
+                 iv_name = 'CONTENT_RN' ).
+    io_xml->add( ig_data = lt_parent_bfs
+                 iv_name = 'PARENT_BFS' ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD lif_object~deserialize.
+
+    DATA: lv_bf                TYPE sfw_bfunction,
+          lo_xml               TYPE REF TO lcl_xml,
+          li_bf                TYPE REF TO cl_sfw_bf,
+          ls_header            TYPE sfw_bf,
+          lv_name_32           TYPE sfw_name32,
+          lv_name_80           TYPE sfw_name80,
+          lt_assigned_switches TYPE sfw_swbf_outtab,
+          lt_dependancies      TYPE sfw_depend_outtab,
+          ls_sfw_bfc_kw        TYPE sfw_bfc_kw,
+          ls_sfw_bfc_tc        TYPE sfw_bfc_tc,
+          ls_sfw_bfc_rn        TYPE sfw_bfc_rn,
+          lt_parent_bfs        TYPE sfw_bs_bf_outtab.
+
+
+    io_xml->read( EXPORTING iv_name = 'HEADER'
+                  CHANGING cg_data = ls_header ).
+    io_xml->read( EXPORTING iv_name    = 'NAME32'
+                  CHANGING cg_data = lv_name_32 ).
+    io_xml->read( EXPORTING iv_name    = 'NAME80'
+                  CHANGING cg_data = lv_name_80 ).
+
+    io_xml->read( EXPORTING iv_name = 'ASSIGNED_SWITCHES'
+                  CHANGING cg_data = lt_assigned_switches ).
+    io_xml->read( EXPORTING iv_name = 'DEPENDANCIES'
+                  CHANGING cg_data = lt_dependancies ).
+    io_xml->read( EXPORTING iv_name = 'CONTENT_KW'
+                  CHANGING cg_data = ls_sfw_bfc_kw ).
+    io_xml->read( EXPORTING iv_name = 'CONTENT_TC'
+                  CHANGING cg_data = ls_sfw_bfc_tc ).
+    io_xml->read( EXPORTING iv_name = 'CONTENT_RN'
+                  CHANGING cg_data = ls_sfw_bfc_rn ).
+    io_xml->read( EXPORTING iv_name = 'PARENT_BFS'
+                  CHANGING cg_data = lt_parent_bfs ).
+
+    lv_bf = ms_item-obj_name.
+    TRY.
+        li_bf = cl_sfw_bf=>create_bf( lv_bf ).
+      CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
+        _raise 'error in CL_SFW_BF=>CREATE_BF'.
+    ENDTRY.
+
+    ls_header-author = sy-uname.
+    ls_header-createdon = sy-datum.
+    li_bf->set_header_data( ls_header ).
+
+    li_bf->set_texts( p_32 = lv_name_32 p_80 = lv_name_80 ).
+
+    li_bf->set_assigned_switches( lt_assigned_switches ).
+    li_bf->set_excluded_bf( lt_dependancies ).
+    li_bf->set_content_data(
+        im_sfw_bfc_kw = ls_sfw_bfc_kw
+        im_sfw_bfc_rn = ls_sfw_bfc_rn
+        im_sfw_bfc_tc = ls_sfw_bfc_tc ).
+    li_bf->set_parent_bfs( lt_parent_bfs ).
+
+    li_bf->save_all( ).
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~delete.
+
+    DATA: lv_bf TYPE sfw_bfunction,
+          li_bf TYPE REF TO cl_sfw_bf.
+
+
+    lv_bf = ms_item-obj_name.
+    TRY.
+        li_bf = cl_sfw_bf=>get_bf( lv_bf ).
+        li_bf->set_delete_flag( lv_bf ).
+        li_bf->save_all( ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error deleting BF'.
+    ENDTRY.
+
+  ENDMETHOD.                    "delete
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'SFBF'
+        in_new_window = abap_true.
+
+  ENDMETHOD.                    "jump
+
+ENDCLASS.                    "lcl_object_SFBF IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_SFBS DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfbs DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS.                    "lcl_object_SFBS DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_SFBS IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_sfbs IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: ls_tadir TYPE tadir,
+          lv_bfset TYPE sfw_bset.
+
+    lv_bfset = ms_item-obj_name.
+    IF cl_sfw_bfs=>check_existence( lv_bfset ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_tadir = lcl_tadir=>read_single(
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_bfset       TYPE sfw_bset,
+          lo_xml         TYPE REF TO lcl_xml,
+          li_bfs         TYPE REF TO cl_sfw_bfs,
+          ls_header      TYPE sfw_bs,
+          lv_name_32     TYPE sfw_name32,
+          lv_name_80     TYPE sfw_name80,
+          lt_assigned_bf TYPE sfw_bfbs_outtab,
+          lt_nested_bfs  TYPE sfw_bsbs_outtab,
+          lt_parent_bfs  TYPE sfw_bs_bs_parent_outtab.
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_bfset = ms_item-obj_name.
+
+    TRY.
+        li_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error from CL_SFW_BFS=>GET_BFS'.
+    ENDTRY.
+
+    ls_header = li_bfs->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    li_bfs->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_assigned_bf = li_bfs->get_assigned_bf( ).
+    lt_nested_bfs = li_bfs->get_nested_bfs( ).
+    lt_parent_bfs = li_bfs->get_nested_parent( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_assigned_bf
+                 iv_name = 'ASSIGNED_BF' ).
+    io_xml->add( ig_data = lt_nested_bfs
+                 iv_name = 'NESTED_BFS' ).
+    io_xml->add( ig_data = lt_parent_bfs
+                 iv_name = 'PARENT_BFS' ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD lif_object~deserialize.
+
+    DATA: lv_bfset       TYPE sfw_bset,
+          lo_xml         TYPE REF TO lcl_xml,
+          li_bfs         TYPE REF TO cl_sfw_bfs,
+          ls_header      TYPE sfw_bs,
+          lv_name_32     TYPE sfw_name32,
+          lv_name_80     TYPE sfw_name80,
+          lt_assigned_bf TYPE sfw_bfbs_outtab,
+          lt_nested_bfs  TYPE sfw_bsbs_outtab,
+          lt_parent_bfs  TYPE sfw_bs_bs_parent_outtab.
+
+
+    io_xml->read( EXPORTING iv_name = 'HEADER'
+                  CHANGING cg_data = ls_header ).
+    io_xml->read( EXPORTING iv_name = 'NAME32'
+                  CHANGING cg_data = lv_name_32 ).
+    io_xml->read( EXPORTING iv_name = 'NAME80'
+                  CHANGING cg_data = lv_name_80 ).
+
+    io_xml->read( EXPORTING iv_name = 'ASSIGNED_BF'
+                  CHANGING cg_data = lt_assigned_bf ).
+    io_xml->read( EXPORTING iv_name = 'NESTED_BFS'
+                  CHANGING cg_data = lt_nested_bfs ).
+    io_xml->read( EXPORTING iv_name = 'PARENT_BFS'
+                  CHANGING cg_data = lt_parent_bfs ).
+
+    lv_bfset = ms_item-obj_name.
+    TRY.
+        li_bfs = cl_sfw_bfs=>create_bfs( lv_bfset ).
+      CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
+        _raise 'error in CL_SFW_BFS=>CREATE_BFS'.
+    ENDTRY.
+
+    ls_header-author = sy-uname.
+    ls_header-createdon = sy-datum.
+    li_bfs->set_header_data( ls_header ).
+
+    li_bfs->set_texts( p_32 = lv_name_32 p_80 = lv_name_80 ).
+
+    li_bfs->set_assigned_bf( lt_assigned_bf ).
+    li_bfs->set_assigned_bfs( lt_nested_bfs ).
+    li_bfs->set_nested_parent( lt_parent_bfs ).
+
+
+    li_bfs->save_all( ).
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~delete.
+
+    DATA: lv_bfset TYPE sfw_bset,
+          li_bfs   TYPE REF TO cl_sfw_bfs.
+
+
+    lv_bfset = ms_item-obj_name.
+    TRY.
+        li_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
+        li_bfs->set_delete_flag( lv_bfset ).
+        li_bfs->save_all( ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error deleting BF'.
+    ENDTRY.
+
+  ENDMETHOD.                    "delete
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'SFBS'
+        in_new_window = abap_true.
+
+  ENDMETHOD.                    "jump
+
+ENDCLASS.                    "lcl_object_SFBS IMPLEMENTATION
+
 CLASS lcl_file_status DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -10659,6 +11610,8 @@ CLASS lcl_tadir IMPLEMENTATION.
       WHERE devclass = iv_package
       AND object <> 'DEVC'
       AND object <> 'SOTR'
+      AND object <> 'SFB1'
+      AND object <> 'SFB2'
       AND delflag = abap_false
       ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
 
