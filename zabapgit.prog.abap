@@ -2667,6 +2667,15 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING iv_program_name TYPE programm
       RETURNING VALUE(rs_cua)   TYPE ty_cua
       RAISING   lcx_exception.
+
+    METHODS deserialize_dynpros
+      IMPORTING it_dynpros TYPE ty_dynpro_tt
+      RAISING   lcx_exception.
+
+    METHODS deserialize_cua
+      IMPORTING is_cua TYPE ty_cua
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_objects_program IMPLEMENTATION.
@@ -2983,6 +2992,109 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "serialize_dynpros
+
+
+  METHOD deserialize_dynpros.
+
+    DATA: lv_name   TYPE dwinactiv-obj_name,
+          ls_dynpro LIKE LINE OF it_dynpros.
+
+
+* ls_dynpro is changed by the function module, a field-symbol will cause
+* the program to dump since it_dynpros cannot be changed
+    LOOP AT it_dynpros INTO ls_dynpro.
+
+      CALL FUNCTION 'RPY_DYNPRO_INSERT'
+        EXPORTING
+          header                 = ls_dynpro-header
+          suppress_exist_checks  = abap_true
+        TABLES
+          containers             = ls_dynpro-containers
+          fields_to_containers   = ls_dynpro-fields
+          flow_logic             = ls_dynpro-flow_logic
+        EXCEPTIONS
+          cancelled              = 1
+          already_exists         = 2
+          program_not_exists     = 3
+          not_executed           = 4
+          missing_required_field = 5
+          illegal_field_value    = 6
+          field_not_allowed      = 7
+          not_generated          = 8
+          illegal_field_position = 9
+          OTHERS                 = 10.
+      IF sy-subrc <> 2 AND sy-subrc <> 0.
+        _raise 'error from RPY_DYNPRO_INSERT'.
+      ENDIF.
+* todo, RPY_DYNPRO_UPDATE?
+
+      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
+        INTO lv_name RESPECTING BLANKS.
+      ASSERT NOT lv_name IS INITIAL.
+
+      lcl_objects_activation=>add( iv_type = 'DYNP'
+                                   iv_name = lv_name ).
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "deserialize_dynpros
+
+
+  METHOD deserialize_cua.
+
+    DATA: ls_tr_key TYPE trkey.
+
+
+    IF is_cua-adm IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE devclass INTO ls_tr_key-devclass
+      FROM tadir
+      WHERE pgmid = 'R3TR'
+      AND object = ms_item-obj_type
+      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      _raise 'not found in tadir'.
+    ENDIF.
+
+    ls_tr_key-obj_type = ms_item-obj_type.
+    ls_tr_key-obj_name = ms_item-obj_name.
+    ls_tr_key-sub_type = 'CUAD'.
+    ls_tr_key-sub_name = ms_item-obj_name.
+
+    sy-tcode = 'SE41'. " evil hack, workaround to handle fixes in note 2159455
+    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
+      EXPORTING
+        program   = ms_item-obj_name
+        language  = gc_english
+        tr_key    = ls_tr_key
+        adm       = is_cua-adm
+        state     = 'I'
+      TABLES
+        sta       = is_cua-sta
+        fun       = is_cua-fun
+        men       = is_cua-men
+        mtx       = is_cua-mtx
+        act       = is_cua-act
+        but       = is_cua-but
+        pfk       = is_cua-pfk
+        set       = is_cua-set
+        doc       = is_cua-doc
+        tit       = is_cua-tit
+        biv       = is_cua-biv
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CUA_INTERNAL_WRITE'.
+    ENDIF.
+
+    lcl_objects_activation=>add( iv_type = 'CUAD'
+                                 iv_name = ms_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize_cua
+
 
 ENDCLASS.
 
@@ -9455,13 +9567,13 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-    METHODS deserialize_dynpros
-      IMPORTING it_dynpros TYPE ty_dynpro_tt
-      RAISING   lcx_exception.
-
-    METHODS deserialize_cua
-      IMPORTING is_cua TYPE ty_cua
-      RAISING   lcx_exception.
+*    METHODS deserialize_dynpros
+*      IMPORTING it_dynpros TYPE ty_dynpro_tt
+*      RAISING   lcx_exception.
+*
+*    METHODS deserialize_cua
+*      IMPORTING is_cua TYPE ty_cua
+*      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_fugr DEFINITION
 
@@ -9611,106 +9723,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_includes
-
-  METHOD deserialize_dynpros.
-
-    DATA: lv_name   TYPE dwinactiv-obj_name,
-          ls_dynpro LIKE LINE OF it_dynpros.
-
-
-* ls_dynpro is changed by the function module, a field-symbol will cause
-* the program to dump since it_dynpros cannot be changed
-    LOOP AT it_dynpros INTO ls_dynpro.
-
-      CALL FUNCTION 'RPY_DYNPRO_INSERT'
-        EXPORTING
-          header                 = ls_dynpro-header
-          suppress_exist_checks  = abap_true
-        TABLES
-          containers             = ls_dynpro-containers
-          fields_to_containers   = ls_dynpro-fields
-          flow_logic             = ls_dynpro-flow_logic
-        EXCEPTIONS
-          cancelled              = 1
-          already_exists         = 2
-          program_not_exists     = 3
-          not_executed           = 4
-          missing_required_field = 5
-          illegal_field_value    = 6
-          field_not_allowed      = 7
-          not_generated          = 8
-          illegal_field_position = 9
-          OTHERS                 = 10.
-      IF sy-subrc <> 2 AND sy-subrc <> 0.
-        _raise 'error from RPY_DYNPRO_INSERT'.
-      ENDIF.
-* todo, RPY_DYNPRO_UPDATE?
-
-      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
-        INTO lv_name RESPECTING BLANKS.
-      ASSERT NOT lv_name IS INITIAL.
-
-      lcl_objects_activation=>add( iv_type = 'DYNP'
-                                   iv_name = lv_name ).
-
-    ENDLOOP.
-
-  ENDMETHOD.                    "deserialize_dynpros
-
-  METHOD deserialize_cua.
-
-    DATA: ls_tr_key TYPE trkey.
-
-
-    IF is_cua-adm IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE devclass INTO ls_tr_key-devclass
-      FROM tadir
-      WHERE pgmid = 'R3TR'
-      AND object = ms_item-obj_type
-      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      _raise 'not found in tadir'.
-    ENDIF.
-
-    ls_tr_key-obj_type = ms_item-obj_type.
-    ls_tr_key-obj_name = ms_item-obj_name.
-    ls_tr_key-sub_type = 'CUAD'.
-    ls_tr_key-sub_name = ms_item-obj_name.
-
-    sy-tcode = 'SE41'. " evil hack, workaround to handle fixes in note 2159455
-    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
-      EXPORTING
-        program   = ms_item-obj_name
-        language  = gc_english
-        tr_key    = ls_tr_key
-        adm       = is_cua-adm
-        state     = 'I'
-      TABLES
-        sta       = is_cua-sta
-        fun       = is_cua-fun
-        men       = is_cua-men
-        mtx       = is_cua-mtx
-        act       = is_cua-act
-        but       = is_cua-but
-        pfk       = is_cua-pfk
-        set       = is_cua-set
-        doc       = is_cua-doc
-        tit       = is_cua-tit
-        biv       = is_cua-biv
-      EXCEPTIONS
-        not_found = 1
-        OTHERS    = 2.
-    IF sy-subrc <> 0.
-      _raise 'error from RS_CUA_INTERNAL_WRITE'.
-    ENDIF.
-
-    lcl_objects_activation=>add( iv_type = 'CUAD'
-                                 iv_name = ms_item-obj_name ).
-
-  ENDMETHOD.                    "deserialize_cua
 
   METHOD deserialize_xml.
 
@@ -10592,13 +10604,6 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    METHODS deserialize_dynpros
-      IMPORTING it_dynpros TYPE ty_dynpro_tt
-      RAISING   lcx_exception.
-
-    METHODS deserialize_cua
-      IMPORTING is_cua TYPE ty_cua
-      RAISING   lcx_exception.
 
     METHODS deserialize_textpool
       IMPORTING it_tpool TYPE textpool_table
@@ -10683,61 +10688,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_textpool
 
-  METHOD deserialize_cua.
-
-    DATA: ls_tr_key TYPE trkey.
-
-
-    IF is_cua-adm IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE devclass INTO ls_tr_key-devclass
-      FROM tadir
-      WHERE pgmid = 'R3TR'
-      AND object = ms_item-obj_type
-      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      _raise 'not found in tadir'.
-    ENDIF.
-
-    ls_tr_key-obj_type = ms_item-obj_type.
-    ls_tr_key-obj_name = ms_item-obj_name.
-    ls_tr_key-sub_type = 'CUAD'.
-    ls_tr_key-sub_name = ms_item-obj_name.
-
-    sy-tcode = 'SE41'. " evil hack, workaround to handle fixes in note 2159455
-    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
-      EXPORTING
-        program   = ms_item-obj_name
-        language  = gc_english
-        tr_key    = ls_tr_key
-        adm       = is_cua-adm
-        state     = 'I'
-      TABLES
-        sta       = is_cua-sta
-        fun       = is_cua-fun
-        men       = is_cua-men
-        mtx       = is_cua-mtx
-        act       = is_cua-act
-        but       = is_cua-but
-        pfk       = is_cua-pfk
-        set       = is_cua-set
-        doc       = is_cua-doc
-        tit       = is_cua-tit
-        biv       = is_cua-biv
-      EXCEPTIONS
-        not_found = 1
-        OTHERS    = 2.
-    IF sy-subrc <> 0.
-      _raise 'error from RS_CUA_INTERNAL_WRITE'.
-    ENDIF.
-
-    lcl_objects_activation=>add( iv_type = 'CUAD'
-                                 iv_name = ms_item-obj_name ).
-
-  ENDMETHOD.                    "deserialize_cua
-
   METHOD lif_object~serialize.
 
     serialize_program( io_xml   = io_xml
@@ -10780,51 +10730,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
     deserialize_textpool( lt_tpool ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
-
-  METHOD deserialize_dynpros.
-
-    DATA: lv_name   TYPE dwinactiv-obj_name,
-          ls_dynpro LIKE LINE OF it_dynpros.
-
-
-* ls_dynpro is changed by the function module, a field-symbol will cause
-* the program to dump since it_dynpros cannot be changed
-    LOOP AT it_dynpros INTO ls_dynpro.
-
-      CALL FUNCTION 'RPY_DYNPRO_INSERT'
-        EXPORTING
-          header                 = ls_dynpro-header
-          suppress_exist_checks  = abap_true
-        TABLES
-          containers             = ls_dynpro-containers
-          fields_to_containers   = ls_dynpro-fields
-          flow_logic             = ls_dynpro-flow_logic
-        EXCEPTIONS
-          cancelled              = 1
-          already_exists         = 2
-          program_not_exists     = 3
-          not_executed           = 4
-          missing_required_field = 5
-          illegal_field_value    = 6
-          field_not_allowed      = 7
-          not_generated          = 8
-          illegal_field_position = 9
-          OTHERS                 = 10.
-      IF sy-subrc <> 2 AND sy-subrc <> 0.
-        _raise 'error from RPY_DYNPRO_INSERT'.
-      ENDIF.
-* todo, RPY_DYNPRO_UPDATE?
-
-      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
-        INTO lv_name RESPECTING BLANKS.
-      ASSERT NOT lv_name IS INITIAL.
-
-      lcl_objects_activation=>add( iv_type = 'DYNP'
-                                   iv_name = lv_name ).
-
-    ENDLOOP.
-
-  ENDMETHOD.                    "deserialize_dynpros
 
 ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 
