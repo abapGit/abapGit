@@ -11528,7 +11528,15 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   " W3xx SERIALIZE
   """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~serialize.
-    DATA ls_key     TYPE wwwdatatab.
+    DATA ls_key      TYPE wwwdatatab.
+    DATA lt_w3mime   TYPE STANDARD TABLE OF w3mime.
+    DATA lt_w3html   TYPE STANDARD TABLE OF w3html.
+    DATA lt_w3params TYPE STANDARD TABLE OF wwwparams.
+    DATA l_xstring   TYPE xstring.
+    DATA ls_wwwparam TYPE wwwparams.
+    DATA l_size      TYPE int4.
+    DATA l_base64str TYPE string.
+    DATA lo_utility  TYPE REF TO cl_http_utility.
 
     ls_key-relid = ms_item-obj_type+2(2).
     ls_key-objid = ms_item-obj_name.
@@ -11543,17 +11551,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    DATA lt_w3mime   TYPE STANDARD TABLE OF w3mime.
-    DATA lt_w3html   TYPE STANDARD TABLE OF w3html.
-    DATA lt_w3params TYPE STANDARD TABLE OF wwwparams.
-
     CALL FUNCTION 'WWWDATA_IMPORT'
       EXPORTING  key               = ls_key
       TABLES     mime              = lt_w3mime
                  html              = lt_w3html
       EXCEPTIONS wrong_object_type = 1
                  import_error      = 2.
-
 
     IF sy-subrc IS NOT INITIAL.
       _raise 'Cannot read W3xx data'.
@@ -11568,10 +11571,6 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     IF sy-subrc IS NOT INITIAL.
       _raise 'Cannot read W3xx data'.
     ENDIF.
-
-    DATA l_xstring   TYPE xstring.
-    DATA ls_wwwparam TYPE wwwparams.
-    DATA l_size      TYPE int4.
 
     READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = 'filesize'.
     IF sy-subrc IS NOT INITIAL.
@@ -11600,10 +11599,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       _raise 'Cannot convert W3xx to xstring'.
     ENDIF.
 
-    DATA l_base64str TYPE string.
-    DATA lo_utility  TYPE REF TO cl_http_utility.
     CREATE OBJECT lo_utility.
-
     l_base64str = lo_utility->encode_x_base64( unencoded = l_xstring ).
 
     io_xml->add( iv_name = 'NAME'
@@ -11638,8 +11634,17 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   " W3xx DESERIALIZE
   """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~deserialize.
-    DATA ls_key      TYPE wwwdatatab.
-    DATA l_base64str TYPE string.
+    DATA ls_key       TYPE wwwdatatab.
+    DATA l_base64str  TYPE string.
+    DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
+    DATA ls_wwwparam  TYPE wwwparams.
+    DATA l_tmp        TYPE string.
+    DATA l_xstring    TYPE xstring.
+    DATA lo_utility   TYPE REF TO cl_http_utility.
+    DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
+    DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
+    DATA l_size       TYPE int4.
+    DATA lv_tadir_obj TYPE tadir-object.
 
     ls_key-relid = ms_item-obj_type+2(2).
     ls_key-objid = ms_item-obj_name.
@@ -11649,11 +11654,6 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     io_xml->read( exporting iv_name = 'DATA'
                   changing  cg_data = l_base64str ).
-
-    DATA lt_w3params TYPE STANDARD TABLE OF wwwparams.
-    DATA ls_wwwparam TYPE wwwparams.
-    DATA l_tmp       TYPE string.
-    DATA l_xstring   TYPE xstring.
 
     DEFINE w3mi_read_param.
       io_xml->read( EXPORTING iv_name = &1
@@ -11671,14 +11671,8 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     w3mi_read_param 'mimetype'.
     w3mi_read_param 'version'.
 
-    DATA lo_utility TYPE REF TO cl_http_utility.
     CREATE OBJECT lo_utility.
-
     l_xstring = lo_utility->decode_x_base64( encoded = l_base64str ).
-
-    DATA lt_w3mime   TYPE STANDARD TABLE OF w3mime.
-    DATA lt_w3html   TYPE STANDARD TABLE OF w3html.
-    DATA l_size      TYPE int4.
 
     CASE ls_key-relid.
       WHEN 'MI'.
@@ -11732,8 +11726,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       _raise 'Cannot upload W3xx data'.
     ENDIF.
 
-    DATA lv_tadir_obj TYPE tadir-object.
-    concatenate 'W3' ls_key-relid into lv_tadir_obj.
+    CONCATENATE 'W3' ls_key-relid INTO lv_tadir_obj.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING   wi_tadir_pgmid    = 'R3TR'
