@@ -11476,6 +11476,351 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_SFBS IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_W3SUPER DEFINITION
+*----------------------------------------------------------------------*
+*   Web Reporting/Internet Transaction Server MIME Types (super class)
+*----------------------------------------------------------------------*
+CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+
+ENDCLASS. "lcl_object_W3SUPER DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_W3SUPER IMPLEMENTATION
+*----------------------------------------------------------------------*
+*   Web Reporting/Internet Transaction Server MIME Types (super class)
+*----------------------------------------------------------------------*
+CLASS lcl_object_w3super IMPLEMENTATION.
+
+  METHOD lif_object~jump.
+    " No idea how to just to SMW0
+    _raise 'Please go to SMW0 for W3MI object'.
+  ENDMETHOD.                    "jump
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " W3xx EXISTS
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  METHOD lif_object~exists.
+    DATA lv_objid TYPE wwwdata-objid.
+
+    SELECT SINGLE objid into lv_objid
+      FROM wwwdata
+      WHERE relid = ms_item-obj_type+2(2)
+      AND   objid = ms_item-obj_name
+      AND   srtf2 = 0.
+
+    IF lv_objid IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+
+  ENDMETHOD.
+
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " W3xx SERIALIZE
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  METHOD lif_object~serialize.
+    DATA ls_key     TYPE wwwdatatab.
+
+    ls_key-relid = ms_item-obj_type+2(2).
+    ls_key-objid = ms_item-obj_name.
+
+    SELECT SINGLE * INTO CORRESPONDING FIELDS OF ls_key
+      FROM wwwdata
+      WHERE relid = ls_key-relid
+      AND   objid = ls_key-objid
+      AND   srtf2 = 0.
+
+    IF sy-subrc IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    DATA lt_w3mime   TYPE STANDARD TABLE OF w3mime.
+    DATA lt_w3html   TYPE STANDARD TABLE OF w3html.
+    DATA lt_w3params TYPE STANDARD TABLE OF wwwparams.
+
+    CALL FUNCTION 'WWWDATA_IMPORT'
+      EXPORTING  key               = ls_key
+      TABLES     mime              = lt_w3mime
+                 html              = lt_w3html
+      EXCEPTIONS wrong_object_type = 1
+                 import_error      = 2.
+
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot read W3xx data'.
+    ENDIF.
+
+    CALL FUNCTION 'WWWPARAMS_READ_ALL'
+      EXPORTING   type             = ls_key-relid
+                  objid            = ls_key-objid
+      TABLES      params           = lt_w3params
+      EXCEPTIONS  entry_not_exists = 1.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot read W3xx data'.
+    ENDIF.
+
+    DATA l_xstring   TYPE xstring.
+    DATA ls_wwwparam TYPE wwwparams.
+    DATA l_size      TYPE int4.
+
+    READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = 'filesize'.
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot read W3xx filesize'.
+    ENDIF.
+
+    l_size = ls_wwwparam-value.
+
+    CASE ls_key-relid.
+      WHEN 'MI'.
+        CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+          EXPORTING  input_length = l_size
+          IMPORTING  buffer       = l_xstring
+          TABLES     binary_tab   = lt_w3mime
+          EXCEPTIONS failed       = 1.
+      WHEN 'HT'.
+        CALL FUNCTION 'SCMS_TEXT_TO_XSTRING'
+          IMPORTING  buffer       = l_xstring
+          TABLES     text_tab     = lt_w3html
+          EXCEPTIONS failed       = 1.
+      WHEN OTHERS.
+        _raise 'Wrong W3xx type'.
+    ENDCASE.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot convert W3xx to xstring'.
+    ENDIF.
+
+    DATA l_base64str TYPE string.
+    DATA lo_utility  TYPE REF TO cl_http_utility.
+    CREATE OBJECT lo_utility.
+
+    l_base64str = lo_utility->encode_x_base64( unencoded = l_xstring ).
+
+    io_xml->add( iv_name = 'NAME'
+                 ig_data = ls_key-objid ).
+
+    io_xml->add( iv_name = 'TEXT'
+                 ig_data = ls_key-text ).
+
+    io_xml->add( iv_name = 'DATA'
+                 ig_data = l_base64str ).
+
+    " TODO normal params serialization
+
+    DEFINE w3mi_save_param.
+      READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = &1.
+      IF sy-subrc IS NOT INITIAL.
+        _raise 'Cannot read required W3xx param'.
+      ENDIF.
+      io_xml->add( iv_name = &1
+                   ig_data = ls_wwwparam-value ).
+    END-OF-DEFINITION.
+
+    w3mi_save_param 'fileextension'.
+    w3mi_save_param 'filename'.
+    w3mi_save_param 'filesize'.
+    w3mi_save_param 'mimetype'.
+    w3mi_save_param 'version'.
+
+  ENDMETHOD.                    "serialize
+
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " W3xx DESERIALIZE
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  METHOD lif_object~deserialize.
+    DATA ls_key      TYPE wwwdatatab.
+    DATA l_base64str TYPE string.
+
+    ls_key-relid = ms_item-obj_type+2(2).
+    ls_key-objid = ms_item-obj_name.
+
+    io_xml->read( exporting iv_name = 'TEXT'
+                  changing  cg_data = ls_key-text ).
+
+    io_xml->read( exporting iv_name = 'DATA'
+                  changing  cg_data = l_base64str ).
+
+    DATA lt_w3params TYPE STANDARD TABLE OF wwwparams.
+    DATA ls_wwwparam TYPE wwwparams.
+    DATA l_tmp       TYPE string.
+    DATA l_xstring   TYPE xstring.
+
+    DEFINE w3mi_read_param.
+      io_xml->read( EXPORTING iv_name = &1
+                    CHANGING  cg_data = l_tmp ).
+      ls_wwwparam-relid = ls_key-relid.
+      ls_wwwparam-objid = ls_key-objid.
+      ls_wwwparam-name  = &1.
+      ls_wwwparam-value = l_tmp.
+      APPEND ls_wwwparam TO lt_w3params.
+    END-OF-DEFINITION.
+
+    w3mi_read_param 'fileextension'.
+    w3mi_read_param 'filename'.
+    w3mi_read_param 'filesize'.
+    w3mi_read_param 'mimetype'.
+    w3mi_read_param 'version'.
+
+    DATA lo_utility TYPE REF TO cl_http_utility.
+    CREATE OBJECT lo_utility.
+
+    l_xstring = lo_utility->decode_x_base64( encoded = l_base64str ).
+
+    DATA lt_w3mime   TYPE STANDARD TABLE OF w3mime.
+    DATA lt_w3html   TYPE STANDARD TABLE OF w3html.
+    DATA l_size      TYPE int4.
+
+    CASE ls_key-relid.
+      WHEN 'MI'.
+        CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+          EXPORTING  buffer        = l_xstring
+          IMPORTING  output_length = l_size
+          TABLES     binary_tab    = lt_w3mime.
+      WHEN 'HT'.
+        CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+          EXPORTING  buffer        = l_xstring
+          IMPORTING  output_length = l_size
+          TABLES     binary_tab    = lt_w3mime.
+
+        CALL FUNCTION 'SCMS_BINARY_TO_TEXT'
+          EXPORTING  input_length  = l_size
+          IMPORTING  output_length = l_size
+          TABLES     binary_tab    = lt_w3mime
+                     text_tab      = lt_w3html
+          EXCEPTIONS failed        = 1.
+
+          IF sy-subrc IS NOT INITIAL.
+            _raise 'Cannot update W3xx params'.
+          ENDIF.
+
+        clear lt_w3mime.
+      WHEN OTHERS.
+        _raise 'Wrong W3xx type'.
+    ENDCASE.
+
+    CALL FUNCTION 'WWWPARAMS_UPDATE'
+      TABLES     params       = lt_w3params
+      EXCEPTIONS update_error = 1.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot update W3xx params'.
+    ENDIF.
+
+    ls_key-tdate    = sy-datum.
+    ls_key-ttime    = sy-uzeit.
+    ls_key-chname   = sy-uname.
+    ls_key-devclass = iv_package.
+
+    CALL FUNCTION 'WWWDATA_EXPORT'
+      EXPORTING  key               = ls_key
+      TABLES     mime              = lt_w3mime
+                 html              = lt_w3html
+      EXCEPTIONS wrong_object_type = 1
+                 export_error      = 2.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot upload W3xx data'.
+    ENDIF.
+
+    DATA lv_tadir_obj TYPE tadir-object.
+    concatenate 'W3' ls_key-relid into lv_tadir_obj.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING   wi_tadir_pgmid    = 'R3TR'
+                  wi_tadir_object   = lv_tadir_obj
+                  wi_tadir_devclass = iv_package
+                  wi_tadir_obj_name = ls_key-objid
+                  wi_test_modus     = space
+      EXCEPTIONS
+                  tadir_entry_not_existing       = 1
+                  tadir_entry_ill_type           = 2
+                  no_systemname                  = 3
+                  no_systemtype                  = 4
+                  original_system_conflict       = 5
+                  object_reserved_for_devclass   = 6
+                  object_exists_global           = 7
+                  object_exists_local            = 8
+                  object_is_distributed          = 9
+                  obj_specification_not_unique   = 10
+                  no_authorization_to_delete     = 11
+                  devclass_not_existing          = 12
+                  simultanious_set_remove_repair = 13
+                  order_missing                  = 14
+                  no_modification_of_head_syst   = 15
+                  pgmid_object_not_allowed       = 16
+                  masterlanguage_not_specified   = 17
+                  devclass_not_specified         = 18
+                  specify_owner_unique           = 19
+                  loc_priv_objs_no_repair        = 20
+                  gtadir_not_reached             = 21
+                  object_locked_for_order        = 22
+                  change_of_class_not_allowed    = 23
+                  no_change_from_sap_to_tmp      = 24
+                  OTHERS                         = 99.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot update TADIR for W3xx'.
+    ENDIF.
+
+  ENDMETHOD.
+
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " W3xx DELETE
+  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  METHOD lif_object~delete.
+    DATA ls_key TYPE wwwdatatab.
+
+    ls_key-relid = ms_item-obj_type+2(2).
+    ls_key-objid = ms_item-obj_name.
+
+    CALL FUNCTION 'WWWDATA_DELETE'
+      EXPORTING  key               = ls_key
+      EXCEPTIONS wrong_object_type = 1
+                 delete_error      = 2.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot delete W3xx data'.
+    ENDIF.
+
+    CALL FUNCTION 'WWWPARAMS_DELETE_ALL'
+      EXPORTING  key               = ls_key
+      EXCEPTIONS delete_error      = 1.
+
+    IF sy-subrc IS NOT INITIAL.
+      _raise 'Cannot delete W3xx params'.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_W3MI DEFINITION
+*----------------------------------------------------------------------*
+*   Web Reporting/Internet Transaction Server MIME Types (binary data)
+*----------------------------------------------------------------------*
+CLASS lcl_object_w3mi DEFINITION INHERITING FROM lcl_object_w3super FINAL.
+ENDCLASS.                    "lcl_object_W3MI DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_W3HT DEFINITION
+*----------------------------------------------------------------------*
+*   Web Reporting/Internet Transaction Server MIME Types (html data)
+*----------------------------------------------------------------------*
+CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
+ENDCLASS.                    "lcl_object_W3HT DEFINITION
+
+
 CLASS lcl_file_status DEFINITION FINAL.
 
   PUBLIC SECTION.
