@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.0.5'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.0.6'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2078,7 +2078,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
         APPEND LINES OF lt_objects TO gt_programs.
       WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'
-        OR 'SFSW' OR 'SFBF' OR 'SFBS' OR 'VCLS'.
+        OR 'SFSW' OR 'SFBF' OR 'SFBS'." OR 'VCLS'.
 * todo also insert_into_working_area?
         APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -2658,8 +2658,6 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
              biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
            END OF ty_cua.
 
-  PRIVATE SECTION.
-
     CLASS-METHODS serialize_dynpros
       IMPORTING iv_program_name  TYPE programm
       RETURNING VALUE(rt_dynpro) TYPE ty_dynpro_tt
@@ -2669,6 +2667,15 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING iv_program_name TYPE programm
       RETURNING VALUE(rs_cua)   TYPE ty_cua
       RAISING   lcx_exception.
+
+    METHODS deserialize_dynpros
+      IMPORTING it_dynpros TYPE ty_dynpro_tt
+      RAISING   lcx_exception.
+
+    METHODS deserialize_cua
+      IMPORTING is_cua TYPE ty_cua
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_objects_program IMPLEMENTATION.
@@ -2985,6 +2992,109 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "serialize_dynpros
+
+
+  METHOD deserialize_dynpros.
+
+    DATA: lv_name   TYPE dwinactiv-obj_name,
+          ls_dynpro LIKE LINE OF it_dynpros.
+
+
+* ls_dynpro is changed by the function module, a field-symbol will cause
+* the program to dump since it_dynpros cannot be changed
+    LOOP AT it_dynpros INTO ls_dynpro.
+
+      CALL FUNCTION 'RPY_DYNPRO_INSERT'
+        EXPORTING
+          header                 = ls_dynpro-header
+          suppress_exist_checks  = abap_true
+        TABLES
+          containers             = ls_dynpro-containers
+          fields_to_containers   = ls_dynpro-fields
+          flow_logic             = ls_dynpro-flow_logic
+        EXCEPTIONS
+          cancelled              = 1
+          already_exists         = 2
+          program_not_exists     = 3
+          not_executed           = 4
+          missing_required_field = 5
+          illegal_field_value    = 6
+          field_not_allowed      = 7
+          not_generated          = 8
+          illegal_field_position = 9
+          OTHERS                 = 10.
+      IF sy-subrc <> 2 AND sy-subrc <> 0.
+        _raise 'error from RPY_DYNPRO_INSERT'.
+      ENDIF.
+* todo, RPY_DYNPRO_UPDATE?
+
+      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
+        INTO lv_name RESPECTING BLANKS.
+      ASSERT NOT lv_name IS INITIAL.
+
+      lcl_objects_activation=>add( iv_type = 'DYNP'
+                                   iv_name = lv_name ).
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "deserialize_dynpros
+
+
+  METHOD deserialize_cua.
+
+    DATA: ls_tr_key TYPE trkey.
+
+
+    IF is_cua-adm IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE devclass INTO ls_tr_key-devclass
+      FROM tadir
+      WHERE pgmid = 'R3TR'
+      AND object = ms_item-obj_type
+      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      _raise 'not found in tadir'.
+    ENDIF.
+
+    ls_tr_key-obj_type = ms_item-obj_type.
+    ls_tr_key-obj_name = ms_item-obj_name.
+    ls_tr_key-sub_type = 'CUAD'.
+    ls_tr_key-sub_name = ms_item-obj_name.
+
+    sy-tcode = 'SE41'. " evil hack, workaround to handle fixes in note 2159455
+    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
+      EXPORTING
+        program   = ms_item-obj_name
+        language  = gc_english
+        tr_key    = ls_tr_key
+        adm       = is_cua-adm
+        state     = 'I'
+      TABLES
+        sta       = is_cua-sta
+        fun       = is_cua-fun
+        men       = is_cua-men
+        mtx       = is_cua-mtx
+        act       = is_cua-act
+        but       = is_cua-but
+        pfk       = is_cua-pfk
+        set       = is_cua-set
+        doc       = is_cua-doc
+        tit       = is_cua-tit
+        biv       = is_cua-biv
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
+    IF sy-subrc <> 0.
+      _raise 'error from RS_CUA_INTERNAL_WRITE'.
+    ENDIF.
+
+    lcl_objects_activation=>add( iv_type = 'CUAD'
+                                 iv_name = ms_item-obj_name ).
+
+  ENDMETHOD.                    "deserialize_cua
+
 
 ENDCLASS.
 
@@ -8645,13 +8755,13 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PRIVATE SECTION.
     DATA: hex_tra TYPE x VALUE '00',               " Transaktion         T
-          hex_men TYPE x VALUE '01',               " Bereichsmenь        M
+          hex_men TYPE x VALUE '01',               " Bereichsmen         M
           hex_par TYPE x VALUE '02',               " Parametertrans.     P
           hex_rep TYPE x VALUE '80',               " Report              R
           hex_rpv TYPE x VALUE '10',               " Report  mit Variante
           hex_obj TYPE x VALUE '08',               " Objekttransaktionen
-          hex_chk TYPE x VALUE '04',               " mit Prьfobjekt
-          hex_enq TYPE x VALUE '20'.               " Gesperrt ьber SM01
+          hex_chk TYPE x VALUE '04',               " mit Prufobjekt
+          hex_enq TYPE x VALUE '20'.               " Gesperrt uber SM01
     CONSTANTS: c_oo_program(9)    VALUE '\PROGRAM=',
                c_oo_class(7)      VALUE '\CLASS=',
                c_oo_method(8)     VALUE '\METHOD=',
@@ -8696,7 +8806,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
     IF iv_param CS iv_type.
       off = sy-fdpos + strlen( iv_type ).
       ic_value = iv_param+off.
-      IF ic_value CA '\'. CLEAR ic_value+sy-fdpos. ENDIF.
+      IF ic_value CA '\'.
+        CLEAR ic_value+sy-fdpos.
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
@@ -8728,11 +8840,13 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ELSEIF is_tstcp-param(1) = '@'.         " Transaktionsvariante
       es_rsstcd-s_vari = c_true.
       IF is_tstcp-param(2) = '@@'.
-        es_rsstcd-s_ind_vari = c_true. off = 2.
+        es_rsstcd-s_ind_vari = c_true.
+        off = 2.
       ELSE.
-        CLEAR es_rsstcd-s_ind_vari. off = 1.
+        CLEAR es_rsstcd-s_ind_vari.
+        off = 1.
       ENDIF.
-      IF is_tstcp-param CA ' '. ENDIF.
+*      IF is_tstcp-param CA ' '. ENDIF.
       sy-fdpos = sy-fdpos - off.
       IF sy-fdpos GT 0.
         es_rsstcd-call_tcode = is_tstcp-param+off(sy-fdpos).
@@ -8747,9 +8861,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
       ELSE.
         CLEAR es_rsstcd-st_skip_1.
       ENDIF.
-      IF is_tstcp-param CA ' '. ENDIF.
+*      IF is_tstcp-param CA ' '. ENDIF.
       param_beg = sy-fdpos + 1.
-      SUBTRACT 2 FROM sy-fdpos.
+      sy-fdpos = sy-fdpos - 2. "SUBTRACT 2 FROM sy-fdpos.
       IF sy-fdpos GT 0.
         es_rsstcd-call_tcode = is_tstcp-param+2(sy-fdpos).
       ENDIF.
@@ -8771,32 +8885,40 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ENDIF.
 
     DO 254 TIMES.
-      IF is_tstcp-param = space. EXIT. ENDIF.
+      IF is_tstcp-param = space.
+        EXIT.
+      ENDIF.
       CLEAR ls_param.
 *        condense tstcp-param no-gaps.
       IF is_tstcp-param CA '='.
         CHECK sy-fdpos NE 0.
         ASSIGN is_tstcp-param(sy-fdpos) TO <f>.
         ls_param-field = <f>.
-        IF ls_param-field(1) = space. SHIFT  ls_param-field. ENDIF.
+        IF ls_param-field(1) = space.
+          SHIFT  ls_param-field.
+        ENDIF.
         sy-fdpos = sy-fdpos + 1.
         SHIFT is_tstcp-param BY sy-fdpos PLACES.
         IF is_tstcp-param CA ';'.
           IF sy-fdpos NE 0.
             ASSIGN is_tstcp-param(sy-fdpos) TO <f>.
             ls_param-value = <f>.
-            IF ls_param-value(1) = space. SHIFT  ls_param-value. ENDIF.
+            IF ls_param-value(1) = space.
+              SHIFT  ls_param-value.
+            ENDIF.
           ENDIF.
           sy-fdpos = sy-fdpos + 1.
           SHIFT is_tstcp-param BY sy-fdpos PLACES.
           APPEND ls_param TO et_rsparam.
-        ELSE.       " Da _____; mцglich
+        ELSE.       " Da _____; muglich
           l_length = strlen( is_tstcp-param ).
           CHECK l_length > 0.
           ASSIGN is_tstcp-param(l_length) TO <f>.
           ls_param-value = <f>.
-          IF ls_param-value(1) = space. SHIFT  ls_param-value. ENDIF.
-          ADD 1 TO l_length.
+          IF ls_param-value(1) = space.
+            SHIFT  ls_param-value.
+          ENDIF.
+          l_length = l_length + 1. "ADD 1 TO l_length.
           SHIFT is_tstcp-param BY l_length PLACES.
           APPEND ls_param TO et_rsparam.
         ENDIF.
@@ -8807,8 +8929,10 @@ CLASS lcl_object_tran IMPLEMENTATION.
       es_rsstcd-s_trframe = c_true.
       LOOP AT et_rsparam INTO ls_param.
         CASE ls_param-field.
-          WHEN c_oo_frclass. es_rsstcd-classname = ls_param-value.
-          WHEN c_oo_frmethod. es_rsstcd-method   = ls_param-value.
+          WHEN c_oo_frclass.
+            es_rsstcd-classname = ls_param-value.
+          WHEN c_oo_frmethod.
+            es_rsstcd-method   = ls_param-value.
           WHEN c_oo_frupdtask.
             IF ls_param-value = c_oo_synchron.
               es_rsstcd-s_upddir  = c_true.
@@ -8987,7 +9111,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
           lt_tcodes      TYPE TABLE OF tstc,
           ls_tcode       LIKE LINE OF lt_tcodes,
           ls_tstct       TYPE tstct,
-          ls_tstcp       TYPE tstcp, " <<<<< temp
+          ls_tstcp       TYPE tstcp,
           lt_gui_attr    TYPE TABLE OF tstcc,
           lo_xml         TYPE REF TO lcl_xml,
           ls_gui_attr    LIKE LINE OF lt_gui_attr.
@@ -9443,6 +9567,14 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
+*    METHODS deserialize_dynpros
+*      IMPORTING it_dynpros TYPE ty_dynpro_tt
+*      RAISING   lcx_exception.
+*
+*    METHODS deserialize_cua
+*      IMPORTING is_cua TYPE ty_cua
+*      RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_object_fugr DEFINITION
 
 *----------------------------------------------------------------------*
@@ -9522,7 +9654,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 *         NAMESPACE               = ' ' todo
           remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
-          function_include        = <ls_func>-include
+          function_include        = lv_include
         TABLES
           import_parameter        = <ls_func>-import
           export_parameter        = <ls_func>-export
@@ -9869,7 +10001,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lt_functions TYPE ty_function_tt.
+    DATA: lt_functions    TYPE ty_function_tt,
+          ls_progdir      TYPE ty_progdir,
+          lv_program_name TYPE programm,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua.
 
     IF lif_object~exists( ) = abap_false.
       RETURN.
@@ -9883,11 +10019,26 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     serialize_includes( ).
 
+    lv_program_name = main_name( ).
+    ls_progdir = read_progdir( lv_program_name ).
+
+    IF ls_progdir-subc = '1'.
+      lt_dynpros = serialize_dynpros( lv_program_name ).
+      io_xml->add( iv_name = 'DYNPROS'
+                   ig_data = lt_dynpros ).
+
+      ls_cua = serialize_cua( lv_program_name ).
+      io_xml->add( iv_name = 'CUA'
+                   ig_data = ls_cua ).
+    ENDIF.
+
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~deserialize.
 
-    DATA: lt_functions TYPE ty_function_tt.
+    DATA: lt_functions TYPE ty_function_tt,
+          lt_dynpros   TYPE ty_dynpro_tt,
+          ls_cua       TYPE ty_cua.
 
 
     deserialize_xml(
@@ -9901,6 +10052,14 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     deserialize_includes(
       io_xml     = io_xml
       iv_package = iv_package ).
+
+    io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
+    deserialize_dynpros( lt_dynpros ).
+
+    io_xml->read( EXPORTING iv_name = 'CUA'
+                  CHANGING cg_data = ls_cua ).
+    deserialize_cua( ls_cua ).
 
   ENDMETHOD.                    "deserialize
 
@@ -10445,13 +10604,6 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    METHODS deserialize_dynpros
-      IMPORTING it_dynpros TYPE ty_dynpro_tt
-      RAISING   lcx_exception.
-
-    METHODS deserialize_cua
-      IMPORTING is_cua TYPE ty_cua
-      RAISING   lcx_exception.
 
     METHODS deserialize_textpool
       IMPORTING it_tpool TYPE textpool_table
@@ -10536,61 +10688,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_textpool
 
-  METHOD deserialize_cua.
-
-    DATA: ls_tr_key TYPE trkey.
-
-
-    IF is_cua-adm IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE devclass INTO ls_tr_key-devclass
-      FROM tadir
-      WHERE pgmid = 'R3TR'
-      AND object = ms_item-obj_type
-      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      _raise 'not found in tadir'.
-    ENDIF.
-
-    ls_tr_key-obj_type = ms_item-obj_type.
-    ls_tr_key-obj_name = ms_item-obj_name.
-    ls_tr_key-sub_type = 'CUAD'.
-    ls_tr_key-sub_name = ms_item-obj_name.
-
-    sy-tcode = 'SE41'. " evil hack, workaround to handle fixes in note 2159455
-    CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
-      EXPORTING
-        program   = ms_item-obj_name
-        language  = gc_english
-        tr_key    = ls_tr_key
-        adm       = is_cua-adm
-        state     = 'I'
-      TABLES
-        sta       = is_cua-sta
-        fun       = is_cua-fun
-        men       = is_cua-men
-        mtx       = is_cua-mtx
-        act       = is_cua-act
-        but       = is_cua-but
-        pfk       = is_cua-pfk
-        set       = is_cua-set
-        doc       = is_cua-doc
-        tit       = is_cua-tit
-        biv       = is_cua-biv
-      EXCEPTIONS
-        not_found = 1
-        OTHERS    = 2.
-    IF sy-subrc <> 0.
-      _raise 'error from RS_CUA_INTERNAL_WRITE'.
-    ENDIF.
-
-    lcl_objects_activation=>add( iv_type = 'CUAD'
-                                 iv_name = ms_item-obj_name ).
-
-  ENDMETHOD.                    "deserialize_cua
-
   METHOD lif_object~serialize.
 
     serialize_program( io_xml   = io_xml
@@ -10633,51 +10730,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
     deserialize_textpool( lt_tpool ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
-
-  METHOD deserialize_dynpros.
-
-    DATA: lv_name   TYPE dwinactiv-obj_name,
-          ls_dynpro LIKE LINE OF it_dynpros.
-
-
-* ls_dynpro is changed by the function module, a field-symbol will cause
-* the program to dump since it_dynpros cannot be changed
-    LOOP AT it_dynpros INTO ls_dynpro.
-
-      CALL FUNCTION 'RPY_DYNPRO_INSERT'
-        EXPORTING
-          header                 = ls_dynpro-header
-          suppress_exist_checks  = abap_true
-        TABLES
-          containers             = ls_dynpro-containers
-          fields_to_containers   = ls_dynpro-fields
-          flow_logic             = ls_dynpro-flow_logic
-        EXCEPTIONS
-          cancelled              = 1
-          already_exists         = 2
-          program_not_exists     = 3
-          not_executed           = 4
-          missing_required_field = 5
-          illegal_field_value    = 6
-          field_not_allowed      = 7
-          not_generated          = 8
-          illegal_field_position = 9
-          OTHERS                 = 10.
-      IF sy-subrc <> 2 AND sy-subrc <> 0.
-        _raise 'error from RPY_DYNPRO_INSERT'.
-      ENDIF.
-* todo, RPY_DYNPRO_UPDATE?
-
-      CONCATENATE ls_dynpro-header-program ls_dynpro-header-screen
-        INTO lv_name RESPECTING BLANKS.
-      ASSERT NOT lv_name IS INITIAL.
-
-      lcl_objects_activation=>add( iv_type = 'DYNP'
-                                   iv_name = lv_name ).
-
-    ENDLOOP.
-
-  ENDMETHOD.                    "deserialize_dynpros
 
 ENDCLASS.                    "lcl_object_prog IMPLEMENTATION
 
@@ -10795,7 +10847,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
         iv_objectname         = lv_objectname
         iv_objecttype         = gc_cluster_type
         iv_maint_mode         = gc_mode_insert
-        iv_devclass           = iv_package " <<< temp
+        iv_devclass           = iv_package
       EXCEPTIONS
         illegal_call          = 1
         object_not_found      = 2
@@ -10807,7 +10859,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
       _raise 'error in OBJ_GENERATE for VCLS'.
     ENDIF.
 
-    lcl_objects_activation=>add_item( ms_item ).
+*    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
