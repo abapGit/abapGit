@@ -11486,6 +11486,9 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+  PRIVATE SECTION.
+    METHODS init_key RETURNING VALUE(rs_key) TYPE wwwdatatab.
+
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
 *----------------------------------------------------------------------*
@@ -11494,6 +11497,11 @@ ENDCLASS. "lcl_object_W3SUPER DEFINITION
 *   Web Reporting/Internet Transaction Server MIME Types (super class)
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3super IMPLEMENTATION.
+
+  METHOD init_key.
+    rs_key-relid = ms_item-obj_type+2(2).
+    rs_key-objid = ms_item-obj_name.
+  ENDMETHOD.                    " init_key
 
   METHOD lif_object~jump.
     " No idea how to just to SMW0
@@ -11508,15 +11516,17 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   " W3xx EXISTS
   """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~exists.
-    DATA lv_objid TYPE wwwdata-objid.
+    DATA ls_key   TYPE wwwdatatab.
 
-    SELECT SINGLE objid into lv_objid
+    ls_key = init_key( ).
+
+    SELECT SINGLE objid into ls_key-objid
       FROM wwwdata
-      WHERE relid = ms_item-obj_type+2(2)
-      AND   objid = ms_item-obj_name
+      WHERE relid = ls_key-relid
+      AND   objid = ls_key-objid
       AND   srtf2 = 0.
 
-    IF lv_objid IS INITIAL.
+    IF sy-subrc IS NOT INITIAL.
       RETURN.
     ENDIF.
 
@@ -11538,8 +11548,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     DATA l_base64str TYPE string.
     DATA lo_utility  TYPE REF TO cl_http_utility.
 
-    ls_key-relid = ms_item-obj_type+2(2).
-    ls_key-objid = ms_item-obj_name.
+    ls_key = init_key( ).
 
     SELECT SINGLE * INTO CORRESPONDING FIELDS OF ls_key
       FROM wwwdata
@@ -11611,22 +11620,8 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     io_xml->add( iv_name = 'DATA'
                  ig_data = l_base64str ).
 
-    " TODO normal params serialization
-
-    DEFINE w3mi_save_param.
-      READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = &1.
-      IF sy-subrc IS NOT INITIAL.
-        _raise 'Cannot read required W3xx param'.
-      ENDIF.
-      io_xml->add( iv_name = &1
-                   ig_data = ls_wwwparam-value ).
-    END-OF-DEFINITION.
-
-    w3mi_save_param 'fileextension'.
-    w3mi_save_param 'filename'.
-    w3mi_save_param 'filesize'.
-    w3mi_save_param 'mimetype'.
-    w3mi_save_param 'version'.
+    io_xml->add( iv_name = 'PARAMS'
+                 ig_data = lt_w3params ).
 
   ENDMETHOD.                    "serialize
 
@@ -11646,8 +11641,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     DATA l_size       TYPE int4.
     DATA lv_tadir_obj TYPE tadir-object.
 
-    ls_key-relid = ms_item-obj_type+2(2).
-    ls_key-objid = ms_item-obj_name.
+    ls_key = init_key( ).
 
     io_xml->read( exporting iv_name = 'TEXT'
                   changing  cg_data = ls_key-text ).
@@ -11655,21 +11649,8 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     io_xml->read( exporting iv_name = 'DATA'
                   changing  cg_data = l_base64str ).
 
-    DEFINE w3mi_read_param.
-      io_xml->read( EXPORTING iv_name = &1
-                    CHANGING  cg_data = l_tmp ).
-      ls_wwwparam-relid = ls_key-relid.
-      ls_wwwparam-objid = ls_key-objid.
-      ls_wwwparam-name  = &1.
-      ls_wwwparam-value = l_tmp.
-      APPEND ls_wwwparam TO lt_w3params.
-    END-OF-DEFINITION.
-
-    w3mi_read_param 'fileextension'.
-    w3mi_read_param 'filename'.
-    w3mi_read_param 'filesize'.
-    w3mi_read_param 'mimetype'.
-    w3mi_read_param 'version'.
+    io_xml->read( EXPORTING iv_name = 'PARAMS'
+                  CHANGING  cg_data = lt_w3params ).
 
     CREATE OBJECT lo_utility.
     l_xstring = lo_utility->decode_x_base64( encoded = l_base64str ).
@@ -11773,8 +11754,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   METHOD lif_object~delete.
     DATA ls_key TYPE wwwdatatab.
 
-    ls_key-relid = ms_item-obj_type+2(2).
-    ls_key-objid = ms_item-obj_name.
+    ls_key = init_key( ).
 
     CALL FUNCTION 'WWWDATA_DELETE'
       EXPORTING  key               = ls_key
