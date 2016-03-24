@@ -3,12 +3,12 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.1.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.2.0'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
 *
-* Copyright (c) 2014 Lars Hvam Petersen
+* Copyright (c) 2014 abapGit Contributors
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -2077,13 +2077,15 @@ CLASS lcl_objects_activation IMPLEMENTATION.
         ENDIF.
 
         APPEND LINES OF lt_objects TO gt_programs.
-      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP' OR 'VIEW' OR 'SHLP' OR 'ENQU'
-        OR 'SFSW' OR 'SFBF' OR 'SFBS'." OR 'VCLS'.
+      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP'
+        OR 'VIEW' OR 'SHLP' OR 'ENQU'
+        OR 'SFSW' OR 'SFBF' OR 'SFBS'.
 * todo also insert_into_working_area?
         APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF' OR 'FUNC' OR 'ENHO' OR 'TYPE'.
+      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF'
+          OR 'FUNC' OR 'ENHO' OR 'TYPE' OR 'XSLT'.
 * these seem to go into the workarea automatically
         APPEND INITIAL LINE TO gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.
@@ -2102,11 +2104,15 @@ CLASS lcl_objects_files DEFINITION FINAL.
     METHODS:
       constructor
         IMPORTING is_item TYPE ty_item,
-      add_html
-        IMPORTING iv_html TYPE string
+      add_string
+        IMPORTING iv_extra  TYPE clike OPTIONAL
+                  iv_ext    TYPE string
+                  iv_string TYPE string
         RAISING   lcx_exception,
-      read_html
-        RETURNING VALUE(rv_html) TYPE string
+      read_string
+        IMPORTING iv_extra         TYPE clike OPTIONAL
+                  iv_ext           TYPE string
+        RETURNING VALUE(rv_string) TYPE string
         RAISING   lcx_exception,
       add_xml
         IMPORTING iv_extra     TYPE clike OPTIONAL
@@ -2194,21 +2200,22 @@ CLASS lcl_objects_files IMPLEMENTATION.
     mt_files = it_files.
   ENDMETHOD.
 
-  METHOD read_html.
+  METHOD read_string.
 
     DATA: lv_filename TYPE string.
 
     FIELD-SYMBOLS: <ls_html> LIKE LINE OF mt_files.
 
 
-    lv_filename = filename( 'html' ).                       "#EC NOTEXT
+    lv_filename = filename( iv_extra = iv_extra
+                            iv_ext   = iv_ext ).            "#EC NOTEXT
 
     READ TABLE mt_files ASSIGNING <ls_html> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       _raise 'html not found'.
     ENDIF.
 
-    rv_html = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
+    rv_string = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
 
   ENDMETHOD.
 
@@ -2255,14 +2262,15 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   ENDMETHOD.                    "abap_to_file
 
-  METHOD add_html.
+  METHOD add_string.
 
     DATA: ls_file TYPE ty_file.
 
 
     ls_file-path = '/'.
-    ls_file-filename = filename( 'html' ).                  "#EC NOTEXT
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_html ).
+    ls_file-filename = filename( iv_extra = iv_extra
+                                 iv_ext   = iv_ext ).       "#EC NOTEXT
+    ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_string ).
 
     APPEND ls_file TO mt_files.
 
@@ -3337,9 +3345,6 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
 ENDCLASS.
 
-* todo, to be removed later
-INCLUDE zabapgit_gateway IF FOUND.
-
 CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
@@ -3436,6 +3441,160 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
     _raise 'todo, AUTH jump'.
 
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_xslt DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+
+ENDCLASS.
+
+CLASS lcl_object_xslt IMPLEMENTATION.
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_name       TYPE cxsltdesc,
+          lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          lv_source     TYPE string,
+          ls_attributes TYPE o2xsltattr.
+
+
+    lv_name = ms_item-obj_name.
+
+    cl_o2_api_xsltdesc=>load(
+      EXPORTING
+        p_xslt_desc        = lv_name
+      IMPORTING
+        p_obj              = lo_xslt
+      EXCEPTIONS
+        not_existing       = 1
+        permission_failure = 2
+        OTHERS             = 3 ).
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    ls_attributes = lo_xslt->get_attributes( ).
+
+    CLEAR: ls_attributes-author,
+           ls_attributes-createdon,
+           ls_attributes-changedby,
+           ls_attributes-changedon,
+           ls_attributes-devclass.
+
+    io_xml->add( iv_name = 'ATTRIBUTES'
+                 ig_data = ls_attributes ).
+
+    lv_source = lo_xslt->get_source_string( ).
+
+    mo_files->add_string( iv_extra  = 'source'
+                          iv_ext    = 'xml'
+                          iv_string = lv_source ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: lv_source     TYPE string,
+          lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          lv_len        TYPE i,
+          ls_attributes TYPE o2xsltattr.
+
+
+    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING cg_data = ls_attributes ).
+
+    ls_attributes-devclass = iv_package.
+
+    lv_source = mo_files->read_string( iv_extra = 'source'
+                                       iv_ext   = 'xml' ).
+
+* workaround: somewhere additional linefeeds are added
+    lv_len = strlen( lv_source ) - 2.
+    IF lv_source+lv_len(2) = cl_abap_char_utilities=>cr_lf.
+      lv_source = lv_source(lv_len).
+    ENDIF.
+
+    cl_o2_api_xsltdesc=>create_new_from_string(
+      EXPORTING
+        p_source                = lv_source
+        p_attr                  = ls_attributes
+      IMPORTING
+        p_obj                   = lo_xslt
+      EXCEPTIONS
+        action_cancelled        = 1
+        error_occured           = 2
+        not_authorized          = 3
+        object_already_existing = 4
+        undefined_name          = 5
+        OTHERS                  = 6 ).
+    IF sy-subrc <> 0.
+      _raise 'error from cl_o2_api_xsltdesc=>create_new_from_string'.
+    ENDIF.
+
+    lo_xslt->save( ).
+
+    lo_xslt->set_changeable( abap_false ).
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+
+    DATA: lo_xslt TYPE REF TO cl_o2_api_xsltdesc,
+          lv_name TYPE cxsltdesc.
+
+
+    lv_name = ms_item-obj_name.
+
+    cl_o2_api_xsltdesc=>load(
+      EXPORTING
+        p_xslt_desc        = lv_name
+      IMPORTING
+        p_obj              = lo_xslt
+      EXCEPTIONS
+        error_occured      = 1
+        not_existing       = 2
+        permission_failure = 3
+        version_not_found  = 4
+        OTHERS             = 5 ).
+    IF sy-subrc <> 0.
+      _raise 'error from cl_o2_api_xsltdesc=>load'.
+    ENDIF.
+
+    lo_xslt->set_changeable( abap_true ).
+    lo_xslt->delete( ).
+    lo_xslt->save( ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_name TYPE cxsltdesc.
+
+
+    lv_name = ms_item-obj_name.
+
+    rv_bool = cl_o2_api_xsltdesc=>exists( lv_name ).
+    IF rv_bool = '1'.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    _raise 'XSLT, jump, todo'.
+  ENDMETHOD.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -4038,7 +4197,8 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).
 
-    mo_files->add_html( lv_source ).
+    mo_files->add_string( iv_ext = 'html'
+                        iv_string = lv_source ).
 
   ENDMETHOD.
 
@@ -4080,7 +4240,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = mo_files->read_html( ).
+    lv_source = mo_files->read_string( iv_ext = 'html' ).
 
     ls_attr-devclass = iv_package.
     save( is_attr   = ls_attr
@@ -9796,7 +9956,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     DATA: lv_program TYPE program,
           lv_cnam    TYPE reposrc-cnam,
           lv_tabix   LIKE sy-tabix,
-          lt_functab type ty_rs38l_incl_tt.
+          lt_functab TYPE ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
