@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.1.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.1.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9795,7 +9795,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_program TYPE program,
           lv_cnam    TYPE reposrc-cnam,
-          lt_functab TYPE ty_rs38l_incl_tt.
+          lv_tabix   LIKE sy-tabix,
+          lt_functab type ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
@@ -9823,15 +9824,27 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       DELETE TABLE rt_includes FROM <ls_func>-include.
     ENDLOOP.
 
-* skip SAP standard includes
+
     LOOP AT rt_includes ASSIGNING <lv_include>.
+      lv_tabix = sy-tabix.
+
+* skip SAP standard includes
       SELECT SINGLE cnam FROM reposrc INTO lv_cnam
         WHERE progname = <lv_include>
         AND r3state = 'A'
         AND cnam = 'SAP'.
       IF sy-subrc = 0.
-        DELETE rt_includes INDEX sy-tabix.
+        DELETE rt_includes INDEX lv_tabix.
       ENDIF.
+
+* also make sure the include exists
+      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
+        WHERE progname = <lv_include>
+        AND r3state = 'A'.
+      IF sy-subrc <> 0.
+        DELETE rt_includes INDEX lv_tabix.
+      ENDIF.
+
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
