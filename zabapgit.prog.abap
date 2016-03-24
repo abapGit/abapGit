@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.1.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.1.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -10961,7 +10961,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     lv_switch_id = ms_item-obj_name.
 
     TRY.
-        lo_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
+        lo_switch = cl_sfw_sw=>get_switch_from_db( lv_switch_id ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         _raise 'Error from CL_SFW_SW=>GET_SWITCH'.
     ENDTRY.
@@ -11141,7 +11141,7 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
     lv_bf = ms_item-obj_name.
 
     TRY.
-        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
+        lo_bf = cl_sfw_bf=>get_bf_from_db( lv_bf ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         _raise 'Error from CL_SFW_BF=>GET_BF'.
     ENDTRY.
@@ -11343,7 +11343,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
     lv_bfset = ms_item-obj_name.
 
     TRY.
-        lo_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
+        lo_bfs = cl_sfw_bfs=>get_bfs_from_db( lv_bfset ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         _raise 'Error from CL_SFW_BFS=>GET_BFS'.
     ENDTRY.
