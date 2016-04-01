@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.2.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.2.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2682,7 +2682,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
              uccheck TYPE progdir-uccheck,
            END OF ty_progdir.
 
-    CLASS-METHODS serialize_program
+    METHODS serialize_program
       IMPORTING io_xml     TYPE REF TO lcl_xml_output OPTIONAL
                 is_item    TYPE ty_item
                 io_files   TYPE REF TO lcl_objects_files
@@ -2690,11 +2690,11 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
                 iv_extra   TYPE clike OPTIONAL
       RAISING   lcx_exception.
 
-    CLASS-METHODS read_progdir
+    METHODS read_progdir
       IMPORTING iv_program        TYPE programm
       RETURNING VALUE(rs_progdir) TYPE ty_progdir.
 
-    CLASS-METHODS deserialize_program
+    METHODS deserialize_program
       IMPORTING is_progdir TYPE ty_progdir
                 it_source  TYPE abaptxt255_tab
                 it_tpool   TYPE textpool_table
@@ -2702,11 +2702,14 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
   PROTECTED SECTION.
+    TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
+
     TYPES: BEGIN OF ty_dynpro,
              header     TYPE rpy_dyhead,
              containers TYPE dycatt_tab,
              fields     TYPE dyfatc_tab,
              flow_logic TYPE swydyflow,
+             spaces     TYPE ty_spaces_tt,
            END OF ty_dynpro.
 
     TYPES: ty_dynpro_tt TYPE STANDARD TABLE OF ty_dynpro WITH DEFAULT KEY.
@@ -2726,12 +2729,12 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
              biv TYPE STANDARD TABLE OF rsmpe_buts WITH DEFAULT KEY,
            END OF ty_cua.
 
-    CLASS-METHODS serialize_dynpros
+    METHODS serialize_dynpros
       IMPORTING iv_program_name  TYPE programm
       RETURNING VALUE(rt_dynpro) TYPE ty_dynpro_tt
       RAISING   lcx_exception.
 
-    CLASS-METHODS serialize_cua
+    METHODS serialize_cua
       IMPORTING iv_program_name TYPE programm
       RETURNING VALUE(rs_cua)   TYPE ty_cua
       RAISING   lcx_exception.
@@ -2744,6 +2747,17 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING is_cua TYPE ty_cua
       RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+    METHODS:
+      condense_flow
+        EXPORTING et_spaces TYPE ty_spaces_tt
+        CHANGING  ct_flow   TYPE swydyflow,
+      uncondense_flow
+        IMPORTING it_flow        TYPE swydyflow
+                  it_spaces      TYPE ty_spaces_tt
+        RETURNING VALUE(rt_flow) TYPE swydyflow.
+
+
 ENDCLASS.                    "lcl_objects_program DEFINITION
 
 *----------------------------------------------------------------------*
@@ -2752,6 +2766,48 @@ ENDCLASS.                    "lcl_objects_program DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_objects_program IMPLEMENTATION.
+
+  METHOD condense_flow.
+
+    DATA: lv_spaces LIKE LINE OF et_spaces.
+
+    FIELD-SYMBOLS: <ls_flow> LIKE LINE OF ct_flow.
+
+
+    CLEAR et_spaces.
+
+    LOOP AT ct_flow ASSIGNING <ls_flow>.
+      lv_spaces = 0.
+
+      WHILE NOT <ls_flow>-line IS INITIAL AND <ls_flow>-line(1) = space.
+        lv_spaces = lv_spaces + 1.
+        <ls_flow>-line = <ls_flow>-line+1.
+      ENDWHILE.
+
+      APPEND lv_spaces TO et_spaces.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD uncondense_flow.
+
+    DATA: lv_spaces LIKE LINE OF it_spaces.
+
+    FIELD-SYMBOLS: <ls_flow>   LIKE LINE OF it_flow,
+                   <ls_output> LIKE LINE OF rt_flow.
+
+
+    LOOP AT it_flow ASSIGNING <ls_flow>.
+      APPEND INITIAL LINE TO rt_flow ASSIGNING <ls_output>.
+      <ls_output>-line = <ls_flow>-line.
+
+      READ TABLE it_spaces INDEX sy-tabix INTO lv_spaces.
+      IF sy-subrc = 0.
+        <ls_output>-line+lv_spaces = <ls_output>-line.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD serialize_program.
 
@@ -3060,6 +3116,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
       <ls_dynpro>-header     = ls_header.
       <ls_dynpro>-containers = lt_containers.
       <ls_dynpro>-fields     = lt_fields_to_containers.
+
+      condense_flow( IMPORTING et_spaces = <ls_dynpro>-spaces
+                     CHANGING ct_flow = lt_flow_logic ).
       <ls_dynpro>-flow_logic = lt_flow_logic.
 
     ENDLOOP.
@@ -3076,6 +3135,10 @@ CLASS lcl_objects_program IMPLEMENTATION.
 * ls_dynpro is changed by the function module, a field-symbol will cause
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
+
+      ls_dynpro-flow_logic = uncondense_flow(
+        it_flow = ls_dynpro-flow_logic
+        it_spaces = ls_dynpro-spaces ).
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'
         EXPORTING
