@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.2.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.2.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -11301,7 +11301,10 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
     lv_bf = ms_item-obj_name.
 
     TRY.
-        lo_bf = cl_sfw_bf=>get_bf_from_db( lv_bf ).
+* make sure to clear cache, method GET_BF_FROM_DB does not exist in 702
+        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
+        lo_bf->free( ).
+        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         _raise 'Error from CL_SFW_BF=>GET_BF'.
     ENDTRY.
@@ -11503,7 +11506,9 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
     lv_bfset = ms_item-obj_name.
 
     TRY.
-        lo_bfs = cl_sfw_bfs=>get_bfs_from_db( lv_bfset ).
+        lo_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
+        lo_bfs->free( ).
+        lo_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         _raise 'Error from CL_SFW_BFS=>GET_BFS'.
     ENDTRY.
