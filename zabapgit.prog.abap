@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.2.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.2.5'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3074,6 +3074,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_d020s                TYPE TABLE OF d020s.
 
     FIELD-SYMBOLS: <ls_d020s>  LIKE LINE OF lt_d020s,
+                   <ls_field>  LIKE LINE OF lt_fields_to_containers,
                    <ls_dynpro> LIKE LINE OF rt_dynpro.
 
 
@@ -3111,6 +3112,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
       IF sy-subrc <> 0.
         _raise 'Error while reading dynpro'.
       ENDIF.
+
+      LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
+* output style is a NUMC field, the XML conversion
+* will fail if it contains invalid value
+        IF <ls_field>-outputstyle = '  '.
+          CLEAR <ls_field>-outputstyle.
+        ENDIF.
+      ENDLOOP.
 
       APPEND INITIAL LINE TO rt_dynpro ASSIGNING <ls_dynpro>.
       <ls_dynpro>-header     = ls_header.
@@ -8308,6 +8317,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_s,
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
+
+* XML output assumes correct field content
+      IF <ls_dd03p>-routputlen = '      '.
+        CLEAR <ls_dd03p>-routputlen.
+      ENDIF.
     ENDLOOP.
 
     io_xml->add( iv_name = 'DD02V'
