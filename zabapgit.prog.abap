@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.2.5'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.2.6'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3074,6 +3074,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_d020s                TYPE TABLE OF d020s.
 
     FIELD-SYMBOLS: <ls_d020s>  LIKE LINE OF lt_d020s,
+                   <lv_outputstyle> TYPE scrpostyle,
                    <ls_field>  LIKE LINE OF lt_fields_to_containers,
                    <ls_dynpro> LIKE LINE OF rt_dynpro.
 
@@ -3114,10 +3115,11 @@ CLASS lcl_objects_program IMPLEMENTATION.
       ENDIF.
 
       LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
-* output style is a NUMC field, the XML conversion
-* will fail if it contains invalid value
-        IF <ls_field>-outputstyle = '  '.
-          CLEAR <ls_field>-outputstyle.
+* output style is a NUMC field, the XML conversion will fail if it contains invalid value
+* field does not exist in all versions
+        ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE <ls_field> TO <lv_outputstyle>.
+        IF sy-subrc = 0 AND <lv_outputstyle> = '  '.
+          CLEAR <lv_outputstyle>.
         ENDIF.
       ENDLOOP.
 
