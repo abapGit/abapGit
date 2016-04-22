@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.3.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.3.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14528,7 +14528,10 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS render
       RAISING lcx_exception.
 
-    CLASS-METHODS set_page
+    CLASS-METHODS back
+      RAISING lcx_exception.
+
+    CLASS-METHODS call_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
@@ -14550,6 +14553,7 @@ CLASS lcl_gui DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
+                gt_stack       TYPE TABLE OF REF TO lif_gui_page,
                 go_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     CLASS-METHODS startup
@@ -16493,10 +16497,35 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "on_event
 
-  METHOD set_page.
+  METHOD back.
+
+    DATA: lv_index TYPE i.
+
+
+    lv_index = lines( gt_stack ).
+
+    IF lv_index = 0.
+      RETURN.
+    ENDIF.
+
+    READ TABLE gt_stack INDEX lv_index INTO gi_page.
+    ASSERT sy-subrc = 0.
+
+    DELETE gt_stack INDEX lv_index.
+    ASSERT sy-subrc = 0.
+
+    render( ).
+
+  ENDMETHOD.
+
+  METHOD call_page.
 
     IF NOT go_html_viewer IS BOUND.
       startup( ).
+    ENDIF.
+
+    IF NOT gi_page IS INITIAL.
+      APPEND gi_page TO gt_stack.
     ENDIF.
 
     gi_page = ii_page.
@@ -16671,13 +16700,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: lo_main TYPE REF TO lcl_gui_page_main.
-
-
     CASE iv_action.
       WHEN 'back'.
-        CREATE OBJECT lo_main.
-        lcl_gui=>set_page( lo_main ).
+        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -16875,7 +16900,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         is_result = is_result
         io_diff   = lo_diff.
 
-    lcl_gui=>set_page( lo_page ).
+    lcl_gui=>call_page( lo_page ).
 
   ENDMETHOD.                    "diff
 
@@ -17813,7 +17838,7 @@ FORM run.
 
   TRY.
       CREATE OBJECT lo_main.
-      lcl_gui=>set_page( lo_main ).
+      lcl_gui=>call_page( lo_main ).
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
