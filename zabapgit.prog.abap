@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.3.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.3.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17793,6 +17793,7 @@ ENDCLASS.
 FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception,
+        lo_main      TYPE REF TO lcl_gui_page_main,
         lv_ind       TYPE t000-ccnocliind.
 
 
@@ -17811,7 +17812,6 @@ FORM run.
   ENDIF.
 
   TRY.
-      DATA: lo_main TYPE REF TO lcl_gui_page_main.
       CREATE OBJECT lo_main.
       lcl_gui=>set_page( lo_main ).
     CATCH lcx_exception INTO lx_exception.
