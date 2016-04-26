@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.3.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.3.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -904,20 +904,35 @@ ENDCLASS.                    "lcl_tadir DEFINITION
 CLASS lcl_user DEFINITION FINAL.
 
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_user,
+             username TYPE string,
+             email    TYPE string,
+           END OF ty_user.
+
+    TYPES: ty_user_tt TYPE STANDARD TABLE OF ty_user WITH DEFAULT KEY.
+
     CLASS-METHODS set_username
-      IMPORTING iv_username TYPE string
+      IMPORTING iv_user     TYPE xubname DEFAULT sy-uname
+                iv_username TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS get_username
+      IMPORTING iv_user            TYPE xubname DEFAULT sy-uname
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS set_email
-      IMPORTING iv_email TYPE string
+      IMPORTING iv_user  TYPE xubname DEFAULT sy-uname
+                iv_email TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS get_email
+      IMPORTING iv_user         TYPE xubname DEFAULT sy-uname
       RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS list
+      RETURNING VALUE(rt_data) TYPE ty_user_tt
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -1015,7 +1030,7 @@ CLASS lcl_user IMPLEMENTATION.
     DATA: lv_name TYPE tdobname.
 
 
-    CONCATENATE 'ZABAPGIT_USERNAME_' sy-uname INTO lv_name.
+    CONCATENATE 'ZABAPGIT_USERNAME_' iv_user INTO lv_name.
 
     save( iv_name  = lv_name
           iv_value = iv_username ).
@@ -1027,7 +1042,7 @@ CLASS lcl_user IMPLEMENTATION.
     DATA: lv_name TYPE tdobname.
 
 
-    CONCATENATE 'ZABAPGIT_USERNAME_' sy-uname INTO lv_name.
+    CONCATENATE 'ZABAPGIT_USERNAME_' iv_user INTO lv_name.
 
     rv_username = read( lv_name ).
 
@@ -1038,19 +1053,43 @@ CLASS lcl_user IMPLEMENTATION.
     DATA: lv_name TYPE tdobname.
 
 
-    CONCATENATE 'ZABAPGIT_EMAIL_' sy-uname INTO lv_name.
+    CONCATENATE 'ZABAPGIT_EMAIL_' iv_user INTO lv_name.
 
     save( iv_name  = lv_name
           iv_value = iv_email ).
 
   ENDMETHOD.                    "set_email
 
+  METHOD list.
+
+    DATA: lt_stxh TYPE STANDARD TABLE OF stxh WITH DEFAULT KEY,
+          lv_user LIKE sy-uname.
+
+    FIELD-SYMBOLS: <ls_output> LIKE LINE OF rt_data,
+                   <ls_stxh>   LIKE LINE OF lt_stxh.
+
+
+    SELECT * FROM stxh INTO TABLE lt_stxh
+      WHERE tdobject = 'TEXT'
+      AND tdname LIKE 'ZABAPGIT_USERNAME_%'.
+
+    LOOP AT lt_stxh ASSIGNING <ls_stxh>.
+      APPEND INITIAL LINE TO rt_data ASSIGNING <ls_output>.
+
+      lv_user = <ls_stxh>-tdname+18.
+
+      <ls_output>-username = get_username( lv_user ).
+      <ls_output>-email = get_email( lv_user ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD get_email.
 
     DATA: lv_name TYPE tdobname.
 
 
-    CONCATENATE 'ZABAPGIT_EMAIL_' sy-uname INTO lv_name.
+    CONCATENATE 'ZABAPGIT_EMAIL_' iv_user INTO lv_name.
 
     rv_email = read( lv_name ).
 
