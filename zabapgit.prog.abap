@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.3.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.3.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -905,6 +905,7 @@ CLASS lcl_user DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_user,
+             user     LIKE sy-uname,
              username TYPE string,
              email    TYPE string,
            END OF ty_user.
@@ -1062,8 +1063,7 @@ CLASS lcl_user IMPLEMENTATION.
 
   METHOD list.
 
-    DATA: lt_stxh TYPE STANDARD TABLE OF stxh WITH DEFAULT KEY,
-          lv_user LIKE sy-uname.
+    DATA: lt_stxh TYPE STANDARD TABLE OF stxh WITH DEFAULT KEY.
 
     FIELD-SYMBOLS: <ls_output> LIKE LINE OF rt_data,
                    <ls_stxh>   LIKE LINE OF lt_stxh.
@@ -1076,10 +1076,9 @@ CLASS lcl_user IMPLEMENTATION.
     LOOP AT lt_stxh ASSIGNING <ls_stxh>.
       APPEND INITIAL LINE TO rt_data ASSIGNING <ls_output>.
 
-      lv_user = <ls_stxh>-tdname+18.
-
-      <ls_output>-username = get_username( lv_user ).
-      <ls_output>-email = get_email( lv_user ).
+      <ls_output>-user     = <ls_stxh>-tdname+18.
+      <ls_output>-username = get_username( <ls_output>-user ).
+      <ls_output>-email    = get_email( <ls_output>-user ).
     ENDLOOP.
 
   ENDMETHOD.
