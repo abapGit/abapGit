@@ -7,6 +7,7 @@ c. Variables are prefixed using the standard setting in Code Inspector check "Ex
 
 d. abapGit is targeted for version 702, so the code should only contain expressions/statements that works on 702
 
+e. commit often, whenever something is working, and is a step in the right direction do a commit or PR. This way other contributors can see the changes, and it will minimize the risk of merge conflicts.
 
 External Links:
 https://guides.github.com/activities/contributing-to-open-source/
