@@ -1,5 +1,4 @@
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
-[![codecov.io](https://codecov.io/github/larshp/abapGit/coverage.svg?branch=master)](https://codecov.io/github/larshp/abapGit?branch=master)
 
 # abapGit #
 
