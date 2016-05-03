@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16526,17 +16526,47 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD css.
 
-    rv_html = '<style type="text/css">' && gc_newline &&
-      'body {'                      && gc_newline &&        "#EC NOTEXT
+    rv_html = '<style type="text/css">'            && gc_newline &&
+      'body {'                                     && gc_newline && "#EC NOTEXT
       '  font-family: Arial,Helvetica,sans-serif;' && gc_newline && "#EC NOTEXT
-      '  background: #DEF1F2;'      && gc_newline &&        "#EC NOTEXT
+      '  background: #E8E8E8;'                     && gc_newline && "#EC NOTEXT
+      '}'                                          && gc_newline &&
+      'div#header {'                               && gc_newline &&
+      '  display:          block;'                 && gc_newline &&
+      '  margin-top:       0.5em;'                 && gc_newline &&
+      '  padding-bottom:   0.5em;'                 && gc_newline &&
+      '  border-bottom:    3px double lightgrey;'  && gc_newline &&
+      '}'                                          && gc_newline &&
+      '.mixedbar {'                                && gc_newline &&
+      '  width: 98%; /*IE7 compat5 mode workaround, OMG it so sucks!*/' && gc_newline &&
       '}'                           && gc_newline &&
-      'a:link {'                    && gc_newline &&        "#EC NOTEXT
-      '  color: blue;'              && gc_newline &&        "#EC NOTEXT
+      '.logobar tr {'               && gc_newline &&
+      '  vertical-align: middle;'   && gc_newline &&
       '}'                           && gc_newline &&
-      'a:visited {'                 && gc_newline &&        "#EC NOTEXT
-      '  color: blue;'              && gc_newline &&        "#EC NOTEXT
+      '.logobar td.menu {'          && gc_newline &&
+      '  padding-top: 1em;'         && gc_newline &&
       '}'                           && gc_newline &&
+      '.logobar img {'              && gc_newline &&
+      '  border: 0px;'              && gc_newline &&
+      '}'                           && gc_newline &&
+      '.right {'                    && gc_newline &&
+      '  text-align:right;'         && gc_newline &&
+      '}'                           && gc_newline &&
+      '.menu a {'                   && gc_newline &&
+      '  padding-left: 0.5em;'      && gc_newline &&
+      '  padding-right: 0.5em;'     && gc_newline &&
+      '  border-right: 1px solid lightgrey;' && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.menu_end {'                          && gc_newline &&
+      '  border-right: 0px !important;'      && gc_newline &&
+      '}'                                    && gc_newline &&
+      'a, a:visited {' && gc_newline &&
+      '  color:            #4078c0;' && gc_newline &&
+      '  text-decoration:  none;' && gc_newline &&
+      '}' && gc_newline &&
+      'a:hover, a:active {' && gc_newline &&
+      '  text-decoration:  underline;' && gc_newline &&
+      '}' && gc_newline &&
       'a.grey:link {'               && gc_newline &&        "#EC NOTEXT
       '  color: grey;'              && gc_newline &&        "#EC NOTEXT
       '  font-size: smaller;'       && gc_newline &&        "#EC NOTEXT
@@ -16574,19 +16604,19 @@ CLASS lcl_gui IMPLEMENTATION.
       'pre {'                       && gc_newline &&
       '  display: inline;'          && gc_newline &&
       '}'                           && gc_newline &&
-      'table, th, td {'             && gc_newline &&
-      '  border: 1px solid black;'  && gc_newline &&
-      '  border-collapse: collapse;' && gc_newline &&
-      '}'                           && gc_newline &&
-      'th, td {'                    && gc_newline &&
-      '  padding: 5px;'             && gc_newline &&
-      '}'                           && gc_newline &&
-      'th {'                        && gc_newline &&
-      '  background: #e5e5e5;'      && gc_newline &&
-      '}'                           && gc_newline &&
-      'td {'                        && gc_newline &&
-      ' background: #F8FCFC;'       && gc_newline &&
-      '}'                           && gc_newline &&
+*      'table, th, td {'             && gc_newline &&
+*      '  border: 1px solid black;'  && gc_newline &&
+*      '  border-collapse: collapse;' && gc_newline &&
+*      '}'                           && gc_newline &&
+*      'th, td {'                    && gc_newline &&
+*      '  padding: 5px;'             && gc_newline &&
+*      '}'                           && gc_newline &&
+*      'th {'                        && gc_newline &&
+*      '  background: #e5e5e5;'      && gc_newline &&
+*      '}'                           && gc_newline &&
+*      'td {'                        && gc_newline &&
+*      ' background: #F8FCFC;'       && gc_newline &&
+*      '}'                           && gc_newline &&
       '</style>'                    && gc_newline.
 
   ENDMETHOD.                    "render_css
@@ -16688,7 +16718,7 @@ CLASS lcl_gui IMPLEMENTATION.
       css( ) && gc_newline &&
       '<meta http-equiv="content-type" content="text/html; charset=utf-8">' && gc_newline &&
       '</head>' && gc_newline &&
-      '<body style="background: rgba(222, 241, 242, 1);">' && gc_newline. "#EC NOTEXT
+      '<body>' && gc_newline.                               "#EC NOTEXT
 
   ENDMETHOD.                    "render_head
 
@@ -17673,20 +17703,32 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_menu.
 
-    rv_html =
-      |<img src="{ lcl_gui=>get_logo_src( ) }">|                    && gc_newline &&
-      '&nbsp;'                                                      && gc_newline &&
-      '<a href="sapevent:refresh">Refresh</a>&nbsp;'                && gc_newline &&
-      '<a href="sapevent:install">Clone</a>&nbsp;'                  && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>&nbsp;'                && gc_newline &&
-      '<a href="sapevent:abapgithome">abapGit@GitHub</a>&nbsp;'     && gc_newline &&
-      '<a href="sapevent:newoffline">New offline project</a>&nbsp;' && gc_newline.
+    DATA: lv_install TYPE string.
+
 
     IF needs_installation( ) = abap_true.
-      rv_html = rv_html && '<a href="sapevent:abapgit_installation">Install</a>&nbsp;' && gc_newline.
+      lv_install = '<a href="sapevent:abapgit_installation">Install</a>' && gc_newline.
     ENDIF.
 
-    rv_html = rv_html && '<hr>' && gc_newline.
+    rv_html =
+      '<div id="header">'                                  && gc_newline &&
+      '<table class="mixedbar logobar">'                   && gc_newline &&
+      '<tr>'                                               && gc_newline &&
+      '<td class="logo">'                                  && gc_newline &&
+      '<a href="sapevent:abapgithome">'                    && gc_newline &&
+      |<img src="{ lcl_gui=>get_logo_src( ) }">|           && gc_newline &&
+      '</a>'                                               && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '<td class="right menu">'                            && gc_newline &&
+      '<a href="sapevent:refresh">Refresh All</a>'         && gc_newline &&
+      '<a href="sapevent:install">Clone</a>'               && gc_newline &&
+      '<a href="sapevent:explore">Explore</a>'             && gc_newline &&
+      |{ lv_install }|                                     && gc_newline &&
+      '<a class="menu_end" href="sapevent:newoffline">New Offline Repo</a>' && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '</tr>'                                              && gc_newline &&
+      '</table>'                                           && gc_newline &&
+      '</div>'                                             && gc_newline.
 
   ENDMETHOD.                    "render_menu
 
@@ -18013,8 +18055,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'explore'.
         lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
       WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute(
-             document = 'https://github.com/larshp/abapGit' ).
+        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
       WHEN 'add'.
         file_decode( EXPORTING iv_string = iv_getdata
                      IMPORTING ev_key = lv_key
