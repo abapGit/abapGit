@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -19082,6 +19082,8 @@ CLASS ltcl_dangerous IMPLEMENTATION.
                    <lv_type>   LIKE LINE OF lt_types.
 
 
+    lcl_sap_package=>create( c_package ).
+
     lt_types = lcl_objects=>supported_list( ).
 
     lo_repo = lcl_repo_srv=>new_online(
@@ -19121,6 +19123,8 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     ENDLOOP.
 
     lcl_repo_srv=>delete( lo_repo ).
+
+    COMMIT WORK.
 
   ENDMETHOD.                    "run
 
