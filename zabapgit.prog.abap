@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.5'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -19351,7 +19351,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
     lock( iv_type  = iv_type
           iv_value = iv_value ).
 
-    UPDATE (c_tabname) SET data = iv_data
+    UPDATE (c_tabname) SET data_str = iv_data
       WHERE type = iv_type
       AND value = iv_value.
     IF sy-subrc <> 0.
@@ -20174,6 +20174,8 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lcl_gui=>call_page( lo_edit ).
       WHEN 'delete'.
         delete( ls_key ).
+      WHEN 'back'.
+        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -20193,15 +20195,16 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     CREATE OBJECT lo_db.
     lt_data = lo_db->list( ).
 
-    rv_html = lcl_gui=>header( )      && gc_newline &&
-      '<h1>Database persistency</h1>' && gc_newline &&
-      '<br><br>'                      && gc_newline &&
-      '<table>'                       && gc_newline &&
-      '<tr>'                          && gc_newline &&
-      '<td><b>Type</b></td>'          && gc_newline &&
-      '<td><b>Value</b></td>'         && gc_newline &&
-      '<td><b>Data</b></td>'          && gc_newline &&
-      '</tr>'                         && gc_newline.
+    rv_html = lcl_gui=>header( )         && gc_newline &&
+      '<h1>Database persistency</h1>'    && gc_newline &&
+      '<a href="sapevent:back">Back</a>' && gc_newline &&
+      '<br><br>'                         && gc_newline &&
+      '<table>'                          && gc_newline &&
+      '<tr>'                             && gc_newline &&
+      '<td><b>Type</b></td>'             && gc_newline &&
+      '<td><b>Value</b></td>'            && gc_newline &&
+      '<td><b>Data</b></td>'             && gc_newline &&
+      '</tr>'                            && gc_newline.
 
     LOOP AT lt_data ASSIGNING <ls_data>.
       lv_escaped = escape( val    = <ls_data>-data_str(150)
