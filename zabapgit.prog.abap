@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.6'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.7'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16542,6 +16542,20 @@ CLASS lcl_gui IMPLEMENTATION.
       '  background-color: #f2f2f2;'               && gc_newline &&
       '  padding:          1em;'                   && gc_newline &&
       '}'                                          && gc_newline &&
+      'div.repo {'                                 && gc_newline &&
+      '  display:          block;'                 && gc_newline &&
+      '  margin-top:       3px;'                   && gc_newline &&
+      '  background-color: #f2f2f2;'               && gc_newline &&
+      '  padding:          0.7em    '              && gc_newline &&
+      '}'                                          && gc_newline &&
+      'div#footer {'                               && gc_newline &&
+      '  display:          block;'                 && gc_newline &&
+      '  margin-bottom:    1em;'                   && gc_newline &&
+      '  padding-top:      0.5em;'                 && gc_newline &&
+      '  border-top:       3px double lightgrey;'  && gc_newline &&
+      '  color:            grey;'                  && gc_newline &&
+      '  text-align:       center;'                && gc_newline &&
+      '}'                                          && gc_newline &&
       '.mixedbar {'                                && gc_newline &&
       '  width: 98%; /*IE7 compat5 mode workaround, OMG it so sucks!*/' && gc_newline &&
       '}'                           && gc_newline &&
@@ -16565,13 +16579,13 @@ CLASS lcl_gui IMPLEMENTATION.
       '.menu_end {'                          && gc_newline &&
       '  border-right: 0px !important;'      && gc_newline &&
       '}'                                    && gc_newline &&
-      'a, a:visited {' && gc_newline &&
-      '  color:            #4078c0;' && gc_newline &&
-      '  text-decoration:  none;' && gc_newline &&
-      '}' && gc_newline &&
-      'a:hover, a:active {' && gc_newline &&
-      '  text-decoration:  underline;' && gc_newline &&
-      '}' && gc_newline &&
+      'a, a:visited {'                       && gc_newline &&
+      '  color:            #4078c0;'         && gc_newline &&
+      '  text-decoration:  none;'            && gc_newline &&
+      '}'                                    && gc_newline &&
+      'a:hover, a:active {'                  && gc_newline &&
+      '  text-decoration:  underline;'       && gc_newline &&
+      '}'                                    && gc_newline &&
       'a.grey:link {'               && gc_newline &&        "#EC NOTEXT
       '  color: grey;'              && gc_newline &&        "#EC NOTEXT
       '  font-size: smaller;'       && gc_newline &&        "#EC NOTEXT
@@ -16588,11 +16602,11 @@ CLASS lcl_gui IMPLEMENTATION.
       '  color: black;'             && gc_newline &&        "#EC NOTEXT
       '  text-decoration: none;'    && gc_newline &&        "#EC NOTEXT
       '}'                           && gc_newline &&
-      'a.white:link {'              && gc_newline &&        "#EC NOTEXT
-      '  color: white;'             && gc_newline &&        "#EC NOTEXT
+      'a.bkg:link {'                && gc_newline &&        "#EC NOTEXT
+      '  color: #E8E8E8;'           && gc_newline &&        "#EC NOTEXT
       '}'                           && gc_newline &&
-      'a.white:visited {'           && gc_newline &&        "#EC NOTEXT
-      '  color: white;'             && gc_newline &&        "#EC NOTEXT
+      'a.bkg:visited {'             && gc_newline &&        "#EC NOTEXT
+      '  color: #E8E8E8;'           && gc_newline &&        "#EC NOTEXT
       '}'                           && gc_newline &&
       'h1 {'                        && gc_newline &&        "#EC NOTEXT
       '  display: inline;'          && gc_newline &&        "#EC NOTEXT
@@ -16609,19 +16623,6 @@ CLASS lcl_gui IMPLEMENTATION.
       'pre {'                       && gc_newline &&
       '  display: inline;'          && gc_newline &&
       '}'                           && gc_newline &&
-*      'table, th, td {'             && gc_newline &&
-*      '  border: 1px solid black;'  && gc_newline &&
-*      '  border-collapse: collapse;' && gc_newline &&
-*      '}'                           && gc_newline &&
-*      'th, td {'                    && gc_newline &&
-*      '  padding: 5px;'             && gc_newline &&
-*      '}'                           && gc_newline &&
-*      'th {'                        && gc_newline &&
-*      '  background: #e5e5e5;'      && gc_newline &&
-*      '}'                           && gc_newline &&
-*      'td {'                        && gc_newline &&
-*      ' background: #F8FCFC;'       && gc_newline &&
-*      '}'                           && gc_newline &&
       '</style>'                    && gc_newline.
 
   ENDMETHOD.                    "render_css
@@ -16629,12 +16630,12 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD footer.
 
     rv_html = rv_html &&
-      '<br><br><hr>' &&
-      '<center>' &&
-      |<img src="{ get_logo_src( ) }" ><br><h3>| &&
-      gc_abap_version &&
-      '</h3></center>' &&
-      '</body></html>'.
+      '<div id="footer">'                        && gc_newline &&
+      |<img src="{ get_logo_src( ) }" ><br>| && gc_newline &&
+      gc_abap_version && gc_newline &&
+      '</div>' && gc_newline &&
+      '</body>' && gc_newline &&
+      '</html>'.
 
   ENDMETHOD.                    "render_footer
 
@@ -16978,42 +16979,45 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
 
     lv_html = lcl_gui=>header( ) &&
-              '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
-              '<hr><h3>' &&
-              ms_result-obj_type && '&nbsp;' &&
-              ms_result-obj_name && '&nbsp;' &&
-              ms_result-filename && '</h3><br><br>'.
+      '<div id="header">' &&
+      '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
+      '</div>' &&
+      '<div id="toc">' &&
+      '<h3>' &&
+      ms_result-obj_type && '&nbsp;' &&
+      ms_result-obj_name && '&nbsp;' &&
+      ms_result-filename && '</h3><br><br>'.
 
     ls_count = mo_diff->stats( ).
     lv_html = lv_html &&
-              '<table border="1">' && gc_newline &&
-              '<tr>'               && gc_newline &&
-              '<td>Insert</td>'    && gc_newline &&
-              '<td>'               &&
-              ls_count-insert      &&
-              '</td>'              && gc_newline &&
-              '</tr>'              && gc_newline &&
-              '<tr>'               && gc_newline &&
-              '<td>Delete</td>'    && gc_newline &&
-              '<td>'               &&
-              ls_count-delete      &&
-              '</td>'              && gc_newline &&
-              '</tr>'              && gc_newline &&
-              '<tr>'               && gc_newline &&
-              '<td>Update</td>'    && gc_newline &&
-              '<td>'               &&
-              ls_count-update      &&
-              '</td>'              && gc_newline &&
-              '</tr>'              && gc_newline &&
-              '</table><br>'       && gc_newline.
+      '<table border="1">' && gc_newline &&
+      '<tr>'               && gc_newline &&
+      '<td>Insert</td>'    && gc_newline &&
+      '<td>'               &&
+      ls_count-insert      &&
+      '</td>'              && gc_newline &&
+      '</tr>'              && gc_newline &&
+      '<tr>'               && gc_newline &&
+      '<td>Delete</td>'    && gc_newline &&
+      '<td>'               &&
+      ls_count-delete      &&
+      '</td>'              && gc_newline &&
+      '</tr>'              && gc_newline &&
+      '<tr>'               && gc_newline &&
+      '<td>Update</td>'    && gc_newline &&
+      '<td>'               &&
+      ls_count-update      &&
+      '</td>'              && gc_newline &&
+      '</tr>'              && gc_newline &&
+      '</table><br>'       && gc_newline.
 
     lv_html = lv_html &&
-              '<table border="0">'                    && gc_newline &&
-              '<tr>'                                  && gc_newline &&
-              '<th><h2>Local</h2></th>'               && gc_newline &&
-              |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
-              '<th><h2>Remote</h2></th>'              && gc_newline &&
-              '</tr>'.
+      '<table border="0">'                    && gc_newline &&
+      '<tr>'                                  && gc_newline &&
+      '<th><h2>Local</h2></th>'               && gc_newline &&
+      |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
+      '<th><h2>Remote</h2></th>'              && gc_newline &&
+      '</tr>'.
 
     lt_diffs = mo_diff->get( ).
 
@@ -17059,9 +17063,11 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         gc_newline &&
         '</tr>' && gc_newline.
     ENDLOOP.
-    lv_html = lv_html && '</table>' && gc_newline.
 
-    rv_html = lv_html && lcl_gui=>footer( ).
+    rv_html = lv_html && gc_newline &&
+      '</table>' && gc_newline &&
+      '</div>' && gc_newline &&
+      lcl_gui=>footer( ).
 
   ENDMETHOD.
 
@@ -17721,19 +17727,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     rv_html =
-      '<div id="header">'                                  && gc_newline &&
-      '<table class="mixedbar logobar">'                   && gc_newline &&
-      '<tr>'                                               && gc_newline &&
-      '<td class="logo">'                                  && gc_newline &&
-      '<a href="sapevent:abapgithome">'                    && gc_newline &&
-      |<img src="{ lcl_gui=>get_logo_src( ) }">|           && gc_newline &&
-      '</a>'                                               && gc_newline &&
-      '</td>'                                              && gc_newline &&
-      '<td class="right menu">'                            && gc_newline &&
-      '<a href="sapevent:refresh">Refresh All</a>'         && gc_newline &&
-      '<a href="sapevent:install">Clone</a>'               && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>'             && gc_newline &&
-      |{ lv_install }|                                     && gc_newline &&
+      '<div id="header">'                                    && gc_newline &&
+      '<table class="mixedbar logobar">'                     && gc_newline &&
+      '<tr>'                                                 && gc_newline &&
+      '<td class="logo">'                                    && gc_newline &&
+      '<a href="sapevent:abapgithome">'                      && gc_newline &&
+      |<img src="{ lcl_gui=>get_logo_src( ) }"></a>|         && gc_newline &&
+      '<a href="sapevent:zipexport_gui" class="bkg">e</a>' && gc_newline &&
+      '<a href="sapevent:db" class="bkg">d</a>'            && gc_newline &&
+      '</td>'                                                && gc_newline &&
+      '<td class="right menu">'                              && gc_newline &&
+      '<a href="sapevent:refresh">Refresh All</a>'           && gc_newline &&
+      '<a href="sapevent:install">Clone</a>'                 && gc_newline &&
+      '<a href="sapevent:explore">Explore</a>'               && gc_newline &&
+      |{ lv_install }|                                       && gc_newline &&
       '<a class="menu_end" href="sapevent:newoffline">New Offline Repo</a>' && gc_newline &&
       '</td>'                                              && gc_newline &&
       '</tr>'                                              && gc_newline &&
@@ -17750,7 +17757,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     rv_html = rv_html &&
-      '<a id="' && io_repo->get_name( ) && '"></a>' &&
+      '<div class="repo">' && gc_newline &&
+      '<a id="' && io_repo->get_name( ) && '"></a>' && gc_newline &&
       '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' &&
       '<h3>' && io_repo->get_package( ) && '</h3>&nbsp;&nbsp;' &&
       '<br>' &&
@@ -17758,14 +17766,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       io_repo->get_key( ) &&
       '" class="grey">' &&
       'remove' &&
-      '</a>&nbsp;' &&
+      '</a>&nbsp;' && gc_newline &&
       '<a href="sapevent:uninstall?' &&
       io_repo->get_key( ) &&
       '" class="grey">' &&
       'uninstall' &&
-      '</a><br><br>'.                                       "#EC NOTEXT
-
-    rv_html = rv_html && '<table border="1">' && gc_newline &&
+      '</a><br><br>' && gc_newline &&
+      '<table border="1">' && gc_newline &&
       '<tr>'                                  && gc_newline &&
       '<th><u>Local object</u></th>'          && gc_newline &&
       '</tr>'                                 && gc_newline.
@@ -17781,9 +17788,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         '</tr>' && gc_newline.
     ENDLOOP.
 
-    rv_html = rv_html && '</table>' && gc_newline.
-
-    rv_html = rv_html && '<a href="sapevent:zipimport?' &&
+    rv_html = rv_html && '</table>' && gc_newline &&
+      '<a href="sapevent:zipimport?' &&
       io_repo->get_key( ) &&
       '">' && 'Import ZIP' &&
       '</a>&nbsp;' &&
@@ -17794,8 +17800,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       '<a href="sapevent:files_commit?' &&
       io_repo->get_key( ) &&
       '">' && 'Export files and commit' &&
-      '</a>&nbsp;' &&
-      '<br><br><br>'.                                       "#EC NOTEXT
+      '</a>' && gc_newline &&
+      '</div>'.                                       "#EC NOTEXT
 
   ENDMETHOD.                    "render_repo_offline
 
@@ -17817,6 +17823,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     rv_html = rv_html &&
+      '<div class="repo">' &&
       '<a id="' && io_repo->get_name( ) && '"></a>' &&
       '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' &&
       '<h3>' && io_repo->get_url( ) && '</h3>&nbsp;&nbsp;' &&
@@ -17832,9 +17839,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       io_repo->get_key( ) &&
       '" class="grey">' &&
       'uninstall' &&
-      '</a><br>'.                                           "#EC NOTEXT
-
-    rv_html = rv_html && '<br>'.
+      '</a><br>' &&
+      '<br>'.
 
     lt_results = io_repo->status( ).
     IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
@@ -17925,7 +17931,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
       lv_span = lv_span - 1.
     ENDLOOP.
-    rv_html = rv_html && '</table>' && gc_newline.
+
+    rv_html = rv_html &&
+      '</table>' &&
+      gc_newline.
 
     CASE lv_status.
       WHEN 'commit'.
@@ -17938,7 +17947,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_status = lcl_sap_package=>check( it_results = lt_results
                                         iv_top     = io_repo->get_package( ) ).
-    rv_html = rv_html && lv_status && '<br><br><br>'.
+
+    rv_html = rv_html &&
+      lv_status &&
+      '</div>'.
 
   ENDMETHOD.                    "render_repo
 
@@ -18144,7 +18156,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       rv_html = rv_html &&
         '<a' && lv_class && ' href="#' && lo_repo->get_name( ) &&'">' &&
         lo_repo->get_name( ) &&
-        '</a>&nbsp;'.
+        '</a>'.
     ENDLOOP.
 
     rv_html = rv_html &&
@@ -18170,8 +18182,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lt_repos[] IS INITIAL.
       rv_html = rv_html && '<br><a href="sapevent:explore">Explore</a> new projects'.
     ELSE.
-      rv_html = rv_html && '<br><br><br>'.
-
       LOOP AT lt_repos INTO lo_repo.
         IF lo_repo->is_offline( ) = abap_true.
           lo_repo_offline ?= lo_repo.
@@ -18182,10 +18192,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDIF.
-
-    rv_html = rv_html &&
-      '<h3><a href="sapevent:zipexport_gui" class="white">e</a></h3>' && gc_newline &&
-      '<h3><a href="sapevent:db" class="white">d</a></h3>' && gc_newline.
 
     rv_html = rv_html && lcl_gui=>footer( ).
 
@@ -20227,9 +20233,11 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     lt_data = lo_db->list( ).
 
     rv_html = lcl_gui=>header( )         && gc_newline &&
+      '<div id="header">'                && gc_newline &&
       '<h1>Database persistency</h1>'    && gc_newline &&
       '<a href="sapevent:back">Back</a>' && gc_newline &&
-      '<br><br>'                         && gc_newline &&
+      '</div>'                           && gc_newline &&
+      '<div id="toc">'                   && gc_newline &&
       '<table>'                          && gc_newline &&
       '<tr>'                             && gc_newline &&
       '<td><b>Type</b></td>'             && gc_newline &&
@@ -20254,7 +20262,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         '</tr>'                                                         && gc_newline.
     ENDLOOP.
 
-    rv_html = rv_html && '</table>' && lcl_gui=>footer( ).
+    rv_html = rv_html && '</table>' && '</div>' && lcl_gui=>footer( ).
 
   ENDMETHOD.
 
