@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14649,7 +14649,7 @@ CLASS lcl_persistence_db DEFINITION FINAL.
     TYPES: BEGIN OF ty_content,
              type  TYPE ty_type,
              value TYPE ty_value,
-             data  TYPE string,
+             data_str TYPE string,
            END OF ty_content,
            tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY value.
 
@@ -14663,7 +14663,7 @@ CLASS lcl_persistence_db DEFINITION FINAL.
     METHODS add
       IMPORTING iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data
+                iv_data  TYPE ty_content-data_str
       RAISING   lcx_exception.
 
     METHODS delete
@@ -14674,19 +14674,19 @@ CLASS lcl_persistence_db DEFINITION FINAL.
     METHODS update
       IMPORTING iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data
+                iv_data  TYPE ty_content-data_str
       RAISING   lcx_exception.
 
     METHODS modify
       IMPORTING iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data
+                iv_data  TYPE ty_content-data_str
       RAISING   lcx_exception.
 
     METHODS read
       IMPORTING iv_type        TYPE ty_type
                 iv_value       TYPE ty_content-value
-      RETURNING VALUE(rv_data) TYPE ty_content-data
+      RETURNING VALUE(rv_data) TYPE ty_content-data_str
       RAISING   lcx_not_found.
 
     METHODS lock
@@ -19325,7 +19325,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
     ls_table-type  = iv_type.
     ls_table-value = iv_value.
-    ls_table-data  = iv_data.
+    ls_table-data_str = iv_data.
 
     INSERT (c_tabname) FROM ls_table.                     "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
@@ -19369,7 +19369,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
     ls_content-type  = iv_type.
     ls_content-value = iv_value.
-    ls_content-data  = iv_data.
+    ls_content-data_str = iv_data.
 
     MODIFY (c_tabname) FROM ls_content.
     IF sy-subrc <> 0.
@@ -19380,7 +19380,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   METHOD read.
 
-    SELECT SINGLE data FROM (c_tabname) INTO rv_data
+    SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
       WHERE type = iv_type
       AND value = iv_value.                               "#EC CI_SUBRC
     IF sy-subrc <> 0.
@@ -19445,11 +19445,11 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ENDTRY.
 
     ls_repo-sha1 = iv_branch_sha1.
-    ls_content-data = to_xml( ls_repo ).
+    ls_content-data_str = to_xml( ls_repo ).
 
     mo_db->update( iv_type  = c_type_repo
                    iv_value = url_to_id( iv_url )
-                   iv_data  = ls_content-data ).
+                   iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
 
@@ -19503,7 +19503,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     lt_content = mo_db->list_by_type( c_type_repo ).
 
     LOOP AT lt_content INTO ls_content.
-      ls_repo = from_xml( ls_content-data ).
+      ls_repo = from_xml( ls_content-data_str ).
       INSERT ls_repo INTO TABLE rt_repos.
     ENDLOOP.
 
@@ -19536,7 +19536,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     lt_content = mo_db->list_by_type( c_type_repo ).
 
     LOOP AT lt_content INTO ls_content.
-      ls_repo = from_xml( ls_content-data ).
+      ls_repo = from_xml( ls_content-data_str ).
       IF ls_repo-url = iv_url.
         rv_id = ls_content-value.
         RETURN.
@@ -19766,7 +19766,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
     APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
     <ls_dd03p>-tabname   = lcl_persistence_db=>c_tabname.
-    <ls_dd03p>-fieldname = 'DATA'.
+    <ls_dd03p>-fieldname = 'DATA_STR'.
     <ls_dd03p>-position  = '0003'.
     <ls_dd03p>-datatype  = 'STRG'.
 
@@ -19904,7 +19904,7 @@ CLASS lcl_gui_page_display IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data,
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
           lo_db   TYPE REF TO lcl_persistence_db.
 
 
@@ -19983,14 +19983,14 @@ CLASS lcl_gui_page_edit IMPLEMENTATION.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata'.
     ASSERT sy-subrc = 0.
-    ls_content-data = <ls_field>-value+1. " hmm
+    ls_content-data_str = <ls_field>-value+1. " hmm
 
     CREATE OBJECT lo_db.
 
     lo_db->update(
       iv_type  = ls_content-type
       iv_value = ls_content-value
-      iv_data  = ls_content-data ).
+      iv_data  = ls_content-data_str ).
 
     COMMIT WORK.
 
@@ -20014,7 +20014,7 @@ CLASS lcl_gui_page_edit IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data,
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
           lo_db   TYPE REF TO lcl_persistence_db.
 
 
@@ -20204,7 +20204,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       '</tr>'                         && gc_newline.
 
     LOOP AT lt_data ASSIGNING <ls_data>.
-      lv_escaped = escape( val    = <ls_data>-data(150)
+      lv_escaped = escape( val    = <ls_data>-data_str(150)
                            format = cl_abap_format=>e_html_attr ).
 
       lv_encode = key_encode( <ls_data> ).
