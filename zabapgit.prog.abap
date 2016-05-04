@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.5'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.6'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14647,8 +14647,8 @@ CLASS lcl_persistence_db DEFINITION FINAL.
     TYPES: ty_value TYPE c LENGTH 12.
 
     TYPES: BEGIN OF ty_content,
-             type  TYPE ty_type,
-             value TYPE ty_value,
+             type     TYPE ty_type,
+             value    TYPE ty_value,
              data_str TYPE string,
            END OF ty_content,
            tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY value.
@@ -16537,6 +16537,11 @@ CLASS lcl_gui IMPLEMENTATION.
       '  padding-bottom:   0.5em;'                 && gc_newline &&
       '  border-bottom:    3px double lightgrey;'  && gc_newline &&
       '}'                                          && gc_newline &&
+      'div#toc {'                                  && gc_newline &&
+      '  display:          block;'                 && gc_newline &&
+      '  background-color: #f2f2f2;'               && gc_newline &&
+      '  padding:          1em;'                   && gc_newline &&
+      '}'                                          && gc_newline &&
       '.mixedbar {'                                && gc_newline &&
       '  width: 98%; /*IE7 compat5 mode workaround, OMG it so sucks!*/' && gc_newline &&
       '}'                           && gc_newline &&
@@ -16851,6 +16856,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
 
     CLASS-METHODS render_menu
       RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS render_toc
+      IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
+      RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
 
     CLASS-METHODS install
       IMPORTING iv_url TYPE string
@@ -18117,6 +18127,32 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_toc.
+
+    DATA: lo_repo  LIKE LINE OF it_list,
+          lv_class TYPE string.
+
+
+    rv_html = '<div id="toc">' && gc_newline &&
+      '<span class="menu">' && gc_newline.
+
+    LOOP AT it_list INTO lo_repo.
+      IF sy-tabix = lines( it_list ).
+        lv_class = ' class="menu_end"'.
+      ENDIF.
+
+      rv_html = rv_html &&
+        '<a' && lv_class && ' href="#' && lo_repo->get_name( ) &&'">' &&
+        lo_repo->get_name( ) &&
+        '</a>&nbsp;'.
+    ENDLOOP.
+
+    rv_html = rv_html &&
+      '</span>' && gc_newline &&
+      '</div>' && gc_newline.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
@@ -18127,14 +18163,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lt_repos = lcl_repo_srv=>list( ).
 
-    rv_html = lcl_gui=>header( ) && render_menu( ).
-
-    LOOP AT lt_repos INTO lo_repo.
-      rv_html = rv_html &&
-        '<a href="#' && lo_repo->get_name( ) &&'" class="grey">' &&
-        lo_repo->get_name( ) &&
-        '</a>&nbsp;'.
-    ENDLOOP.
+    rv_html = lcl_gui=>header( ) &&
+      render_menu( ) &&
+      render_toc( lt_repos ).
 
     IF lt_repos[] IS INITIAL.
       rv_html = rv_html && '<br><a href="sapevent:explore">Explore</a> new projects'.
