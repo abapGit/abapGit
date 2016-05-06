@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.10'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.11'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14571,8 +14571,6 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       delete
         RAISING lcx_exception,
-*      add
-*        RAISING lcx_exception,
       refresh
         RAISING lcx_exception,
       is_offline
@@ -14604,11 +14602,14 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       get_sha1_local
         RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
       get_sha1_remote
-        RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
+        RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1
+        RAISING   lcx_exception,
       get_files
-        RETURNING VALUE(rt_files) TYPE ty_files_tt,
+        RETURNING VALUE(rt_files) TYPE ty_files_tt
+        RAISING   lcx_exception,
       get_objects
-        RETURNING VALUE(rt_objects) TYPE lcl_git_pack=>ty_objects_tt,
+        RETURNING VALUE(rt_objects) TYPE lcl_git_pack=>ty_objects_tt
+        RAISING   lcx_exception,
       deserialize
         RAISING lcx_exception,
       status
@@ -14621,11 +14622,14 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
 
   PRIVATE SECTION.
     DATA:
-      mt_files   TYPE ty_files_tt,
-      mt_objects TYPE lcl_git_pack=>ty_objects_tt,
-      mv_branch  TYPE ty_sha1.
+      mt_files       TYPE ty_files_tt,
+      mt_objects     TYPE lcl_git_pack=>ty_objects_tt,
+      mv_branch      TYPE ty_sha1,
+      mv_initialized TYPE abap_bool.
 
     METHODS:
+      initialize
+        RAISING lcx_exception,
       set_sha1
         IMPORTING iv_sha1 TYPE ty_sha1
         RAISING   lcx_exception.
@@ -14783,8 +14787,7 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS refresh
-      IMPORTING iv_show_progress TYPE abap_bool DEFAULT abap_true
-      RAISING   lcx_exception.
+      RAISING lcx_exception.
 
     CLASS-METHODS new_online
       IMPORTING iv_url         TYPE string
@@ -14822,12 +14825,7 @@ CLASS lcl_repo_srv DEFINITION FINAL.
         IMPORTING
           iv_package TYPE devclass
         RAISING
-          lcx_exception,
-      show_progress
-        IMPORTING
-          iv_current TYPE i
-          iv_total   TYPE i
-          iv_text    TYPE string.
+          lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
 
@@ -14841,11 +14839,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( is_data ).
-    refresh( ).
+
+    mv_initialized = abap_false.
 
   ENDMETHOD.                    "constructor
 
+  METHOD initialize.
+    IF mv_initialized = abap_false.
+      refresh( ).
+    ENDIF.
+  ENDMETHOD.
+
   METHOD status.
+
+    initialize( ).
 
     rt_results = lcl_file_status=>status( it_files   = mt_files
                                           iv_package = get_package( ) ).
@@ -14853,6 +14860,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
   ENDMETHOD.                    "status
 
   METHOD deserialize.
+
+    initialize( ).
 
     lcl_objects=>deserialize( it_files   = mt_files
                               iv_package = get_package( ) ).
@@ -14868,17 +14877,25 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                        et_objects = mt_objects
                                        ev_branch  = mv_branch ).
 
+    mv_initialized = abap_true.
+
   ENDMETHOD.                    "refresh
 
   METHOD get_sha1_remote.
+    initialize( ).
+
     rv_sha1 = mv_branch.
   ENDMETHOD.                    "get_sha1_remote
 
   METHOD get_files.
+    initialize( ).
+
     rt_files = mt_files.
   ENDMETHOD.                    "get_files
 
   METHOD get_objects.
+    initialize( ).
+
     rt_objects = mt_objects.
   ENDMETHOD.                    "get_objects
 
@@ -14962,22 +14979,6 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.                    "refresh
 
-*  METHOD add.
-*
-*    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
-*
-*
-*    CREATE OBJECT lo_persistence.
-*
-*    lo_persistence->add(
-*      iv_url         = ms_data-url
-*      iv_branch_name = ms_data-branch_name
-*      iv_branch      = ms_data-sha1
-*      iv_package     = ms_data-package
-*      iv_offline     = ms_data-offline ).
-*
-*  ENDMETHOD.                    "add
-
   METHOD get_package.
     rv_package = ms_data-package.
   ENDMETHOD.                    "get_package
@@ -15048,12 +15049,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     lt_list = go_persistence->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
-      IF iv_show_progress = abap_true.
-        show_progress( iv_current = sy-tabix
-                       iv_total   = lines( lt_list )
-                       iv_text    = <ls_list>-url ).
-      ENDIF.
-
       IF <ls_list>-offline = abap_false.
         CREATE OBJECT lo_online
           EXPORTING
@@ -15143,27 +15138,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     APPEND io_repo TO gt_list.
 
   ENDMETHOD.                    "add
-
-  METHOD show_progress.
-
-    DATA: lv_text TYPE c LENGTH 100,
-          lv_pct  TYPE i,
-          lv_f    TYPE f.
-
-
-    lv_text = iv_text.
-    lv_f = ( iv_current / iv_total ) * 100.
-    lv_pct = lv_f.
-    IF lv_pct = 100.
-      lv_pct = 99.
-    ENDIF.
-
-    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
-      EXPORTING
-        percentage = lv_pct
-        text       = lv_text.
-
-  ENDMETHOD.                    "show_progress
 
   METHOD validate_package.
 
@@ -16929,6 +16903,12 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
     CLASS-METHODS needs_installation
       RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
 
+    CLASS-METHODS show_progress
+      IMPORTING
+        iv_current TYPE i
+        iv_total   TYPE i
+        iv_text    TYPE string.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_diff DEFINITION FINAL.
@@ -18171,6 +18151,27 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD show_progress.
+
+    DATA: lv_text TYPE c LENGTH 100,
+          lv_pct  TYPE i,
+          lv_f    TYPE f.
+
+
+    lv_text = iv_text.
+    lv_f = ( iv_current / iv_total ) * 100.
+    lv_pct = lv_f.
+    IF lv_pct = 100.
+      lv_pct = 99.
+    ENDIF.
+
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = lv_text.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
@@ -18203,6 +18204,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         '</div>'                                              && gc_newline.
     ELSE.
       LOOP AT lt_repos INTO lo_repo.
+        show_progress( iv_current = sy-tabix
+                       iv_total   = lines( lt_repos )
+                       iv_text    = lo_repo->get_name( ) ).
+
         IF lo_repo->is_offline( ) = abap_true.
           lo_repo_offline ?= lo_repo.
           rv_html = rv_html && render_repo_offline( lo_repo_offline ).
