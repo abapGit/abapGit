@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.8'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.9'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14063,7 +14063,7 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
 
 * this class is obsolete, use LCL_PERSISTENCE_REPO instead
 
-  PUBLIC SECTION.
+  PROTECTED SECTION.
     TYPES: BEGIN OF ty_repo_persi,
              url         TYPE string,
              branch_name TYPE string,
@@ -14073,7 +14073,6 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
            END OF ty_repo_persi.
     TYPES: ty_repos_persi_tt TYPE STANDARD TABLE OF ty_repo_persi WITH DEFAULT KEY.
 
-  PROTECTED SECTION.
     METHODS list
       RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
       RAISING   lcx_exception.
@@ -14417,6 +14416,141 @@ CLASS lcl_persistence IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 
+CLASS lcl_persistence_db DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CONSTANTS:
+      c_tabname TYPE tabname VALUE 'ZABAPGIT',
+      c_lock    TYPE viewname VALUE 'EZABAPGIT'.
+
+    TYPES: ty_type  TYPE c LENGTH 12.
+    TYPES: ty_value TYPE c LENGTH 12.
+
+    TYPES: BEGIN OF ty_content,
+             type     TYPE ty_type,
+             value    TYPE ty_value,
+             data_str TYPE string,
+           END OF ty_content,
+           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY value.
+
+    METHODS list_by_type
+      IMPORTING iv_type           TYPE ty_type
+      RETURNING VALUE(rt_content) TYPE tt_content.
+
+    METHODS list
+      RETURNING VALUE(rt_content) TYPE tt_content.
+
+    METHODS add
+      IMPORTING iv_type  TYPE ty_type
+                iv_value TYPE ty_content-value
+                iv_data  TYPE ty_content-data_str
+      RAISING   lcx_exception.
+
+    METHODS delete
+      IMPORTING iv_type  TYPE ty_type
+                iv_value TYPE ty_content-value
+      RAISING   lcx_exception.
+
+    METHODS update
+      IMPORTING iv_type  TYPE ty_type
+                iv_value TYPE ty_content-value
+                iv_data  TYPE ty_content-data_str
+      RAISING   lcx_exception.
+
+    METHODS modify
+      IMPORTING iv_type  TYPE ty_type
+                iv_value TYPE ty_content-value
+                iv_data  TYPE ty_content-data_str
+      RAISING   lcx_exception.
+
+    METHODS read
+      IMPORTING iv_type        TYPE ty_type
+                iv_value       TYPE ty_content-value
+      RETURNING VALUE(rv_data) TYPE ty_content-data_str
+      RAISING   lcx_not_found.
+
+    METHODS lock
+      IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
+                iv_type  TYPE ty_type
+                iv_value TYPE ty_content-value
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_persistence_repo DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_repo,
+             url         TYPE string,
+             branch_name TYPE string,
+             sha1        TYPE ty_sha1,
+             package     TYPE devclass,
+             offline     TYPE sap_bool,
+           END OF ty_repo.
+    TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
+
+    TYPES: ty_repo_id TYPE c LENGTH 12.
+
+    METHODS constructor.
+
+    METHODS list
+      RETURNING VALUE(rt_repos) TYPE tt_repo
+      RAISING   lcx_exception.
+
+    METHODS update
+      IMPORTING iv_url         TYPE ty_repo-url
+                iv_branch_sha1 TYPE ty_sha1
+      RAISING   lcx_exception.
+
+    METHODS add
+      IMPORTING iv_url         TYPE string
+                iv_branch_name TYPE string
+                iv_branch      TYPE ty_sha1 OPTIONAL
+                iv_package     TYPE devclass
+                iv_offline     TYPE sap_bool DEFAULT abap_false
+      RAISING   lcx_exception.
+
+    METHODS delete
+      IMPORTING iv_url TYPE ty_repo-url
+      RAISING   lcx_exception.
+
+    METHODS read
+      IMPORTING iv_url         TYPE ty_repo-url
+      RETURNING VALUE(rs_repo) TYPE ty_repo
+      RAISING   lcx_exception
+                lcx_not_found.
+
+    METHODS lock
+      IMPORTING iv_mode TYPE enqmode
+                iv_url  TYPE ty_repo-url
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    CONSTANTS c_type_repo TYPE lcl_persistence_db=>ty_type VALUE 'REPO'.
+
+    DATA: mo_db TYPE REF TO lcl_persistence_db.
+
+    METHODS from_xml
+      IMPORTING iv_repo_xml_string TYPE string
+      RETURNING VALUE(rs_repo)     TYPE ty_repo
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_repo                   TYPE ty_repo
+      RETURNING VALUE(rv_repo_xml_string) TYPE string.
+
+    METHODS get_next_id
+      RETURNING VALUE(rv_next_repo_id) TYPE lcl_persistence_db=>ty_content-value
+      RAISING   lcx_exception.
+
+    METHODS url_to_id
+      IMPORTING iv_url       TYPE ty_repo-url
+      RETURNING VALUE(rv_id) TYPE lcl_persistence_db=>ty_content-value
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
@@ -14430,14 +14564,14 @@ CLASS lcl_repo DEFINITION ABSTRACT.
     METHODS:
       constructor
         IMPORTING iv_key  TYPE ty_key
-                  is_data TYPE lcl_persistence=>ty_repo_persi,
+                  is_data TYPE lcl_persistence_repo=>ty_repo,
       get_key
         RETURNING VALUE(rv_key) TYPE ty_key,
       get_name
         RETURNING VALUE(rv_name) TYPE string
         RAISING   lcx_exception,
       get_package
-        RETURNING VALUE(rv_package) TYPE lcl_persistence=>ty_repo_persi-package,
+        RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       delete
         RAISING lcx_exception,
       add
@@ -14450,7 +14584,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
     DATA: mv_key  TYPE ty_key,
-          ms_data TYPE lcl_persistence=>ty_repo_persi.
+          ms_data TYPE lcl_persistence_repo=>ty_repo.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -14466,16 +14600,16 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       refresh REDEFINITION,
       constructor
         IMPORTING iv_key  TYPE ty_key
-                  is_data TYPE lcl_persistence=>ty_repo_persi
+                  is_data TYPE lcl_persistence_repo=>ty_repo
         RAISING   lcx_exception,
       get_url
-        RETURNING VALUE(rv_url) TYPE lcl_persistence=>ty_repo_persi-url,
+        RETURNING VALUE(rv_url) TYPE lcl_persistence_repo=>ty_repo-url,
       get_branch_name
-        RETURNING VALUE(rv_name) TYPE lcl_persistence=>ty_repo_persi-branch_name,
+        RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-branch_name,
       get_sha1_local
-        RETURNING VALUE(rv_sha1) TYPE lcl_persistence=>ty_repo_persi-sha1,
+        RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
       get_sha1_remote
-        RETURNING VALUE(rv_sha1) TYPE lcl_persistence=>ty_repo_persi-sha1,
+        RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
       get_objects
@@ -14636,141 +14770,6 @@ CLASS lcl_repo_offline IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 
-CLASS lcl_persistence_db DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CONSTANTS:
-      c_tabname TYPE tabname VALUE 'ZABAPGIT',
-      c_lock    TYPE viewname VALUE 'EZABAPGIT'.
-
-    TYPES: ty_type  TYPE c LENGTH 12.
-    TYPES: ty_value TYPE c LENGTH 12.
-
-    TYPES: BEGIN OF ty_content,
-             type     TYPE ty_type,
-             value    TYPE ty_value,
-             data_str TYPE string,
-           END OF ty_content,
-           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY value.
-
-    METHODS list_by_type
-      IMPORTING iv_type           TYPE ty_type
-      RETURNING VALUE(rt_content) TYPE tt_content.
-
-    METHODS list
-      RETURNING VALUE(rt_content) TYPE tt_content.
-
-    METHODS add
-      IMPORTING iv_type  TYPE ty_type
-                iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data_str
-      RAISING   lcx_exception.
-
-    METHODS delete
-      IMPORTING iv_type  TYPE ty_type
-                iv_value TYPE ty_content-value
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING iv_type  TYPE ty_type
-                iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data_str
-      RAISING   lcx_exception.
-
-    METHODS modify
-      IMPORTING iv_type  TYPE ty_type
-                iv_value TYPE ty_content-value
-                iv_data  TYPE ty_content-data_str
-      RAISING   lcx_exception.
-
-    METHODS read
-      IMPORTING iv_type        TYPE ty_type
-                iv_value       TYPE ty_content-value
-      RETURNING VALUE(rv_data) TYPE ty_content-data_str
-      RAISING   lcx_not_found.
-
-    METHODS lock
-      IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
-                iv_type  TYPE ty_type
-                iv_value TYPE ty_content-value
-      RAISING   lcx_exception.
-
-ENDCLASS.
-
-CLASS lcl_persistence_repo DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    TYPES: BEGIN OF ty_repo,
-             url         TYPE string,
-             branch_name TYPE string,
-             sha1        TYPE ty_sha1,
-             package     TYPE devclass,
-             offline     TYPE sap_bool,
-           END OF ty_repo.
-    TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
-
-    TYPES: ty_repo_id TYPE c LENGTH 12.
-
-    METHODS constructor.
-
-    METHODS list
-      RETURNING VALUE(rt_repos) TYPE tt_repo
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING iv_url         TYPE ty_repo-url
-                iv_branch_sha1 TYPE ty_sha1
-      RAISING   lcx_exception.
-
-    METHODS add
-      IMPORTING iv_url         TYPE string
-                iv_branch_name TYPE string
-                iv_branch      TYPE ty_sha1 OPTIONAL
-                iv_package     TYPE devclass
-                iv_offline     TYPE sap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
-
-    METHODS delete
-      IMPORTING iv_url TYPE ty_repo-url
-      RAISING   lcx_exception.
-
-    METHODS read
-      IMPORTING iv_url         TYPE ty_repo-url
-      RETURNING VALUE(rs_repo) TYPE ty_repo
-      RAISING   lcx_exception
-                lcx_not_found.
-
-    METHODS lock
-      IMPORTING iv_mode TYPE enqmode
-                iv_url  TYPE ty_repo-url
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-
-    CONSTANTS c_type_repo TYPE lcl_persistence_db=>ty_type VALUE 'REPO'.
-
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
-
-    METHODS from_xml
-      IMPORTING iv_repo_xml_string TYPE string
-      RETURNING VALUE(rs_repo)     TYPE ty_repo
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_repo                   TYPE ty_repo
-      RETURNING VALUE(rv_repo_xml_string) TYPE string.
-
-    METHODS get_next_id
-      RETURNING VALUE(rv_next_repo_id) TYPE lcl_persistence_db=>ty_content-value
-      RAISING   lcx_exception.
-
-    METHODS url_to_id
-      IMPORTING iv_url       TYPE ty_repo-url
-      RETURNING VALUE(rv_id) TYPE lcl_persistence_db=>ty_content-value
-      RAISING   lcx_exception.
-
-ENDCLASS.
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_srv DEFINITION
 *----------------------------------------------------------------------*
@@ -14836,8 +14835,6 @@ CLASS lcl_repo_srv DEFINITION FINAL.
           iv_text    TYPE string.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
-
-
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online IMPLEMENTATION
@@ -15045,7 +15042,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list    TYPE lcl_persistence=>ty_repos_persi_tt,
+    DATA: lt_list    TYPE lcl_persistence_repo=>tt_repo,
           lv_index   TYPE i,
           lo_online  TYPE REF TO lcl_repo_online,
           lo_offline TYPE REF TO lcl_repo_offline.
@@ -15086,7 +15083,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_repo_persi TYPE lcl_persistence=>ty_repo_persi.
+    DATA: ls_repo_persi TYPE lcl_persistence_repo=>ty_repo.
 
 
     validate_package( iv_package ).
@@ -15104,7 +15101,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: ls_repo_persi TYPE lcl_persistence=>ty_repo_persi.
+    DATA: ls_repo_persi TYPE lcl_persistence_repo=>ty_repo.
 
 
     validate_package( iv_package ).
@@ -15166,7 +15163,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   METHOD validate_package.
 
     DATA: lv_devclass TYPE tdevc-devclass,
-          lt_repos    TYPE lcl_persistence=>ty_repos_persi_tt.
+          lt_repos    TYPE lcl_persistence_repo=>tt_repo.
 
 
     IF iv_package IS INITIAL.
