@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.12'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.13'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3724,7 +3724,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
     mo_files->add_string( iv_extra  = 'source'
                           iv_ext    = 'xml'
-                          iv_string = lv_source ).
+                          iv_string = lv_source ) ##NO_TEXT.
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -3742,7 +3742,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
     ls_attributes-devclass = iv_package.
 
     lv_source = mo_files->read_string( iv_extra = 'source'
-                                       iv_ext   = 'xml' ).
+                                       iv_ext   = 'xml' ) ##NO_TEXT.
 
 * workaround: somewhere additional linefeeds are added
     lv_len = strlen( lv_source ) - 2.
@@ -4428,8 +4428,8 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).
 
-    mo_files->add_string( iv_ext = 'html'
-                        iv_string = lv_source ).
+    mo_files->add_string( iv_ext    = 'html'
+                          iv_string = lv_source ) ##NO_TEXT.
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -4471,7 +4471,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = mo_files->read_string( iv_ext = 'html' ).
+    lv_source = mo_files->read_string( 'html' ) ##NO_TEXT.
 
     ls_attr-devclass = iv_package.
     save( is_attr   = ls_attr
@@ -17113,7 +17113,7 @@ CLASS lcl_persistence_user DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db DEFINITION.
+CLASS lcl_gui_page_db DEFINITION FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_gui_page.
@@ -17743,31 +17743,32 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     rv_html = rv_html &&
-      '<div class="repo">' && gc_newline &&
-      '<a id="' && io_repo->get_name( ) && '"></a>' && gc_newline &&
-      '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' &&
-      '<h3>' && io_repo->get_package( ) && '</h3>&nbsp;&nbsp;' &&
-      '<br>' &&
-      '<a href="sapevent:remove?' &&
-      io_repo->get_key( ) &&
-      '" class="grey">' &&
-      'remove' &&
-      '</a>&nbsp;' && gc_newline &&
-      '<a href="sapevent:uninstall?' &&
-      io_repo->get_key( ) &&
-      '" class="grey">' &&
-      'uninstall' &&
-      '</a><br><br>' && gc_newline &&
-      '<table border="1">' && gc_newline &&
-      '<tr>'                                  && gc_newline &&
-      '<th><u>Local object</u></th>'          && gc_newline &&
-      '</tr>'                                 && gc_newline.
+      '<div class="repo">'                            && gc_newline &&
+      '<a id="' && io_repo->get_name( ) && '"></a>'   && gc_newline &&
+      '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' && gc_newline &&
+      '<h3>' && io_repo->get_package( ) && '</h3>'    && gc_newline &&
+      '<br>'                                          && gc_newline &&
+      '<a href="sapevent:remove?'                     &&
+      io_repo->get_key( )                             &&
+      '" class="grey">'                               &&
+      'remove'                                        &&
+      '</a>&nbsp;'                                    && gc_newline &&
+      '<a href="sapevent:uninstall?'                  &&
+      io_repo->get_key( )                             &&
+      '" class="grey">'                               &&
+      'uninstall'                                     &&
+      '</a><br><br>'                                  && gc_newline &&
+      '<table border="1">'                            && gc_newline &&
+      '<tr>'                                          && gc_newline &&
+      '<th><u>Local object</u></th>'                  && gc_newline &&
+      '</tr>'                                         && gc_newline ##NO_TEXT.
 
     lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 * todo, add jump link like in online rendering
-      rv_html = rv_html && '<tr>' &&
+      rv_html = rv_html &&
+        '<tr>' && gc_newline &&
         '<td>' && <ls_tadir>-object &&
         '&nbsp;' && <ls_tadir>-obj_name &&
         '</td>' && gc_newline &&
@@ -17821,13 +17822,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       io_repo->get_key( ) &&
       '" class="grey">' &&
       'remove' &&
-      '</a>&nbsp;' &&
+      '</a>&nbsp;' && gc_newline &&
       '<a href="sapevent:uninstall?' &&
       io_repo->get_key( ) &&
       '" class="grey">' &&
       'uninstall' &&
-      '</a><br>' &&
-      '<br>'.
+      '</a>&nbsp;' && gc_newline &&
+      '<a href="sapevent:refresh_single?' &&
+      io_repo->get_key( ) &&
+      '" class="grey">' &&
+      'refresh' &&
+      '</a>&nbsp;' &&
+      '<br>' &&
+      '<br>' ##NO_TEXT.
 
     TRY.
         lt_results = io_repo->status( ).
@@ -18070,7 +18077,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'explore'.
         lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
       WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
+        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ) ##NO_TEXT.
       WHEN 'add'.
         file_decode( EXPORTING iv_string = iv_getdata
                      IMPORTING ev_key = lv_key
@@ -18087,6 +18094,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         remove( lv_key ).
       WHEN 'refresh'.
         lcl_repo_srv=>refresh( ).
+        lcl_gui=>render( ).
+      WHEN 'refresh_single'.
+        lv_key = iv_getdata.
+        lcl_repo_srv=>get( lv_key )->refresh( ).
         lcl_gui=>render( ).
       WHEN 'commit'.
         lv_key = iv_getdata.
@@ -18142,18 +18153,18 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    rv_html = '<div id="toc">' && gc_newline &&
-      '<span class="menu">' && gc_newline.
+    rv_html = '<div id="toc">'    && gc_newline &&
+      '<span class="menu">'       && gc_newline.
 
     LOOP AT it_list INTO lo_repo.
       IF sy-tabix = lines( it_list ).
-        lv_class = ' class="menu_end"'.
+        lv_class = ' class="menu_end"' ##NO_TEXT.
       ENDIF.
 
       rv_html = rv_html &&
         '<a' && lv_class && ' href="#' && lo_repo->get_name( ) &&'">' &&
         lo_repo->get_name( ) &&
-        '</a>'.
+        '</a>' && gc_newline ##NO_TEXT.
     ENDLOOP.
 
     rv_html = rv_html &&
@@ -18188,7 +18199,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     rv_html = '<div id="toc">' && gc_newline &&
       'Error:<br>'             && gc_newline &&
       ix_error->mv_text        && gc_newline &&
-      '</div>'                 && gc_newline.
+      '</div>'                 && gc_newline ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -19973,7 +19984,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_xml_pretty DEFINITION.
+CLASS lcl_xml_pretty DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: print
@@ -20027,7 +20038,7 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_display DEFINITION.
+CLASS lcl_gui_page_display DEFINITION FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_gui_page.
@@ -20091,7 +20102,7 @@ CLASS lcl_gui_page_display IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_edit DEFINITION.
+CLASS lcl_gui_page_edit DEFINITION FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_gui_page.
@@ -20128,15 +20139,15 @@ CLASS lcl_gui_page_edit IMPLEMENTATION.
 
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type'.
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
     ASSERT sy-subrc = 0.
     ls_content-type = <ls_field>-value.
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value'.
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
     ASSERT sy-subrc = 0.
     ls_content-value = <ls_field>-value.
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata'.
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
     ASSERT sy-subrc = 0.
     ls_content-data_str = <ls_field>-value+1. " hmm
 
