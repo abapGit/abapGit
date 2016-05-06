@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.13'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.14'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3724,7 +3724,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
     mo_files->add_string( iv_extra  = 'source'
                           iv_ext    = 'xml'
-                          iv_string = lv_source ) ##NO_TEXT.
+                          iv_string = lv_source ).
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -4429,7 +4429,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
                  ig_data = ls_attr ).
 
     mo_files->add_string( iv_ext    = 'html'
-                          iv_string = lv_source ) ##NO_TEXT.
+                          iv_string = lv_source ).
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -17060,55 +17060,52 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 ENDCLASS.
 
 CLASS lcl_persistence_user DEFINITION FINAL.
-* todo, refactor this class later? add constructor with
-* iv_user as importing optional parameter
 
   PUBLIC SECTION.
-    CLASS-METHODS set_username
-      IMPORTING iv_user     TYPE xubname DEFAULT sy-uname
-                iv_username TYPE string
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
+
+    METHODS set_username
+      IMPORTING iv_username TYPE string
       RAISING   lcx_exception.
 
-    CLASS-METHODS get_username
-      IMPORTING iv_user            TYPE xubname DEFAULT sy-uname
+    METHODS get_username
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
-    CLASS-METHODS set_email
-      IMPORTING iv_user  TYPE xubname DEFAULT sy-uname
-                iv_email TYPE string
+    METHODS set_email
+      IMPORTING iv_email TYPE string
       RAISING   lcx_exception.
 
-    CLASS-METHODS get_email
-      IMPORTING iv_user         TYPE xubname DEFAULT sy-uname
+    METHODS get_email
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
 
+    DATA: mv_user TYPE xubname.
+
     TYPES: BEGIN OF ty_user,
              username TYPE string,
              email    TYPE string,
            END OF ty_user.
 
-    CLASS-METHODS from_xml
+    METHODS from_xml
       IMPORTING iv_xml         TYPE string
       RETURNING VALUE(rs_user) TYPE ty_user
       RAISING   lcx_exception.
 
-    CLASS-METHODS to_xml
+    METHODS to_xml
       IMPORTING is_user       TYPE ty_user
       RETURNING VALUE(rv_xml) TYPE string.
 
-    CLASS-METHODS read
-      IMPORTING iv_user        TYPE xubname
+    METHODS read
       RETURNING VALUE(rs_user) TYPE ty_user
       RAISING   lcx_exception.
 
-    CLASS-METHODS update
-      IMPORTING iv_user TYPE xubname
-                is_user TYPE ty_user
+    METHODS update
+      IMPORTING is_user TYPE ty_user
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -17228,27 +17225,30 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD popup_comment.
 
     DATA: lv_returncode TYPE c,
+          lo_user       TYPE REF TO lcl_persistence_user,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
+    CREATE OBJECT lo_user.
+
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname = 'BAPIRTEXT'.
+    <ls_field>-tabname   = 'BAPIRTEXT'.
     <ls_field>-fieldname = 'TEXT'.
     <ls_field>-fieldtext = 'Username'.                      "#EC NOTEXT
     <ls_field>-field_obl = abap_true.
-    <ls_field>-value = lcl_persistence_user=>get_username( ).
+    <ls_field>-value     = lo_user->get_username( ).
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname = 'BAPIRTEXT1'.
+    <ls_field>-tabname   = 'BAPIRTEXT1'.
     <ls_field>-fieldname = 'TEXT'.
     <ls_field>-fieldtext = 'E-Mail'.                        "#EC NOTEXT
     <ls_field>-field_obl = abap_true.
-    <ls_field>-value = lcl_persistence_user=>get_email( ).
+    <ls_field>-value     = lo_user->get_email( ).
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname = 'ABAPTXT255'.
+    <ls_field>-tabname   = 'ABAPTXT255'.
     <ls_field>-fieldname = 'LINE'.
     <ls_field>-fieldtext = 'Comment'.                       "#EC NOTEXT
     <ls_field>-field_obl = abap_true.
@@ -17275,12 +17275,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     rs_comment-username = <ls_field>-value.
-    lcl_persistence_user=>set_username( rs_comment-username ).
+    lo_user->set_username( rs_comment-username ).
 
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     rs_comment-email = <ls_field>-value.
-    lcl_persistence_user=>set_email( rs_comment-email ).
+    lo_user->set_email( rs_comment-email ).
 
     READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
@@ -18077,7 +18077,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'explore'.
         lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
       WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ) ##NO_TEXT.
+        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
       WHEN 'add'.
         file_decode( EXPORTING iv_string = iv_getdata
                      IMPORTING ev_key = lv_key
@@ -19376,6 +19376,10 @@ ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
 
 CLASS lcl_persistence_user IMPLEMENTATION.
 
+  METHOD constructor.
+    mv_user = iv_user.
+  ENDMETHOD.
+
   METHOD from_xml.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
@@ -19400,7 +19404,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     TRY.
         lv_xml = lo_db->read(
           iv_type  = c_type_user
-          iv_value = iv_user ).
+          iv_value = mv_user ).
       CATCH lcx_not_found.
         RETURN.
     ENDTRY.
@@ -19421,7 +19425,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     lo_db->modify(
       iv_type  = c_type_user
-      iv_value = iv_user
+      iv_value = mv_user
       iv_data  = lv_xml ).
 
   ENDMETHOD.
@@ -19431,18 +19435,17 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     DATA: ls_user TYPE ty_user.
 
 
-    ls_user = read( iv_user ).
+    ls_user = read( ).
 
     ls_user-username = iv_username.
 
-    update( iv_user = iv_user
-            is_user = ls_user ).
+    update( ls_user ).
 
   ENDMETHOD.
 
   METHOD get_username.
 
-    rv_username = read( iv_user )-username.
+    rv_username = read( )-username.
 
   ENDMETHOD.
 
@@ -19451,18 +19454,17 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     DATA: ls_user TYPE ty_user.
 
 
-    ls_user = read( iv_user ).
+    ls_user = read( ).
 
     ls_user-email = iv_email.
 
-    update( iv_user = iv_user
-            is_user = ls_user ).
+    update( ls_user ).
 
   ENDMETHOD.
 
   METHOD get_email.
 
-    rv_email = read( iv_user )-email.
+    rv_email = read( )-email.
 
   ENDMETHOD.
 
@@ -19768,19 +19770,20 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
   METHOD migrate_user.
 
-    DATA: lt_users TYPE lcl_user=>ty_user_tt.
+    DATA: lo_user  TYPE REF TO lcl_persistence_user,
+          lt_users TYPE lcl_user=>ty_user_tt.
 
     FIELD-SYMBOLS: <ls_user> LIKE LINE OF lt_users.
 
 
     lt_users = lcl_user=>list( ).
     LOOP AT lt_users ASSIGNING <ls_user>.
-      lcl_persistence_user=>set_username(
-        iv_user     = <ls_user>-user
-        iv_username = <ls_user>-username ).
-      lcl_persistence_user=>set_email(
-        iv_user  = <ls_user>-user
-        iv_email = <ls_user>-email ).
+      CREATE OBJECT lo_user
+        EXPORTING
+          iv_user = <ls_user>-user.
+
+      lo_user->set_username( <ls_user>-username ).
+      lo_user->set_email( <ls_user>-email ).
     ENDLOOP.
 
   ENDMETHOD.
