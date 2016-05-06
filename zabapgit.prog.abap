@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.7'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.8'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17801,7 +17801,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       io_repo->get_key( ) &&
       '">' && 'Export files and commit' &&
       '</a>' && gc_newline &&
-      '</div>'.                                       "#EC NOTEXT
+      '</div>'.                                             "#EC NOTEXT
 
   ENDMETHOD.                    "render_repo_offline
 
@@ -19059,6 +19059,99 @@ CLASS ltcl_object_types IMPLEMENTATION.
   ENDMETHOD.                    "not_exist
 
 ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
+
+CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PUBLIC SECTION.
+    METHODS:
+      up FOR TESTING
+        RAISING lcx_exception,
+      down FOR TESTING
+        RAISING lcx_exception.
+
+    TYPES: BEGIN OF st_old,
+             foo TYPE i,
+             bar TYPE c LENGTH 1,
+           END OF st_old.
+
+    TYPES: BEGIN OF st_new,
+             foo TYPE i,
+             bar TYPE c LENGTH 1,
+             moo TYPE f,
+           END OF st_new.
+
+ENDCLASS.
+
+CLASS ltcl_xml IMPLEMENTATION.
+
+  METHOD up.
+
+    DATA: ls_old    TYPE st_old,
+          ls_new    TYPE st_new,
+          lv_xml    TYPE string,
+          lo_input  TYPE REF TO lcl_xml_input,
+          lo_output TYPE REF TO lcl_xml_output.
+
+
+    ls_old-foo = 2.
+    ls_old-bar = 'A'.
+
+    CREATE OBJECT lo_output.
+    lo_output->add( iv_name = 'DATA'
+                    ig_data = ls_old ).
+    lv_xml = lo_output->render( ).
+
+    CREATE OBJECT lo_input
+      EXPORTING
+        iv_xml = lv_xml.
+    lo_input->read( EXPORTING iv_name = 'DATA'
+                    CHANGING cg_data = ls_new ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_new-foo
+      exp = ls_old-foo ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_new-bar
+      exp = ls_old-bar ).
+
+  ENDMETHOD.
+
+  METHOD down.
+
+    DATA: ls_old    TYPE st_old,
+          ls_new    TYPE st_new,
+          lv_xml    TYPE string,
+          lo_input  TYPE REF TO lcl_xml_input,
+          lo_output TYPE REF TO lcl_xml_output.
+
+
+    ls_new-foo = 2.
+    ls_new-bar = 'A'.
+    ls_new-moo = 5.
+
+    CREATE OBJECT lo_output.
+    lo_output->add( iv_name = 'DATA'
+                    ig_data = ls_new ).
+    lv_xml = lo_output->render( ).
+
+    CREATE OBJECT lo_input
+      EXPORTING
+        iv_xml = lv_xml.
+    lo_input->read( EXPORTING iv_name = 'DATA'
+                    CHANGING cg_data = ls_old ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_old-foo
+      exp = ls_new-foo ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_old-bar
+      exp = ls_new-bar ).
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_zlib DEFINITION
