@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.9'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.10'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14480,13 +14480,18 @@ ENDCLASS.
 CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_repo,
+    TYPES: BEGIN OF ty_repo_xml,
              url         TYPE string,
              branch_name TYPE string,
              sha1        TYPE ty_sha1,
              package     TYPE devclass,
              offline     TYPE sap_bool,
-           END OF ty_repo.
+           END OF ty_repo_xml.
+
+    TYPES: BEGIN OF ty_repo,
+             key TYPE lcl_persistence_db=>ty_value.
+        INCLUDE TYPE ty_repo_xml.
+    TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
 
     TYPES: ty_repo_id TYPE c LENGTH 12.
@@ -14498,7 +14503,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS update
-      IMPORTING iv_url         TYPE ty_repo-url
+      IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_sha1
       RAISING   lcx_exception.
 
@@ -14508,32 +14513,32 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
                 iv_branch      TYPE ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
+      RETURNING VALUE(rv_key)  TYPE ty_repo-key
       RAISING   lcx_exception.
 
     METHODS delete
-      IMPORTING iv_url TYPE ty_repo-url
+      IMPORTING iv_key TYPE ty_repo-key
       RAISING   lcx_exception.
 
     METHODS read
-      IMPORTING iv_url         TYPE ty_repo-url
+      IMPORTING iv_key         TYPE ty_repo-key
       RETURNING VALUE(rs_repo) TYPE ty_repo
       RAISING   lcx_exception
                 lcx_not_found.
 
     METHODS lock
       IMPORTING iv_mode TYPE enqmode
-                iv_url  TYPE ty_repo-url
+                iv_key  TYPE ty_repo-key
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
-
     CONSTANTS c_type_repo TYPE lcl_persistence_db=>ty_type VALUE 'REPO'.
 
     DATA: mo_db TYPE REF TO lcl_persistence_db.
 
     METHODS from_xml
       IMPORTING iv_repo_xml_string TYPE string
-      RETURNING VALUE(rs_repo)     TYPE ty_repo
+      RETURNING VALUE(rs_repo)     TYPE ty_repo_xml
       RAISING   lcx_exception.
 
     METHODS to_xml
@@ -14542,11 +14547,6 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     METHODS get_next_id
       RETURNING VALUE(rv_next_repo_id) TYPE lcl_persistence_db=>ty_content-value
-      RAISING   lcx_exception.
-
-    METHODS url_to_id
-      IMPORTING iv_url       TYPE ty_repo-url
-      RETURNING VALUE(rv_id) TYPE lcl_persistence_db=>ty_content-value
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -14559,14 +14559,11 @@ ENDCLASS.
 CLASS lcl_repo DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
-    TYPES: ty_key TYPE i.
-
     METHODS:
       constructor
-        IMPORTING iv_key  TYPE ty_key
-                  is_data TYPE lcl_persistence_repo=>ty_repo,
+        IMPORTING is_data TYPE lcl_persistence_repo=>ty_repo,
       get_key
-        RETURNING VALUE(rv_key) TYPE ty_key,
+        RETURNING VALUE(rv_key) TYPE lcl_persistence_db=>ty_value,
       get_name
         RETURNING VALUE(rv_name) TYPE string
         RAISING   lcx_exception,
@@ -14574,8 +14571,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       delete
         RAISING lcx_exception,
-      add
-        RAISING lcx_exception,
+*      add
+*        RAISING lcx_exception,
       refresh
         RAISING lcx_exception,
       is_offline
@@ -14583,8 +14580,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    DATA: mv_key  TYPE ty_key,
-          ms_data TYPE lcl_persistence_repo=>ty_repo.
+    DATA: ms_data TYPE lcl_persistence_repo=>ty_repo.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -14599,8 +14595,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
     METHODS:
       refresh REDEFINITION,
       constructor
-        IMPORTING iv_key  TYPE ty_key
-                  is_data TYPE lcl_persistence_repo=>ty_repo
+        IMPORTING is_data TYPE lcl_persistence_repo=>ty_repo
         RAISING   lcx_exception,
       get_url
         RETURNING VALUE(rv_url) TYPE lcl_persistence_repo=>ty_repo-url,
@@ -14804,16 +14799,12 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
       RAISING   lcx_exception.
 
-    CLASS-METHODS add
-      IMPORTING io_repo TYPE REF TO lcl_repo
-      RAISING   lcx_exception.
-
     CLASS-METHODS delete
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
     CLASS-METHODS get
-      IMPORTING iv_key         TYPE lcl_repo=>ty_key
+      IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo.
 
   PRIVATE SECTION.
@@ -14821,6 +14812,10 @@ CLASS lcl_repo_srv DEFINITION FINAL.
     CLASS-DATA: gv_init        TYPE abap_bool VALUE abap_false,
                 go_persistence TYPE REF TO lcl_persistence_repo,
                 gt_list        TYPE ty_repo_tt.
+
+    CLASS-METHODS add
+      IMPORTING io_repo TYPE REF TO lcl_repo
+      RAISING   lcx_exception.
 
     CLASS-METHODS:
       validate_package
@@ -14845,9 +14840,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( iv_key  = iv_key
-                        is_data = is_data ).
-
+    super->constructor( is_data ).
     refresh( ).
 
   ENDMETHOD.                    "constructor
@@ -14864,7 +14857,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lcl_objects=>deserialize( it_files   = mt_files
                               iv_package = get_package( ) ).
 
-    lcl_repo_srv=>add( me ).
     set_sha1( mv_branch ).
 
   ENDMETHOD.                    "deserialize
@@ -14924,7 +14916,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     CREATE OBJECT lo_persistence.
 
-    lo_persistence->update( iv_url         = ms_data-url
+    lo_persistence->update( iv_key         = ms_data-key
                             iv_branch_sha1 = iv_sha1 ).
 
     ms_data-sha1 = iv_sha1.
@@ -14941,8 +14933,11 @@ ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 CLASS lcl_repo IMPLEMENTATION.
 
   METHOD constructor.
+
+    ASSERT NOT is_data-key IS INITIAL.
+
     ms_data = is_data.
-    mv_key = iv_key.
+
   ENDMETHOD.                    "constructor
 
   METHOD delete.
@@ -14952,7 +14947,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     CREATE OBJECT lo_persistence.
 
-    lo_persistence->delete( ms_data-url ).
+    lo_persistence->delete( ms_data-key ).
 
   ENDMETHOD.                    "delete
 
@@ -14967,28 +14962,28 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.                    "refresh
 
-  METHOD add.
-
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
-
-
-    CREATE OBJECT lo_persistence.
-
-    lo_persistence->add(
-      iv_url         = ms_data-url
-      iv_branch_name = ms_data-branch_name
-      iv_branch      = ms_data-sha1
-      iv_package     = ms_data-package
-      iv_offline     = ms_data-offline ).
-
-  ENDMETHOD.                    "add
+*  METHOD add.
+*
+*    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+*
+*
+*    CREATE OBJECT lo_persistence.
+*
+*    lo_persistence->add(
+*      iv_url         = ms_data-url
+*      iv_branch_name = ms_data-branch_name
+*      iv_branch      = ms_data-sha1
+*      iv_package     = ms_data-package
+*      iv_offline     = ms_data-offline ).
+*
+*  ENDMETHOD.                    "add
 
   METHOD get_package.
     rv_package = ms_data-package.
   ENDMETHOD.                    "get_package
 
   METHOD get_key.
-    rv_key = mv_key.
+    rv_key = ms_data-key.
   ENDMETHOD.                    "get_key
 
   METHOD get_name.
@@ -15043,7 +15038,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   METHOD refresh.
 
     DATA: lt_list    TYPE lcl_persistence_repo=>tt_repo,
-          lv_index   TYPE i,
           lo_online  TYPE REF TO lcl_repo_online,
           lo_offline TYPE REF TO lcl_repo_offline.
 
@@ -15054,8 +15048,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     lt_list = go_persistence->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
-      lv_index = sy-tabix.
-
       IF iv_show_progress = abap_true.
         show_progress( iv_current = sy-tabix
                        iv_total   = lines( lt_list )
@@ -15065,13 +15057,11 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       IF <ls_list>-offline = abap_false.
         CREATE OBJECT lo_online
           EXPORTING
-            iv_key  = lv_index
             is_data = <ls_list>.
         APPEND lo_online TO gt_list.
       ELSE.
         CREATE OBJECT lo_offline
           EXPORTING
-            iv_key  = lv_index
             is_data = <ls_list>.
         APPEND lo_offline TO gt_list.
       ENDIF.
@@ -15083,37 +15073,54 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_repo_persi TYPE lcl_persistence_repo=>ty_repo.
+    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
 
-    ls_repo_persi-url         = iv_url.
-    ls_repo_persi-branch_name = iv_branch_name.
-    ls_repo_persi-package     = iv_package.
+    lv_key = go_persistence->add(
+      iv_url         = iv_url
+      iv_branch_name = iv_branch_name
+      iv_package     = iv_package ).
+
+    TRY.
+        ls_repo = go_persistence->read( lv_key ).
+      CATCH lcx_not_found.
+        _raise 'new_online not found'.
+    ENDTRY.
 
     CREATE OBJECT ro_repo
       EXPORTING
-        iv_key  = lines( gt_list ) + 1
-        is_data = ls_repo_persi.
+        is_data = ls_repo.
+
+    add( ro_repo ).
 
   ENDMETHOD.                    "new_online
 
   METHOD new_offline.
 
-    DATA: ls_repo_persi TYPE lcl_persistence_repo=>ty_repo.
+    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
 
-    ls_repo_persi-url     = iv_url.
-    ls_repo_persi-package = iv_package.
-    ls_repo_persi-offline = abap_true.
+    lv_key = go_persistence->add(
+      iv_url         = iv_url
+      iv_branch_name = ''
+      iv_package     = iv_package
+      iv_offline     = abap_true ).
+
+    TRY.
+        ls_repo = go_persistence->read( lv_key ).
+      CATCH lcx_not_found.
+        _raise 'new_offline not found'.
+    ENDTRY.
 
     CREATE OBJECT ro_repo
       EXPORTING
-        iv_key  = lines( gt_list ) + 1
-        is_data = ls_repo_persi.
+        is_data = ls_repo.
 
     add( ro_repo ).
 
@@ -15132,8 +15139,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         _raise 'identical keys'.
       ENDIF.
     ENDLOOP.
-
-    io_repo->add( ).
 
     APPEND io_repo TO gt_list.
 
@@ -15735,11 +15740,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS import
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
       RAISING   lcx_exception.
 
     CLASS-METHODS export_key
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
                 iv_zip TYPE abap_bool DEFAULT abap_true
       RAISING   lcx_exception.
 
@@ -16869,38 +16874,38 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
 
     CLASS-METHODS add
       IMPORTING is_item TYPE ty_item
-                iv_key  TYPE lcl_repo=>ty_key
+                iv_key  TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS uninstall
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS remove
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS commit
-      IMPORTING iv_key TYPE lcl_repo=>ty_key
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS diff
       IMPORTING is_result TYPE lcl_file_status=>ty_result
-                iv_key    TYPE lcl_repo=>ty_key
+                iv_key    TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_repo=>ty_key
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
                 is_file          TYPE lcl_file_status=>ty_result
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
       IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_repo=>ty_key
+      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
                 es_file   TYPE lcl_file_status=>ty_result
       RAISING   lcx_exception.
 
@@ -18062,7 +18067,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: ls_result TYPE lcl_file_status=>ty_result,
           lv_url    TYPE string,
-          lv_key    TYPE lcl_repo=>ty_key,
+          lv_key    TYPE lcl_persistence_repo=>ty_repo-key,
           ls_item   TYPE ty_item,
           lo_db     TYPE REF TO lcl_gui_page_db.
 
@@ -18142,6 +18147,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_class TYPE string.
 
 
+    IF lines( it_list ) = 0.
+      RETURN.
+    ENDIF.
+
     rv_html = '<div id="toc">' && gc_newline &&
       '<span class="menu">' && gc_newline.
 
@@ -18167,17 +18176,31 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
           lo_repo_online  TYPE REF TO lcl_repo_online,
           lo_repo_offline TYPE REF TO lcl_repo_offline,
+          lx_error        TYPE REF TO lcx_exception,
           lo_repo         LIKE LINE OF lt_repos.
 
 
-    lt_repos = lcl_repo_srv=>list( ).
-
     rv_html = lcl_gui=>header( ) &&
-      render_menu( ) &&
-      render_toc( lt_repos ).
+      render_menu( ).
+
+    TRY.
+        lt_repos = lcl_repo_srv=>list( ).
+      CATCH lcx_exception INTO lx_error.
+* if wrong meta data exists in database, make sure to still render the menu
+* where it is possible to use the database tool
+        rv_html = rv_html &&
+          '<div id="toc">Error:<br>' && gc_newline &&
+          lx_error->mv_text          && gc_newline &&
+          '</div>'                   && gc_newline.
+    ENDTRY.
+
+    rv_html = rv_html && render_toc( lt_repos ).
 
     IF lt_repos[] IS INITIAL.
-      rv_html = rv_html && '<br><a href="sapevent:explore">Explore</a> new projects'.
+      rv_html = rv_html &&
+        '<div id="toc">'                                      && gc_newline &&
+        '<a href="sapevent:explore">Explore</a> new projects' && gc_newline &&
+        '</div>'                                              && gc_newline.
     ELSE.
       LOOP AT lt_repos INTO lo_repo.
         IF lo_repo->is_offline( ) = abap_true.
@@ -19532,17 +19555,12 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-package      = iv_package.
     ls_repo-offline      = iv_offline.
 
-*  prevent duplicates
-    TRY.
-        read( iv_url ).
-        _raise 'Repository already exists'.
-      CATCH lcx_not_found ##NO_HANDLER.
-    ENDTRY.
-
     lv_repo_as_xml = to_xml( ls_repo ).
 
+    rv_key = get_next_id( ).
+
     mo_db->add( iv_type  = c_type_repo
-                iv_value = get_next_id( )
+                iv_value = rv_key
                 iv_data  = lv_repo_as_xml ).
 
   ENDMETHOD.
@@ -19550,7 +19568,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   METHOD delete.
 
     mo_db->delete( iv_type  = c_type_repo
-                   iv_value = url_to_id( iv_url ) ).
+                   iv_value = iv_key ).
 
   ENDMETHOD.
 
@@ -19565,17 +19583,19 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
       _raise 'update, sha empty'.
     ENDIF.
 
+    ASSERT NOT iv_key IS INITIAL.
+
     TRY.
-        ls_repo = read( iv_url ).
+        ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        _raise 'update repo not found'.
+        _raise 'key not found'.
     ENDTRY.
 
     ls_repo-sha1 = iv_branch_sha1.
     ls_content-data_str = to_xml( ls_repo ).
 
     mo_db->update( iv_type  = c_type_repo
-                   iv_value = url_to_id( iv_url )
+                   iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
@@ -19586,7 +19606,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     lt_repo = list( ).
 
-    READ TABLE lt_repo INTO rs_repo WITH KEY url = iv_url.
+    READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
@@ -19630,7 +19650,8 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     lt_content = mo_db->list_by_type( c_type_repo ).
 
     LOOP AT lt_content INTO ls_content.
-      ls_repo = from_xml( ls_content-data_str ).
+      MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO ls_repo.
+      ls_repo-key = ls_content-value.
       INSERT ls_repo INTO TABLE rt_repos.
     ENDLOOP.
 
@@ -19648,30 +19669,15 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD to_xml.
+
+    DATA: ls_xml TYPE ty_repo_xml.
+
+
+    MOVE-CORRESPONDING is_repo TO ls_xml.
+
     CALL TRANSFORMATION id
-      SOURCE (c_type_repo) = is_repo
+      SOURCE (c_type_repo) = ls_xml
       RESULT XML rv_repo_xml_string.
-  ENDMETHOD.
-
-  METHOD url_to_id.
-
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    lt_content = mo_db->list_by_type( c_type_repo ).
-
-    LOOP AT lt_content INTO ls_content.
-      ls_repo = from_xml( ls_content-data_str ).
-      IF ls_repo-url = iv_url.
-        rv_id = ls_content-value.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    _raise 'Repo, error finding id for url'.
-
   ENDMETHOD.
 
   METHOD constructor.
@@ -19682,7 +19688,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     mo_db->lock( iv_mode  = iv_mode
                  iv_type  = c_type_repo
-                 iv_value = url_to_id( iv_url ) ).
+                 iv_value = iv_key ).
 
   ENDMETHOD.
 
