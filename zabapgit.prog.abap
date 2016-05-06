@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.14'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.5.0'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16815,12 +16815,81 @@ CLASS lcl_gui IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_gui IMPLEMENTATION
 
+CLASS lcl_persistence_user DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
+
+    METHODS set_username
+      IMPORTING iv_username TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_username
+      RETURNING VALUE(rv_username) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_email
+      IMPORTING iv_email TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_email
+      RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS is_hidden
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_hidden) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS hide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS unhide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
+
+    DATA: mv_user TYPE xubname.
+
+    TYPES: ty_repo_hidden_tt TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_user,
+             username    TYPE string,
+             email       TYPE string,
+             repo_hidden TYPE ty_repo_hidden_tt,
+           END OF ty_user.
+
+    METHODS from_xml
+      IMPORTING iv_xml         TYPE string
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_user       TYPE ty_user
+      RETURNING VALUE(rv_xml) TYPE string.
+
+    METHODS read
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS update
+      IMPORTING is_user TYPE ty_user
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
 CLASS lcl_gui_page_main DEFINITION FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_gui_page.
 
   PRIVATE SECTION.
+    CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
+
     CLASS-METHODS render_repo_online
       IMPORTING io_repo        TYPE REF TO lcl_repo_online
       RETURNING VALUE(rv_html) TYPE string
@@ -16840,6 +16909,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
 
     CLASS-METHODS render_toc
       IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
+      RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_repo_menu
+      IMPORTING io_repo        TYPE REF TO lcl_repo
       RETURNING VALUE(rv_html) TYPE string
       RAISING   lcx_exception.
 
@@ -17056,57 +17130,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lcl_gui=>footer( ).
 
   ENDMETHOD.
-
-ENDCLASS.
-
-CLASS lcl_persistence_user DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
-
-    METHODS set_username
-      IMPORTING iv_username TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_username
-      RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS set_email
-      IMPORTING iv_email TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_email
-      RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
-
-    DATA: mv_user TYPE xubname.
-
-    TYPES: BEGIN OF ty_user,
-             username TYPE string,
-             email    TYPE string,
-           END OF ty_user.
-
-    METHODS from_xml
-      IMPORTING iv_xml         TYPE string
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_user       TYPE ty_user
-      RETURNING VALUE(rv_xml) TYPE string.
-
-    METHODS read
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING is_user TYPE ty_user
-      RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -17747,50 +17770,83 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       '<a id="' && io_repo->get_name( ) && '"></a>'   && gc_newline &&
       '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' && gc_newline &&
       '<h3>' && io_repo->get_package( ) && '</h3>'    && gc_newline &&
-      '<br>'                                          && gc_newline &&
-      '<a href="sapevent:remove?'                     &&
-      io_repo->get_key( )                             &&
-      '" class="grey">'                               &&
-      'remove'                                        &&
-      '</a>&nbsp;'                                    && gc_newline &&
-      '<a href="sapevent:uninstall?'                  &&
-      io_repo->get_key( )                             &&
-      '" class="grey">'                               &&
-      'uninstall'                                     &&
-      '</a><br><br>'                                  && gc_newline &&
-      '<table border="1">'                            && gc_newline &&
-      '<tr>'                                          && gc_newline &&
-      '<th><u>Local object</u></th>'                  && gc_newline &&
-      '</tr>'                                         && gc_newline ##NO_TEXT.
+      render_repo_menu( io_repo ).
 
-    lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
+    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
 
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-* todo, add jump link like in online rendering
       rv_html = rv_html &&
-        '<tr>' && gc_newline &&
-        '<td>' && <ls_tadir>-object &&
-        '&nbsp;' && <ls_tadir>-obj_name &&
-        '</td>' && gc_newline &&
-        '</tr>' && gc_newline.
-    ENDLOOP.
+        '<table border="1">'                            && gc_newline &&
+        '<tr>'                                          && gc_newline &&
+        '<th><u>Local object</u></th>'                  && gc_newline &&
+        '</tr>'                                         && gc_newline ##NO_TEXT.
 
-    rv_html = rv_html && '</table>' && gc_newline &&
-      '<a href="sapevent:zipimport?' &&
-      io_repo->get_key( ) &&
-      '">' && 'Import ZIP' &&
-      '</a>&nbsp;' &&
-      '<a href="sapevent:zipexport?' &&
-      io_repo->get_key( ) &&
-      '">' && 'Export ZIP' &&
-      '</a>&nbsp;' &&
-      '<a href="sapevent:files_commit?' &&
-      io_repo->get_key( ) &&
-      '">' && 'Export files and commit' &&
-      '</a>' && gc_newline &&
-      '</div>'.                                             "#EC NOTEXT
+      lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
+
+      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+* todo, add jump link like in online rendering
+        rv_html = rv_html &&
+          '<tr>' && gc_newline &&
+          '<td>' && <ls_tadir>-object &&
+          '&nbsp;' && <ls_tadir>-obj_name &&
+          '</td>' && gc_newline &&
+          '</tr>' && gc_newline.
+      ENDLOOP.
+
+      rv_html = rv_html && '</table>' && gc_newline &&
+        '<a href="sapevent:zipimport?' &&
+        io_repo->get_key( ) &&
+        '">' && 'Import ZIP' &&
+        '</a>&nbsp;' &&
+        '<a href="sapevent:zipexport?' &&
+        io_repo->get_key( ) &&
+        '">' && 'Export ZIP' &&
+        '</a>&nbsp;' &&
+        '<a href="sapevent:files_commit?' &&
+        io_repo->get_key( ) &&
+        '">' && 'Export files and commit' &&
+        '</a>' && gc_newline.
+    ENDIF.
+
+    rv_html = rv_html && '</div>'.                          "#EC NOTEXT
 
   ENDMETHOD.                    "render_repo_offline
+
+  METHOD render_repo_menu.
+
+    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_true.
+      rv_html = '<br>' &&
+        '<a href="sapevent:unhide?' &&
+        io_repo->get_key( ) &&
+        '" class="grey">' &&
+        'unhide' &&
+        '</a>&nbsp;'.
+    ELSE.
+      rv_html = '<br>' &&
+        '<a href="sapevent:remove?' &&
+        io_repo->get_key( ) &&
+        '" class="grey">' &&
+        'remove' &&
+        '</a>&nbsp;' && gc_newline &&
+        '<a href="sapevent:uninstall?' &&
+        io_repo->get_key( ) &&
+        '" class="grey">' &&
+        'uninstall' &&
+        '</a>&nbsp;' && gc_newline &&
+        '<a href="sapevent:refresh_single?' &&
+        io_repo->get_key( ) &&
+        '" class="grey">' &&
+        'refresh' &&
+        '</a>&nbsp;' && gc_newline &&
+        '<a href="sapevent:hide?' &&
+        io_repo->get_key( ) &&
+        '" class="grey">' &&
+        'hide' &&
+        '</a>&nbsp;' &&
+        '<br>' &&
+        '<br>' ##NO_TEXT.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD render_repo_online.
 
@@ -17817,137 +17873,130 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       '<h3>' && io_repo->get_url( ) && '</h3>&nbsp;&nbsp;' &&
       '<h3>' && io_repo->get_branch_name( ) && '</h3>&nbsp;&nbsp;' &&
       '<h3>' && io_repo->get_package( ) && '</h3>&nbsp;&nbsp;' &&
-      '<br>' &&
-      '<a href="sapevent:remove?' &&
-      io_repo->get_key( ) &&
-      '" class="grey">' &&
-      'remove' &&
-      '</a>&nbsp;' && gc_newline &&
-      '<a href="sapevent:uninstall?' &&
-      io_repo->get_key( ) &&
-      '" class="grey">' &&
-      'uninstall' &&
-      '</a>&nbsp;' && gc_newline &&
-      '<a href="sapevent:refresh_single?' &&
-      io_repo->get_key( ) &&
-      '" class="grey">' &&
-      'refresh' &&
-      '</a>&nbsp;' &&
-      '<br>' &&
-      '<br>' ##NO_TEXT.
+      render_repo_menu( io_repo ).
 
-    TRY.
-        lt_results = io_repo->status( ).
-        IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
-          lv_status = 'pull'.                               "#EC NOTEXT
-        ELSE.
-          READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
-          IF sy-subrc = 0.
-            lv_status = 'commit'.                           "#EC NOTEXT
+
+    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
+      TRY.
+          lt_results = io_repo->status( ).
+          IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
+            lv_status = 'pull'.                             "#EC NOTEXT
           ELSE.
-            lv_status = 'match'.                            "#EC NOTEXT
-          ENDIF.
-        ENDIF.
-
-        rv_html = rv_html && '<table border="1">' && gc_newline &&
-          '<tr>'                                  && gc_newline &&
-          '<th><u>Local object</u></th>'          && gc_newline &&
-          '<th><u>Package</u></th>'               && gc_newline &&
-          '<th><u>Path</u></th>'                  && gc_newline &&
-          '<th><u>Remote file</u></th>'           && gc_newline &&
-          '<th></th>'                             && gc_newline &&
-          '</tr>'                                 && gc_newline.
-
-        LOOP AT lt_results ASSIGNING <ls_result>.
-          lv_index = sy-tabix.
-          lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
-                                        is_file = <ls_result> ).
-
-          CLEAR lv_link.
-          IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
-            MOVE-CORRESPONDING <ls_result> TO ls_item.
-            lv_supported = lcl_objects=>is_supported( ls_item ).
-            IF lv_supported = abap_true.
-              lv_link = '<a href="sapevent:add?' && lv_file_encode && '">add</a>'.
+            READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
+            IF sy-subrc = 0.
+              lv_status = 'commit'.                         "#EC NOTEXT
             ELSE.
-              lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
+              lv_status = 'match'.                          "#EC NOTEXT
             ENDIF.
-          ELSEIF <ls_result>-match = abap_false.
-            lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
-          ENDIF.
-
-          IF lv_span = 0.
-            READ TABLE lt_results INTO ls_next INDEX lv_index.
-            ASSERT sy-subrc = 0.
-            WHILE ls_next-obj_type = <ls_result>-obj_type
-                AND ls_next-obj_name = <ls_result>-obj_name.
-              lv_span  = lv_span + 1.
-              lv_index = lv_index + 1.
-              READ TABLE lt_results INTO ls_next INDEX lv_index.
-              IF sy-subrc <> 0.
-                EXIT. " current loop.
-              ENDIF.
-            ENDWHILE.
-
-            IF <ls_result>-obj_type IS INITIAL.
-              lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
-
-              lv_package = lv_object.
-            ELSE.
-              lv_object = '<td rowspan="' &&
-                lv_span &&
-                '" valign="top"><a href="sapevent:jump?' &&
-                lv_file_encode &&
-                '" class="plain">' &&
-                <ls_result>-obj_type &&
-                '&nbsp;' &&
-                <ls_result>-obj_name  &&
-                '</a></td>'.
-
-              lv_package = '<td rowspan="' &&
-                lv_span &&
-                '" valign="top">' &&
-                <ls_result>-package &&
-                '</td>'.
-            ENDIF.
-          ELSE.
-            CLEAR lv_object.
-            CLEAR lv_package.
           ENDIF.
 
           rv_html = rv_html &&
-            '<tr>'                                    && gc_newline &&
-            lv_object                                 && gc_newline &&
-            lv_package                                && gc_newline &&
-            '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
-            '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
-            '<td>' && lv_link && '</td>'              && gc_newline &&
-            '</tr>'                                   && gc_newline.
+            '<table border="1">'           && gc_newline &&
+            '<tr>'                         && gc_newline &&
+            '<th><u>Local object</u></th>' && gc_newline &&
+            '<th><u>Package</u></th>'      && gc_newline &&
+            '<th><u>Path</u></th>'         && gc_newline &&
+            '<th><u>Remote file</u></th>'  && gc_newline &&
+            '<th></th>'                    && gc_newline &&
+            '</tr>'                        && gc_newline.
 
-          lv_span = lv_span - 1.
-        ENDLOOP.
+          LOOP AT lt_results ASSIGNING <ls_result>.
+            lv_index = sy-tabix.
+            lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
+                                          is_file = <ls_result> ).
 
-        rv_html = rv_html &&
-          '</table>' &&
-          gc_newline.
+            CLEAR lv_link.
+            IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
+              MOVE-CORRESPONDING <ls_result> TO ls_item.
+              lv_supported = lcl_objects=>is_supported( ls_item ).
+              IF lv_supported = abap_true.
+                lv_link = '<a href="sapevent:add?' && lv_file_encode && '">add</a>'.
+              ELSE.
+                lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
+              ENDIF.
+            ELSEIF <ls_result>-match = abap_false.
+              lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
+            ENDIF.
 
-        CASE lv_status.
-          WHEN 'commit'.
-            rv_html = rv_html && '<a href="sapevent:commit?'
-                      && io_repo->get_key( ) && '">commit</a>'.
-          WHEN 'pull'.
-            rv_html = rv_html && '<a href="sapevent:pull?'
-                      && io_repo->get_key( ) && '">pull</a>'.
-        ENDCASE.
+            IF lv_span = 0.
+              READ TABLE lt_results INTO ls_next INDEX lv_index.
+              ASSERT sy-subrc = 0.
+              WHILE ls_next-obj_type = <ls_result>-obj_type
+                  AND ls_next-obj_name = <ls_result>-obj_name.
+                lv_span  = lv_span + 1.
+                lv_index = lv_index + 1.
+                READ TABLE lt_results INTO ls_next INDEX lv_index.
+                IF sy-subrc <> 0.
+                  EXIT. " current loop.
+                ENDIF.
+              ENDWHILE.
 
-        lv_status = lcl_sap_package=>check( it_results = lt_results
-                                            iv_top     = io_repo->get_package( ) ).
-        rv_html = rv_html &&
-          lv_status.
+              IF <ls_result>-obj_type IS INITIAL.
+                lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
 
-      CATCH lcx_exception INTO lx_error.
-        rv_html = rv_html && render_error( lx_error ).
-    ENDTRY.
+                lv_package = lv_object.
+              ELSE.
+                lv_object = '<td rowspan="' &&
+                  lv_span &&
+                  '" valign="top"><a href="sapevent:jump?' &&
+                  lv_file_encode &&
+                  '" class="plain">' &&
+                  <ls_result>-obj_type &&
+                  '&nbsp;' &&
+                  <ls_result>-obj_name  &&
+                  '</a></td>'.
+
+                lv_package = '<td rowspan="' &&
+                  lv_span &&
+                  '" valign="top">' &&
+                  <ls_result>-package &&
+                  '</td>'.
+              ENDIF.
+            ELSE.
+              CLEAR lv_object.
+              CLEAR lv_package.
+            ENDIF.
+
+            rv_html = rv_html &&
+              '<tr>'                                    && gc_newline &&
+              lv_object                                 && gc_newline &&
+              lv_package                                && gc_newline &&
+              '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
+              '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
+              '<td>' && lv_link && '</td>'              && gc_newline &&
+              '</tr>'                                   && gc_newline.
+
+            lv_span = lv_span - 1.
+          ENDLOOP.
+
+          rv_html = rv_html &&
+            '</table>' &&
+            gc_newline.
+
+          CASE lv_status.
+            WHEN 'commit'.
+              rv_html = rv_html &&
+                '<a href="sapevent:commit?' &&
+                io_repo->get_key( ) &&
+                '">commit</a>'.
+            WHEN 'pull'.
+              rv_html = rv_html &&
+                '<a href="sapevent:pull?' &&
+                io_repo->get_key( ) &&
+                '">pull</a>'.
+          ENDCASE.
+
+          lv_status = lcl_sap_package=>check(
+            it_results = lt_results
+            iv_top     = io_repo->get_package( ) ).
+
+          rv_html = rv_html &&
+            lv_status.
+
+        CATCH lcx_exception INTO lx_error.
+          rv_html = rv_html && render_error( lx_error ).
+      ENDTRY.
+    ENDIF.
 
     rv_html = rv_html &&
       '</div>' && gc_newline.
@@ -18099,6 +18148,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key = iv_getdata.
         lcl_repo_srv=>get( lv_key )->refresh( ).
         lcl_gui=>render( ).
+      WHEN 'hide'.
+        lv_key = iv_getdata.
+        go_user->hide( lv_key ).
+        lcl_gui=>render( ).
+      WHEN 'unhide'.
+        lv_key = iv_getdata.
+        go_user->unhide( lv_key ).
+        lcl_gui=>render( ).
       WHEN 'commit'.
         lv_key = iv_getdata.
         commit( lv_key ).
@@ -18211,6 +18268,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error        TYPE REF TO lcx_exception,
           lo_repo         LIKE LINE OF lt_repos.
 
+
+    CREATE OBJECT go_user.
 
     rv_html = lcl_gui=>header( ) &&
       render_menu( ).
@@ -19449,15 +19508,50 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD is_hidden.
+
+    DATA: lt_hidden TYPE ty_repo_hidden_tt.
+
+
+    lt_hidden = read( )-repo_hidden.
+    READ TABLE lt_hidden FROM iv_key TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_hidden = abap_true.
+    ELSE.
+      rv_hidden = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD hide.
+
+    DATA: ls_user TYPE ty_user.
+
+
+    ls_user = read( ).
+    APPEND iv_key TO ls_user-repo_hidden.
+    update( ls_user ).
+
+  ENDMETHOD.
+
+  METHOD unhide.
+
+    DATA: ls_user TYPE ty_user.
+
+
+    ls_user = read( ).
+    DELETE TABLE ls_user-repo_hidden FROM iv_key.
+    update( ls_user ).
+
+  ENDMETHOD.
+
   METHOD set_email.
 
     DATA: ls_user TYPE ty_user.
 
 
     ls_user = read( ).
-
     ls_user-email = iv_email.
-
     update( ls_user ).
 
   ENDMETHOD.
