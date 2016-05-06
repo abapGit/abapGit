@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.4.11'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.4.12'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16834,6 +16834,10 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
     CLASS-METHODS render_menu
       RETURNING VALUE(rv_html) TYPE string.
 
+    CLASS-METHODS render_error
+      IMPORTING ix_error       TYPE REF TO lcx_exception
+      RETURNING VALUE(rv_html) TYPE string.
+
     CLASS-METHODS render_toc
       IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
       RETURNING VALUE(rv_html) TYPE string
@@ -17795,6 +17799,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_object      TYPE string,
           lv_index       LIKE sy-tabix,
           lv_file_encode TYPE string,
+          lx_error       TYPE REF TO lcx_exception,
           lv_span        TYPE i,
           lt_results     TYPE lcl_file_status=>ty_results_tt,
           ls_next        LIKE LINE OF lt_results,
@@ -17824,115 +17829,121 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       '</a><br>' &&
       '<br>'.
 
-    lt_results = io_repo->status( ).
-    IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
-      lv_status = 'pull'.                                   "#EC NOTEXT
-    ELSE.
-      READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
-        lv_status = 'commit'.                               "#EC NOTEXT
-      ELSE.
-        lv_status = 'match'.                                "#EC NOTEXT
-      ENDIF.
-    ENDIF.
-
-    rv_html = rv_html && '<table border="1">' && gc_newline &&
-      '<tr>'                                  && gc_newline &&
-      '<th><u>Local object</u></th>'          && gc_newline &&
-      '<th><u>Package</u></th>'               && gc_newline &&
-      '<th><u>Path</u></th>'                  && gc_newline &&
-      '<th><u>Remote file</u></th>'           && gc_newline &&
-      '<th></th>'                             && gc_newline &&
-      '</tr>'                                 && gc_newline.
-
-    LOOP AT lt_results ASSIGNING <ls_result>.
-      lv_index = sy-tabix.
-      lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
-                                    is_file = <ls_result> ).
-
-      CLEAR lv_link.
-      IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
-        MOVE-CORRESPONDING <ls_result> TO ls_item.
-        lv_supported = lcl_objects=>is_supported( ls_item ).
-        IF lv_supported = abap_true.
-          lv_link = '<a href="sapevent:add?' && lv_file_encode && '">add</a>'.
+    TRY.
+        lt_results = io_repo->status( ).
+        IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
+          lv_status = 'pull'.                               "#EC NOTEXT
         ELSE.
-          lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
-        ENDIF.
-      ELSEIF <ls_result>-match = abap_false.
-        lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
-      ENDIF.
-
-      IF lv_span = 0.
-        READ TABLE lt_results INTO ls_next INDEX lv_index.
-        ASSERT sy-subrc = 0.
-        WHILE ls_next-obj_type = <ls_result>-obj_type
-            AND ls_next-obj_name = <ls_result>-obj_name.
-          lv_span  = lv_span + 1.
-          lv_index = lv_index + 1.
-          READ TABLE lt_results INTO ls_next INDEX lv_index.
-          IF sy-subrc <> 0.
-            EXIT. " current loop.
+          READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
+          IF sy-subrc = 0.
+            lv_status = 'commit'.                           "#EC NOTEXT
+          ELSE.
+            lv_status = 'match'.                            "#EC NOTEXT
           ENDIF.
-        ENDWHILE.
-
-        IF <ls_result>-obj_type IS INITIAL.
-          lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
-
-          lv_package = lv_object.
-        ELSE.
-          lv_object = '<td rowspan="' &&
-            lv_span &&
-            '" valign="top"><a href="sapevent:jump?' &&
-            lv_file_encode &&
-            '" class="plain">' &&
-            <ls_result>-obj_type &&
-            '&nbsp;' &&
-            <ls_result>-obj_name  &&
-            '</a></td>'.
-
-          lv_package = '<td rowspan="' &&
-            lv_span &&
-            '" valign="top">' &&
-            <ls_result>-package &&
-            '</td>'.
         ENDIF.
-      ELSE.
-        CLEAR lv_object.
-        CLEAR lv_package.
-      ENDIF.
 
-      rv_html = rv_html &&
-        '<tr>'                                    && gc_newline &&
-        lv_object                                 && gc_newline &&
-        lv_package                                && gc_newline &&
-        '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
-        '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
-        '<td>' && lv_link && '</td>'              && gc_newline &&
-        '</tr>'                                   && gc_newline.
+        rv_html = rv_html && '<table border="1">' && gc_newline &&
+          '<tr>'                                  && gc_newline &&
+          '<th><u>Local object</u></th>'          && gc_newline &&
+          '<th><u>Package</u></th>'               && gc_newline &&
+          '<th><u>Path</u></th>'                  && gc_newline &&
+          '<th><u>Remote file</u></th>'           && gc_newline &&
+          '<th></th>'                             && gc_newline &&
+          '</tr>'                                 && gc_newline.
 
-      lv_span = lv_span - 1.
-    ENDLOOP.
+        LOOP AT lt_results ASSIGNING <ls_result>.
+          lv_index = sy-tabix.
+          lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
+                                        is_file = <ls_result> ).
+
+          CLEAR lv_link.
+          IF lv_status = 'match' AND <ls_result>-filename IS INITIAL.
+            MOVE-CORRESPONDING <ls_result> TO ls_item.
+            lv_supported = lcl_objects=>is_supported( ls_item ).
+            IF lv_supported = abap_true.
+              lv_link = '<a href="sapevent:add?' && lv_file_encode && '">add</a>'.
+            ELSE.
+              lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
+            ENDIF.
+          ELSEIF <ls_result>-match = abap_false.
+            lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
+          ENDIF.
+
+          IF lv_span = 0.
+            READ TABLE lt_results INTO ls_next INDEX lv_index.
+            ASSERT sy-subrc = 0.
+            WHILE ls_next-obj_type = <ls_result>-obj_type
+                AND ls_next-obj_name = <ls_result>-obj_name.
+              lv_span  = lv_span + 1.
+              lv_index = lv_index + 1.
+              READ TABLE lt_results INTO ls_next INDEX lv_index.
+              IF sy-subrc <> 0.
+                EXIT. " current loop.
+              ENDIF.
+            ENDWHILE.
+
+            IF <ls_result>-obj_type IS INITIAL.
+              lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
+
+              lv_package = lv_object.
+            ELSE.
+              lv_object = '<td rowspan="' &&
+                lv_span &&
+                '" valign="top"><a href="sapevent:jump?' &&
+                lv_file_encode &&
+                '" class="plain">' &&
+                <ls_result>-obj_type &&
+                '&nbsp;' &&
+                <ls_result>-obj_name  &&
+                '</a></td>'.
+
+              lv_package = '<td rowspan="' &&
+                lv_span &&
+                '" valign="top">' &&
+                <ls_result>-package &&
+                '</td>'.
+            ENDIF.
+          ELSE.
+            CLEAR lv_object.
+            CLEAR lv_package.
+          ENDIF.
+
+          rv_html = rv_html &&
+            '<tr>'                                    && gc_newline &&
+            lv_object                                 && gc_newline &&
+            lv_package                                && gc_newline &&
+            '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
+            '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
+            '<td>' && lv_link && '</td>'              && gc_newline &&
+            '</tr>'                                   && gc_newline.
+
+          lv_span = lv_span - 1.
+        ENDLOOP.
+
+        rv_html = rv_html &&
+          '</table>' &&
+          gc_newline.
+
+        CASE lv_status.
+          WHEN 'commit'.
+            rv_html = rv_html && '<a href="sapevent:commit?'
+                      && io_repo->get_key( ) && '">commit</a>'.
+          WHEN 'pull'.
+            rv_html = rv_html && '<a href="sapevent:pull?'
+                      && io_repo->get_key( ) && '">pull</a>'.
+        ENDCASE.
+
+        lv_status = lcl_sap_package=>check( it_results = lt_results
+                                            iv_top     = io_repo->get_package( ) ).
+        rv_html = rv_html &&
+          lv_status.
+
+      CATCH lcx_exception INTO lx_error.
+        rv_html = rv_html && render_error( lx_error ).
+    ENDTRY.
 
     rv_html = rv_html &&
-      '</table>' &&
-      gc_newline.
-
-    CASE lv_status.
-      WHEN 'commit'.
-        rv_html = rv_html && '<a href="sapevent:commit?'
-                  && io_repo->get_key( ) && '">commit</a>'.
-      WHEN 'pull'.
-        rv_html = rv_html && '<a href="sapevent:pull?'
-                  && io_repo->get_key( ) && '">pull</a>'.
-    ENDCASE.
-
-    lv_status = lcl_sap_package=>check( it_results = lt_results
-                                        iv_top     = io_repo->get_package( ) ).
-
-    rv_html = rv_html &&
-      lv_status &&
-      '</div>'.
+      '</div>' && gc_newline.
 
   ENDMETHOD.                    "render_repo
 
@@ -18172,6 +18183,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_error.
+
+    rv_html = '<div id="toc">' && gc_newline &&
+      'Error:<br>'             && gc_newline &&
+      ix_error->mv_text        && gc_newline &&
+      '</div>'                 && gc_newline.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
@@ -18189,10 +18209,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       CATCH lcx_exception INTO lx_error.
 * if wrong meta data exists in database, make sure to still render the menu
 * where it is possible to use the database tool
-        rv_html = rv_html &&
-          '<div id="toc">Error:<br>' && gc_newline &&
-          lx_error->mv_text          && gc_newline &&
-          '</div>'                   && gc_newline.
+        rv_html = rv_html && render_error( lx_error ).
     ENDTRY.
 
     rv_html = rv_html && render_toc( lt_repos ).
