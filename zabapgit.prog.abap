@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.5.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.5.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -56,8 +56,9 @@ TYPES: BEGIN OF ty_item,
        END OF ty_item.
 
 TYPES: BEGIN OF ty_metadata,
-         class   TYPE string,
-         version TYPE string,
+         class      TYPE string,
+         version    TYPE string,
+         late_deser TYPE string,
        END OF ty_metadata.
 
 CONSTANTS: BEGIN OF gc_type,
@@ -1138,7 +1139,8 @@ CLASS lcl_xml DEFINITION ABSTRACT.
     CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit' ##NO_TEXT,
                c_attr_version            TYPE string VALUE 'version' ##NO_TEXT,
                c_attr_serializer         TYPE string VALUE 'serializer' ##NO_TEXT,
-               c_attr_serializer_version TYPE string VALUE 'serializer_version' ##NO_TEXT.
+               c_attr_serializer_version TYPE string VALUE 'serializer_version' ##NO_TEXT,
+               c_attr_late_deserialize   TYPE string VALUE 'late_deserialize' ##NO_TEXT.
 
     METHODS to_xml
       IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
@@ -1205,6 +1207,7 @@ CLASS lcl_xml IMPLEMENTATION.
 *    buffer serializer metadata. Git node will be removed lateron
     ms_metadata-class = li_element->get_attribute_ns( c_attr_serializer ).
     ms_metadata-version = li_element->get_attribute_ns( c_attr_serializer_version ).
+    ms_metadata-late_deser = li_element->get_attribute_ns( c_attr_late_deserialize ).
 
   ENDMETHOD.                    "parse
 
@@ -1369,6 +1372,8 @@ CLASS lcl_xml_output IMPLEMENTATION.
                              value = is_metadata-class ).   "#EC NOTEXT
       li_git->set_attribute( name  = c_attr_serializer_version
                              value = is_metadata-version ). "#EC NOTEXT
+      li_git->set_attribute( name  = c_attr_late_deserialize
+                             value = is_metadata-late_deser ). "#EC NOTEXT
     ENDIF.
     li_git->append_child( li_abap ).
     mi_xml_doc->get_root( )->append_child( li_git ).
@@ -2498,7 +2503,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -8620,6 +8625,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     DATA: lv_tool TYPE enhtooltype.
 
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
                   CHANGING cg_data = lv_tool ).
@@ -9584,6 +9592,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-late_deser = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -9695,7 +9704,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-* todo, TOBJ has to be saved/generated after the DDIC tables have been activated
+* TOBJ has to be saved/generated after the DDIC tables have been activated - fixed with late deserialization
       _raise 'error from OBJ_GENERATE'.
     ENDIF.
 
@@ -10430,7 +10439,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     lv_program_name = main_name( ).
     ls_progdir = read_progdir( lv_program_name ).
 
-    IF ls_progdir-subc = '1'.
+    IF ls_progdir-subc = 'F'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
       io_xml->add( iv_name = 'DYNPROS'
                    ig_data = lt_dynpros ).
@@ -13250,12 +13259,13 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item    TYPE ty_item,
-          lv_cancel  TYPE abap_bool,
-          li_obj     TYPE REF TO lif_object,
-          lo_files   TYPE REF TO lcl_objects_files,
-          lo_xml     TYPE REF TO lcl_xml_input,
-          lt_results TYPE lcl_file_status=>ty_results_tt.
+    DATA: ls_item               TYPE ty_item,
+          lv_cancel             TYPE abap_bool,
+          li_obj                TYPE REF TO lif_object,
+          lo_files              TYPE REF TO lcl_objects_files,
+          lo_xml                TYPE REF TO lcl_xml_input,
+          lt_results            TYPE lcl_file_status=>ty_results_tt,
+          lt_late_deser_results TYPE lcl_file_status=>ty_results_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
@@ -13295,6 +13305,11 @@ CLASS lcl_objects IMPLEMENTATION.
 *      Analyze XML in order to instantiate the proper serializer
       lo_xml = lo_files->read_xml( ).
 
+      IF lo_xml->get_metadata( )-late_deser EQ abap_true.
+        APPEND <ls_result> TO lt_late_deser_results.
+        CONTINUE.
+      ENDIF.
+
       li_obj = create_object( is_item       = ls_item
                               is_metadata   = lo_xml->get_metadata( ) ).
 
@@ -13306,6 +13321,42 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     lcl_objects_activation=>activate( ).
+
+
+    LOOP AT lt_late_deser_results ASSIGNING <ls_result>.
+      show_progress( iv_current  = sy-tabix
+                     iv_total    = lines( lt_late_deser_results )
+                     iv_obj_name = <ls_result>-obj_name ).
+
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+* handle namespaces
+      REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
+
+      lv_cancel = check_warning( is_item    = ls_item
+                                 iv_package = iv_package ).
+      IF lv_cancel = abap_true.
+        RETURN.
+      ENDIF.
+
+      CREATE OBJECT lo_files
+        EXPORTING
+          is_item = ls_item.
+      lo_files->set_files( it_files ).
+
+*      Analyze XML in order to instantiate the proper serializer
+      lo_xml = lo_files->read_xml( ).
+
+      li_obj = create_object( is_item       = ls_item
+                              is_metadata   = lo_xml->get_metadata( ) ).
+
+      li_obj->mo_files = lo_files.
+
+      li_obj->deserialize( iv_package = iv_package
+                           io_xml     = lo_xml ).
+
+    ENDLOOP.
 
     update_package_tree( iv_package ).
 
@@ -14490,7 +14541,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_repo,
              key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_repo_xml.
+            INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
 
