@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.6.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.0'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -12706,8 +12706,11 @@ CLASS lcl_sap_package DEFINITION FINAL.
         IMPORTING it_results       TYPE lcl_file_status=>ty_results_tt
                   iv_top           TYPE devclass
         RETURNING VALUE(rv_errors) TYPE string,
-      create
+      create_local
         IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception,
+      create
+        IMPORTING is_package TYPE scompkdtln
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -12820,13 +12823,16 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lv_err TYPE string.
-    DATA ls_package TYPE scompkdtln.
-    DATA li_package TYPE REF TO if_package.
+    DATA: lv_err     TYPE string,
+          ls_package LIKE is_package,
+          li_package TYPE REF TO if_package.
+
+
+    ASSERT NOT is_package-devclass IS INITIAL.
 
     cl_package_factory=>load_package(
       EXPORTING
-        i_package_name             = iv_package
+        i_package_name             = is_package-devclass
       EXCEPTIONS
         object_not_existing        = 1
         unexpected_error           = 2
@@ -12837,11 +12843,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
       RETURN. "Package already exists. We assume this is fine
     ENDIF.
 
-    ls_package-devclass  = iv_package.
-    ls_package-ctext     = iv_package.
-    ls_package-pdevclass = '$TMP'.
-    ls_package-component = 'LOCAL'.
-    ls_package-as4user   = sy-uname.
+    ls_package = is_package.
 
     cl_package_factory=>create_new_package(
       EXPORTING
@@ -12875,7 +12877,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 *        error_in_cts_checks        = 21
         OTHERS                     = 18 ).
     IF sy-subrc <> 0.
-      lv_err = |Package { iv_package } could not be created|.
+      lv_err = |Package { is_package-devclass } could not be created|.
       _raise lv_err.
     ENDIF.
 
@@ -12895,6 +12897,21 @@ CLASS lcl_sap_package IMPLEMENTATION.
         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
       _raise lv_err.
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD create_local.
+
+    DATA: ls_package TYPE scompkdtln.
+
+
+    ls_package-devclass  = iv_package.
+    ls_package-ctext     = iv_package.
+    ls_package-pdevclass = '$TMP'.
+    ls_package-component = 'LOCAL'.
+    ls_package-as4user   = sy-uname.
+
+    create( ls_package ).
 
   ENDMETHOD.                    "create
 
@@ -17891,6 +17908,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_branch_name TYPE string,
           lv_icon_ok     TYPE icon-name,
           lv_icon_br     TYPE icon-name,
+          lv_icon_msg    TYPE icon-name,
           lo_repo        TYPE REF TO lcl_repo_online,
           lt_fields      TYPE TABLE OF sval.
 
@@ -17917,6 +17935,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_icon_ok = icon_okay.
     lv_icon_br = icon_workflow_fork.
+    lv_icon_msg = icon_msg.
 
     CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
@@ -17927,6 +17946,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         icon_ok_push      = lv_icon_ok
         first_pushbutton  = 'Select branch'
         icon_button_1     = lv_icon_br
+        second_pushbutton = 'Create package'
+        icon_button_2     = lv_icon_msg
       IMPORTING
         returncode        = lv_returncode
       TABLES
@@ -18295,7 +18316,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           iv_url              = lv_url
           iv_target_package   = lv_target_package ).
 
-        lcl_sap_package=>create( lv_target_package ).
+        lcl_sap_package=>create_local( lv_target_package ).
 
         lo_repo = lcl_repo_srv=>new_online(
           iv_url         = lv_url
@@ -18626,11 +18647,12 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
                   RAISING lcx_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
-  DATA: lv_url       TYPE string,
-        lv_answer    TYPE c,
-        lx_error     TYPE REF TO lcx_exception,
-        lt_selection TYPE TABLE OF spopli,
-        lt_branches  TYPE lcl_git_transport=>ty_branch_list_tt.
+  DATA: lv_url          TYPE string,
+        lv_answer       TYPE c,
+        lx_error        TYPE REF TO lcx_exception,
+        lt_selection    TYPE TABLE OF spopli,
+        ls_package_data TYPE scompkdtln,
+        lt_branches     TYPE lcl_git_transport=>ty_branch_list_tt.
 
   FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields,
                  <ls_branch>  LIKE LINE OF lt_branches,
@@ -18690,6 +18712,36 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
     ASSERT sy-subrc = 0.
     <ls_fbranch>-value = <ls_sel>-varoption.
 
+  ELSEIF pv_code = 'COD2'.
+    cv_show_popup = abap_true.
+
+    CALL FUNCTION 'FUNCTION_EXISTS'
+      EXPORTING
+        funcname           = 'PB_POPUP_PACKAGE_CREATE'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 1.
+* looks like the function module used does not exist on all
+* versions since 702, so show an error
+      _raise 'Function module PB_POPUP_PACKAGE_CREATE does not exist'.
+    ENDIF.
+
+    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
+      CHANGING
+        p_object_data    = ls_package_data
+      EXCEPTIONS
+        action_cancelled = 1.
+    IF sy-subrc = 1.
+      RETURN.
+    ENDIF.
+
+    lcl_sap_package=>create( ls_package_data ).
+    COMMIT WORK.
+
+    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TDEVC'.
+    ASSERT sy-subrc = 0.
+    <ls_fbranch>-value = ls_package_data-devclass.
   ENDIF.
 
 ENDFORM.                    "branch_popup
@@ -19640,7 +19692,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
                    <lv_type>   LIKE LINE OF lt_types.
 
 
-    lcl_sap_package=>create( c_package ).
+    lcl_sap_package=>create_local( c_package ).
 
     lt_types = lcl_objects=>supported_list( ).
 
