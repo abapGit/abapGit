@@ -17288,15 +17288,9 @@ CLASS lcl_gui_page_diff DEFINITION FINAL.
     DATA: ms_result TYPE lcl_file_status=>ty_result,
           mo_diff   TYPE REF TO lcl_diff.
 
-<<<<<<< HEAD
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_head  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_diff  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-=======
-    METHODS:
-      render_stats
-        RETURNING VALUE(rv_html) TYPE string.
->>>>>>> master
 
 ENDCLASS.
 
@@ -17370,6 +17364,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( 'table.diff_tab td.num, th.num {' ).              "#EC NOTEXT
     lo_html->add( '  text-align: right;' ).                         "#EC NOTEXT
     lo_html->add( '  color: #ccc;' ).                               "#EC NOTEXT
+    lo_html->add( '  border-left: 1px solid #eee;' ).              "#EC NOTEXT
     lo_html->add( '  border-right: 1px solid #eee;' ).              "#EC NOTEXT
     lo_html->add( '}' ).                                            "#EC NOTEXT
     lo_html->add( 'table.diff_tab td.cmd {' ).                      "#EC NOTEXT
@@ -17380,7 +17375,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html = lo_html.
   ENDMETHOD.
 
-<<<<<<< HEAD
   METHOD render_head.
     DATA lo_html  TYPE REF TO lcl_html_helper.
     DATA ls_count TYPE lcl_diff=>ty_count.
@@ -17401,15 +17395,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html = lo_html.
   ENDMETHOD.
-=======
-  METHOD render_stats.
-
-    DATA: ls_count TYPE lcl_diff=>ty_count.
->>>>>>> master
 
   METHOD render_diff.
 
-<<<<<<< HEAD
     DATA lo_html         TYPE REF TO lcl_html_helper.
     DATA lt_diffs        TYPE lcl_diff=>ty_diffs_tt.
     DATA lv_index        TYPE i.
@@ -17421,74 +17409,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lv_anchor_name  TYPE string.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
-=======
-    ls_count = mo_diff->stats( ).
-    rv_html = '<table border="1">' && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Insert</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-insert      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Delete</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-delete      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Update</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-update      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '</table><br>'       && gc_newline.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~render.
-
-    DATA: lv_html         TYPE string,
-          lv_local        TYPE string,
-          lv_remote       TYPE string,
-          lv_clocal       TYPE string,
-          lv_cremote      TYPE string,
-          lv_index        TYPE i,
-          lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
-          lv_anchor_count LIKE sy-tabix,
-          lv_break        TYPE string,
-          lv_href         TYPE string.
-
-    FIELD-SYMBOLS: <ls_diff>  LIKE LINE OF lt_diffs,
-                   <ls_break> LIKE LINE OF lt_diffs.
-
-
-    lv_html = lcl_gui=>header( ) &&
-      '<div id="header">' &&
-      '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
-      '</div>' &&
-      '<div id="toc">' &&
-      '<h3>' &&
-      ms_result-obj_type && '&nbsp;' &&
-      ms_result-obj_name && '&nbsp;' &&
-      ms_result-filename && '</h3><br><br>' &&
-      render_stats( ).
-
-    lv_html = lv_html &&
-      '<table border="0">'                    && gc_newline &&
-      '<tr>'                                  && gc_newline &&
-      '<th></td>'                             && gc_newline &&
-      '<th><h2>Local</h2></th>'               && gc_newline &&
-      |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
-      '<th></td>'                             && gc_newline &&
-      '<th><h2>Remote</h2></th>'              && gc_newline &&
-      '</tr>'.
->>>>>>> master
 
     CREATE OBJECT lo_html.
     lt_diffs = mo_diff->get( ).
 
-<<<<<<< HEAD
     lo_html->add( '<div class="diff_content">' ).  "#EC NOTEXT
     lo_html->add( '<table class="diff_tab">' ).    "#EC NOTEXT
     lo_html->add( '<tr>' ).                        "#EC NOTEXT
@@ -17502,27 +17426,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lv_index  = sy-tabix.
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
-=======
-    LOOP AT lt_diffs ASSIGNING <ls_diff> WHERE short = abap_true.
-      lv_index = sy-tabix + 1.
-      READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
-      IF sy-subrc = 0 AND <ls_break>-short = abap_false.
-        lv_break = '<tr>' && gc_newline &&
-          '<td>&nbsp;<br>&nbsp;</td>' && gc_newline &&
-          '<td></td>' && gc_newline &&
-          '<td></td>' && gc_newline &&
-          '<td></td>' && gc_newline &&
-          '<td></td>' && gc_newline &&
-          '</tr>'.
-      ELSE.
-        CLEAR lv_break.
-      ENDIF.
-
-      lv_local = escape( val    = <ls_diff>-local
-                         format = cl_abap_format=>e_html_attr ).
-      lv_remote = escape( val    = <ls_diff>-remote
-                          format = cl_abap_format=>e_html_attr ).
->>>>>>> master
 
       CLEAR: lv_attr_local, lv_attr_remote.
       CASE <ls_diff>-result.
@@ -17535,13 +17438,12 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
       ENDCASE.
 
-<<<<<<< HEAD
-      lo_html->add( '<tr>' ).                                    "#EC NOTEXT
-      lo_html->add( |<td class="num">{ lv_index }</td>| ).       "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }>{ lv_local }</td>| ).  "#EC NOTEXT
-      lo_html->add( |<td class="num"></td>| ).                   "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }>{ lv_remote }</td>| )."#EC NOTEXT
-      lo_html->add( '</tr>' ).                                   "#EC NOTEXT
+      lo_html->add( '<tr>' ).                                           "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).  "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }>{ lv_local }</td>| ).         "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }>{ lv_remote }</td>| ).       "#EC NOTEXT
+      lo_html->add( '</tr>' ).                                          "#EC NOTEXT
 
     ENDLOOP.
 
@@ -17550,7 +17452,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html = lo_html.
   ENDMETHOD.
-
 
   METHOD lif_gui_page~on_event.
 
@@ -17567,6 +17468,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     DATA: lv_html         TYPE string.
     DATA  lo_html  TYPE REF TO lcl_html_helper.
+
+    CREATE OBJECT lo_html.
 
 * REDO
     lv_html = lcl_gui=>header( ).
@@ -17587,35 +17490,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( lcl_gui=>footer( ) ).
 
     rv_html = lo_html->mv_html.
-=======
-      IF <ls_diff>-result = lcl_diff=>c_diff-delete
-          OR <ls_diff>-result = lcl_diff=>c_diff-insert
-          OR <ls_diff>-result = lcl_diff=>c_diff-update.
-        lv_anchor_count = lv_anchor_count + 1.
-        lv_href = |<a name="diff_{
-          lv_anchor_count
-          }" href="#diff_{
-          lv_anchor_count + 1
-          }">{ <ls_diff>-result }</a>|.
-      ELSE.
-        CLEAR lv_href.
-      ENDIF.
-
-      lv_html = lv_html &&
-        '<tr>'                                                        && gc_newline &&
-        '<td>' && <ls_diff>-local_line && '</td>'                     && gc_newline &&
-        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>'   && gc_newline &&
-        '<td>&nbsp;' && lv_href && '&nbsp;</td>'                      && gc_newline &&
-        '<td>' && <ls_diff>-remote_line && '</td>'                    && gc_newline &&
-        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' && gc_newline &&
-        '</tr>' && lv_break                                           && gc_newline.
-    ENDLOOP.
-
-    rv_html = lv_html && gc_newline &&
-      '</table>'      && gc_newline &&
-      '</div>'        && gc_newline &&
-      lcl_gui=>footer( ).
->>>>>>> master
 
   ENDMETHOD.
 
