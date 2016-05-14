@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.5.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.5.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16579,6 +16579,23 @@ CLASS lcl_gui IMPLEMENTATION.
       '.menu_end {'                          && gc_newline &&
       '  border-right: 0px !important;'      && gc_newline &&
       '}'                                    && gc_newline &&
+      '.repo_name span {' && gc_newline &&
+      '  font-weight: bold;' && gc_newline &&
+      '  font-size: x-large;' && gc_newline &&
+      '}' && gc_newline &&
+      '.repo_attr {' && gc_newline &&
+      '  color: grey;' && gc_newline &&
+      '  font-size: smaller;' && gc_newline &&
+      '}' && gc_newline &&
+      '.repo_attr span {' && gc_newline &&
+      '  margin-right:     1em;' && gc_newline &&
+      '}' && gc_newline &&
+      '.repo_attr input {' && gc_newline &&
+      '  background-color: transparent;' && gc_newline &&
+      '  border-style: none;' && gc_newline &&
+      '  text-overflow: ellipsis;' && gc_newline &&
+      '  color: grey;' && gc_newline &&
+      '}' && gc_newline &&
       'a, a:visited {'                       && gc_newline &&
       '  color:            #4078c0;'         && gc_newline &&
       '  text-decoration:  none;'            && gc_newline &&
@@ -17788,12 +17805,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
 
-
     rv_html = rv_html &&
-      '<div class="repo">'                            && gc_newline &&
-      '<a id="' && io_repo->get_name( ) && '"></a>'   && gc_newline &&
-      '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' && gc_newline &&
-      '<h3>' && io_repo->get_package( ) && '</h3>'    && gc_newline &&
+      '<div class="repo">'                                 && gc_newline &&
+      '<a id="' && io_repo->get_name( ) && '"></a>'        && gc_newline &&
+      '<table class="mixedbar">'                           && gc_newline &&
+      '<tr>'                                               && gc_newline &&
+      '<td class="repo_name">'                             && gc_newline &&
+      '<span>' && io_repo->get_name( ) && '</span>'        && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '<td class="repo_attr right">'                       && gc_newline &&
+      '<span>' && io_repo->get_package( ) && '</span>'     && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '</tr>'                                              && gc_newline &&
+      '</table>'                                           && gc_newline &&
       render_repo_menu( io_repo ).
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
@@ -17837,38 +17861,30 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo_menu.
 
+    rv_html = '<div class="mixedbar right menu">' && gc_newline.
+
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_true.
-      rv_html = '<br>' &&
-        '<a href="sapevent:unhide?' &&
+      rv_html = rv_html &&
+        '<a class="menu_end" href="sapevent:unhide?' &&
         io_repo->get_key( ) &&
-        '" class="grey">' &&
-        'unhide' &&
-        '</a>&nbsp;'.
+        '">Unhide</a>' && gc_newline.
     ELSE.
-      rv_html = '<br>' &&
+      rv_html = rv_html &&
         '<a href="sapevent:remove?' &&
         io_repo->get_key( ) &&
-        '" class="grey">' &&
-        'remove' &&
-        '</a>&nbsp;' && gc_newline &&
+        '">Remove</a>' && gc_newline &&
         '<a href="sapevent:uninstall?' &&
         io_repo->get_key( ) &&
-        '" class="grey">' &&
-        'uninstall' &&
-        '</a>&nbsp;' && gc_newline &&
+        '">Uninstall</a>' && gc_newline &&
         '<a href="sapevent:refresh_single?' &&
         io_repo->get_key( ) &&
-        '" class="grey">' &&
-        'refresh' &&
-        '</a>&nbsp;' && gc_newline &&
-        '<a href="sapevent:hide?' &&
+        '">Refresh</a>' && gc_newline &&
+        '<a class="menu_end" href="sapevent:hide?' &&
         io_repo->get_key( ) &&
-        '" class="grey">' &&
-        'hide' &&
-        '</a>&nbsp;' &&
-        '<br>' &&
-        '<br>' ##NO_TEXT.
+        '">Hide</a>' && gc_newline.
     ENDIF.
+
+    rv_html = rv_html && '</div>' && gc_newline.
 
   ENDMETHOD.
 
@@ -17891,14 +17907,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     rv_html = rv_html &&
-      '<div class="repo">' &&
-      '<a id="' && io_repo->get_name( ) && '"></a>' &&
-      '<h2>' && io_repo->get_name( ) && '</h2>&nbsp;' &&
-      '<h3>' && io_repo->get_url( ) && '</h3>&nbsp;&nbsp;' &&
-      '<h3>' && io_repo->get_branch_name( ) && '</h3>&nbsp;&nbsp;' &&
-      '<h3>' && io_repo->get_package( ) && '</h3>&nbsp;&nbsp;' &&
+      '<div class="repo">'                                 && gc_newline &&
+      '<a id="' && io_repo->get_name( ) && '"></a>'        && gc_newline &&
+      '<table class="mixedbar">'                           && gc_newline &&
+      '<tr>'                                               && gc_newline &&
+      '<td class="repo_name">'                             && gc_newline &&
+      '<span>' && io_repo->get_name( ) && '</span>'        && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '<td class="repo_attr right">'                       && gc_newline &&
+      '<span>' && io_repo->get_package( ) && '</span>'     && gc_newline &&
+      '<span>' && io_repo->get_branch_name( ) && '</span>' && gc_newline &&
+      '<span>' && io_repo->get_url( ) && '</span>'         && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '</tr>'                                              && gc_newline &&
+      '</table>'                                           && gc_newline &&
       render_repo_menu( io_repo ).
-
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
