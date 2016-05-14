@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.5.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.6.0'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1780,9 +1780,12 @@ CLASS lcl_diff DEFINITION FINAL.
                END OF c_diff.
 
     TYPES: BEGIN OF ty_diff,
-             local  TYPE string,
-             result TYPE c LENGTH 1,
-             remote TYPE string,
+             local_line  TYPE c LENGTH 6,
+             local       TYPE string,
+             result      TYPE c LENGTH 1,
+             remote_line TYPE c LENGTH 6,
+             remote      TYPE string,
+             short       TYPE abap_bool,
            END OF ty_diff.
     TYPES: ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -1807,22 +1810,25 @@ CLASS lcl_diff DEFINITION FINAL.
   PRIVATE SECTION.
     DATA mt_diff TYPE ty_diffs_tt.
 
-    CLASS-METHODS: unpack
-      IMPORTING iv_local  TYPE xstring
-                iv_remote TYPE xstring
-      EXPORTING et_local  TYPE abaptxt255_tab
-                et_remote TYPE abaptxt255_tab.
+    CLASS-METHODS:
+      unpack
+        IMPORTING iv_local  TYPE xstring
+                  iv_remote TYPE xstring
+        EXPORTING et_local  TYPE abaptxt255_tab
+                  et_remote TYPE abaptxt255_tab,
+      render
+        IMPORTING it_local       TYPE abaptxt255_tab
+                  it_remote      TYPE abaptxt255_tab
+                  it_delta       TYPE vxabapt255_tab
+        RETURNING VALUE(rt_diff) TYPE ty_diffs_tt,
+      compute
+        IMPORTING it_local        TYPE abaptxt255_tab
+                  it_remote       TYPE abaptxt255_tab
+        RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
 
-    CLASS-METHODS: render
-      IMPORTING it_local       TYPE abaptxt255_tab
-                it_remote      TYPE abaptxt255_tab
-                it_delta       TYPE vxabapt255_tab
-      RETURNING VALUE(rt_diff) TYPE ty_diffs_tt.
-
-    CLASS-METHODS: compute
-      IMPORTING it_local        TYPE abaptxt255_tab
-                it_remote       TYPE abaptxt255_tab
-      RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
+    METHODS:
+      calculate_line_num,
+      shortlist.
 
 ENDCLASS.                    "lcl_diff DEFINITION
 
@@ -1887,6 +1893,64 @@ CLASS lcl_diff IMPLEMENTATION.
 
   ENDMETHOD.                    "compute
 
+  METHOD shortlist.
+
+    DATA: lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+
+
+    IF lines( mt_diff ) < 5000.
+      LOOP AT mt_diff ASSIGNING <ls_diff>.
+        <ls_diff>-short = abap_true.
+      ENDLOOP.
+    ELSE.
+      LOOP AT mt_diff TRANSPORTING NO FIELDS
+          WHERE NOT result IS INITIAL AND short = abap_false.
+        lv_index = sy-tabix.
+
+        DO 20 TIMES.
+          READ TABLE mt_diff INDEX lv_index ASSIGNING <ls_diff>.
+          IF sy-subrc <> 0 OR <ls_diff>-short = abap_true.
+            EXIT.
+          ENDIF.
+          <ls_diff>-short = abap_true.
+          lv_index = lv_index - 1.
+        ENDDO.
+
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD calculate_line_num.
+
+    DATA: lv_local  TYPE i VALUE 1,
+          lv_remote TYPE i VALUE 1.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+      <ls_diff>-local_line = lv_local.
+      <ls_diff>-remote_line = lv_remote.
+
+      CASE <ls_diff>-result.
+        WHEN c_diff-delete.
+          lv_remote = lv_remote + 1.
+          CLEAR <ls_diff>-local_line.
+        WHEN c_diff-insert.
+          lv_local = lv_local + 1.
+          CLEAR <ls_diff>-remote_line.
+        WHEN OTHERS.
+          lv_local = lv_local + 1.
+          lv_remote = lv_remote + 1.
+      ENDCASE.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD constructor.
 
     DATA: lt_delta  TYPE vxabapt255_tab,
@@ -1905,6 +1969,10 @@ CLASS lcl_diff IMPLEMENTATION.
     mt_diff = render( it_local  = lt_local
                       it_remote = lt_remote
                       it_delta  = lt_delta ).
+
+    calculate_line_num( ).
+
+    shortlist( ).
 
   ENDMETHOD.                    "diff
 
@@ -1966,7 +2034,7 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
@@ -2665,7 +2733,8 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class
-        WHERE table_line <> 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'. "have the generic plugin only as fallback
+        WHERE table_line <> 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'.
+* have the generic plugin only as fallback
       TRY.
           CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
         CATCH cx_sy_create_object_error.
@@ -2680,8 +2749,11 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
       LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
         INSERT ls_objtype_map INTO TABLE gt_objtype_map.
         IF sy-subrc <> 0.
-* No exception in class-contructor possible. Anyway, a shortdump is more appropriate in this case
-          ASSERT 'There must not be' = |multiple ABAPGit-Plugins for the same object type { ls_objtype_map-obj_typ }|.
+* No exception in class-contructor possible.
+* Anyway, a shortdump is more appropriate in this case
+          ASSERT 'There must not be' =
+            |multiple ABAPGit-Plugins for the same object type {
+            ls_objtype_map-obj_typ }|.
         ENDIF.
       ENDLOOP.
     ENDLOOP. "at plugins
@@ -3358,7 +3430,8 @@ CLASS lcl_objects_super IMPLEMENTATION.
   ENDMETHOD.                                                "jump_se11
 
   METHOD get_metadata.
-    rs_metadata-class = cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
+    rs_metadata-class =
+      cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
     rs_metadata-version = 'v1.0.0' ##no_text.
   ENDMETHOD.                    "get_metadata
 
@@ -9700,7 +9773,8 @@ CLASS lcl_object_tobj IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-* TOBJ has to be saved/generated after the DDIC tables have been activated - fixed with late deserialization
+* TOBJ has to be saved/generated after the DDIC tables have been
+* activated - fixed with late deserialization
       _raise 'error from OBJ_GENERATE'.
     ENDIF.
 
@@ -12910,7 +12984,9 @@ CLASS lcl_objects IMPLEMENTATION.
              item     LIKE is_item,
              metadata LIKE is_metadata,
            END OF ty_obj_serializer_map.
-    STATICS st_obj_serializer_map TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
+
+    STATICS st_obj_serializer_map
+      TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
 
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
@@ -12921,7 +12997,8 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = ls_obj_serializer_map-metadata-class.
     ELSEIF is_metadata IS NOT INITIAL.
 *        Metadata is provided only on serialization
-*        Once this has been triggered, the same serializer shall be used for subsequent processes.
+*        Once this has been triggered, the same serializer shall be used
+*        for subsequent processes.
 *        Thus, buffer the metadata afterwards
       ls_obj_serializer_map-item      = is_item.
       ls_obj_serializer_map-metadata  = is_metadata.
@@ -16767,7 +16844,8 @@ CLASS lcl_gui IMPLEMENTATION.
       '<head>' && gc_newline &&
       '<title>abapGit</title>' && gc_newline &&
       css( ) && gc_newline &&
-      '<meta http-equiv="content-type" content="text/html; charset=utf-8">' && gc_newline &&
+      '<meta http-equiv="content-type" content="text/html; charset=utf-8">' &&
+      gc_newline &&
       '</head>' && gc_newline &&
       '<body>' && gc_newline.                               "#EC NOTEXT
 
@@ -16924,7 +17002,10 @@ CLASS lcl_persistence_user DEFINITION FINAL.
 
     DATA: mv_user TYPE xubname.
 
-    TYPES: ty_repo_hidden_tt TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key WITH DEFAULT KEY.
+    TYPES:
+      ty_repo_hidden_tt
+        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
+        WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_user,
              username    TYPE string,
@@ -17088,6 +17169,10 @@ CLASS lcl_gui_page_diff DEFINITION FINAL.
     DATA: ms_result TYPE lcl_file_status=>ty_result,
           mo_diff   TYPE REF TO lcl_diff.
 
+    METHODS:
+      render_stats
+        RETURNING VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_diff IMPLEMENTATION.
@@ -17108,34 +17193,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_stats.
 
-    DATA: lv_html         TYPE string,
-          lv_local        TYPE string,
-          lv_remote       TYPE string,
-          lv_clocal       TYPE string,
-          lv_cremote      TYPE string,
-          ls_count        TYPE lcl_diff=>ty_count,
-          lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
-          lv_anchor_count LIKE sy-tabix,
-          lv_anchor_name  TYPE string.
+    DATA: ls_count TYPE lcl_diff=>ty_count.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
-
-
-    lv_html = lcl_gui=>header( ) &&
-      '<div id="header">' &&
-      '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
-      '</div>' &&
-      '<div id="toc">' &&
-      '<h3>' &&
-      ms_result-obj_type && '&nbsp;' &&
-      ms_result-obj_name && '&nbsp;' &&
-      ms_result-filename && '</h3><br><br>'.
 
     ls_count = mo_diff->stats( ).
-    lv_html = lv_html &&
-      '<table border="1">' && gc_newline &&
+    rv_html = '<table border="1">' && gc_newline &&
       '<tr>'               && gc_newline &&
       '<td>Insert</td>'    && gc_newline &&
       '<td>'               &&
@@ -17156,17 +17220,63 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       '</tr>'              && gc_newline &&
       '</table><br>'       && gc_newline.
 
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    DATA: lv_html         TYPE string,
+          lv_local        TYPE string,
+          lv_remote       TYPE string,
+          lv_clocal       TYPE string,
+          lv_cremote      TYPE string,
+          lv_index        TYPE i,
+          lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
+          lv_anchor_count LIKE sy-tabix,
+          lv_break        TYPE string,
+          lv_href         TYPE string.
+
+    FIELD-SYMBOLS: <ls_diff>  LIKE LINE OF lt_diffs,
+                   <ls_break> LIKE LINE OF lt_diffs.
+
+
+    lv_html = lcl_gui=>header( ) &&
+      '<div id="header">' &&
+      '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
+      '</div>' &&
+      '<div id="toc">' &&
+      '<h3>' &&
+      ms_result-obj_type && '&nbsp;' &&
+      ms_result-obj_name && '&nbsp;' &&
+      ms_result-filename && '</h3><br><br>' &&
+      render_stats( ).
+
     lv_html = lv_html &&
       '<table border="0">'                    && gc_newline &&
       '<tr>'                                  && gc_newline &&
+      '<th></td>'                             && gc_newline &&
       '<th><h2>Local</h2></th>'               && gc_newline &&
       |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
+      '<th></td>'                             && gc_newline &&
       '<th><h2>Remote</h2></th>'              && gc_newline &&
       '</tr>'.
 
     lt_diffs = mo_diff->get( ).
 
-    LOOP AT lt_diffs ASSIGNING <ls_diff>.
+    LOOP AT lt_diffs ASSIGNING <ls_diff> WHERE short = abap_true.
+      lv_index = sy-tabix + 1.
+      READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
+      IF sy-subrc = 0 AND <ls_break>-short = abap_false.
+        lv_break = '<tr>' && gc_newline &&
+          '<td>&nbsp;<br>&nbsp;</td>' && gc_newline &&
+          '<td></td>' && gc_newline &&
+          '<td></td>' && gc_newline &&
+          '<td></td>' && gc_newline &&
+          '<td></td>' && gc_newline &&
+          '</tr>'.
+      ELSE.
+        CLEAR lv_break.
+      ENDIF.
+
       lv_local = escape( val    = <ls_diff>-local
                          format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val    = <ls_diff>-remote
@@ -17191,27 +17301,28 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           OR <ls_diff>-result = lcl_diff=>c_diff-insert
           OR <ls_diff>-result = lcl_diff=>c_diff-update.
         lv_anchor_count = lv_anchor_count + 1.
-        lv_anchor_name = | name="diff_{ lv_anchor_count }"|.
+        lv_href = |<a name="diff_{
+          lv_anchor_count
+          }" href="#diff_{
+          lv_anchor_count + 1
+          }">{ <ls_diff>-result }</a>|.
       ELSE.
-        CLEAR lv_anchor_name.
+        CLEAR lv_href.
       ENDIF.
 
       lv_html = lv_html &&
-        |<tr>| && gc_newline &&
-        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
-        gc_newline &&
-        '<td>&nbsp;' &&
-        |<a{ lv_anchor_name } href="#diff_{ lv_anchor_count + 1 }">{ <ls_diff>-result }</a>| &&
-        '&nbsp;</td>' &&
-        gc_newline &&
-        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
-        gc_newline &&
-        '</tr>' && gc_newline.
+        '<tr>'                                                        && gc_newline &&
+        '<td>' && <ls_diff>-local_line && '</td>'                     && gc_newline &&
+        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>'   && gc_newline &&
+        '<td>&nbsp;' && lv_href && '&nbsp;</td>'                      && gc_newline &&
+        '<td>' && <ls_diff>-remote_line && '</td>'                    && gc_newline &&
+        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' && gc_newline &&
+        '</tr>' && lv_break                                           && gc_newline.
     ENDLOOP.
 
     rv_html = lv_html && gc_newline &&
-      '</table>' && gc_newline &&
-      '</div>' && gc_newline &&
+      '</table>'      && gc_newline &&
+      '</div>'        && gc_newline &&
       lcl_gui=>footer( ).
 
   ENDMETHOD.
@@ -17867,25 +17978,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     rv_html =
-      '<div id="header">'                                    && gc_newline &&
-      '<table class="mixedbar logobar">'                     && gc_newline &&
-      '<tr>'                                                 && gc_newline &&
-      '<td class="logo">'                                    && gc_newline &&
-      '<a href="sapevent:abapgithome">'                      && gc_newline &&
-      |<img src="{ lcl_gui=>get_logo_src( ) }"></a>|         && gc_newline &&
+      '<div id="header">'                                  && gc_newline &&
+      '<table class="mixedbar logobar">'                   && gc_newline &&
+      '<tr>'                                               && gc_newline &&
+      '<td class="logo">'                                  && gc_newline &&
+      '<a href="sapevent:abapgithome">'                    && gc_newline &&
+      |<img src="{ lcl_gui=>get_logo_src( ) }"></a>|       && gc_newline &&
       '<a href="sapevent:zipexport_gui" class="bkg">e</a>' && gc_newline &&
       '<a href="sapevent:db" class="bkg">d</a>'            && gc_newline &&
-      '</td>'                                                && gc_newline &&
-      '<td class="right menu">'                              && gc_newline &&
-      '<a href="sapevent:refresh">Refresh All</a>'           && gc_newline &&
-      '<a href="sapevent:install">Clone</a>'                 && gc_newline &&
-      '<a href="sapevent:explore">Explore</a>'               && gc_newline &&
-      |{ lv_install }|                                       && gc_newline &&
-      '<a class="menu_end" href="sapevent:newoffline">New Offline Repo</a>' && gc_newline &&
+      '</td>'                                              && gc_newline &&
+      '<td class="right menu">'                            && gc_newline &&
+      '<a href="sapevent:refresh">Refresh All</a>'         && gc_newline &&
+      '<a href="sapevent:install">Clone</a>'               && gc_newline &&
+      '<a href="sapevent:explore">Explore</a>'             && gc_newline &&
+      |{ lv_install }|                                     && gc_newline &&
+      '<a class="menu_end" href="sapevent:newoffline">'    &&
+      'New Offline Repo</a>'                               && gc_newline &&
       '</td>'                                              && gc_newline &&
       '</tr>'                                              && gc_newline &&
       '</table>'                                           && gc_newline &&
-      '</div>'                                             && gc_newline.
+      '</div>'                                             && gc_newline ##NO_TEXT.
 
   ENDMETHOD.                    "render_menu
 
@@ -17942,7 +18054,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         '<a href="sapevent:files_commit?' &&
         io_repo->get_key( ) &&
         '">' && 'Export files and commit' &&
-        '</a>' && gc_newline.
+        '</a>' && gc_newline ##NO_TEXT.
     ENDIF.
 
     rv_html = rv_html && '</div>'.                          "#EC NOTEXT
@@ -18224,7 +18336,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ENDIF.
 
           IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
-            lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
+            lv_err = |Installation to package {
+              lv_package } detected. Cancelling installation|.
             _raise lv_err.
           ENDIF.
 
@@ -18238,13 +18351,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD. "is_repo_installed
 
   METHOD needs_installation.
+
+    CONSTANTS:
+      c_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
+      c_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
+
     TRY.
-        IF is_repo_installed( 'https://github.com/larshp/abapGit.git' ) = abap_false
-            OR is_repo_installed( 'https://github.com/larshp/abapGit-plugins.git' ) = abap_false.
+        IF is_repo_installed( c_abapgit ) = abap_false
+            OR is_repo_installed( c_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
-        rv_not_completely_installed = abap_false. "cannot be installed anyway in this case, e.g. no connection
+* cannot be installed anyway in this case, e.g. no connection
+        rv_not_completely_installed = abap_false.
     ENDTRY.
   ENDMETHOD.                    "needs_installation
 
