@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.6.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.6.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18329,23 +18329,22 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     LOOP AT lt_repo INTO lo_repo.
       TRY.
           lo_repo_online ?= lo_repo.
-          lv_url          = lo_repo_online->get_url( ).
-          lv_package      = lo_repo_online->get_package( ).
-          IF to_upper( lv_url ) <> to_upper( iv_url ).
-            CONTINUE.
-          ENDIF.
-
-          IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
-            lv_err = |Installation to package {
-              lv_package } detected. Cancelling installation|.
-            _raise lv_err.
-          ENDIF.
-
-          rv_installed = abap_true.
-
         CATCH cx_sy_move_cast_error.
           CONTINUE. "the repositories we're looking for are online-repositories
       ENDTRY.
+
+      lv_url     = lo_repo_online->get_url( ).
+      lv_package = lo_repo_online->get_package( ).
+      IF to_upper( lv_url ) <> to_upper( iv_url ).
+        CONTINUE.
+      ENDIF.
+
+      IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
+        lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
+        _raise lv_err.
+      ENDIF.
+
+      rv_installed = abap_true.
     ENDLOOP.
 
   ENDMETHOD. "is_repo_installed
