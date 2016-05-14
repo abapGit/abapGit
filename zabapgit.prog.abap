@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.5.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.5.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16579,23 +16579,51 @@ CLASS lcl_gui IMPLEMENTATION.
       '.menu_end {'                          && gc_newline &&
       '  border-right: 0px !important;'      && gc_newline &&
       '}'                                    && gc_newline &&
-      '.repo_name span {' && gc_newline &&
-      '  font-weight: bold;' && gc_newline &&
-      '  font-size: x-large;' && gc_newline &&
-      '}' && gc_newline &&
-      '.repo_attr {' && gc_newline &&
-      '  color: grey;' && gc_newline &&
-      '  font-size: smaller;' && gc_newline &&
-      '}' && gc_newline &&
-      '.repo_attr span {' && gc_newline &&
-      '  margin-right:     1em;' && gc_newline &&
-      '}' && gc_newline &&
-      '.repo_attr input {' && gc_newline &&
-      '  background-color: transparent;' && gc_newline &&
-      '  border-style: none;' && gc_newline &&
-      '  text-overflow: ellipsis;' && gc_newline &&
-      '  color: grey;' && gc_newline &&
-      '}' && gc_newline &&
+      '.repo_name span {'                    && gc_newline &&
+      '  font-weight: bold;'                 && gc_newline &&
+      '  font-size: x-large;'                && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_attr {'                         && gc_newline &&
+      '  color: grey;'                       && gc_newline &&
+      '  font-size: smaller;'                && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_attr span {'                    && gc_newline &&
+      '  margin-right:     1em;'             && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_attr input {'                   && gc_newline &&
+      '  background-color: transparent;'     && gc_newline &&
+      '  border-style: none;'                && gc_newline &&
+      '  text-overflow: ellipsis;'           && gc_newline &&
+      '  color: grey;'                       && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab {'                          && gc_newline &&
+      '  border: 1px solid #DDD;'            && gc_newline &&
+      '  border-radius: 3px;'                && gc_newline &&
+      '  background: #ffffff;'               && gc_newline &&
+      '  margin-top: 1em;'                   && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab tr.unsupported {'           && gc_newline &&
+      '  color: lightgrey;'                  && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab td {'                       && gc_newline &&
+      '  border-top: 1px solid #eee;'        && gc_newline &&
+      '  vertical-align: top;'               && gc_newline &&
+      '  padding-top: 2px;'                  && gc_newline &&
+      '  padding-bottom: 2px;'               && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab td.icon {'                  && gc_newline &&
+      '  padding-left: 10px;'                && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab td.type {'                  && gc_newline &&
+      '  width: 3.5em;'                      && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab td.object {'                && gc_newline &&
+      '  padding-left: 0.5em;'               && gc_newline &&
+      '}'                                    && gc_newline &&
+      '.repo_tab td.files {'                 && gc_newline &&
+      '  padding-left: 0.5em;'               && gc_newline &&
+      '  padding-right: 0.5em;'              && gc_newline &&
+      '}'                                    && gc_newline &&
       'a, a:visited {'                       && gc_newline &&
       '  color:            #4078c0;'         && gc_newline &&
       '  text-decoration:  none;'            && gc_newline &&
@@ -16939,6 +16967,22 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
     CLASS-METHODS render_repo_offline
       IMPORTING io_repo        TYPE REF TO lcl_repo_offline
       RETURNING VALUE(rv_html) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS jump_link
+      IMPORTING iv_obj_type    TYPE tadir-object
+                iv_obj_name    TYPE tadir-obj_name
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS jump_encode
+      IMPORTING iv_obj_type      TYPE tadir-object
+                iv_obj_name      TYPE tadir-obj_name
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS jump_decode
+      IMPORTING iv_string   TYPE clike
+      EXPORTING ev_obj_type TYPE tadir-object
+                ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
 
     CLASS-METHODS render_menu
@@ -17413,6 +17457,34 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "commit
 
+  METHOD jump_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
+                   <lg_any>   TYPE any.
+
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
+    IF sy-subrc = 0.
+      ev_obj_type = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_type.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
+    IF sy-subrc = 0.
+      ev_obj_name = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_name.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD file_decode.
 
     DATA: lt_fields TYPE tihttpnvp,
@@ -17442,6 +17514,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "struct_decode
+
+  METHOD jump_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+
+    ls_field-name = 'TYPE'.
+    ls_field-value = iv_obj_type.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'NAME'.
+    ls_field-value = iv_obj_name.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.
 
   METHOD file_encode.
 
@@ -17823,24 +17913,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
 
       rv_html = rv_html &&
-        '<table border="1">'                            && gc_newline &&
-        '<tr>'                                          && gc_newline &&
-        '<th><u>Local object</u></th>'                  && gc_newline &&
-        '</tr>'                                         && gc_newline ##NO_TEXT.
+        '<table class="repo_tab">' && gc_newline &&
+        '<tbody>'                  && gc_newline.
 
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
 
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-* todo, add jump link like in online rendering
         rv_html = rv_html &&
           '<tr>' && gc_newline &&
-          '<td>' && <ls_tadir>-object &&
-          '&nbsp;' && <ls_tadir>-obj_name &&
+          '<td>' &&
+          jump_link( iv_obj_type = <ls_tadir>-object
+                     iv_obj_name = <ls_tadir>-obj_name ) &&
           '</td>' && gc_newline &&
           '</tr>' && gc_newline.
       ENDLOOP.
 
-      rv_html = rv_html && '</table>' && gc_newline &&
+      rv_html = rv_html &&
+        '</tbody>' && gc_newline &&
+        '</table>' && gc_newline &&
         '<a href="sapevent:zipimport?' &&
         io_repo->get_key( ) &&
         '">' && 'Import ZIP' &&
@@ -17888,16 +17978,35 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD jump_link.
+
+    DATA: lv_encode TYPE string.
+
+
+    lv_encode = jump_encode(
+      iv_obj_type = iv_obj_type
+      iv_obj_name = iv_obj_name ).
+
+    rv_html = iv_obj_type &&
+      '&nbsp;' &&
+      '<a href="sapevent:jump?' &&
+      lv_encode &&
+      '">' &&
+      iv_obj_name  &&
+      '</a>'.
+
+  ENDMETHOD.
+
   METHOD render_repo_online.
 
     DATA: lv_link        TYPE string,
           lv_status      TYPE string,
-          lv_package     TYPE string,
           lv_object      TYPE string,
           lv_index       LIKE sy-tabix,
           lv_file_encode TYPE string,
           lx_error       TYPE REF TO lcx_exception,
           lv_span        TYPE i,
+          lv_trclass     TYPE string,
           lt_results     TYPE lcl_file_status=>ty_results_tt,
           ls_next        LIKE LINE OF lt_results,
           ls_item        TYPE ty_item,
@@ -17938,14 +18047,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ENDIF.
 
           rv_html = rv_html &&
-            '<table border="1">'           && gc_newline &&
-            '<tr>'                         && gc_newline &&
-            '<th><u>Local object</u></th>' && gc_newline &&
-            '<th><u>Package</u></th>'      && gc_newline &&
-            '<th><u>Path</u></th>'         && gc_newline &&
-            '<th><u>Remote file</u></th>'  && gc_newline &&
-            '<th></th>'                    && gc_newline &&
-            '</tr>'                        && gc_newline.
+            '<table class="repo_tab">' && gc_newline &&
+            '<tbody>' && gc_newline.
 
           LOOP AT lt_results ASSIGNING <ls_result>.
             lv_index = sy-tabix.
@@ -17979,45 +18082,33 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
               ENDWHILE.
 
               IF <ls_result>-obj_type IS INITIAL.
-                lv_object = '<td rowspan="' && lv_span && '" valign="top">&nbsp;</td>'.
-
-                lv_package = lv_object.
+                lv_object = '<td rowspan="' && lv_span && '">&nbsp;</td>'.
+                lv_trclass = ' class="unsupported"'.
               ELSE.
-                lv_object = '<td rowspan="' &&
-                  lv_span &&
-                  '" valign="top"><a href="sapevent:jump?' &&
-                  lv_file_encode &&
-                  '" class="plain">' &&
-                  <ls_result>-obj_type &&
-                  '&nbsp;' &&
-                  <ls_result>-obj_name  &&
-                  '</a></td>'.
-
-                lv_package = '<td rowspan="' &&
-                  lv_span &&
-                  '" valign="top">' &&
-                  <ls_result>-package &&
+                CLEAR lv_trclass.
+                lv_object = '<td rowspan="' && lv_span && '">' &&
+                  jump_link( iv_obj_type = <ls_result>-obj_type
+                             iv_obj_name = <ls_result>-obj_name ) &&
                   '</td>'.
               ENDIF.
             ELSE.
               CLEAR lv_object.
-              CLEAR lv_package.
             ENDIF.
 
-            rv_html = rv_html &&
-              '<tr>'                                    && gc_newline &&
-              lv_object                                 && gc_newline &&
-              lv_package                                && gc_newline &&
-              '<td>' && <ls_result>-path && '</td>'     && gc_newline &&
-              '<td>' && <ls_result>-filename && '</td>' && gc_newline &&
-              '<td>' && lv_link && '</td>'              && gc_newline &&
-              '</tr>'                                   && gc_newline.
+            rv_html = rv_html                 &&
+              '<tr' && lv_trclass && '>'      && gc_newline &&
+              lv_object                       && gc_newline &&
+              '<td>' && <ls_result>-path      &&
+              <ls_result>-filename && '</td>' && gc_newline &&
+              '<td>' && lv_link && '</td>'    && gc_newline &&
+              '</tr>'                         && gc_newline.
 
             lv_span = lv_span - 1.
           ENDLOOP.
 
           rv_html = rv_html &&
-            '</table>' &&
+            '</tbody>' && gc_newline &&
+            '</table>' && gc_newline &&
             gc_newline.
 
           CASE lv_status.
@@ -18213,11 +18304,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         diff( is_result = ls_result
               iv_key    = lv_key ).
       WHEN 'jump'.
-        file_decode( EXPORTING iv_string = iv_getdata
-                     IMPORTING ev_key = lv_key
-                               es_file = ls_result ).
         CLEAR ls_item.
-        MOVE-CORRESPONDING ls_result TO ls_item.
+        jump_decode( EXPORTING iv_string = iv_getdata
+                     IMPORTING ev_obj_type = ls_item-obj_type
+                               ev_obj_name = ls_item-obj_name ).
         lcl_objects=>jump( ls_item ).
       WHEN 'pull'.
         lv_key = iv_getdata.
