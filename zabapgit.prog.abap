@@ -17364,11 +17364,12 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( 'table.diff_tab td.num, th.num {' ).              "#EC NOTEXT
     lo_html->add( '  text-align: right;' ).                         "#EC NOTEXT
     lo_html->add( '  color: #ccc;' ).                               "#EC NOTEXT
-    lo_html->add( '  border-left: 1px solid #eee;' ).              "#EC NOTEXT
+    lo_html->add( '  border-left: 1px solid #eee;' ).               "#EC NOTEXT
     lo_html->add( '  border-right: 1px solid #eee;' ).              "#EC NOTEXT
     lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab td.cmd {' ).                      "#EC NOTEXT
-    lo_html->add( '  text-align: center;' ).                        "#EC NOTEXT
+    lo_html->add( 'table.diff_tab td.cmd, th.cmd {' ).              "#EC NOTEXT
+    lo_html->add( '  font-size: smaller;' ).                        "#EC NOTEXT
+    lo_html->add( '  text-align: center !important;' ).             "#EC NOTEXT
     lo_html->add( '}' ).                                            "#EC NOTEXT
     lo_html->add( '</style>' ).                                     "#EC NOTEXT
 
@@ -17406,9 +17407,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lv_attr_local   TYPE string.
     DATA lv_attr_remote  TYPE string.
     DATA lv_anchor_count LIKE sy-tabix.
-    DATA lv_anchor_name  TYPE string.
+    DATA lv_href         TYPE string.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
+    FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
+    FIELD-SYMBOLS <ls_break> LIKE LINE OF lt_diffs.
 
     CREATE OBJECT lo_html.
     lt_diffs = mo_diff->get( ).
@@ -17420,6 +17422,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '<th>@LOCAL</th>' ).             "#EC NOTEXT
     lo_html->add( '<th class="num"></th>' ).       "#EC NOTEXT
     lo_html->add( '<th>@REMOTE</th>' ).            "#EC NOTEXT
+    lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ).       "#EC NOTEXT
     lo_html->add( '</tr>' ).                       "#EC NOTEXT
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
@@ -17427,7 +17430,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
 
-      CLEAR: lv_attr_local, lv_attr_remote.
+      CLEAR: lv_attr_local, lv_attr_remote. " Class for changed lines
       CASE <ls_diff>-result.
         WHEN lcl_diff=>c_diff-insert.
           lv_attr_local  = ' class="diff_ins"'.    "#EC NOTEXT
@@ -17438,12 +17441,29 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
       ENDCASE.
 
+      CLEAR lv_href.  " Create link to next change
+      IF <ls_diff>-result = lcl_diff=>c_diff-delete
+      OR <ls_diff>-result = lcl_diff=>c_diff-insert
+      OR <ls_diff>-result = lcl_diff=>c_diff-update.
+        lv_anchor_count = lv_anchor_count + 1.
+        lv_href = |<a name="diff_{ lv_anchor_count }"|
+               && |   href="#diff_{ lv_anchor_count + 1 }|
+               && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
+      ENDIF.
+
       lo_html->add( '<tr>' ).                                           "#EC NOTEXT
       lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).  "#EC NOTEXT
       lo_html->add( |<td{ lv_attr_local }>{ lv_local }</td>| ).         "#EC NOTEXT
       lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
       lo_html->add( |<td{ lv_attr_remote }>{ lv_remote }</td>| ).       "#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).               "#EC NOTEXT
       lo_html->add( '</tr>' ).                                          "#EC NOTEXT
+
+      " TODO Refactor ?
+      READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
+      IF sy-subrc = 0 AND <ls_break>-short = abap_false.
+        lo_html->add( '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>' ).
+      ENDIF.
 
     ENDLOOP.
 
