@@ -14717,6 +14717,129 @@ CLASS lcl_git_porcelain DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_porcelain DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_helper DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_html_helper DEFINITION FINAL.
+  PUBLIC SECTION.
+    CONSTANTS mc_indent_size TYPE i VALUE 2.
+
+    DATA mv_html   TYPE string READ-ONLY.
+    DATA mv_indent TYPE i READ-ONLY.
+
+    METHODS add IMPORTING iv_chunk TYPE any.
+    METHODS div IMPORTING iv_class TYPE string OPTIONAL
+                          iv_id    TYPE string OPTIONAL
+                          iv_chunk TYPE any.
+    METHODS reset.
+
+  PRIVATE SECTION.
+    METHODS _add_str IMPORTING iv_str  TYPE csequence.
+    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html_helper.
+
+endclass.                    "lcl_html_helper DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_helper IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_html_helper IMPLEMENTATION.
+  METHOD add.
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_html TYPE REF TO lcl_html_helper.
+
+    lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
+
+    CASE lo_type->type_kind.
+    WHEN cl_abap_typedescr=>typekind_char OR cl_abap_typedescr=>typekind_string.
+      _add_str( iv_chunk ).
+    WHEN cl_abap_typedescr=>typekind_oref.
+      ASSERT iv_chunk IS BOUND.
+      TRY.
+        lo_html ?= iv_chunk.
+      CATCH cx_sy_move_cast_error.
+        ASSERT 1 = 0. " Dev mistake
+      ENDTRY.
+      _add_htm( lo_html ).
+    WHEN OTHERS.
+      ASSERT 1 = 0. " Dev mistake
+    ENDCASE.
+
+  ENDMETHOD.  " add
+
+  METHOD div.
+    DATA lv_tag TYPE string.
+
+    lv_tag = '<div'.
+    IF iv_class IS NOT INITIAL.
+      lv_tag = lv_tag && ' class="' && iv_class && '"'.
+    ENDIF.
+    IF iv_id IS NOT INITIAL.
+      lv_tag = lv_tag && ' id="' && iv_id && '"'.
+    ENDIF.
+    lv_tag = lv_tag && '>'.
+
+    add( lv_tag ).
+    add( iv_chunk ).
+    add( '</div>' ).
+
+  ENDMETHOD.                    "div
+
+  METHOD reset.
+    CLEAR: me->mv_html, me->mv_indent.
+  ENDMETHOD.                    "reset
+
+  METHOD _add_str.
+    DATA lv_tags        TYPE i.
+    DATA lv_tags_open   TYPE i.
+    DATA lv_tags_close  TYPE i.
+    DATA lv_close_offs  TYPE i.
+    DATA lv_shift_back  TYPE i.
+
+    FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
+    IF sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0. " Found close tag @beginning
+      lv_shift_back = 1.
+    ENDIF.
+
+    mv_html =   mv_html
+            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * mc_indent_size )
+            &&  iv_str
+            &&  gc_newline.
+
+    FIND ALL OCCURRENCES OF '<'  IN iv_str MATCH COUNT lv_tags.
+    FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
+    lv_tags_open = lv_tags - lv_tags_close.
+
+    IF lv_tags_open > lv_tags_close. " This logic chosen due to possible double tags in a line '<a><b>'
+      mv_indent = mv_indent + 1.
+    ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
+      mv_indent = mv_indent - 1.
+    ENDIF.
+
+  ENDMETHOD.                    "_add_str
+
+  METHOD _add_htm.
+    DATA lv_indent_str  TYPE string.
+    DATA lv_temp_str    TYPE string.
+
+    lv_indent_str = repeat( val = ` ` occ = mv_indent * mc_indent_size ).
+    lv_temp_str   = io_html->mv_html.
+
+    IF me->mv_indent > 0.
+      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str WITH gc_newline && lv_indent_str.
+      SHIFT lv_temp_str RIGHT DELETING TRAILING space.
+      SHIFT lv_temp_str LEFT  DELETING LEADING space.
+    ENDIF.
+
+    mv_html   = mv_html && lv_indent_str && lv_temp_str.
+    mv_indent = mv_indent + io_html->mv_indent.
+
+  ENDMETHOD.                    "_add_htm
+
+ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       INTERFACE lif_gui_page DEFINITION
+*----------------------------------------------------------------------*
 INTERFACE lif_gui_page.
 
   METHODS:
@@ -17088,13 +17211,90 @@ CLASS lcl_gui_page_diff DEFINITION FINAL.
     DATA: ms_result TYPE lcl_file_status=>ty_result,
           mo_diff   TYPE REF TO lcl_diff.
 
+    METHODS styles RETURNING VALUE(rv_html) TYPE string.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
     ms_result = is_result.
-    mo_diff = io_diff.
+    mo_diff   = io_diff.
+  ENDMETHOD.
+
+  METHOD styles.
+    DATA h TYPE REF TO lcl_html_helper.
+    CREATE OBJECT h.
+
+    h->add( '<style type="text/css">' ).
+
+    h->add( '/* DIFF */' ).
+    h->add( 'div.diff {' ).
+    h->add( '  background-color: #f2f2f2;' ).
+    h->add( '  padding: 0.7em    ' ).
+    h->add( '}' ).
+    h->add( 'div.diff_head {' ).
+    h->add( '  border-bottom: 1px solid #DDD;' ).
+    h->add( '  padding-bottom: 0.7em;' ).
+    h->add( '}' ).
+    h->add( 'span.diff_name {' ).
+    h->add( '  padding-left: 0.5em;' ).
+    h->add( '  color: grey;' ).
+    h->add( '}' ).
+    h->add( 'span.diff_name strong {' ).
+    h->add( '  color: #333;' ).
+    h->add( '}' ).
+    h->add( 'span.diff_banner {' ).
+    h->add( '  border-style: solid;' ).
+    h->add( '  border-width: 1px;' ).
+    h->add( '  border-radius: 3px;' ).
+    h->add( '  padding-left: 0.3em;' ).
+    h->add( '  padding-right: 0.3em;' ).
+    h->add( '}' ).
+    h->add( '.diff_ins {' ).
+    h->add( '  border-color: #38e038;' ).
+    h->add( '  background-color: #91ee91 !important;' ).
+    h->add( '}' ).
+    h->add( '.diff_del {' ).
+    h->add( '  border-color: #ff8093;' ).
+    h->add( '  background-color: #ffb3be !important;' ).
+    h->add( '}' ).
+    h->add( '.diff_upd {' ).
+    h->add( '  border-color: #dada00;' ).
+    h->add( '  background-color: #ffffb3 !important;' ).
+    h->add( '}' ).
+    h->add( 'div.diff_content {' ).
+    h->add( '  background: #fff;' ).
+    h->add( '}' ).
+    h->add( 'table.diff_tab {' ).
+    h->add( '  width: 98%;' ).
+    h->add( '  border-collapse: collapse;' ).
+    h->add( '  font-family: Consolas, Courier, monospace;' ).
+    h->add( '}' ).
+    h->add( 'table.diff_tab th {' ).
+    h->add( '  color: grey;' ).
+    h->add( '  text-align: left;' ).
+    h->add( '  font-weight: normal;' ).
+    h->add( '  padding: 0.5em;' ).
+    h->add( '}' ).
+    h->add( 'table.diff_tab td {' ).
+    h->add( '  color: #333;' ).
+    h->add( '  padding-left: 0.5em;' ).
+    h->add( '  padding-right: 0.5em;' ).
+    h->add( '  font-size: smaller;' ).
+    h->add( '}' ).
+    h->add( 'table.diff_tab td.num, th.num {' ).
+    h->add( '  text-align: right;' ).
+    h->add( '  color: #ccc;' ).
+    h->add( '  border-right: 1px solid #eee;' ).
+    h->add( '}' ).
+    h->add( 'table.diff_tab td.cmd {' ).
+    h->add( '  text-align: center;' ).
+    h->add( '}' ).
+
+    h->add( '</style>' ).
+
+    rv_html = h->mv_html.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -17113,106 +17313,103 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA: lv_html         TYPE string,
           lv_local        TYPE string,
           lv_remote       TYPE string,
-          lv_clocal       TYPE string,
-          lv_cremote      TYPE string,
+          lv_attr_local   TYPE string,
+          lv_attr_remote  TYPE string,
           ls_count        TYPE lcl_diff=>ty_count,
           lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
           lv_anchor_count LIKE sy-tabix,
           lv_anchor_name  TYPE string.
 
+    DATA  h_main TYPE REF TO lcl_html_helper.
+    DATA  h_head TYPE REF TO lcl_html_helper.
+    DATA  h_cont TYPE REF TO lcl_html_helper.
+    DATA  lv_cnt TYPE i.
+
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diffs.
 
+    CREATE OBJECT h_main.
+    CREATE OBJECT h_head.
+    CREATE OBJECT h_cont.
 
-    lv_html = lcl_gui=>header( ) &&
-      '<div id="header">' &&
-      '<h1>diff</h1>&nbsp;<a href="sapevent:back">Back</a>' &&
-      '</div>' &&
-      '<div id="toc">' &&
-      '<h3>' &&
-      ms_result-obj_type && '&nbsp;' &&
-      ms_result-obj_name && '&nbsp;' &&
-      ms_result-filename && '</h3><br><br>'.
-
+    " Diff header
     ls_count = mo_diff->stats( ).
-    lv_html = lv_html &&
-      '<table border="1">' && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Insert</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-insert      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Delete</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-delete      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '<tr>'               && gc_newline &&
-      '<td>Update</td>'    && gc_newline &&
-      '<td>'               &&
-      ls_count-update      &&
-      '</td>'              && gc_newline &&
-      '</tr>'              && gc_newline &&
-      '</table><br>'       && gc_newline.
 
-    lv_html = lv_html &&
-      '<table border="0">'                    && gc_newline &&
-      '<tr>'                                  && gc_newline &&
-      '<th><h2>Local</h2></th>'               && gc_newline &&
-      |<th><a href=#diff_1>&lt;&gt;</a></th>| && gc_newline &&
-      '<th><h2>Remote</h2></th>'              && gc_newline &&
-      '</tr>'.
+    h_head->add( '<div class="diff_head">' ).
+    h_head->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ).
+    h_head->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ).
+    h_head->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ).
+    h_head->add( '<span class="diff_name">' ).
+    h_head->add( ms_result-obj_type ).
+    h_head->add( |<strong>{ ms_result-obj_name }</strong>| ).
+    h_head->add( |({ ms_result-filename })| ).
+    h_head->add( '</span>' ).
+    h_head->add( '</div>' ).
 
+    " Diff content
     lt_diffs = mo_diff->get( ).
 
+    h_cont->add( '<div class="diff_content">' ).
+    h_cont->add( '<table class="diff_tab">' ).
+    h_cont->add( '<tr>' ).
+    h_cont->add( '<th class="num"></th>' ).
+    h_cont->add( '<th>@LOCAL</th>' ).
+    h_cont->add( '<th></th>' ).
+    h_cont->add( '<th>@REMOTE</th>' ).
+    h_cont->add( '</tr>' ).
+
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
-      lv_local = escape( val    = <ls_diff>-local
-                         format = cl_abap_format=>e_html_attr ).
+      lv_cnt    = sy-tabix.
+      lv_local  = escape( val    = <ls_diff>-local
+                          format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val    = <ls_diff>-remote
                           format = cl_abap_format=>e_html_attr ).
 
       CASE <ls_diff>-result.
         WHEN lcl_diff=>c_diff-insert.
-          lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
-          lv_cremote = ''.
+          lv_attr_local  = ' class="diff_ins"'.    "#EC NOTEXT
+          lv_attr_remote = ''.
         WHEN lcl_diff=>c_diff-delete.
-          lv_clocal = ''.
-          lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
+          lv_attr_local  = ''.
+          lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
         WHEN lcl_diff=>c_diff-update.
-          lv_clocal = ' style="background:lightgreen;"'.    "#EC NOTEXT
-          lv_cremote = ' style="background:lightpink;"'.    "#EC NOTEXT
+          lv_attr_local  = ' class="diff_ins"'.    "#EC NOTEXT
+          lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
         WHEN OTHERS.
-          lv_clocal = ''.
-          lv_cremote = ''.
+          lv_attr_local  = ''.
+          lv_attr_remote = ''.
       ENDCASE.
 
-      IF <ls_diff>-result = lcl_diff=>c_diff-delete
-          OR <ls_diff>-result = lcl_diff=>c_diff-insert
-          OR <ls_diff>-result = lcl_diff=>c_diff-update.
-        lv_anchor_count = lv_anchor_count + 1.
-        lv_anchor_name = | name="diff_{ lv_anchor_count }"|.
-      ELSE.
-        CLEAR lv_anchor_name.
-      ENDIF.
+      h_cont->add( '<tr>' ).
+      h_cont->add( |<td class="num">{ lv_cnt }</td>| ).
+      h_cont->add( |<td{ lv_attr_local }>{ lv_local }</td>| ).
+      h_cont->add( |<td class="cmd"></td>| ). " TODO, ANCHOR ????
+      h_cont->add( |<td{ lv_attr_remote }>{ lv_remote }</td>| ).
+      h_cont->add( '</tr>' ).
 
-      lv_html = lv_html &&
-        |<tr>| && gc_newline &&
-        '<td' && lv_clocal && '><pre>' && lv_local && '</pre></td>' &&
-        gc_newline &&
-        '<td>&nbsp;' &&
-        |<a{ lv_anchor_name } href="#diff_{ lv_anchor_count + 1 }">{ <ls_diff>-result }</a>| &&
-        '&nbsp;</td>' &&
-        gc_newline &&
-        '<td' && lv_cremote && '><pre>' && lv_remote && '</pre></td>' &&
-        gc_newline &&
-        '</tr>' && gc_newline.
     ENDLOOP.
 
-    rv_html = lv_html && gc_newline &&
-      '</table>' && gc_newline &&
-      '</div>' && gc_newline &&
-      lcl_gui=>footer( ).
+    h_cont->add( '</table>' ).
+    h_cont->add( '</div>' ).
+
+    " Build all together all
+* REDO
+    lv_html = lcl_gui=>header( ).
+
+    replace first occurrence of '</style>' in lv_html
+      with '</style>' && styles( ). "TODO: crutch, redo later after unification
+
+    "TODO: crutch, move to SAP back button (code almost ready)
+    lv_html = lv_html && '<div>' && '<a href="sapevent:back">Back</a>' && '</div>'.
+    h_main->add( lv_html ).
+* ^^^ REDO
+
+    h_main->add( '<div class="diff">' ).
+    h_main->add( h_head ).
+    h_main->add( h_cont ).
+    h_main->add( '</div>' ).
+    h_main->add( lcl_gui=>footer( ) ).
+
+    rv_html = h_main->mv_html.
 
   ENDMETHOD.
 
