@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.7'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.8'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -927,7 +927,7 @@ CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persistence_migrate.
 
 * this class is obsolete, use LCL_PERSISTENCE_USER instead
 
-  PROTECTED SECTION.
+  PRIVATE SECTION.
     TYPES: BEGIN OF ty_user,
              user     LIKE sy-uname,
              username TYPE string,
@@ -960,7 +960,6 @@ CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persistence_migrate.
       RETURNING VALUE(rt_data) TYPE ty_user_tt
       RAISING   lcx_exception.
 
-  PRIVATE SECTION.
     CLASS-METHODS read
       IMPORTING iv_name         TYPE tdobname
       RETURNING VALUE(rv_value) TYPE string
@@ -3798,7 +3797,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
     mo_files->add_string( iv_extra  = 'source'
                           iv_ext    = 'xml'
-                          iv_string = lv_source ).
+                          iv_string = lv_source ) ##NO_TEXT.
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -4503,7 +4502,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
                  ig_data = ls_attr ).
 
     mo_files->add_string( iv_ext    = 'html'
-                          iv_string = lv_source ).
+                          iv_string = lv_source ) ##NO_TEXT.
 
   ENDMETHOD.                    "lif_object~serialize
 
@@ -14185,7 +14184,7 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
 
 * this class is obsolete, use LCL_PERSISTENCE_REPO instead
 
-  PROTECTED SECTION.
+  PRIVATE SECTION.
     TYPES: BEGIN OF ty_repo_persi,
              url         TYPE string,
              branch_name TYPE string,
@@ -14218,7 +14217,6 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
                 iv_branch_name TYPE ty_repo_persi-branch_name
       RAISING   lcx_exception.
 
-  PRIVATE SECTION.
     METHODS read_text_online
       RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
       RAISING   lcx_exception.
@@ -14616,8 +14614,6 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
 
-    TYPES: ty_repo_id TYPE c LENGTH 12.
-
     METHODS constructor.
 
     METHODS list
@@ -14715,8 +14711,7 @@ CLASS lcl_stage DEFINITION FINAL.
 
     CONSTANTS: BEGIN OF c_method,
                  add    TYPE ty_method VALUE 'A',
-                 reset  TYPE ty_method VALUE 'E',
-                 rm     TYPE ty_method VALUE 'M',
+                 rm     TYPE ty_method VALUE 'R',
                  ignore TYPE ty_method VALUE 'I',
                END OF c_method.
 
@@ -14980,7 +14975,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
     FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
     lv_tags_open = lv_tags - lv_tags_close.
 
-    IF lv_tags_open > lv_tags_close. " This logic chosen due to possible double tags in a line '<a><b>'
+* This logic chosen due to possible double tags in a line '<a><b>'
+    IF lv_tags_open > lv_tags_close.
       mv_indent = mv_indent + 1.
     ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
       mv_indent = mv_indent - 1.
@@ -14996,7 +14992,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
     lv_temp_str   = io_html->mv_html.
 
     IF me->mv_indent > 0.
-      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str WITH gc_newline && lv_indent_str.
+      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str
+        WITH gc_newline && lv_indent_str.
       SHIFT lv_temp_str RIGHT DELETING TRAILING space.
       SHIFT lv_temp_str LEFT  DELETING LEADING space.
     ENDIF.
@@ -16885,7 +16882,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
 * folders
       lv_sub = <ls_folder>-path && '+*'.
-      LOOP AT lt_folders ASSIGNING <ls_sub> WHERE count = <ls_folder>-count + 1 AND path CP lv_sub.
+      LOOP AT lt_folders ASSIGNING <ls_sub>
+          WHERE count = <ls_folder>-count + 1 AND path CP lv_sub.
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
         <ls_node>-chmod = gc_chmod-dir.
 
@@ -17644,9 +17642,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ls_count = mo_diff->stats( ).
 
     lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ). "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ). "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ). "#EC NOTEXT
+    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ).
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
     lo_html->add( |{ mv_filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
@@ -17802,12 +17800,10 @@ CLASS lcl_stage IMPLEMENTATION.
     CASE iv_method.
       WHEN c_method-add.
         rv_description = 'add'.
-      WHEN c_method-reset.
-        rv_description = 'reset'.
       WHEN c_method-rm.
         rv_description = 'rm'.
       WHEN c_method-ignore.
-        rv_description = 'ignore'.
+        rv_description = 'ignore' ##NO_TEXT.
       WHEN OTHERS.
         _raise 'unknown staging method type'.
     ENDCASE.
@@ -18049,7 +18045,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '</tr>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td colspan="2">' ).
-    ro_html->add( 'body <br>' ).
+    ro_html->add( 'body <br>' ) ##NO_TEXT.
     ro_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
@@ -18270,7 +18266,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html->add( 'Local:<br>' ).
+    ro_html->add( 'Local:<br>' ) ##NO_TEXT.
 
     ro_html->add( '<table>' ).
     LOOP AT mt_local ASSIGNING <ls_file>.
@@ -18309,7 +18305,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html->add( 'Remote:<br>' ).
+    ro_html->add( 'Remote:<br>' ) ##NO_TEXT.
 
     ro_html->add( '<table>' ).
     LOOP AT mt_remote ASSIGNING <ls_file>.
@@ -18507,8 +18503,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           lv_string TYPE string.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
-                   <lg_any>   TYPE any.
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
     lv_string = iv_string.     " type conversion
@@ -18888,7 +18883,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '<a href="sapevent:explore">Explore</a>' ).
     ro_html->add( |{ lv_install }| ).
     ro_html->add( '<a class="menu_end" href="sapevent:newoffline">' ).
-    ro_html->add( 'New Offline Repo</a>' ).
+    ro_html->add( 'New Offline Repo</a>' ) ##NO_TEXT.
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</table>' ).
@@ -18922,7 +18917,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       IF lines( lt_tadir ) = 0.
-        ro_html->add( 'Empty package<br><br>' ).
+        ro_html->add( 'Empty package<br><br>' ) ##NO_TEXT.
       ELSE.
         ro_html->add( '<table class="repo_tab">' ).
         ro_html->add( '<tbody>' ).
@@ -18942,17 +18937,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( '<a href="sapevent:zipimport?' &&
         io_repo->get_key( ) &&
         '">' && 'Import ZIP' &&
-        '</a>' ).
+        '</a>' ) ##NO_TEXT.
 
       ro_html->add( '<a href="sapevent:zipexport?' &&
         io_repo->get_key( ) &&
         '">' && 'Export ZIP' &&
-        '</a>' ).
+        '</a>' ) ##NO_TEXT.
 
       ro_html->add( '<a href="sapevent:files_commit?' &&
         io_repo->get_key( ) &&
         '">' && 'Export files and commit' &&
-        '</a>' ).
+        '</a>' ) ##NO_TEXT.
     ENDIF.
 
     ro_html->add( '</div>' ).
@@ -19081,7 +19076,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
               IF <ls_result>-obj_type IS INITIAL.
                 lv_object = '<td rowspan="' && lv_span && '">&nbsp;</td>' &&
                   '<td rowspan="' && lv_span && '"></td>'.
-                lv_trclass = ' class="unsupported"'.
+                lv_trclass = ' class="unsupported"' ##NO_TEXT.
               ELSE.
                 CLEAR lv_trclass.
                 lv_object = '<td rowspan="' && lv_span && '">' &&
@@ -19263,14 +19258,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
-*      WHEN 'add'.
-*        file_decode( EXPORTING iv_string = iv_getdata
-*                     IMPORTING ev_key = lv_key
-*                               es_file = ls_result ).
-*        CLEAR ls_item.
-*        MOVE-CORRESPONDING ls_result TO ls_item.
-*        add( is_item = ls_item
-*             iv_key  = lv_key ).
       WHEN 'uninstall'.
         lv_key = iv_getdata.
         uninstall( lv_key ).
@@ -19292,9 +19279,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key = iv_getdata.
         go_user->unhide( lv_key ).
         lcl_gui=>render( ).
-*      WHEN 'commit'.
-*        lv_key = iv_getdata.
-*        commit( lv_key ).
       WHEN 'stage'.
         lv_key = iv_getdata.
         stage( lv_key ).
@@ -19394,7 +19378,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="toc">' ).
-    ro_html->add( 'Error:<br>' ).
+    ro_html->add( 'Error:<br>' ) ##NO_TEXT.
     ro_html->add( ix_error->mv_text ).
     ro_html->add( '</div>' ).
 
