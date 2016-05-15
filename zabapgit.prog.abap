@@ -14955,9 +14955,13 @@ CLASS lcl_html_helper IMPLEMENTATION.
   ENDMETHOD.                    "reset
 
   METHOD _add_str.
+    CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
+      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source)'.
+
     DATA lv_tags        TYPE i.
     DATA lv_tags_open   TYPE i.
     DATA lv_tags_close  TYPE i.
+    DATA lv_tags_single TYPE i.
     DATA lv_close_offs  TYPE i.
     DATA lv_shift_back  TYPE i.
 
@@ -14973,9 +14977,11 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     FIND ALL OCCURRENCES OF '<'  IN iv_str MATCH COUNT lv_tags.
     FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
-    lv_tags_open = lv_tags - lv_tags_close.
+    FIND ALL OCCURRENCES OF REGEX lc_single_tags_re IN iv_str MATCH COUNT lv_tags_single.
 
-* This logic chosen due to possible double tags in a line '<a><b>'
+    lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
+
+    " More-less logic chosen due to possible double tags in a line '<a><b>'
     IF lv_tags_open > lv_tags_close.
       mv_indent = mv_indent + 1.
     ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
