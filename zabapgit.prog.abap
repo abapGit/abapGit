@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.6'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.7'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18266,6 +18266,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    IF lines( mt_local ) = 0.
+      RETURN.
+    ENDIF.
+
     ro_html->add( 'Local:<br>' ).
 
     ro_html->add( '<table>' ).
@@ -18298,7 +18302,12 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_remote.
 
+
     CREATE OBJECT ro_html.
+
+    IF lines( mt_remote ) = 0.
+      RETURN.
+    ENDIF.
 
     ro_html->add( 'Remote:<br>' ).
 
@@ -18344,7 +18353,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     IF mo_stage->count( ) > 0.
       ro_html->add( '<a href="sapevent:commit">commit</a>' ).
-    ELSE.
+    ELSEIF lines( mt_local ) > 0.
       ro_html->add( '<a href="sapevent:all">add all and commit</a>' ).
     ENDIF.
 
