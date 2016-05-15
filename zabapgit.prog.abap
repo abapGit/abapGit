@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.5'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.6'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18872,14 +18872,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo_online.
 
-    CONSTANTS: BEGIN OF c_status,
-                 commit TYPE c VALUE 'C',
-                 match  TYPE c VALUE 'M',
-                 pull   TYPE c VALUE 'P',
-               END OF c_status.
-
     DATA: lv_link        TYPE string,
-          lv_status      TYPE string,
           lv_object      TYPE string,
           lv_index       LIKE sy-tabix,
           lv_file_encode TYPE string,
@@ -18904,16 +18897,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           lt_results = io_repo->status( ).
-          IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
-            lv_status = c_status-pull.
-          ELSE.
-            READ TABLE lt_results WITH KEY match = abap_false TRANSPORTING NO FIELDS.
-            IF sy-subrc = 0.
-              lv_status = c_status-commit.
-            ELSE.
-              lv_status = c_status-match.
-            ENDIF.
-          ENDIF.
 
           ro_html->add( '<table class="repo_tab">' ).
           ro_html->add( '<tbody>' ).
@@ -18924,12 +18907,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                                           is_file = <ls_result> ).
 
             CLEAR lv_link.
-            IF lv_status = c_status-match AND <ls_result>-filename IS INITIAL.
+            IF <ls_result>-filename IS INITIAL.
               MOVE-CORRESPONDING <ls_result> TO ls_item.
               lv_supported = lcl_objects=>is_supported( ls_item ).
               IF lv_supported = abap_true.
                 lv_link = 'new'.
-                lv_status = c_status-commit.
               ELSE.
                 lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
               ENDIF.
@@ -18978,22 +18960,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ro_html->add( '</tbody>' ).
           ro_html->add( '</table>' ).
 
-          CASE lv_status.
-            WHEN c_status-commit.
-              ro_html->add( '<a href="sapevent:stage?' &&
-                io_repo->get_key( ) &&
-                '">stage</a>' ).
-            WHEN c_status-pull.
-              ro_html->add( '<a href="sapevent:pull?' &&
-                io_repo->get_key( ) &&
-                '">pull</a>' ).
-          ENDCASE.
+          IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
+            ro_html->add( '<a href="sapevent:pull?' &&
+              io_repo->get_key( ) &&
+              '">pull</a>' ).
+          ELSE.
+            ro_html->add( '<a href="sapevent:stage?' &&
+              io_repo->get_key( ) &&
+              '">stage</a>' ).
+          ENDIF.
 
-          lv_status = lcl_sap_package=>check(
+          ro_html->add( lcl_sap_package=>check(
             it_results = lt_results
-            iv_top     = io_repo->get_package( ) ).
-
-          ro_html->add( lv_status ).
+            iv_top     = io_repo->get_package( ) ) ).
 
         CATCH lcx_exception INTO lx_error.
           ro_html->add( render_error( lx_error ) ).
