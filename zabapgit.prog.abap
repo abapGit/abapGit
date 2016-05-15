@@ -17575,6 +17575,9 @@ CLASS lcl_stage DEFINITION FINAL.
              method TYPE ty_method,
            END OF ty_stage.
 
+    TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
+      WITH UNIQUE KEY file-path file-filename.
+
     METHODS:
       add
         IMPORTING is_file TYPE ty_file
@@ -17594,11 +17597,12 @@ CLASS lcl_stage DEFINITION FINAL.
         IMPORTING iv_path         TYPE ty_file-path
                   iv_filename     TYPE ty_file-filename
         RETURNING VALUE(rs_stage) TYPE ty_stage
-        RAISING   lcx_not_found.
+        RAISING   lcx_not_found,
+      get_all
+        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
 
   PRIVATE SECTION.
-    DATA: mt_stage TYPE SORTED TABLE OF ty_stage
-      WITH UNIQUE KEY file-path file-filename.
+    DATA: mt_stage TYPE ty_stage_tt.
 
     METHODS: append
       IMPORTING is_file   TYPE ty_file
@@ -17610,10 +17614,15 @@ CLASS lcl_stage IMPLEMENTATION.
 
   METHOD lookup.
     READ TABLE mt_stage INTO rs_stage
-      WITH KEY file-path = iv_path file-filename = iv_filename.
+      WITH KEY file-path = iv_path
+      file-filename = iv_filename.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
+  ENDMETHOD.
+
+  METHOD get_all.
+    rt_stage = mt_stage.
   ENDMETHOD.
 
   METHOD append.
@@ -17634,7 +17643,8 @@ CLASS lcl_stage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD reset.
-    DELETE mt_stage WHERE file-path = is_file-path AND file-filename = is_file-filename.
+    DELETE mt_stage WHERE file-path = is_file-path
+      AND file-filename = is_file-filename.
     ASSERT sy-subrc = 0.
   ENDMETHOD.
 
@@ -17664,12 +17674,47 @@ CLASS lcl_gui_page_commit DEFINITION FINAL.
 
     INTERFACES lif_gui_page.
 
+  PRIVATE SECTION.
+    DATA: mo_repo  TYPE REF TO lcl_repo_online,
+          mo_stage TYPE REF TO lcl_stage.
+
+    METHODS: render_files
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD constructor.
-* todo
+    mo_repo = io_repo.
+    mo_stage = io_stage.
+  ENDMETHOD.
+
+  METHOD render_files.
+
+    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
+
+
+    CREATE OBJECT ro_html.
+
+    lt_stage = mo_stage->get_all( ).
+
+    ro_html->add( '<table border="1">' ).
+    LOOP AT lt_stage ASSIGNING <ls_stage>.
+      ro_html->add( '<tr>' ).
+      ro_html->add( '<td>' ).
+      ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
+      ro_html->add( '</td>' ).
+      ro_html->add( '<td>' ).
+      ro_html->add( <ls_stage>-method ).
+      ro_html->add( '</td>' ).
+      ro_html->add( '</tr>' ).
+    ENDLOOP.
+    ro_html->add( '</table>' ).
+    ro_html->add( '<br>' ).
+
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -17687,8 +17732,11 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
-          lv_email TYPE string.
+          lv_email TYPE string,
+          lo_html  TYPE REF TO lcl_html_helper.
 
+
+    CREATE OBJECT lo_html.
 
     CREATE OBJECT lo_user.
     lv_user = lo_user->get_username( ).
@@ -17698,50 +17746,53 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    rv_html = lcl_gui=>header( )                    && gc_newline &&
-      '<div id="header">'                           && gc_newline &&
-      '<h1>Commit</h1>'                             && gc_newline &&
-      '<a href="sapevent:cancel">Cancel</a>'        && gc_newline &&
-      '</div>'                                      && gc_newline &&
-      '<div id="toc">'                              && gc_newline &&
-      '<form method="post" action="sapevent:post">' && gc_newline &&
-      '<table>'                                     && gc_newline &&
-      '<tr>'                                        && gc_newline &&
-      '<td>username</td>'                           && gc_newline &&
-      '<td>'                                        && gc_newline &&
-      '<input name="username" type="text" value="' && lv_user && '">' &&
-      '</td>'                                       && gc_newline &&
-      '</tr>'                                       && gc_newline &&
-      '<tr>'                                        && gc_newline &&
-      '<td>email</td>'                              && gc_newline &&
-      '<td>'                                        && gc_newline &&
-      '<input name="email" type="text" value="' && lv_email && '">' &&
-      '</td>'                                       && gc_newline &&
-      '</tr>'                                       && gc_newline &&
-      '<tr>'                                        && gc_newline &&
-      '<td>comment</td>'                            && gc_newline &&
-      '<td>'                                        && gc_newline &&
-      '<input name="comment" type="text" id="comment" maxlength="50" size="50">' &&
-      '</td>'                                       && gc_newline &&
-      '</tr>'                                       && gc_newline &&
-      '<tr>'                                        && gc_newline &&
-      '<td colspan="2">'                            && gc_newline &&
-      'body <br>'                                   && gc_newline &&
-      '<textarea name="body" rows="10" cols="72"></textarea>' && gc_newline &&
-      '</td>'                                       && gc_newline &&
-      '</tr>'                                       && gc_newline &&
-      '<tr>'                                        && gc_newline &&
-      '<td colspan="2" align="right">'              && gc_newline &&
-      '<input type="submit" value="Push">'          && gc_newline &&
-      '</td>'                                       && gc_newline &&
-      '</tr>'                                       && gc_newline &&
-      '</table>'                                    && gc_newline &&
-      '</form>'                                     && gc_newline &&
-      '<script>'                                    && gc_newline &&
-      'document.getElementById("comment").focus();' && gc_newline &&
-      '</script>'                                   && gc_newline &&
-      '</div>'                                      && gc_newline &&
-      lcl_gui=>footer( ).
+    lo_html->add( lcl_gui=>header( ) ).
+    lo_html->add( '<div id="header">' ).
+    lo_html->add( '<h1>Commit</h1>' ).
+    lo_html->add( '<a href="sapevent:cancel">Cancel</a>' ).
+    lo_html->add( '</div>' ).
+    lo_html->add( '<div id="toc">' ).
+    lo_html->add( render_files( ) ).
+    lo_html->add( '<form method="post" action="sapevent:post">' ).
+    lo_html->add( '<table>' ).
+    lo_html->add( '<tr>' ).
+    lo_html->add( '<td>username</td>' ).
+    lo_html->add( '<td>' ).
+    lo_html->add( '<input name="username" type="text" value="' && lv_user && '">' ).
+    lo_html->add( '</td>' ).
+    lo_html->add( '</tr>' ).
+    lo_html->add( '<tr>' ).
+    lo_html->add( '<td>email</td>' ).
+    lo_html->add( '<td>' ).
+    lo_html->add( '<input name="email" type="text" value="' && lv_email && '">' ).
+    lo_html->add( '</td>' ).
+    lo_html->add( '</tr>' ).
+    lo_html->add( '<tr>' ).
+    lo_html->add( '<td>comment</td>' ).
+    lo_html->add( '<td>' ).
+    lo_html->add( '<input name="comment" type="text" id="cmt" maxlength="50" size="50">' ).
+    lo_html->add( '</td>' ).
+    lo_html->add( '</tr>' ).
+    lo_html->add( '<tr>' ).
+    lo_html->add( '<td colspan="2">' ).
+    lo_html->add( 'body <br>' ).
+    lo_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
+    lo_html->add( '</td>' ).
+    lo_html->add( '</tr>' ).
+    lo_html->add( '<tr>' ).
+    lo_html->add( '<td colspan="2" align="right">' ).
+    lo_html->add( '<input type="submit" value="Push">' ).
+    lo_html->add( '</td>' ).
+    lo_html->add( '</tr>' ).
+    lo_html->add( '</table>' ).
+    lo_html->add( '</form>' ).
+    lo_html->add( '<script>' ).
+    lo_html->add( 'document.getElementById("cmt").focus();' ).
+    lo_html->add( '</script>' ).
+    lo_html->add( '</div>' ).
+    lo_html->add( lcl_gui=>footer( ) ).
+
+    rv_html = lo_html->mv_html.
 
   ENDMETHOD.
 
@@ -19395,6 +19446,90 @@ FORM branch_popup TABLES   tt_fields STRUCTURE sval
   ENDIF.
 
 ENDFORM.                    "branch_popup
+
+CLASS ltcl_html_helper DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    DATA: mo_html TYPE REF TO lcl_html_helper.
+
+    METHODS:
+      indent1 FOR TESTING RAISING lcx_exception,
+      indent2 FOR TESTING RAISING lcx_exception,
+      indent3 FOR TESTING RAISING lcx_exception,
+      indent4 FOR TESTING RAISING lcx_exception.
+
+    METHODS:
+      setup,
+      last_line
+        RETURNING VALUE(rv_line) TYPE string.
+
+ENDCLASS.
+
+CLASS ltcl_html_helper IMPLEMENTATION.
+
+  METHOD setup.
+    CREATE OBJECT mo_html.
+  ENDMETHOD.
+
+  METHOD indent1.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( 'hello world' ).
+    mo_html->add( '</td>' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = last_line( )
+      exp = '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD indent2.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( '<input name="comment" type="text">' ).
+    mo_html->add( '</td>' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = last_line( )
+      exp = '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD indent3.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
+    mo_html->add( '</td>' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = last_line( )
+      exp = '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD indent4.
+
+    mo_html->add( '<td>' ).
+    mo_html->add( 'foo<br>bar' ).
+    mo_html->add( '</td>' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = last_line( )
+      exp = '</td>' ).
+
+  ENDMETHOD.
+
+  METHOD last_line.
+
+    DATA: lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
+    SPLIT mo_html->mv_html AT gc_newline INTO TABLE lt_strings.
+
+    READ TABLE lt_strings INDEX lines( lt_strings ) INTO rv_line.
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_convert DEFINITION
