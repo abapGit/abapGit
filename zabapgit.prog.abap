@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14831,7 +14831,7 @@ CLASS lcl_html_helper DEFINITION FINAL.
     METHODS _add_str IMPORTING iv_str  TYPE csequence.
     METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html_helper.
 
-endclass.                    "lcl_html_helper DEFINITION
+ENDCLASS.                    "lcl_html_helper DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_html_helper IMPLEMENTATION
@@ -14844,18 +14844,18 @@ CLASS lcl_html_helper IMPLEMENTATION.
     lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
 
     CASE lo_type->type_kind.
-    WHEN cl_abap_typedescr=>typekind_char OR cl_abap_typedescr=>typekind_string.
-      _add_str( iv_chunk ).
-    WHEN cl_abap_typedescr=>typekind_oref.
-      ASSERT iv_chunk IS BOUND. " Dev mistake
-      TRY.
-        lo_html ?= iv_chunk.
-      CATCH cx_sy_move_cast_error.
+      WHEN cl_abap_typedescr=>typekind_char OR cl_abap_typedescr=>typekind_string.
+        _add_str( iv_chunk ).
+      WHEN cl_abap_typedescr=>typekind_oref.
+        ASSERT iv_chunk IS BOUND. " Dev mistake
+        TRY.
+            lo_html ?= iv_chunk.
+          CATCH cx_sy_move_cast_error.
+            ASSERT 1 = 0. " Dev mistake
+        ENDTRY.
+        _add_htm( lo_html ).
+      WHEN OTHERS.
         ASSERT 1 = 0. " Dev mistake
-      ENDTRY.
-      _add_htm( lo_html ).
-    WHEN OTHERS.
-      ASSERT 1 = 0. " Dev mistake
     ENDCASE.
 
   ENDMETHOD.  " add
@@ -17348,73 +17348,73 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lo_html TYPE REF TO lcl_html_helper.
     CREATE OBJECT lo_html.
 
-    lo_html->add( '<style type="text/css">' ).                      "#EC NOTEXT
-    lo_html->add( '/* DIFF */' ).                                   "#EC NOTEXT
-    lo_html->add( 'div.diff {' ).                                   "#EC NOTEXT
-    lo_html->add( '  background-color: #f2f2f2;' ).                 "#EC NOTEXT
-    lo_html->add( '  padding: 0.7em    ' ).                         "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'div.diff_head {' ).                              "#EC NOTEXT
-    lo_html->add( '  border-bottom: 1px solid #DDD;' ).             "#EC NOTEXT
-    lo_html->add( '  padding-bottom: 0.7em;' ).                     "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'span.diff_name {' ).                             "#EC NOTEXT
-    lo_html->add( '  padding-left: 0.5em;' ).                       "#EC NOTEXT
-    lo_html->add( '  color: grey;' ).                               "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'span.diff_name strong {' ).                      "#EC NOTEXT
-    lo_html->add( '  color: #333;' ).                               "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'span.diff_banner {' ).                           "#EC NOTEXT
-    lo_html->add( '  border-style: solid;' ).                       "#EC NOTEXT
-    lo_html->add( '  border-width: 1px;' ).                         "#EC NOTEXT
-    lo_html->add( '  border-radius: 3px;' ).                        "#EC NOTEXT
-    lo_html->add( '  padding-left: 0.3em;' ).                       "#EC NOTEXT
-    lo_html->add( '  padding-right: 0.3em;' ).                      "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( '.diff_ins {' ).                                  "#EC NOTEXT
-    lo_html->add( '  border-color: #38e038;' ).                     "#EC NOTEXT
-    lo_html->add( '  background-color: #91ee91 !important;' ).      "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( '.diff_del {' ).                                  "#EC NOTEXT
-    lo_html->add( '  border-color: #ff8093;' ).                     "#EC NOTEXT
-    lo_html->add( '  background-color: #ffb3be !important;' ).      "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( '.diff_upd {' ).                                  "#EC NOTEXT
-    lo_html->add( '  border-color: #dada00;' ).                     "#EC NOTEXT
-    lo_html->add( '  background-color: #ffffb3 !important;' ).      "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'div.diff_content {' ).                           "#EC NOTEXT
-    lo_html->add( '  background: #fff;' ).                          "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab {' ).                             "#EC NOTEXT
-    lo_html->add( '  width: 98%;' ).                                "#EC NOTEXT
-    lo_html->add( '  border-collapse: collapse;' ).                 "#EC NOTEXT
+    lo_html->add( '<style type="text/css">' ).              "#EC NOTEXT
+    lo_html->add( '/* DIFF */' ).                           "#EC NOTEXT
+    lo_html->add( 'div.diff {' ).                           "#EC NOTEXT
+    lo_html->add( '  background-color: #f2f2f2;' ).         "#EC NOTEXT
+    lo_html->add( '  padding: 0.7em    ' ).                 "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'div.diff_head {' ).                      "#EC NOTEXT
+    lo_html->add( '  border-bottom: 1px solid #DDD;' ).     "#EC NOTEXT
+    lo_html->add( '  padding-bottom: 0.7em;' ).             "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'span.diff_name {' ).                     "#EC NOTEXT
+    lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
+    lo_html->add( '  color: grey;' ).                       "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'span.diff_name strong {' ).              "#EC NOTEXT
+    lo_html->add( '  color: #333;' ).                       "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'span.diff_banner {' ).                   "#EC NOTEXT
+    lo_html->add( '  border-style: solid;' ).               "#EC NOTEXT
+    lo_html->add( '  border-width: 1px;' ).                 "#EC NOTEXT
+    lo_html->add( '  border-radius: 3px;' ).                "#EC NOTEXT
+    lo_html->add( '  padding-left: 0.3em;' ).               "#EC NOTEXT
+    lo_html->add( '  padding-right: 0.3em;' ).              "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( '.diff_ins {' ).                          "#EC NOTEXT
+    lo_html->add( '  border-color: #38e038;' ).             "#EC NOTEXT
+    lo_html->add( '  background-color: #91ee91 !important;' ). "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( '.diff_del {' ).                          "#EC NOTEXT
+    lo_html->add( '  border-color: #ff8093;' ).             "#EC NOTEXT
+    lo_html->add( '  background-color: #ffb3be !important;' ). "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( '.diff_upd {' ).                          "#EC NOTEXT
+    lo_html->add( '  border-color: #dada00;' ).             "#EC NOTEXT
+    lo_html->add( '  background-color: #ffffb3 !important;' ). "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'div.diff_content {' ).                   "#EC NOTEXT
+    lo_html->add( '  background: #fff;' ).                  "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab {' ).                     "#EC NOTEXT
+    lo_html->add( '  width: 98%;' ).                        "#EC NOTEXT
+    lo_html->add( '  border-collapse: collapse;' ).         "#EC NOTEXT
     lo_html->add( '  font-family: Consolas, Courier, monospace;' ). "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab th {' ).                          "#EC NOTEXT
-    lo_html->add( '  color: grey;' ).                               "#EC NOTEXT
-    lo_html->add( '  text-align: left;' ).                          "#EC NOTEXT
-    lo_html->add( '  font-weight: normal;' ).                       "#EC NOTEXT
-    lo_html->add( '  padding: 0.5em;' ).                            "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab td {' ).                          "#EC NOTEXT
-    lo_html->add( '  color: #333;' ).                               "#EC NOTEXT
-    lo_html->add( '  padding-left: 0.5em;' ).                       "#EC NOTEXT
-    lo_html->add( '  padding-right: 0.5em;' ).                      "#EC NOTEXT
-    lo_html->add( '  font-size: smaller;' ).                        "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab td.num, th.num {' ).              "#EC NOTEXT
-    lo_html->add( '  text-align: right;' ).                         "#EC NOTEXT
-    lo_html->add( '  color: #ccc;' ).                               "#EC NOTEXT
-    lo_html->add( '  border-left: 1px solid #eee;' ).               "#EC NOTEXT
-    lo_html->add( '  border-right: 1px solid #eee;' ).              "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( 'table.diff_tab td.cmd, th.cmd {' ).              "#EC NOTEXT
-    lo_html->add( '  font-size: smaller;' ).                        "#EC NOTEXT
-    lo_html->add( '  text-align: center !important;' ).             "#EC NOTEXT
-    lo_html->add( '}' ).                                            "#EC NOTEXT
-    lo_html->add( '</style>' ).                                     "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab th {' ).                  "#EC NOTEXT
+    lo_html->add( '  color: grey;' ).                       "#EC NOTEXT
+    lo_html->add( '  text-align: left;' ).                  "#EC NOTEXT
+    lo_html->add( '  font-weight: normal;' ).               "#EC NOTEXT
+    lo_html->add( '  padding: 0.5em;' ).                    "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab td {' ).                  "#EC NOTEXT
+    lo_html->add( '  color: #333;' ).                       "#EC NOTEXT
+    lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
+    lo_html->add( '  padding-right: 0.5em;' ).              "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab td.num, th.num {' ).      "#EC NOTEXT
+    lo_html->add( '  text-align: right;' ).                 "#EC NOTEXT
+    lo_html->add( '  color: #ccc;' ).                       "#EC NOTEXT
+    lo_html->add( '  border-left: 1px solid #eee;' ).       "#EC NOTEXT
+    lo_html->add( '  border-right: 1px solid #eee;' ).      "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab td.cmd, th.cmd {' ).      "#EC NOTEXT
+    lo_html->add( '  font-size: smaller;' ).                "#EC NOTEXT
+    lo_html->add( '  text-align: center !important;' ).     "#EC NOTEXT
+    lo_html->add( '  white-space: nowrap;' ).               "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( '</style>' ).                             "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
@@ -17426,16 +17426,16 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ls_count = mo_diff->stats( ).
 
-    lo_html->add( '<div class="diff_head">' ).                  "#EC NOTEXT
+    lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
     lo_html->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ). "#EC NOTEXT
     lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ). "#EC NOTEXT
     lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ). "#EC NOTEXT
-    lo_html->add( '<span class="diff_name">' ).                 "#EC NOTEXT
-    lo_html->add( ms_result-obj_type ).                         "#EC NOTEXT
-    lo_html->add( |<strong>{ ms_result-obj_name }</strong>| ).  "#EC NOTEXT
+    lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
+    lo_html->add( ms_result-obj_type ).                     "#EC NOTEXT
+    lo_html->add( |<strong>{ ms_result-obj_name }</strong>| ). "#EC NOTEXT
     lo_html->add( |({ ms_result-filename })| ).
-    lo_html->add( '</span>' ).                                  "#EC NOTEXT
-    lo_html->add( '</div>' ).                                   "#EC NOTEXT
+    lo_html->add( '</span>' ).                              "#EC NOTEXT
+    lo_html->add( '</div>' ).                               "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
@@ -17458,17 +17458,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT lo_html.
     lt_diffs = mo_diff->get( ).
 
-    lo_html->add( '<div class="diff_content">' ).  "#EC NOTEXT
-    lo_html->add( '<table class="diff_tab">' ).    "#EC NOTEXT
-    lo_html->add( '<tr>' ).                        "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).       "#EC NOTEXT
-    lo_html->add( '<th>@LOCAL</th>' ).             "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).       "#EC NOTEXT
-    lo_html->add( '<th>@REMOTE</th>' ).            "#EC NOTEXT
-    lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ).       "#EC NOTEXT
-    lo_html->add( '</tr>' ).                       "#EC NOTEXT
+    lo_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
+    lo_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
+    lo_html->add( '<tr>' ).                                 "#EC NOTEXT
+    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    lo_html->add( '<th>@LOCAL</th>' ).                      "#EC NOTEXT
+    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    lo_html->add( '<th>@REMOTE</th>' ).                     "#EC NOTEXT
+    lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
+    lo_html->add( '</tr>' ).                                "#EC NOTEXT
 
-    LOOP AT lt_diffs ASSIGNING <ls_diff>.
+    LOOP AT lt_diffs ASSIGNING <ls_diff> WHERE short = abap_true.
       lv_index  = sy-tabix.
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
@@ -17476,31 +17476,31 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       CLEAR: lv_attr_local, lv_attr_remote. " Class for changed lines
       CASE <ls_diff>-result.
         WHEN lcl_diff=>c_diff-insert.
-          lv_attr_local  = ' class="diff_ins"'.    "#EC NOTEXT
+          lv_attr_local  = ' class="diff_ins"'.             "#EC NOTEXT
         WHEN lcl_diff=>c_diff-delete.
-          lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
+          lv_attr_remote = ' class="diff_del"'.             "#EC NOTEXT
         WHEN lcl_diff=>c_diff-update.
-          lv_attr_local  = ' class="diff_ins"'.    "#EC NOTEXT
-          lv_attr_remote = ' class="diff_del"'.    "#EC NOTEXT
+          lv_attr_local  = ' class="diff_upd"'.             "#EC NOTEXT
+          lv_attr_remote = ' class="diff_upd"'.             "#EC NOTEXT
       ENDCASE.
 
       CLEAR lv_href.  " Create link to next change
       IF <ls_diff>-result = lcl_diff=>c_diff-delete
-      OR <ls_diff>-result = lcl_diff=>c_diff-insert
-      OR <ls_diff>-result = lcl_diff=>c_diff-update.
+          OR <ls_diff>-result = lcl_diff=>c_diff-insert
+          OR <ls_diff>-result = lcl_diff=>c_diff-update.
         lv_anchor_count = lv_anchor_count + 1.
         lv_href = |<a name="diff_{ lv_anchor_count }"|
                && |   href="#diff_{ lv_anchor_count + 1 }|
                && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                                           "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).  "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }>{ lv_local }</td>| ).         "#EC NOTEXT
+      lo_html->add( '<tr>' ).                               "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }><pre>{ lv_local }</pre></td>| ). "#EC NOTEXT
       lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }>{ lv_remote }</td>| ).       "#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).               "#EC NOTEXT
-      lo_html->add( '</tr>' ).                                          "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }><pre>{ lv_remote }</pre></td>| ). "#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
+      lo_html->add( '</tr>' ).                              "#EC NOTEXT
 
       " TODO Refactor ?
       READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
@@ -17510,8 +17510,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ENDLOOP.
 
-    lo_html->add( '</table>' ).  "#EC NOTEXT
-    lo_html->add( '</div>' ).    "#EC NOTEXT
+    lo_html->add( '</table>' ).                             "#EC NOTEXT
+    lo_html->add( '</div>' ).                               "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
@@ -17522,15 +17522,15 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       WHEN 'back'.
         lcl_gui=>back( ).
       WHEN OTHERS.
-        _raise 'Unknown action'. "#EC NOTEXT
+        _raise 'Unknown action'.                            "#EC NOTEXT
     ENDCASE.
 
   ENDMETHOD.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_html         TYPE string.
-    DATA  lo_html  TYPE REF TO lcl_html_helper.
+    DATA: lv_html TYPE string,
+          lo_html TYPE REF TO lcl_html_helper.
 
     CREATE OBJECT lo_html.
 
@@ -17538,18 +17538,18 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lv_html = lcl_gui=>header( ).
 
     "TODO: crutch, redo later after unification
-    replace first occurrence of '</style>' in lv_html
-      with '</style>' && styles( )->mv_html.
+    REPLACE FIRST OCCURRENCE OF '</style>' IN lv_html
+      WITH '</style>' && styles( )->mv_html.
 
     "TODO: crutch, move to SAP back button (code almost ready)
     lv_html = lv_html && '<div>' && '<a href="sapevent:back">Back</a>' && '</div>'.
     lo_html->add( lv_html ).
 * ^^^ REDO
 
-    lo_html->add( '<div class="diff">' ).  "#EC NOTEXT
+    lo_html->add( '<div class="diff">' ).                   "#EC NOTEXT
     lo_html->add( render_head( ) ).
     lo_html->add( render_diff( ) ).
-    lo_html->add( '</div>' ).              "#EC NOTEXT
+    lo_html->add( '</div>' ).                               "#EC NOTEXT
     lo_html->add( lcl_gui=>footer( ) ).
 
     rv_html = lo_html->mv_html.
