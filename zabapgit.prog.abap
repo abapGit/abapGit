@@ -12574,9 +12574,9 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD compare_files.
 
-    READ TABLE it_repo WITH KEY path = is_gen-path
-                                filename = is_gen-filename
-                                data = is_gen-data
+    READ TABLE it_repo WITH KEY
+      filename = is_gen-filename
+      data = is_gen-data
       TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       rv_match = abap_false.
@@ -13660,6 +13660,10 @@ CLASS lcl_git_pack IMPLEMENTATION.
     SORT lt_nodes BY name ASCENDING.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
+      ASSERT NOT <ls_node>-chmod IS INITIAL.
+      ASSERT NOT <ls_node>-name IS INITIAL.
+      ASSERT NOT <ls_node>-sha1 IS INITIAL.
+
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
       lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
@@ -14849,6 +14853,27 @@ CLASS lcl_git_porcelain DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_expanded,
+             path TYPE string,
+             name TYPE string,
+             sha1 TYPE ty_sha1,
+           END OF ty_expanded.
+
+    TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_tree,
+             path TYPE string,
+             data TYPE xstring,
+             sha1 TYPE ty_sha1,
+           END OF ty_tree.
+
+    TYPES: ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY.
+
+    CLASS-METHODS build_trees
+      IMPORTING it_expanded     TYPE ty_expanded_tt
+      RETURNING VALUE(rt_trees) TYPE ty_trees_tt
+      RAISING   lcx_exception.
+
     CLASS-METHODS walk
       IMPORTING it_objects TYPE lcl_git_pack=>ty_objects_tt
                 iv_sha1    TYPE ty_sha1
@@ -14856,17 +14881,24 @@ CLASS lcl_git_porcelain DEFINITION FINAL.
       CHANGING  ct_files   TYPE ty_files_tt
       RAISING   lcx_exception.
 
-    CLASS-METHODS root_tree
-      IMPORTING it_objects      TYPE lcl_git_pack=>ty_objects_tt
-                iv_branch       TYPE ty_sha1
-      RETURNING VALUE(rt_nodes) TYPE lcl_git_pack=>ty_nodes_tt
+    CLASS-METHODS walk_tree
+      IMPORTING it_objects         TYPE lcl_git_pack=>ty_objects_tt
+                iv_tree            TYPE ty_sha1
+                iv_base            TYPE string
+      RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS full_tree
+      IMPORTING it_objects         TYPE lcl_git_pack=>ty_objects_tt
+                iv_branch          TYPE ty_sha1
+      RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS receive_pack
       IMPORTING is_comment       TYPE ty_comment
                 io_repo          TYPE REF TO lcl_repo_online
-                it_nodes         TYPE lcl_git_pack=>ty_nodes_tt
-                it_files         TYPE ty_files_tt
+                it_trees         TYPE ty_trees_tt
+                it_blobs         TYPE ty_files_tt
                 iv_branch        TYPE ty_sha1
       RETURNING VALUE(rv_branch) TYPE ty_sha1
       RAISING   lcx_exception.
@@ -16604,22 +16636,24 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: lv_tree    TYPE xstring,
-          lv_time    TYPE lcl_time=>ty_unixtime,
+    DATA: lv_time    TYPE lcl_time=>ty_unixtime,
           lv_commit  TYPE xstring,
           lt_objects TYPE lcl_git_pack=>ty_objects_tt,
           lv_pack    TYPE xstring,
           ls_object  LIKE LINE OF lt_objects,
           ls_commit  TYPE lcl_git_pack=>ty_commit.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+    FIELD-SYMBOLS: <ls_tree> LIKE LINE OF it_trees,
+                   <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_tree = lcl_git_pack=>encode_tree( it_nodes ).
+    lv_time = lcl_time=>get( ).
+
+    READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
+    ASSERT sy-subrc = 0.
 
 * new commit
-    lv_time = lcl_time=>get( ).
-    ls_commit-tree      = lcl_hash=>sha1( iv_type = gc_type-tree iv_data = lv_tree ).
+    ls_commit-tree      = <ls_tree>-sha1.
     ls_commit-parent    = iv_branch.
     CONCATENATE is_comment-username space '<' is_comment-email '>' space lv_time
       INTO ls_commit-author RESPECTING BLANKS.
@@ -16632,16 +16666,20 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     ls_object-type = gc_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO lt_objects.
-    CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-tree iv_data = lv_tree ).
-    ls_object-type = gc_type-tree.
-    ls_object-data = lv_tree.
-    APPEND ls_object TO lt_objects.
-    LOOP AT it_files ASSIGNING <ls_file>.
+
+    LOOP AT it_trees ASSIGNING <ls_tree>.
       CLEAR ls_object.
-      ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_file>-data ).
+      ls_object-sha1 = <ls_tree>-sha1.
+      ls_object-type = gc_type-tree.
+      ls_object-data = <ls_tree>-data.
+      APPEND ls_object TO lt_objects.
+    ENDLOOP.
+
+    LOOP AT it_blobs ASSIGNING <ls_blob>.
+      CLEAR ls_object.
+      ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_blob>-data ).
       ls_object-type = gc_type-blob.
-      ls_object-data = <ls_file>-data.
+      ls_object-data = <ls_blob>-data.
       APPEND ls_object TO lt_objects.
     ENDLOOP.
 
@@ -16656,66 +16694,97 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD push.
 
-* todo, only works with root files
+    DATA: lt_expanded TYPE ty_expanded_tt,
+          lt_blobs    TYPE ty_files_tt,
+          lv_sha1     TYPE ty_sha1,
+          lt_trees    TYPE ty_trees_tt,
+          lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
-    DATA:
-      lt_nodes TYPE lcl_git_pack=>ty_nodes_tt,
-      lt_files TYPE ty_files_tt,
-      lv_sha1  TYPE ty_sha1,
-      lt_stage TYPE lcl_stage=>ty_stage_tt,
-      lv_index TYPE i.
-
-    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
-                   <ls_stage> LIKE LINE OF lt_stage,
-                   <ls_node>  LIKE LINE OF lt_nodes.
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage,
+                   <ls_exp>   LIKE LINE OF lt_expanded.
 
 
-    lt_nodes = root_tree( it_objects = io_repo->get_objects( )
-                          iv_branch  = io_repo->get_sha1_remote( ) ).
+    lt_expanded = full_tree( it_objects = io_repo->get_objects( )
+                             iv_branch  = io_repo->get_sha1_remote( ) ).
 
-* todo, can only handle add
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       CASE <ls_stage>-method.
         WHEN lcl_stage=>c_method-add.
-          APPEND <ls_stage>-file TO lt_files.
+          APPEND <ls_stage>-file TO lt_blobs.
+
+          READ TABLE lt_expanded ASSIGNING <ls_exp> WITH KEY
+            name = <ls_stage>-file-filename
+            path = <ls_stage>-file-path.
+          IF sy-subrc <> 0. " new files
+            APPEND INITIAL LINE TO lt_expanded ASSIGNING <ls_exp>.
+            <ls_exp>-name = <ls_stage>-file-filename.
+            <ls_exp>-path = <ls_stage>-file-path.
+          ENDIF.
+
+          lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_stage>-file-data ).
+          IF <ls_exp>-sha1 <> lv_sha1.
+            <ls_exp>-sha1 = lv_sha1.
+          ENDIF.
+        WHEN lcl_stage=>c_method-rm.
+          DELETE lt_expanded
+            WHERE name = <ls_stage>-file-filename
+            AND path = <ls_stage>-file-path.
+          ASSERT sy-subrc = 0.
         WHEN OTHERS.
-* todo, work in progress see issue #5 on github
           _raise 'stage method not supported, todo'.
       ENDCASE.
     ENDLOOP.
 
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      lv_index = sy-tabix.
-      READ TABLE lt_nodes ASSIGNING <ls_node> WITH KEY name = <ls_file>-filename.
-      IF sy-subrc <> 0.
-* new files
-        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod-file.
-        <ls_node>-name = <ls_file>-filename.
-      ENDIF.
-
-      lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_file>-data ).
-      IF <ls_node>-sha1 <> lv_sha1.
-        <ls_node>-sha1 = lv_sha1.
-      ELSE.
-        DELETE lt_files INDEX lv_index.
-      ENDIF.
-    ENDLOOP.
-
-    IF lt_files[] IS INITIAL.
-      _raise 'no files'.
-    ENDIF.
+    lt_trees = build_trees( lt_expanded ).
 
     rv_branch = receive_pack( is_comment = is_comment
                               io_repo    = io_repo
-                              it_nodes   = lt_nodes
-                              it_files   = lt_files
+                              it_trees   = lt_trees
+                              it_blobs   = lt_blobs
                               iv_branch  = io_repo->get_sha1_remote( ) ).
 
   ENDMETHOD.                    "push
 
-  METHOD root_tree.
+  METHOD walk_tree.
+
+    DATA: ls_object   LIKE LINE OF it_objects,
+          lt_expanded LIKE rt_expanded,
+          lt_nodes    TYPE lcl_git_pack=>ty_nodes_tt.
+
+    FIELD-SYMBOLS: <ls_exp>  LIKE LINE OF rt_expanded,
+                   <ls_node> LIKE LINE OF lt_nodes.
+
+
+    READ TABLE it_objects INTO ls_object
+      WITH KEY sha1 = iv_tree
+      type = gc_type-tree.
+    IF sy-subrc <> 0.
+      _raise 'tree not found'.
+    ENDIF.
+    lt_nodes = lcl_git_pack=>decode_tree( ls_object-data ).
+
+    LOOP AT lt_nodes ASSIGNING <ls_node>.
+      CASE <ls_node>-chmod.
+        WHEN gc_chmod-file.
+          APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
+          <ls_exp>-path = iv_base.
+          <ls_exp>-name = <ls_node>-name.
+          <ls_exp>-sha1 = <ls_node>-sha1.
+        WHEN gc_chmod-dir.
+          lt_expanded = walk_tree(
+            it_objects = it_objects
+            iv_tree    = <ls_node>-sha1
+            iv_base    = iv_base && <ls_node>-name && '/' ).
+          APPEND LINES OF lt_expanded TO rt_expanded.
+        WHEN OTHERS.
+          _raise 'walk_tree: unknown chmod'.
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD full_tree.
 
     DATA: ls_object LIKE LINE OF it_objects,
           ls_commit TYPE lcl_git_pack=>ty_commit.
@@ -16727,12 +16796,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     ENDIF.
     ls_commit = lcl_git_pack=>decode_commit( ls_object-data ).
 
-    READ TABLE it_objects INTO ls_object
-      WITH KEY sha1 = ls_commit-tree type = gc_type-tree.
-    IF sy-subrc <> 0.
-      _raise 'tree not found'.
-    ENDIF.
-    rt_nodes = lcl_git_pack=>decode_tree( ls_object-data ).
+    rt_expanded = walk_tree( it_objects = it_objects
+                             iv_tree    = ls_commit-tree
+                             iv_base    = '/' ).
 
   ENDMETHOD.                    "root_tree
 
@@ -16771,6 +16837,77 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           CHANGING ct_files = et_files ).
 
   ENDMETHOD.                    "pull
+
+  METHOD build_trees.
+
+    TYPES: BEGIN OF ty_folder,
+             path  TYPE string,
+             count TYPE i,
+             sha1  TYPE ty_sha1,
+           END OF ty_folder.
+
+    TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
+
+    DATA: lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
+          ls_tree    LIKE LINE OF rt_trees,
+          lv_sub     TYPE string,
+          lv_len     TYPE i,
+          lt_folders TYPE ty_folders_tt.
+
+    FIELD-SYMBOLS: <ls_folder> LIKE LINE OF lt_folders,
+                   <ls_node>   LIKE LINE OF lt_nodes,
+                   <ls_sub>    LIKE LINE OF lt_folders,
+                   <ls_exp>    LIKE LINE OF it_expanded.
+
+
+    LOOP AT it_expanded ASSIGNING <ls_exp>.
+      READ TABLE lt_folders WITH KEY path = <ls_exp>-path TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO lt_folders ASSIGNING <ls_folder>.
+        <ls_folder>-path = <ls_exp>-path.
+        FIND ALL OCCURRENCES OF '/' IN <ls_folder>-path MATCH COUNT <ls_folder>-count.
+      ENDIF.
+    ENDLOOP.
+
+* start with the deepest folders
+    SORT lt_folders BY count DESCENDING.
+
+    LOOP AT lt_folders ASSIGNING <ls_folder>.
+      CLEAR lt_nodes.
+
+* files
+      LOOP AT it_expanded ASSIGNING <ls_exp> WHERE path = <ls_folder>-path.
+        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+        <ls_node>-chmod = gc_chmod-file.
+        <ls_node>-name = <ls_exp>-name.
+        <ls_node>-sha1 = <ls_exp>-sha1.
+      ENDLOOP.
+
+* folders
+      lv_sub = <ls_folder>-path && '+*'.
+      LOOP AT lt_folders ASSIGNING <ls_sub> WHERE count = <ls_folder>-count + 1 AND path CP lv_sub.
+        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+        <ls_node>-chmod = gc_chmod-dir.
+
+* extract folder name, this can probably be done easier using regular expressions
+        lv_len = strlen( <ls_folder>-path ).
+        <ls_node>-name = <ls_sub>-path+lv_len.
+        lv_len = strlen( <ls_node>-name ) - 1.
+        <ls_node>-name = <ls_node>-name(lv_len).
+
+        <ls_node>-sha1 = <ls_sub>-sha1.
+      ENDLOOP.
+
+      CLEAR ls_tree.
+      ls_tree-path = <ls_folder>-path.
+      ls_tree-data = lcl_git_pack=>encode_tree( lt_nodes ).
+      ls_tree-sha1 = lcl_hash=>sha1( iv_type = gc_type-tree iv_data = ls_tree-data ).
+      APPEND ls_tree TO rt_trees.
+
+      <ls_folder>-sha1 = ls_tree-sha1.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD walk.
 
@@ -18933,13 +19070,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
               ENDWHILE.
 
               IF <ls_result>-obj_type IS INITIAL.
-                lv_object = '<td rowspan="' && lv_span && '">&nbsp;</td>'.
+                lv_object = '<td rowspan="' && lv_span && '">&nbsp;</td>' &&
+                  '<td rowspan="' && lv_span && '"></td>'.
                 lv_trclass = ' class="unsupported"'.
               ELSE.
                 CLEAR lv_trclass.
                 lv_object = '<td rowspan="' && lv_span && '">' &&
                   jump_link( iv_obj_type = <ls_result>-obj_type
                              iv_obj_name = <ls_result>-obj_name ) &&
+                  '</td>' &&
+                  '<td rowspan="' && lv_span && '">' &&
+                  <ls_result>-package &&
                   '</td>'.
               ENDIF.
             ELSE.
