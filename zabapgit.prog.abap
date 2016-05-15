@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14685,6 +14685,9 @@ CLASS lcl_repo DEFINITION ABSTRACT.
       get_name
         RETURNING VALUE(rv_name) TYPE string
         RAISING   lcx_exception,
+      get_files_local
+        RETURNING VALUE(rt_files) TYPE ty_files_tt
+        RAISING   lcx_exception,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       delete
@@ -14699,6 +14702,58 @@ CLASS lcl_repo DEFINITION ABSTRACT.
     DATA: ms_data TYPE lcl_persistence_repo=>ty_repo.
 
 ENDCLASS.                    "lcl_repo DEFINITION
+
+CLASS lcl_stage DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    TYPES: ty_method TYPE c LENGTH 1.
+
+    CONSTANTS: BEGIN OF c_method,
+                 add    TYPE ty_method VALUE 'A',
+                 reset  TYPE ty_method VALUE 'E',
+                 rm     TYPE ty_method VALUE 'M',
+                 ignore TYPE ty_method VALUE 'I',
+               END OF c_method.
+
+    TYPES: BEGIN OF ty_stage,
+             file   TYPE ty_file,
+             method TYPE ty_method,
+           END OF ty_stage.
+
+    TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
+      WITH UNIQUE KEY file-path file-filename.
+
+    METHODS:
+      add
+        IMPORTING is_file TYPE ty_file
+        RAISING   lcx_exception,
+      reset
+        IMPORTING is_file TYPE ty_file
+        RAISING   lcx_exception,
+      rm
+        IMPORTING is_file TYPE ty_file
+        RAISING   lcx_exception,
+      ignore
+        IMPORTING is_file TYPE ty_file
+        RAISING   lcx_exception,
+      count
+        RETURNING VALUE(rv_count) TYPE i,
+      lookup
+        IMPORTING iv_path         TYPE ty_file-path
+                  iv_filename     TYPE ty_file-filename
+        RETURNING VALUE(rs_stage) TYPE ty_stage
+        RAISING   lcx_not_found,
+      get_all
+        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
+
+  PRIVATE SECTION.
+    DATA: mt_stage TYPE ty_stage_tt.
+
+    METHODS: append
+      IMPORTING is_file   TYPE ty_file
+                iv_method TYPE ty_method.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online DEFINITION
@@ -14725,9 +14780,6 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
         RAISING   lcx_exception,
-      get_files_local
-        RETURNING VALUE(rt_files) TYPE ty_files_tt
-        RAISING   lcx_exception,
       get_objects
         RETURNING VALUE(rt_objects) TYPE lcl_git_pack=>ty_objects_tt
         RAISING   lcx_exception,
@@ -14738,7 +14790,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   lcx_exception,
       push
         IMPORTING is_comment TYPE ty_comment
-                  it_files   TYPE ty_files_tt
+                  io_stage   TYPE REF TO lcl_stage
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -14785,7 +14837,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL.
     CLASS-METHODS push
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
                 is_comment       TYPE ty_comment
-                it_files         TYPE ty_files_tt
+                io_stage         TYPE REF TO lcl_stage
       RETURNING VALUE(rv_branch) TYPE ty_sha1
       RAISING   lcx_exception.
 
@@ -15114,32 +15166,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rv_sha1 = mv_branch.
   ENDMETHOD.                    "get_sha1_remote
 
-  METHOD get_files_local.
-* todo, this can be optimized, cache the data
-* and rebould on refresh. Also see STATUS method
-* it also generates the same files
-
-    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
-          ls_item  TYPE ty_item,
-          lt_files LIKE rt_files.
-
-    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
-                   <ls_tadir> LIKE LINE OF lt_tadir.
-
-
-    lt_tadir = lcl_tadir=>read( get_package( ) ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      lt_files = lcl_objects=>serialize( ls_item ).
-      LOOP AT lt_files ASSIGNING <ls_file>.
-        <ls_file>-path = '/' && <ls_tadir>-path.
-      ENDLOOP.
-      APPEND LINES OF lt_files TO rt_files.
-    ENDLOOP.
-
-  ENDMETHOD.
-
   METHOD get_files_remote.
     initialize( ).
 
@@ -15171,7 +15197,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
                                          io_repo    = me
-                                         it_files   = it_files ).
+                                         io_stage   = io_stage ).
 
     set_sha1( lv_branch ).
 
@@ -15209,6 +15235,32 @@ CLASS lcl_repo IMPLEMENTATION.
     ms_data = is_data.
 
   ENDMETHOD.                    "constructor
+
+  METHOD get_files_local.
+* todo, this can be optimized, cache the data
+* and rebuild on refresh. Also see STATUS method
+* it also generates the same files
+
+    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
+          ls_item  TYPE ty_item,
+          lt_files LIKE rt_files.
+
+    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
+                   <ls_tadir> LIKE LINE OF lt_tadir.
+
+
+    lt_tadir = lcl_tadir=>read( get_package( ) ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      lt_files = lcl_objects=>serialize( ls_item ).
+      LOOP AT lt_files ASSIGNING <ls_file>.
+        <ls_file>-path = '/' && <ls_tadir>-path.
+      ENDLOOP.
+      APPEND LINES OF lt_files TO rt_files.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD delete.
 
@@ -16594,18 +16646,24 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     DATA:
       lt_nodes TYPE lcl_git_pack=>ty_nodes_tt,
-      lt_files LIKE it_files,
+      lt_files TYPE ty_files_tt,
       lv_sha1  TYPE ty_sha1,
+      lt_stage TYPE lcl_stage=>ty_stage_tt,
       lv_index TYPE i.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files,
-                   <ls_node> LIKE LINE OF lt_nodes.
+    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
+                   <ls_stage> LIKE LINE OF lt_stage,
+                   <ls_node>  LIKE LINE OF lt_nodes.
 
 
     lt_nodes = root_tree( it_objects = io_repo->get_objects( )
                           iv_branch  = io_repo->get_sha1_remote( ) ).
 
-    lt_files[] = it_files[].
+* todo, can only handle add
+    lt_stage = io_stage->get_all( ).
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-add.
+      APPEND <ls_stage>-file TO lt_files.
+    ENDLOOP.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
       lv_index = sy-tabix.
@@ -17324,12 +17382,12 @@ CLASS lcl_gui_page_diff DEFINITION FINAL.
 
     METHODS: constructor
       IMPORTING
-        is_result TYPE lcl_file_status=>ty_result
-        io_diff   TYPE REF TO lcl_diff.
+        is_local  TYPE ty_file
+        is_remote TYPE ty_file.
 
   PRIVATE SECTION.
-    DATA: ms_result TYPE lcl_file_status=>ty_result,
-          mo_diff   TYPE REF TO lcl_diff.
+    DATA: mv_filename TYPE string,
+          mo_diff     TYPE REF TO lcl_diff.
 
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_head  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -17340,8 +17398,13 @@ ENDCLASS.
 CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
-    ms_result = is_result.
-    mo_diff   = io_diff.
+    mv_filename = is_local-filename.
+
+    CREATE OBJECT mo_diff
+      EXPORTING
+        iv_local  = is_local-data
+        iv_remote = is_remote-data.
+
   ENDMETHOD.
 
   METHOD styles.
@@ -17431,9 +17494,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ). "#EC NOTEXT
     lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ). "#EC NOTEXT
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
-    lo_html->add( ms_result-obj_type ).                     "#EC NOTEXT
-    lo_html->add( |<strong>{ ms_result-obj_name }</strong>| ). "#EC NOTEXT
-    lo_html->add( |({ ms_result-filename })| ).
+    lo_html->add( |{ mv_filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
     lo_html->add( '</div>' ).                               "#EC NOTEXT
 
@@ -17555,58 +17616,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     rv_html = lo_html->mv_html.
 
   ENDMETHOD.
-
-ENDCLASS.
-
-CLASS lcl_stage DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    TYPES: ty_method TYPE c LENGTH 1.
-
-    CONSTANTS: BEGIN OF c_method,
-                 add    TYPE ty_method VALUE 'A',
-                 reset  TYPE ty_method VALUE 'E',
-                 rm     TYPE ty_method VALUE 'M',
-                 ignore TYPE ty_method VALUE 'I',
-               END OF c_method.
-
-    TYPES: BEGIN OF ty_stage,
-             file   TYPE ty_file,
-             method TYPE ty_method,
-           END OF ty_stage.
-
-    TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
-      WITH UNIQUE KEY file-path file-filename.
-
-    METHODS:
-      add
-        IMPORTING is_file TYPE ty_file
-        RAISING   lcx_exception,
-      reset
-        IMPORTING is_file TYPE ty_file
-        RAISING   lcx_exception,
-      rm
-        IMPORTING is_file TYPE ty_file
-        RAISING   lcx_exception,
-      ignore
-        IMPORTING is_file TYPE ty_file
-        RAISING   lcx_exception,
-      count
-        RETURNING VALUE(rv_count) TYPE i,
-      lookup
-        IMPORTING iv_path         TYPE ty_file-path
-                  iv_filename     TYPE ty_file-filename
-        RETURNING VALUE(rs_stage) TYPE ty_stage
-        RAISING   lcx_not_found,
-      get_all
-        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
-
-  PRIVATE SECTION.
-    DATA: mt_stage TYPE ty_stage_tt.
-
-    METHODS: append
-      IMPORTING is_file   TYPE ty_file
-                iv_method TYPE ty_method.
 
 ENDCLASS.
 
@@ -18093,8 +18102,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lt_local  TYPE ty_files_tt,
           ls_item   TYPE ty_item,
           lo_page   TYPE REF TO lcl_gui_page_diff,
-          lo_repo   TYPE REF TO lcl_repo_online,
-          lo_diff   TYPE REF TO lcl_diff.
+          lo_repo   TYPE REF TO lcl_repo_online.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
                    <ls_local>  LIKE LINE OF lt_local.
@@ -18120,15 +18128,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       _raise 'not found locally'.
     ENDIF.
 
-    CREATE OBJECT lo_diff
-      EXPORTING
-        iv_local  = <ls_local>-data
-        iv_remote = <ls_remote>-data.
-
     CREATE OBJECT lo_page
       EXPORTING
-        is_result = is_result
-        io_diff   = lo_diff.
+        is_local  = <ls_local>
+        is_remote = <ls_remote>.
 
     lcl_gui=>call_page( lo_page ).
 
@@ -18236,17 +18239,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD commit.
 
     DATA: lt_results TYPE lcl_file_status=>ty_results_tt,
-          lt_push    TYPE ty_files_tt,
+*          lt_push    TYPE ty_files_tt,
           ls_item    TYPE ty_item,
           ls_comment TYPE ty_comment,
+          lo_stage   TYPE REF TO lcl_stage,
           lo_repo    TYPE REF TO lcl_repo_online,
           lt_files   TYPE ty_files_tt.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
+                   <ls_result> LIKE LINE OF lt_results.
 
 
     lo_repo ?= lcl_repo_srv=>get( iv_key ).
     lt_results = lo_repo->status( ).
+
+    CREATE OBJECT lo_stage.
 
     LOOP AT lt_results ASSIGNING <ls_result>
         WHERE match = abap_false
@@ -18256,10 +18263,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ls_item-obj_name = <ls_result>-obj_name.
 
       lt_files = lcl_objects=>serialize( ls_item ).
-      APPEND LINES OF lt_files TO lt_push.
+      LOOP AT lt_files ASSIGNING <ls_file>.
+        lo_stage->add( <ls_file> ).
+*      APPEND LINES OF lt_files TO lt_push.
+      ENDLOOP.
     ENDLOOP.
 
-    IF lt_push[] IS INITIAL.
+    IF lo_stage->count( ) = 0.
       _raise 'no changes'.
     ENDIF.
 
@@ -18269,7 +18279,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     lo_repo->push( is_comment = ls_comment
-                   it_files   = lt_push ).
+                   io_stage   = lo_stage ).
 
     COMMIT WORK.
 
@@ -18497,7 +18507,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_comment  TYPE ty_comment,
           lo_repo     TYPE REF TO lcl_repo_online,
           lv_package  TYPE devclass,
+          lo_stage    TYPE REF TO lcl_stage,
           lv_obj_name TYPE tadir-obj_name.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
 
     lo_repo ?= lcl_repo_srv=>get( iv_key ).
@@ -18521,13 +18534,18 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lt_files = lcl_objects=>serialize( is_item ).
 
+    CREATE OBJECT lo_stage.
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      lo_stage->add( <ls_file> ).
+    ENDLOOP.
+
     ls_comment = popup_comment( ).
     IF ls_comment IS INITIAL.
       RETURN.
     ENDIF.
 
     lo_repo->push( is_comment = ls_comment
-                   it_files   = lt_files ).
+                   io_stage   = lo_stage ).
 
     COMMIT WORK.
 
