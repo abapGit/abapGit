@@ -55,6 +55,12 @@ TYPES: BEGIN OF ty_item,
          obj_name TYPE tadir-obj_name,
        END OF ty_item.
 
+TYPES: BEGIN OF ty_file_item,
+         file TYPE ty_file,
+         item TYPE ty_item,
+       END OF ty_file_item.
+TYPES: ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY.
+
 TYPES: BEGIN OF ty_metadata,
          class      TYPE string,
          version    TYPE string,
@@ -12475,41 +12481,6 @@ ENDCLASS.                    "lcl_object_W3MI DEFINITION
 CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
 ENDCLASS.                    "lcl_object_W3HT DEFINITION
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_file_status DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_file_status DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    TYPES: BEGIN OF ty_result,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             match    TYPE sap_bool,
-             filename TYPE string,
-             package  TYPE devclass,
-             path     TYPE string,
-           END OF ty_result.
-    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
-
-    CLASS-METHODS status
-      IMPORTING it_files          TYPE ty_files_tt
-                iv_package        TYPE devclass
-      RETURNING VALUE(rt_results) TYPE ty_results_tt
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-
-    CLASS-METHODS compare_files
-      IMPORTING it_repo         TYPE ty_files_tt
-                is_gen          TYPE ty_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
-      RAISING   lcx_exception.
-
-ENDCLASS.                    "lcl_file_status DEFINITION
-
 CLASS lcl_persistence_db DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -12661,7 +12632,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception,
       get_files_local
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
-        RETURNING VALUE(rt_files) TYPE ty_files_tt
+        RETURNING VALUE(rt_files) TYPE ty_files_item_tt
         RAISING   lcx_exception,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
@@ -12679,11 +12650,47 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    DATA: mt_local  TYPE ty_files_tt,
+    DATA: mt_local  TYPE ty_files_item_tt,
           mt_remote TYPE ty_files_tt,
           ms_data   TYPE lcl_persistence_repo=>ty_repo.
 
 ENDCLASS.                    "lcl_repo DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_file_status DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_file_status DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_result,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             match    TYPE sap_bool,
+             filename TYPE string,
+             package  TYPE devclass,
+             path     TYPE string,
+           END OF ty_result.
+    TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
+
+    CLASS-METHODS status
+      IMPORTING io_repo           TYPE REF TO lcl_repo
+*      it_files          TYPE ty_files_tt
+*                iv_package        TYPE devclass
+      RETURNING VALUE(rt_results) TYPE ty_results_tt
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS compare_files
+      IMPORTING it_repo         TYPE ty_files_tt
+                is_gen          TYPE ty_file
+      RETURNING VALUE(rv_match) TYPE sap_bool
+      RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_file_status DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object DEFINITION
@@ -12902,6 +12909,7 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD compare_files.
 
     READ TABLE it_repo WITH KEY
+      path = is_gen-path
       filename = is_gen-filename
       data = is_gen-data
       TRANSPORTING NO FIELDS.
@@ -12921,23 +12929,28 @@ CLASS lcl_file_status IMPLEMENTATION.
           lv_type   TYPE string,
           ls_item   TYPE ty_item,
           lt_tadir  TYPE lcl_tadir=>ty_tadir_tt,
+          lt_local  TYPE ty_files_item_tt,
           ls_tadir  TYPE tadir,
           lt_remote TYPE ty_files_tt,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_file>   TYPE ty_file,
+    FIELD-SYMBOLS: <ls_remote> TYPE ty_file,
                    <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_result> LIKE LINE OF rt_results,
+                   <ls_local>  LIKE LINE OF lt_local,
                    <ls_gen>    LIKE LINE OF lt_files.
 
 
-    LOOP AT it_files ASSIGNING <ls_file>.
+    lt_remote = io_repo->get_files_remote( ).
+    lt_local = io_repo->get_files_local( ).
+
+    LOOP AT lt_remote ASSIGNING <ls_remote>.
       lcl_progress=>show( iv_key     = 'Status'
                           iv_current = sy-tabix
-                          iv_total   = lines( it_files )
-                          iv_text    = <ls_file>-filename ) ##NO_TEXT.
+                          iv_total   = lines( lt_remote )
+                          iv_text    = <ls_remote>-filename ) ##NO_TEXT.
 
-      SPLIT <ls_file>-filename AT '.' INTO lv_pre lv_type lv_ext.
+      SPLIT <ls_remote>-filename AT '.' INTO lv_pre lv_type lv_ext.
       TRANSLATE lv_pre TO UPPER CASE.
       TRANSLATE lv_type TO UPPER CASE.
 
@@ -12956,37 +12969,40 @@ CLASS lcl_file_status IMPLEMENTATION.
       ls_item-obj_type = lv_type.
       ls_item-obj_name = lv_pre.
 
-      lt_files = lcl_objects=>serialize( ls_item ).
+      CLEAR lt_files.
+      LOOP AT lt_local ASSIGNING <ls_local> WHERE item = ls_item.
+        APPEND <ls_local>-file TO lt_files.
+      ENDLOOP.
 
       IF lt_files[] IS INITIAL.
 * item does not exist locally
-        ls_result-filename = <ls_file>-filename.
+        ls_result-filename = <ls_remote>-filename.
         APPEND ls_result TO rt_results.
         CONTINUE. " current loop
       ENDIF.
 
       LOOP AT lt_files ASSIGNING <ls_gen>.
         ls_result-filename = <ls_gen>-filename.
-        ls_result-match = compare_files( it_repo = it_files
+        ls_result-match = compare_files( it_repo = lt_remote
                                          is_gen  = <ls_gen> ).
         APPEND ls_result TO rt_results.
       ENDLOOP.
     ENDLOOP.
 
 * find files only existing remotely, including non abapGit related
-    LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE rt_results WITH KEY filename = <ls_file>-filename
+    LOOP AT lt_remote ASSIGNING <ls_remote>.
+      READ TABLE rt_results WITH KEY filename = <ls_remote>-filename
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         CLEAR ls_result.
         ls_result-match    = abap_true.
-        ls_result-filename = <ls_file>-filename.
+        ls_result-filename = <ls_remote>-filename.
         APPEND ls_result TO rt_results.
       ENDIF.
     ENDLOOP.
 
 * find objects only existing locally
-    lt_tadir = lcl_tadir=>read( iv_package ).
+    lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       READ TABLE rt_results
         WITH KEY obj_type = <ls_tadir>-object
@@ -13002,10 +13018,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     ENDLOOP.
 
 * add path information for files
-    LOOP AT it_files ASSIGNING <ls_file>.
-      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_file>-filename.
+    LOOP AT lt_remote ASSIGNING <ls_remote>.
+      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_remote>-filename.
       IF sy-subrc = 0.
-        <ls_result>-path = <ls_file>-path.
+        <ls_result>-path = <ls_remote>-path.
       ENDIF.
     ENDLOOP.
 
@@ -13690,8 +13706,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( ).
 
-    lt_results = lcl_file_status=>status( it_files = lt_remote
-                                          iv_package = io_repo->get_package( ) ).
+    lt_results = lcl_file_status=>status( io_repo ).
     DELETE lt_results WHERE match = abap_true.
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
@@ -14971,7 +14986,7 @@ CLASS lcl_stage_logic DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_stage_files,
-             local  TYPE ty_files_tt,
+             local  TYPE ty_files_item_tt,
              remote TYPE ty_files_tt,
            END OF ty_stage_files.
 
@@ -15008,11 +15023,11 @@ CLASS lcl_stage_logic IMPLEMENTATION.
       lv_index = sy-tabix.
 
       READ TABLE cs_files-remote INTO ls_remote
-        WITH KEY path = <ls_local>-path
-        filename = <ls_local>-filename.
+        WITH KEY path = <ls_local>-file-path
+        filename = <ls_local>-file-filename.
       IF sy-subrc = 0.
         DELETE cs_files-remote INDEX sy-tabix.
-        IF ls_remote-data = <ls_local>-data.
+        IF ls_remote-data = <ls_local>-file-data.
           DELETE cs_files-local INDEX lv_index.
         ENDIF.
       ENDIF.
@@ -15411,8 +15426,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     initialize( ).
 
-    rt_results = lcl_file_status=>status( it_files   = mt_remote
-                                          iv_package = get_package( ) ).
+    rt_results = lcl_file_status=>status( me ).
 
   ENDMETHOD.                    "status
 
@@ -15534,10 +15548,11 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
           ls_item  TYPE ty_item,
-          lt_files LIKE rt_files.
+          lt_files TYPE ty_files_tt.
 
-    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
-                   <ls_tadir> LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
+                   <ls_return> LIKE LINE OF rt_files,
+                   <ls_tadir>  LIKE LINE OF lt_tadir.
 
 
     IF lines( mt_local ) > 0.
@@ -15547,7 +15562,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      lcl_progress=>show( iv_key     = 'Files'
+      lcl_progress=>show( iv_key     = 'Serialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_tadir )
                           iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
@@ -15568,8 +15583,11 @@ CLASS lcl_repo IMPLEMENTATION.
       lt_files = lcl_objects=>serialize( ls_item ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = '/' && <ls_tadir>-path.
+
+        APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+        <ls_return>-file = <ls_file>.
+        <ls_return>-item = ls_item.
       ENDLOOP.
-      APPEND LINES OF lt_files TO rt_files.
     ENDLOOP.
 
     mt_local = rt_files.
@@ -16360,11 +16378,11 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS files_commit
-      IMPORTING it_files TYPE ty_files_tt
+      IMPORTING it_files TYPE ty_files_item_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_files
-      IMPORTING it_files       TYPE ty_files_tt
+      IMPORTING it_files       TYPE ty_files_item_tt
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
@@ -16504,9 +16522,9 @@ CLASS lcl_zip IMPLEMENTATION.
     CREATE OBJECT lo_zip.
 
     LOOP AT it_files ASSIGNING <ls_file>.
-      CONCATENATE <ls_file>-path+1 <ls_file>-filename INTO lv_filename.
+      CONCATENATE <ls_file>-file-path+1 <ls_file>-file-filename INTO lv_filename.
       lo_zip->add( name    = lv_filename
-                   content = <ls_file>-data ).
+                   content = <ls_file>-file-data ).
     ENDLOOP.
 
     rv_xstr = lo_zip->save( ).
@@ -16653,7 +16671,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo,
           lo_log  TYPE REF TO lcl_log,
-          lt_zip  TYPE ty_files_tt.
+          lt_zip  TYPE ty_files_item_tt.
 
 
     lo_repo = lcl_repo_srv=>get( iv_key ).
@@ -16720,13 +16738,13 @@ CLASS lcl_zip IMPLEMENTATION.
     lv_message = get_message( ).
 
     LOOP AT it_files ASSIGNING <ls_file>.
-      lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).
+      lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-file-data ).
 
-      CONCATENATE lv_folder <ls_file>-path <ls_file>-filename INTO lv_filename.
+      CONCATENATE lv_folder <ls_file>-file-path <ls_file>-file-filename INTO lv_filename.
 
       cl_gui_frontend_services=>gui_download(
         EXPORTING
-          bin_filesize            = xstrlen( <ls_file>-data )
+          bin_filesize            = xstrlen( <ls_file>-file-data )
           filename                = lv_filename
           filetype                = 'BIN'
         CHANGING
@@ -18287,7 +18305,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL.
     DATA: mo_repo   TYPE REF TO lcl_repo_online,
           mt_remote TYPE ty_files_tt,
           mo_stage  TYPE REF TO lcl_stage,
-          mt_local  TYPE ty_files_tt.
+          mt_local  TYPE ty_files_item_tt.
 
     METHODS:
       file_encode
@@ -18326,7 +18344,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ASSERT lines( mt_local ) > 0.
 
     LOOP AT mt_local ASSIGNING <ls_file>.
-      mo_stage->add( <ls_file> ).
+      mo_stage->add( <ls_file>-file ).
     ENDLOOP.
 
     call_commit( ).
@@ -18368,6 +18386,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     DATA: lt_fields   TYPE tihttpnvp,
           lv_path     TYPE string,
           lv_filename TYPE string,
+          ls_local    LIKE LINE OF mt_local,
           lv_string   TYPE string.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -18385,8 +18404,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     lv_filename = <ls_field>-value.
 
 * the file should exist in either mt_lcoal or mt_remote, not in both at same time
-    READ TABLE mt_local INTO rs_file WITH KEY path = lv_path filename = lv_filename.
-    IF sy-subrc <> 0.
+    READ TABLE mt_local INTO ls_local WITH KEY file-path = lv_path file-filename = lv_filename.
+    IF sy-subrc = 0.
+      rs_file = ls_local-file.
+    ELSE.
       READ TABLE mt_remote INTO rs_file WITH KEY path = lv_path filename = lv_filename.
     ENDIF.
     ASSERT sy-subrc = 0.
@@ -18457,15 +18478,15 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( '<table>' ).
     LOOP AT mt_local ASSIGNING <ls_file>.
       ro_html->add( '<tr>' ).
-      lv_encode = file_encode( <ls_file> ).
+      lv_encode = file_encode( <ls_file>-file ).
 
       ro_html->add( '<td>' ).
-      ro_html->add( <ls_file>-path && <ls_file>-filename ).
+      ro_html->add( <ls_file>-file-path && <ls_file>-file-filename ).
       ro_html->add( '</td>' ).
 
       ro_html->add( '<td>' ).
       TRY.
-          mo_stage->lookup( iv_path = <ls_file>-path iv_filename = <ls_file>-filename ).
+          mo_stage->lookup( iv_path = <ls_file>-file-path iv_filename = <ls_file>-file-filename ).
           ro_html->add( '<a href="sapevent:reset?' && lv_encode && '">reset</a>' ).
         CATCH lcx_not_found.
           ro_html->add( '<a href="sapevent:add?' && lv_encode && '">add</a>' ).
@@ -18573,7 +18594,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD diff.
 
     DATA: lt_remote TYPE ty_files_tt,
-          lt_local  TYPE ty_files_tt,
+          lt_local  TYPE ty_files_item_tt,
           lo_page   TYPE REF TO lcl_gui_page_diff,
           lo_repo   TYPE REF TO lcl_repo_online.
 
@@ -18595,15 +18616,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     READ TABLE lt_local ASSIGNING <ls_local>
-      WITH KEY filename = is_result-filename
-      path = is_result-path.
+      WITH KEY file-filename = is_result-filename
+      file-path = is_result-path.
     IF sy-subrc <> 0.
       _raise 'file not found locally'.
     ENDIF.
 
     CREATE OBJECT lo_page
       EXPORTING
-        is_local  = <ls_local>
+        is_local  = <ls_local>-file
         is_remote = <ls_remote>.
 
     lcl_gui=>call_page( lo_page ).
@@ -18634,6 +18655,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     lo_repo ?= lcl_repo_srv=>get( iv_key ).
+
+* force refresh on stage, to make sure the latest local and remote files are used
+    lo_repo->refresh( ).
 
     CREATE OBJECT lo_stage
       EXPORTING
