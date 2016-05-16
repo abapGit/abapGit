@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.8.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.8.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -259,6 +259,117 @@ CLASS lcl_progress IMPLEMENTATION.
 
 ENDCLASS.
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_helper DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_html_helper DEFINITION FINAL.
+  PUBLIC SECTION.
+    CONSTANTS c_indent_size TYPE i VALUE 2.
+
+    DATA mv_html   TYPE string READ-ONLY.
+    DATA mv_indent TYPE i READ-ONLY.
+
+    METHODS add IMPORTING iv_chunk TYPE any.
+    METHODS reset.
+
+  PRIVATE SECTION.
+    METHODS _add_str IMPORTING iv_str  TYPE csequence.
+    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html_helper.
+
+ENDCLASS.                    "lcl_html_helper DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_helper IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_html_helper IMPLEMENTATION.
+  METHOD add.
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_html TYPE REF TO lcl_html_helper.
+
+    lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
+
+    CASE lo_type->type_kind.
+      WHEN cl_abap_typedescr=>typekind_char
+          OR cl_abap_typedescr=>typekind_string.
+        IF strlen( iv_chunk ) = 0.
+          RETURN.
+        ENDIF.
+        _add_str( iv_chunk ).
+      WHEN cl_abap_typedescr=>typekind_oref.
+        ASSERT iv_chunk IS BOUND. " Dev mistake
+        TRY.
+            lo_html ?= iv_chunk.
+          CATCH cx_sy_move_cast_error.
+            ASSERT 1 = 0. " Dev mistake
+        ENDTRY.
+        _add_htm( lo_html ).
+      WHEN OTHERS.
+        ASSERT 1 = 0. " Dev mistake
+    ENDCASE.
+
+  ENDMETHOD.  " add
+
+  METHOD reset.
+    CLEAR: me->mv_html, me->mv_indent.
+  ENDMETHOD.                    "reset
+
+  METHOD _add_str.
+    CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
+      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source)'.
+
+    DATA lv_tags        TYPE i.
+    DATA lv_tags_open   TYPE i.
+    DATA lv_tags_close  TYPE i.
+    DATA lv_tags_single TYPE i.
+    DATA lv_close_offs  TYPE i.
+    DATA lv_shift_back  TYPE i.
+
+    FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
+    IF sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0. " Found close tag @beginning
+      lv_shift_back = 1.
+    ENDIF.
+
+    mv_html =   mv_html
+            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * c_indent_size )
+            &&  iv_str
+            &&  gc_newline.
+
+    FIND ALL OCCURRENCES OF '<'  IN iv_str MATCH COUNT lv_tags.
+    FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
+    FIND ALL OCCURRENCES OF REGEX lc_single_tags_re IN iv_str MATCH COUNT lv_tags_single.
+
+    lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
+
+    " More-less logic chosen due to possible double tags in a line '<a><b>'
+    IF lv_tags_open > lv_tags_close.
+      mv_indent = mv_indent + 1.
+    ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
+      mv_indent = mv_indent - 1.
+    ENDIF.
+
+  ENDMETHOD.                    "_add_str
+
+  METHOD _add_htm.
+    DATA lv_indent_str  TYPE string.
+    DATA lv_temp_str    TYPE string.
+
+    lv_indent_str = repeat( val = ` ` occ = mv_indent * c_indent_size ).
+    lv_temp_str   = io_html->mv_html.
+
+    IF me->mv_indent > 0.
+      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str
+        WITH gc_newline && lv_indent_str.
+      SHIFT lv_temp_str RIGHT DELETING TRAILING space.
+      SHIFT lv_temp_str LEFT  DELETING LEADING space.
+    ENDIF.
+
+    mv_html   = mv_html && lv_indent_str && lv_temp_str.
+    mv_indent = mv_indent + io_html->mv_indent.
+
+  ENDMETHOD.                    "_add_htm
+
+ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
+
 CLASS lcl_log DEFINITION.
 
   PUBLIC SECTION.
@@ -266,11 +377,13 @@ CLASS lcl_log DEFINITION.
       add
         IMPORTING
           iv_msgv1 TYPE csequence
-          iv_msgv2 TYPE csequence
-          iv_msgv3 TYPE csequence
-          iv_msgv4 TYPE csequence,
+          iv_msgv2 TYPE csequence OPTIONAL
+          iv_msgv3 TYPE csequence OPTIONAL
+          iv_msgv4 TYPE csequence OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
+      to_html
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       show.
 
   PRIVATE SECTION.
@@ -279,6 +392,31 @@ CLASS lcl_log DEFINITION.
 ENDCLASS.
 
 CLASS lcl_log IMPLEMENTATION.
+
+  METHOD to_html.
+
+    DATA: lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    CREATE OBJECT ro_html.
+
+    IF count( ) = 0.
+      RETURN.
+    ENDIF.
+
+    ro_html->add( '<br>' ).
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      CONCATENATE <ls_log>-msgv1
+        <ls_log>-msgv2
+        <ls_log>-msgv3
+        <ls_log>-msgv4 INTO lv_string SEPARATED BY space.
+      ro_html->add( lv_string ).
+      ro_html->add( '<br>' ).
+    ENDLOOP.
+    ro_html->add( '<br>' ).
+
+  ENDMETHOD.
 
   METHOD add.
 
@@ -12677,8 +12815,7 @@ CLASS lcl_file_status DEFINITION FINAL.
 
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO lcl_repo
-*      it_files          TYPE ty_files_tt
-*                iv_package        TYPE devclass
+                io_log            TYPE REF TO lcl_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE ty_results_tt
       RAISING   lcx_exception.
 
@@ -12900,6 +13037,37 @@ CLASS lcl_tadir IMPLEMENTATION.
 ENDCLASS.                    "lcl_tadir IMPLEMENTATION
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_package DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_sap_package DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      check
+        IMPORTING io_log     TYPE REF TO lcl_log
+                  it_results TYPE lcl_file_status=>ty_results_tt
+                  iv_top     TYPE devclass,
+      create_local
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception,
+      create
+        IMPORTING is_package TYPE scompkdtln
+        RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      class_to_path
+        IMPORTING
+          iv_top         TYPE devclass
+          iv_package     TYPE devclass
+        RETURNING
+          VALUE(rv_path) TYPE string.
+
+ENDCLASS.                    "lcl_package DEFINITION
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_file_status IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
@@ -12942,7 +13110,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     lt_remote = io_repo->get_files_remote( ).
-    lt_local = io_repo->get_files_local( ).
+    lt_local = io_repo->get_files_local( io_log ).
 
     LOOP AT lt_remote ASSIGNING <ls_remote>.
       lcl_progress=>show( iv_key     = 'Status'
@@ -13009,6 +13177,12 @@ CLASS lcl_file_status IMPLEMENTATION.
         obj_name = <ls_tadir>-obj_name
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
+        ls_item-obj_type = <ls_tadir>-object.
+        ls_item-obj_name = <ls_tadir>-obj_name.
+        IF lcl_objects=>is_supported( ls_item ) = abap_false.
+          CONTINUE.
+        ENDIF.
+
         CLEAR ls_result.
         ls_result-match    = abap_true.
         ls_result-obj_type = <ls_tadir>-object.
@@ -13039,40 +13213,15 @@ CLASS lcl_file_status IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
 
+    lcl_sap_package=>check(
+      io_log     = io_log
+      it_results = rt_results
+      iv_top     = io_repo->get_package( ) ).
+
   ENDMETHOD.                    "status
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_package DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_sap_package DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS:
-      check
-        IMPORTING it_results       TYPE lcl_file_status=>ty_results_tt
-                  iv_top           TYPE devclass
-        RETURNING VALUE(rv_errors) TYPE string,
-      create_local
-        IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception,
-      create
-        IMPORTING is_package TYPE scompkdtln
-        RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CLASS-METHODS:
-      class_to_path
-        IMPORTING
-          iv_top         TYPE devclass
-          iv_package     TYPE devclass
-        RETURNING
-          VALUE(rv_path) TYPE string.
-
-ENDCLASS.                    "lcl_package DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_package IMPLEMENTATION
@@ -13132,10 +13281,10 @@ CLASS lcl_sap_package IMPLEMENTATION.
           WHERE obj_type = <ls_res1>-obj_type
           AND obj_name = <ls_res1>-obj_name
           AND path <> <ls_res1>-path.
-        CONCATENATE rv_errors 'Files for object'
-          <ls_res1>-obj_type <ls_res1>-obj_name
-          'are not placed in the same folder<br>'
-          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+        io_log->add( iv_msgv1 = 'Files for object'
+                     iv_msgv2 = <ls_res1>-obj_type
+                     iv_msgv3 = <ls_res1>-obj_name
+                     iv_msgv4 = 'are not placed in the same folder' ) ##no_text.
         EXIT.
       ENDLOOP.
     ENDLOOP.
@@ -13146,9 +13295,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
       lv_path = class_to_path( iv_top     = iv_top
                                iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
-        CONCATENATE rv_errors 'Package and path does not match for object,'
-          <ls_res1>-obj_type <ls_res1>-obj_name '<br>'
-          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+        io_log->add( iv_msgv1 = 'Package and path does not match for object,'
+                     iv_msgv2 = <ls_res1>-obj_type
+                     iv_msgv3 = <ls_res1>-obj_name ) ##no_text.
       ENDIF.
     ENDLOOP.
 
@@ -13158,16 +13307,11 @@ CLASS lcl_sap_package IMPLEMENTATION.
       LOOP AT it_results ASSIGNING <ls_res2>
           WHERE filename = <ls_res1>-filename
           AND path <> <ls_res1>-path.
-        CONCATENATE rv_errors 'Multiple files with same filename,'
-          <ls_res1>-filename '<br>'
-          INTO rv_errors SEPARATED BY space.                "#EC NOTEXT
+        io_log->add( iv_msgv1 = 'Multiple files with same filename,'
+                     iv_msgv2 = <ls_res1>-filename ) ##no_text.
         EXIT.
       ENDLOOP.
     ENDLOOP.
-
-    IF NOT rv_errors IS INITIAL.
-      CONCATENATE '<br>' rv_errors INTO rv_errors.
-    ENDIF.
 
   ENDMETHOD.                    "check
 
@@ -14960,6 +15104,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   lcx_exception,
       deserialize REDEFINITION,
       status
+        IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_results) TYPE lcl_file_status=>ty_results_tt
         RAISING   lcx_exception,
       push
@@ -15142,117 +15287,6 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 ENDCLASS.                    "lcl_porcelain DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_html_helper DEFINITION
-*----------------------------------------------------------------------*
-CLASS lcl_html_helper DEFINITION FINAL.
-  PUBLIC SECTION.
-    CONSTANTS c_indent_size TYPE i VALUE 2.
-
-    DATA mv_html   TYPE string READ-ONLY.
-    DATA mv_indent TYPE i READ-ONLY.
-
-    METHODS add IMPORTING iv_chunk TYPE any.
-    METHODS reset.
-
-  PRIVATE SECTION.
-    METHODS _add_str IMPORTING iv_str  TYPE csequence.
-    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html_helper.
-
-ENDCLASS.                    "lcl_html_helper DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_html_helper IMPLEMENTATION
-*----------------------------------------------------------------------*
-CLASS lcl_html_helper IMPLEMENTATION.
-  METHOD add.
-    DATA lo_type TYPE REF TO cl_abap_typedescr.
-    DATA lo_html TYPE REF TO lcl_html_helper.
-
-    lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
-
-    CASE lo_type->type_kind.
-      WHEN cl_abap_typedescr=>typekind_char
-          OR cl_abap_typedescr=>typekind_string.
-        IF strlen( iv_chunk ) = 0.
-          RETURN.
-        ENDIF.
-        _add_str( iv_chunk ).
-      WHEN cl_abap_typedescr=>typekind_oref.
-        ASSERT iv_chunk IS BOUND. " Dev mistake
-        TRY.
-            lo_html ?= iv_chunk.
-          CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
-        ENDTRY.
-        _add_htm( lo_html ).
-      WHEN OTHERS.
-        ASSERT 1 = 0. " Dev mistake
-    ENDCASE.
-
-  ENDMETHOD.  " add
-
-  METHOD reset.
-    CLEAR: me->mv_html, me->mv_indent.
-  ENDMETHOD.                    "reset
-
-  METHOD _add_str.
-    CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
-      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source)'.
-
-    DATA lv_tags        TYPE i.
-    DATA lv_tags_open   TYPE i.
-    DATA lv_tags_close  TYPE i.
-    DATA lv_tags_single TYPE i.
-    DATA lv_close_offs  TYPE i.
-    DATA lv_shift_back  TYPE i.
-
-    FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
-    IF sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0. " Found close tag @beginning
-      lv_shift_back = 1.
-    ENDIF.
-
-    mv_html =   mv_html
-            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * c_indent_size )
-            &&  iv_str
-            &&  gc_newline.
-
-    FIND ALL OCCURRENCES OF '<'  IN iv_str MATCH COUNT lv_tags.
-    FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
-    FIND ALL OCCURRENCES OF REGEX lc_single_tags_re IN iv_str MATCH COUNT lv_tags_single.
-
-    lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
-
-    " More-less logic chosen due to possible double tags in a line '<a><b>'
-    IF lv_tags_open > lv_tags_close.
-      mv_indent = mv_indent + 1.
-    ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
-      mv_indent = mv_indent - 1.
-    ENDIF.
-
-  ENDMETHOD.                    "_add_str
-
-  METHOD _add_htm.
-    DATA lv_indent_str  TYPE string.
-    DATA lv_temp_str    TYPE string.
-
-    lv_indent_str = repeat( val = ` ` occ = mv_indent * c_indent_size ).
-    lv_temp_str   = io_html->mv_html.
-
-    IF me->mv_indent > 0.
-      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str
-        WITH gc_newline && lv_indent_str.
-      SHIFT lv_temp_str RIGHT DELETING TRAILING space.
-      SHIFT lv_temp_str LEFT  DELETING LEADING space.
-    ENDIF.
-
-    mv_html   = mv_html && lv_indent_str && lv_temp_str.
-    mv_indent = mv_indent + io_html->mv_indent.
-
-  ENDMETHOD.                    "_add_htm
-
-ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       INTERFACE lif_gui_page DEFINITION
 *----------------------------------------------------------------------*
 INTERFACE lif_gui_page.
@@ -15426,7 +15460,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     initialize( ).
 
-    rt_results = lcl_file_status=>status( me ).
+    rt_results = lcl_file_status=>status( io_repo = me
+                                          io_log  = io_log ).
 
   ENDMETHOD.                    "status
 
@@ -19188,6 +19223,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error       TYPE REF TO lcx_exception,
           lv_span        TYPE i,
           lv_trclass     TYPE string,
+          lo_log         TYPE REF TO lcl_log,
           lt_results     TYPE lcl_file_status=>ty_results_tt,
           ls_next        LIKE LINE OF lt_results,
           ls_item        TYPE ty_item,
@@ -19205,7 +19241,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
-          lt_results = io_repo->status( ).
+          CREATE OBJECT lo_log.
+          lt_results = io_repo->status( lo_log ).
 
           ro_html->add( '<table class="repo_tab">' ).
           ro_html->add( '<tbody>' ).
@@ -19217,13 +19254,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
             CLEAR lv_link.
             IF <ls_result>-filename IS INITIAL.
-              MOVE-CORRESPONDING <ls_result> TO ls_item.
-              lv_supported = lcl_objects=>is_supported( ls_item ).
-              IF lv_supported = abap_true.
-                lv_link = 'new'.
-              ELSE.
-                lv_link = |Object type <b>{ ls_item-obj_type }</b> not supported|.
-              ENDIF.
+              lv_link = 'new'.
             ELSEIF <ls_result>-match = abap_false.
               lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
             ENDIF.
@@ -19283,9 +19314,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
               '">stage</a>' ).
           ENDIF.
 
-          ro_html->add( lcl_sap_package=>check(
-            it_results = lt_results
-            iv_top     = io_repo->get_package( ) ) ).
+          ro_html->add( lo_log->to_html( ) ).
 
         CATCH lcx_exception INTO lx_error.
           ro_html->add( render_error( lx_error ) ).
