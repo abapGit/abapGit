@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.9'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.10'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -14815,6 +14815,61 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
 
+CLASS lcl_stage_logic DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_stage_files,
+             local  TYPE ty_files_tt,
+             remote TYPE ty_files_tt,
+           END OF ty_stage_files.
+
+    CLASS-METHODS:
+      get
+        IMPORTING io_repo         TYPE REF TO lcl_repo_online
+        RETURNING VALUE(rs_files) TYPE ty_stage_files
+        RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      remove_identical
+        CHANGING cs_files TYPE ty_stage_files.
+
+ENDCLASS.
+
+CLASS lcl_stage_logic IMPLEMENTATION.
+
+  METHOD get.
+    rs_files-local = io_repo->get_files_local( ).
+    rs_files-remote = io_repo->get_files_remote( ).
+    remove_identical( CHANGING cs_files = rs_files ).
+  ENDMETHOD.
+
+  METHOD remove_identical.
+
+    DATA: lv_index  TYPE i,
+          ls_remote LIKE LINE OF cs_files-remote.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF cs_files-local.
+
+
+    LOOP AT cs_files-local ASSIGNING <ls_local>.
+      lv_index = sy-tabix.
+
+      READ TABLE cs_files-remote INTO ls_remote
+        WITH KEY path = <ls_local>-path
+        filename = <ls_local>-filename.
+      IF sy-subrc = 0.
+        DELETE cs_files-remote INDEX sy-tabix.
+        IF ls_remote-data = <ls_local>-data.
+          DELETE cs_files-local INDEX lv_index.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_offline DEFINITION
 *----------------------------------------------------------------------*
@@ -18106,7 +18161,6 @@ CLASS lcl_gui_page_stage DEFINITION FINAL.
         RAISING lcx_exception,
       call_commit
         RAISING lcx_exception,
-      remove_identical,
       render_local
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_remote
@@ -18199,34 +18253,13 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD refresh.
 
+    DATA: ls_files TYPE lcl_stage_logic=>ty_stage_files.
+
     CREATE OBJECT mo_stage.
-    mt_local = mo_repo->get_files_local( ).
-    mt_remote = mo_repo->get_files_remote( ).
-    remove_identical( ).
 
-  ENDMETHOD.
-
-  METHOD remove_identical.
-
-    DATA: lv_index  TYPE i,
-          ls_remote LIKE LINE OF mt_remote.
-
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF mt_local.
-
-
-    LOOP AT mt_local ASSIGNING <ls_local>.
-      lv_index = sy-tabix.
-
-      READ TABLE mt_remote INTO ls_remote
-        WITH KEY path = <ls_local>-path
-        filename = <ls_local>-filename.
-      IF sy-subrc = 0.
-        DELETE mt_remote INDEX sy-tabix.
-        IF ls_remote-data = <ls_local>-data.
-          DELETE mt_local INDEX lv_index.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
+    ls_files = lcl_stage_logic=>get( mo_repo ).
+    mt_local = ls_files-local.
+    mt_remote = ls_files-remote.
 
   ENDMETHOD.
 
