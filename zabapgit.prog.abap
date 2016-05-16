@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.10'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.11'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9616,7 +9616,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ENDIF.
 
     SELECT SINGLE * FROM tstcp INTO ls_tstcp
-      WHERE tcode = lv_transaction.                       "#EC CI_SUBRC
+      WHERE tcode = lv_transaction.       "#EC CI_SUBRC "#EC CI_GENBUFF
 
     READ TABLE lt_tcodes INDEX 1 INTO ls_tcode.
     ASSERT sy-subrc = 0.
@@ -14879,12 +14879,14 @@ CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
 
 ENDCLASS.                    "lcl_repo_offline DEFINITION
 
+CLASS ltcl_git_porcelain DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_porcelain DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_git_porcelain DEFINITION FINAL.
+CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
   PUBLIC SECTION.
 
@@ -14919,10 +14921,22 @@ CLASS lcl_git_porcelain DEFINITION FINAL.
 
     TYPES: ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_folder,
+             path  TYPE string,
+             count TYPE i,
+             sha1  TYPE ty_sha1,
+           END OF ty_folder.
+
+    TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
+
     CLASS-METHODS build_trees
       IMPORTING it_expanded     TYPE ty_expanded_tt
       RETURNING VALUE(rt_trees) TYPE ty_trees_tt
       RAISING   lcx_exception.
+
+    CLASS-METHODS find_folders
+      IMPORTING it_expanded       TYPE ty_expanded_tt
+      RETURNING VALUE(rt_folders) TYPE ty_folders_tt.
 
     CLASS-METHODS walk
       IMPORTING it_objects TYPE lcl_git_pack=>ty_objects_tt
@@ -14960,7 +14974,7 @@ ENDCLASS.                    "lcl_porcelain DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_helper DEFINITION FINAL.
   PUBLIC SECTION.
-    CONSTANTS mc_indent_size TYPE i VALUE 2.
+    CONSTANTS c_indent_size TYPE i VALUE 2.
 
     DATA mv_html   TYPE string READ-ONLY.
     DATA mv_indent TYPE i READ-ONLY.
@@ -15026,7 +15040,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
     ENDIF.
 
     mv_html =   mv_html
-            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * mc_indent_size )
+            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * c_indent_size )
             &&  iv_str
             &&  gc_newline.
 
@@ -15049,7 +15063,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
     DATA lv_indent_str  TYPE string.
     DATA lv_temp_str    TYPE string.
 
-    lv_indent_str = repeat( val = ` ` occ = mv_indent * mc_indent_size ).
+    lv_indent_str = repeat( val = ` ` occ = mv_indent * c_indent_size ).
     lv_temp_str   = io_html->mv_html.
 
     IF me->mv_indent > 0.
@@ -16896,15 +16910,47 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   ENDMETHOD.                    "pull
 
+  METHOD find_folders.
+
+    DATA: lt_paths TYPE TABLE OF string,
+          lv_split TYPE string,
+          lv_path  TYPE string.
+
+    FIELD-SYMBOLS: <ls_folder> LIKE LINE OF rt_folders,
+                   <ls_new>    LIKE LINE OF rt_folders,
+                   <ls_exp>    LIKE LINE OF it_expanded.
+
+
+    LOOP AT it_expanded ASSIGNING <ls_exp>.
+      READ TABLE rt_folders WITH KEY path = <ls_exp>-path TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO rt_folders ASSIGNING <ls_folder>.
+        <ls_folder>-path = <ls_exp>-path.
+      ENDIF.
+    ENDLOOP.
+
+* add empty folders
+    LOOP AT rt_folders ASSIGNING <ls_folder>.
+      SPLIT <ls_folder>-path AT '/' INTO TABLE lt_paths.
+
+      CLEAR lv_path.
+      LOOP AT lt_paths INTO lv_split.
+        CONCATENATE lv_path lv_split '/' INTO lv_path.
+        READ TABLE rt_folders WITH KEY path = lv_path TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          APPEND INITIAL LINE TO rt_folders ASSIGNING <ls_new>.
+          <ls_new>-path = lv_path.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+    LOOP AT rt_folders ASSIGNING <ls_folder>.
+      FIND ALL OCCURRENCES OF '/' IN <ls_folder>-path MATCH COUNT <ls_folder>-count.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD build_trees.
-
-    TYPES: BEGIN OF ty_folder,
-             path  TYPE string,
-             count TYPE i,
-             sha1  TYPE ty_sha1,
-           END OF ty_folder.
-
-    TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
 
     DATA: lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
           ls_tree    LIKE LINE OF rt_trees,
@@ -16918,14 +16964,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                    <ls_exp>    LIKE LINE OF it_expanded.
 
 
-    LOOP AT it_expanded ASSIGNING <ls_exp>.
-      READ TABLE lt_folders WITH KEY path = <ls_exp>-path TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO lt_folders ASSIGNING <ls_folder>.
-        <ls_folder>-path = <ls_exp>-path.
-        FIND ALL OCCURRENCES OF '/' IN <ls_folder>-path MATCH COUNT <ls_folder>-count.
-      ENDIF.
-    ENDLOOP.
+    lt_folders = find_folders( it_expanded ).
 
 * start with the deepest folders
     SORT lt_folders BY count DESCENDING.
@@ -17992,7 +18031,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD parse.
 
-    CONSTANTS: c_replace TYPE string VALUE '<<new>>'.
+    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
 
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp.
@@ -18002,7 +18041,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
 
-    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH c_replace.
+    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
 
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
@@ -18021,7 +18060,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
     ASSERT sy-subrc = 0.
     rs_fields-body = <ls_field>-value.
-    REPLACE ALL OCCURRENCES OF c_replace IN rs_fields-body WITH gc_newline.
+    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
 
   ENDMETHOD.
 
@@ -19271,12 +19310,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD needs_installation.
 
     CONSTANTS:
-      c_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
-      c_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
+      lc_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
+      lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     TRY.
-        IF is_repo_installed( c_abapgit ) = abap_false
-            OR is_repo_installed( c_plugins ) = abap_false.
+        IF is_repo_installed( lc_abapgit ) = abap_false
+            OR is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
@@ -21797,6 +21836,108 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
     ro_html->add( lcl_gui=>footer( ) ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      append
+        IMPORTING iv_path TYPE string
+                  iv_name TYPE string,
+      single_file FOR TESTING
+        RAISING lcx_exception,
+      two_files_same_path FOR TESTING
+        RAISING lcx_exception,
+      root_empty FOR TESTING
+        RAISING lcx_exception,
+      sub FOR TESTING
+        RAISING lcx_exception.
+
+    DATA: mt_expanded TYPE lcl_git_porcelain=>ty_expanded_tt,
+          mt_trees    TYPE lcl_git_porcelain=>ty_trees_tt.
+
+ENDCLASS.
+
+CLASS ltcl_git_porcelain IMPLEMENTATION.
+
+  METHOD setup.
+    CLEAR mt_expanded.
+    CLEAR mt_trees.
+  ENDMETHOD.
+
+  METHOD append.
+
+    FIELD-SYMBOLS: <ls_expanded> LIKE LINE OF mt_expanded.
+
+
+    APPEND INITIAL LINE TO mt_expanded ASSIGNING <ls_expanded>.
+    <ls_expanded>-path = iv_path.
+    <ls_expanded>-name = iv_name.
+    <ls_expanded>-sha1 = 'a'.
+
+  ENDMETHOD.
+
+  METHOD single_file.
+
+    append( iv_path = '/'
+            iv_name = 'foobar.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 1 ).
+
+  ENDMETHOD.
+
+  METHOD two_files_same_path.
+
+    append( iv_path = '/'
+            iv_name = 'foo.txt' ).
+
+    append( iv_path = '/'
+            iv_name = 'bar.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 1 ).
+
+  ENDMETHOD.
+
+  METHOD sub.
+
+    append( iv_path = '/'
+            iv_name = 'foo.txt' ).
+
+    append( iv_path = '/sub/'
+            iv_name = 'bar.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD root_empty.
+
+    append( iv_path = '/sub/'
+            iv_name = 'bar.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+* so 2 total trees are expected: '/' and '/sub/'
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 2 ).
 
   ENDMETHOD.
 
