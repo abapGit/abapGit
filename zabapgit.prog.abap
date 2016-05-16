@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.13'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.14'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -145,6 +145,59 @@ ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
 CLASS lcx_not_found IMPLEMENTATION.
 
 ENDCLASS.                    "lcx_not_found IMPLEMENTATION
+
+CLASS lcl_log DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS:
+      add
+        IMPORTING
+          iv_msgv1 TYPE csequence
+          iv_msgv2 TYPE csequence
+          iv_msgv3 TYPE csequence
+          iv_msgv4 TYPE csequence,
+      count
+        RETURNING VALUE(rv_count) TYPE i,
+      show.
+
+  PRIVATE SECTION.
+    DATA: mt_log TYPE rs_t_msg.
+
+ENDCLASS.
+
+CLASS lcl_log IMPLEMENTATION.
+
+  METHOD add.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
+    <ls_log>-msgty = 'W'.
+    <ls_log>-msgid = '00'.
+    <ls_log>-msgno = '001'.
+    <ls_log>-msgv1 = iv_msgv1.
+    <ls_log>-msgv2 = iv_msgv2.
+    <ls_log>-msgv3 = iv_msgv3.
+    <ls_log>-msgv4 = iv_msgv4.
+
+  ENDMETHOD.
+
+  METHOD show.
+    CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
+      EXPORTING
+        i_t_msg           = mt_log
+        i_txt             = 'Warning'
+        i_with_s_on_empty = abap_false
+        i_one_msg_direct  = abap_false
+        i_one_msg_type_s  = abap_false
+        ##no_text.
+  ENDMETHOD.
+
+  METHOD count.
+    rv_count = lines( mt_log ).
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_zlib_huffman DEFINITION
@@ -12500,7 +12553,9 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_name) TYPE string
         RAISING   lcx_exception,
       get_files_local
-        RETURNING VALUE(rt_files) TYPE ty_files_tt
+        IMPORTING io_log           TYPE REF TO lcl_log OPTIONAL
+                  iv_show_progress TYPE abap_bool DEFAULT abap_false
+        RETURNING VALUE(rt_files)  TYPE ty_files_tt
         RAISING   lcx_exception,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
@@ -12521,6 +12576,11 @@ CLASS lcl_repo DEFINITION ABSTRACT.
     DATA: mt_local  TYPE ty_files_tt,
           mt_remote TYPE ty_files_tt,
           ms_data   TYPE lcl_persistence_repo=>ty_repo.
+
+    CLASS-METHODS show_progress
+      IMPORTING iv_current  TYPE i
+                iv_total    TYPE i
+                iv_obj_name TYPE tadir-obj_name.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -15378,6 +15438,23 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD show_progress.
+
+    DATA: lv_pct  TYPE i,
+          lv_text TYPE string,
+          lv_f    TYPE f.
+
+
+    lv_f = ( iv_current / iv_total ) * 100.
+    lv_pct = lv_f.
+    lv_text = |{ iv_obj_name } ({ iv_current }/{ iv_total })|.
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = lv_text.
+
+  ENDMETHOD.
+
   METHOD get_files_local.
 
     DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
@@ -15395,8 +15472,25 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      IF iv_show_progress = abap_true.
+        show_progress( iv_current  = sy-tabix
+                       iv_total    = lines( lt_tadir )
+                       iv_obj_name = <ls_tadir>-obj_name ).
+      ENDIF.
+
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
+
+      IF lcl_objects=>is_supported( ls_item ) = abap_false.
+        IF NOT io_log IS INITIAL.
+          io_log->add( iv_msgv1 = 'Object type ignored, not supported:'
+                       iv_msgv2 = ls_item-obj_type
+                       iv_msgv3 = '-'
+                       iv_msgv4 = ls_item-obj_name ) ##no_text.
+        ENDIF.
+        CONTINUE.
+      ENDIF.
+
       lt_files = lcl_objects=>serialize( ls_item ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = '/' && <ls_tadir>-path.
@@ -16170,16 +16264,7 @@ CLASS lcl_zip DEFINITION FINAL.
                 iv_zip TYPE abap_bool DEFAULT abap_true
       RAISING   lcx_exception.
 
-    CLASS-METHODS export
-      IMPORTING iv_package TYPE devclass
-                iv_zip     TYPE abap_bool DEFAULT abap_true
-      RAISING   lcx_exception.
-
   PRIVATE SECTION.
-    CLASS-METHODS show_progress
-      IMPORTING iv_current  TYPE i
-                iv_total    TYPE i
-                iv_obj_name TYPE tadir-obj_name.
 
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
@@ -16221,23 +16306,6 @@ ENDCLASS.                    "lcl_zip DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_zip IMPLEMENTATION.
-
-  METHOD show_progress.
-
-    DATA: lv_pct  TYPE i,
-          lv_text TYPE string,
-          lv_f    TYPE f.
-
-
-    lv_f = ( iv_current / iv_total ) * 100.
-    lv_pct = lv_f.
-    lv_text = |{ iv_obj_name } ({ iv_current }/{ iv_total })|.
-    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
-      EXPORTING
-        percentage = lv_pct
-        text       = lv_text.
-
-  ENDMETHOD.                    "show_progress
 
   METHOD get_message.
 
@@ -16362,7 +16430,7 @@ CLASS lcl_zip IMPLEMENTATION.
     CREATE OBJECT lo_zip.
 
     LOOP AT it_files ASSIGNING <ls_file>.
-      CONCATENATE <ls_file>-path <ls_file>-filename INTO lv_filename.
+      CONCATENATE <ls_file>-path+1 <ls_file>-filename INTO lv_filename.
       lo_zip->add( name    = lv_filename
                    content = <ls_file>-data ).
     ENDLOOP.
@@ -16509,13 +16577,28 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export_key.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo.
+    DATA: lo_repo TYPE REF TO lcl_repo,
+          lo_log  TYPE REF TO lcl_log,
+          lt_zip  TYPE ty_files_tt.
 
 
     lo_repo = lcl_repo_srv=>get( iv_key ).
 
-    export( iv_package = lo_repo->get_package( )
-            iv_zip     = iv_zip ).
+    CREATE OBJECT lo_log.
+
+    lt_zip = lo_repo->get_files_local( io_log           = lo_log
+                                       iv_show_progress = abap_true ).
+
+    IF lo_log->count( ) > 0.
+      lo_log->show( ).
+    ENDIF.
+
+    IF iv_zip = abap_true.
+      file_download( iv_package = lo_repo->get_package( )
+                     iv_xstr = encode_files( lt_zip ) ).
+    ELSE.
+      files_commit( lt_zip ).
+    ENDIF.
 
   ENDMETHOD.                    "export_key
 
@@ -16531,72 +16614,6 @@ CLASS lcl_zip IMPLEMENTATION.
     lcl_gui=>render( ).
 
   ENDMETHOD.                    "import
-
-  METHOD export.
-* todo, align this method with lcl_repo->get_files_local()
-
-    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt,
-          ls_item  TYPE ty_item,
-          lt_msg   TYPE rs_t_msg,
-          lt_files TYPE ty_files_tt,
-          lt_zip   TYPE ty_files_tt.
-
-    FIELD-SYMBOLS: <ls_file>  LIKE LINE OF lt_files,
-                   <ls_msg>   LIKE LINE OF lt_msg,
-                   <ls_tadir> LIKE LINE OF lt_tadir.
-
-
-    lt_tadir = lcl_tadir=>read( iv_package ).
-
-    IF lt_tadir IS INITIAL.
-      _raise 'Package is empty'.
-    ENDIF.
-
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      show_progress( iv_current  = sy-tabix
-                     iv_total    = lines( lt_tadir )
-                     iv_obj_name = <ls_tadir>-obj_name ).
-
-      CLEAR ls_item.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      IF lcl_objects=>is_supported( ls_item ) = abap_false.
-        APPEND INITIAL LINE TO lt_msg ASSIGNING <ls_msg>.
-        <ls_msg>-msgty = 'W'.
-        <ls_msg>-msgid = '00'.
-        <ls_msg>-msgno = '001'.
-        <ls_msg>-msgv1 = 'Object type ignored, not supported:' ##no_text.
-        <ls_msg>-msgv2 = ls_item-obj_type.
-        <ls_msg>-msgv3 = '-'.
-        <ls_msg>-msgv4 = ls_item-obj_name.
-      ELSE.
-        lt_files = lcl_objects=>serialize( ls_item ).
-        LOOP AT lt_files ASSIGNING <ls_file>.
-          <ls_file>-path = <ls_tadir>-path.
-        ENDLOOP.
-        APPEND LINES OF lt_files TO lt_zip.
-      ENDIF.
-    ENDLOOP.
-
-    IF lines( lt_msg ) > 0.
-      CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
-        EXPORTING
-          i_t_msg           = lt_msg
-          i_txt             = 'Warning'
-          i_with_s_on_empty = abap_false
-          i_one_msg_direct  = abap_false
-          i_one_msg_type_s  = abap_false
-          ##no_text.
-    ENDIF.
-
-    IF iv_zip = abap_true.
-      file_download( iv_package = iv_package
-                     iv_xstr = encode_files( lt_zip ) ).
-    ELSE.
-      files_commit( lt_zip ).
-    ENDIF.
-
-  ENDMETHOD.                    "export
 
   METHOD files_commit.
 
@@ -17626,9 +17643,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
                 es_file   TYPE lcl_file_status=>ty_result
       RAISING   lcx_exception.
 
-    CLASS-METHODS zipexport
-      RAISING lcx_exception.
-
     CLASS-METHODS abapgit_installation
       RAISING lcx_exception.
 
@@ -18489,47 +18503,6 @@ ENDCLASS.
 
 CLASS lcl_gui_page_main IMPLEMENTATION.
 
-  METHOD zipexport.
-
-    DATA: lv_returncode TYPE c,
-          lv_package    TYPE devclass,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Export package to ZIP'           "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    lcl_zip=>export( lv_package ).
-
-  ENDMETHOD.                    "zipexport
-
   METHOD diff.
 
     DATA: lt_remote TYPE ty_files_tt,
@@ -18979,7 +18952,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '<td class="logo">' ).
     ro_html->add( '<a href="sapevent:abapgithome">' ).
     ro_html->add( |<img src="{ lcl_gui=>get_logo_src( ) }"></a>| ).
-    ro_html->add( '<a href="sapevent:zipexport_gui" class="bkg">e</a>' ).
     ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ).
     ro_html->add( '</td>' ).
     ro_html->add( '<td class="right menu">' ).
@@ -19417,8 +19389,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key = iv_getdata.
         lcl_zip=>export_key( iv_key = lv_key
                              iv_zip = abap_false ).
-      WHEN 'zipexport_gui'.
-        zipexport( ).
       WHEN 'abapgit_installation'.
         abapgit_installation( ).
       WHEN OTHERS.
