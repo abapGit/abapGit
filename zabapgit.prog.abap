@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.11'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.12'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -19874,6 +19874,8 @@ CLASS ltcl_diff IMPLEMENTATION.
           lo_diff    TYPE REF TO lcl_diff,
           lt_diff    TYPE lcl_diff=>ty_diffs_tt.
 
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
+
 
     CONCATENATE LINES OF mt_local  INTO lv_local SEPARATED BY gc_newline.
     CONCATENATE LINES OF mt_remote INTO lv_remote SEPARATED BY gc_newline.
@@ -19887,6 +19889,12 @@ CLASS ltcl_diff IMPLEMENTATION.
         iv_remote = lv_xremote.
 
     lt_diff = lo_diff->get( ).
+
+    LOOP AT lt_diff ASSIGNING <ls_diff>.
+      CLEAR <ls_diff>-local_line.
+      CLEAR <ls_diff>-remote_line.
+      CLEAR <ls_diff>-short.
+    ENDLOOP.
 
     cl_abap_unit_assert=>assert_equals( act = lt_diff
                                         exp = mt_expected ).
