@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.8.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.8.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -180,6 +180,9 @@ CLASS lcl_progress IMPLEMENTATION.
 
   METHOD show.
 
+    DATA: lv_pct  TYPE i,
+          lv_text TYPE string.
+
     FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
 
 * assumption:
@@ -196,10 +199,13 @@ CLASS lcl_progress IMPLEMENTATION.
     <ls_stack>-total   = iv_total.
     <ls_stack>-text    = iv_text.
 
+    lv_pct = calc_pct( ).
+    lv_text = build_text( ).
+
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
       EXPORTING
-        percentage = calc_pct( )
-        text       = build_text( ).
+        percentage = lv_pct
+        text       = lv_text.
 
     IF iv_current = iv_total.
       DELETE gt_stack INDEX lines( gt_stack ).
