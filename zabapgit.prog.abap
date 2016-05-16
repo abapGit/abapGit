@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.7.8'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.7.9'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17937,6 +17937,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD parse.
 
+    CONSTANTS: c_replace TYPE string VALUE '<<new>>'.
+
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp.
 
@@ -17944,6 +17946,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH c_replace.
 
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
@@ -17962,6 +17966,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
     ASSERT sy-subrc = 0.
     rs_fields-body = <ls_field>-value.
+    REPLACE ALL OCCURRENCES OF c_replace IN rs_fields-body WITH gc_newline.
 
   ENDMETHOD.
 
