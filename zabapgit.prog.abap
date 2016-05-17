@@ -370,6 +370,77 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_toolbar DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_html_toolbar DEFINITION FINAL.
+  PUBLIC SECTION.
+    METHODS add    IMPORTING  iv_txt TYPE string
+                              iv_cmd TYPE string.
+    METHODS render IMPORTING  iv_tag TYPE string DEFAULT 'span'
+                              ib_right TYPE abap_bool OPTIONAL
+                   RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+  PRIVATE SECTION.
+    TYPES:  BEGIN OF ty_item,
+              txt TYPE string,
+              cmd TYPE string,
+            END OF ty_item.
+    TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
+
+    DATA    mt_items TYPE tt_items.
+
+ENDCLASS. "lcl_html_toolbar DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_toolbar IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_html_toolbar IMPLEMENTATION.
+
+  METHOD add.
+    DATA ls_item TYPE ty_item.
+
+    ls_item-txt = iv_txt.
+    ls_item-cmd = iv_cmd.
+    APPEND ls_item TO mt_items.
+  ENDMETHOD.
+
+  METHOD render.
+    DATA lo_html  TYPE REF TO lcl_html_helper.
+    DATA lv_class TYPE string.
+    FIELD-SYMBOLS <item> TYPE ty_item.
+
+    CREATE OBJECT lo_html.
+
+    IF iv_tag IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_class = 'menu'.
+    IF ib_right = abap_true.
+      lv_class = lv_class && ' right'.
+    ENDIF.
+
+    lo_html->add( |<{ iv_tag } class="{ lv_class }">| ).
+
+    LOOP AT mt_items ASSIGNING <item>.
+      CLEAR lv_class.
+      AT LAST.
+        lv_class = ' class="menu_end"'.
+      ENDAT.
+
+      lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+
+    ENDLOOP.
+
+    lo_html->add( |</{ iv_tag }>| ).
+    ro_html = lo_html.
+
+  ENDMETHOD.
+
+ENDCLASS. "lcl_html_toolbar IMPLEMENTATION
+
+
 CLASS lcl_log DEFINITION.
 
   PUBLIC SECTION.
@@ -19063,14 +19134,18 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_menu.
 
-    DATA: lv_install TYPE string.
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-
-    IF needs_installation( ) = abap_true.
-      lv_install = '<a href="sapevent:abapgit_installation">Install</a>' && gc_newline.
-    ENDIF.
-
+    CREATE OBJECT lo_toolbar.
     CREATE OBJECT ro_html.
+
+    lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
+    lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
+    lo_toolbar->add( iv_txt = 'Explore'          iv_cmd = 'sapevent:explore' ).
+    lo_toolbar->add( iv_txt = 'New Offline Repo' iv_cmd = 'sapevent:newoffline' ).
+    IF needs_installation( ) = abap_true.
+      lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
+    ENDIF.
 
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<table class="mixedbar logobar">' ).
@@ -19080,14 +19155,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( |<img src="{ lcl_gui=>get_logo_src( ) }"></a>| ).
     ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ).
     ro_html->add( '</td>' ).
-    ro_html->add( '<td class="right menu">' ).
-    ro_html->add( '<a href="sapevent:refresh">Refresh All</a>' ).
-    ro_html->add( '<a href="sapevent:install">Clone</a>' ).
-    ro_html->add( '<a href="sapevent:explore">Explore</a>' ).
-    ro_html->add( |{ lv_install }| ).
-    ro_html->add( '<a class="menu_end" href="sapevent:newoffline">' ).
-    ro_html->add( 'New Offline Repo</a>' ) ##NO_TEXT.
-    ro_html->add( '</td>' ).
+    ro_html->add( lo_toolbar->render( iv_tag = 'td' ib_right = abap_true ) ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
@@ -19520,29 +19588,22 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_toc.
 
     DATA: lo_repo  LIKE LINE OF it_list,
+          lo_toolbar TYPE REF TO lcl_html_toolbar,
           lv_class TYPE string.
 
-
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
 
     IF lines( it_list ) = 0.
       RETURN.
     ENDIF.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<span class="menu">' ).
-
     LOOP AT it_list INTO lo_repo.
-      IF sy-tabix = lines( it_list ).
-        lv_class = ' class="menu_end"' ##NO_TEXT.
-      ENDIF.
-
-      ro_html->add( '<a' && lv_class && ' href="#' && lo_repo->get_name( ) &&'">' ).
-      ro_html->add( lo_repo->get_name( ) ).
-      ro_html->add( '</a>' ).
+      lo_toolbar->add( iv_txt = lo_repo->get_name( ) iv_cmd = |#{ lo_repo->get_name( ) }| ).
     ENDLOOP.
 
-    ro_html->add( '</span>' ).
+    ro_html->add( '<div id="toc">' ) ##NO_TEXT.
+    ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
