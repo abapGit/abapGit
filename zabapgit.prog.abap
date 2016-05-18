@@ -15389,6 +15389,7 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING lcx_exception.
 
     CLASS-METHODS back
+      RETURNING VALUE(r_exit) TYPE xfeld
       RAISING lcx_exception.
 
     CLASS-METHODS call_page
@@ -17580,6 +17581,7 @@ CLASS lcl_gui IMPLEMENTATION.
     lv_index = lines( gt_stack ).
 
     IF lv_index = 0.
+      r_exit = 'X'.
       RETURN.
     ENDIF.
 
@@ -22103,3 +22105,10 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+AT SELECTION-SCREEN ON EXIT-COMMAND.
+  CASE sy-ucomm.
+    WHEN 'CBAC'.  "Back
+      IF lcl_gui=>back( ) IS INITIAL.
+        LEAVE TO SCREEN 1001.
+      ENDIF.
+  ENDCASE.
