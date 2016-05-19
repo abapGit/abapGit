@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.8.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.8.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -375,17 +375,17 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS add    IMPORTING  iv_txt TYPE string
-                              iv_cmd TYPE string.
-    METHODS render IMPORTING  iv_tag TYPE string DEFAULT 'span'
-                              ib_right TYPE abap_bool OPTIONAL
+    METHODS add    IMPORTING iv_txt TYPE string
+                             iv_cmd TYPE string.
+    METHODS render IMPORTING iv_tag         TYPE string DEFAULT 'span'
+                             ib_right       TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
-    TYPES:  BEGIN OF ty_item,
-              txt TYPE string,
-              cmd TYPE string,
-            END OF ty_item.
+    TYPES: BEGIN OF ty_item,
+             txt TYPE string,
+             cmd TYPE string,
+           END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
     DATA    mt_items TYPE tt_items.
@@ -2138,6 +2138,267 @@ CLASS lcl_convert IMPLEMENTATION.
   ENDMETHOD.                    "x_to_bitbyte
 
 ENDCLASS.                    "lcl_convert IMPLEMENTATION
+
+CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
+
+CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
+
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_file_checksum,
+             path     TYPE string,
+             filename TYPE string,
+             sha1     TYPE ty_sha1,
+           END OF ty_file_checksum.
+
+    TYPES: ty_file_checksum_tt TYPE STANDARD TABLE OF ty_file_checksum WITH DEFAULT KEY.
+
+    CLASS-METHODS:
+      build_default
+        RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
+      deserialize
+        IMPORTING iv_xstr               TYPE xstring
+        RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit
+        RAISING   lcx_exception.
+
+    METHODS:
+      serialize
+        RETURNING VALUE(rv_xstr) TYPE xstring,
+      add_ignore
+        IMPORTING iv_path     TYPE string
+                  iv_filename TYPE string,
+      is_ignored
+        IMPORTING iv_path           TYPE string
+                  iv_filename       TYPE string
+        RETURNING VALUE(rv_ignored) TYPE abap_bool,
+      remove_ignore
+        IMPORTING iv_path     TYPE string
+                  iv_filename TYPE string,
+      get_starting_folder
+        RETURNING VALUE(rv_path) TYPE string,
+      set_starting_folder
+        IMPORTING iv_path TYPE string,
+      get_master_language
+        RETURNING VALUE(rv_language) TYPE spras,
+      set_master_language
+        IMPORTING iv_language TYPE spras,
+      set_after_last_pull
+        IMPORTING it_pull TYPE ty_file_checksum_tt,
+      get_after_last_pull
+        RETURNING VALUE(rt_pull) TYPE ty_file_checksum_tt.
+
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_file,
+             path     TYPE string,
+             filename TYPE string,
+           END OF ty_file.
+
+    TYPES: BEGIN OF ty_dot_abapgit,
+             master_language TYPE spras,
+             starting_folder TYPE string,
+             ignore          TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY,
+             after_last_pull TYPE ty_file_checksum_tt,
+           END OF ty_dot_abapgit.
+
+    CONSTANTS: c_data TYPE string VALUE 'DATA'.
+
+    DATA: ms_data TYPE ty_dot_abapgit.
+
+    METHODS:
+      constructor
+        IMPORTING is_data TYPE ty_dot_abapgit.
+
+    CLASS-METHODS:
+      to_xml
+        IMPORTING is_data       TYPE ty_dot_abapgit
+        RETURNING VALUE(rv_xml) TYPE string,
+      from_xml
+        IMPORTING iv_xml         TYPE string
+        RETURNING VALUE(rs_data) TYPE ty_dot_abapgit.
+
+ENDCLASS.
+
+CLASS lcl_dot_abapgit IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_data = is_data.
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lv_xml  TYPE string,
+          ls_data TYPE ty_dot_abapgit.
+
+
+    lv_xml = lcl_convert=>xstring_to_string_utf8( iv_xstr ).
+
+    ls_data = from_xml( lv_xml ).
+
+    CREATE OBJECT ro_dot_abapgit
+      EXPORTING
+        is_data = ls_data.
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = to_xml( ms_data ).
+
+    rv_xstr = lcl_convert=>string_to_xstring_utf8( lv_xml ).
+
+  ENDMETHOD.
+
+  METHOD build_default.
+
+    DATA: ls_data TYPE ty_dot_abapgit.
+
+
+    ls_data-master_language = sy-langu.
+    ls_data-starting_folder = '/'.
+
+    CREATE OBJECT ro_dot_abapgit
+      EXPORTING
+        is_data = ls_data.
+
+  ENDMETHOD.
+
+  METHOD to_xml.
+    CALL TRANSFORMATION id
+      SOURCE (c_data) = is_data
+      RESULT XML rv_xml.
+
+    REPLACE FIRST OCCURRENCE
+      OF '<?xml version="1.0" encoding="utf-16"?>'
+      IN rv_xml
+      WITH '<?xml version="1.0" encoding="utf-8"?>'.
+    ASSERT sy-subrc = 0.
+  ENDMETHOD.
+
+  METHOD from_xml.
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML iv_xml
+      RESULT (c_data) = rs_data ##NO_TEXT.
+  ENDMETHOD.
+
+  METHOD add_ignore.
+
+    FIELD-SYMBOLS: <ls_ignore> LIKE LINE OF ms_data-ignore.
+
+    APPEND INITIAL LINE TO ms_data-ignore ASSIGNING <ls_ignore>.
+    <ls_ignore>-path = iv_path.
+    <ls_ignore>-filename = iv_filename.
+
+  ENDMETHOD.
+
+  METHOD is_ignored.
+
+    READ TABLE ms_data-ignore WITH KEY
+      path = iv_path
+      filename = iv_filename
+      TRANSPORTING NO FIELDS.
+
+    rv_ignored = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+  METHOD remove_ignore.
+
+    DELETE ms_data-ignore WHERE path = iv_path AND filename = iv_filename.
+
+  ENDMETHOD.
+
+  METHOD get_starting_folder.
+    rv_path = ms_data-starting_folder.
+  ENDMETHOD.
+
+  METHOD set_starting_folder.
+    ms_data-starting_folder = iv_path.
+  ENDMETHOD.
+
+  METHOD get_master_language.
+    rv_language = ms_data-master_language.
+  ENDMETHOD.
+
+  METHOD set_master_language.
+    ms_data-master_language = iv_language.
+  ENDMETHOD.
+
+  METHOD get_after_last_pull.
+    rt_pull = ms_data-after_last_pull.
+  ENDMETHOD.
+
+  METHOD set_after_last_pull.
+    ms_data-after_last_pull = it_pull.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_dot_abapgit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      identity FOR TESTING
+        RAISING lcx_exception,
+      ignore FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_dot_abapgit IMPLEMENTATION.
+
+  METHOD identity.
+
+    DATA: lo_dot    TYPE REF TO lcl_dot_abapgit,
+          ls_before TYPE lcl_dot_abapgit=>ty_dot_abapgit,
+          ls_after  TYPE lcl_dot_abapgit=>ty_dot_abapgit.
+
+
+    lo_dot = lcl_dot_abapgit=>build_default( ).
+    ls_before = lo_dot->ms_data.
+
+    lo_dot = lcl_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
+    ls_after = lo_dot->ms_data.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_after
+      exp = ls_before ).
+
+  ENDMETHOD.
+
+  METHOD ignore.
+
+    CONSTANTS: lc_path     TYPE string VALUE '/',
+               lc_filename TYPE string VALUE 'foobar.txt'.
+
+    DATA: lv_ignored TYPE abap_bool,
+          lo_dot     TYPE REF TO lcl_dot_abapgit.
+
+
+    lo_dot = lcl_dot_abapgit=>build_default( ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+    lo_dot->add_ignore( iv_path = lc_path iv_filename = lc_filename ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_true ).
+
+    lo_dot->remove_ignore( iv_path = lc_path iv_filename = lc_filename ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_diff DEFINITION
@@ -19587,9 +19848,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_toc.
 
-    DATA: lo_repo  LIKE LINE OF it_list,
+    DATA: lo_repo    LIKE LINE OF it_list,
           lo_toolbar TYPE REF TO lcl_html_toolbar,
-          lv_class TYPE string.
+          lv_class   TYPE string.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
