@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.8.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.8.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2144,16 +2144,9 @@ CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_file_checksum,
-             path     TYPE string,
-             filename TYPE string,
-             sha1     TYPE ty_sha1,
-           END OF ty_file_checksum.
-
-    TYPES: ty_file_checksum_tt TYPE STANDARD TABLE OF ty_file_checksum WITH DEFAULT KEY.
-
     CLASS-METHODS:
       build_default
+        IMPORTING iv_master_language    TYPE spras
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       deserialize
         IMPORTING iv_xstr               TYPE xstring
@@ -2180,23 +2173,13 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
       set_master_language
-        IMPORTING iv_language TYPE spras,
-      set_after_last_pull
-        IMPORTING it_pull TYPE ty_file_checksum_tt,
-      get_after_last_pull
-        RETURNING VALUE(rt_pull) TYPE ty_file_checksum_tt.
+        IMPORTING iv_language TYPE spras.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_file,
-             path     TYPE string,
-             filename TYPE string,
-           END OF ty_file.
-
     TYPES: BEGIN OF ty_dot_abapgit,
              master_language TYPE spras,
              starting_folder TYPE string,
-             ignore          TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY,
-             after_last_pull TYPE ty_file_checksum_tt,
+             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            END OF ty_dot_abapgit.
 
     CONSTANTS: c_data TYPE string VALUE 'DATA'.
@@ -2254,7 +2237,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     DATA: ls_data TYPE ty_dot_abapgit.
 
 
-    ls_data-master_language = sy-langu.
+    ls_data-master_language = iv_master_language.
     ls_data-starting_folder = '/'.
 
     CREATE OBJECT ro_dot_abapgit
@@ -2287,16 +2270,18 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_ignore> LIKE LINE OF ms_data-ignore.
 
     APPEND INITIAL LINE TO ms_data-ignore ASSIGNING <ls_ignore>.
-    <ls_ignore>-path = iv_path.
-    <ls_ignore>-filename = iv_filename.
+    <ls_ignore> = iv_path && iv_filename.
 
   ENDMETHOD.
 
   METHOD is_ignored.
 
-    READ TABLE ms_data-ignore WITH KEY
-      path = iv_path
-      filename = iv_filename
+    DATA: lv_name TYPE string.
+
+
+    lv_name = iv_path && iv_filename.
+
+    READ TABLE ms_data-ignore FROM lv_name
       TRANSPORTING NO FIELDS.
 
     rv_ignored = boolc( sy-subrc = 0 ).
@@ -2305,7 +2290,12 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD remove_ignore.
 
-    DELETE ms_data-ignore WHERE path = iv_path AND filename = iv_filename.
+    DATA: lv_name TYPE string.
+
+
+    lv_name = iv_path && iv_filename.
+
+    DELETE TABLE ms_data-ignore FROM lv_name.
 
   ENDMETHOD.
 
@@ -2323,14 +2313,6 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD set_master_language.
     ms_data-master_language = iv_language.
-  ENDMETHOD.
-
-  METHOD get_after_last_pull.
-    rt_pull = ms_data-after_last_pull.
-  ENDMETHOD.
-
-  METHOD set_after_last_pull.
-    ms_data-after_last_pull = it_pull.
   ENDMETHOD.
 
 ENDCLASS.
@@ -2354,7 +2336,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           ls_after  TYPE lcl_dot_abapgit=>ty_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( ).
+    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
     ls_before = lo_dot->ms_data.
 
     lo_dot = lcl_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
@@ -2375,7 +2357,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           lo_dot     TYPE REF TO lcl_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( ).
+    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
 
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
@@ -13015,12 +12997,22 @@ ENDCLASS.
 CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_file_checksum,
+             path     TYPE string,
+             filename TYPE string,
+             sha1     TYPE ty_sha1,
+           END OF ty_file_checksum.
+
+    TYPES: ty_file_checksum_tt TYPE STANDARD TABLE OF ty_file_checksum WITH DEFAULT KEY.
+
     TYPES: BEGIN OF ty_repo_xml,
-             url         TYPE string,
-             branch_name TYPE string,
-             sha1        TYPE ty_sha1,
-             package     TYPE devclass,
-             offline     TYPE sap_bool,
+             url             TYPE string,
+             branch_name     TYPE string,
+             sha1            TYPE ty_sha1,
+             package         TYPE devclass,
+             offline         TYPE sap_bool,
+             after_last_pull TYPE ty_file_checksum_tt,
+             master_language TYPE spras,
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
@@ -13035,7 +13027,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
       RETURNING VALUE(rt_repos) TYPE tt_repo
       RAISING   lcx_exception.
 
-    METHODS update
+    METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_sha1
       RAISING   lcx_exception.
@@ -13120,9 +13112,15 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    DATA: mt_local  TYPE ty_files_item_tt,
-          mt_remote TYPE ty_files_tt,
-          ms_data   TYPE lcl_persistence_repo=>ty_repo.
+    CONSTANTS: c_root        TYPE string VALUE '/',
+               c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
+
+    DATA: mt_local       TYPE ty_files_item_tt,
+          mt_remote      TYPE ty_files_tt,
+          mo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
+          ms_data        TYPE lcl_persistence_repo=>ty_repo.
+
+    METHODS: find_dot_abapgit RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -15524,7 +15522,8 @@ CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
   PUBLIC SECTION.
     METHODS:
       set_files_remote
-        IMPORTING it_files TYPE ty_files_tt.
+        IMPORTING it_files TYPE ty_files_tt
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_offline DEFINITION
 
@@ -15703,6 +15702,8 @@ CLASS lcl_repo_offline IMPLEMENTATION.
 
     mt_remote = it_files.
 
+    find_dot_abapgit( ).
+
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
@@ -15821,6 +15822,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                        et_objects = mt_objects
                                        ev_branch  = mv_branch ).
 
+    find_dot_abapgit( ).
+
     mv_initialized = abap_true.
 
   ENDMETHOD.                    "refresh
@@ -15877,8 +15880,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     CREATE OBJECT lo_persistence.
 
-    lo_persistence->update( iv_key         = ms_data-key
-                            iv_branch_sha1 = iv_sha1 ).
+    lo_persistence->update_sha1( iv_key         = ms_data-key
+                                 iv_branch_sha1 = iv_sha1 ).
 
     ms_data-sha1 = iv_sha1.
 
@@ -15901,11 +15904,30 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.                    "constructor
 
+  METHOD find_dot_abapgit.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+      WITH KEY path = c_root
+      filename = c_dot_abapgit.
+    IF sy-subrc = 0.
+      mo_dot_abapgit = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD get_files_remote.
     rt_files = mt_remote.
   ENDMETHOD.
 
   METHOD deserialize.
+
+* todo
+*    IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
+*      _raise 'Current login language does not match master language'.
+*    ENDIF.
 
     lcl_objects=>deserialize( me ).
 
@@ -15956,6 +15978,15 @@ CLASS lcl_repo IMPLEMENTATION.
         <ls_return>-item = ls_item.
       ENDLOOP.
     ENDLOOP.
+
+* todo
+*    IF mo_dot_abapgit IS INITIAL.
+*      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
+*    ENDIF.
+*    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+*    <ls_return>-file-path     = c_root.
+*    <ls_return>-file-filename = c_dot_abapgit.
+*    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     mt_local = rt_files.
 
@@ -17828,6 +17859,7 @@ CLASS lcl_gui IMPLEMENTATION.
           it_postdata    = postdata
           it_query_table = query_table ).
       CATCH lcx_exception INTO lx_exception.
+        ROLLBACK WORK.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
@@ -21436,6 +21468,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-sha1         = iv_branch.
     ls_repo-package      = iv_package.
     ls_repo-offline      = iv_offline.
+    ls_repo-master_language = sy-langu.
 
     lv_repo_as_xml = to_xml( ls_repo ).
 
@@ -21454,7 +21487,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD update.
+  METHOD update_sha1.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
@@ -21491,6 +21524,11 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
+    ENDIF.
+
+* field master_language is new, so default it for old repositories
+    IF rs_repo-master_language IS INITIAL.
+      rs_repo-master_language = sy-langu.
     ENDIF.
 
   ENDMETHOD.
