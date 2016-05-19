@@ -18061,8 +18061,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.                            "#EC NOTEXT
     ENDCASE.
@@ -18081,9 +18079,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     "TODO: crutch, redo later after unification
     REPLACE FIRST OCCURRENCE OF '</style>' IN lv_html
       WITH '</style>' && styles( )->mv_html.
-
-    "TODO: crutch, move to SAP back button (code almost ready)
-    lv_html = lv_html && '<div>' && '<a href="sapevent:back">Back</a>' && '</div>'.
     ro_html->add( lv_html ).
 * ^^^ REDO
 
@@ -22105,6 +22100,8 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+* SAP back command re-direction
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
