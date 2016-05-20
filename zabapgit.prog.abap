@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.2'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.3'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3202,11 +3202,13 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
     METHODS:
       constructor
         IMPORTING
-          is_item TYPE ty_item.
+          is_item     TYPE ty_item
+          iv_language TYPE spras.
 
   PROTECTED SECTION.
 
-    DATA: ms_item  TYPE ty_item.
+    DATA: ms_item     TYPE ty_item,
+          mv_language TYPE spras.
 
     METHODS:
       get_metadata
@@ -3269,7 +3271,8 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
     DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
-    super->constructor( is_item ).
+    super->constructor( is_item = is_item
+                        iv_language = gc_english ).
 
 *    determine the responsible plugin
     READ TABLE gt_objtype_map INTO ls_objtype_map
@@ -3673,7 +3676,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         object              = is_progdir-name
         object_class        = 'ABAP'
         devclass            = iv_package
-        master_language     = gc_english
+        master_language     = mv_language
         mode                = 'INSERT'
       EXCEPTIONS
         cancelled           = 1
@@ -3732,7 +3735,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       IF NOT it_tpool[] IS INITIAL.
         INSERT TEXTPOOL is_progdir-name
           FROM it_tpool
-          LANGUAGE gc_english
+          LANGUAGE mv_language
           STATE 'I'.
         IF sy-subrc <> 0.
           _raise 'error from INSERT TEXTPOOL'.
@@ -3813,7 +3816,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     CALL FUNCTION 'RS_CUA_INTERNAL_FETCH'
       EXPORTING
         program         = iv_program_name
-        language        = gc_english
+        language        = mv_language
         state           = 'A'
       IMPORTING
         adm             = rs_cua-adm
@@ -4022,7 +4025,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
       EXPORTING
         program   = ms_item-obj_name
-        language  = gc_english
+        language  = mv_language
         tr_key    = ls_tr_key
         adm       = is_cua-adm
         state     = 'I'
@@ -4060,7 +4063,10 @@ ENDCLASS.                    "lcl_objects_program IMPLEMENTATION
 CLASS lcl_objects_super IMPLEMENTATION.
 
   METHOD constructor.
-    ms_item  = is_item.
+    ms_item = is_item.
+    ASSERT NOT ms_item IS INITIAL.
+    mv_language = iv_language.
+    ASSERT NOT mv_language IS INITIAL.
   ENDMETHOD.                    "constructor
 
   METHOD jump_se11.
@@ -4122,7 +4128,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         object              = ls_object
         object_class        = 'DICT'
         devclass            = iv_package
-        master_language     = gc_english
+        master_language     = mv_language
         mode                = 'INSERT'
       EXCEPTIONS
         cancelled           = 1
@@ -4623,7 +4629,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DOMA_GET'
       EXPORTING
         name          = lv_name
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd01v_wa      = ls_dd01v
       TABLES
@@ -5331,7 +5337,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     CALL FUNCTION 'DDIF_DTEL_GET'
       EXPORTING
         name          = lv_name
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd04v_wa      = ls_dd04v
         tpara_wa      = ls_tpara
@@ -5844,7 +5850,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
                      ig_data = ls_vseoclass ).
 
         lv_cp = cl_oo_classname_service=>get_classpool_name( ls_clskey-clsname ).
-        READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE gc_english. "#EC CI_READ_REP
+        READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE mv_language. "#EC CI_READ_REP
         io_xml->add( iv_name = 'TPOOL'
                      ig_data = add_tpool( lt_tpool ) ).
       WHEN 'INTF'.
@@ -5858,7 +5864,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
         id                = 'CL'
-        langu             = gc_english
+        langu             = mv_language
         object            = lv_object
       IMPORTING
         dokstate          = lv_state
@@ -5913,7 +5919,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CALL FUNCTION 'DOCU_UPD'
       EXPORTING
         id       = 'CL'
-        langu    = gc_english
+        langu    = mv_language
         object   = lv_object
       TABLES
         line     = lt_lines
@@ -5947,7 +5953,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     INSERT TEXTPOOL lv_cp
       FROM lt_tpool
-      LANGUAGE gc_english
+      LANGUAGE mv_language
       STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
@@ -6516,7 +6522,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       EXPORTING
         icf_name          = ls_key-icf_name
         icfparguid        = ls_key-icfparguid
-        icf_langu         = gc_english
+        icf_langu         = mv_language
       IMPORTING
         serv_info         = lt_serv_info
         icfdocu           = es_icfdocu
@@ -6639,7 +6645,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         icf_name                  = is_icfservice-orig_name
         icfparguid                = lv_parent
         icfdocu                   = ls_icfdocu
-        doculang                  = gc_english
+        doculang                  = mv_language
         icfhandlst                = lt_icfhndlist
         package                   = iv_package
         application               = space
@@ -6694,7 +6700,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         icf_name                  = is_icfservice-orig_name
         icfparguid                = iv_parent
         icfdocu                   = is_icfdocu
-        doculang                  = gc_english
+        doculang                  = mv_language
         icfhandlst                = lt_icfhndlist
         package                   = iv_package
         application               = space
@@ -6841,7 +6847,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         i_style_name             = lv_style_name
         i_style_active_flag      = 'A'
         i_style_variant          = '%MAIN'
-        i_style_language         = gc_english
+        i_style_language         = mv_language
       IMPORTING
         e_header                 = ls_header
       TABLES
@@ -7612,209 +7618,6 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_object_wdca DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_wdca DEFINITION INHERITING FROM lcl_objects_super FINAL.
-
-  PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
-
-    METHODS constructor
-      IMPORTING
-                is_item TYPE ty_item
-      RAISING   cx_sy_create_object_error.
-
-  PRIVATE SECTION.
-    METHODS read
-      EXPORTING es_outline TYPE wdy_cfg_outline_data
-                et_data    TYPE wdy_cfg_persist_data_appl_tab
-      RAISING   lcx_exception.
-
-    METHODS save
-      IMPORTING is_outline TYPE wdy_cfg_outline_data
-                it_data    TYPE wdy_cfg_persist_data_appl_tab
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
-
-ENDCLASS.                    "lcl_object_wdca DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_wdca IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_wdca IMPLEMENTATION.
-
-  METHOD lif_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
-
-  METHOD constructor.
-    super->constructor( is_item = is_item ).
-    RAISE EXCEPTION TYPE cx_sy_create_object_error.
-*    This serializer is currently not yet functional.
-*    Prevent instantiation in order to enable handling of WDCA by plugins
-  ENDMETHOD.                    "constructor
-
-  METHOD lif_object~exists.
-
-    DATA: ls_outline TYPE wdy_cfg_outline_data.
-
-
-    read( IMPORTING es_outline = ls_outline ).
-    rv_bool = boolc( NOT ls_outline IS INITIAL ).
-
-  ENDMETHOD.                    "lif_object~exists
-
-  METHOD save.
-    _raise 'WDCA, save not implemented'.
-
-*   below code are ideas, does not seem to work though
-*    DATA: lo_cfg       TYPE REF TO cl_wdr_cfg_persistence_appl,
-*          ls_key       TYPE wdy_config_key,
-*          ls_data      LIKE LINE OF it_data,
-*          lv_operation TYPE i,
-*          lv_name      TYPE wdy_md_object_name.
-*
-*
-*    MOVE-CORRESPONDING is_outline TO ls_key.
-*
-*    TRY.
-*        CREATE OBJECT lo_cfg
-*          EXPORTING
-*            config_key  = ls_key
-*            object_name = lv_name.
-*
-*        READ TABLE it_data INDEX 1 INTO ls_data.
-*        ASSERT sy-subrc = 0.
-*
-*        lo_cfg->set_save_data( ls_data ).
-*
-*        lv_operation = if_wdr_cfg_constants=>c_cts_operation-e_save.
-*        lo_cfg->do_next_step( CHANGING c_operation = lv_operation ).
-*
-*      CATCH cx_wd_configuration.
-*        _raise 'WDCA, save error'.
-*    ENDTRY.
-
-  ENDMETHOD.                    "save
-
-  METHOD read.
-
-    DATA: lo_cfg    TYPE REF TO cl_wdr_cfg_persistence_appl,
-          ls_key    TYPE wdy_config_key,
-          lv_exists TYPE abap_bool,
-          lx_err    TYPE REF TO cx_wd_configuration,
-          lv_name   TYPE wdy_md_object_name.
-
-
-    CLEAR et_data.
-
-    ls_key = ms_item-obj_name.
-
-    TRY.
-        CREATE OBJECT lo_cfg
-          EXPORTING
-            config_key  = ls_key
-            object_name = lv_name.
-
-        MOVE-CORRESPONDING ls_key TO es_outline.
-
-        lo_cfg->check_config_existent(
-          EXPORTING
-            i_outline_data       = es_outline
-            i_only_current_layer = abap_false
-            i_is_original        = abap_true
-          IMPORTING
-            e_is_existent        = lv_exists ).
-        IF lv_exists = abap_false.
-          CLEAR es_outline.
-          RETURN.
-        ENDIF.
-
-        es_outline = lo_cfg->read_outline_data( ).
-      CATCH cx_wd_configuration INTO lx_err.
-        IF lx_err->textid = cx_wd_configuration=>conf_config_not_exist.
-          CLEAR es_outline.
-          RETURN.
-        ELSE.
-          _raise 'WDCA, read error'.
-        ENDIF.
-    ENDTRY.
-
-    CLEAR: es_outline-devclass,
-           es_outline-author,
-           es_outline-createdon,
-           es_outline-changedby,
-           es_outline-changedon.
-    et_data = lo_cfg->read_data( ).
-
-  ENDMETHOD.                    "read
-
-  METHOD lif_object~serialize.
-
-    DATA: ls_outline TYPE wdy_cfg_outline_data,
-          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
-
-
-    read( IMPORTING es_outline = ls_outline
-                    et_data    = lt_data ).
-    IF ls_outline IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    io_xml->add( iv_name = 'OUTLINE'
-                 ig_data = ls_outline ).
-    io_xml->add( iv_name = 'DATA'
-                 ig_data = lt_data ).
-
-  ENDMETHOD.                    "serialize
-
-  METHOD lif_object~deserialize.
-
-    DATA: ls_outline TYPE wdy_cfg_outline_data,
-          lt_data    TYPE wdy_cfg_persist_data_appl_tab.
-
-
-    io_xml->read( EXPORTING iv_name = 'OUTLINE'
-                  CHANGING cg_data = ls_outline ).
-    io_xml->read( EXPORTING iv_name = 'DATA'
-                  CHANGING cg_data = lt_data ).
-
-    save( is_outline = ls_outline
-          it_data    = lt_data
-          iv_package = iv_package ).
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD lif_object~delete.
-
-    DATA: ls_key TYPE wdy_config_key.
-
-
-    ls_key = ms_item-obj_name.
-
-    cl_wdr_configuration_utils=>delete_config_4_appl( ls_key ).
-
-  ENDMETHOD.                    "delete
-
-  METHOD lif_object~jump.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = ms_item-obj_type
-        in_new_window = abap_true.
-
-  ENDMETHOD.                    "jump
-
-ENDCLASS.                    "lcl_object_wdca IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_object_wdya DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -8071,7 +7874,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
 
     SELECT SINGLE * FROM tobjt INTO ls_tobjt
       WHERE object = ms_item-obj_name
-      AND langu = gc_english.                           "#EC CI_GENBUFF
+      AND langu = mv_language.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'TOBJT no english description'.
     ENDIF.
@@ -8215,7 +8018,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
 
     SELECT SINGLE * FROM tobct INTO ls_tobct
       WHERE oclss = ms_item-obj_name
-      AND langu = gc_english.
+      AND langu = mv_language.
     IF sy-subrc <> 0.
       _raise 'TOBCT no english description'.
     ENDIF.
@@ -8339,7 +8142,7 @@ CLASS lcl_object_type IMPLEMENTATION.
     SELECT SINGLE ddtext FROM ddtypet
       INTO ev_ddtext
       WHERE typegroup = ms_item-obj_name
-      AND ddlanguage = gc_english.
+      AND ddlanguage = mv_language.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
@@ -8526,7 +8329,7 @@ CLASS lcl_object_para IMPLEMENTATION.
 
     SELECT SINGLE * FROM tparat INTO ls_tparat
       WHERE paramid = ms_item-obj_name
-      AND sprache = gc_english.                         "#EC CI_GENBUFF
+      AND sprache = mv_language.                        "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'PARA no english description'.
     ENDIF.
@@ -8566,7 +8369,7 @@ CLASS lcl_object_para IMPLEMENTATION.
         mode                = lv_mode
         global_lock         = abap_true
         devclass            = iv_package
-        master_language     = gc_english
+        master_language     = mv_language
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
@@ -8652,7 +8455,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
     SELECT SINGLE * FROM tsp1t INTO ls_tsp1t
       WHERE papart = ms_item-obj_name
-      AND spras = gc_english.             "#EC CI_GENBUFF "#EC CI_SUBRC
+      AND spras = mv_language.            "#EC CI_GENBUFF "#EC CI_SUBRC
     SELECT SINGLE * FROM tsp1d INTO ls_tsp1d
       WHERE papart = ms_item-obj_name.                    "#EC CI_SUBRC
     SELECT SINGLE * FROM tsp0p INTO ls_tsp0p
@@ -8939,17 +8742,17 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
 * todo, iv_package?
     lv_formname = ms_item-obj_name.
     lo_sf->enqueue( suppress_corr_check = space
-                    master_language     = gc_english
+                    master_language     = mv_language
                     mode                = 'INSERT'
                     formname            = lv_formname ).
 
     lo_sf->xml_upload( EXPORTING dom      = io_xml->get_raw( )
                                  formname = lv_formname
-                                 language = gc_english
+                                 language = mv_language
                        CHANGING  sform    = lo_res ).
 
     lo_res->store( im_formname = lo_res->header-formname
-                   im_language = gc_english
+                   im_language = mv_language
                    im_active   = abap_true ).
 
     lo_sf->dequeue( lv_formname ).
@@ -9047,7 +8850,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     CALL FUNCTION 'DDIF_TABL_GET'
       EXPORTING
         name          = lv_name
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd02v_wa      = ls_dd02v
         dd09l_wa      = ls_dd09l
@@ -9641,7 +9444,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd25v_wa      = ls_dd25v
       TABLES
@@ -9794,7 +9597,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd30v_wa      = ls_dd30v
       TABLES
@@ -10188,7 +9991,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         transaction             = ls_tstc-tcode
         program                 = ls_tstc-pgmna
         dynpro                  = lv_dynpro
-        language                = gc_english
+        language                = mv_language
         development_class       = iv_package
         transaction_type        = lv_type
         shorttext               = ls_tstct-ttext
@@ -10249,7 +10052,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ENDIF.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
-      WHERE sprsl = gc_english
+      WHERE sprsl = mv_language
       AND tcode = lv_transaction.                       "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'Transaction description not found'.
@@ -10335,7 +10138,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       EXPORTING
         iv_objectname      = ls_objh-objectname
         iv_objecttype      = ls_objh-objecttype
-        iv_language        = gc_english
+        iv_language        = mv_language
         iv_sel_objt        = abap_true
         iv_sel_objs        = abap_true
         iv_sel_objsl       = abap_true
@@ -10560,7 +10363,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
-    ls_t100a-masterlang = gc_english.
+    ls_t100a-masterlang = mv_language.
     ls_t100a-lastuser = sy-uname.
     ls_t100a-respuser = sy-uname.
     ls_t100a-ldate = sy-datum.
@@ -10568,7 +10371,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
-    ls_t100t-sprsl = gc_english.
+    ls_t100t-sprsl = mv_language.
     ls_t100t-arbgb = ls_t100a-arbgb.
     ls_t100t-stext = ls_t100a-stext.
     MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
@@ -10593,7 +10396,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     CLEAR ls_inf-respuser.
 
     SELECT * FROM t100 INTO TABLE lt_source
-      WHERE sprsl = gc_english
+      WHERE sprsl = mv_language
       AND arbgb = lv_msg_id
       ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
@@ -10909,7 +10712,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     SELECT SINGLE areat INTO lv_areat
       FROM tlibt
-      WHERE spras = gc_english
+      WHERE spras = mv_language
       AND area = ms_item-obj_name.                      "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       _raise 'not found in TLIBT'.
@@ -11315,7 +11118,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd25v_wa      = ls_dd25v
         dd09l_wa      = ls_dd09l
@@ -11458,7 +11261,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_READ'
       EXPORTING
-        language          = gc_english
+        language          = mv_language
         object            = lv_object
       IMPORTING
         object_attributes = ls_attributes
@@ -11526,7 +11329,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wi_tadir_obj_name   = ms_item-obj_name
         wi_tadir_author     = sy-uname
         wi_tadir_devclass   = iv_package
-        wi_tadir_masterlang = gc_english
+        wi_tadir_masterlang = mv_language
         wi_set_genflag      = abap_true
       EXCEPTIONS
         OTHERS              = 1.
@@ -11545,7 +11348,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_DELETE'
       EXPORTING
-        language           = gc_english
+        language           = mv_language
         object             = lv_object
       EXCEPTIONS
         delete_not_allowed = 1
@@ -11646,7 +11449,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
       EXPORTING
         name          = lv_name
         state         = 'A'
-        langu         = gc_english
+        langu         = mv_language
       IMPORTING
         dd40v_wa      = ls_dd40v
       TABLES
@@ -11803,7 +11606,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     INSERT TEXTPOOL ms_item-obj_name
       FROM it_tpool
-      LANGUAGE gc_english
+      LANGUAGE mv_language
       STATE 'I'.
     IF sy-subrc <> 0.
       _raise 'error from INSERT TEXTPOOL'.
@@ -13123,6 +12926,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
+      get_master_language
+        RETURNING VALUE(rv_language) TYPE spras,
       delete
         RAISING lcx_exception,
       get_dot_abapgit
@@ -13195,6 +13000,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
+                iv_language     TYPE spras
       RETURNING VALUE(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
 
@@ -13224,6 +13030,7 @@ CLASS lcl_objects DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item
+                iv_language   TYPE spras
                 is_metadata   TYPE ty_metadata OPTIONAL
       RETURNING VALUE(ri_obj) TYPE REF TO lif_object
       RAISING   lcx_exception.
@@ -13862,7 +13669,8 @@ CLASS lcl_objects IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
-            is_item = is_item.
+            is_item = is_item
+            iv_language = iv_language.
       CATCH cx_sy_create_object_error.
         TRY.
 * 2nd step, try looking for plugins
@@ -13882,7 +13690,8 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD is_supported.
 
     TRY.
-        create_object( is_item ).
+        create_object( is_item = is_item
+                       iv_language = gc_english ).
         rv_bool = abap_true.
       CATCH lcx_exception.
         rv_bool = abap_false.
@@ -13922,7 +13731,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
 
     TRY.
-        li_obj = create_object( is_item ).
+        li_obj = create_object( is_item = is_item
+                                iv_language = gc_english ).
         rv_bool = li_obj->exists( ).
       CATCH lcx_exception.
 * ignore all errors and assume the object exists
@@ -13942,7 +13752,8 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: li_obj TYPE REF TO lif_object.
 
 
-    li_obj = create_object( is_item ).
+    li_obj = create_object( is_item = is_item
+                            iv_language = gc_english ).
     li_obj->jump( ).
 
   ENDMETHOD.                    "jump
@@ -14120,10 +13931,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete_obj.
 
-    DATA: li_obj     TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO lif_object.
 
 
-    li_obj = create_object( is_item ).
+    li_obj = create_object( is_item = is_item
+                            iv_language = gc_english ).
     li_obj->delete( ).
 
   ENDMETHOD.                    "delete
@@ -14140,7 +13952,8 @@ CLASS lcl_objects IMPLEMENTATION.
       EXPORTING
         is_item = is_item.
 
-    li_obj = create_object( is_item ).
+    li_obj = create_object( is_item = is_item
+                            iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
     li_obj->serialize( lo_xml ).
@@ -14238,6 +14051,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lo_xml = lo_files->read_xml( ).
 
       li_obj = create_object( is_item     = ls_item
+                              iv_language = io_repo->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
       li_obj->mo_files = lo_files.
@@ -16025,6 +15839,8 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lcl_objects=>deserialize( me ).
 
+    CLEAR mt_local.
+
   ENDMETHOD.
 
   METHOD get_files_local.
@@ -16063,7 +15879,8 @@ CLASS lcl_repo IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      lt_files = lcl_objects=>serialize( ls_item ).
+      lt_files = lcl_objects=>serialize( is_item = ls_item
+                                         iv_language = get_master_language( ) ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = '/' && <ls_tadir>-path.
 
@@ -16111,6 +15928,10 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD get_package.
     rv_package = ms_data-package.
   ENDMETHOD.                    "get_package
+
+  METHOD get_master_language.
+    rv_language = ms_data-master_language.
+  ENDMETHOD.
 
   METHOD get_key.
     rv_key = ms_data-key.
@@ -20092,11 +19913,6 @@ FORM run.
         lv_ind       TYPE t000-ccnocliind.
 
 
-  IF sy-langu <> gc_english.
-    WRITE: / 'Use English as logon language'.               "#EC NOTEXT
-    RETURN.
-  ENDIF.
-
   SELECT SINGLE ccnocliind FROM t000 INTO lv_ind
     WHERE mandt = sy-mandt.
   IF sy-subrc = 0
@@ -20770,7 +20586,8 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     DATA: lt_files TYPE ty_files_tt.
 
-    lt_files = lcl_objects=>serialize( is_item ).
+    lt_files = lcl_objects=>serialize( is_item     = is_item
+                                       iv_language = gc_english ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -21023,6 +20840,7 @@ CLASS ltcl_object_types IMPLEMENTATION.
     lt_types = lcl_objects=>supported_list( ).
 
     LOOP AT lt_types ASSIGNING <lv_type>.
+
       CLEAR ls_item.
       ls_item-obj_type = <lv_type>.
       lv_supported = lcl_objects=>is_supported( ls_item ).
