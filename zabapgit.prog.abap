@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.1'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.2'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -1353,6 +1353,8 @@ ENDCLASS.                    "lcl_user DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_user IMPLEMENTATION.
+
+* this class is obsolete, use LCL_PERSISTENCE_USER instead
 
   METHOD read.
 
@@ -3204,13 +3206,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
 
-    TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
-    TYPES:   split TYPE c LENGTH 8.
-    TYPES: END OF ty_tpool.
-
-    TYPES: ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
-
     DATA: ms_item  TYPE ty_item.
 
     METHODS:
@@ -3223,14 +3218,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
         RAISING   lcx_exception.
-
-    CLASS-METHODS:
-      add_tpool
-        IMPORTING it_tpool        TYPE textpool_table
-        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt,
-      read_tpool
-        IMPORTING it_tpool        TYPE ty_tpool_tt
-        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
 
@@ -3476,6 +3463,13 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
   PROTECTED SECTION.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_tpool.
+        INCLUDE TYPE textpool.
+    TYPES:   split TYPE c LENGTH 8.
+    TYPES: END OF ty_tpool.
+
+    TYPES: ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
+
     TYPES: BEGIN OF ty_dynpro,
              header     TYPE rpy_dyhead,
              containers TYPE dycatt_tab,
@@ -3518,6 +3512,14 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     METHODS deserialize_cua
       IMPORTING is_cua TYPE ty_cua
       RAISING   lcx_exception.
+
+    CLASS-METHODS:
+      add_tpool
+        IMPORTING it_tpool        TYPE textpool_table
+        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt,
+      read_tpool
+        IMPORTING it_tpool        TYPE ty_tpool_tt
+        RETURNING VALUE(rt_tpool) TYPE ty_tpool_tt.
 
   PRIVATE SECTION.
     METHODS:
@@ -3958,6 +3960,40 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_dynpros
 
+  METHOD add_tpool.
+
+    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
+                   <ls_tpool_out> LIKE LINE OF rt_tpool.
+
+
+    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
+      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
+      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
+      IF <ls_tpool_out>-id = 'S'.
+        <ls_tpool_out>-split = <ls_tpool_out>-entry.
+        <ls_tpool_out>-entry = <ls_tpool_out>-entry+8.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.                    "add_tpool
+
+  METHOD read_tpool.
+
+    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
+                   <ls_tpool_out> LIKE LINE OF rt_tpool.
+
+
+    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
+      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
+      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
+      IF <ls_tpool_out>-id = 'S'.
+        CONCATENATE <ls_tpool_in>-split <ls_tpool_in>-entry
+          INTO <ls_tpool_out>-entry
+          RESPECTING BLANKS.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.                    "read_tpool
 
   METHOD deserialize_cua.
 
@@ -4072,41 +4108,6 @@ CLASS lcl_objects_super IMPLEMENTATION.
       cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
     rs_metadata-version = 'v1.0.0' ##no_text.
   ENDMETHOD.                    "get_metadata
-
-  METHOD add_tpool.
-
-    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
-                   <ls_tpool_out> LIKE LINE OF rt_tpool.
-
-
-    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
-      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
-      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
-      IF <ls_tpool_out>-id = 'S'.
-        <ls_tpool_out>-split = <ls_tpool_out>-entry.
-        <ls_tpool_out>-entry = <ls_tpool_out>-entry+8.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.                    "add_tpool
-
-  METHOD read_tpool.
-
-    FIELD-SYMBOLS: <ls_tpool_in>  LIKE LINE OF it_tpool,
-                   <ls_tpool_out> LIKE LINE OF rt_tpool.
-
-
-    LOOP AT it_tpool ASSIGNING <ls_tpool_in>.
-      APPEND INITIAL LINE TO rt_tpool ASSIGNING <ls_tpool_out>.
-      MOVE-CORRESPONDING <ls_tpool_in> TO <ls_tpool_out>.
-      IF <ls_tpool_out>-id = 'S'.
-        CONCATENATE <ls_tpool_in>-split <ls_tpool_in>-entry
-          INTO <ls_tpool_out>-entry
-          RESPECTING BLANKS.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.                    "read_tpool
 
   METHOD corr_insert.
 
@@ -5397,7 +5398,7 @@ ENDCLASS.                    "lcl_object_dtel IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_super.
+CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
