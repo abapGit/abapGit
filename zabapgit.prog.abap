@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.8.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.0'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2139,6 +2139,15 @@ CLASS lcl_convert IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_convert IMPLEMENTATION
 
+CLASS lcl_xml_pretty DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: print
+      IMPORTING iv_xml        TYPE string
+      RETURNING VALUE(rv_xml) TYPE string.
+
+ENDCLASS.
+
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
 CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
@@ -2251,6 +2260,8 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       SOURCE (c_data) = is_data
       RESULT XML rv_xml.
 
+    rv_xml = lcl_xml_pretty=>print( rv_xml ).
+
     REPLACE FIRST OCCURRENCE
       OF '<?xml version="1.0" encoding="utf-16"?>'
       IN rv_xml
@@ -2267,10 +2278,20 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD add_ignore.
 
+    DATA: lv_name TYPE string.
+
     FIELD-SYMBOLS: <ls_ignore> LIKE LINE OF ms_data-ignore.
 
+
+    lv_name = iv_path && iv_filename.
+
+    READ TABLE ms_data-ignore FROM lv_name TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      RETURN.
+    ENDIF.
+
     APPEND INITIAL LINE TO ms_data-ignore ASSIGNING <ls_ignore>.
-    <ls_ignore> = iv_path && iv_filename.
+    <ls_ignore> = lv_name.
 
   ENDMETHOD.
 
@@ -13103,6 +13124,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       delete
         RAISING lcx_exception,
+      get_dot_abapgit
+        RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       deserialize
         RAISING lcx_exception,
       refresh
@@ -14412,7 +14435,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       CONCATENATE lv_result '1' lv_bits+14(7) INTO lv_result.
       CONCATENATE lv_result '0' lv_bits+7(7) INTO lv_result.
     ELSE.
-* todo, this IF can be refactored, use shifting?
+* this IF can be refactored, use shifting?
       _raise 'Todo, encoding length'.
     ENDIF.
 
@@ -15449,6 +15472,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       mv_initialized TYPE abap_bool.
 
     METHODS:
+      handle_stage_ignore
+        IMPORTING io_stage TYPE REF TO lcl_stage
+        RAISING   lcx_exception,
       initialize
         RAISING lcx_exception,
       set_sha1
@@ -15469,10 +15495,17 @@ CLASS lcl_stage_logic DEFINITION FINAL.
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
         RETURNING VALUE(rs_files) TYPE ty_stage_files
+        RAISING   lcx_exception,
+      count
+        IMPORTING io_repo         TYPE REF TO lcl_repo_online
+        RETURNING VALUE(rv_count) TYPE i
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
+      remove_ignored
+        IMPORTING io_repo  TYPE REF TO lcl_repo_online
+        CHANGING  cs_files TYPE ty_stage_files,
       remove_identical
         CHANGING cs_files TYPE ty_stage_files.
 
@@ -15484,6 +15517,37 @@ CLASS lcl_stage_logic IMPLEMENTATION.
     rs_files-local = io_repo->get_files_local( ).
     rs_files-remote = io_repo->get_files_remote( ).
     remove_identical( CHANGING cs_files = rs_files ).
+    remove_ignored( EXPORTING io_repo = io_repo
+                    CHANGING cs_files = rs_files ).
+  ENDMETHOD.
+
+  METHOD count.
+
+    DATA: ls_files TYPE ty_stage_files.
+
+    ls_files = get( io_repo ).
+
+    rv_count = lines( ls_files-remote ) + lines( ls_files-local ).
+
+  ENDMETHOD.
+
+  METHOD remove_ignored.
+
+    DATA: lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF cs_files-remote.
+
+
+    LOOP AT cs_files-remote ASSIGNING <ls_remote>.
+      lv_index = sy-tabix.
+
+      IF io_repo->get_dot_abapgit( )->is_ignored(
+          iv_path = <ls_remote>-path
+          iv_filename = <ls_remote>-filename ) = abap_true.
+        DELETE cs_files-remote INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD remove_identical.
@@ -15863,6 +15927,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
     DATA: lv_branch TYPE ty_sha1.
 
 
+    handle_stage_ignore( io_stage ).
+
     lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
                                          io_repo    = me
                                          io_stage   = io_stage ).
@@ -15872,6 +15938,34 @@ CLASS lcl_repo_online IMPLEMENTATION.
     refresh( ).
 
   ENDMETHOD.                    "push
+
+  METHOD handle_stage_ignore.
+
+    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt,
+          ls_file  TYPE ty_file.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
+
+
+    lt_stage = io_stage->get_all( ).
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
+
+      mo_dot_abapgit->add_ignore( iv_path = <ls_stage>-file-path iv_filename = <ls_stage>-file-filename ).
+* remove it from the staging object, as the action is handled here
+
+      CLEAR ls_file.
+      ls_file-path = <ls_stage>-file-path.
+      ls_file-filename = <ls_stage>-file-filename.
+      io_stage->reset( ls_file ).
+
+      CLEAR ls_file.
+      ls_file-path     = c_root.
+      ls_file-filename = c_dot_abapgit.
+      ls_file-data     = mo_dot_abapgit->serialize( ).
+      io_stage->add( ls_file ).
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD set_sha1.
 
@@ -15924,10 +16018,9 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD deserialize.
 
-* todo
-*    IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
-*      _raise 'Current login language does not match master language'.
-*    ENDIF.
+    IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
+      _raise 'Current login language does not match master language'.
+    ENDIF.
 
     lcl_objects=>deserialize( me ).
 
@@ -15979,17 +16072,20 @@ CLASS lcl_repo IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-* todo
-*    IF mo_dot_abapgit IS INITIAL.
-*      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
-*    ENDIF.
-*    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-*    <ls_return>-file-path     = c_root.
-*    <ls_return>-file-filename = c_dot_abapgit.
-*    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
+    IF mo_dot_abapgit IS INITIAL.
+      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
+    ENDIF.
+    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+    <ls_return>-file-path     = c_root.
+    <ls_return>-file-filename = c_dot_abapgit.
+    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     mt_local = rt_files.
 
+  ENDMETHOD.
+
+  METHOD get_dot_abapgit.
+    ro_dot_abapgit = mo_dot_abapgit.
   ENDMETHOD.
 
   METHOD delete.
@@ -18407,11 +18503,18 @@ CLASS lcl_stage IMPLEMENTATION.
 
     DATA: ls_stage LIKE LINE OF mt_stage.
 
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF mt_stage.
 
-    ls_stage-file   = is_file.
-    ls_stage-method = iv_method.
 
-    INSERT ls_stage INTO TABLE mt_stage.
+    READ TABLE mt_stage WITH KEY file = is_file ASSIGNING <ls_stage>.
+    IF sy-subrc = 0.
+      <ls_stage>-file-data = is_file-data.
+      <ls_stage>-method = iv_method.
+    ELSE.
+      ls_stage-file   = is_file.
+      ls_stage-method = iv_method.
+      INSERT ls_stage INTO TABLE mt_stage.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -19669,7 +19772,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
             ro_html->add( '<a href="sapevent:pull?' &&
               io_repo->get_key( ) &&
               '">pull</a>' ).
-          ELSE.
+          ELSEIF lcl_stage_logic=>count( io_repo ) > 0.
             ro_html->add( '<a href="sapevent:stage?' &&
               io_repo->get_key( ) &&
               '">stage</a>' ).
@@ -21869,15 +21972,6 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-ENDCLASS.
-
-CLASS lcl_xml_pretty DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS: print
-      IMPORTING iv_xml        TYPE string
-      RETURNING VALUE(rv_xml) TYPE string.
 
 ENDCLASS.
 
