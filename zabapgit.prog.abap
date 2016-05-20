@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.3'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.4'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -3580,7 +3580,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
       READ TABLE it_spaces INDEX sy-tabix INTO lv_spaces.
       IF sy-subrc = 0.
-        <ls_output>-line+lv_spaces = <ls_output>-line.
+        SHIFT <ls_output>-line RIGHT BY lv_spaces PLACES IN CHARACTER MODE.
       ENDIF.
     ENDLOOP.
 
@@ -13807,6 +13807,11 @@ CLASS lcl_objects IMPLEMENTATION.
     SORT lt_tadir BY korrnum ASCENDING.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      lcl_progress=>show( iv_key     = 'Delete'
+                          iv_current = sy-tabix
+                          iv_total   = lines( lt_tadir )
+                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
