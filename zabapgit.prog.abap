@@ -21451,11 +21451,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
 
-* field master_language is new, so default it for old repositories
-    IF rs_repo-master_language IS INITIAL.
-      rs_repo-master_language = sy-langu.
-    ENDIF.
-
   ENDMETHOD.
 
   METHOD get_next_id.
@@ -21510,6 +21505,11 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     IF rs_repo IS INITIAL.
       _raise 'Inconsistent repo metadata'.
+    ENDIF.
+
+* field master_language is new, so default it for old repositories
+    IF rs_repo-master_language IS INITIAL.
+      rs_repo-master_language = sy-langu.
     ENDIF.
   ENDMETHOD.
 
