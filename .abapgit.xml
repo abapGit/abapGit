@@ -4,7 +4,9 @@
   <_--28C_DATA_--29>
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/</STARTING_FOLDER>
-   <IGNORE/>
+   <IGNORE>
+    <item>/.travis.yml</item>
+   </IGNORE>
   </_--28C_DATA_--29>
  </asx:values>
 </asx:abap>
