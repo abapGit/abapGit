@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.0'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.1'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18506,7 +18506,10 @@ CLASS lcl_stage IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF mt_stage.
 
 
-    READ TABLE mt_stage WITH KEY file = is_file ASSIGNING <ls_stage>.
+    READ TABLE mt_stage WITH KEY
+      file-path = is_file-path
+      file-filename = is_file-filename
+      ASSIGNING <ls_stage>.
     IF sy-subrc = 0.
       <ls_stage>-file-data = is_file-data.
       <ls_stage>-method = iv_method.

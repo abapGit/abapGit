@@ -6,6 +6,10 @@
    <STARTING_FOLDER>/</STARTING_FOLDER>
    <IGNORE>
     <item>/.travis.yml</item>
+    <item>/CONTRIBUTING.md</item>
+    <item>/LICENSE</item>
+    <item>/README.md</item>
+    <item>/package.json</item>
    </IGNORE>
   </_--28C_DATA_--29>
  </asx:values>
