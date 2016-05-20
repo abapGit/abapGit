@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.4'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.5'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5441,6 +5441,11 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       RETURNING VALUE(rt_source) TYPE ty_string_tt
       RAISING   lcx_exception.
 
+    METHODS read_include
+      IMPORTING is_clskey        TYPE seoclskey
+                iv_type          TYPE seop_include_ext_app
+      RETURNING VALUE(rt_source) TYPE seop_source_string.
+
     METHODS serialize_testclasses
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE ty_string_tt
@@ -5579,19 +5584,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_locals_imp.
 
-    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
-      EXPORTING
-        clskey                       = is_clskey
-        inctype                      = seop_ext_class_locals_imp
-      IMPORTING
-        source_expanded              = rt_source
-      EXCEPTIONS
-        _internal_class_not_existing = 1
-        not_existing                 = 2
-        OTHERS                       = 3.
-    IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from get_include_source, imp'.
-    ENDIF.
+    rt_source = read_include( is_clskey = is_clskey
+                              iv_type = seop_ext_class_locals_imp ).
 
     reduce( CHANGING ct_source = rt_source ).
 
@@ -5599,23 +5593,34 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_locals_def.
 
-    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
-      EXPORTING
-        clskey                       = is_clskey
-        inctype                      = seop_ext_class_locals_def
-      IMPORTING
-        source_expanded              = rt_source
-      EXCEPTIONS
-        _internal_class_not_existing = 1
-        not_existing                 = 2
-        OTHERS                       = 3.
-    IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from get_include_source, def'.
-    ENDIF.
+    rt_source = read_include( is_clskey = is_clskey
+                              iv_type = seop_ext_class_locals_def ).
 
     reduce( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.                    "serialize_locals_def
+
+  METHOD read_include.
+
+    DATA: ls_include TYPE progstruc.
+
+
+    ASSERT iv_type = seop_ext_class_locals_def
+      OR iv_type = seop_ext_class_locals_imp
+      OR iv_type = seop_ext_class_macros
+      OR iv_type = seop_ext_class_testclasses.
+
+    ls_include-rootname = is_clskey-clsname.
+    TRANSLATE ls_include-rootname USING ' ='.
+    ls_include-categorya = iv_type(1).
+    ls_include-codea = iv_type+1(4).
+
+* it looks like there is an issue in function module SEO_CLASS_GET_INCLUDE_SOURCE
+* on 750 kernels, where the READ REPORT without STATE addition does not
+* return the active version, this method is a workaround for this issue
+    READ REPORT ls_include INTO rt_source STATE 'A'.
+
+  ENDMETHOD.
 
   METHOD serialize_testclasses.
 
@@ -5623,19 +5628,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lv_line2 LIKE LINE OF rt_source.
 
 
-    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
-      EXPORTING
-        clskey                       = is_clskey
-        inctype                      = seop_ext_class_testclasses
-      IMPORTING
-        source_expanded              = rt_source
-      EXCEPTIONS
-        _internal_class_not_existing = 1
-        not_existing                 = 2
-        OTHERS                       = 3.
-    IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from get_include_source, test'.
-    ENDIF.
+    rt_source = read_include( is_clskey = is_clskey
+                              iv_type = seop_ext_class_testclasses ).
 
 * when creating classes in Eclipse it automatically generates the
 * testclass include, but it is not needed, so skip to avoid
@@ -5665,19 +5659,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_macros.
 
-    CALL FUNCTION 'SEO_CLASS_GET_INCLUDE_SOURCE'
-      EXPORTING
-        clskey                       = is_clskey
-        inctype                      = seop_ext_class_macros
-      IMPORTING
-        source_expanded              = rt_source
-      EXCEPTIONS
-        _internal_class_not_existing = 1
-        not_existing                 = 2
-        OTHERS                       = 3.
-    IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from get_include_source, macros'.
-    ENDIF.
+    rt_source = read_include( is_clskey = is_clskey
+                              iv_type = seop_ext_class_macros ).
 
     reduce( CHANGING ct_source = rt_source ).
 
