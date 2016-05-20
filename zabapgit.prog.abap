@@ -22105,6 +22105,21 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+AT SELECTION-SCREEN OUTPUT.
+"Hide Execute button from screen
+  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
+  PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
+
+  APPEND: 'CRET' TO lt_ucomm.  "Button Execute
+
+  CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
+    EXPORTING
+      p_status  = sy-pfkey
+    TABLES
+      p_exclude = lt_ucomm.
+	  
+* SAP back command re-direction
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
