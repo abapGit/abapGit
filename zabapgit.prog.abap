@@ -17692,6 +17692,11 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
       IMPORTING io_include_script TYPE REF TO lcl_html_helper OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
+    METHODS title
+      IMPORTING iv_page_title TYPE string
+                io_menu TYPE REF TO lcl_html_toolbar OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
     METHODS get_logo_src
       RETURNING VALUE(rv_src) TYPE string.
 
@@ -17720,7 +17725,30 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</head>' ).
     ro_html->add( '<body>' ).
 
-  ENDMETHOD.                    "render_head
+  ENDMETHOD.                    "render html header
+
+  METHOD title.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="header">' ).
+    ro_html->add( '<table class="mixedbar logobar"><tr>' ).
+
+    ro_html->add( '<td class="logo">' ).
+    ro_html->add( '<a href="sapevent:abapgithome">' ).
+    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| ).
+    ro_html->add( |<span>::{ iv_page_title }</span>| ).
+    ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ). "TODO REFACTOR ->beta_menu ?
+    ro_html->add( '</td>' ).
+
+    IF io_menu IS BOUND.
+      ro_html->add( io_menu->render( iv_tag = 'td' ib_right = abap_true ) ).
+    ENDIF.
+
+    ro_html->add( '</tr></table>' ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.                    "render page title
 
   METHOD footer.
 
@@ -17738,7 +17766,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '</html>').
 
-  ENDMETHOD.                    "render_footer
+  ENDMETHOD.                    "render html footer & logo
 
   METHOD styles.
 
@@ -17798,6 +17826,12 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('.logobar img {').
     ro_html->add('  border: 0px;').
+    ro_html->add('}').
+    ro_html->add('.logo span {').
+    ro_html->add('  font-weight: normal;').
+    ro_html->add('  font-size: x-large;').
+    ro_html->add('  color: #bbb;').
+    ro_html->add('  vertical-align: super;').
     ro_html->add('}').
     ro_html->add('.right {').
     ro_html->add('  text-align:right;').
@@ -17903,7 +17937,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add('</style>').
 
-  ENDMETHOD.                    "styles
+  ENDMETHOD.                    "common styles
 
   METHOD get_logo_src.
 
@@ -18030,8 +18064,8 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
 
-    METHODS render_menu
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
     CLASS-METHODS render_error
       IMPORTING ix_error       TYPE REF TO lcx_exception
@@ -18319,6 +18353,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'DIFF' ) ).
     ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
     ro_html->add( render_head( ) ).
     ro_html->add( render_diff( ) ).
@@ -19383,12 +19418,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "install
 
-  METHOD render_menu.
+  METHOD build_menu.
 
     DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-
     CREATE OBJECT lo_toolbar.
-    CREATE OBJECT ro_html.
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
@@ -19398,20 +19431,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
 
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<table class="mixedbar logobar">' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="logo">' ).
-    ro_html->add( '<a href="sapevent:abapgithome">' ).
-    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| ).
-    ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( lo_toolbar->render( iv_tag = 'td' ib_right = abap_true ) ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
-    ro_html->add( '</div>' ).
+    ro_menu = lo_toolbar.
 
-  ENDMETHOD.                    "render_menu
+  ENDMETHOD.                    "build menu
 
   METHOD render_repo_offline.
 
@@ -19894,7 +19916,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT go_user.
 
     ro_html->add( header( ) ).
-    ro_html->add( render_menu( ) ).
+    ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_repo_srv=>list( ).
