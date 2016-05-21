@@ -18936,16 +18936,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-<<<<<<< HEAD
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Stage</h1>' ).
-    ro_html->add( '</div>' ).
-=======
     ro_html->add( header( ) ).
     ro_html->add( title( iv_page_title = 'STAGE' ) ).
 
->>>>>>> t221
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_local( ) ).
     ro_html->add( '<br>' ).
@@ -21952,16 +21945,9 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-<<<<<<< HEAD
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Display</h1>' ).
-    ro_html->add( '</div>' ).
-=======
     ro_html->add( header( ) ).
     ro_html->add( title( iv_page_title = 'CONFIG' ) ).
 
->>>>>>> t221
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
     ro_html->add( ms_key-type && '<br><br>' ).
@@ -22243,16 +22229,9 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-<<<<<<< HEAD
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Database persistency</h1>' ).
-    ro_html->add( '</div>' ).
-=======
     ro_html->add( header( ) ).
     ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
 
->>>>>>> t221
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
