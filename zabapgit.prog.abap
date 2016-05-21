@@ -22315,7 +22315,7 @@ AT SELECTION-SCREEN OUTPUT.
     EXPORTING
       p_status  = sy-pfkey
     TABLES
-      p_exclude = lt_ucomm. 
+      p_exclude = lt_ucomm.
 
 * SAP back command re-direction
 AT SELECTION-SCREEN ON EXIT-COMMAND.
