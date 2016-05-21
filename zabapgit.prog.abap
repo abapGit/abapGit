@@ -17727,8 +17727,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="footer">' ).
-    ro_html->add( |<img src="{ get_logo_src( ) }" ><br>| ).
-    ro_html->add( gc_abap_version ).
+    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).
+    ro_html->add( |<span class="version">{ gc_abap_version }</span>| ).
     ro_html->add( '</div>' ).
     ro_html->add( '</body>' ).
 
@@ -17786,7 +17786,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  text-align:       center;').
     ro_html->add('}').
 
-    ro_html->add('/* HEADER & MENU */').
+    ro_html->add('/* HEADER, FOOTER & MENU */').
     ro_html->add('.mixedbar {').
     ro_html->add('  width: 98%; /*IE7 compat5 mode workaround*/').
     ro_html->add('}').
@@ -17809,6 +17809,10 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('.menu_end {').
     ro_html->add('  border-right: 0px !important;').
+    ro_html->add('}').
+    ro_html->add('span.version {').
+    ro_html->add('  display: block;').
+    ro_html->add('  margin-top: 0.3em;').
     ro_html->add('}').
 
     ro_html->add('/* REPOSITORY */'). "TODO move to the page rendering repos
