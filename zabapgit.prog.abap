@@ -17685,9 +17685,11 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
     METHODS header
+      IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     METHODS footer
+      IMPORTING io_include_script TYPE REF TO lcl_html_helper OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     METHODS get_logo_src
@@ -17709,6 +17711,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<head>' ).
     ro_html->add( '<title>abapGit</title>' ).
     ro_html->add( styles( ) ).
+
+    IF io_include_style IS BOUND.
+      ro_html->add( io_include_style ).
+    ENDIF.
+
     ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ).
     ro_html->add( '</head>' ).
     ro_html->add( '<body>' ).
@@ -17724,6 +17731,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( gc_abap_version ).
     ro_html->add( '</div>' ).
     ro_html->add( '</body>' ).
+
+    IF io_include_script IS BOUND.
+      ro_html->add( io_include_script ).
+    ENDIF.
+
     ro_html->add( '</html>').
 
   ENDMETHOD.                    "render_footer
@@ -18300,19 +18312,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_html TYPE string.
-
     CREATE OBJECT ro_html.
 
-* REDO
-    lv_html = header( )->mv_html.
-
-    "TODO: crutch, redo later after unification
-    REPLACE FIRST OCCURRENCE OF '</style>' IN lv_html
-      WITH '</style>' && styles( )->mv_html.
-    ro_html->add( lv_html ).
-* ^^^ REDO
-
+    ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
     ro_html->add( render_head( ) ).
     ro_html->add( render_diff( ) ).
