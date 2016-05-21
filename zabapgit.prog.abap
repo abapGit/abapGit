@@ -17828,8 +17828,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  border: 0px;').
     ro_html->add('}').
     ro_html->add('.logo span {').
-    ro_html->add('  font-weight: normal;').
-    ro_html->add('  font-size: x-large;').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: larger;').
     ro_html->add('  color: #bbb;').
     ro_html->add('  vertical-align: super;').
     ro_html->add('}').
@@ -18631,10 +18631,13 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * body should wrap at 72 characters
 
     ro_html->add( header( ) ).
+
+    "TODO refactor
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Commit</h1>' ).
     ro_html->add( '<a href="sapevent:cancel">Cancel</a>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_files( ) ).
     ro_html->add( '<form method="post" action="sapevent:post">' ).
@@ -18674,6 +18677,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( 'document.getElementById("cmt").focus();' ).
     ro_html->add( '</script>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
@@ -18823,8 +18827,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN 'add'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->add( ls_file ).
@@ -18935,10 +18937,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Stage</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( title( iv_page_title = 'STAGE' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_local( ) ).
     ro_html->add( '<br>' ).
@@ -21918,8 +21918,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -21948,10 +21946,8 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
                       format = cl_abap_format=>e_html_attr ).
 
     ro_html->add( header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Display</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a><br><br>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( title( iv_page_title = 'CONFIG' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
     ro_html->add( ms_key-type && '<br><br>' ).
@@ -21960,6 +21956,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ro_html->add( '<b>Data:</b><br>' ).
     ro_html->add( '<pre>' && lv_data && '</pre><br>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
@@ -22070,10 +22067,13 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
                       format = cl_abap_format=>e_html_attr ).
 
     ro_html->add( header( ) ).
+
+    "TODO refactor
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Edit</h1>' ).
     ro_html->add( '<a href="sapevent:back">Back</a><br><br>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
     ro_html->add( ms_key-type && '<br><br>' ).
@@ -22212,8 +22212,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lcl_gui=>call_page( lo_edit ).
       WHEN 'delete'.
         delete( ls_key ).
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -22236,10 +22234,8 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Database persistency</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
@@ -22267,6 +22263,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
