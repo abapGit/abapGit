@@ -15516,6 +15516,7 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING lcx_exception.
 
     CLASS-METHODS back
+      RETURNING VALUE(r_exit) TYPE xfeld
       RAISING lcx_exception.
 
     CLASS-METHODS call_page
@@ -17779,6 +17780,7 @@ CLASS lcl_gui IMPLEMENTATION.
     lv_index = lines( gt_stack ).
 
     IF lv_index = 0.
+      r_exit = 'X'.
       RETURN.
     ENDIF.
 
@@ -18258,8 +18260,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.                            "#EC NOTEXT
     ENDCASE.
@@ -18278,9 +18278,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     "TODO: crutch, redo later after unification
     REPLACE FIRST OCCURRENCE OF '</style>' IN lv_html
       WITH '</style>' && styles( )->mv_html.
-
-    "TODO: crutch, move to SAP back button (code almost ready)
-    lv_html = lv_html && '<div>' && '<a href="sapevent:back">Back</a>' && '</div>'.
     ro_html->add( lv_html ).
 * ^^^ REDO
 
@@ -22306,3 +22303,25 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+AT SELECTION-SCREEN OUTPUT.
+"Hide Execute button from screen
+  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
+  PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
+
+  APPEND: 'CRET' TO lt_ucomm.  "Button Execute
+
+  CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
+    EXPORTING
+      p_status  = sy-pfkey
+    TABLES
+      p_exclude = lt_ucomm. 
+
+* SAP back command re-direction
+AT SELECTION-SCREEN ON EXIT-COMMAND.
+  CASE sy-ucomm.
+    WHEN 'CBAC'.  "Back
+      IF lcl_gui=>back( ) IS INITIAL.
+        LEAVE TO SCREEN 1001.
+      ENDIF.
+  ENDCASE.
