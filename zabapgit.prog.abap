@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.5'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.6'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -15517,7 +15517,7 @@ CLASS lcl_gui DEFINITION FINAL.
 
     CLASS-METHODS back
       RETURNING VALUE(r_exit) TYPE xfeld
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
     CLASS-METHODS call_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
@@ -18744,8 +18744,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN 'add'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->add( ls_file ).
@@ -18858,7 +18856,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( lcl_gui=>header( ) ).
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Stage</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a>' ).
     ro_html->add( '</div>' ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_local( ) ).
@@ -21849,8 +21846,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -21881,7 +21876,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ro_html->add( lcl_gui=>header( ) ).
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Display</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a><br><br>' ).
     ro_html->add( '</div>' ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
@@ -21962,9 +21956,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-      WHEN 'back'.
-        COMMIT WORK. " release lock
-        lcl_gui=>back( ).
       WHEN 'post'.
         save( it_postdata ).
       WHEN OTHERS.
@@ -22001,7 +21992,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( lcl_gui=>header( ) ).
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Edit</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a><br><br>' ).
     ro_html->add( '</div>' ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
@@ -22141,8 +22131,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lcl_gui=>call_page( lo_edit ).
       WHEN 'delete'.
         delete( ls_key ).
-      WHEN 'back'.
-        lcl_gui=>back( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
@@ -22167,7 +22155,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add( lcl_gui=>header( ) ).
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Database persistency</h1>' ).
-    ro_html->add( '<a href="sapevent:back">Back</a>' ).
     ro_html->add( '</div>' ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<table>' ).
@@ -22305,7 +22292,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 ENDCLASS.
 
 AT SELECTION-SCREEN OUTPUT.
-"Hide Execute button from screen
+* Hide Execute button from screen
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
