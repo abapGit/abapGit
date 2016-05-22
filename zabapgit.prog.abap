@@ -2562,7 +2562,7 @@ CLASS lcl_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
 
-    IF lines( mt_diff ) < 5000.
+    IF lines( mt_diff ) < 500.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
       ENDLOOP.
@@ -2571,13 +2571,23 @@ CLASS lcl_diff IMPLEMENTATION.
           WHERE NOT result IS INITIAL AND short = abap_false.
         lv_index = sy-tabix.
 
-        DO 20 TIMES.
-          READ TABLE mt_diff INDEX lv_index ASSIGNING <ls_diff>.
-          IF sy-subrc <> 0 OR <ls_diff>-short = abap_true.
+        DO 20 TIMES. " Backward
+          READ TABLE mt_diff INDEX ( lv_index - sy-index ) ASSIGNING <ls_diff>.
+          IF sy-subrc <> 0 OR <ls_diff>-short = abap_true. " tab bound or prev marker
             EXIT.
           ENDIF.
           <ls_diff>-short = abap_true.
-          lv_index = lv_index - 1.
+*          lv_index = lv_index - 1.
+        ENDDO.
+
+        DO 20 TIMES. " Forward
+*          lv_index = lv_index + 1.
+          READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
+          IF sy-subrc <> 0. " tab bound reached
+            EXIT.
+          ENDIF.
+          CHECK <ls_diff>-short = abap_false. " skip marked
+          <ls_diff>-short = abap_true.
         ENDDO.
 
       ENDLOOP.
@@ -18146,6 +18156,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     DATA: mv_filename TYPE string,
+          ms_stats    TYPE lcl_diff=>ty_count,
           mo_diff     TYPE REF TO lcl_diff.
 
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -18222,7 +18233,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  padding: 0.5em;' ).                    "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td {' ).                  "#EC NOTEXT
-    lo_html->add( '  color: #333;' ).                       "#EC NOTEXT
+    lo_html->add( '  color: #444;' ).                       "#EC NOTEXT
     lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
     lo_html->add( '  padding-right: 0.5em;' ).              "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
@@ -18237,21 +18248,31 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  text-align: center !important;' ).     "#EC NOTEXT
     lo_html->add( '  white-space: nowrap;' ).               "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
+    lo_html->add( 'table.diff_tab tr.diff_nav_line {').     "#EC NOTEXT
+    lo_html->add( '  background-color: #edf2f9;').          "#EC NOTEXT
+    lo_html->add( '}').                                     "#EC NOTEXT
+    lo_html->add( 'table.diff_tab tr.diff_nav_line td {').  "#EC NOTEXT
+    lo_html->add( '  color: #ccc;').                        "#EC NOTEXT
+    lo_html->add( '}').                                     "#EC NOTEXT
+    lo_html->add( 'table.diff_tab code {' ).                "#EC NOTEXT
+    lo_html->add( '  font-family: inherit;' ).              "#EC NOTEXT
+    lo_html->add( '  font-size: normal;' ).                 "#EC NOTEXT
+    lo_html->add( '  white-space: pre;' ).                  "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
 
   METHOD render_head.
     DATA lo_html  TYPE REF TO lcl_html_helper.
-    DATA ls_count TYPE lcl_diff=>ty_count.
     CREATE OBJECT lo_html.
 
-    ls_count = mo_diff->stats( ).
+    ms_stats = mo_diff->stats( ).
 
     lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_ins">+ { ms_stats-insert }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_del">- { ms_stats-delete }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_upd">~ { ms_stats-update }</span>| ).
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
     lo_html->add( |{ mv_filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
@@ -18264,13 +18285,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     DATA lo_html         TYPE REF TO lcl_html_helper.
     DATA lt_diffs        TYPE lcl_diff=>ty_diffs_tt.
-    DATA lv_index        TYPE i.
     DATA lv_local        TYPE string.
     DATA lv_remote       TYPE string.
     DATA lv_attr_local   TYPE string.
     DATA lv_attr_remote  TYPE string.
     DATA lv_anchor_count LIKE sy-tabix.
     DATA lv_href         TYPE string.
+    DATA lb_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
     FIELD-SYMBOLS <ls_break> LIKE LINE OF lt_diffs.
@@ -18288,8 +18309,19 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
     lo_html->add( '</tr>' ).                                "#EC NOTEXT
 
-    LOOP AT lt_diffs ASSIGNING <ls_diff> WHERE short = abap_true.
-      lv_index  = sy-tabix.
+    LOOP AT lt_diffs ASSIGNING <ls_diff>.
+      IF <ls_diff>-short = abap_false.
+        lb_insert_nav = abap_true.
+        CONTINUE.
+      ENDIF.
+
+      IF lb_insert_nav = abap_true. " Insert separator line with navigation
+        lb_insert_nav = abap_false.
+        lo_html->add( '<tr class="diff_nav_line"><td class="num"></td>' ).
+        lo_html->add( |<td colspan="4">@@ { <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
+        lo_html->add( '</tr>' ).
+      ENDIF.
+
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
 
@@ -18305,28 +18337,24 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDCASE.
 
       CLEAR lv_href.  " Create link to next change
-      IF <ls_diff>-result = lcl_diff=>c_diff-delete
-          OR <ls_diff>-result = lcl_diff=>c_diff-insert
-          OR <ls_diff>-result = lcl_diff=>c_diff-update.
+      IF <ls_diff>-result IS NOT INITIAL.
         lv_anchor_count = lv_anchor_count + 1.
-        lv_href = |<a name="diff_{ lv_anchor_count }"|
-               && |   href="#diff_{ lv_anchor_count + 1 }|
-               && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
+        IF lv_anchor_count < ms_stats-insert + ms_stats-delete + ms_stats-update.
+          lv_href = |<a name="diff_{ lv_anchor_count }"|
+                 && |   href="#diff_{ lv_anchor_count + 1 }|
+                 && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
+        ELSE.
+          lv_href = |<a name="diff_{ lv_anchor_count }"></a>|.
+        ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><pre>{ lv_local }</pre></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><pre>{ lv_remote }</pre></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                              "#EC NOTEXT
-
-      " TODO Refactor ?
-      READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
-      IF sy-subrc = 0 AND <ls_break>-short = abap_false.
-        lo_html->add( '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>' ).
-      ENDIF.
+      lo_html->add( '<tr>' ).                                               "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).      "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ).  "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ).     "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| )."#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).                   "#EC NOTEXT
+      lo_html->add( '</tr>' ).                                              "#EC NOTEXT
 
     ENDLOOP.
 
