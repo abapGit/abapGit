@@ -17734,18 +17734,20 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<html>' ).
-    ro_html->add( '<head>' ).
-    ro_html->add( '<title>abapGit</title>' ).
+    ro_html->add( '<html>' ).                                 "#EC NOTEXT
+    ro_html->add( '<head>' ).                                 "#EC NOTEXT
+    ro_html->add( '<title>abapGit</title>' ).                 "#EC NOTEXT
     ro_html->add( styles( ) ).
 
     IF io_include_style IS BOUND.
+      ro_html->add( '<style type="text/css">' ).              "#EC NOTEXT
       ro_html->add( io_include_style ).
+      ro_html->add( '</style>' ).                             "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ).
-    ro_html->add( '</head>' ).
-    ro_html->add( '<body>' ).
+    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' )."#EC NOTEXT
+    ro_html->add( '</head>' ).                                "#EC NOTEXT
+    ro_html->add( '<body>' ).                                 "#EC NOTEXT
 
   ENDMETHOD.                    "render html header
 
@@ -17753,23 +17755,23 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<table class="mixed_height_bar"><tr>' ).
+    ro_html->add( '<div id="header">' ).                      "#EC NOTEXT
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ).   "#EC NOTEXT
 
-    ro_html->add( '<td class="logo">' ).
-    ro_html->add( '<a href="sapevent:abapgithome">' ).
-    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| ).
-    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| ).
-    ro_html->add( '</td>' ).
+    ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
+    ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
+    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| )."#EC NOTEXT
+    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
+    ro_html->add( '</td>' ).                                  "#EC NOTEXT
 
     IF io_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).
+      ro_html->add( '<td class="right">' ).                   "#EC NOTEXT
       ro_html->add( io_menu->render( ) ).
-      ro_html->add( '</td>' ).
+      ro_html->add( '</td>' ).                                "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '</tr></table>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( '</tr></table>' ).                          "#EC NOTEXT
+    ro_html->add( '</div>' ).                                 "#EC NOTEXT
 
   ENDMETHOD.                    "render page title
 
@@ -17777,17 +17779,17 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="footer">' ).
-    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).
-    ro_html->add( |<span class="version">{ gc_abap_version }</span>| ).
-    ro_html->add( '</div>' ).
-    ro_html->add( '</body>' ).
+    ro_html->add( '<div id="footer">' ).                      "#EC NOTEXT
+    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).       "#EC NOTEXT
+    ro_html->add( |<span class="version">{ gc_abap_version }</span>| )."#EC NOTEXT
+    ro_html->add( '</div>' ).                                 "#EC NOTEXT
+    ro_html->add( '</body>' ).                                "#EC NOTEXT
 
     IF io_include_script IS BOUND.
       ro_html->add( io_include_script ).
     ENDIF.
 
-    ro_html->add( '</html>').
+    ro_html->add( '</html>').                                 "#EC NOTEXT
 
   ENDMETHOD.                    "render html footer & logo
 
@@ -17888,59 +17890,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('.dropdown_content a:hover { background-color: #f1f1f1 }').
     ro_html->add('.dropdown:hover .dropdown_content { display: block; }').
     ro_html->add('.dropdown:hover .dropbtn { color: #79a0d2; }').
-
-    ro_html->add('/* REPOSITORY */'). "TODO move to the page rendering repos
-    ro_html->add('div.repo {').
-    ro_html->add('  display:          block;').
-    ro_html->add('  margin-top:       3px;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          0.7em    ').
-    ro_html->add('}').
-    ro_html->add('.repo_name span {').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: x-large;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr span {').
-    ro_html->add('  margin-right:     1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr input {').
-    ro_html->add('  background-color: transparent;').
-    ro_html->add('  border-style: none;').
-    ro_html->add('  text-overflow: ellipsis;').
-    ro_html->add('  color: grey;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab {').
-    ro_html->add('  border: 1px solid #DDD;').
-    ro_html->add('  border-radius: 3px;').
-    ro_html->add('  background: #ffffff;').
-    ro_html->add('  margin-top: 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab tr.unsupported {').
-    ro_html->add('  color: lightgrey;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td {').
-    ro_html->add('  border-top: 1px solid #eee;').
-    ro_html->add('  vertical-align: top;').
-    ro_html->add('  padding-top: 2px;').
-    ro_html->add('  padding-bottom: 2px;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.icon {').
-    ro_html->add('  padding-left: 10px;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.type {').
-    ro_html->add('  width: 3.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.object {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.files {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('  padding-right: 0.5em;').
-    ro_html->add('}').
 
     " Other and outdated (?) styles
     ro_html->add('/* MISC AND REFACTOR */').
@@ -18076,6 +18025,12 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
 
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
     CLASS-METHODS render_repo_online
       IMPORTING io_repo        TYPE REF TO lcl_repo_online
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
@@ -18110,9 +18065,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       EXPORTING ev_obj_type TYPE tadir-object
                 ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
-
-    METHODS build_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
     CLASS-METHODS render_error
       IMPORTING ix_error       TYPE REF TO lcx_exception
@@ -18220,7 +18172,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lo_html TYPE REF TO lcl_html_helper.
     CREATE OBJECT lo_html.
 
-    lo_html->add( '<style type="text/css">' ).              "#EC NOTEXT
     lo_html->add( '/* DIFF */' ).                           "#EC NOTEXT
     lo_html->add( 'div.diff {' ).                           "#EC NOTEXT
     lo_html->add( '  background-color: #f2f2f2;' ).         "#EC NOTEXT
@@ -18286,7 +18237,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  text-align: center !important;' ).     "#EC NOTEXT
     lo_html->add( '  white-space: nowrap;' ).               "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
-    lo_html->add( '</style>' ).                             "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
@@ -19487,6 +19437,64 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "build menu
 
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* REPOSITORY */').
+    ro_html->add('div.repo {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  margin-top:       3px;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding:          0.7em    ').
+    ro_html->add('}').
+    ro_html->add('.repo_name span {').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: x-large;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: smaller;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr span {').
+    ro_html->add('  margin-right:     1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr input {').
+    ro_html->add('  background-color: transparent;').
+    ro_html->add('  border-style: none;').
+    ro_html->add('  text-overflow: ellipsis;').
+    ro_html->add('  color: grey;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  border-radius: 3px;').
+    ro_html->add('  background: #ffffff;').
+    ro_html->add('  margin-top: 1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab tr.unsupported {').
+    ro_html->add('  color: lightgrey;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td {').
+    ro_html->add('  border-top: 1px solid #eee;').
+    ro_html->add('  vertical-align: top;').
+    ro_html->add('  padding-top: 2px;').
+    ro_html->add('  padding-bottom: 2px;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.icon {').
+    ro_html->add('  padding-left: 10px;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.type {').
+    ro_html->add('  width: 3.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.object {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.files {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('  padding-right: 0.5em;').
+    ro_html->add('}').
+
+  ENDMETHOD.
+
   METHOD render_repo_offline.
 
     DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt.
@@ -19967,7 +19975,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT go_user.
 
-    ro_html->add( header( ) ).
+    ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_menu( ) ) ).
 
     TRY.
