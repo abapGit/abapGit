@@ -376,16 +376,18 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt TYPE string
-                             iv_cmd TYPE string.
-    METHODS render IMPORTING iv_tag         TYPE string DEFAULT 'span'
-                             ib_right       TYPE abap_bool OPTIONAL
+                             iv_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_cmd TYPE string OPTIONAL.
+    METHODS render IMPORTING iv_as_droplist_with_label  TYPE string OPTIONAL
+                             ib_no_separator            TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_item,
-             txt TYPE string,
-             cmd TYPE string,
-           END OF ty_item.
+    TYPES:  BEGIN OF ty_item,
+              txt TYPE string,
+              cmd TYPE string,
+              sub TYPE REF TO lcl_html_toolbar,
+            END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
     DATA    mt_items TYPE tt_items.
@@ -400,40 +402,60 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
+    ASSERT iv_cmd IS INITIAL AND iv_sub IS NOT INITIAL
+      OR   iv_cmd IS NOT INITIAL AND iv_sub IS INITIAL. " Only one supplied
+
     ls_item-txt = iv_txt.
     ls_item-cmd = iv_cmd.
+    ls_item-sub = iv_sub.
     APPEND ls_item TO mt_items.
   ENDMETHOD.
 
   METHOD render.
-    DATA lo_html  TYPE REF TO lcl_html_helper.
-    DATA lv_class TYPE string.
-    FIELD-SYMBOLS <item> TYPE ty_item.
+    DATA          lo_html   TYPE REF TO lcl_html_helper.
+    DATA          lv_class  TYPE string.
+    DATA          lb_last   TYPE abap_bool.
+    FIELD-SYMBOLS <item>    TYPE ty_item.
 
     CREATE OBJECT lo_html.
 
-    IF iv_tag IS INITIAL.
-      RETURN.
+    IF iv_as_droplist_with_label IS INITIAL.
+      lv_class = 'menu'.
+    ELSE.
+      lv_class = 'dropdown'.
+      IF ib_no_separator = abap_true.
+        lv_class = lv_class && ' menu_end'.
+      ENDIF.
     ENDIF.
 
-    lv_class = 'menu'.
-    IF ib_right = abap_true.
-      lv_class = lv_class && ' right'.
-    ENDIF.
+    lo_html->add( |<div class="{ lv_class }">| ).
 
-    lo_html->add( |<{ iv_tag } class="{ lv_class }">| ).
+    IF iv_as_droplist_with_label IS NOT INITIAL.
+      lo_html->add( |<button class="dropbtn">{ iv_as_droplist_with_label }</button>| ).
+      lo_html->add( '<div class="dropdown_content">' ).
+    ENDIF.
 
     LOOP AT mt_items ASSIGNING <item>.
-      CLEAR lv_class.
-      AT LAST.
-        lv_class = ' class="menu_end"'.
-      ENDAT.
+      lb_last = boolc( sy-tabix = lines( mt_items ) ).
 
-      lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+      IF <item>-sub IS INITIAL.
+        CLEAR lv_class.
+        IF lb_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
+          lv_class = ' class="menu_end"'.
+        ENDIF.
+        lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+      ELSE.
+        lo_html->add( <item>-sub->render( iv_as_droplist_with_label = <item>-txt
+                                          ib_no_separator           = lb_last ) ).
+      ENDIF.
 
     ENDLOOP.
 
-    lo_html->add( |</{ iv_tag }>| ).
+    IF iv_as_droplist_with_label IS NOT INITIAL.
+      lo_html->add( '</div>' ).
+    ENDIF.
+
+    lo_html->add( '</div>' ).
     ro_html = lo_html.
 
   ENDMETHOD.
@@ -17732,17 +17754,18 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="header">' ).
-    ro_html->add( '<table class="mixedbar logobar"><tr>' ).
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ).
 
     ro_html->add( '<td class="logo">' ).
     ro_html->add( '<a href="sapevent:abapgithome">' ).
     ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| ).
-    ro_html->add( |<span>::{ iv_page_title }</span>| ).
-    ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ). "TODO REFACTOR ->beta_menu ?
+    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| ).
     ro_html->add( '</td>' ).
 
     IF io_menu IS BOUND.
-      ro_html->add( io_menu->render( iv_tag = 'td' ib_right = abap_true ) ).
+      ro_html->add( '<td class="right">' ).
+      ro_html->add( io_menu->render( ) ).
+      ro_html->add( '</td>' ).
     ENDIF.
 
     ro_html->add( '</tr></table>' ).
@@ -17774,6 +17797,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add('<style type="text/css">').
 
+    " Global styles
     ro_html->add('/* GLOBALS */').
     ro_html->add('body {').
     ro_html->add('  font-family: Arial,Helvetica,sans-serif;').
@@ -17783,27 +17807,20 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  color:            #4078c0;').
     ro_html->add('  text-decoration:  none;').
     ro_html->add('}').
-    ro_html->add('a:hover, a:active {').
-    ro_html->add('  text-decoration:  underline;').
-    ro_html->add('}').
+    ro_html->add('a:hover, a:active { text-decoration:  underline; }').
+    ro_html->add('img               { border: 0px; }').
 
+    " Structure div styles: header, footer, toc
     ro_html->add('/* STRUCTURE DIVS */').
     ro_html->add('div#header {').
     ro_html->add('  display:          block;').
     ro_html->add('  margin-top:       0.5em;').
-    ro_html->add('  padding-bottom:   0.5em;').
     ro_html->add('  border-bottom:    3px double lightgrey;').
     ro_html->add('}').
     ro_html->add('div#toc {').
     ro_html->add('  display:          block;').
     ro_html->add('  background-color: #f2f2f2;').
     ro_html->add('  padding:          1em;').
-    ro_html->add('}').
-    ro_html->add('div.repo {').
-    ro_html->add('  display:          block;').
-    ro_html->add('  margin-top:       3px;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          0.7em    ').
     ro_html->add('}').
     ro_html->add('div#footer {').
     ro_html->add('  display:          block;').
@@ -17814,42 +17831,71 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  text-align:       center;').
     ro_html->add('}').
 
+    " Header, footer and menu styles
     ro_html->add('/* HEADER, FOOTER & MENU */').
-    ro_html->add('.mixedbar {').
+    ro_html->add('.mixed_height_bar {').
     ro_html->add('  width: 98%; /*IE7 compat5 mode workaround*/').
     ro_html->add('}').
-    ro_html->add('.logobar tr {').
-    ro_html->add('  vertical-align: middle;').
-    ro_html->add('}').
-    ro_html->add('.logobar td.menu {').
-    ro_html->add('  padding-top: 1em;').
-    ro_html->add('}').
-    ro_html->add('.logobar img {').
-    ro_html->add('  border: 0px;').
-    ro_html->add('}').
-    ro_html->add('.logo span {').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: larger;').
-    ro_html->add('  color: #bbb;').
-    ro_html->add('  vertical-align: super;').
-    ro_html->add('}').
-    ro_html->add('.right {').
-    ro_html->add('  text-align:right;').
-    ro_html->add('}').
+    ro_html->add('div.menu  { display: inline; }').
+    ro_html->add('.right    { text-align:right; }').
+    ro_html->add('.menu_end { border-right: 0px !important; }').
     ro_html->add('.menu a {').
     ro_html->add('  padding-left: 0.5em;').
     ro_html->add('  padding-right: 0.5em;').
     ro_html->add('  border-right: 1px solid lightgrey;').
     ro_html->add('}').
-    ro_html->add('.menu_end {').
-    ro_html->add('  border-right: 0px !important;').
-    ro_html->add('}').
     ro_html->add('span.version {').
     ro_html->add('  display: block;').
     ro_html->add('  margin-top: 0.3em;').
     ro_html->add('}').
+    ro_html->add('span.page_title {').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: larger;').
+    ro_html->add('  color: #bbb;').
+    ro_html->add('  vertical-align: super;').
+    ro_html->add('}').
+
+    " Drop down styles
+    ro_html->add('/*DROP DOWN*/').
+    ro_html->add('.dropdown {').
+    ro_html->add('    position: relative;').
+    ro_html->add('    display: inline;').
+    ro_html->add('    border-right: 1px solid lightgrey;').
+    ro_html->add('}').
+    ro_html->add('.dropbtn {').
+    ro_html->add('    background-color: transparent;').
+    ro_html->add('    color: #4078c0;').
+    ro_html->add('    border: none;').
+    ro_html->add('    padding-left: 0.5em;').
+    ro_html->add('    padding-right: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content {').
+    ro_html->add('    display: none;').
+    ro_html->add('    position: absolute;').
+    ro_html->add('    background-color: #f9f9f9;').
+    ro_html->add('    right: 0;').
+    ro_html->add('    top: 1.1em; /*IE7 woraround*/').
+    ro_html->add('    border-right: 1px solid lightgrey;').
+    ro_html->add('    border-bottom: 1px solid lightgrey;').
+    ro_html->add('    min-width: 8em;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content a {').
+    ro_html->add('    padding: 0.2em;').
+    ro_html->add('    text-decoration: none;').
+    ro_html->add('    border: 0px;').
+    ro_html->add('    display: block;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content a:hover { background-color: #f1f1f1 }').
+    ro_html->add('.dropdown:hover .dropdown_content { display: block; }').
+    ro_html->add('.dropdown:hover .dropbtn { color: #79a0d2; }').
 
     ro_html->add('/* REPOSITORY */'). "TODO move to the page rendering repos
+    ro_html->add('div.repo {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  margin-top:       3px;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding:          0.7em    ').
+    ro_html->add('}').
     ro_html->add('.repo_name span {').
     ro_html->add('  font-weight: bold;').
     ro_html->add('  font-size: x-large;').
@@ -17896,6 +17942,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  padding-right: 0.5em;').
     ro_html->add('}').
 
+    " Other and outdated (?) styles
     ro_html->add('/* MISC AND REFACTOR */').
     ro_html->add('a.grey:link {').
     ro_html->add('  color: grey;').
@@ -19421,7 +19468,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD build_menu.
 
     DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lo_betasub TYPE REF TO lcl_html_toolbar.
     CREATE OBJECT lo_toolbar.
+    CREATE OBJECT lo_betasub.
+
+    lo_betasub->add( iv_txt = 'Repo config'      iv_cmd = 'sapevent:db' ).
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
@@ -19430,6 +19481,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF needs_installation( ) = abap_true.
       lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
+    lo_toolbar->add( iv_txt = '<b>&#x03b2;</b>'  iv_sub = lo_betasub ).
 
     ro_menu = lo_toolbar.
 
@@ -19445,7 +19497,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<div class="repo">' ).
     ro_html->add( '<a id="' && io_repo->get_name( ) && '"></a>' ).
-    ro_html->add( '<table class="mixedbar">' ).
+    ro_html->add( '<table class="mixed_height_bar">' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
@@ -19502,7 +19554,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="mixedbar right menu">' ).
+    ro_html->add( '<div class="mixed_height_bar right menu">' ).
 
     IF go_user->is_hidden( iv_key ) = abap_true.
       ro_html->add( '<a class="menu_end" href="sapevent:unhide?' && iv_key && '">Show</a>' ).
@@ -19540,7 +19592,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<table class="mixedbar">' ).
+    ro_html->add( '<table class="mixed_height_bar">' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
@@ -22368,8 +22420,8 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 
 ENDCLASS.
 
-AT SELECTION-SCREEN OUTPUT.
 * Hide Execute button from screen
+AT SELECTION-SCREEN OUTPUT.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
