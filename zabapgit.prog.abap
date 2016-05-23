@@ -376,16 +376,18 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt TYPE string
-                             iv_cmd TYPE string.
-    METHODS render IMPORTING iv_tag         TYPE string DEFAULT 'span'
-                             ib_right       TYPE abap_bool OPTIONAL
+                             iv_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_cmd TYPE string OPTIONAL.
+    METHODS render IMPORTING iv_as_droplist_with_label  TYPE string OPTIONAL
+                             ib_no_separator            TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_item,
-             txt TYPE string,
-             cmd TYPE string,
-           END OF ty_item.
+    TYPES:  BEGIN OF ty_item,
+              txt TYPE string,
+              cmd TYPE string,
+              sub TYPE REF TO lcl_html_toolbar,
+            END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
     DATA    mt_items TYPE tt_items.
@@ -400,40 +402,60 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
+    ASSERT iv_cmd IS INITIAL AND iv_sub IS NOT INITIAL
+      OR   iv_cmd IS NOT INITIAL AND iv_sub IS INITIAL. " Only one supplied
+
     ls_item-txt = iv_txt.
     ls_item-cmd = iv_cmd.
+    ls_item-sub = iv_sub.
     APPEND ls_item TO mt_items.
   ENDMETHOD.
 
   METHOD render.
-    DATA lo_html  TYPE REF TO lcl_html_helper.
-    DATA lv_class TYPE string.
-    FIELD-SYMBOLS <item> TYPE ty_item.
+    DATA          lo_html   TYPE REF TO lcl_html_helper.
+    DATA          lv_class  TYPE string.
+    DATA          lb_last   TYPE abap_bool.
+    FIELD-SYMBOLS <item>    TYPE ty_item.
 
     CREATE OBJECT lo_html.
 
-    IF iv_tag IS INITIAL.
-      RETURN.
+    IF iv_as_droplist_with_label IS INITIAL.
+      lv_class = 'menu'.
+    ELSE.
+      lv_class = 'dropdown'.
+      IF ib_no_separator = abap_true.
+        lv_class = lv_class && ' menu_end'.
+      ENDIF.
     ENDIF.
 
-    lv_class = 'menu'.
-    IF ib_right = abap_true.
-      lv_class = lv_class && ' right'.
-    ENDIF.
+    lo_html->add( |<div class="{ lv_class }">| ).
 
-    lo_html->add( |<{ iv_tag } class="{ lv_class }">| ).
+    IF iv_as_droplist_with_label IS NOT INITIAL.
+      lo_html->add( |<button class="dropbtn">{ iv_as_droplist_with_label }</button>| ).
+      lo_html->add( '<div class="dropdown_content">' ).
+    ENDIF.
 
     LOOP AT mt_items ASSIGNING <item>.
-      CLEAR lv_class.
-      AT LAST.
-        lv_class = ' class="menu_end"'.
-      ENDAT.
+      lb_last = boolc( sy-tabix = lines( mt_items ) ).
 
-      lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+      IF <item>-sub IS INITIAL.
+        CLEAR lv_class.
+        IF lb_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
+          lv_class = ' class="menu_end"'.
+        ENDIF.
+        lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+      ELSE.
+        lo_html->add( <item>-sub->render( iv_as_droplist_with_label = <item>-txt
+                                          ib_no_separator           = lb_last ) ).
+      ENDIF.
 
     ENDLOOP.
 
-    lo_html->add( |</{ iv_tag }>| ).
+    IF iv_as_droplist_with_label IS NOT INITIAL.
+      lo_html->add( '</div>' ).
+    ENDIF.
+
+    lo_html->add( '</div>' ).
     ro_html = lo_html.
 
   ENDMETHOD.
@@ -2540,7 +2562,7 @@ CLASS lcl_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
 
-    IF lines( mt_diff ) < 5000.
+    IF lines( mt_diff ) < 500.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
       ENDLOOP.
@@ -2549,13 +2571,23 @@ CLASS lcl_diff IMPLEMENTATION.
           WHERE NOT result IS INITIAL AND short = abap_false.
         lv_index = sy-tabix.
 
-        DO 20 TIMES.
-          READ TABLE mt_diff INDEX lv_index ASSIGNING <ls_diff>.
-          IF sy-subrc <> 0 OR <ls_diff>-short = abap_true.
+        DO 20 TIMES. " Backward
+          READ TABLE mt_diff INDEX ( lv_index - sy-index ) ASSIGNING <ls_diff>.
+          IF sy-subrc <> 0 OR <ls_diff>-short = abap_true. " tab bound or prev marker
             EXIT.
           ENDIF.
           <ls_diff>-short = abap_true.
-          lv_index = lv_index - 1.
+*          lv_index = lv_index - 1.
+        ENDDO.
+
+        DO 20 TIMES. " Forward
+*          lv_index = lv_index + 1.
+          READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
+          IF sy-subrc <> 0. " tab bound reached
+            EXIT.
+          ENDIF.
+          CHECK <ls_diff>-short = abap_false. " skip marked
+          <ls_diff>-short = abap_true.
         ENDDO.
 
       ENDLOOP.
@@ -15534,14 +15566,6 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS show_url
       IMPORTING iv_url TYPE clike.
 
-    CLASS-METHODS header
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    CLASS-METHODS footer
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    CLASS-METHODS get_logo_src
-      RETURNING VALUE(rv_src) TYPE string.
 
   PRIVATE SECTION.
     CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
@@ -15553,9 +15577,6 @@ CLASS lcl_gui DEFINITION FINAL.
 
     CLASS-METHODS view
       IMPORTING iv_html TYPE string.
-
-    CLASS-METHODS: css
-      RETURNING VALUE(rv_html) TYPE string.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -17501,258 +17522,6 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD css.
-
-    rv_html = '<style type="text/css">'            && gc_newline &&
-      'body {'                                     && gc_newline && "#EC NOTEXT
-      '  font-family: Arial,Helvetica,sans-serif;' && gc_newline && "#EC NOTEXT
-      '  background: #E8E8E8;'                     && gc_newline && "#EC NOTEXT
-      '}'                                          && gc_newline &&
-      'div#header {'                               && gc_newline &&
-      '  display:          block;'                 && gc_newline &&
-      '  margin-top:       0.5em;'                 && gc_newline &&
-      '  padding-bottom:   0.5em;'                 && gc_newline &&
-      '  border-bottom:    3px double lightgrey;'  && gc_newline &&
-      '}'                                          && gc_newline &&
-      'div#toc {'                                  && gc_newline &&
-      '  display:          block;'                 && gc_newline &&
-      '  background-color: #f2f2f2;'               && gc_newline &&
-      '  padding:          1em;'                   && gc_newline &&
-      '}'                                          && gc_newline &&
-      'div.repo {'                                 && gc_newline &&
-      '  display:          block;'                 && gc_newline &&
-      '  margin-top:       3px;'                   && gc_newline &&
-      '  background-color: #f2f2f2;'               && gc_newline &&
-      '  padding:          0.7em    '              && gc_newline &&
-      '}'                                          && gc_newline &&
-      'div#footer {'                               && gc_newline &&
-      '  display:          block;'                 && gc_newline &&
-      '  margin-bottom:    1em;'                   && gc_newline &&
-      '  padding-top:      0.5em;'                 && gc_newline &&
-      '  border-top:       3px double lightgrey;'  && gc_newline &&
-      '  color:            grey;'                  && gc_newline &&
-      '  text-align:       center;'                && gc_newline &&
-      '}'                                          && gc_newline &&
-      '.mixedbar {'                                && gc_newline &&
-      '  width: 98%; /*IE7 compat5 mode workaround, OMG it so sucks!*/' && gc_newline &&
-      '}'                           && gc_newline &&
-      '.logobar tr {'               && gc_newline &&
-      '  vertical-align: middle;'   && gc_newline &&
-      '}'                           && gc_newline &&
-      '.logobar td.menu {'          && gc_newline &&
-      '  padding-top: 1em;'         && gc_newline &&
-      '}'                           && gc_newline &&
-      '.logobar img {'              && gc_newline &&
-      '  border: 0px;'              && gc_newline &&
-      '}'                           && gc_newline &&
-      '.right {'                    && gc_newline &&
-      '  text-align:right;'         && gc_newline &&
-      '}'                           && gc_newline &&
-      '.menu a {'                   && gc_newline &&
-      '  padding-left: 0.5em;'      && gc_newline &&
-      '  padding-right: 0.5em;'     && gc_newline &&
-      '  border-right: 1px solid lightgrey;' && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.menu_end {'                          && gc_newline &&
-      '  border-right: 0px !important;'      && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_name span {'                    && gc_newline &&
-      '  font-weight: bold;'                 && gc_newline &&
-      '  font-size: x-large;'                && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_attr {'                         && gc_newline &&
-      '  color: grey;'                       && gc_newline &&
-      '  font-size: smaller;'                && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_attr span {'                    && gc_newline &&
-      '  margin-right:     1em;'             && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_attr input {'                   && gc_newline &&
-      '  background-color: transparent;'     && gc_newline &&
-      '  border-style: none;'                && gc_newline &&
-      '  text-overflow: ellipsis;'           && gc_newline &&
-      '  color: grey;'                       && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab {'                          && gc_newline &&
-      '  border: 1px solid #DDD;'            && gc_newline &&
-      '  border-radius: 3px;'                && gc_newline &&
-      '  background: #ffffff;'               && gc_newline &&
-      '  margin-top: 1em;'                   && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab tr.unsupported {'           && gc_newline &&
-      '  color: lightgrey;'                  && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab td {'                       && gc_newline &&
-      '  border-top: 1px solid #eee;'        && gc_newline &&
-      '  vertical-align: top;'               && gc_newline &&
-      '  padding-top: 2px;'                  && gc_newline &&
-      '  padding-bottom: 2px;'               && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab td.icon {'                  && gc_newline &&
-      '  padding-left: 10px;'                && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab td.type {'                  && gc_newline &&
-      '  width: 3.5em;'                      && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab td.object {'                && gc_newline &&
-      '  padding-left: 0.5em;'               && gc_newline &&
-      '}'                                    && gc_newline &&
-      '.repo_tab td.files {'                 && gc_newline &&
-      '  padding-left: 0.5em;'               && gc_newline &&
-      '  padding-right: 0.5em;'              && gc_newline &&
-      '}'                                    && gc_newline &&
-      'a, a:visited {'                       && gc_newline &&
-      '  color:            #4078c0;'         && gc_newline &&
-      '  text-decoration:  none;'            && gc_newline &&
-      '}'                                    && gc_newline &&
-      'a:hover, a:active {'                  && gc_newline &&
-      '  text-decoration:  underline;'       && gc_newline &&
-      '}'                                    && gc_newline &&
-      'a.grey:link {'               && gc_newline &&        "#EC NOTEXT
-      '  color: grey;'              && gc_newline &&        "#EC NOTEXT
-      '  font-size: smaller;'       && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'a.grey:visited {'            && gc_newline &&        "#EC NOTEXT
-      '  color: grey;'              && gc_newline &&        "#EC NOTEXT
-      '  font-size: smaller;'       && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'a.plain:link {'              && gc_newline &&        "#EC NOTEXT
-      '  color: black;'             && gc_newline &&        "#EC NOTEXT
-      '  text-decoration: none;'    && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'a.plain:visited {'           && gc_newline &&        "#EC NOTEXT
-      '  color: black;'             && gc_newline &&        "#EC NOTEXT
-      '  text-decoration: none;'    && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'a.bkg:link {'                && gc_newline &&        "#EC NOTEXT
-      '  color: #E8E8E8;'           && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'a.bkg:visited {'             && gc_newline &&        "#EC NOTEXT
-      '  color: #E8E8E8;'           && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'h1 {'                        && gc_newline &&        "#EC NOTEXT
-      '  display: inline;'          && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'h2 {'                        && gc_newline &&        "#EC NOTEXT
-      '  display: inline;'          && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'h3 {'                        && gc_newline &&        "#EC NOTEXT
-      '  display: inline;'          && gc_newline &&        "#EC NOTEXT
-      '  color: grey;'              && gc_newline &&        "#EC NOTEXT
-      '  font-weight:normal;'       && gc_newline &&        "#EC NOTEXT
-      '  font-size: smaller;'       && gc_newline &&        "#EC NOTEXT
-      '}'                           && gc_newline &&
-      'pre {'                       && gc_newline &&
-      '  display: inline;'          && gc_newline &&
-      '}'                           && gc_newline &&
-      '</style>'                    && gc_newline.
-
-  ENDMETHOD.                    "render_css
-
-  METHOD footer.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div id="footer">' ).
-    ro_html->add( |<img src="{ get_logo_src( ) }" ><br>| ).
-    ro_html->add( gc_abap_version ).
-    ro_html->add( '</div>' ).
-    ro_html->add( '</body>' ).
-    ro_html->add( '</html>').
-
-  ENDMETHOD.                    "render_footer
-
-  METHOD get_logo_src.
-
-    rv_src =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhk' &&
-      'iAAAAAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAA8' &&
-      'VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQcEkDJWmTltLStGkoDC' &&
-      'kzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8IlUByIsS1sLEu75+0fu5JXu9/et' &&
-      'AJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfaHfx02pPPd469sgk+7misYnyjpWXy5IOG' &&
-      '7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqo' &&
-      'QUwrZTAhygrFQshjfaGmZ/M7yxQtmxGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4' &&
-      'KcYLwpupoOmCO+5Z2dXPfExk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY' &&
-      '4HFyogghxN2n7SwIendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO' &&
-      '5wv2m0rqDezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJ' &&
-      'aF7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2TxpHVre' &&
-      '7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBog3tK2A2xHns0o' &&
-      'Mrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfAO+932weStno1zghps6Q7' &&
-      'GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90oMZYhRADJ+bv725vmj6Q8tHWffPK' &&
-      'UD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYOkH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5' &&
-      'lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AFCWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPiv' &&
-      'X5SssqOwuzPSqk71mN3ymw5ZtdKdmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv6' &&
-      '25tOMRd6DLF4v0lWmQO8qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLN' &&
-      'bvkh1QheV5DNNTZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlk' &&
-      'bNbmlRdeXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZebY' &&
-      '1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLzu05s/huM' &&
-      'x4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN+5s7t9jz5TgdbdB' &&
-      'MvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5RhULpL9Yaxkcj7g3QT6zK39' &&
-      '7ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjUGmZ3NOI2mdnVnX32eHZZ7903hGXfB' &&
-      'G8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8foLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955' &&
-      'iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO' &&
-      '+Uor3AIbOx7QV2TeBMPu3vKYASw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Te' &&
-      'k2R3286YzWiK4eQltk9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsq' &&
-      'iXsyClHMHK60hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqa' &&
-      'lxE0mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSronM0F' &&
-      'ytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpjFjBYTj3l4K' &&
-      'Y9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6Us5VWZbOFnQtsyMqvc' &&
-      '56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62hfrE8EWsJ3mFsGYs+OQqze+A' &&
-      '1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexMPG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5' &&
-      'bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj' &&
-      '36RWY5ZyX2WCLukvbX67ZYHFLHZtGw+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6' &&
-      'x+j4dCx6eF/BEtwDBkbx7Fe29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H' &&
-      '121hXIIZNrxou9oW6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9t' &&
-      'JD4Ur5umgPSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gf' &&
-      'sB2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83MB7XQE' &&
-      'dEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsAcqJDfIi9oayf' &&
-      'W8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdbxD1hjI5AklJ+ydgTUGz' &&
-      '6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7qBqh7uqu7f3nzdw3uKFJszEIcpq' &&
-      'VRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/FMZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI' &&
-      '37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XNDj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Sw' &&
-      'n8JFhr4VQnMze5uKnv0ugOHfUXa3ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pO' &&
-      'r6H03QRIIZeYnUj1njhid8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJs' &&
-      'SnNgZufBdCkmsN60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ' &&
-      '0kXAjnDcazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM' &&
-      'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaFqqxeZn8' &&
-      '13n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2A5g/c/qaTasC8k' &&
-      'rC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJh0oqaefF++zmzh5bu7bbX' &&
-      'rBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEFjiQlHeIXEaRIPZAVRMVCTDcQCUh8' &&
-      'LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJoUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rM' &&
-      'r5mnUyru6xl0LZAeFvDG3l83DF5199mukoJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4H' &&
-      'XW9KcrEyKApTa7s9BVSyLaF3IkSbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos' &&
-      '1vtLYCE551QKNuCKW63+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/u' &&
-      'M5/MTJlU7S/ZN6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kw' &&
-      'M3dQaVgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFobQ' &&
-      'jdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbLOcJsq1ejD' &&
-      '2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81ytrTsWLtiixpgQNLZ' &&
-      '4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOIAFjRVaZhus3g2az0WuA0wcI' &&
-      'i5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4LECKAM1gG9tVR5UP+RkqZN5s7a0yBnw' &&
-      'UEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnlnn31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyW' &&
-      'I/dmZ0R77O7LNXLBkWy9CE7Pd6XvNihQkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBd' &&
-      'wIslNL0N+JnMvravxiraFO/stm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzES' &&
-      'SlixgnhMLzXAeXp+3hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2' &&
-      'o3YJiWs5WxzbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcA' &&
-      'cw08Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7cX9K+' &&
-      'ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v/PogUvEwPUG' &&
-      'FiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2fcpUAAAAASUVORK5CYII='.
-
-  ENDMETHOD.                    "base64_logo
-
-  METHOD header.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<html>' ).
-    ro_html->add( '<head>' ).
-    ro_html->add( '<title>abapGit</title>' ).
-    ro_html->add( css( ) ).
-    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ).
-    ro_html->add( '</head>' ).
-    ro_html->add( '<body>' ).
-
-  ENDMETHOD.                    "render_head
-
   METHOD on_event.
 
     DATA: lx_exception TYPE REF TO lcx_exception.
@@ -17942,13 +17711,335 @@ CLASS lcl_persistence_user DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_main DEFINITION FINAL.
+CLASS lcl_gui_page_super DEFINITION ABSTRACT.
+  PUBLIC SECTION.
+    INTERFACES lif_gui_page ALL METHODS ABSTRACT.
+
+  PROTECTED SECTION.
+    METHODS header
+      IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS footer
+      IMPORTING io_include_script TYPE REF TO lcl_html_helper OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS title
+      IMPORTING iv_page_title TYPE string
+                io_menu TYPE REF TO lcl_html_toolbar OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS get_logo_src
+      RETURNING VALUE(rv_src) TYPE string.
+
+  PRIVATE SECTION.
+    METHODS: styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_super IMPLEMENTATION.
+
+  METHOD header.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<html>' ).                                 "#EC NOTEXT
+    ro_html->add( '<head>' ).                                 "#EC NOTEXT
+    ro_html->add( '<title>abapGit</title>' ).                 "#EC NOTEXT
+    ro_html->add( styles( ) ).
+
+    IF io_include_style IS BOUND.
+      ro_html->add( '<style type="text/css">' ).              "#EC NOTEXT
+      ro_html->add( io_include_style ).
+      ro_html->add( '</style>' ).                             "#EC NOTEXT
+    ENDIF.
+
+    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' )."#EC NOTEXT
+    ro_html->add( '</head>' ).                                "#EC NOTEXT
+    ro_html->add( '<body>' ).                                 "#EC NOTEXT
+
+  ENDMETHOD.                    "render html header
+
+  METHOD title.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="header">' ).                      "#EC NOTEXT
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ).   "#EC NOTEXT
+
+    ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
+    ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
+    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| )."#EC NOTEXT
+    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
+    ro_html->add( '</td>' ).                                  "#EC NOTEXT
+
+    IF io_menu IS BOUND.
+      ro_html->add( '<td class="right">' ).                   "#EC NOTEXT
+      ro_html->add( io_menu->render( ) ).
+      ro_html->add( '</td>' ).                                "#EC NOTEXT
+    ENDIF.
+
+    ro_html->add( '</tr></table>' ).                          "#EC NOTEXT
+    ro_html->add( '</div>' ).                                 "#EC NOTEXT
+
+  ENDMETHOD.                    "render page title
+
+  METHOD footer.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="footer">' ).                      "#EC NOTEXT
+    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).       "#EC NOTEXT
+    ro_html->add( |<span class="version">{ gc_abap_version }</span>| )."#EC NOTEXT
+    ro_html->add( '</div>' ).                                 "#EC NOTEXT
+    ro_html->add( '</body>' ).                                "#EC NOTEXT
+
+    IF io_include_script IS BOUND.
+      ro_html->add( io_include_script ).
+    ENDIF.
+
+    ro_html->add( '</html>').                                 "#EC NOTEXT
+
+  ENDMETHOD.                    "render html footer & logo
+
+  METHOD styles.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add('<style type="text/css">').
+
+    " Global styles
+    ro_html->add('/* GLOBALS */').
+    ro_html->add('body {').
+    ro_html->add('  font-family: Arial,Helvetica,sans-serif;').
+    ro_html->add('  background: #E8E8E8;').
+    ro_html->add('}').
+    ro_html->add('a, a:visited {').
+    ro_html->add('  color:            #4078c0;').
+    ro_html->add('  text-decoration:  none;').
+    ro_html->add('}').
+    ro_html->add('a:hover, a:active { text-decoration:  underline; }').
+    ro_html->add('img               { border: 0px; }').
+
+    " Structure div styles: header, footer, toc
+    ro_html->add('/* STRUCTURE DIVS */').
+    ro_html->add('div#header {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  margin-top:       0.5em;').
+    ro_html->add('  border-bottom:    3px double lightgrey;').
+    ro_html->add('}').
+    ro_html->add('div#toc {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding:          1em;').
+    ro_html->add('}').
+    ro_html->add('div#footer {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  margin-bottom:    1em;').
+    ro_html->add('  padding-top:      0.5em;').
+    ro_html->add('  border-top:       3px double lightgrey;').
+    ro_html->add('  color:            grey;').
+    ro_html->add('  text-align:       center;').
+    ro_html->add('}').
+
+    " Header, footer and menu styles
+    ro_html->add('/* HEADER, FOOTER & MENU */').
+    ro_html->add('.mixed_height_bar {').
+    ro_html->add('  width: 98%; /*IE7 compat5 mode workaround*/').
+    ro_html->add('}').
+    ro_html->add('div.menu  { display: inline; }').
+    ro_html->add('.right    { text-align:right; }').
+    ro_html->add('.menu_end { border-right: 0px !important; }').
+    ro_html->add('.menu a {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('  padding-right: 0.5em;').
+    ro_html->add('  border-right: 1px solid lightgrey;').
+    ro_html->add('}').
+    ro_html->add('span.version {').
+    ro_html->add('  display: block;').
+    ro_html->add('  margin-top: 0.3em;').
+    ro_html->add('}').
+    ro_html->add('span.page_title {').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: larger;').
+    ro_html->add('  color: #bbb;').
+    ro_html->add('  vertical-align: super;').
+    ro_html->add('}').
+
+    " Drop down styles
+    ro_html->add('/*DROP DOWN*/').
+    ro_html->add('.dropdown {').
+    ro_html->add('    position: relative;').
+    ro_html->add('    display: inline;').
+    ro_html->add('    border-right: 1px solid lightgrey;').
+    ro_html->add('}').
+    ro_html->add('.dropbtn {').
+    ro_html->add('    background-color: transparent;').
+    ro_html->add('    color: #4078c0;').
+    ro_html->add('    border: none;').
+    ro_html->add('    padding-left: 0.5em;').
+    ro_html->add('    padding-right: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content {').
+    ro_html->add('    display: none;').
+    ro_html->add('    position: absolute;').
+    ro_html->add('    background-color: #f9f9f9;').
+    ro_html->add('    right: 0;').
+    ro_html->add('    top: 1.1em; /*IE7 woraround*/').
+    ro_html->add('    border-right: 1px solid lightgrey;').
+    ro_html->add('    border-bottom: 1px solid lightgrey;').
+    ro_html->add('    min-width: 8em;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content a {').
+    ro_html->add('    padding: 0.2em;').
+    ro_html->add('    text-decoration: none;').
+    ro_html->add('    border: 0px;').
+    ro_html->add('    display: block;').
+    ro_html->add('}').
+    ro_html->add('.dropdown_content a:hover { background-color: #f1f1f1 }').
+    ro_html->add('.dropdown:hover .dropdown_content { display: block; }').
+    ro_html->add('.dropdown:hover .dropbtn { color: #79a0d2; }').
+
+    " Other and outdated (?) styles
+    ro_html->add('/* MISC AND REFACTOR */').
+    ro_html->add('a.grey:link {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: smaller;').
+    ro_html->add('}').
+    ro_html->add('a.grey:visited {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: smaller;').
+    ro_html->add('}').
+    ro_html->add('a.plain:link {').
+    ro_html->add('  color: black;').
+    ro_html->add('  text-decoration: none;').
+    ro_html->add('}').
+    ro_html->add('a.plain:visited {').
+    ro_html->add('  color: black;').
+    ro_html->add('  text-decoration: none;').
+    ro_html->add('}').
+    ro_html->add('a.bkg:link {').
+    ro_html->add('  color: #E8E8E8;').
+    ro_html->add('}').
+    ro_html->add('a.bkg:visited {').
+    ro_html->add('  color: #E8E8E8;').
+    ro_html->add('}').
+    ro_html->add('h1 {').
+    ro_html->add('  display: inline;').
+    ro_html->add('}').
+    ro_html->add('h2 {').
+    ro_html->add('  display: inline;').
+    ro_html->add('}').
+    ro_html->add('h3 {').
+    ro_html->add('  display: inline;').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-weight:normal;').
+    ro_html->add('  font-size: smaller;').
+    ro_html->add('}').
+    ro_html->add('pre {').
+    ro_html->add('  display: inline;').
+    ro_html->add('}').
+
+    ro_html->add('</style>').
+
+  ENDMETHOD.                    "common styles
+
+  METHOD get_logo_src.
+
+    rv_src =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhk' &&
+      'iAAAAAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAA8' &&
+      'VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQcEkDJWmTltLStGkoDC' &&
+      'kzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8IlUByIsS1sLEu75+0fu5JXu9/et' &&
+      'AJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfaHfx02pPPd469sgk+7misYnyjpWXy5IOG' &&
+      '7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqo' &&
+      'QUwrZTAhygrFQshjfaGmZ/M7yxQtmxGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4' &&
+      'KcYLwpupoOmCO+5Z2dXPfExk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY' &&
+      '4HFyogghxN2n7SwIendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO' &&
+      '5wv2m0rqDezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJ' &&
+      'aF7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2TxpHVre' &&
+      '7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBog3tK2A2xHns0o' &&
+      'Mrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfAO+932weStno1zghps6Q7' &&
+      'GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90oMZYhRADJ+bv725vmj6Q8tHWffPK' &&
+      'UD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYOkH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5' &&
+      'lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AFCWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPiv' &&
+      'X5SssqOwuzPSqk71mN3ymw5ZtdKdmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv6' &&
+      '25tOMRd6DLF4v0lWmQO8qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLN' &&
+      'bvkh1QheV5DNNTZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlk' &&
+      'bNbmlRdeXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZebY' &&
+      '1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLzu05s/huM' &&
+      'x4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN+5s7t9jz5TgdbdB' &&
+      'MvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5RhULpL9Yaxkcj7g3QT6zK39' &&
+      '7ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjUGmZ3NOI2mdnVnX32eHZZ7903hGXfB' &&
+      'G8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8foLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955' &&
+      'iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO' &&
+      '+Uor3AIbOx7QV2TeBMPu3vKYASw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Te' &&
+      'k2R3286YzWiK4eQltk9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsq' &&
+      'iXsyClHMHK60hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqa' &&
+      'lxE0mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSronM0F' &&
+      'ytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpjFjBYTj3l4K' &&
+      'Y9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6Us5VWZbOFnQtsyMqvc' &&
+      '56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62hfrE8EWsJ3mFsGYs+OQqze+A' &&
+      '1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexMPG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5' &&
+      'bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj' &&
+      '36RWY5ZyX2WCLukvbX67ZYHFLHZtGw+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6' &&
+      'x+j4dCx6eF/BEtwDBkbx7Fe29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H' &&
+      '121hXIIZNrxou9oW6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9t' &&
+      'JD4Ur5umgPSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gf' &&
+      'sB2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83MB7XQE' &&
+      'dEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsAcqJDfIi9oayf' &&
+      'W8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdbxD1hjI5AklJ+ydgTUGz' &&
+      '6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7qBqh7uqu7f3nzdw3uKFJszEIcpq' &&
+      'VRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/FMZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI' &&
+      '37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XNDj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Sw' &&
+      'n8JFhr4VQnMze5uKnv0ugOHfUXa3ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pO' &&
+      'r6H03QRIIZeYnUj1njhid8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJs' &&
+      'SnNgZufBdCkmsN60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ' &&
+      '0kXAjnDcazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM' &&
+      'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaFqqxeZn8' &&
+      '13n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2A5g/c/qaTasC8k' &&
+      'rC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJh0oqaefF++zmzh5bu7bbX' &&
+      'rBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEFjiQlHeIXEaRIPZAVRMVCTDcQCUh8' &&
+      'LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJoUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rM' &&
+      'r5mnUyru6xl0LZAeFvDG3l83DF5199mukoJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4H' &&
+      'XW9KcrEyKApTa7s9BVSyLaF3IkSbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos' &&
+      '1vtLYCE551QKNuCKW63+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/u' &&
+      'M5/MTJlU7S/ZN6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kw' &&
+      'M3dQaVgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFobQ' &&
+      'jdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbLOcJsq1ejD' &&
+      '2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81ytrTsWLtiixpgQNLZ' &&
+      '4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOIAFjRVaZhus3g2az0WuA0wcI' &&
+      'i5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4LECKAM1gG9tVR5UP+RkqZN5s7a0yBnw' &&
+      'UEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnlnn31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyW' &&
+      'I/dmZ0R77O7LNXLBkWy9CE7Pd6XvNihQkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBd' &&
+      'wIslNL0N+JnMvravxiraFO/stm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzES' &&
+      'SlixgnhMLzXAeXp+3hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2' &&
+      'o3YJiWs5WxzbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcA' &&
+      'cw08Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7cX9K+' &&
+      'ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v/PogUvEwPUG' &&
+      'FiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2fcpUAAAAASUVORK5CYII='.
+
+  ENDMETHOD.                    "base64_logo
+
+
+ENDCLASS.
+
+
+CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
+
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     CLASS-METHODS render_repo_online
       IMPORTING io_repo        TYPE REF TO lcl_repo_online
@@ -17984,9 +18075,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
       EXPORTING ev_obj_type TYPE tadir-object
                 ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
-
-    CLASS-METHODS render_menu
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     CLASS-METHODS render_error
       IMPORTING ix_error       TYPE REF TO lcx_exception
@@ -18055,18 +18143,20 @@ CLASS lcl_gui_page_main DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_diff DEFINITION FINAL.
+CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
-
     METHODS: constructor
       IMPORTING
         is_local  TYPE ty_file
         is_remote TYPE ty_file.
 
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
+
   PRIVATE SECTION.
     DATA: mv_filename TYPE string,
+          ms_stats    TYPE lcl_diff=>ty_count,
           mo_diff     TYPE REF TO lcl_diff.
 
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -18078,6 +18168,8 @@ ENDCLASS.
 CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
+    super->constructor( ).
+
     mv_filename = is_local-filename.
 
     CREATE OBJECT mo_diff
@@ -18091,7 +18183,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lo_html TYPE REF TO lcl_html_helper.
     CREATE OBJECT lo_html.
 
-    lo_html->add( '<style type="text/css">' ).              "#EC NOTEXT
     lo_html->add( '/* DIFF */' ).                           "#EC NOTEXT
     lo_html->add( 'div.diff {' ).                           "#EC NOTEXT
     lo_html->add( '  background-color: #f2f2f2;' ).         "#EC NOTEXT
@@ -18142,7 +18233,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  padding: 0.5em;' ).                    "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td {' ).                  "#EC NOTEXT
-    lo_html->add( '  color: #333;' ).                       "#EC NOTEXT
+    lo_html->add( '  color: #444;' ).                       "#EC NOTEXT
     lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
     lo_html->add( '  padding-right: 0.5em;' ).              "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
@@ -18157,22 +18248,31 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  text-align: center !important;' ).     "#EC NOTEXT
     lo_html->add( '  white-space: nowrap;' ).               "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
-    lo_html->add( '</style>' ).                             "#EC NOTEXT
+    lo_html->add( 'table.diff_tab tr.diff_nav_line {').     "#EC NOTEXT
+    lo_html->add( '  background-color: #edf2f9;').          "#EC NOTEXT
+    lo_html->add( '}').                                     "#EC NOTEXT
+    lo_html->add( 'table.diff_tab tr.diff_nav_line td {').  "#EC NOTEXT
+    lo_html->add( '  color: #ccc;').                        "#EC NOTEXT
+    lo_html->add( '}').                                     "#EC NOTEXT
+    lo_html->add( 'table.diff_tab code {' ).                "#EC NOTEXT
+    lo_html->add( '  font-family: inherit;' ).              "#EC NOTEXT
+    lo_html->add( '  font-size: normal;' ).                 "#EC NOTEXT
+    lo_html->add( '  white-space: pre;' ).                  "#EC NOTEXT
+    lo_html->add( '}' ).                                    "#EC NOTEXT
 
     ro_html = lo_html.
   ENDMETHOD.
 
   METHOD render_head.
     DATA lo_html  TYPE REF TO lcl_html_helper.
-    DATA ls_count TYPE lcl_diff=>ty_count.
     CREATE OBJECT lo_html.
 
-    ls_count = mo_diff->stats( ).
+    ms_stats = mo_diff->stats( ).
 
     lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_count-insert }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_del">- { ls_count-delete }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_count-update }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_ins">+ { ms_stats-insert }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_del">- { ms_stats-delete }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_upd">~ { ms_stats-update }</span>| ).
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
     lo_html->add( |{ mv_filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
@@ -18185,13 +18285,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     DATA lo_html         TYPE REF TO lcl_html_helper.
     DATA lt_diffs        TYPE lcl_diff=>ty_diffs_tt.
-    DATA lv_index        TYPE i.
     DATA lv_local        TYPE string.
     DATA lv_remote       TYPE string.
     DATA lv_attr_local   TYPE string.
     DATA lv_attr_remote  TYPE string.
     DATA lv_anchor_count LIKE sy-tabix.
     DATA lv_href         TYPE string.
+    DATA lb_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
     FIELD-SYMBOLS <ls_break> LIKE LINE OF lt_diffs.
@@ -18209,8 +18309,19 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
     lo_html->add( '</tr>' ).                                "#EC NOTEXT
 
-    LOOP AT lt_diffs ASSIGNING <ls_diff> WHERE short = abap_true.
-      lv_index  = sy-tabix.
+    LOOP AT lt_diffs ASSIGNING <ls_diff>.
+      IF <ls_diff>-short = abap_false.
+        lb_insert_nav = abap_true.
+        CONTINUE.
+      ENDIF.
+
+      IF lb_insert_nav = abap_true. " Insert separator line with navigation
+        lb_insert_nav = abap_false.
+        lo_html->add( '<tr class="diff_nav_line"><td class="num"></td>' ).
+        lo_html->add( |<td colspan="4">@@ { <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
+        lo_html->add( '</tr>' ).
+      ENDIF.
+
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
       lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
 
@@ -18226,28 +18337,24 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDCASE.
 
       CLEAR lv_href.  " Create link to next change
-      IF <ls_diff>-result = lcl_diff=>c_diff-delete
-          OR <ls_diff>-result = lcl_diff=>c_diff-insert
-          OR <ls_diff>-result = lcl_diff=>c_diff-update.
+      IF <ls_diff>-result IS NOT INITIAL.
         lv_anchor_count = lv_anchor_count + 1.
-        lv_href = |<a name="diff_{ lv_anchor_count }"|
-               && |   href="#diff_{ lv_anchor_count + 1 }|
-               && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
+        IF lv_anchor_count < ms_stats-insert + ms_stats-delete + ms_stats-update.
+          lv_href = |<a name="diff_{ lv_anchor_count }"|
+                 && |   href="#diff_{ lv_anchor_count + 1 }|
+                 && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
+        ELSE.
+          lv_href = |<a name="diff_{ lv_anchor_count }"></a>|.
+        ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><pre>{ lv_local }</pre></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><pre>{ lv_remote }</pre></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                              "#EC NOTEXT
-
-      " TODO Refactor ?
-      READ TABLE lt_diffs INDEX lv_index ASSIGNING <ls_break>.
-      IF sy-subrc = 0 AND <ls_break>-short = abap_false.
-        lo_html->add( '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td></tr>' ).
-      ENDIF.
+      lo_html->add( '<tr>' ).                                               "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).      "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ).  "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ).     "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| )."#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).                   "#EC NOTEXT
+      lo_html->add( '</tr>' ).                                              "#EC NOTEXT
 
     ENDLOOP.
 
@@ -18268,24 +18375,15 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_html TYPE string.
-
     CREATE OBJECT ro_html.
 
-* REDO
-    lv_html = lcl_gui=>header( )->mv_html.
-
-    "TODO: crutch, redo later after unification
-    REPLACE FIRST OCCURRENCE OF '</style>' IN lv_html
-      WITH '</style>' && styles( )->mv_html.
-    ro_html->add( lv_html ).
-* ^^^ REDO
-
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'DIFF' ) ).
     ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
     ro_html->add( render_head( ) ).
     ro_html->add( render_diff( ) ).
     ro_html->add( '</div>' ).                               "#EC NOTEXT
-    ro_html->add( lcl_gui=>footer( ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
@@ -18370,7 +18468,7 @@ CLASS lcl_stage IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_commit DEFINITION FINAL.
+CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
     METHODS constructor
@@ -18378,7 +18476,8 @@ CLASS lcl_gui_page_commit DEFINITION FINAL.
                 io_stage TYPE REF TO lcl_stage
       RAISING   lcx_exception.
 
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
@@ -18410,6 +18509,8 @@ ENDCLASS.
 CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD constructor.
+    super->constructor( ).
+
     mo_repo  = io_repo.
     mo_stage = io_stage.
   ENDMETHOD.
@@ -18554,11 +18655,14 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    ro_html->add( lcl_gui=>header( ) ).
+    ro_html->add( header( ) ).
+
+    "TODO refactor
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Commit</h1>' ).
     ro_html->add( '<a href="sapevent:cancel">Cancel</a>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_files( ) ).
     ro_html->add( '<form method="post" action="sapevent:post">' ).
@@ -18598,20 +18702,22 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( 'document.getElementById("cmt").focus();' ).
     ro_html->add( '</script>' ).
     ro_html->add( '</div>' ).
-    ro_html->add( lcl_gui=>footer( ) ).
+
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_stage DEFINITION FINAL.
+CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
     METHODS constructor
       IMPORTING io_repo TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo   TYPE REF TO lcl_repo_online,
@@ -18643,6 +18749,8 @@ ENDCLASS.
 CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
+    super->constructor( ).
+
     mo_repo = io_repo.
     refresh( ).
   ENDMETHOD.
@@ -18853,10 +18961,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Stage</h1>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( header( ) ).
+    ro_html->add( title( iv_page_title = 'STAGE' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_local( ) ).
     ro_html->add( '<br>' ).
@@ -18870,16 +18977,17 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( '</div>' ).
-    ro_html->add( lcl_gui=>footer( ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db DEFINITION FINAL.
+CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     METHODS:
@@ -19335,12 +19443,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "install
 
-  METHOD render_menu.
+  METHOD build_menu.
 
     DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-
+    DATA lo_betasub TYPE REF TO lcl_html_toolbar.
     CREATE OBJECT lo_toolbar.
-    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_betasub.
+
+    lo_betasub->add( iv_txt = 'Repo config'      iv_cmd = 'sapevent:db' ).
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
@@ -19349,21 +19459,69 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF needs_installation( ) = abap_true.
       lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
+    lo_toolbar->add( iv_txt = '<b>&#x03b2;</b>'  iv_sub = lo_betasub ).
 
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<table class="mixedbar logobar">' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="logo">' ).
-    ro_html->add( '<a href="sapevent:abapgithome">' ).
-    ro_html->add( |<img src="{ lcl_gui=>get_logo_src( ) }"></a>| ).
-    ro_html->add( '<a href="sapevent:db" class="bkg">d</a>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( lo_toolbar->render( iv_tag = 'td' ib_right = abap_true ) ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
-    ro_html->add( '</div>' ).
+    ro_menu = lo_toolbar.
 
-  ENDMETHOD.                    "render_menu
+  ENDMETHOD.                    "build menu
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* REPOSITORY */').
+    ro_html->add('div.repo {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  margin-top:       3px;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding:          0.7em    ').
+    ro_html->add('}').
+    ro_html->add('.repo_name span {').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: x-large;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: smaller;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr span {').
+    ro_html->add('  margin-right:     1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr input {').
+    ro_html->add('  background-color: transparent;').
+    ro_html->add('  border-style: none;').
+    ro_html->add('  text-overflow: ellipsis;').
+    ro_html->add('  color: grey;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  border-radius: 3px;').
+    ro_html->add('  background: #ffffff;').
+    ro_html->add('  margin-top: 1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab tr.unsupported {').
+    ro_html->add('  color: lightgrey;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td {').
+    ro_html->add('  border-top: 1px solid #eee;').
+    ro_html->add('  vertical-align: top;').
+    ro_html->add('  padding-top: 2px;').
+    ro_html->add('  padding-bottom: 2px;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.icon {').
+    ro_html->add('  padding-left: 10px;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.type {').
+    ro_html->add('  width: 3.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.object {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab td.files {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('  padding-right: 0.5em;').
+    ro_html->add('}').
+
+  ENDMETHOD.
 
   METHOD render_repo_offline.
 
@@ -19375,7 +19533,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<div class="repo">' ).
     ro_html->add( '<a id="' && io_repo->get_name( ) && '"></a>' ).
-    ro_html->add( '<table class="mixedbar">' ).
+    ro_html->add( '<table class="mixed_height_bar">' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
@@ -19432,7 +19590,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="mixedbar right menu">' ).
+    ro_html->add( '<div class="mixed_height_bar right menu">' ).
 
     IF go_user->is_hidden( iv_key ) = abap_true.
       ro_html->add( '<a class="menu_end" href="sapevent:unhide?' && iv_key && '">Show</a>' ).
@@ -19470,7 +19628,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<table class="mixedbar">' ).
+    ro_html->add( '<table class="mixed_height_bar">' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
@@ -19845,8 +20003,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT go_user.
 
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( render_menu( ) ).
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_repo_srv=>list( ).
@@ -19877,7 +20035,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    ro_html->add( lcl_gui=>footer( ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
@@ -21824,10 +21982,11 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_display DEFINITION FINAL.
+CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
@@ -21840,6 +21999,7 @@ ENDCLASS.
 CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   METHOD constructor.
+    super->constructor( ).
     ms_key = is_key.
   ENDMETHOD.
 
@@ -21873,10 +22033,9 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Display</h1>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( header( ) ).
+    ro_html->add( title( iv_page_title = 'CONFIG' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
     ro_html->add( ms_key-type && '<br><br>' ).
@@ -21885,16 +22044,18 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ro_html->add( '<b>Data:</b><br>' ).
     ro_html->add( '<pre>' && lv_data && '</pre><br>' ).
     ro_html->add( '</div>' ).
-    ro_html->add( lcl_gui=>footer( ) ).
+
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_edit DEFINITION FINAL.
+CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
 
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
@@ -21911,6 +22072,7 @@ ENDCLASS.
 CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD constructor.
+    super->constructor( ).
     ms_key = is_key.
   ENDMETHOD.
 
@@ -21989,10 +22151,13 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( lcl_gui=>header( ) ).
+    ro_html->add( header( ) ).
+
+    "TODO refactor
     ro_html->add( '<div id="header">' ).
     ro_html->add( '<h1>Edit</h1>' ).
     ro_html->add( '</div>' ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<b>Type:</b><br>' ).
     ro_html->add( ms_key-type && '<br><br>' ).
@@ -22006,7 +22171,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( lv_data ).
     ro_html->add( '</textarea><br><input type="submit" value="Update"></form>' ).
     ro_html->add( '</div>' ).
-    ro_html->add( lcl_gui=>footer( ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
@@ -22152,10 +22317,9 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( lcl_gui=>header( ) ).
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Database persistency</h1>' ).
-    ro_html->add( '</div>' ).
+    ro_html->add( header( ) ).
+    ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
+
     ro_html->add( '<div id="toc">' ).
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
@@ -22183,7 +22347,8 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
-    ro_html->add( lcl_gui=>footer( ) ).
+
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
@@ -22291,8 +22456,8 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 
 ENDCLASS.
 
-AT SELECTION-SCREEN OUTPUT.
 * Hide Execute button from screen
+AT SELECTION-SCREEN OUTPUT.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
