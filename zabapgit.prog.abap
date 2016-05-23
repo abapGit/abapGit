@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.6'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.7'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17744,6 +17744,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->add( '<!DOCTYPE html>' ).                        "#EC NOTEXT
     ro_html->add( '<html>' ).                                 "#EC NOTEXT
     ro_html->add( '<head>' ).                                 "#EC NOTEXT
     ro_html->add( '<title>abapGit</title>' ).                 "#EC NOTEXT
@@ -19450,7 +19451,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
     CREATE OBJECT lo_betasub.
 
-    lo_betasub->add( iv_txt = 'Repo config'      iv_cmd = 'sapevent:db' ).
+    lo_betasub->add( iv_txt = 'Database util'    iv_cmd = 'sapevent:db' ).
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
