@@ -315,7 +315,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
   METHOD _add_str.
     CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
-      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source)'.
+      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source|!)'.
 
     DATA lv_tags        TYPE i.
     DATA lv_tags_open   TYPE i.
