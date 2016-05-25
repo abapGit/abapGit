@@ -15566,14 +15566,17 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-METHODS show_url
       IMPORTING iv_url TYPE clike.
 
+    CLASS-METHODS cache_image
+      IMPORTING iv_url    TYPE char40
+                iv_base64 TYPE string.
+
+    CLASS-METHODS startup
+      RAISING lcx_exception.
 
   PRIVATE SECTION.
     CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
                 gt_stack       TYPE TABLE OF REF TO lif_gui_page,
                 go_html_viewer TYPE REF TO cl_gui_html_viewer.
-
-    CLASS-METHODS startup
-      RAISING lcx_exception.
 
     CLASS-METHODS view
       IMPORTING iv_html TYPE string.
@@ -17639,6 +17642,42 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "view
 
+  METHOD cache_image.
+
+    DATA lv_xtmp  TYPE xstring.
+    DATA lv_size  TYPE int4.
+    DATA lt_xdata TYPE TABLE OF w3_mime. " RAW255
+
+    CALL FUNCTION 'SSFC_BASE64_DECODE'
+      EXPORTING
+        b64data = iv_base64
+      IMPORTING
+        bindata = lv_xtmp
+      EXCEPTIONS
+        OTHERS  = 1.
+
+    ASSERT sy-subrc = 0. " Image data error
+
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+      EXPORTING
+        buffer        = lv_xtmp
+      IMPORTING
+        output_length = lv_size
+      TABLES
+        binary_tab    = lt_xdata.
+
+    go_html_viewer->load_data(
+      EXPORTING  type         = 'image'
+                 subtype      = 'png'
+                 size         = lv_size
+                 url          = iv_url
+      CHANGING   data_table   = lt_xdata
+      EXCEPTIONS OTHERS       = 1 ).
+
+    ASSERT sy-subrc = 0. " Image data error
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_gui IMPLEMENTATION
 
 CLASS lcl_persistence_user DEFINITION FINAL.
@@ -17714,6 +17753,7 @@ ENDCLASS.
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_gui_page ALL METHODS ABSTRACT.
+    CLASS-METHODS class_constructor.
 
   PROTECTED SECTION.
     METHODS header
@@ -17729,16 +17769,106 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
                 io_menu TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
-    METHODS get_logo_src
-      RETURNING VALUE(rv_src) TYPE string.
-
   PRIVATE SECTION.
-    METHODS: styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    CLASS-METHODS load_images.
+    METHODS styles RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
 CLASS lcl_gui_page_super IMPLEMENTATION.
+
+  METHOD class_constructor.
+    load_images( ).
+  ENDMETHOD.
+
+  METHOD load_images.
+
+    DATA lv_image TYPE string.
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
+      && 'AAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9y'
+      && 'Z5vuPBoAAA8VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQ'
+      && 'cEkDJWmTltLStGkoDCkzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8Il'
+      && 'UByIsS1sLEu75+0fu5JXu9/etAJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfa'
+      && 'Hfx02pPPd469sgk+7misYnyjpWXy5IOG7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu'
+      && '2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqoQUwrZTAhygrFQshjfaGmZ/M7yxQtm'
+      && 'xGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4KcYLwpupoOmCO+5Z2dXPfE'
+      && 'xk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY4HFyogghxN2n7Sw'
+      && 'IendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO5wv2m0rq'
+      && 'DezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJa'
+      && 'F7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2T'
+      && 'xpHVre7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBo'
+      && 'g3tK2A2xHns0oMrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfA'
+      && 'O+932weStno1zghps6Q7GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90o'
+      && 'MZYhRADJ+bv725vmj6Q8tHWffPKUD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYO'
+      && 'kH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AF'
+      && 'CWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPivX5SssqOwuzPSqk71mN3ymw5ZtdK'
+      && 'dmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv625tOMRd6DLF4v0lWmQO8'
+      && 'qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLNbvkh1QheV5DNN'
+      && 'TZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlkbNbmlR'
+      && 'deXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZeb'
+      && 'Y1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLz'
+      && 'u05s/huMx4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN'
+      && '+5s7t9jz5TgdbdBMvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5R'
+      && 'hULpL9Yaxkcj7g3QT6zK397ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjU'
+      && 'GmZ3NOI2mdnVnX32eHZZ7903hGXfBG8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8f'
+      && 'oLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48'
+      && 'ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO+Uor3AIbOx7QV2TeBMPu3vKYA'
+      && 'Sw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Tek2R3286YzWiK4eQltk'
+      && '9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsqiXsyClHMHK6'
+      && '0hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqalxE0'
+      && 'mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSron'
+      && 'M0FytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpj'
+      && 'FjBYTj3l4KY9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6U'
+      && 's5VWZbOFnQtsyMqvc56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62'
+      && 'hfrE8EWsJ3mFsGYs+OQqze+A1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexM'
+      && 'PG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0'
+      && 'J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj36RWY5ZyX2WCLukvbX67ZYHFLHZtGw'
+      && '+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6x+j4dCx6eF/BEtwDBkbx7Fe'
+      && '29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H121hXIIZNrxou9oW'
+      && '6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9tJD4Ur5umg'
+      && 'PSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gfsB'
+      && '2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83M'
+      && 'B7XQEdEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsA'
+      && 'cqJDfIi9oayfW8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdb'
+      && 'xD1hjI5AklJ+ydgTUGz6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7q'
+      && 'Bqh7uqu7f3nzdw3uKFJszEIcpqVRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/F'
+      && 'MZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XN'
+      && 'Dj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Swn8JFhr4VQnMze5uKnv0ugOHfUXa3'
+      && 'ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pOr6H03QRIIZeYnUj1njhid'
+      && '8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJsSnNgZufBdCkmsN'
+      && '60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ0kXAjnD'
+      && 'cazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM'
+      && 'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaF'
+      && 'qqxeZn813n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2'
+      && 'A5g/c/qaTasC8krC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJ'
+      && 'h0oqaefF++zmzh5bu7bbXrBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEF'
+      && 'jiQlHeIXEaRIPZAVRMVCTDcQCUh8LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJ'
+      && 'oUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rMr5mnUyru6xl0LZAeFvDG3l83DF5199muk'
+      && 'oJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4HXW9KcrEyKApTa7s9BVSyLaF3Ik'
+      && 'SbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos1vtLYCE551QKNuCKW63'
+      && '+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/uM5/MTJlU7S/Z'
+      && 'N6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kwM3dQa'
+      && 'VgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFo'
+      && 'bQjdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbL'
+      && 'OcJsq1ejD2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81y'
+      && 'trTsWLtiixpgQNLZ4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOI'
+      && 'AFjRVaZhus3g2az0WuA0wcIi5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4L'
+      && 'ECKAM1gG9tVR5UP+RkqZN5s7a0yBnwUEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnln'
+      && 'n31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyWI/dmZ0R77O7LNXLBkWy9CE7Pd6XvNih'
+      && 'QkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBdwIslNL0N+JnMvravxiraFO/s'
+      && 'tm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzESSlixgnhMLzXAeXp+3'
+      && 'hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2o3YJiWs5Wx'
+      && 'zbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcAcw0'
+      && '8Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7c'
+      && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
+      && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
+      && 'cpUAAAAASUVORK5CYII='.
+
+    lcl_gui=>cache_image( iv_url = 'img/logo' iv_base64 = lv_image ).
+
+  ENDMETHOD.
 
   METHOD header.
 
@@ -17771,7 +17901,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
     ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
-    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| )."#EC NOTEXT
+    ro_html->add( '<img src="img/logo"></a>' ).               "#EC NOTEXT
     ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
     ro_html->add( '</td>' ).                                  "#EC NOTEXT
 
@@ -17791,7 +17921,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="footer">' ).                      "#EC NOTEXT
-    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).       "#EC NOTEXT
+    ro_html->add( '<img src="img/logo" >' ).                  "#EC NOTEXT
     ro_html->add( |<span class="version">{ gc_abap_version }</span>| )."#EC NOTEXT
     ro_html->add( '</div>' ).                                 "#EC NOTEXT
     ro_html->add( '</body>' ).                                "#EC NOTEXT
@@ -17945,84 +18075,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('</style>').
 
   ENDMETHOD.                    "common styles
-
-  METHOD get_logo_src.
-
-    rv_src =
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhk' &&
-      'iAAAAAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAA8' &&
-      'VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQcEkDJWmTltLStGkoDC' &&
-      'kzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8IlUByIsS1sLEu75+0fu5JXu9/et' &&
-      'AJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfaHfx02pPPd469sgk+7misYnyjpWXy5IOG' &&
-      '7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqo' &&
-      'QUwrZTAhygrFQshjfaGmZ/M7yxQtmxGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4' &&
-      'KcYLwpupoOmCO+5Z2dXPfExk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY' &&
-      '4HFyogghxN2n7SwIendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO' &&
-      '5wv2m0rqDezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJ' &&
-      'aF7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2TxpHVre' &&
-      '7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBog3tK2A2xHns0o' &&
-      'Mrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfAO+932weStno1zghps6Q7' &&
-      'GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90oMZYhRADJ+bv725vmj6Q8tHWffPK' &&
-      'UD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYOkH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5' &&
-      'lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AFCWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPiv' &&
-      'X5SssqOwuzPSqk71mN3ymw5ZtdKdmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv6' &&
-      '25tOMRd6DLF4v0lWmQO8qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLN' &&
-      'bvkh1QheV5DNNTZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlk' &&
-      'bNbmlRdeXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZebY' &&
-      '1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLzu05s/huM' &&
-      'x4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN+5s7t9jz5TgdbdB' &&
-      'MvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5RhULpL9Yaxkcj7g3QT6zK39' &&
-      '7ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjUGmZ3NOI2mdnVnX32eHZZ7903hGXfB' &&
-      'G8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8foLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955' &&
-      'iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO' &&
-      '+Uor3AIbOx7QV2TeBMPu3vKYASw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Te' &&
-      'k2R3286YzWiK4eQltk9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsq' &&
-      'iXsyClHMHK60hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqa' &&
-      'lxE0mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSronM0F' &&
-      'ytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpjFjBYTj3l4K' &&
-      'Y9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6Us5VWZbOFnQtsyMqvc' &&
-      '56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62hfrE8EWsJ3mFsGYs+OQqze+A' &&
-      '1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexMPG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5' &&
-      'bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj' &&
-      '36RWY5ZyX2WCLukvbX67ZYHFLHZtGw+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6' &&
-      'x+j4dCx6eF/BEtwDBkbx7Fe29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H' &&
-      '121hXIIZNrxou9oW6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9t' &&
-      'JD4Ur5umgPSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gf' &&
-      'sB2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83MB7XQE' &&
-      'dEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsAcqJDfIi9oayf' &&
-      'W8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdbxD1hjI5AklJ+ydgTUGz' &&
-      '6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7qBqh7uqu7f3nzdw3uKFJszEIcpq' &&
-      'VRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/FMZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI' &&
-      '37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XNDj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Sw' &&
-      'n8JFhr4VQnMze5uKnv0ugOHfUXa3ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pO' &&
-      'r6H03QRIIZeYnUj1njhid8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJs' &&
-      'SnNgZufBdCkmsN60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ' &&
-      '0kXAjnDcazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM' &&
-      'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaFqqxeZn8' &&
-      '13n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2A5g/c/qaTasC8k' &&
-      'rC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJh0oqaefF++zmzh5bu7bbX' &&
-      'rBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEFjiQlHeIXEaRIPZAVRMVCTDcQCUh8' &&
-      'LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJoUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rM' &&
-      'r5mnUyru6xl0LZAeFvDG3l83DF5199mukoJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4H' &&
-      'XW9KcrEyKApTa7s9BVSyLaF3IkSbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos' &&
-      '1vtLYCE551QKNuCKW63+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/u' &&
-      'M5/MTJlU7S/ZN6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kw' &&
-      'M3dQaVgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFobQ' &&
-      'jdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbLOcJsq1ejD' &&
-      '2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81ytrTsWLtiixpgQNLZ' &&
-      '4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOIAFjRVaZhus3g2az0WuA0wcI' &&
-      'i5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4LECKAM1gG9tVR5UP+RkqZN5s7a0yBnw' &&
-      'UEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnlnn31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyW' &&
-      'I/dmZ0R77O7LNXLBkWy9CE7Pd6XvNihQkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBd' &&
-      'wIslNL0N+JnMvravxiraFO/stm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzES' &&
-      'SlixgnhMLzXAeXp+3hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2' &&
-      'o3YJiWs5WxzbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcA' &&
-      'cw08Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7cX9K+' &&
-      'ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v/PogUvEwPUG' &&
-      'FiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2fcpUAAAAASUVORK5CYII='.
-
-  ENDMETHOD.                    "base64_logo
-
 
 ENDCLASS.
 
@@ -20065,6 +20117,7 @@ FORM run.
 
   TRY.
       lcl_persistence_migrate=>run( ).
+      lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
 
       CREATE OBJECT lo_main.
       lcl_gui=>call_page( lo_main ).
