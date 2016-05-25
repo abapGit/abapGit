@@ -12934,6 +12934,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_files) TYPE ty_files_item_tt
         RAISING   lcx_exception,
+      get_local_checksums
+        RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
         RAISING   lcx_exception,
@@ -12949,6 +12951,9 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING lcx_exception,
       refresh
         RAISING lcx_exception,
+      build_local_checksums
+        RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt
+        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.
@@ -12963,12 +12968,11 @@ CLASS lcl_repo DEFINITION ABSTRACT.
           ms_data        TYPE lcl_persistence_repo=>ty_repo.
 
     METHODS:
-      save_local_checksums
-        RAISING lcx_exception,
       find_dot_abapgit
         RAISING lcx_exception,
-      set_local_checksums
-        IMPORTING it_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt
+      set
+        IMPORTING iv_sha1      TYPE ty_sha1 OPTIONAL
+                  it_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
@@ -13669,7 +13673,9 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF st_obj_serializer_map.
 
-    READ TABLE st_obj_serializer_map INTO ls_obj_serializer_map WITH KEY item = is_item.
+
+    READ TABLE st_obj_serializer_map
+      INTO ls_obj_serializer_map WITH KEY item = is_item.
     IF sy-subrc = 0.
       lv_class_name = ls_obj_serializer_map-metadata-class.
     ELSEIF is_metadata IS NOT INITIAL.
@@ -14577,7 +14583,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_len = 65536.
         ENDIF.
 
-        CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
+        CONCATENATE lv_result lv_base+lv_offset(lv_len)
+          INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
         lv_len = lv_x.
@@ -14790,7 +14797,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
-        ls_object-sha1 = lcl_hash=>sha1( iv_type = lv_type iv_data = lv_decompressed ).
+        ls_object-sha1 = lcl_hash=>sha1(
+          iv_type = lv_type
+          iv_data = lv_decompressed ).
       ENDIF.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
@@ -15316,10 +15325,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING io_stage TYPE REF TO lcl_stage
         RAISING   lcx_exception,
       initialize
-        RAISING lcx_exception,
-      set_sha1
-        IMPORTING iv_sha1 TYPE ty_sha1
-        RAISING   lcx_exception.
+        RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
 
@@ -15698,7 +15704,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     super->deserialize( ).
 
-    set_sha1( mv_branch ).
+    set( iv_sha1 = mv_branch ).
 
   ENDMETHOD.                    "deserialize
 
@@ -15763,9 +15769,11 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                          io_repo    = me
                                          io_stage   = io_stage ).
 
-    set_sha1( lv_branch ).
+    set( iv_sha1 = lv_branch ).
 
     refresh( ).
+
+    set( it_checksums = build_local_checksums( ) ).
 
   ENDMETHOD.                    "push
 
@@ -15780,11 +15788,13 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
 
-      mo_dot_abapgit->add_ignore( iv_path = <ls_stage>-file-path iv_filename = <ls_stage>-file-filename ).
-* remove it from the staging object, as the action is handled here
+      mo_dot_abapgit->add_ignore(
+        iv_path     = <ls_stage>-file-path
+        iv_filename = <ls_stage>-file-filename ).
 
+* remove it from the staging object, as the action is handled here
       CLEAR ls_file.
-      ls_file-path = <ls_stage>-file-path.
+      ls_file-path     = <ls_stage>-file-path.
       ls_file-filename = <ls_stage>-file-filename.
       io_stage->reset( ls_file ).
 
@@ -15796,20 +15806,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD set_sha1.
-
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
-
-
-    CREATE OBJECT lo_persistence.
-
-    lo_persistence->update_sha1( iv_key         = ms_data-key
-                                 iv_branch_sha1 = iv_sha1 ).
-
-    ms_data-sha1 = iv_sha1.
-
-  ENDMETHOD.                    "set_sha1
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
@@ -15846,27 +15842,37 @@ CLASS lcl_repo IMPLEMENTATION.
     rt_files = mt_remote.
   ENDMETHOD.
 
-  METHOD set_local_checksums.
+  METHOD set.
 
     DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
 
 
+    ASSERT iv_sha1 IS SUPPLIED OR it_checksums IS SUPPLIED.
+
     CREATE OBJECT lo_persistence.
 
-    lo_persistence->update_local_checksums(
-      iv_key       = ms_data-key
-      it_checksums = it_checksums ).
+    IF iv_sha1 IS SUPPLIED.
+      lo_persistence->update_sha1( iv_key         = ms_data-key
+                                   iv_branch_sha1 = iv_sha1 ).
+      ms_data-sha1 = iv_sha1.
+    ENDIF.
 
-  ENDMETHOD.
+    IF it_checksums IS SUPPLIED.
+      lo_persistence->update_local_checksums(
+        iv_key       = ms_data-key
+        it_checksums = it_checksums ).
+      ms_data-local_checksums = it_checksums.
+    ENDIF.
 
-  METHOD save_local_checksums.
+  ENDMETHOD.                    "set_sha1
 
-    DATA: lv_xstring   TYPE xstring,
-          lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
-          lt_local     TYPE ty_files_item_tt.
+  METHOD build_local_checksums.
+
+    DATA: lv_xstring TYPE xstring,
+          lt_local   TYPE ty_files_item_tt.
 
     FIELD-SYMBOLS: <ls_item>     LIKE LINE OF lt_local,
-                   <ls_checksum> LIKE LINE OF lt_checksums,
+                   <ls_checksum> LIKE LINE OF rt_checksums,
                    <ls_local>    LIKE LINE OF lt_local.
 
 
@@ -15880,7 +15886,7 @@ CLASS lcl_repo IMPLEMENTATION.
         CONCATENATE lv_xstring <ls_local>-file-data INTO lv_xstring IN BYTE MODE.
       ENDLOOP.
 
-      APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
+      APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
       <ls_checksum>-item = <ls_item>-item.
       ASSERT NOT lv_xstring IS INITIAL.
       <ls_checksum>-sha1 = lcl_hash=>sha1_raw( lv_xstring ).
@@ -15888,8 +15894,6 @@ CLASS lcl_repo IMPLEMENTATION.
       DELETE lt_local WHERE item = <ls_item>-item.
 
     ENDLOOP.
-
-    set_local_checksums( lt_checksums ).
 
   ENDMETHOD.
 
@@ -15903,8 +15907,12 @@ CLASS lcl_repo IMPLEMENTATION.
 
     CLEAR mt_local.
 
-    save_local_checksums( ).
+    set( it_checksums = build_local_checksums( ) ).
 
+  ENDMETHOD.
+
+  METHOD get_local_checksums.
+    rt_checksums = ms_data-local_checksums.
   ENDMETHOD.
 
   METHOD get_files_local.
