@@ -372,16 +372,16 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
     METHODS add    IMPORTING iv_txt TYPE string
                              iv_sub TYPE REF TO lcl_html_toolbar OPTIONAL
                              iv_cmd TYPE string OPTIONAL.
-    METHODS render IMPORTING iv_as_droplist_with_label  TYPE string OPTIONAL
-                             ib_no_separator            TYPE abap_bool OPTIONAL
-                   RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
+                             ib_no_separator           TYPE abap_bool OPTIONAL
+                   RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
-    TYPES:  BEGIN OF ty_item,
-              txt TYPE string,
-              cmd TYPE string,
-              sub TYPE REF TO lcl_html_toolbar,
-            END OF ty_item.
+    TYPES: BEGIN OF ty_item,
+             txt TYPE string,
+             cmd TYPE string,
+             sub TYPE REF TO lcl_html_toolbar,
+           END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
     DATA    mt_items TYPE tt_items.
@@ -12831,13 +12831,12 @@ ENDCLASS.
 CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_file_checksum,
-             path     TYPE string,
-             filename TYPE string,
-             sha1     TYPE ty_sha1,
-           END OF ty_file_checksum.
+    TYPES: BEGIN OF ty_local_checksum,
+             item TYPE ty_item,
+             sha1 TYPE ty_sha1,
+           END OF ty_local_checksum.
 
-    TYPES: ty_file_checksum_tt TYPE STANDARD TABLE OF ty_file_checksum WITH DEFAULT KEY.
+    TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_xml,
              url             TYPE string,
@@ -12845,7 +12844,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              sha1            TYPE ty_sha1,
              package         TYPE devclass,
              offline         TYPE sap_bool,
-             after_last_pull TYPE ty_file_checksum_tt,
+             local_checksums TYPE ty_local_checksum_tt,
              master_language TYPE spras,
            END OF ty_repo_xml.
 
@@ -12864,6 +12863,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_sha1
+      RAISING   lcx_exception.
+
+    METHODS update_local_checksums
+      IMPORTING iv_key       TYPE ty_repo-key
+                it_checksums TYPE ty_local_checksum_tt
       RAISING   lcx_exception.
 
     METHODS add
@@ -12958,7 +12962,14 @@ CLASS lcl_repo DEFINITION ABSTRACT.
           mo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
           ms_data        TYPE lcl_persistence_repo=>ty_repo.
 
-    METHODS: find_dot_abapgit RAISING lcx_exception.
+    METHODS:
+      save_local_checksums
+        RAISING lcx_exception,
+      find_dot_abapgit
+        RAISING lcx_exception,
+      set_local_checksums
+        IMPORTING it_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -15835,6 +15846,53 @@ CLASS lcl_repo IMPLEMENTATION.
     rt_files = mt_remote.
   ENDMETHOD.
 
+  METHOD set_local_checksums.
+
+    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+
+
+    CREATE OBJECT lo_persistence.
+
+    lo_persistence->update_local_checksums(
+      iv_key       = ms_data-key
+      it_checksums = it_checksums ).
+
+  ENDMETHOD.
+
+  METHOD save_local_checksums.
+
+    DATA: lv_xstring   TYPE xstring,
+          lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+          lt_local     TYPE ty_files_item_tt.
+
+    FIELD-SYMBOLS: <ls_item>     LIKE LINE OF lt_local,
+                   <ls_checksum> LIKE LINE OF lt_checksums,
+                   <ls_local>    LIKE LINE OF lt_local.
+
+
+    lt_local = get_files_local( ).
+
+    LOOP AT lt_local ASSIGNING <ls_item> WHERE NOT item IS INITIAL.
+
+      CLEAR lv_xstring.
+
+      LOOP AT lt_local ASSIGNING <ls_local> WHERE item = <ls_item>-item.
+        CONCATENATE lv_xstring <ls_local>-file-data INTO lv_xstring IN BYTE MODE.
+      ENDLOOP.
+
+      APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
+      <ls_checksum>-item = <ls_item>-item.
+      ASSERT NOT lv_xstring IS INITIAL.
+      <ls_checksum>-sha1 = lcl_hash=>sha1_raw( lv_xstring ).
+
+      DELETE lt_local WHERE item = <ls_item>-item.
+
+    ENDLOOP.
+
+    set_local_checksums( lt_checksums ).
+
+  ENDMETHOD.
+
   METHOD deserialize.
 
     IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
@@ -15844,6 +15902,8 @@ CLASS lcl_repo IMPLEMENTATION.
     lcl_objects=>deserialize( me ).
 
     CLEAR mt_local.
+
+    save_local_checksums( ).
 
   ENDMETHOD.
 
@@ -17712,15 +17772,15 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
     METHODS header
       IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper.
 
     METHODS footer
       IMPORTING io_include_script TYPE REF TO lcl_html_helper OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html)    TYPE REF TO lcl_html_helper.
 
     METHODS title
-      IMPORTING iv_page_title TYPE string
-                io_menu TYPE REF TO lcl_html_toolbar OPTIONAL
+      IMPORTING iv_page_title  TYPE string
+                io_menu        TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     METHODS get_logo_src
@@ -17738,21 +17798,21 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<!DOCTYPE html>' ).                        "#EC NOTEXT
-    ro_html->add( '<html>' ).                                 "#EC NOTEXT
-    ro_html->add( '<head>' ).                                 "#EC NOTEXT
-    ro_html->add( '<title>abapGit</title>' ).                 "#EC NOTEXT
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html>' ).                               "#EC NOTEXT
+    ro_html->add( '<head>' ).                               "#EC NOTEXT
+    ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( styles( ) ).
 
     IF io_include_style IS BOUND.
-      ro_html->add( '<style type="text/css">' ).              "#EC NOTEXT
+      ro_html->add( '<style type="text/css">' ).            "#EC NOTEXT
       ro_html->add( io_include_style ).
-      ro_html->add( '</style>' ).                             "#EC NOTEXT
+      ro_html->add( '</style>' ).                           "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' )."#EC NOTEXT
-    ro_html->add( '</head>' ).                                "#EC NOTEXT
-    ro_html->add( '<body>' ).                                 "#EC NOTEXT
+    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
+    ro_html->add( '</head>' ).                              "#EC NOTEXT
+    ro_html->add( '<body>' ).                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html header
 
@@ -17760,23 +17820,23 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="header">' ).                      "#EC NOTEXT
-    ro_html->add( '<table class="mixed_height_bar"><tr>' ).   "#EC NOTEXT
+    ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ). "#EC NOTEXT
 
-    ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
-    ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
-    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| )."#EC NOTEXT
-    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
-    ro_html->add( '</td>' ).                                  "#EC NOTEXT
+    ro_html->add( '<td class="logo">' ).                    "#EC NOTEXT
+    ro_html->add( '<a href="sapevent:abapgithome">' ).      "#EC NOTEXT
+    ro_html->add( |<img src="{ me->get_logo_src( ) }"></a>| ). "#EC NOTEXT
+    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| ). "#EC NOTEXT
+    ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     IF io_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).                   "#EC NOTEXT
+      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
       ro_html->add( io_menu->render( ) ).
-      ro_html->add( '</td>' ).                                "#EC NOTEXT
+      ro_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '</tr></table>' ).                          "#EC NOTEXT
-    ro_html->add( '</div>' ).                                 "#EC NOTEXT
+    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.                    "render page title
 
@@ -17784,17 +17844,17 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="footer">' ).                      "#EC NOTEXT
-    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).       "#EC NOTEXT
-    ro_html->add( |<span class="version">{ gc_abap_version }</span>| )."#EC NOTEXT
-    ro_html->add( '</div>' ).                                 "#EC NOTEXT
-    ro_html->add( '</body>' ).                                "#EC NOTEXT
+    ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
+    ro_html->add( |<img src="{ get_logo_src( ) }" >| ).     "#EC NOTEXT
+    ro_html->add( |<span class="version">{ gc_abap_version }</span>| ). "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     IF io_include_script IS BOUND.
       ro_html->add( io_include_script ).
     ENDIF.
 
-    ro_html->add( '</html>').                                 "#EC NOTEXT
+    ro_html->add( '</html>').                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html footer & logo
 
@@ -18343,13 +18403,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).      "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ).  "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ).     "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| )."#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).                   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                                              "#EC NOTEXT
+      lo_html->add( '<tr>' ).                               "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
+      lo_html->add( '</tr>' ).                              "#EC NOTEXT
 
     ENDLOOP.
 
@@ -21544,6 +21604,30 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     mo_db->delete( iv_type  = c_type_repo
                    iv_value = iv_key ).
+
+  ENDMETHOD.
+
+  METHOD update_local_checksums.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        _raise 'key not found'.
+    ENDTRY.
+
+    ls_repo-local_checksums = it_checksums.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
 
