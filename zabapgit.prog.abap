@@ -350,21 +350,15 @@ CLASS lcl_html_helper IMPLEMENTATION.
   ENDMETHOD.                    "_add_str
 
   METHOD _add_htm.
-    DATA lv_indent_str  TYPE string.
-    DATA lv_temp_str    TYPE string.
 
-    lv_indent_str = repeat( val = ` ` occ = mv_indent * c_indent_size ).
-    lv_temp_str   = io_html->mv_html.
+    DATA lt_strtab TYPE TABLE OF string.
+    DATA lv_str    TYPE string.
 
-    IF me->mv_indent > 0.
-      REPLACE ALL OCCURRENCES OF gc_newline IN lv_temp_str
-        WITH gc_newline && lv_indent_str.
-      SHIFT lv_temp_str RIGHT DELETING TRAILING space.
-      SHIFT lv_temp_str LEFT  DELETING LEADING space.
-    ENDIF.
-
-    mv_html   = mv_html && lv_indent_str && lv_temp_str.
-    mv_indent = mv_indent + io_html->mv_indent.
+    SPLIT io_html->mv_html AT gc_newline INTO TABLE lt_strtab.
+    LOOP AT lt_strtab INTO lv_str.
+      SHIFT lv_str LEFT  DELETING LEADING space.
+      _add_str( lv_str ).
+    ENDLOOP.
 
   ENDMETHOD.                    "_add_htm
 
