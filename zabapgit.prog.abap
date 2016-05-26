@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.8'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.9'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13238,6 +13238,7 @@ CLASS lcl_sap_package DEFINITION FINAL.
       check
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE lcl_file_status=>ty_results_tt
+                  iv_start   type string
                   iv_top     TYPE devclass,
       create_local
         IMPORTING iv_package TYPE devclass
@@ -13251,6 +13252,7 @@ CLASS lcl_sap_package DEFINITION FINAL.
       class_to_path
         IMPORTING
           iv_top         TYPE devclass
+          iv_start       type string
           iv_package     TYPE devclass
         RETURNING
           VALUE(rv_path) TYPE string.
@@ -13406,6 +13408,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     lcl_sap_package=>check(
       io_log     = io_log
       it_results = rt_results
+      iv_start   = io_repo->get_dot_abapgit( )->get_starting_folder( )
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.                    "status
@@ -13428,7 +13431,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
 
     IF iv_top = iv_package.
-      rv_path = '/'.
+      rv_path = iv_start.
     ELSE.
       SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
         WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
@@ -13446,6 +13449,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
         CONCATENATE lv_path '/' INTO lv_path.
 
         rv_path = class_to_path( iv_top     = iv_top
+                                 iv_start   = iv_start
                                  iv_package = lv_parentcl ).
 
         CONCATENATE rv_path lv_path INTO rv_path.
@@ -13483,6 +13487,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
       lv_path = class_to_path( iv_top     = iv_top
+                               iv_start   = iv_start
                                iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
         io_log->add( iv_msgv1 = 'Package and path does not match for object,'
@@ -16001,6 +16006,14 @@ CLASS lcl_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    IF mo_dot_abapgit IS INITIAL.
+      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
+    ENDIF.
+    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+    <ls_return>-file-path     = c_root.
+    <ls_return>-file-filename = c_dot_abapgit.
+    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
+
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lcl_progress=>show( iv_key     = 'Serialize'
@@ -16024,21 +16037,13 @@ CLASS lcl_repo IMPLEMENTATION.
       lt_files = lcl_objects=>serialize( is_item = ls_item
                                          iv_language = get_master_language( ) ).
       LOOP AT lt_files ASSIGNING <ls_file>.
-        <ls_file>-path = '/' && <ls_tadir>-path.
+        <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
         <ls_return>-item = ls_item.
       ENDLOOP.
     ENDLOOP.
-
-    IF mo_dot_abapgit IS INITIAL.
-      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
-    ENDIF.
-    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = c_root.
-    <ls_return>-file-filename = c_dot_abapgit.
-    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     mt_local = rt_files.
 
@@ -19682,7 +19687,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       IF lines( lt_tadir ) = 0.
-        ro_html->add( 'Empty package<br><br>' ) ##NO_TEXT.
+        ro_html->add( '<br><br>Empty package<br><br>' ) ##NO_TEXT.
       ELSE.
         ro_html->add( '<table class="repo_tab">' ).
         ro_html->add( '<tbody>' ).
