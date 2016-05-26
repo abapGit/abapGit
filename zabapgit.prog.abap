@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.12'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.13'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2268,6 +2268,11 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
     ls_data-master_language = iv_master_language.
     ls_data-starting_folder = '/'.
+    APPEND '/.gitignore' TO ls_data-ignore.
+    APPEND '/LICENSE' TO ls_data-ignore.
+    APPEND '/README.md' TO ls_data-ignore.
+    APPEND '/package.json' TO ls_data-ignore.
+    APPEND '/.travis.yml' TO ls_data-ignore.
 
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -17398,8 +17403,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             path = <ls_stage>-file-path.
           IF sy-subrc <> 0. " new files
             APPEND INITIAL LINE TO lt_expanded ASSIGNING <ls_exp>.
-            <ls_exp>-name = <ls_stage>-file-filename.
-            <ls_exp>-path = <ls_stage>-file-path.
+            <ls_exp>-name  = <ls_stage>-file-filename.
+            <ls_exp>-path  = <ls_stage>-file-path.
+            <ls_exp>-chmod = gc_chmod-file.
           ENDIF.
 
           lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_stage>-file-data ).
