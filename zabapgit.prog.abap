@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.11'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.12'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -74,9 +74,12 @@ CONSTANTS: BEGIN OF gc_type,
              blob   TYPE ty_type VALUE 'blob',              "#EC NOTEXT
            END OF gc_type.
 
+TYPES: ty_chmod TYPE c LENGTH 6.
+
 CONSTANTS: BEGIN OF gc_chmod,
-             file TYPE c LENGTH 6 VALUE '100644',
-             dir  TYPE c LENGTH 5 VALUE '40000',
+             file       TYPE ty_chmod VALUE '100644',
+             executable TYPE ty_chmod VALUE '100755',
+             dir        TYPE ty_chmod VALUE '40000 ',
            END OF gc_chmod.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
@@ -2721,7 +2724,7 @@ CLASS lcl_git_pack DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_node,
-             chmod TYPE string,
+             chmod TYPE ty_chmod,
              name  TYPE string,
              sha1  TYPE ty_sha1,
            END OF ty_node.
@@ -14712,7 +14715,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
                lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
-          lv_chmod   TYPE string,
+          lv_chmod   TYPE ty_chmod,
           lv_name    TYPE string,
           lv_string  TYPE string,
           lv_len     TYPE i,
@@ -14738,7 +14741,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
         CLEAR ls_node.
         ls_node-chmod = lv_chmod.
-        IF ls_node-chmod <> gc_chmod-dir AND ls_node-chmod <> gc_chmod-file.
+        IF ls_node-chmod <> gc_chmod-dir
+            AND ls_node-chmod <> gc_chmod-file
+            AND ls_node-chmod <> gc_chmod-executable.
           _raise 'Unknown chmod'.
         ENDIF.
 
@@ -15548,9 +15553,10 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_expanded,
-             path TYPE string,
-             name TYPE string,
-             sha1 TYPE ty_sha1,
+             path  TYPE string,
+             name  TYPE string,
+             sha1  TYPE ty_sha1,
+             chmod TYPE ty_chmod,
            END OF ty_expanded.
 
     TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
@@ -17440,11 +17446,13 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
-        WHEN gc_chmod-file.
+        WHEN gc_chmod-file
+            OR gc_chmod-executable.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
-          <ls_exp>-path = iv_base.
-          <ls_exp>-name = <ls_node>-name.
-          <ls_exp>-sha1 = <ls_node>-sha1.
+          <ls_exp>-path  = iv_base.
+          <ls_exp>-name  = <ls_node>-name.
+          <ls_exp>-sha1  = <ls_node>-sha1.
+          <ls_exp>-chmod = <ls_node>-chmod.
         WHEN gc_chmod-dir.
           lt_expanded = walk_tree(
             it_objects = it_objects
@@ -17577,9 +17585,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 * files
       LOOP AT it_expanded ASSIGNING <ls_exp> WHERE path = <ls_folder>-path.
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod-file.
-        <ls_node>-name = <ls_exp>-name.
-        <ls_node>-sha1 = <ls_exp>-sha1.
+        <ls_node>-chmod = <ls_exp>-chmod.
+        <ls_node>-name  = <ls_exp>-name.
+        <ls_node>-sha1  = <ls_exp>-sha1.
       ENDLOOP.
 
 * folders
@@ -22560,9 +22568,10 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO mt_expanded ASSIGNING <ls_expanded>.
-    <ls_expanded>-path = iv_path.
-    <ls_expanded>-name = iv_name.
-    <ls_expanded>-sha1 = 'a'.
+    <ls_expanded>-path  = iv_path.
+    <ls_expanded>-name  = iv_name.
+    <ls_expanded>-sha1  = 'a'.
+    <ls_expanded>-chmod = gc_chmod-file.
 
   ENDMETHOD.
 
