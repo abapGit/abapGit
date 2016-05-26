@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.7'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.8'.      "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13072,7 +13072,12 @@ CLASS lcl_objects DEFINITION FINAL.
       CHANGING ct_tadir TYPE lcl_tadir=>ty_tadir_tt
       RAISING  lcx_exception.
 
-    CLASS-METHODS check_warning
+    CLASS-METHODS warning_overwrite
+      IMPORTING io_repo    TYPE REF TO lcl_repo
+      CHANGING  ct_results TYPE lcl_file_status=>ty_results_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS warning_package
       IMPORTING is_item          TYPE ty_item
                 iv_package       TYPE devclass
       RETURNING VALUE(rv_cancel) TYPE abap_bool
@@ -13603,7 +13608,69 @@ ENDCLASS.                    "lcl_package IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_objects IMPLEMENTATION.
 
-  METHOD check_warning.
+  METHOD warning_overwrite.
+
+    DATA: lv_index    TYPE i,
+          lv_answer   TYPE c,
+          lv_question TYPE string,
+          lt_before   TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+          lt_current  TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+
+    FIELD-SYMBOLS: <ls_before>  LIKE LINE OF lt_before,
+                   <ls_current> LIKE LINE OF lt_current,
+                   <ls_result>  LIKE LINE OF ct_results.
+
+
+    lt_before = io_repo->get_local_checksums( ).
+    lt_current = io_repo->build_local_checksums( ).
+
+    LOOP AT ct_results ASSIGNING <ls_result>.
+      lv_index = sy-tabix.
+
+      READ TABLE lt_before ASSIGNING <ls_before>
+        WITH KEY item-obj_type = <ls_result>-obj_type
+        item-obj_name = <ls_result>-obj_name.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_current ASSIGNING <ls_current>
+        WITH KEY item-obj_type = <ls_result>-obj_type
+        item-obj_name = <ls_result>-obj_name.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF <ls_before>-sha1 <> <ls_current>-sha1.
+        lv_question = |It looks like object { <ls_result>-obj_type
+          } { <ls_result>-obj_name
+          } has been modified locally, overwrite object?|.
+
+        CALL FUNCTION 'POPUP_TO_CONFIRM'
+          EXPORTING
+            titlebar              = 'Warning'
+            text_question         = lv_question
+            display_cancel_button = abap_false
+          IMPORTING
+            answer                = lv_answer
+          EXCEPTIONS
+            text_not_found        = 1
+            OTHERS                = 2.
+        IF sy-subrc <> 0.
+          _raise 'error from POPUP_TO_CONFIRM'.
+        ENDIF.
+
+        IF lv_answer = '2'.
+          DELETE ct_results INDEX lv_index.
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD warning_package.
 
     DATA: lv_question TYPE c LENGTH 200,
           lv_answer   TYPE c,
@@ -14055,6 +14122,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_results = prioritize_deser( lt_results ).
 
+    warning_overwrite( EXPORTING io_repo = io_repo
+                       CHANGING ct_results = lt_results ).
+
     LOOP AT lt_results ASSIGNING <ls_result>.
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
@@ -14067,10 +14137,10 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      lv_cancel = check_warning( is_item    = ls_item
-                                 iv_package = io_repo->get_package( ) ).
+      lv_cancel = warning_package( is_item    = ls_item
+                                   iv_package = io_repo->get_package( ) ).
       IF lv_cancel = abap_true.
-        RETURN.
+        _raise 'cancelled'.
       ENDIF.
 
       CREATE OBJECT lo_files
