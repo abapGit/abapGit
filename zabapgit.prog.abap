@@ -369,18 +369,22 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS add    IMPORTING iv_txt TYPE string
-                             iv_sub TYPE REF TO lcl_html_toolbar OPTIONAL
-                             iv_cmd TYPE string OPTIONAL.
+    METHODS add    IMPORTING iv_txt   TYPE string
+                             iv_sub   TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_cmd   TYPE string    OPTIONAL
+                             iv_emph  TYPE abap_bool OPTIONAL
+                             iv_canc  TYPE abap_bool OPTIONAL.
     METHODS render IMPORTING iv_as_droplist_with_label  TYPE string OPTIONAL
                              ib_no_separator            TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
     TYPES:  BEGIN OF ty_item,
-              txt TYPE string,
-              cmd TYPE string,
-              sub TYPE REF TO lcl_html_toolbar,
+              txt       TYPE string,
+              cmd       TYPE string,
+              sub       TYPE REF TO lcl_html_toolbar,
+              emphasis  TYPE abap_bool,
+              cancel    TYPE abap_bool,
             END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
@@ -399,9 +403,11 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ASSERT iv_cmd IS INITIAL AND iv_sub IS NOT INITIAL
       OR   iv_cmd IS NOT INITIAL AND iv_sub IS INITIAL. " Only one supplied
 
-    ls_item-txt = iv_txt.
-    ls_item-cmd = iv_cmd.
-    ls_item-sub = iv_sub.
+    ls_item-txt       = iv_txt.
+    ls_item-cmd       = iv_cmd.
+    ls_item-sub       = iv_sub.
+    ls_item-emphasis  = iv_emph.
+    ls_item-cancel    = iv_canc.
     APPEND ls_item TO mt_items.
   ENDMETHOD.
 
@@ -435,8 +441,19 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       IF <item>-sub IS INITIAL.
         CLEAR lv_class.
         IF lb_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
-          lv_class = ' class="menu_end"'.
+          lv_class = 'menu_end'.
         ENDIF.
+        IF <item>-emphasis = abap_true.
+          lv_class = lv_class && ' emphasis'.
+        ENDIF.
+        IF <item>-cancel = abap_true.
+          lv_class = lv_class && ' cancel'.
+        ENDIF.
+        IF lv_class IS NOT INITIAL.
+          SHIFT lv_class LEFT DELETING LEADING space.
+          lv_class = | class="{ lv_class }"|.
+        ENDIF.
+
         lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
       ELSE.
         lo_html->add( <item>-sub->render( iv_as_droplist_with_label = <item>-txt
@@ -17859,8 +17876,89 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
       && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
       && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
       && 'cpUAAAAASUVORK5CYII='.
-
     lcl_gui=>cache_image( iv_url = 'img/logo' iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
+      && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
+      && 'AABJRU5ErkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/toc'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABZUlEQVQ4jY3TsWuTYRAG'
+      && '8N8XQuggpVgIVKwgdNLNQRxEWggOdZWEUtTFgtBBiiCIgydOoo4iCqZ/gDgUlW5t6aLW'
+      && '0bp1U0sRB5FQRCQ4fO8HHyEJOXg5uId77p67ezNDLCLO4BlO4QNu4je+RQSoDEkexzr2'
+      && '0EIXX/AV7yNiArIByWOp8mVMRsTfRHgVG1jDPq4MIniKeTyIiHYf/Bweopb1AHX8wmc8'
+      && 'iYgXQyQ28CYrBW4n1hYWUMddbEdENyIqyU+k+EX8yEoD+44j2EkEq7iAOWzjNV7hOO6j'
+      && 'jXvV1EAzJcNZvMQSVvAOB6mjefk2lovZFGu81iNxFpt4niQ9wmlMYRqHxR1UI2IG5/vM'
+      && '6Rg+YQs/cQcnSvgudqt9qpetisYArFUQfMQiagkYeJ1y/fAHnaLCJdwYklS2f+mN4THe'
+      && 'VuQbGNVaOJk6aRYddHB0RII5+TorShJW5B9nfASC68kf4Bb8B2i6ZO2+FsBYAAAAAElF'
+      && 'TkSuQmCC'.
+    lcl_gui=>cache_image( iv_url = 'img/repo_online'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
+      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNrEkr1KxFAQhe9P/iS6goLWiiB2PoCN'
+      && 'lYW9ChbbiFhYRAQ7MaS2SOdT2PkSvoGPINiF1YTNz/WceC+sohDYwoFvZ/Zm78mcmZXG'
+      && 'GDFPKDFn/L+AdEWWZUIptRmG4bLWeglHNXjHjGoppUa9CiaoX3ieJEl/z3MCXdfdIKXT'
+      && '6bRFju2xYeASJ618338Dl6gf8zw3FOktpGk6QrrFmyPP82J0IgmCHxq1F0URBdbxuzuw'
+      && '9nMGR2CRltCBbJpG1HUtmNGZcN/tynfAgbPgBMbWxp/DcmIIDaFdWOjtK7S/hbxnDQu0'
+      && 'LGBFBEHQg7YNbAnCZ5xJWZbnRVFsuw7GM4P8hhXkPLgh0batqKqKFmM8O3FbeAanIOAM'
+      && 'cJFQWNoBLpAv/e6D4PKEK3UCh+DiN9/sgG8lbhSWCNyDJ2U3MDSOwQa7cfc828rKQIF9'
+      && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
+    lcl_gui=>cache_image( iv_url = 'img/repo_offline'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
+      && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
+      && 'BWVjT7hwOQ+HEzEbMhU7jrTd69q2KhtFRU2nrvS927dm3pyqPXcuNRVD7sxiRIQlDSc+'
+      && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
+      && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
+      && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/pkg'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgID/OyosAAAAN3RSTlMAAQIDBAYICQ8TFRweJScoKSo3Oj1FRk1dYWJjZmhzdIaJ'
+      && 'j5GVm6CwsrS5vsHDyszV19ne7/X583teZAAAAIFJREFUGFdVytkagVAYheFvFzJlnqc0'
+      && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
+      && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
+      && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/branch'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICVwFMKAAAAHnRSTlMAAwQFBgcK'
+      && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
+      && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
+      && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
+    lcl_gui=>cache_image( iv_url = 'img/link'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
+      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
+      && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
+      && 'rkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/code'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
+      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
+      && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
+      && 'RotPsQAAAABJRU5ErkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/bin'  iv_base64 = lv_image ).
+
+    lv_image =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
+      && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
+      && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
+    lcl_gui=>cache_image( iv_url = 'img/obj'  iv_base64 = lv_image ).
 
   ENDMETHOD.
 
@@ -17946,6 +18044,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('a:hover, a:active { text-decoration:  underline; }').
     ro_html->add('img               { border: 0px; }').
+    ro_html->add('.error            { color: red; }').
+    ro_html->add('table { border-collapse: collapse; }').
 
     " Structure div styles: header, footer, toc
     ro_html->add('/* STRUCTURE DIVS */').
@@ -17965,6 +18065,12 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  padding-top:      0.5em;').
     ro_html->add('  border-top:       3px double lightgrey;').
     ro_html->add('  color:            grey;').
+    ro_html->add('  text-align:       center;').
+    ro_html->add('}').
+    ro_html->add('div.dummydiv {').
+    ro_html->add('  display:          block;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding:          1em;').
     ro_html->add('  text-align:       center;').
     ro_html->add('}').
 
@@ -17991,6 +18097,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  color: #bbb;').
     ro_html->add('  vertical-align: super;').
     ro_html->add('}').
+    ro_html->add('.emphasis { font-weight: bold; }').
+    ro_html->add('.cancel { color: red !important; }').
 
     " Drop down styles
     ro_html->add('/*DROP DOWN*/').
@@ -18082,28 +18190,42 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
 
-    METHODS build_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
-
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
-    CLASS-METHODS render_repo_online
+    METHODS render_error
+      IMPORTING ix_error       TYPE REF TO lcx_exception
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS render_toc
+      IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+
+    METHODS render_repo_top
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
+    METHODS render_repo_menu
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
+    METHODS render_repo_online
       IMPORTING io_repo        TYPE REF TO lcl_repo_online
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    CLASS-METHODS render_top
-      IMPORTING io_repo        TYPE REF TO lcl_repo_online
+    METHODS render_repo_offline
+      IMPORTING io_repo        TYPE REF TO lcl_repo_offline
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
     CLASS-METHODS render_explore
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_repo_offline
-      IMPORTING io_repo        TYPE REF TO lcl_repo_offline
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
@@ -18121,20 +18243,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       IMPORTING iv_string   TYPE clike
       EXPORTING ev_obj_type TYPE tadir-object
                 ev_obj_name TYPE tadir-obj_name
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_error
-      IMPORTING ix_error       TYPE REF TO lcx_exception
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    CLASS-METHODS render_toc
-      IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    CLASS-METHODS render_repo_menu
-      IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
     CLASS-METHODS install
@@ -18270,7 +18378,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab {' ).                     "#EC NOTEXT
     lo_html->add( '  width: 98%;' ).                        "#EC NOTEXT
-    lo_html->add( '  border-collapse: collapse;' ).         "#EC NOTEXT
     lo_html->add( '  font-family: Consolas, Courier, monospace;' ). "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab th {' ).                  "#EC NOTEXT
@@ -19236,6 +19343,25 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "encode_struct
 
+  METHOD jump_link.
+
+    DATA: lv_encode TYPE string.
+
+
+    lv_encode = jump_encode(
+      iv_obj_type = iv_obj_type
+      iv_obj_name = iv_obj_name ).
+
+    rv_html = iv_obj_type &&
+       '&nbsp;' &&
+       '<a href="sapevent:jump?' &&
+       lv_encode &&
+       '">' &&
+       iv_obj_name  &&
+       '</a>'.
+
+  ENDMETHOD.
+
   METHOD uninstall.
 
     DATA: lt_tadir    TYPE lcl_tadir=>ty_tadir_tt,
@@ -19533,6 +19659,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('.repo_attr span {').
     ro_html->add('  margin-right:     1em;').
     ro_html->add('}').
+    ro_html->add('.repo_attr img {').
+    ro_html->add('  margin-right:     0.3em;').
+    ro_html->add('}').
     ro_html->add('.repo_attr input {').
     ro_html->add('  background-color: transparent;').
     ro_html->add('  border-style: none;').
@@ -19540,6 +19669,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('  color: grey;').
     ro_html->add('}').
     ro_html->add('.repo_tab {').
+    ro_html->add('  width: 98%;').
     ro_html->add('  border: 1px solid #DDD;').
     ro_html->add('  border-radius: 3px;').
     ro_html->add('  background: #ffffff;').
@@ -19567,6 +19697,77 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('  padding-left: 0.5em;').
     ro_html->add('  padding-right: 0.5em;').
     ro_html->add('}').
+    ro_html->add( '.repo_tab tr.firstrow td { border-top: 0px; } ' ).
+    ro_html->add( '.repo_attr input {').
+    ro_html->add( '  background-color: transparent;').
+    ro_html->add( '  border-style: none;').
+    ro_html->add( '  text-overflow: ellipsis;').
+    ro_html->add( '  color: grey;').
+    ro_html->add( '}').
+    ro_html->add( '.repo_tab td.files span { display: block; }').
+
+  ENDMETHOD.
+
+  METHOD render_repo_menu.
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lv_key     TYPE lcl_persistence_db=>ty_value.
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lv_key = io_repo->get_key( ).
+
+    IF go_user->is_hidden( lv_key ) = abap_true.
+      lo_toolbar->add( iv_txt = 'Show'      iv_cmd = |sapevent:unhide?{ lv_key }| ).
+    ELSE.
+      IF io_repo->is_offline( ) = abap_true.
+        lo_toolbar->add( iv_txt = 'Import ZIP'    iv_cmd = |sapevent:zipimport?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export ZIP'    iv_cmd = |sapevent:zipexport?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export&Commit' iv_cmd = |sapevent:files_commit?{ lv_key }| iv_emph = abap_true ).
+      ELSE.
+      ENDIF.
+      lo_toolbar->add( iv_txt = 'Remove'    iv_cmd = |sapevent:remove?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Uninstall' iv_cmd = |sapevent:uninstall?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Refresh'   iv_cmd = |sapevent:refresh?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Hide'      iv_cmd = |sapevent:hide?{ lv_key }| ).
+    ENDIF.
+
+    ro_html->add( '<div class="mixed_height_bar right">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+  METHOD render_repo_top.
+    DATA  lo_repo_online  TYPE REF TO lcl_repo_online.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<a id="{ io_repo->get_name( ) }"></a>| ).
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ).
+
+    ro_html->add( '<td class="repo_name">' ).
+    IF io_repo->is_offline( ) = abap_false.
+      ro_html->add( '<img src="img/repo_online">' ).
+    ELSE.
+      ro_html->add( '<img src="img/repo_offline">' ).
+    ENDIF.
+    ro_html->add( |<span>{ io_repo->get_name( ) }</span>| ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '<td class="repo_attr right">' ).
+    ro_html->add( '<img src="img/pkg">' ).
+    ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+      ro_html->add( '<img src="img/branch">' ).
+      ro_html->add( |<span>{ lo_repo_online->get_branch_name( ) }</span>| ).
+      ro_html->add( '<img src="img/link">' ).
+      ro_html->add( |<input type="text" value="{ lo_repo_online->get_url( ) }" readonly>| ).
+    ENDIF.
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
 
@@ -19579,116 +19780,38 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( '<a id="' && io_repo->get_name( ) && '"></a>' ).
-    ro_html->add( '<table class="mixed_height_bar">' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="repo_name">' ).
-    ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '<td class="repo_attr right">' ).
-    ro_html->add( '<span>' && io_repo->get_package( ) && '</span>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
-    ro_html->add( render_repo_menu( io_repo->get_key( ) ) ).
+    ro_html->add( render_repo_top( io_repo ) ).
+    ro_html->add( render_repo_menu( io_repo ) ).
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
 
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       IF lines( lt_tadir ) = 0.
-        ro_html->add( 'Empty package<br><br>' ) ##NO_TEXT.
+        ro_html->add( '<table class="repo_tab"><tr class="unsupported"><td>'
+                     && '<center>Empty package</center>'
+                     && '</td></tr></table>' ) ##NO_TEXT.
       ELSE.
         ro_html->add( '<table class="repo_tab">' ).
-        ro_html->add( '<tbody>' ).
         LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-          ro_html->add( '<tr>' ).
+          IF sy-tabix = 1.
+            ro_html->add( '<tr class="firstrow">' ).
+          ELSE.
+            ro_html->add( '<tr>' ).
+          ENDIF.
           ro_html->add( '<td>' ).
-          ro_html->add(
-            jump_link( iv_obj_type = <ls_tadir>-object
-                       iv_obj_name = <ls_tadir>-obj_name ) ).
+          ro_html->add( jump_link( iv_obj_type = <ls_tadir>-object
+                                   iv_obj_name = <ls_tadir>-obj_name ) ).
           ro_html->add( '</td>' ).
           ro_html->add( '</tr>' ).
         ENDLOOP.
-        ro_html->add( '</tbody>' ).
         ro_html->add( '</table>' ).
       ENDIF.
 
-      ro_html->add( '<a href="sapevent:zipimport?' &&
-        io_repo->get_key( ) &&
-        '">' && 'Import ZIP' &&
-        '</a>' ) ##NO_TEXT.
-
-      ro_html->add( '<a href="sapevent:zipexport?' &&
-        io_repo->get_key( ) &&
-        '">' && 'Export ZIP' &&
-        '</a>' ) ##NO_TEXT.
-
-      ro_html->add( '<a href="sapevent:files_commit?' &&
-        io_repo->get_key( ) &&
-        '">' && 'Export files and commit' &&
-        '</a>' ) ##NO_TEXT.
     ENDIF.
 
     ro_html->add( '</div>' ).
 
   ENDMETHOD.                    "render_repo_offline
-
-  METHOD render_repo_menu.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div class="mixed_height_bar right menu">' ).
-
-    IF go_user->is_hidden( iv_key ) = abap_true.
-      ro_html->add( '<a class="menu_end" href="sapevent:unhide?' && iv_key && '">Show</a>' ).
-    ELSE.
-      ro_html->add( '<a href="sapevent:remove?' && iv_key && '">Remove</a>' ).
-      ro_html->add( '<a href="sapevent:uninstall?' && iv_key && '">Uninstall</a>' ).
-      ro_html->add( '<a href="sapevent:refresh_single?' && iv_key && '">Refresh</a>' ).
-      ro_html->add( '<a class="menu_end" href="sapevent:hide?' && iv_key && '">Hide</a>' ).
-    ENDIF.
-
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-  METHOD jump_link.
-
-    DATA: lv_encode TYPE string.
-
-
-    lv_encode = jump_encode(
-      iv_obj_type = iv_obj_type
-      iv_obj_name = iv_obj_name ).
-
-    rv_html = iv_obj_type &&
-       '&nbsp;' &&
-       '<a href="sapevent:jump?' &&
-       lv_encode &&
-       '">' &&
-       iv_obj_name  &&
-       '</a>'.
-
-  ENDMETHOD.
-
-  METHOD render_top.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<table class="mixed_height_bar">' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="repo_name">' ).
-    ro_html->add( '<span>' && io_repo->get_name( ) && '</span>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '<td class="repo_attr right">' ).
-    ro_html->add( '<span>' && io_repo->get_package( ) && '</span>' ).
-    ro_html->add( '<span>' && io_repo->get_branch_name( ) && '</span>' ).
-    ro_html->add( '<span>' && io_repo->get_url( ) && '</span>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
-
-  ENDMETHOD.
 
   METHOD render_repo_online.
 
@@ -19711,9 +19834,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( '<a id="' && io_repo->get_name( ) && '"></a>' ).
-    ro_html->add( render_top( io_repo ) ).
-    ro_html->add( render_repo_menu( io_repo->get_key( ) ) ).
+    ro_html->add( render_repo_top( io_repo ) ).
+    ro_html->add( render_repo_menu( io_repo ) ).
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
@@ -19765,6 +19887,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
             ELSE.
               CLEAR lv_object.
             ENDIF.
+
 
             ro_html->add( '<tr' && lv_trclass && '>' ).
             ro_html->add( lv_object ).
@@ -19938,11 +20061,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key = iv_getdata.
         remove( lv_key ).
       WHEN 'refresh'.
-        lcl_repo_srv=>refresh( ).
-        lcl_gui=>render( ).
-      WHEN 'refresh_single'.
         lv_key = iv_getdata.
-        lcl_repo_srv=>get( lv_key )->refresh( ).
+        IF lv_key IS INITIAL. " Refresh all or single
+          lcl_repo_srv=>refresh( ).
+        ELSE.
+          lcl_repo_srv=>get( lv_key )->refresh( ).
+        ENDIF.
         lcl_gui=>render( ).
       WHEN 'hide'.
         lv_key = iv_getdata.
@@ -19996,8 +20120,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_toc.
 
     DATA: lo_repo    LIKE LINE OF it_list,
-          lo_toolbar TYPE REF TO lcl_html_toolbar,
-          lv_class   TYPE string.
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
@@ -20007,10 +20130,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     LOOP AT it_list INTO lo_repo.
-      lo_toolbar->add( iv_txt = lo_repo->get_name( ) iv_cmd = |#{ lo_repo->get_name( ) }| ).
+      lo_toolbar->add( iv_txt = lo_repo->get_name( )
+                       iv_cmd = |#{ lo_repo->get_name( ) }| ).
     ENDLOOP.
 
     ro_html->add( '<div id="toc">' ) ##NO_TEXT.
+    ro_html->add( '<img src="img/toc">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
@@ -20020,19 +20145,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( 'Error:<br>' ) ##NO_TEXT.
-    ro_html->add( ix_error->mv_text ).
+    ro_html->add( '<div class="dummydiv error">' ).
+    ro_html->add( |Error: { ix_error->mv_text }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
   METHOD render_explore.
 
-    CREATE OBJECT ro_html.
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<a href="sapevent:explore">Explore</a> new projects' ).
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lo_toolbar->add( iv_txt = 'Explore new projects'
+                     iv_cmd = 'explore' ).
+
+    ro_html->add( '<div class="dummydiv">' ).
+    ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -20047,7 +20177,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     CREATE OBJECT ro_html.
-
     CREATE OBJECT go_user.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
@@ -20056,14 +20185,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     TRY.
         lt_repos = lcl_repo_srv=>list( ).
       CATCH lcx_exception INTO lx_error.
-* if wrong meta data exists in database, make sure to still render the menu
-* where it is possible to use the database tool
         ro_html->add( render_error( lx_error ) ).
     ENDTRY.
 
     ro_html->add( render_toc( lt_repos ) ).
 
-    IF lines( lt_repos ) = 0.
+    IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
       LOOP AT lt_repos INTO lo_repo.
