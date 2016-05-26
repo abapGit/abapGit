@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.10'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.11'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2210,8 +2210,6 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
              ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            END OF ty_dot_abapgit.
 
-    CONSTANTS: c_data TYPE string VALUE 'DATA'.
-
     DATA: ms_data TYPE ty_dot_abapgit.
 
     METHODS:
@@ -2276,7 +2274,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD to_xml.
     CALL TRANSFORMATION id
-      SOURCE (c_data) = is_data
+      SOURCE data = is_data
       RESULT XML rv_xml.
 
     rv_xml = lcl_xml_pretty=>print( rv_xml ).
@@ -2289,10 +2287,19 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_xml.
+
+* fix downward compatibility
+    REPLACE ALL OCCURRENCES OF '<_--28C_DATA_--29>' IN lv_xml WITH '<DATA>'.
+    REPLACE ALL OCCURRENCES OF '</_--28C_DATA_--29>' IN lv_xml WITH '</DATA>'.
+
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_xml
-      RESULT (c_data) = rs_data ##NO_TEXT.
+      SOURCE XML lv_xml
+      RESULT data = rs_data ##NO_TEXT.
   ENDMETHOD.
 
   METHOD add_ignore.
@@ -13414,7 +13421,6 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION
 
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_package IMPLEMENTATION
 *----------------------------------------------------------------------*
@@ -13466,6 +13472,10 @@ CLASS lcl_sap_package IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
 
+
+    IF io_log IS INITIAL.
+      RETURN.
+    ENDIF.
 
 * check files for one object is in the same folder
     LOOP AT it_results ASSIGNING <ls_res1>
