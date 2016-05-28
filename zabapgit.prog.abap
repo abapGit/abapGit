@@ -18502,6 +18502,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_head  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_diff  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_lines RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -18622,31 +18623,43 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff.
 
-    DATA lo_html         TYPE REF TO lcl_html_helper.
-    DATA lt_diffs        TYPE lcl_diff=>ty_diffs_tt.
-    DATA lv_local        TYPE string.
-    DATA lv_remote       TYPE string.
-    DATA lv_attr_local   TYPE string.
-    DATA lv_attr_remote  TYPE string.
-    DATA lv_anchor_count LIKE sy-tabix.
-    DATA lv_href         TYPE string.
-    DATA lv_insert_nav   TYPE abap_bool.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
+    ro_html->add( render_head( ) ).
+
+    " Content
+    ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
+    ro_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
+    ro_html->add(   '<tr>' ).                               "#EC NOTEXT
+    ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
+    ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
+    ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
+    ro_html->add(   '<th>@REMOTE</th>' ).                   "#EC NOTEXT
+    ro_html->add(   '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
+    ro_html->add(   '</tr>' ).                              "#EC NOTEXT
+    ro_html->add( render_lines( ) ).
+    ro_html->add( '</table>' ).                             "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+  ENDMETHOD.
+
+  METHOD render_lines.
+    DATA: lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
+          lv_local        TYPE string,
+          lv_remote       TYPE string,
+          lv_attr_local   TYPE string,
+          lv_attr_remote  TYPE string,
+          lv_anchor_count LIKE sy-tabix,
+          lv_href         TYPE string,
+          lv_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-
-    CREATE OBJECT lo_html.
+    CREATE OBJECT ro_html.
     lt_diffs = mo_diff->get( ).
-
-    lo_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    lo_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
-    lo_html->add( '<tr>' ).                                 "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    lo_html->add( '<th>@LOCAL</th>' ).                      "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    lo_html->add( '<th>@REMOTE</th>' ).                     "#EC NOTEXT
-    lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
-    lo_html->add( '</tr>' ).                                "#EC NOTEXT
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
@@ -18656,10 +18669,12 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
         lv_insert_nav = abap_false.
-        lo_html->add( '<tr class="diff_nav_line"><td class="num"></td>' ).
-        lo_html->add( |<td colspan="4">@@ {
-          <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
-        lo_html->add( '</tr>' ).
+        ro_html->add( '<tr class="diff_nav_line">').
+        ro_html->add( '<td class="num"></td>' ).
+
+        ro_html->add( |<td colspan="4">@@ { <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
+
+        ro_html->add( '</tr>' ).
       ENDIF.
 
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
@@ -18688,20 +18703,16 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                              "#EC NOTEXT
+      ro_html->add( '<tr>' ).                               "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
+      ro_html->add( '</tr>' ).                              "#EC NOTEXT
 
     ENDLOOP.
 
-    lo_html->add( '</table>' ).                             "#EC NOTEXT
-    lo_html->add( '</div>' ).                               "#EC NOTEXT
-
-    ro_html = lo_html.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -18719,10 +18730,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'DIFF' ) ).
-    ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
-    ro_html->add( render_head( ) ).
     ro_html->add( render_diff( ) ).
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
