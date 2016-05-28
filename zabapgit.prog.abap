@@ -448,10 +448,10 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         IF lv_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
           lv_class = 'menu_end'.
         ENDIF.
-        IF <item>-emphasis = abap_true.
+        IF <ls_item>-emphasis = abap_true.
           lv_class = lv_class && ' emphasis'.
         ENDIF.
-        IF <item>-cancel = abap_true.
+        IF <ls_item>-cancel = abap_true.
           lv_class = lv_class && ' cancel'.
         ENDIF.
         IF lv_class IS NOT INITIAL.
@@ -459,7 +459,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
           lv_class = | class="{ lv_class }"|.
         ENDIF.
 
-        lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
+        lo_html->add( |<a{ lv_class } href="{ <ls_item>-cmd }">{ <ls_item>-txt }</a>| ).
       ELSE.
         lo_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
                                              iv_no_separator           = lv_last ) ).
@@ -20057,7 +20057,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDIF.
 
         AT END OF obj_name. "obj_type + obj_name
-*          APPEND ls_repo_item TO et_repo_items.
+          APPEND ls_repo_item TO et_repo_items.
         ENDAT.
       ENDLOOP.
     ENDIF.
