@@ -2468,21 +2468,24 @@ CLASS lcl_diff DEFINITION FINAL.
                  update TYPE c LENGTH 1 VALUE 'U',
                END OF c_diff.
 
-    TYPES: BEGIN OF ty_diff,
-             local_line  TYPE c LENGTH 6,
-             local       TYPE string,
-             result      TYPE c LENGTH 1,
-             remote_line TYPE c LENGTH 6,
-             remote      TYPE string,
-             short       TYPE abap_bool,
-           END OF ty_diff.
-    TYPES: ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
+    TYPES:  BEGIN OF ty_diff,
+              local_line  TYPE c LENGTH 6,
+              local       TYPE string,
+              result      TYPE c LENGTH 1,
+              remote_line TYPE c LENGTH 6,
+              remote      TYPE string,
+              short       TYPE abap_bool,
+              beacon      TYPE i,
+            END OF ty_diff.
+    TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_count,
              insert TYPE i,
              delete TYPE i,
              update TYPE i,
            END OF ty_count.
+
+    DATA mt_beacons TYPE ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -2497,8 +2500,8 @@ CLASS lcl_diff DEFINITION FINAL.
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
-    DATA mt_diff  TYPE ty_diffs_tt.
-    DATA ms_stats TYPE ty_count.
+    DATA mt_diff    TYPE ty_diffs_tt.
+    DATA ms_stats   TYPE ty_count.
 
     CLASS-METHODS:
       unpack
@@ -2518,6 +2521,7 @@ CLASS lcl_diff DEFINITION FINAL.
 
     METHODS:
       calculate_line_num_and_stats,
+      map_beacons,
       shortlist.
 
 ENDCLASS.                    "lcl_diff DEFINITION
@@ -2604,7 +2608,7 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                " shortlist
 
   METHOD calculate_line_num_and_stats.
 
@@ -2641,7 +2645,50 @@ CLASS lcl_diff IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                " calculate_line_num_and_stats
+
+  METHOD map_beacons.
+
+    DATA: lv_beacon     TYPE i,
+          lv_offs       TYPE i,
+          lv_code_line  TYPE string,
+          lo_regex      TYPE REF TO cl_abap_regex,
+          lt_regex_set  TYPE TABLE OF REF TO cl_abap_regex.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+
+    DEFINE _add_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING pattern     = &1
+                  ignore_case = abap_true.
+      APPEND lo_regex TO lt_regex_set.
+    END-OF-DEFINITION.
+
+    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT)\s'.
+    _add_regex '^\s*START-OF-'.
+    _add_regex '^\s*INITIALIZATION(\s|\.)'.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+      <ls_diff>-beacon = lv_beacon.
+      LOOP AT lt_regex_set INTO lo_regex.
+        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-local.
+        IF sy-subrc = 0. " Match
+          lv_code_line = <ls_diff>-local.
+
+          " Get rid of comments
+          FIND FIRST OCCURRENCE OF '.' IN lv_code_line MATCH OFFSET lv_offs.
+          IF sy-subrc = 0.
+            lv_code_line = lv_code_line(lv_offs).
+          ENDIF.
+
+          APPEND lv_code_line TO mt_beacons.
+          lv_beacon        = sy-tabix.
+          <ls_diff>-beacon = lv_beacon.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.                " map_beacons
 
   METHOD constructor.
 
@@ -2663,7 +2710,7 @@ CLASS lcl_diff IMPLEMENTATION.
                       it_delta  = lt_delta ).
 
     calculate_line_num_and_stats( ).
-
+    map_beacons( ).
     shortlist( ).
 
   ENDMETHOD.                    "diff
@@ -2726,7 +2773,7 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.
+  ENDMETHOD.                " render
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
@@ -18647,6 +18694,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           lv_attr_remote  TYPE string,
           lv_anchor_count LIKE sy-tabix,
           lv_href         TYPE string,
+          lv_beacon       TYPE string,
           lv_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
@@ -18661,13 +18709,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDIF.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
-        lv_insert_nav = abap_false.
+        IF <ls_diff>-beacon > 0.
+          READ TABLE mo_diff->mt_beacons INTO lv_beacon INDEX <ls_diff>-beacon.
+        ELSE.
+          lv_beacon = '---'.
+        ENDIF.
+
         ro_html->add( '<tr class="diff_nav_line">').
         ro_html->add( '<td class="num"></td>' ).
-
-        ro_html->add( |<td colspan="4">@@ { <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
-
+        ro_html->add( |<td colspan="4">@@ { <ls_diff>-local_line } @@ { lv_beacon }</td>| ).
         ro_html->add( '</tr>' ).
+        lv_insert_nav = abap_false.
       ENDIF.
 
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
