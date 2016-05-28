@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.7'.      "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.13'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -74,9 +74,12 @@ CONSTANTS: BEGIN OF gc_type,
              blob   TYPE ty_type VALUE 'blob',              "#EC NOTEXT
            END OF gc_type.
 
+TYPES: ty_chmod TYPE c LENGTH 6.
+
 CONSTANTS: BEGIN OF gc_chmod,
-             file TYPE c LENGTH 6 VALUE '100644',
-             dir  TYPE c LENGTH 5 VALUE '40000',
+             file       TYPE ty_chmod VALUE '100644',
+             executable TYPE ty_chmod VALUE '100755',
+             dir        TYPE ty_chmod VALUE '40000 ',
            END OF gc_chmod.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
@@ -152,7 +155,7 @@ CLASS lcx_not_found IMPLEMENTATION.
 
 ENDCLASS.                    "lcx_not_found IMPLEMENTATION
 
-CLASS lcl_progress DEFINITION.
+CLASS lcl_progress DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -370,13 +373,13 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt   TYPE string
-                             iv_sub   TYPE REF TO lcl_html_toolbar OPTIONAL
+                             io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
                              iv_cmd   TYPE string    OPTIONAL
                              iv_emph  TYPE abap_bool OPTIONAL
                              iv_canc  TYPE abap_bool OPTIONAL.
-    METHODS render IMPORTING iv_as_droplist_with_label  TYPE string OPTIONAL
-                             ib_no_separator            TYPE abap_bool OPTIONAL
-                   RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
+                             iv_no_separator           TYPE abap_bool OPTIONAL
+                   RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
     TYPES:  BEGIN OF ty_item,
@@ -400,22 +403,24 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
-    ASSERT iv_cmd IS INITIAL AND iv_sub IS NOT INITIAL
-      OR   iv_cmd IS NOT INITIAL AND iv_sub IS INITIAL. " Only one supplied
+    ASSERT iv_cmd IS INITIAL AND io_sub IS NOT INITIAL
+      OR   iv_cmd IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
     ls_item-txt       = iv_txt.
     ls_item-cmd       = iv_cmd.
-    ls_item-sub       = iv_sub.
+    ls_item-sub       = io_sub.
     ls_item-emphasis  = iv_emph.
     ls_item-cancel    = iv_canc.
     APPEND ls_item TO mt_items.
   ENDMETHOD.
 
   METHOD render.
-    DATA          lo_html   TYPE REF TO lcl_html_helper.
-    DATA          lv_class  TYPE string.
-    DATA          lb_last   TYPE abap_bool.
-    FIELD-SYMBOLS <item>    TYPE ty_item.
+    DATA: lo_html  TYPE REF TO lcl_html_helper,
+          lv_class TYPE string,
+          lv_last  TYPE abap_bool.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
+
 
     CREATE OBJECT lo_html.
 
@@ -423,7 +428,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       lv_class = 'menu'.
     ELSE.
       lv_class = 'dropdown'.
-      IF ib_no_separator = abap_true.
+      IF iv_no_separator = abap_true.
         lv_class = lv_class && ' menu_end'.
       ENDIF.
     ENDIF.
@@ -435,12 +440,12 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       lo_html->add( '<div class="dropdown_content">' ).
     ENDIF.
 
-    LOOP AT mt_items ASSIGNING <item>.
-      lb_last = boolc( sy-tabix = lines( mt_items ) ).
+    LOOP AT mt_items ASSIGNING <ls_item>.
+      lv_last = boolc( sy-tabix = lines( mt_items ) ).
 
-      IF <item>-sub IS INITIAL.
+      IF <ls_item>-sub IS INITIAL.
         CLEAR lv_class.
-        IF lb_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
+        IF lv_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
           lv_class = 'menu_end'.
         ENDIF.
         IF <item>-emphasis = abap_true.
@@ -456,8 +461,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
         lo_html->add( |<a{ lv_class } href="{ <item>-cmd }">{ <item>-txt }</a>| ).
       ELSE.
-        lo_html->add( <item>-sub->render( iv_as_droplist_with_label = <item>-txt
-                                          ib_no_separator           = lb_last ) ).
+        lo_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
+                                             iv_no_separator           = lv_last ) ).
       ENDIF.
 
     ENDLOOP.
@@ -473,8 +478,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
 ENDCLASS. "lcl_html_toolbar IMPLEMENTATION
 
-
-CLASS lcl_log DEFINITION.
+CLASS lcl_log DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS:
@@ -2185,7 +2189,7 @@ ENDCLASS.
 
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
-CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
+CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -2212,12 +2216,12 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
                   iv_filename TYPE string,
       get_starting_folder
         RETURNING VALUE(rv_path) TYPE string,
-      set_starting_folder
-        IMPORTING iv_path TYPE string,
+*      set_starting_folder
+*        IMPORTING iv_path TYPE string,
       get_master_language
-        RETURNING VALUE(rv_language) TYPE spras,
-      set_master_language
-        IMPORTING iv_language TYPE spras.
+        RETURNING VALUE(rv_language) TYPE spras.
+*      set_master_language
+*        IMPORTING iv_language TYPE spras.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_dot_abapgit,
@@ -2225,8 +2229,6 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FRIENDS ltcl_dot_abapgit.
              starting_folder TYPE string,
              ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            END OF ty_dot_abapgit.
-
-    CONSTANTS: c_data TYPE string VALUE 'DATA'.
 
     DATA: ms_data TYPE ty_dot_abapgit.
 
@@ -2283,6 +2285,11 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
     ls_data-master_language = iv_master_language.
     ls_data-starting_folder = '/'.
+    APPEND '/.gitignore' TO ls_data-ignore.
+    APPEND '/LICENSE' TO ls_data-ignore.
+    APPEND '/README.md' TO ls_data-ignore.
+    APPEND '/package.json' TO ls_data-ignore.
+    APPEND '/.travis.yml' TO ls_data-ignore.
 
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -2292,7 +2299,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD to_xml.
     CALL TRANSFORMATION id
-      SOURCE (c_data) = is_data
+      SOURCE data = is_data
       RESULT XML rv_xml.
 
     rv_xml = lcl_xml_pretty=>print( rv_xml ).
@@ -2305,17 +2312,26 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_xml.
+
+* fix downward compatibility
+    REPLACE ALL OCCURRENCES OF '<_--28C_DATA_--29>' IN lv_xml WITH '<DATA>'.
+    REPLACE ALL OCCURRENCES OF '</_--28C_DATA_--29>' IN lv_xml WITH '</DATA>'.
+
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_xml
-      RESULT (c_data) = rs_data ##NO_TEXT.
+      SOURCE XML lv_xml
+      RESULT data = rs_data ##NO_TEXT.
   ENDMETHOD.
 
   METHOD add_ignore.
 
     DATA: lv_name TYPE string.
 
-    FIELD-SYMBOLS: <ls_ignore> LIKE LINE OF ms_data-ignore.
+    FIELD-SYMBOLS: <lv_ignore> LIKE LINE OF ms_data-ignore.
 
 
     lv_name = iv_path && iv_filename.
@@ -2325,8 +2341,8 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    APPEND INITIAL LINE TO ms_data-ignore ASSIGNING <ls_ignore>.
-    <ls_ignore> = lv_name.
+    APPEND INITIAL LINE TO ms_data-ignore ASSIGNING <lv_ignore>.
+    <lv_ignore> = lv_name.
 
   ENDMETHOD.
 
@@ -2359,17 +2375,17 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     rv_path = ms_data-starting_folder.
   ENDMETHOD.
 
-  METHOD set_starting_folder.
-    ms_data-starting_folder = iv_path.
-  ENDMETHOD.
+*  METHOD set_starting_folder.
+*    ms_data-starting_folder = iv_path.
+*  ENDMETHOD.
 
   METHOD get_master_language.
     rv_language = ms_data-master_language.
   ENDMETHOD.
 
-  METHOD set_master_language.
-    ms_data-master_language = iv_language.
-  ENDMETHOD.
+*  METHOD set_master_language.
+*    ms_data-master_language = iv_language.
+*  ENDMETHOD.
 
 ENDCLASS.
 
@@ -2730,7 +2746,7 @@ CLASS lcl_git_pack DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_node,
-             chmod TYPE string,
+             chmod TYPE ty_chmod,
              name  TYPE string,
              sha1  TYPE ty_sha1,
            END OF ty_node.
@@ -11698,14 +11714,13 @@ CLASS lcl_object_vcls DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+  PRIVATE SECTION.
+* See include MTOBJCON:
+    CONSTANTS: c_cluster_type TYPE c VALUE 'C'.
+    CONSTANTS: c_mode_insert  TYPE obj_para-maint_mode VALUE 'I'.
+
 ENDCLASS.                    "lcl_object_vcls DEFINITION
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_vcls IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-INCLUDE mtobjcon.
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_vcls IMPLEMENTATION
 *----------------------------------------------------------------------*
@@ -11720,7 +11735,8 @@ CLASS lcl_object_vcls IMPLEMENTATION.
   METHOD lif_object~exists.
     DATA lv_vclname TYPE vcl_name.
 
-    SELECT SINGLE vclname INTO lv_vclname FROM vcldir WHERE vclname = ms_item-obj_name.
+    SELECT SINGLE vclname INTO lv_vclname FROM vcldir
+      WHERE vclname = ms_item-obj_name.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -11803,8 +11819,8 @@ CLASS lcl_object_vcls IMPLEMENTATION.
     CALL FUNCTION 'OBJ_GENERATE'
       EXPORTING
         iv_objectname         = lv_objectname
-        iv_objecttype         = gc_cluster_type
-        iv_maint_mode         = gc_mode_insert
+        iv_objecttype         = c_cluster_type
+        iv_maint_mode         = c_mode_insert
         iv_devclass           = iv_package
       EXCEPTIONS
         illegal_call          = 1
@@ -11816,8 +11832,6 @@ CLASS lcl_object_vcls IMPLEMENTATION.
     IF sy-subrc <> 0.
       _raise 'error in OBJ_GENERATE for VCLS'.
     ENDIF.
-
-*    lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
@@ -12848,13 +12862,12 @@ ENDCLASS.
 CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_file_checksum,
-             path     TYPE string,
-             filename TYPE string,
-             sha1     TYPE ty_sha1,
-           END OF ty_file_checksum.
+    TYPES: BEGIN OF ty_local_checksum,
+             item TYPE ty_item,
+             sha1 TYPE ty_sha1,
+           END OF ty_local_checksum.
 
-    TYPES: ty_file_checksum_tt TYPE STANDARD TABLE OF ty_file_checksum WITH DEFAULT KEY.
+    TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_xml,
              url             TYPE string,
@@ -12862,7 +12875,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              sha1            TYPE ty_sha1,
              package         TYPE devclass,
              offline         TYPE sap_bool,
-             after_last_pull TYPE ty_file_checksum_tt,
+             local_checksums TYPE ty_local_checksum_tt,
              master_language TYPE spras,
            END OF ty_repo_xml.
 
@@ -12881,6 +12894,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_sha1
+      RAISING   lcx_exception.
+
+    METHODS update_local_checksums
+      IMPORTING iv_key       TYPE ty_repo-key
+                it_checksums TYPE ty_local_checksum_tt
       RAISING   lcx_exception.
 
     METHODS add
@@ -12947,6 +12965,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_files) TYPE ty_files_item_tt
         RAISING   lcx_exception,
+      get_local_checksums
+        RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
         RAISING   lcx_exception,
@@ -12962,6 +12982,9 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING lcx_exception,
       refresh
         RAISING lcx_exception,
+      build_local_checksums
+        RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt
+        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.
@@ -12975,7 +12998,13 @@ CLASS lcl_repo DEFINITION ABSTRACT.
           mo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
           ms_data        TYPE lcl_persistence_repo=>ty_repo.
 
-    METHODS: find_dot_abapgit RAISING lcx_exception.
+    METHODS:
+      find_dot_abapgit
+        RAISING lcx_exception,
+      set
+        IMPORTING iv_sha1      TYPE ty_sha1 OPTIONAL
+                  it_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -13074,7 +13103,12 @@ CLASS lcl_objects DEFINITION FINAL.
       CHANGING ct_tadir TYPE lcl_tadir=>ty_tadir_tt
       RAISING  lcx_exception.
 
-    CLASS-METHODS check_warning
+    CLASS-METHODS warning_overwrite
+      IMPORTING io_repo    TYPE REF TO lcl_repo
+      CHANGING  ct_results TYPE lcl_file_status=>ty_results_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS warning_package
       IMPORTING is_item          TYPE ty_item
                 iv_package       TYPE devclass
       RETURNING VALUE(rv_cancel) TYPE abap_bool
@@ -13235,6 +13269,7 @@ CLASS lcl_sap_package DEFINITION FINAL.
       check
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE lcl_file_status=>ty_results_tt
+                  iv_start   TYPE string
                   iv_top     TYPE devclass,
       create_local
         IMPORTING iv_package TYPE devclass
@@ -13248,6 +13283,7 @@ CLASS lcl_sap_package DEFINITION FINAL.
       class_to_path
         IMPORTING
           iv_top         TYPE devclass
+          iv_start       TYPE string
           iv_package     TYPE devclass
         RETURNING
           VALUE(rv_path) TYPE string.
@@ -13289,7 +13325,7 @@ CLASS lcl_file_status IMPLEMENTATION.
           lt_remote TYPE ty_files_tt,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_remote> TYPE ty_file,
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
                    <ls_tadir>  LIKE LINE OF lt_tadir,
                    <ls_result> LIKE LINE OF rt_results,
                    <ls_local>  LIKE LINE OF lt_local,
@@ -13403,12 +13439,12 @@ CLASS lcl_file_status IMPLEMENTATION.
     lcl_sap_package=>check(
       io_log     = io_log
       it_results = rt_results
+      iv_start   = io_repo->get_dot_abapgit( )->get_starting_folder( )
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.                    "status
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION
-
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_package IMPLEMENTATION
@@ -13425,7 +13461,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
 
     IF iv_top = iv_package.
-      rv_path = '/'.
+      rv_path = iv_start.
     ELSE.
       SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
         WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
@@ -13443,6 +13479,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
         CONCATENATE lv_path '/' INTO lv_path.
 
         rv_path = class_to_path( iv_top     = iv_top
+                                 iv_start   = iv_start
                                  iv_package = lv_parentcl ).
 
         CONCATENATE rv_path lv_path INTO rv_path.
@@ -13460,6 +13497,10 @@ CLASS lcl_sap_package IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
 
+
+    IF io_log IS INITIAL.
+      RETURN.
+    ENDIF.
 
 * check files for one object is in the same folder
     LOOP AT it_results ASSIGNING <ls_res1>
@@ -13480,6 +13521,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
       lv_path = class_to_path( iv_top     = iv_top
+                               iv_start   = iv_start
                                iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
         io_log->add( iv_msgv1 = 'Package and path does not match for object,'
@@ -13605,7 +13647,69 @@ ENDCLASS.                    "lcl_package IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_objects IMPLEMENTATION.
 
-  METHOD check_warning.
+  METHOD warning_overwrite.
+
+    DATA: lv_index    TYPE i,
+          lv_answer   TYPE c,
+          lv_question TYPE string,
+          lt_before   TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+          lt_current  TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+
+    FIELD-SYMBOLS: <ls_before>  LIKE LINE OF lt_before,
+                   <ls_current> LIKE LINE OF lt_current,
+                   <ls_result>  LIKE LINE OF ct_results.
+
+
+    lt_before = io_repo->get_local_checksums( ).
+    lt_current = io_repo->build_local_checksums( ).
+
+    LOOP AT ct_results ASSIGNING <ls_result>.
+      lv_index = sy-tabix.
+
+      READ TABLE lt_before ASSIGNING <ls_before>
+        WITH KEY item-obj_type = <ls_result>-obj_type
+        item-obj_name = <ls_result>-obj_name.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      READ TABLE lt_current ASSIGNING <ls_current>
+        WITH KEY item-obj_type = <ls_result>-obj_type
+        item-obj_name = <ls_result>-obj_name.
+      IF sy-subrc <> 0.
+        CONTINUE.
+      ENDIF.
+
+      IF <ls_before>-sha1 <> <ls_current>-sha1.
+        lv_question = |It looks like object { <ls_result>-obj_type
+          } { <ls_result>-obj_name
+          } has been modified locally, overwrite object?|.
+
+        CALL FUNCTION 'POPUP_TO_CONFIRM'
+          EXPORTING
+            titlebar              = 'Warning'
+            text_question         = lv_question
+            display_cancel_button = abap_false
+          IMPORTING
+            answer                = lv_answer
+          EXCEPTIONS
+            text_not_found        = 1
+            OTHERS                = 2 ##NO_TEXT.
+        IF sy-subrc <> 0.
+          _raise 'error from POPUP_TO_CONFIRM'.
+        ENDIF.
+
+        IF lv_answer = '2'.
+          DELETE ct_results INDEX lv_index.
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD warning_package.
 
     DATA: lv_question TYPE c LENGTH 200,
           lv_answer   TYPE c,
@@ -13675,7 +13779,9 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_class_name         TYPE string,
           ls_obj_serializer_map LIKE LINE OF st_obj_serializer_map.
 
-    READ TABLE st_obj_serializer_map INTO ls_obj_serializer_map WITH KEY item = is_item.
+
+    READ TABLE st_obj_serializer_map
+      INTO ls_obj_serializer_map WITH KEY item = is_item.
     IF sy-subrc = 0.
       lv_class_name = ls_obj_serializer_map-metadata-class.
     ELSEIF is_metadata IS NOT INITIAL.
@@ -14055,6 +14161,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_results = prioritize_deser( lt_results ).
 
+    warning_overwrite( EXPORTING io_repo = io_repo
+                       CHANGING ct_results = lt_results ).
+
     LOOP AT lt_results ASSIGNING <ls_result>.
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
@@ -14067,10 +14176,10 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      lv_cancel = check_warning( is_item    = ls_item
-                                 iv_package = io_repo->get_package( ) ).
+      lv_cancel = warning_package( is_item    = ls_item
+                                   iv_package = io_repo->get_package( ) ).
       IF lv_cancel = abap_true.
-        RETURN.
+        _raise 'cancelled'.
       ENDIF.
 
       CREATE OBJECT lo_files
@@ -14583,7 +14692,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_len = 65536.
         ENDIF.
 
-        CONCATENATE lv_result lv_base+lv_offset(lv_len) INTO lv_result IN BYTE MODE.
+        CONCATENATE lv_result lv_base+lv_offset(lv_len)
+          INTO lv_result IN BYTE MODE.
       ELSE. " lv_bitbyte(1) = '0'
 * insert from delta
         lv_len = lv_x.
@@ -14627,7 +14737,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
                lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
-          lv_chmod   TYPE string,
+          lv_chmod   TYPE ty_chmod,
           lv_name    TYPE string,
           lv_string  TYPE string,
           lv_len     TYPE i,
@@ -14653,7 +14763,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
         CLEAR ls_node.
         ls_node-chmod = lv_chmod.
-        IF ls_node-chmod <> gc_chmod-dir AND ls_node-chmod <> gc_chmod-file.
+        IF ls_node-chmod <> gc_chmod-dir
+            AND ls_node-chmod <> gc_chmod-file
+            AND ls_node-chmod <> gc_chmod-executable.
           _raise 'Unknown chmod'.
         ENDIF.
 
@@ -14796,7 +14908,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
-        ls_object-sha1 = lcl_hash=>sha1( iv_type = lv_type iv_data = lv_decompressed ).
+        ls_object-sha1 = lcl_hash=>sha1(
+          iv_type = lv_type
+          iv_data = lv_decompressed ).
       ENDIF.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
@@ -15322,10 +15436,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING io_stage TYPE REF TO lcl_stage
         RAISING   lcx_exception,
       initialize
-        RAISING lcx_exception,
-      set_sha1
-        IMPORTING iv_sha1 TYPE ty_sha1
-        RAISING   lcx_exception.
+        RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
 
@@ -15464,9 +15575,10 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_expanded,
-             path TYPE string,
-             name TYPE string,
-             sha1 TYPE ty_sha1,
+             path  TYPE string,
+             name  TYPE string,
+             sha1  TYPE ty_sha1,
+             chmod TYPE ty_chmod,
            END OF ty_expanded.
 
     TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
@@ -15559,7 +15671,7 @@ CLASS lcl_gui DEFINITION FINAL.
       RAISING lcx_exception.
 
     CLASS-METHODS back
-      RETURNING VALUE(r_exit) TYPE xfeld
+      RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
     CLASS-METHODS call_page
@@ -15707,7 +15819,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     super->deserialize( ).
 
-    set_sha1( mv_branch ).
+    set( iv_sha1 = mv_branch ).
 
   ENDMETHOD.                    "deserialize
 
@@ -15772,9 +15884,11 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                          io_repo    = me
                                          io_stage   = io_stage ).
 
-    set_sha1( lv_branch ).
+    set( iv_sha1 = lv_branch ).
 
     refresh( ).
+
+    set( it_checksums = build_local_checksums( ) ).
 
   ENDMETHOD.                    "push
 
@@ -15789,11 +15903,13 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
 
-      mo_dot_abapgit->add_ignore( iv_path = <ls_stage>-file-path iv_filename = <ls_stage>-file-filename ).
-* remove it from the staging object, as the action is handled here
+      mo_dot_abapgit->add_ignore(
+        iv_path     = <ls_stage>-file-path
+        iv_filename = <ls_stage>-file-filename ).
 
+* remove it from the staging object, as the action is handled here
       CLEAR ls_file.
-      ls_file-path = <ls_stage>-file-path.
+      ls_file-path     = <ls_stage>-file-path.
       ls_file-filename = <ls_stage>-file-filename.
       io_stage->reset( ls_file ).
 
@@ -15805,20 +15921,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD set_sha1.
-
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
-
-
-    CREATE OBJECT lo_persistence.
-
-    lo_persistence->update_sha1( iv_key         = ms_data-key
-                                 iv_branch_sha1 = iv_sha1 ).
-
-    ms_data-sha1 = iv_sha1.
-
-  ENDMETHOD.                    "set_sha1
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
@@ -15855,6 +15957,61 @@ CLASS lcl_repo IMPLEMENTATION.
     rt_files = mt_remote.
   ENDMETHOD.
 
+  METHOD set.
+
+    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+
+
+    ASSERT iv_sha1 IS SUPPLIED OR it_checksums IS SUPPLIED.
+
+    CREATE OBJECT lo_persistence.
+
+    IF iv_sha1 IS SUPPLIED.
+      lo_persistence->update_sha1( iv_key         = ms_data-key
+                                   iv_branch_sha1 = iv_sha1 ).
+      ms_data-sha1 = iv_sha1.
+    ENDIF.
+
+    IF it_checksums IS SUPPLIED.
+      lo_persistence->update_local_checksums(
+        iv_key       = ms_data-key
+        it_checksums = it_checksums ).
+      ms_data-local_checksums = it_checksums.
+    ENDIF.
+
+  ENDMETHOD.                    "set_sha1
+
+  METHOD build_local_checksums.
+
+    DATA: lv_xstring TYPE xstring,
+          lt_local   TYPE ty_files_item_tt.
+
+    FIELD-SYMBOLS: <ls_item>     LIKE LINE OF lt_local,
+                   <ls_checksum> LIKE LINE OF rt_checksums,
+                   <ls_local>    LIKE LINE OF lt_local.
+
+
+    lt_local = get_files_local( ).
+
+    LOOP AT lt_local ASSIGNING <ls_item> WHERE NOT item IS INITIAL.
+
+      CLEAR lv_xstring.
+
+      LOOP AT lt_local ASSIGNING <ls_local> WHERE item = <ls_item>-item.
+        CONCATENATE lv_xstring <ls_local>-file-data INTO lv_xstring IN BYTE MODE.
+      ENDLOOP.
+
+      APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
+      <ls_checksum>-item = <ls_item>-item.
+      ASSERT NOT lv_xstring IS INITIAL.
+      <ls_checksum>-sha1 = lcl_hash=>sha1_raw( lv_xstring ).
+
+      DELETE lt_local WHERE item = <ls_item>-item.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD deserialize.
 
     IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
@@ -15865,6 +16022,12 @@ CLASS lcl_repo IMPLEMENTATION.
 
     CLEAR mt_local.
 
+    set( it_checksums = build_local_checksums( ) ).
+
+  ENDMETHOD.
+
+  METHOD get_local_checksums.
+    rt_checksums = ms_data-local_checksums.
   ENDMETHOD.
 
   METHOD get_files_local.
@@ -15882,6 +16045,14 @@ CLASS lcl_repo IMPLEMENTATION.
       rt_files = mt_local.
       RETURN.
     ENDIF.
+
+    IF mo_dot_abapgit IS INITIAL.
+      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
+    ENDIF.
+    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+    <ls_return>-file-path     = c_root.
+    <ls_return>-file-filename = c_dot_abapgit.
+    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -15906,21 +16077,13 @@ CLASS lcl_repo IMPLEMENTATION.
       lt_files = lcl_objects=>serialize( is_item = ls_item
                                          iv_language = get_master_language( ) ).
       LOOP AT lt_files ASSIGNING <ls_file>.
-        <ls_file>-path = '/' && <ls_tadir>-path.
+        <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
         <ls_return>-item = ls_item.
       ENDLOOP.
     ENDLOOP.
-
-    IF mo_dot_abapgit IS INITIAL.
-      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
-    ENDIF.
-    APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = c_root.
-    <ls_return>-file-filename = c_dot_abapgit.
-    <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     mt_local = rt_files.
 
@@ -17260,8 +17423,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             path = <ls_stage>-file-path.
           IF sy-subrc <> 0. " new files
             APPEND INITIAL LINE TO lt_expanded ASSIGNING <ls_exp>.
-            <ls_exp>-name = <ls_stage>-file-filename.
-            <ls_exp>-path = <ls_stage>-file-path.
+            <ls_exp>-name  = <ls_stage>-file-filename.
+            <ls_exp>-path  = <ls_stage>-file-path.
+            <ls_exp>-chmod = gc_chmod-file.
           ENDIF.
 
           lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_stage>-file-data ).
@@ -17308,11 +17472,13 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
-        WHEN gc_chmod-file.
+        WHEN gc_chmod-file
+            OR gc_chmod-executable.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
-          <ls_exp>-path = iv_base.
-          <ls_exp>-name = <ls_node>-name.
-          <ls_exp>-sha1 = <ls_node>-sha1.
+          <ls_exp>-path  = iv_base.
+          <ls_exp>-name  = <ls_node>-name.
+          <ls_exp>-sha1  = <ls_node>-sha1.
+          <ls_exp>-chmod = <ls_node>-chmod.
         WHEN gc_chmod-dir.
           lt_expanded = walk_tree(
             it_objects = it_objects
@@ -17445,9 +17611,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 * files
       LOOP AT it_expanded ASSIGNING <ls_exp> WHERE path = <ls_folder>-path.
         APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod-file.
-        <ls_node>-name = <ls_exp>-name.
-        <ls_node>-sha1 = <ls_exp>-sha1.
+        <ls_node>-chmod = <ls_exp>-chmod.
+        <ls_node>-name  = <ls_exp>-name.
+        <ls_node>-sha1  = <ls_exp>-sha1.
       ENDLOOP.
 
 * folders
@@ -17563,7 +17729,7 @@ CLASS lcl_gui IMPLEMENTATION.
     lv_index = lines( gt_stack ).
 
     IF lv_index = 0.
-      r_exit = 'X'.
+      rv_exit = abap_true.
       RETURN.
     ENDIF.
 
@@ -17769,15 +17935,15 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PROTECTED SECTION.
     METHODS header
       IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper.
 
     METHODS footer
       IMPORTING io_include_script TYPE REF TO lcl_html_helper OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html)    TYPE REF TO lcl_html_helper.
 
     METHODS title
-      IMPORTING iv_page_title TYPE string
-                io_menu TYPE REF TO lcl_html_toolbar OPTIONAL
+      IMPORTING iv_page_title  TYPE string
+                io_menu        TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
@@ -17966,21 +18132,21 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<!DOCTYPE html>' ).                        "#EC NOTEXT
-    ro_html->add( '<html>' ).                                 "#EC NOTEXT
-    ro_html->add( '<head>' ).                                 "#EC NOTEXT
-    ro_html->add( '<title>abapGit</title>' ).                 "#EC NOTEXT
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html>' ).                               "#EC NOTEXT
+    ro_html->add( '<head>' ).                               "#EC NOTEXT
+    ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( styles( ) ).
 
     IF io_include_style IS BOUND.
-      ro_html->add( '<style type="text/css">' ).              "#EC NOTEXT
+      ro_html->add( '<style type="text/css">' ).            "#EC NOTEXT
       ro_html->add( io_include_style ).
-      ro_html->add( '</style>' ).                             "#EC NOTEXT
+      ro_html->add( '</style>' ).                           "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' )."#EC NOTEXT
-    ro_html->add( '</head>' ).                                "#EC NOTEXT
-    ro_html->add( '<body>' ).                                 "#EC NOTEXT
+    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
+    ro_html->add( '</head>' ).                              "#EC NOTEXT
+    ro_html->add( '<body>' ).                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html header
 
@@ -17988,8 +18154,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="header">' ).                      "#EC NOTEXT
-    ro_html->add( '<table class="mixed_height_bar"><tr>' ).   "#EC NOTEXT
+    ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
+    ro_html->add( '<table class="mixed_height_bar"><tr>' ). "#EC NOTEXT
 
     ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
     ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
@@ -17998,13 +18164,13 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).                                  "#EC NOTEXT
 
     IF io_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).                   "#EC NOTEXT
+      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
       ro_html->add( io_menu->render( ) ).
-      ro_html->add( '</td>' ).                                "#EC NOTEXT
+      ro_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '</tr></table>' ).                          "#EC NOTEXT
-    ro_html->add( '</div>' ).                                 "#EC NOTEXT
+    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.                    "render page title
 
@@ -18022,7 +18188,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
       ro_html->add( io_include_script ).
     ENDIF.
 
-    ro_html->add( '</html>').                                 "#EC NOTEXT
+    ro_html->add( '</html>').                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html footer & logo
 
@@ -18464,10 +18630,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA lv_attr_remote  TYPE string.
     DATA lv_anchor_count LIKE sy-tabix.
     DATA lv_href         TYPE string.
-    DATA lb_insert_nav   TYPE abap_bool.
+    DATA lv_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
-    FIELD-SYMBOLS <ls_break> LIKE LINE OF lt_diffs.
+
 
     CREATE OBJECT lo_html.
     lt_diffs = mo_diff->get( ).
@@ -18484,14 +18650,15 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
-        lb_insert_nav = abap_true.
+        lv_insert_nav = abap_true.
         CONTINUE.
       ENDIF.
 
-      IF lb_insert_nav = abap_true. " Insert separator line with navigation
-        lb_insert_nav = abap_false.
+      IF lv_insert_nav = abap_true. " Insert separator line with navigation
+        lv_insert_nav = abap_false.
         lo_html->add( '<tr class="diff_nav_line"><td class="num"></td>' ).
-        lo_html->add( |<td colspan="4">@@ { <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
+        lo_html->add( |<td colspan="4">@@ {
+          <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
         lo_html->add( '</tr>' ).
       ENDIF.
 
@@ -18521,13 +18688,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ).      "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ).  "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ).     "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| )."#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).                   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                                              "#EC NOTEXT
+      lo_html->add( '<tr>' ).                               "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
+      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
+      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
+      lo_html->add( '</tr>' ).                              "#EC NOTEXT
 
     ENDLOOP.
 
@@ -18997,7 +19164,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     lv_filename = <ls_field>-value.
 
 * the file should exist in either mt_lcoal or mt_remote, not in both at same time
-    READ TABLE mt_local INTO ls_local WITH KEY file-path = lv_path file-filename = lv_filename.
+    READ TABLE mt_local INTO ls_local
+      WITH KEY file-path = lv_path
+      file-filename = lv_filename.
     IF sy-subrc = 0.
       rs_file = ls_local-file.
     ELSE.
@@ -19643,7 +19812,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF needs_installation( ) = abap_true.
       lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
-    lo_toolbar->add( iv_txt = '<b>&#x03b2;</b>'  iv_sub = lo_betasub ).
+    lo_toolbar->add( iv_txt = '<b>&#x03b2;</b>'  io_sub = lo_betasub ).
 
     ro_menu = lo_toolbar.
 
@@ -21755,6 +21924,30 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD update_local_checksums.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        _raise 'key not found'.
+    ENDTRY.
+
+    ls_repo-local_checksums = it_checksums.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.
+
   METHOD update_sha1.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
@@ -22592,9 +22785,10 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO mt_expanded ASSIGNING <ls_expanded>.
-    <ls_expanded>-path = iv_path.
-    <ls_expanded>-name = iv_name.
-    <ls_expanded>-sha1 = 'a'.
+    <ls_expanded>-path  = iv_path.
+    <ls_expanded>-name  = iv_name.
+    <ls_expanded>-sha1  = 'a'.
+    <ls_expanded>-chmod = gc_chmod-file.
 
   ENDMETHOD.
 
