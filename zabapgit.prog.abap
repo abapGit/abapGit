@@ -373,7 +373,7 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt   TYPE string
-                             io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+                             io_sub   TYPE REF TO lcl_html_toolbar OPTIONAL
                              iv_cmd   TYPE string    OPTIONAL
                              iv_emph  TYPE abap_bool OPTIONAL
                              iv_canc  TYPE abap_bool OPTIONAL.
@@ -18157,11 +18157,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
     ro_html->add( '<table class="mixed_height_bar"><tr>' ). "#EC NOTEXT
 
-    ro_html->add( '<td class="logo">' ).                      "#EC NOTEXT
-    ro_html->add( '<a href="sapevent:abapgithome">' ).        "#EC NOTEXT
-    ro_html->add( '<img src="img/logo"></a>' ).               "#EC NOTEXT
+    ro_html->add( '<td class="logo">' ).                    "#EC NOTEXT
+    ro_html->add( '<a href="sapevent:abapgithome">' ).      "#EC NOTEXT
+    ro_html->add( '<img src="img/logo"></a>' ).             "#EC NOTEXT
     ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
-    ro_html->add( '</td>' ).                                  "#EC NOTEXT
+    ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     IF io_menu IS BOUND.
       ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
@@ -18178,11 +18178,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="footer">' ).                      "#EC NOTEXT
-    ro_html->add( '<img src="img/logo" >' ).                  "#EC NOTEXT
-    ro_html->add( |<span class="version">{ gc_abap_version }</span>| )."#EC NOTEXT
-    ro_html->add( '</div>' ).                                 "#EC NOTEXT
-    ro_html->add( '</body>' ).                                "#EC NOTEXT
+    ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
+    ro_html->add( '<img src="img/logo" >' ).                "#EC NOTEXT
+    ro_html->add( |<span class="version">{ gc_abap_version }</span>| ). "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     IF io_include_script IS BOUND.
       ro_html->add( io_include_script ).
