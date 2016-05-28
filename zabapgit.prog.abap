@@ -19815,7 +19815,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ro_html->add( '<table class="repo_tab">' ).
 
           IF lines( lt_repo_items ) = 0.
-            ro_html->add(   '<tr class="unsupported"><td>'
+            ro_html->add(   '<tr class="unsupported firstrow"><td style="padding:1em;">' "TODO move to styles
                          && '<center>Empty package</center>'
                          && '</td></tr>' ) ##NO_TEXT.
           ELSE.
@@ -19863,6 +19863,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ls_repo_item-obj_name = <ls_tadir>-obj_name.
         APPEND ls_repo_item TO et_repo_items.
       ENDLOOP.
+
     ELSE.
       CREATE OBJECT eo_log.
       lo_repo_online ?= io_repo.
@@ -19887,7 +19888,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDIF.
 
         AT END OF obj_name. "obj_type + obj_name
-          APPEND ls_repo_item TO et_repo_items.
+*          APPEND ls_repo_item TO et_repo_items.
         ENDAT.
       ENDLOOP.
     ENDIF.
