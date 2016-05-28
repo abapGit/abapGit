@@ -2497,7 +2497,8 @@ CLASS lcl_diff DEFINITION FINAL.
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
-    DATA mt_diff TYPE ty_diffs_tt.
+    DATA mt_diff  TYPE ty_diffs_tt.
+    DATA ms_stats TYPE ty_count.
 
     CLASS-METHODS:
       unpack
@@ -2516,7 +2517,7 @@ CLASS lcl_diff DEFINITION FINAL.
         RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
 
     METHODS:
-      calculate_line_num,
+      calculate_line_num_and_stats,
       shortlist.
 
 ENDCLASS.                    "lcl_diff DEFINITION
@@ -2533,21 +2534,7 @@ CLASS lcl_diff IMPLEMENTATION.
   ENDMETHOD.                    "get
 
   METHOD stats.
-
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
-
-
-    LOOP AT mt_diff ASSIGNING <ls_diff>.
-      CASE <ls_diff>-result.
-        WHEN lcl_diff=>c_diff-insert.
-          rs_count-insert = rs_count-insert + 1.
-        WHEN lcl_diff=>c_diff-delete.
-          rs_count-delete = rs_count-delete + 1.
-        WHEN lcl_diff=>c_diff-update.
-          rs_count-update = rs_count-update + 1.
-      ENDCASE.
-    ENDLOOP.
-
+    rs_count = ms_stats.
   ENDMETHOD.                    "count
 
   METHOD unpack.
@@ -2588,7 +2575,6 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-
     IF lines( mt_diff ) < 500.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
@@ -2604,11 +2590,9 @@ CLASS lcl_diff IMPLEMENTATION.
             EXIT.
           ENDIF.
           <ls_diff>-short = abap_true.
-*          lv_index = lv_index - 1.
         ENDDO.
 
         DO 20 TIMES. " Forward
-*          lv_index = lv_index + 1.
           READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0. " tab bound reached
             EXIT.
@@ -2622,7 +2606,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD calculate_line_num.
+  METHOD calculate_line_num_and_stats.
 
     DATA: lv_local  TYPE i VALUE 1,
           lv_remote TYPE i VALUE 1.
@@ -2634,7 +2618,7 @@ CLASS lcl_diff IMPLEMENTATION.
       <ls_diff>-local_line = lv_local.
       <ls_diff>-remote_line = lv_remote.
 
-      CASE <ls_diff>-result.
+      CASE <ls_diff>-result. " Line nums
         WHEN c_diff-delete.
           lv_remote = lv_remote + 1.
           CLEAR <ls_diff>-local_line.
@@ -2644,6 +2628,15 @@ CLASS lcl_diff IMPLEMENTATION.
         WHEN OTHERS.
           lv_local = lv_local + 1.
           lv_remote = lv_remote + 1.
+      ENDCASE.
+
+      CASE <ls_diff>-result. " Stats
+        WHEN c_diff-insert.
+          ms_stats-insert = ms_stats-insert + 1.
+        WHEN c_diff-delete.
+          ms_stats-delete = ms_stats-delete + 1.
+        WHEN c_diff-update.
+          ms_stats-update = ms_stats-update + 1.
       ENDCASE.
 
     ENDLOOP.
@@ -2669,7 +2662,7 @@ CLASS lcl_diff IMPLEMENTATION.
                       it_remote = lt_remote
                       it_delta  = lt_delta ).
 
-    calculate_line_num( ).
+    calculate_line_num_and_stats( ).
 
     shortlist( ).
 
