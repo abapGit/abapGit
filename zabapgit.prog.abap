@@ -18044,8 +18044,9 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('a:hover, a:active { text-decoration:  underline; }').
     ro_html->add('img               { border: 0px; }').
+    ro_html->add('table             { border-collapse: collapse; }').
     ro_html->add('.error            { color: red; }').
-    ro_html->add('table { border-collapse: collapse; }').
+    ro_html->add('.grey             { color: lightgrey !important; }').
 
     " Structure div styles: header, footer, toc
     ro_html->add('/* STRUCTURE DIVS */').
@@ -18188,6 +18189,17 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
+
+    TYPES:  BEGIN OF ty_repo_item,
+              obj_type    TYPE tadir-object,
+              obj_name    TYPE tadir-obj_name,
+              is_changed  TYPE abap_bool,
+              files       TYPE ty_string_tt,
+              is_first    TYPE abap_bool,
+              result      TYPE lcl_file_status=>ty_result, "TODO, remove, clutch
+            END OF ty_repo_item.
+    TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
+
     CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
 
     METHODS styles
@@ -18202,7 +18214,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    METHODS build_menu
+    METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
     METHODS render_repo_top
@@ -18215,24 +18227,31 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    METHODS render_repo_online
-      IMPORTING io_repo        TYPE REF TO lcl_repo_online
+    METHODS render_repo
+      IMPORTING io_repo        TYPE REF TO lcl_repo
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    METHODS render_repo_offline
-      IMPORTING io_repo        TYPE REF TO lcl_repo_offline
+    METHODS extract_repo_content
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      EXPORTING et_repo_items  TYPE tt_repo_items
+                eo_log         TYPE REF TO lcl_log
+      RAISING   lcx_exception.
+
+    METHODS render_repo_item
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+                is_item        TYPE ty_repo_item
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
+
+    METHODS render_obj_jump_link
+      IMPORTING iv_obj_type    TYPE tadir-object
+                iv_obj_name    TYPE tadir-obj_name
+      RETURNING VALUE(rv_html) TYPE string.
 
     CLASS-METHODS render_explore
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
-
-    CLASS-METHODS jump_link
-      IMPORTING iv_obj_type    TYPE tadir-object
-                iv_obj_name    TYPE tadir-obj_name
-      RETURNING VALUE(rv_html) TYPE string.
 
     CLASS-METHODS jump_encode
       IMPORTING iv_obj_type      TYPE tadir-object
@@ -19343,22 +19362,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "encode_struct
 
-  METHOD jump_link.
+  METHOD render_obj_jump_link.
 
     DATA: lv_encode TYPE string.
 
+    lv_encode = jump_encode( iv_obj_type = iv_obj_type
+                             iv_obj_name = iv_obj_name ).
 
-    lv_encode = jump_encode(
-      iv_obj_type = iv_obj_type
-      iv_obj_name = iv_obj_name ).
-
-    rv_html = iv_obj_type &&
-       '&nbsp;' &&
-       '<a href="sapevent:jump?' &&
-       lv_encode &&
-       '">' &&
-       iv_obj_name  &&
-       '</a>'.
+    rv_html = |<a href="sapevent:jump?{ lv_encode }">{ iv_obj_name }</a>|.
 
   ENDMETHOD.
 
@@ -19616,7 +19627,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "install
 
-  METHOD build_menu.
+  METHOD build_main_menu.
 
     DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
     DATA lo_betasub TYPE REF TO lcl_html_toolbar.
@@ -19636,7 +19647,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_menu = lo_toolbar.
 
-  ENDMETHOD.                    "build menu
+  ENDMETHOD.                    "build main_menu
 
   METHOD styles.
     CREATE OBJECT ro_html.
@@ -19709,8 +19720,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_repo_menu.
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-    DATA lv_key     TYPE lcl_persistence_db=>ty_value.
+    DATA lo_toolbar     TYPE REF TO lcl_html_toolbar.
+    DATA lv_key         TYPE lcl_persistence_db=>ty_value.
+    DATA lo_repo_online TYPE REF TO lcl_repo_online.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
@@ -19721,10 +19733,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Show'      iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
       IF io_repo->is_offline( ) = abap_true.
-        lo_toolbar->add( iv_txt = 'Import ZIP'    iv_cmd = |sapevent:zipimport?{ lv_key }| iv_emph = abap_true ).
-        lo_toolbar->add( iv_txt = 'Export ZIP'    iv_cmd = |sapevent:zipexport?{ lv_key }| iv_emph = abap_true ).
-        lo_toolbar->add( iv_txt = 'Export&Commit' iv_cmd = |sapevent:files_commit?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Import ZIP'        iv_cmd = |sapevent:zipimport?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export ZIP'        iv_cmd = |sapevent:zipexport?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export&amp;Commit' iv_cmd = |sapevent:files_commit?{ lv_key }| iv_emph = abap_true ).
       ELSE.
+        lo_repo_online ?= io_repo.
+        IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
+          lo_toolbar->add( iv_txt = 'Pull'  iv_cmd = |sapevent:pull?{ lv_key }| iv_emph = abap_true ).
+        ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
+          lo_toolbar->add( iv_txt = 'Stage' iv_cmd = |sapevent:stage?{ lv_key }| iv_emph = abap_true ).
+        ENDIF.
       ENDIF.
       lo_toolbar->add( iv_txt = 'Remove'    iv_cmd = |sapevent:remove?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Uninstall' iv_cmd = |sapevent:uninstall?{ lv_key }| ).
@@ -19740,24 +19758,28 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo_top.
     DATA  lo_repo_online  TYPE REF TO lcl_repo_online.
+    DATA  lv_icon         TYPE string.
 
     CREATE OBJECT ro_html.
+
+    IF io_repo->is_offline( ) = abap_true.
+      lv_icon = 'img/repo_offline'.
+    ELSE.
+      lv_icon = 'img/repo_online'.
+    ENDIF.
 
     ro_html->add( |<a id="{ io_repo->get_name( ) }"></a>| ).
     ro_html->add( '<table class="mixed_height_bar"><tr>' ).
 
     ro_html->add( '<td class="repo_name">' ).
-    IF io_repo->is_offline( ) = abap_false.
-      ro_html->add( '<img src="img/repo_online">' ).
-    ELSE.
-      ro_html->add( '<img src="img/repo_offline">' ).
-    ENDIF.
+    ro_html->add( |<img src="{ lv_icon }">| ).
     ro_html->add( |<span>{ io_repo->get_name( ) }</span>| ).
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
     ro_html->add( '<img src="img/pkg">' ).
     ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       ro_html->add( '<img src="img/branch">' ).
@@ -19765,71 +19787,18 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( '<img src="img/link">' ).
       ro_html->add( |<input type="text" value="{ lo_repo_online->get_url( ) }" readonly>| ).
     ENDIF.
-    ro_html->add( '</td>' ).
 
+    ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
 
-  METHOD render_repo_offline.
+  METHOD render_repo.
+    DATA: lt_repo_items TYPE tt_repo_items,
+          lx_error      TYPE REF TO lcx_exception,
+          lo_log        TYPE REF TO lcl_log.
 
-    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div class="repo">' ).
-    ro_html->add( render_repo_top( io_repo ) ).
-    ro_html->add( render_repo_menu( io_repo ) ).
-
-    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
-
-      lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
-      IF lines( lt_tadir ) = 0.
-        ro_html->add( '<table class="repo_tab"><tr class="unsupported"><td>'
-                     && '<center>Empty package</center>'
-                     && '</td></tr></table>' ) ##NO_TEXT.
-      ELSE.
-        ro_html->add( '<table class="repo_tab">' ).
-        LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-          IF sy-tabix = 1.
-            ro_html->add( '<tr class="firstrow">' ).
-          ELSE.
-            ro_html->add( '<tr>' ).
-          ENDIF.
-          ro_html->add( '<td>' ).
-          ro_html->add( jump_link( iv_obj_type = <ls_tadir>-object
-                                   iv_obj_name = <ls_tadir>-obj_name ) ).
-          ro_html->add( '</td>' ).
-          ro_html->add( '</tr>' ).
-        ENDLOOP.
-        ro_html->add( '</table>' ).
-      ENDIF.
-
-    ENDIF.
-
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.                    "render_repo_offline
-
-  METHOD render_repo_online.
-
-    DATA: lv_link        TYPE string,
-          lv_object      TYPE string,
-          lv_index       LIKE sy-tabix,
-          lv_file_encode TYPE string,
-          lx_error       TYPE REF TO lcx_exception,
-          lv_span        TYPE i,
-          lv_trclass     TYPE string,
-          lo_log         TYPE REF TO lcl_log,
-          lt_results     TYPE lcl_file_status=>ty_results_tt,
-          ls_next        LIKE LINE OF lt_results,
-          ls_item        TYPE ty_item,
-          lv_supported   TYPE abap_bool.
-
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
-
+    FIELD-SYMBOLS <item> TYPE ty_repo_item.
 
     CREATE OBJECT ro_html.
 
@@ -19839,90 +19808,157 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
-          CREATE OBJECT lo_log.
-          lt_results = io_repo->status( lo_log ).
+          extract_repo_content( EXPORTING io_repo       = io_repo
+                                IMPORTING et_repo_items = lt_repo_items
+                                          eo_log        = lo_log ).
 
           ro_html->add( '<table class="repo_tab">' ).
-          ro_html->add( '<tbody>' ).
 
-          LOOP AT lt_results ASSIGNING <ls_result>.
-            lv_index = sy-tabix.
-            lv_file_encode = file_encode( iv_key  = io_repo->get_key( )
-                                          is_file = <ls_result> ).
-
-            CLEAR lv_link.
-            IF <ls_result>-filename IS INITIAL.
-              lv_link = 'new'.
-            ELSEIF <ls_result>-match = abap_false.
-              lv_link = '<a href="sapevent:diff?' && lv_file_encode && '">diff</a>'.
-            ENDIF.
-
-            IF lv_span = 0.
-              READ TABLE lt_results INTO ls_next INDEX lv_index.
-              ASSERT sy-subrc = 0.
-              WHILE ls_next-obj_type = <ls_result>-obj_type
-                  AND ls_next-obj_name = <ls_result>-obj_name.
-                lv_span  = lv_span + 1.
-                lv_index = lv_index + 1.
-                READ TABLE lt_results INTO ls_next INDEX lv_index.
-                IF sy-subrc <> 0.
-                  EXIT. " current loop.
-                ENDIF.
-              ENDWHILE.
-
-              IF <ls_result>-obj_type IS INITIAL.
-                lv_object = '<td rowspan="' && lv_span && '">&nbsp;</td>' &&
-                  '<td rowspan="' && lv_span && '"></td>'.
-                lv_trclass = ' class="unsupported"' ##NO_TEXT.
-              ELSE.
-                CLEAR lv_trclass.
-                lv_object = '<td rowspan="' && lv_span && '">' &&
-                  jump_link( iv_obj_type = <ls_result>-obj_type
-                             iv_obj_name = <ls_result>-obj_name ) &&
-                  '</td>' &&
-                  '<td rowspan="' && lv_span && '">' &&
-                  <ls_result>-package &&
-                  '</td>'.
-              ENDIF.
-            ELSE.
-              CLEAR lv_object.
-            ENDIF.
-
-
-            ro_html->add( '<tr' && lv_trclass && '>' ).
-            ro_html->add( lv_object ).
-            ro_html->add( '<td>' ).
-            ro_html->add( <ls_result>-path && <ls_result>-filename ).
-            ro_html->add( '</td>' ).
-            ro_html->add( '<td>' && lv_link && '</td>' ).
-            ro_html->add( '</tr>' ).
-
-            lv_span = lv_span - 1.
-          ENDLOOP.
-
-          ro_html->add( '</tbody>' ).
-          ro_html->add( '</table>' ).
-
-          IF io_repo->get_sha1_remote( ) <> io_repo->get_sha1_local( ).
-            ro_html->add( '<a href="sapevent:pull?' &&
-              io_repo->get_key( ) &&
-              '">pull</a>' ).
-          ELSEIF lcl_stage_logic=>count( io_repo ) > 0.
-            ro_html->add( '<a href="sapevent:stage?' &&
-              io_repo->get_key( ) &&
-              '">stage</a>' ).
+          IF lines( lt_repo_items ) = 0.
+            ro_html->add(   '<tr class="unsupported"><td>'
+                         && '<center>Empty package</center>'
+                         && '</td></tr>' ) ##NO_TEXT.
+          ELSE.
+            LOOP AT lt_repo_items ASSIGNING <item>.
+              ro_html->add( render_repo_item( io_repo = io_repo is_item = <item> ) ).
+            ENDLOOP.
           ENDIF.
 
-          ro_html->add( lo_log->to_html( ) ).
+          ro_html->add( '</table>' ).
+
+          IF io_repo->is_offline( ) = abap_false.
+            ro_html->add( '<div class="log">' ). "TODO ??????
+            ro_html->add( lo_log->to_html( ) ).
+            ro_html->add( '</div>' ).
+          ENDIF.
 
         CATCH lcx_exception INTO lx_error.
           ro_html->add( render_error( lx_error ) ).
       ENDTRY.
-    ENDIF.
+    ENDIF. " Hidden
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.                    "render_repo
+  ENDMETHOD.
+
+  METHOD extract_repo_content.
+
+    DATA: lo_repo_online  TYPE REF TO lcl_repo_online,
+          lt_tadir        TYPE lcl_tadir=>ty_tadir_tt,
+          ls_repo_item    TYPE ty_repo_item,
+          lv_file         TYPE string,
+          lt_results      TYPE lcl_file_status=>ty_results_tt.
+
+    FIELD-SYMBOLS:  <ls_result> LIKE LINE OF lt_results,
+                    <ls_tadir>  LIKE LINE OF lt_tadir.
+
+    IF io_repo->is_offline( ) = abap_true.
+      lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
+      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+        CLEAR ls_repo_item.
+        IF sy-tabix = 1.
+          ls_repo_item-is_first = abap_true.
+        ENDIF.
+        ls_repo_item-obj_type = <ls_tadir>-object.
+        ls_repo_item-obj_name = <ls_tadir>-obj_name.
+        APPEND ls_repo_item TO et_repo_items.
+      ENDLOOP.
+    ELSE.
+      CREATE OBJECT eo_log.
+      lo_repo_online ?= io_repo.
+      lt_results      = lo_repo_online->status( eo_log ).
+      LOOP AT lt_results ASSIGNING <ls_result>.
+        AT NEW obj_name. "obj_type + obj_name
+          CLEAR ls_repo_item.
+          IF sy-tabix = 1.
+            ls_repo_item-is_first = abap_true.
+          ENDIF.
+          ls_repo_item-obj_type = <ls_result>-obj_type.
+          ls_repo_item-obj_name = <ls_result>-obj_name.
+        ENDAT.
+
+        IF <ls_result>-filename IS NOT INITIAL.
+          lv_file = <ls_result>-path && <ls_result>-filename.
+          APPEND lv_file TO ls_repo_item-files.
+        ENDIF.
+        IF <ls_result>-match = abap_false.
+          ls_repo_item-is_changed = abap_true.
+          ls_repo_item-result = <ls_result>. "TODO remove, clutch
+        ENDIF.
+
+        AT END OF obj_name. "obj_type + obj_name
+          APPEND ls_repo_item TO et_repo_items.
+        ENDAT.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD render_repo_item.
+    DATA:
+          lv_link     TYPE string,
+          lv_icon     TYPE string,
+          lv_file     TYPE string,
+          lv_cmd      TYPE string,
+          lv_trclass  TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    IF is_item-is_first = abap_true. " TR class
+      lv_trclass = 'firstrow'.
+    ENDIF.
+    IF is_item-obj_name IS INITIAL.
+      lv_trclass = lv_trclass && ' unsupported'.
+    ENDIF.
+    IF lv_trclass IS NOT INITIAL.
+      SHIFT lv_trclass LEFT DELETING LEADING space.
+      lv_trclass = | class="{ lv_trclass }"|.
+    ENDIF.
+
+    ro_html->add( |<tr{ lv_trclass }>| ).
+
+    IF is_item-obj_name IS INITIAL.
+      ro_html->add( '<td colspan="3"></td>' ).
+    ELSE.
+      CASE is_item-obj_type. "TODO ??
+        WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
+          lv_icon = |<img src="img/code">|.
+        WHEN 'W3MI' OR 'W3HT'.
+          lv_icon = |<img src="img/bin">|.
+        WHEN ''.
+          " no icon
+        WHEN OTHERS.
+          lv_icon = |<img src="img/obj">|.
+      ENDCASE.
+
+      lv_link = render_obj_jump_link( iv_obj_name = is_item-obj_name
+                                      iv_obj_type = is_item-obj_type ).
+      ro_html->add( |<td class="icon">{ lv_icon }</td>| ).
+      ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
+      ro_html->add( |<td class="object">{ lv_link }</td>| ).
+    ENDIF.
+
+    IF io_repo->is_offline( ) = abap_false. " Files for online repos only
+      ro_html->add( '<td class="files">' ).
+      LOOP AT is_item-files INTO lv_file.
+        ro_html->add( |<span>{ lv_file }</span>| ).
+      ENDLOOP.
+      ro_html->add( '</td>' ).
+
+      IF lines( is_item-files ) = 0.
+        lv_cmd =  '<span class="grey">new</span>'.
+      ELSEIF is_item-is_changed = abap_true.
+        lv_cmd = '<a href="sapevent:diff?' "TODO, refactor, clunch
+              && file_encode( iv_key  = io_repo->get_key( )
+                              is_file = is_item-result )
+              && '">diff</a>'.
+      ENDIF.
+    ENDIF.
+
+    ro_html->add( |<td class="cmd">{ lv_cmd }</td>| ).
+    ro_html->add( '</tr>' ).
+
+  ENDMETHOD.
 
   METHOD abapgit_installation.
 
@@ -20170,8 +20206,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD lif_gui_page~render.
 
     DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo_online  TYPE REF TO lcl_repo_online,
-          lo_repo_offline TYPE REF TO lcl_repo_offline,
           lx_error        TYPE REF TO lcx_exception,
           lo_repo         LIKE LINE OF lt_repos.
 
@@ -20180,7 +20214,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT go_user.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_menu( ) ) ).
+    ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_main_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_repo_srv=>list( ).
@@ -20198,14 +20232,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                             iv_current = sy-tabix
                             iv_total   = lines( lt_repos )
                             iv_text    = lo_repo->get_name( ) ) ##NO_TEXT.
-
-        IF lo_repo->is_offline( ) = abap_true.
-          lo_repo_offline ?= lo_repo.
-          ro_html->add( render_repo_offline( lo_repo_offline ) ).
-        ELSE.
-          lo_repo_online ?= lo_repo.
-          ro_html->add( render_repo_online( lo_repo_online ) ).
-        ENDIF.
+        ro_html->add( render_repo( lo_repo ) ).
       ENDLOOP.
     ENDIF.
 
