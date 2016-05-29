@@ -2684,6 +2684,7 @@ CLASS lcl_diff IMPLEMENTATION.
           APPEND lv_code_line TO mt_beacons.
           lv_beacon        = sy-tabix.
           <ls_diff>-beacon = lv_beacon.
+          EXIT. "Loop
         ENDIF.
       ENDLOOP.
     ENDLOOP.
