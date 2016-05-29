@@ -2468,21 +2468,24 @@ CLASS lcl_diff DEFINITION FINAL.
                  update TYPE c LENGTH 1 VALUE 'U',
                END OF c_diff.
 
-    TYPES: BEGIN OF ty_diff,
-             local_line  TYPE c LENGTH 6,
-             local       TYPE string,
-             result      TYPE c LENGTH 1,
-             remote_line TYPE c LENGTH 6,
-             remote      TYPE string,
-             short       TYPE abap_bool,
-           END OF ty_diff.
-    TYPES: ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
+    TYPES:  BEGIN OF ty_diff,
+              local_line  TYPE c LENGTH 6,
+              local       TYPE string,
+              result      TYPE c LENGTH 1,
+              remote_line TYPE c LENGTH 6,
+              remote      TYPE string,
+              short       TYPE abap_bool,
+              beacon      TYPE i,
+            END OF ty_diff.
+    TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_count,
              insert TYPE i,
              delete TYPE i,
              update TYPE i,
            END OF ty_count.
+
+    DATA mt_beacons TYPE ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -2497,7 +2500,8 @@ CLASS lcl_diff DEFINITION FINAL.
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
-    DATA mt_diff TYPE ty_diffs_tt.
+    DATA mt_diff    TYPE ty_diffs_tt.
+    DATA ms_stats   TYPE ty_count.
 
     CLASS-METHODS:
       unpack
@@ -2516,7 +2520,8 @@ CLASS lcl_diff DEFINITION FINAL.
         RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
 
     METHODS:
-      calculate_line_num,
+      calculate_line_num_and_stats,
+      map_beacons,
       shortlist.
 
 ENDCLASS.                    "lcl_diff DEFINITION
@@ -2533,21 +2538,7 @@ CLASS lcl_diff IMPLEMENTATION.
   ENDMETHOD.                    "get
 
   METHOD stats.
-
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
-
-
-    LOOP AT mt_diff ASSIGNING <ls_diff>.
-      CASE <ls_diff>-result.
-        WHEN lcl_diff=>c_diff-insert.
-          rs_count-insert = rs_count-insert + 1.
-        WHEN lcl_diff=>c_diff-delete.
-          rs_count-delete = rs_count-delete + 1.
-        WHEN lcl_diff=>c_diff-update.
-          rs_count-update = rs_count-update + 1.
-      ENDCASE.
-    ENDLOOP.
-
+    rs_count = ms_stats.
   ENDMETHOD.                    "count
 
   METHOD unpack.
@@ -2588,7 +2579,6 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-
     IF lines( mt_diff ) < 500.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
@@ -2604,11 +2594,9 @@ CLASS lcl_diff IMPLEMENTATION.
             EXIT.
           ENDIF.
           <ls_diff>-short = abap_true.
-*          lv_index = lv_index - 1.
         ENDDO.
 
         DO 20 TIMES. " Forward
-*          lv_index = lv_index + 1.
           READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0. " tab bound reached
             EXIT.
@@ -2620,9 +2608,9 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                " shortlist
 
-  METHOD calculate_line_num.
+  METHOD calculate_line_num_and_stats.
 
     DATA: lv_local  TYPE i VALUE 1,
           lv_remote TYPE i VALUE 1.
@@ -2634,7 +2622,7 @@ CLASS lcl_diff IMPLEMENTATION.
       <ls_diff>-local_line = lv_local.
       <ls_diff>-remote_line = lv_remote.
 
-      CASE <ls_diff>-result.
+      CASE <ls_diff>-result. " Line nums
         WHEN c_diff-delete.
           lv_remote = lv_remote + 1.
           CLEAR <ls_diff>-local_line.
@@ -2646,9 +2634,62 @@ CLASS lcl_diff IMPLEMENTATION.
           lv_remote = lv_remote + 1.
       ENDCASE.
 
+      CASE <ls_diff>-result. " Stats
+        WHEN c_diff-insert.
+          ms_stats-insert = ms_stats-insert + 1.
+        WHEN c_diff-delete.
+          ms_stats-delete = ms_stats-delete + 1.
+        WHEN c_diff-update.
+          ms_stats-update = ms_stats-update + 1.
+      ENDCASE.
+
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                " calculate_line_num_and_stats
+
+  METHOD map_beacons.
+
+    DATA: lv_beacon     TYPE i,
+          lv_offs       TYPE i,
+          lv_code_line  TYPE string,
+          lo_regex      TYPE REF TO cl_abap_regex,
+          lt_regex_set  TYPE TABLE OF REF TO cl_abap_regex.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
+
+    DEFINE _add_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING pattern     = &1
+                  ignore_case = abap_true.
+      APPEND lo_regex TO lt_regex_set.
+    END-OF-DEFINITION.
+
+    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT)\s'.
+    _add_regex '^\s*START-OF-'.
+    _add_regex '^\s*INITIALIZATION(\s|\.)'.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+      <ls_diff>-beacon = lv_beacon.
+      LOOP AT lt_regex_set INTO lo_regex.
+        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-local.
+        IF sy-subrc = 0. " Match
+          lv_code_line = <ls_diff>-local.
+
+          " Get rid of comments
+          FIND FIRST OCCURRENCE OF '.' IN lv_code_line MATCH OFFSET lv_offs.
+          IF sy-subrc = 0.
+            lv_code_line = lv_code_line(lv_offs).
+          ENDIF.
+
+          APPEND lv_code_line TO mt_beacons.
+          lv_beacon        = sy-tabix.
+          <ls_diff>-beacon = lv_beacon.
+          EXIT. "Loop
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+  ENDMETHOD.                " map_beacons
 
   METHOD constructor.
 
@@ -2669,8 +2710,8 @@ CLASS lcl_diff IMPLEMENTATION.
                       it_remote = lt_remote
                       it_delta  = lt_delta ).
 
-    calculate_line_num( ).
-
+    calculate_line_num_and_stats( ).
+    map_beacons( ).
     shortlist( ).
 
   ENDMETHOD.                    "diff
@@ -2733,7 +2774,7 @@ CLASS lcl_diff IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.
+  ENDMETHOD.                " render
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
@@ -18502,6 +18543,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_head  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_diff  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_lines RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -18622,31 +18664,44 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff.
 
-    DATA lo_html         TYPE REF TO lcl_html_helper.
-    DATA lt_diffs        TYPE lcl_diff=>ty_diffs_tt.
-    DATA lv_local        TYPE string.
-    DATA lv_remote       TYPE string.
-    DATA lv_attr_local   TYPE string.
-    DATA lv_attr_remote  TYPE string.
-    DATA lv_anchor_count LIKE sy-tabix.
-    DATA lv_href         TYPE string.
-    DATA lv_insert_nav   TYPE abap_bool.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
+    ro_html->add( render_head( ) ).
+
+    " Content
+    ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
+    ro_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
+    ro_html->add(   '<tr>' ).                               "#EC NOTEXT
+    ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
+    ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
+    ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
+    ro_html->add(   '<th>@REMOTE</th>' ).                   "#EC NOTEXT
+    ro_html->add(   '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
+    ro_html->add(   '</tr>' ).                              "#EC NOTEXT
+    ro_html->add( render_lines( ) ).
+    ro_html->add( '</table>' ).                             "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+  ENDMETHOD.
+
+  METHOD render_lines.
+    DATA: lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
+          lv_local        TYPE string,
+          lv_remote       TYPE string,
+          lv_attr_local   TYPE string,
+          lv_attr_remote  TYPE string,
+          lv_anchor_count LIKE sy-tabix,
+          lv_href         TYPE string,
+          lv_beacon       TYPE string,
+          lv_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-
-    CREATE OBJECT lo_html.
+    CREATE OBJECT ro_html.
     lt_diffs = mo_diff->get( ).
-
-    lo_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    lo_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
-    lo_html->add( '<tr>' ).                                 "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    lo_html->add( '<th>@LOCAL</th>' ).                      "#EC NOTEXT
-    lo_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    lo_html->add( '<th>@REMOTE</th>' ).                     "#EC NOTEXT
-    lo_html->add( '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
-    lo_html->add( '</tr>' ).                                "#EC NOTEXT
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
@@ -18655,11 +18710,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDIF.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
+        IF <ls_diff>-beacon > 0.
+          READ TABLE mo_diff->mt_beacons INTO lv_beacon INDEX <ls_diff>-beacon.
+        ELSE.
+          lv_beacon = '---'.
+        ENDIF.
+
+        ro_html->add( '<tr class="diff_nav_line">').
+        ro_html->add( '<td class="num"></td>' ).
+        ro_html->add( |<td colspan="4">@@ { <ls_diff>-local_line } @@ { lv_beacon }</td>| ).
+        ro_html->add( '</tr>' ).
         lv_insert_nav = abap_false.
-        lo_html->add( '<tr class="diff_nav_line"><td class="num"></td>' ).
-        lo_html->add( |<td colspan="4">@@ {
-          <ls_diff>-local_line }, { <ls_diff>-remote_line }</td>| ).
-        lo_html->add( '</tr>' ).
       ENDIF.
 
       lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
@@ -18688,20 +18749,16 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lo_html->add( '<tr>' ).                               "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
-      lo_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
-      lo_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
-      lo_html->add( '</tr>' ).                              "#EC NOTEXT
+      ro_html->add( '<tr>' ).                               "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
+      ro_html->add( '</tr>' ).                              "#EC NOTEXT
 
     ENDLOOP.
 
-    lo_html->add( '</table>' ).                             "#EC NOTEXT
-    lo_html->add( '</div>' ).                               "#EC NOTEXT
-
-    ro_html = lo_html.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -18719,10 +18776,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'DIFF' ) ).
-    ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
-    ro_html->add( render_head( ) ).
     ro_html->add( render_diff( ) ).
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
