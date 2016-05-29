@@ -415,29 +415,29 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render.
-    DATA: lo_html  TYPE REF TO lcl_html_helper,
+    DATA:
           lv_class TYPE string,
           lv_last  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
-
-    CREATE OBJECT lo_html.
+    CREATE OBJECT ro_html.
 
     IF iv_as_droplist_with_label IS INITIAL.
       lv_class = 'menu'.
     ELSE.
       lv_class = 'dropdown'.
+    ENDIF.
+
+    ro_html->add( |<div class="{ lv_class }">| ).
+
+    IF iv_as_droplist_with_label IS NOT INITIAL.
+      lv_class = 'dropbtn'.
       IF iv_no_separator = abap_true.
         lv_class = lv_class && ' menu_end'.
       ENDIF.
-    ENDIF.
-
-    lo_html->add( |<div class="{ lv_class }">| ).
-
-    IF iv_as_droplist_with_label IS NOT INITIAL.
-      lo_html->add( |<button class="dropbtn">{ iv_as_droplist_with_label }</button>| ).
-      lo_html->add( '<div class="dropdown_content">' ).
+      ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
+      ro_html->add( '<div class="dropdown_content">' ).
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.
@@ -452,27 +452,26 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
           lv_class = lv_class && ' emphasis'.
         ENDIF.
         IF <ls_item>-cancel = abap_true.
-          lv_class = lv_class && ' cancel'.
+          lv_class = lv_class && ' attention'.
         ENDIF.
         IF lv_class IS NOT INITIAL.
           SHIFT lv_class LEFT DELETING LEADING space.
           lv_class = | class="{ lv_class }"|.
         ENDIF.
 
-        lo_html->add( |<a{ lv_class } href="{ <ls_item>-cmd }">{ <ls_item>-txt }</a>| ).
+        ro_html->add( |<a{ lv_class } href="{ <ls_item>-cmd }">{ <ls_item>-txt }</a>| ).
       ELSE.
-        lo_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
+        ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
                                              iv_no_separator           = lv_last ) ).
       ENDIF.
 
     ENDLOOP.
 
     IF iv_as_droplist_with_label IS NOT INITIAL.
-      lo_html->add( '</div>' ).
+      ro_html->add( '</div>' ).
     ENDIF.
 
-    lo_html->add( '</div>' ).
-    ro_html = lo_html.
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -18196,16 +18195,20 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
-    ro_html->add( '<table class="mixed_height_bar"><tr>' ). "#EC NOTEXT
+    ro_html->add( '<table width="100%"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="logo">' ).                    "#EC NOTEXT
     ro_html->add( '<a href="sapevent:abapgithome">' ).      "#EC NOTEXT
-    ro_html->add( '<img src="img/logo"></a>' ).             "#EC NOTEXT
-    ro_html->add( |<span class="page_title">::{ iv_page_title }</span>| )."#EC NOTEXT
+    ro_html->add( '<img src="img/logo">' ).                 "#EC NOTEXT
+    ro_html->add( '</a>' ).                                 "#EC NOTEXT
     ro_html->add( '</td>' ).                                "#EC NOTEXT
 
+    ro_html->add( '<td class="headpad"><span class="page_title">' ). "#EC NOTEXT
+    ro_html->add( |&#x25BA;{ iv_page_title }| ).            "#EC NOTEXT
+    ro_html->add( '</span></td>' ).                         "#EC NOTEXT
+
     IF io_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
+      ro_html->add( '<td class="headpad right">' ).         "#EC NOTEXT
       ro_html->add( io_menu->render( ) ).
       ro_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
@@ -18226,7 +18229,9 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     IF io_include_script IS BOUND.
+      ro_html->add( '<script type="text/javascript">' ).
       ro_html->add( io_include_script ).
+      ro_html->add( '</script>' ).
     ENDIF.
 
     ro_html->add( '</html>').                               "#EC NOTEXT
@@ -18243,6 +18248,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('/* GLOBALS */').
     ro_html->add('body {').
     ro_html->add('  font-family: Arial,Helvetica,sans-serif;').
+    ro_html->add('  font-size:    12pt;' ).
     ro_html->add('  background: #E8E8E8;').
     ro_html->add('}').
     ro_html->add('a, a:visited {').
@@ -18250,97 +18256,85 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  text-decoration:  none;').
     ro_html->add('}').
     ro_html->add('a:hover, a:active { text-decoration:  underline; }').
-    ro_html->add('img               { border: 0px; }').
+    ro_html->add('img               { border: 0px; vertical-align: middle; }').
     ro_html->add('table             { border-collapse: collapse; }').
-    ro_html->add('.error            { color: red; }').
-    ro_html->add('.grey             { color: lightgrey !important; }').
+
+    " Modifiers
+    ro_html->add('/* MODIFIERS */').
+    ro_html->add('.grey             { color: lightgrey  !important; }').
+    ro_html->add('.emphasis         { font-weight: bold !important; }').
+    ro_html->add('.attention        { color: red        !important; }').
+    ro_html->add('.right            { text-align:right; }').
+    ro_html->add('.paddings         { padding: 0.5em 0.5em 0.5em 0.5em; }').
 
     " Structure div styles: header, footer, toc
-    ro_html->add('/* STRUCTURE DIVS */').
+    ro_html->add('/* STRUCTURE DIVS, HEADER & FOOTER */').
+    ro_html->add('td.headpad { padding-top: 11px; }').
+    ro_html->add('td.logo    { width: 164px; }').
     ro_html->add('div#header {').
-    ro_html->add('  display:          block;').
-    ro_html->add('  margin-top:       0.5em;').
+    ro_html->add('  padding:          0.5em 0.5em 0.5em 0.5em;').
     ro_html->add('  border-bottom:    3px double lightgrey;').
     ro_html->add('}').
     ro_html->add('div#toc {').
-    ro_html->add('  display:          block;').
+    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
     ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          1em;').
     ro_html->add('}').
     ro_html->add('div#footer {').
-    ro_html->add('  display:          block;').
-    ro_html->add('  margin-bottom:    1em;').
-    ro_html->add('  padding-top:      0.5em;').
+    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
     ro_html->add('  border-top:       3px double lightgrey;').
-    ro_html->add('  color:            grey;').
     ro_html->add('  text-align:       center;').
     ro_html->add('}').
     ro_html->add('div.dummydiv {').
-    ro_html->add('  display:          block;').
     ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          1em;').
+    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
     ro_html->add('  text-align:       center;').
-    ro_html->add('}').
-
-    " Header, footer and menu styles
-    ro_html->add('/* HEADER, FOOTER & MENU */').
-    ro_html->add('.mixed_height_bar {').
-    ro_html->add('  width: 98%; /*IE7 compat5 mode workaround*/').
-    ro_html->add('}').
-    ro_html->add('div.menu  { display: inline; }').
-    ro_html->add('.right    { text-align:right; }').
-    ro_html->add('.menu_end { border-right: 0px !important; }').
-    ro_html->add('.menu a {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('  padding-right: 0.5em;').
-    ro_html->add('  border-right: 1px solid lightgrey;').
     ro_html->add('}').
     ro_html->add('span.version {').
     ro_html->add('  display: block;').
+    ro_html->add('  color: grey;').
     ro_html->add('  margin-top: 0.3em;').
     ro_html->add('}').
     ro_html->add('span.page_title {').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: larger;').
+    ro_html->add('  font-weight: normal;').
+    ro_html->add('  font-size: 20pt;').
     ro_html->add('  color: #bbb;').
-    ro_html->add('  vertical-align: super;').
+    ro_html->add('  padding-left: 0.2em;').
     ro_html->add('}').
-    ro_html->add('.emphasis { font-weight: bold; }').
-    ro_html->add('.cancel { color: red !important; }').
+
+    " Menu styles
+    ro_html->add('/* MENU */').
+    ro_html->add('div.menu           { display: inline; }').
+    ro_html->add('div.menu .menu_end { border-right: 0px !important; }').
+    ro_html->add('div.menu a {').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('  padding-right: 0.5em;').
+    ro_html->add('  border-right: 1px solid lightgrey;').
+    ro_html->add('  font-size: 12pt;').
+    ro_html->add('}').
 
     " Drop down styles
     ro_html->add('/*DROP DOWN*/').
     ro_html->add('.dropdown {').
     ro_html->add('    position: relative;').
     ro_html->add('    display: inline;').
-    ro_html->add('    border-right: 1px solid lightgrey;').
-    ro_html->add('}').
-    ro_html->add('.dropbtn {').
-    ro_html->add('    background-color: transparent;').
-    ro_html->add('    color: #4078c0;').
-    ro_html->add('    border: none;').
-    ro_html->add('    padding-left: 0.5em;').
-    ro_html->add('    padding-right: 0.5em;').
     ro_html->add('}').
     ro_html->add('.dropdown_content {').
     ro_html->add('    display: none;').
     ro_html->add('    position: absolute;').
-    ro_html->add('    background-color: #f9f9f9;').
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
-    ro_html->add('    border-right: 1px solid lightgrey;').
-    ro_html->add('    border-bottom: 1px solid lightgrey;').
+    ro_html->add('    background-color: #f9f9f9;').
     ro_html->add('    min-width: 8em;').
+    ro_html->add('    border-bottom: 1px solid lightgrey;').
     ro_html->add('}').
     ro_html->add('.dropdown_content a {').
     ro_html->add('    padding: 0.2em;').
     ro_html->add('    text-decoration: none;').
-    ro_html->add('    border: 0px;').
     ro_html->add('    display: block;').
     ro_html->add('}').
     ro_html->add('.dropdown_content a:hover { background-color: #f1f1f1 }').
     ro_html->add('.dropdown:hover .dropdown_content { display: block; }').
-    ro_html->add('.dropdown:hover .dropbtn { color: #79a0d2; }').
+    ro_html->add('.dropdown:hover .dropbtn  { color: #79a0d2; }').
 
     " Other and outdated (?) styles
     ro_html->add('/* MISC AND REFACTOR */').
@@ -18603,8 +18597,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( 'div.diff_content {' ).                   "#EC NOTEXT
     lo_html->add( '  background: #fff;' ).                  "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
+
+    " Table part
+    lo_html->add( '/* DIFF TABLE */' ).                     "#EC NOTEXT
     lo_html->add( 'table.diff_tab {' ).                     "#EC NOTEXT
-    lo_html->add( '  width: 98%;' ).                        "#EC NOTEXT
     lo_html->add( '  font-family: Consolas, Courier, monospace;' ). "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab th {' ).                  "#EC NOTEXT
@@ -18617,6 +18613,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  color: #444;' ).                       "#EC NOTEXT
     lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
     lo_html->add( '  padding-right: 0.5em;' ).              "#EC NOTEXT
+    lo_html->add( '  font-size: 12pt;' ).                   "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td.num, th.num {' ).      "#EC NOTEXT
     lo_html->add( '  text-align: right;' ).                 "#EC NOTEXT
@@ -18625,7 +18622,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  border-right: 1px solid #eee;' ).      "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td.cmd, th.cmd {' ).      "#EC NOTEXT
-    lo_html->add( '  font-size: smaller;' ).                "#EC NOTEXT
     lo_html->add( '  text-align: center !important;' ).     "#EC NOTEXT
     lo_html->add( '  white-space: nowrap;' ).               "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
@@ -18637,7 +18633,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '}').                                     "#EC NOTEXT
     lo_html->add( 'table.diff_tab code {' ).                "#EC NOTEXT
     lo_html->add( '  font-family: inherit;' ).              "#EC NOTEXT
-    lo_html->add( '  font-size: normal;' ).                 "#EC NOTEXT
     lo_html->add( '  white-space: pre;' ).                  "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
 
@@ -18671,7 +18666,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
+    ro_html->add( '<table width="100%" class="diff_tab">' )."#EC NOTEXT
     ro_html->add(   '<tr>' ).                               "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
     ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
@@ -19866,7 +19861,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF needs_installation( ) = abap_true.
       lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
-    lo_toolbar->add( iv_txt = '<b>&#x03b2;</b>'  io_sub = lo_betasub ).
+    lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
     ro_menu = lo_toolbar.
 
@@ -19877,68 +19872,66 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add('/* REPOSITORY */').
     ro_html->add('div.repo {').
-    ro_html->add('  display:          block;').
     ro_html->add('  margin-top:       3px;').
     ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          0.7em    ').
+    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
     ro_html->add('}').
     ro_html->add('.repo_name span {').
     ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: x-large;').
+    ro_html->add('  font-size: 16pt;').
     ro_html->add('}').
     ro_html->add('.repo_attr {').
     ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
+    ro_html->add('  font-size: 12pt;').
     ro_html->add('}').
     ro_html->add('.repo_attr span {').
-    ro_html->add('  margin-right:     1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr img {').
-    ro_html->add('  margin-right:     0.3em;').
+    ro_html->add('  margin-left: 0.2em;').
+    ro_html->add('  margin-right: 0.5em;').
     ro_html->add('}').
     ro_html->add('.repo_attr input {').
+    ro_html->add('  color: grey;').     " Input wants it personaly
+    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
+    ro_html->add('  margin-left: 0.5em;').
+    ro_html->add('  margin-right: 0.5em;').
     ro_html->add('  background-color: transparent;').
     ro_html->add('  border-style: none;').
     ro_html->add('  text-overflow: ellipsis;').
-    ro_html->add('  color: grey;').
     ro_html->add('}').
+
+    ro_html->add('/* REPOSITORY TABLE*/').
     ro_html->add('.repo_tab {').
-    ro_html->add('  width: 98%;').
     ro_html->add('  border: 1px solid #DDD;').
     ro_html->add('  border-radius: 3px;').
-    ro_html->add('  background: #ffffff;').
-    ro_html->add('  margin-top: 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab tr.unsupported {').
-    ro_html->add('  color: lightgrey;').
+    ro_html->add('  background: #fff;').
+    ro_html->add('  margin-top: 0.5em;').
     ro_html->add('}').
     ro_html->add('.repo_tab td {').
     ro_html->add('  border-top: 1px solid #eee;').
-    ro_html->add('  vertical-align: top;').
+    ro_html->add('  vertical-align: middle;').
     ro_html->add('  padding-top: 2px;').
     ro_html->add('  padding-bottom: 2px;').
     ro_html->add('}').
     ro_html->add('.repo_tab td.icon {').
-    ro_html->add('  padding-left: 10px;').
+    ro_html->add('  width: 32px;').
+    ro_html->add('  text-align: center;').
     ro_html->add('}').
     ro_html->add('.repo_tab td.type {').
-    ro_html->add('  width: 3.5em;').
+    ro_html->add('  width: 3em;').
     ro_html->add('}').
     ro_html->add('.repo_tab td.object {').
     ro_html->add('  padding-left: 0.5em;').
     ro_html->add('}').
     ro_html->add('.repo_tab td.files {').
     ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('  padding-right: 0.5em;').
     ro_html->add('}').
-    ro_html->add( '.repo_tab tr.firstrow td { border-top: 0px; } ' ).
-    ro_html->add( '.repo_attr input {').
-    ro_html->add( '  background-color: transparent;').
-    ro_html->add( '  border-style: none;').
-    ro_html->add( '  text-overflow: ellipsis;').
-    ro_html->add( '  color: grey;').
-    ro_html->add( '}').
-    ro_html->add( '.repo_tab td.files span { display: block; }').
+    ro_html->add('.repo_tab td.cmd {').
+    ro_html->add('  text-align: right;').
+    ro_html->add('  padding-left: 0.5em;').
+    ro_html->add('  padding-right: 1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_tab tr.unsupported { color: lightgrey; }').
+    ro_html->add('.repo_tab tr.firstrow td { border-top: 0px; } ' ).
+    ro_html->add('.repo_tab td.files span  { display: block; }').
 
   ENDMETHOD.
 
@@ -19973,7 +19966,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Hide'      iv_cmd = |sapevent:hide?{ lv_key }| ).
     ENDIF.
 
-    ro_html->add( '<div class="mixed_height_bar right">' ).
+    ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
@@ -19991,8 +19984,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lv_icon = 'img/repo_online'.
     ENDIF.
 
-    ro_html->add( |<a id="{ io_repo->get_name( ) }"></a>| ).
-    ro_html->add( '<table class="mixed_height_bar"><tr>' ).
+    ro_html->add( |<a id="repo{ io_repo->get_key( ) }"></a>| ).
+    ro_html->add( '<table width="100%"><tr>' ).
 
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( |<img src="{ lv_icon }">| ).
@@ -20025,7 +20018,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="repo">' ).
+    ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo ) ).
     ro_html->add( render_repo_menu( io_repo ) ).
 
@@ -20035,10 +20028,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                                 IMPORTING et_repo_items = lt_repo_items
                                           eo_log        = lo_log ).
 
-          ro_html->add( '<table class="repo_tab">' ).
+          ro_html->add( '<table width="100%" class="repo_tab">' ).
 
           IF lines( lt_repo_items ) = 0.
-            ro_html->add(   '<tr class="unsupported firstrow"><td style="padding:1em;">' "TODO move to styles
+            ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
                          && '<center>Empty package</center>'
                          && '</td></tr>' ) ##NO_TEXT.
           ELSE.
@@ -20391,7 +20384,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     LOOP AT it_list INTO lo_repo.
       lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                       iv_cmd = |#{ lo_repo->get_name( ) }| ).
+                       iv_cmd = |#repo{ lo_repo->get_key( ) }| ).
     ENDLOOP.
 
     ro_html->add( '<div id="toc">' ) ##NO_TEXT.
@@ -20405,7 +20398,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="dummydiv error">' ).
+    ro_html->add( '<div class="dummydiv attention">' ).
     ro_html->add( |Error: { ix_error->mv_text }| ).
     ro_html->add( '</div>' ).
 
