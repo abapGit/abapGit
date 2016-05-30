@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.13'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.14'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -372,23 +372,23 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS add    IMPORTING iv_txt   TYPE string
-                             io_sub   TYPE REF TO lcl_html_toolbar OPTIONAL
-                             iv_cmd   TYPE string    OPTIONAL
-                             iv_emph  TYPE abap_bool OPTIONAL
-                             iv_canc  TYPE abap_bool OPTIONAL.
+    METHODS add    IMPORTING iv_txt  TYPE string
+                             io_sub  TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_cmd  TYPE string    OPTIONAL
+                             iv_emph TYPE abap_bool OPTIONAL
+                             iv_canc TYPE abap_bool OPTIONAL.
     METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
                              iv_no_separator           TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
-    TYPES:  BEGIN OF ty_item,
-              txt       TYPE string,
-              cmd       TYPE string,
-              sub       TYPE REF TO lcl_html_toolbar,
-              emphasis  TYPE abap_bool,
-              cancel    TYPE abap_bool,
-            END OF ty_item.
+    TYPES: BEGIN OF ty_item,
+             txt      TYPE string,
+             cmd      TYPE string,
+             sub      TYPE REF TO lcl_html_toolbar,
+             emphasis TYPE abap_bool,
+             cancel   TYPE abap_bool,
+           END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
     DATA    mt_items TYPE tt_items.
@@ -416,8 +416,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
   METHOD render.
     DATA:
-          lv_class TYPE string,
-          lv_last  TYPE abap_bool.
+      lv_class TYPE string,
+      lv_last  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
@@ -2467,15 +2467,15 @@ CLASS lcl_diff DEFINITION FINAL.
                  update TYPE c LENGTH 1 VALUE 'U',
                END OF c_diff.
 
-    TYPES:  BEGIN OF ty_diff,
-              local_line  TYPE c LENGTH 6,
-              local       TYPE string,
-              result      TYPE c LENGTH 1,
-              remote_line TYPE c LENGTH 6,
-              remote      TYPE string,
-              short       TYPE abap_bool,
-              beacon      TYPE i,
-            END OF ty_diff.
+    TYPES: BEGIN OF ty_diff,
+             local_line  TYPE c LENGTH 6,
+             local       TYPE string,
+             result      TYPE c LENGTH 1,
+             remote_line TYPE c LENGTH 6,
+             remote      TYPE string,
+             short       TYPE abap_bool,
+             beacon      TYPE i,
+           END OF ty_diff.
     TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_count,
@@ -2648,11 +2648,11 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon     TYPE i,
-          lv_offs       TYPE i,
-          lv_code_line  TYPE string,
-          lo_regex      TYPE REF TO cl_abap_regex,
-          lt_regex_set  TYPE TABLE OF REF TO cl_abap_regex.
+    DATA: lv_beacon    TYPE i,
+          lv_offs      TYPE i,
+          lv_code_line TYPE string,
+          lo_regex     TYPE REF TO cl_abap_regex,
+          lt_regex_set TYPE TABLE OF REF TO cl_abap_regex.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
@@ -2777,12 +2777,14 @@ CLASS lcl_diff IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_diff IMPLEMENTATION
 
+CLASS ltcl_git_pack DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_pack DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_git_pack DEFINITION FINAL.
+CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_node,
@@ -2858,6 +2860,10 @@ CLASS lcl_git_pack DEFINITION FINAL.
     CLASS-METHODS delta_header
       EXPORTING ev_header TYPE i
       CHANGING  cv_delta  TYPE xstring.
+
+    CLASS-METHODS sort_tree
+      IMPORTING it_nodes        TYPE ty_nodes_tt
+      RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt.
 
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
@@ -14385,6 +14391,38 @@ ENDCLASS.                    "lcl_hash IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_git_pack IMPLEMENTATION.
 
+  METHOD sort_tree.
+
+    TYPES: BEGIN OF ty_sort,
+             sort TYPE string,
+             node TYPE ty_node,
+           END OF ty_sort.
+
+    DATA: lt_sort TYPE STANDARD TABLE OF ty_sort WITH DEFAULT KEY.
+
+    FIELD-SYMBOLS: <ls_sort> LIKE LINE OF lt_sort,
+                   <ls_node> LIKE LINE OF it_nodes.
+
+
+    LOOP AT it_nodes ASSIGNING <ls_node>.
+      APPEND INITIAL LINE TO lt_sort ASSIGNING <ls_sort>.
+      IF <ls_node>-chmod = gc_chmod-dir.
+        CONCATENATE <ls_node>-name '/' INTO <ls_sort>-sort.
+      ELSE.
+        <ls_sort>-sort = <ls_node>-name.
+      ENDIF.
+      <ls_sort>-node = <ls_node>.
+    ENDLOOP.
+
+* following has to be done, or unpack will fail on server side
+    SORT lt_sort BY sort ASCENDING.
+
+    LOOP AT lt_sort ASSIGNING <ls_sort>.
+      APPEND <ls_sort>-node TO rt_nodes.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD type_and_length.
 
     DATA: lv_bits   TYPE string,
@@ -14485,9 +14523,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_node> LIKE LINE OF it_nodes.
 
 
-    lt_nodes[] = it_nodes[].
-* following has to be done, or unpack will fail on server side
-    SORT lt_nodes BY name ASCENDING.
+    lt_nodes = sort_tree( it_nodes ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       ASSERT NOT <ls_node>-chmod IS INITIAL.
@@ -18438,9 +18474,9 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RAISING   lcx_exception.
 
     METHODS extract_repo_content
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      EXPORTING et_repo_items  TYPE tt_repo_items
-                eo_log         TYPE REF TO lcl_log
+      IMPORTING io_repo       TYPE REF TO lcl_repo
+      EXPORTING et_repo_items TYPE tt_repo_items
+                eo_log        TYPE REF TO lcl_log
       RAISING   lcx_exception.
 
     METHODS render_repo_item
@@ -18670,7 +18706,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table width="100%" class="diff_tab">' )."#EC NOTEXT
+    ro_html->add( '<table width="100%" class="diff_tab">' ). "#EC NOTEXT
     ro_html->add(   '<tr>' ).                               "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
     ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
@@ -20080,14 +20116,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD extract_repo_content.
 
-    DATA: lo_repo_online  TYPE REF TO lcl_repo_online,
-          lt_tadir        TYPE lcl_tadir=>ty_tadir_tt,
-          ls_repo_item    TYPE ty_repo_item,
-          ls_file         TYPE ty_repo_file,
-          lt_results      TYPE lcl_file_status=>ty_results_tt.
+    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+          lt_tadir       TYPE lcl_tadir=>ty_tadir_tt,
+          ls_repo_item   TYPE ty_repo_item,
+          ls_file        TYPE ty_repo_file,
+          lt_results     TYPE lcl_file_status=>ty_results_tt.
 
-    FIELD-SYMBOLS:  <ls_result> LIKE LINE OF lt_results,
-                    <ls_tadir>  LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
+                   <ls_tadir>  LIKE LINE OF lt_tadir.
 
     IF io_repo->is_offline( ) = abap_true.
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
@@ -20448,9 +20484,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lt_repos        TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error        TYPE REF TO lcx_exception,
-          lo_repo         LIKE LINE OF lt_repos.
+    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error TYPE REF TO lcx_exception,
+          lo_repo  LIKE LINE OF lt_repos.
 
 
     CREATE OBJECT ro_html.
@@ -20951,7 +20987,9 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
       pack_long FOR TESTING
         RAISING lcx_exception,
       pack_multiple FOR TESTING
-        RAISING lcx_exception.
+        RAISING lcx_exception,
+      sort_tree1 FOR TESTING,
+      sort_tree2 FOR TESTING.
 
     METHODS:
       object_blob
@@ -21217,6 +21255,62 @@ ENDCLASS.                    "ltcl_url IMPLEMENTATION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_git_pack IMPLEMENTATION.
+
+  METHOD sort_tree1.
+
+    DATA: lt_tree TYPE lcl_git_pack=>ty_nodes_tt.
+
+    FIELD-SYMBOLS: <ls_tree> LIKE LINE OF lt_tree.
+
+
+    APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
+    <ls_tree>-chmod = gc_chmod-file.
+    <ls_tree>-name  = 'b.txt'.
+    <ls_tree>-sha1  = '0123'.
+
+    APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
+    <ls_tree>-chmod = gc_chmod-file.
+    <ls_tree>-name  = 'a.txt'.
+    <ls_tree>-sha1  = '0123'.
+
+    lt_tree = lcl_git_pack=>sort_tree( lt_tree ).
+
+    READ TABLE lt_tree INDEX 1 ASSIGNING <ls_tree>.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_tree>-name
+      exp = 'a.txt' ).
+
+  ENDMETHOD.
+
+  METHOD sort_tree2.
+
+    DATA: lt_tree TYPE lcl_git_pack=>ty_nodes_tt.
+
+    FIELD-SYMBOLS: <ls_tree> LIKE LINE OF lt_tree.
+
+
+    APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
+    <ls_tree>-chmod = gc_chmod-file.
+    <ls_tree>-name  = 'foo.txt'.
+    <ls_tree>-sha1  = '0123'.
+
+    APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
+    <ls_tree>-chmod = gc_chmod-dir.
+    <ls_tree>-name  = 'foo'.
+    <ls_tree>-sha1  = '0123'.
+
+    lt_tree = lcl_git_pack=>sort_tree( lt_tree ).
+
+    READ TABLE lt_tree INDEX 1 ASSIGNING <ls_tree>.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_tree>-name
+      exp = 'foo.txt' ).
+
+  ENDMETHOD.
 
   METHOD pack_multiple.
 
