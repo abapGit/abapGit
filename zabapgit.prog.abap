@@ -18390,14 +18390,18 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
+    TYPES:  BEGIN OF ty_repo_file,
+              path        TYPE string,
+              filename    TYPE string,
+              is_changed  TYPE abap_bool,
+            END OF ty_repo_file.
+    TYPES   tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
     TYPES:  BEGIN OF ty_repo_item,
               obj_type    TYPE tadir-object,
               obj_name    TYPE tadir-obj_name,
-              is_changed  TYPE abap_bool,
-              files       TYPE ty_string_tt,
               is_first    TYPE abap_bool,
-              result      TYPE lcl_file_status=>ty_result, "TODO, remove, clutch
+              files       TYPE tt_repo_files,
             END OF ty_repo_item.
     TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
@@ -18489,19 +18493,19 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RAISING   lcx_exception.
 
     CLASS-METHODS diff
-      IMPORTING is_result TYPE lcl_file_status=>ty_result
+      IMPORTING is_file   TYPE ty_repo_file
                 iv_key    TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE lcl_file_status=>ty_result
+                is_file          TYPE ty_repo_file
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
       IMPORTING iv_string TYPE clike
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE lcl_file_status=>ty_result
+                es_file   TYPE ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS abapgit_installation
@@ -19410,22 +19414,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    <ls_local>  LIKE LINE OF lt_local.
 
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
-
+    lo_repo  ?= lcl_repo_srv=>get( iv_key ).
     lt_remote = lo_repo->get_files_remote( ).
-
-    lt_local = lo_repo->get_files_local( ).
+    lt_local  = lo_repo->get_files_local( ).
 
     READ TABLE lt_remote ASSIGNING <ls_remote>
-      WITH KEY filename = is_result-filename
-      path = is_result-path.
+      WITH KEY filename = is_file-filename
+               path     = is_file-path.
     IF sy-subrc <> 0.
       _raise 'file not found remotely'.
     ENDIF.
 
     READ TABLE lt_local ASSIGNING <ls_local>
-      WITH KEY file-filename = is_result-filename
-      file-path = is_result-path.
+      WITH KEY file-filename = is_file-filename
+               file-path     = is_file-path.
     IF sy-subrc <> 0.
       _raise 'file not found locally'.
     ENDIF.
@@ -19507,27 +19509,36 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           lv_string TYPE string.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
-                   <lg_any>   TYPE any.
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+*                   <lg_any>   TYPE any.
 
 
     lv_string = iv_string.     " type conversion
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
-    LOOP AT lt_fields ASSIGNING <ls_field>.
-      ASSIGN COMPONENT <ls_field>-name OF STRUCTURE es_file TO <lg_any>.
-      IF sy-subrc <> 0.
-        CONTINUE. " more structures might be encoded in same string
-      ENDIF.
+*    LOOP AT lt_fields ASSIGNING <ls_field>.
+*      ASSIGN COMPONENT <ls_field>-name OF STRUCTURE es_file TO <lg_any>.
+*      IF sy-subrc <> 0.
+*        CONTINUE. " more structures might be encoded in same string
+*      ENDIF.
+*
+*      <lg_any> = <ls_field>-value.
+*    ENDLOOP.
 
-      <lg_any> = <ls_field>-value.
-    ENDLOOP.
-
+    CLEAR: ev_key, es_file.
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
     IF sy-subrc = 0.
       ev_key = <ls_field>-value.
-    ELSE.
-      CLEAR ev_key.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
+    IF sy-subrc = 0.
+      es_file-path = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
+    IF sy-subrc = 0.
+      es_file-filename = <ls_field>-value.
     ENDIF.
 
   ENDMETHOD.                    "struct_decode
@@ -19553,27 +19564,35 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD file_encode.
 
     DATA: lt_fields    TYPE tihttpnvp,
-          lo_descr_ref TYPE REF TO cl_abap_structdescr,
+*          lo_descr_ref TYPE REF TO cl_abap_structdescr,
           ls_field     LIKE LINE OF lt_fields.
 
-    FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr_ref->components,
-                   <lg_any>  TYPE any.
-
-
-    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( is_file ).
-
-    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
-
-      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE is_file TO <lg_any>.
-      ASSERT sy-subrc = 0.
-
-      ls_field-name = <ls_comp>-name.
-      ls_field-value = <lg_any>.
-      APPEND ls_field TO lt_fields.
-    ENDLOOP.
+*    FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr_ref->components,
+*                   <lg_any>  TYPE any.
+*
+*
+*    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( is_file ).
+*
+*    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
+*
+*      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE is_file TO <lg_any>.
+*      ASSERT sy-subrc = 0.
+*
+*      ls_field-name = <ls_comp>-name.
+*      ls_field-value = <lg_any>.
+*      APPEND ls_field TO lt_fields.
+*    ENDLOOP.
 
     ls_field-name = 'KEY'.
     ls_field-value = iv_key.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'PATH'.
+    ls_field-value = is_file-path.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'FILENAME'.
+    ls_field-value = is_file-filename.
     APPEND ls_field TO lt_fields.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
@@ -19932,6 +19951,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('.repo_tab tr.unsupported { color: lightgrey; }').
     ro_html->add('.repo_tab tr.firstrow td { border-top: 0px; } ' ).
     ro_html->add('.repo_tab td.files span  { display: block; }').
+    ro_html->add('.repo_tab td.cmd span    { display: block; }').
+    ro_html->add('.repo_tab td.cmd a       { display: block; }').
 
   ENDMETHOD.
 
@@ -20062,7 +20083,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lo_repo_online  TYPE REF TO lcl_repo_online,
           lt_tadir        TYPE lcl_tadir=>ty_tadir_tt,
           ls_repo_item    TYPE ty_repo_item,
-          lv_file         TYPE string,
+          ls_file         TYPE ty_repo_file,
           lt_results      TYPE lcl_file_status=>ty_results_tt.
 
     FIELD-SYMBOLS:  <ls_result> LIKE LINE OF lt_results,
@@ -20095,12 +20116,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDAT.
 
         IF <ls_result>-filename IS NOT INITIAL.
-          lv_file = <ls_result>-path && <ls_result>-filename.
-          APPEND lv_file TO ls_repo_item-files.
-        ENDIF.
-        IF <ls_result>-match = abap_false.
-          ls_repo_item-is_changed = abap_true.
-          ls_repo_item-result = <ls_result>. "TODO remove, clutch
+          ls_file-path       = <ls_result>-path.
+          ls_file-filename   = <ls_result>-filename.
+          ls_file-is_changed = boolc( NOT <ls_result>-match = abap_true ).
+          APPEND ls_file TO ls_repo_item-files.
         ENDIF.
 
         AT END OF obj_name. "obj_type + obj_name
@@ -20115,8 +20134,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA:
           lv_link     TYPE string,
           lv_icon     TYPE string,
-          lv_file     TYPE string,
-          lv_cmd      TYPE string,
+          lv_difflink TYPE string,
+          ls_file     TYPE ty_repo_file,
           lv_trclass  TYPE string.
 
     CREATE OBJECT ro_html.
@@ -20156,23 +20175,30 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     IF io_repo->is_offline( ) = abap_false. " Files for online repos only
+
       ro_html->add( '<td class="files">' ).
-      LOOP AT is_item-files INTO lv_file.
-        ro_html->add( |<span>{ lv_file }</span>| ).
+      LOOP AT is_item-files INTO ls_file.
+        ro_html->add( |<span>{ ls_file-path && ls_file-filename }</span>| ).
       ENDLOOP.
       ro_html->add( '</td>' ).
 
+      ro_html->add( '<td class="cmd">' ).
       IF lines( is_item-files ) = 0.
-        lv_cmd =  '<span class="grey">new</span>'.
-      ELSEIF is_item-is_changed = abap_true.
-        lv_cmd = '<a href="sapevent:diff?' "TODO, refactor, clunch
-              && file_encode( iv_key  = io_repo->get_key( )
-                              is_file = is_item-result )
-              && '">diff</a>'.
+        ro_html->add( '<span class="grey">new</span>' ).
+      ELSE.
+        LOOP AT is_item-files INTO ls_file.
+          IF ls_file-is_changed = abap_true.
+            lv_difflink = file_encode( iv_key = io_repo->get_key( ) is_file = ls_file ).
+            ro_html->add( |<a href="sapevent:diff?{ lv_difflink }">diff</a>| ).
+          ELSE.
+            ro_html->add( |<span>&nbsp;</span>| ).
+          ENDIF.
+        ENDLOOP.
       ENDIF.
+      ro_html->add( '</td>' ).
+
     ENDIF.
 
-    ro_html->add( |<td class="cmd">{ lv_cmd }</td>| ).
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.
@@ -20292,7 +20318,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: ls_result TYPE lcl_file_status=>ty_result,
+    DATA: ls_file   TYPE ty_repo_file,
           lv_url    TYPE string,
           lv_key    TYPE lcl_persistence_repo=>ty_repo-key,
           ls_item   TYPE ty_item,
@@ -20335,8 +20361,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'diff'.
         file_decode( EXPORTING iv_string = iv_getdata
                      IMPORTING ev_key    = lv_key
-                               es_file   = ls_result ).
-        diff( is_result = ls_result
+                               es_file   = ls_file ).
+        diff( is_file   = ls_file
               iv_key    = lv_key ).
       WHEN 'jump'.
         CLEAR ls_item.
