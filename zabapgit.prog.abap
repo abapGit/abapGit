@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.10.1'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.10.2'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18514,7 +18514,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
     ro_html->add('    background-color: #f9f9f9;').
-    ro_html->add('    min-width: 8em;').
+    ro_html->add('    min-width: 10em;').
     ro_html->add('    border-bottom: 1px solid lightgrey;').
     ro_html->add('}').
     ro_html->add('.dropdown_content a {').
@@ -19050,6 +19050,74 @@ CLASS lcl_stage IMPLEMENTATION.
 
   METHOD count.
     rv_count = lines( mt_stage ).
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_background DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+
+  PUBLIC SECTION.
+    METHODS:
+      lif_gui_page~on_event REDEFINITION,
+      lif_gui_page~render   REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS:
+      render_data
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_background IMPLEMENTATION.
+
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+*      WHEN 'apush'.
+*      WHEN 'apull'.
+      WHEN OTHERS.
+        _raise 'Unknown action, background'.
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD render_data.
+
+    DATA: lo_repo   TYPE REF TO lcl_repo,
+          lo_online TYPE REF TO lcl_repo_online,
+          lt_list   TYPE lcl_repo_srv=>ty_repo_tt.
+
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="toc">' ).
+    ro_html->add( 'Listing online repositories' ).
+    ro_html->add( '<br><br>' ).
+
+    lt_list = lcl_repo_srv=>list( ).
+    LOOP AT lt_list INTO lo_repo.
+      IF lo_repo->is_offline( ) = abap_false.
+        lo_online ?= lo_repo.
+        ro_html->add( lo_online->get_name( ) && '<br>' ).
+        ro_html->add( 'Automatic push | Automatic pull' && '<br>' ).
+        ro_html->add( '<br>' ).
+      ENDIF.
+    ENDLOOP.
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( ) ).
+    ro_html->add( title( iv_page_title = 'BACKGROUND' ) ).
+    ro_html->add( render_data( ) ).
+    ro_html->add( footer( ) ).
+
   ENDMETHOD.
 
 ENDCLASS.
@@ -20038,6 +20106,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_cmd = 'sapevent:db' ).
     lo_betasub->add( iv_txt = 'Package to zip'   iv_cmd = 'sapevent:packagezip' ).
+    lo_betasub->add( iv_txt = 'Background mode'  iv_cmd = 'sapevent:background' ).
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
@@ -20537,11 +20606,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: ls_file TYPE ty_repo_file,
-          lv_url  TYPE string,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item TYPE ty_item,
-          lo_db   TYPE REF TO lcl_gui_page_db.
+    DATA: ls_file       TYPE ty_repo_file,
+          lv_url        TYPE string,
+          lo_background TYPE REF TO lcl_gui_page_background,
+          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item       TYPE ty_item,
+          lo_db         TYPE REF TO lcl_gui_page_db.
 
 
     CASE iv_action.
@@ -20597,6 +20667,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'db'.
         CREATE OBJECT lo_db.
         lcl_gui=>call_page( lo_db ).
+      WHEN 'background'.
+        CREATE OBJECT lo_background.
+        lcl_gui=>call_page( lo_background ).
       WHEN 'zipimport'.
         lv_key = iv_getdata.
         lcl_zip=>import( lv_key ).
@@ -20706,6 +20779,22 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_background DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: run.
+
+ENDCLASS.
+
+CLASS lcl_background IMPLEMENTATION.
+
+  METHOD run.
+* see https://github.com/larshp/abapGit/issues/236
+    WRITE: / 'background mode, todo, WIP'.
+  ENDMETHOD.
+
+ENDCLASS.
+
 *&---------------------------------------------------------------------*
 *&      Form  run
 *&---------------------------------------------------------------------*
@@ -20729,15 +20818,20 @@ FORM run.
 
   TRY.
       lcl_persistence_migrate=>run( ).
-      lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
 
-      CREATE OBJECT lo_main.
-      lcl_gui=>call_page( lo_main ).
+      IF sy-batch = abap_true.
+        lcl_background=>run( ).
+      ELSE.
+        lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
+
+        CREATE OBJECT lo_main.
+        lcl_gui=>call_page( lo_main ).
+
+        CALL SELECTION-SCREEN 1001. " trigger screen
+      ENDIF.
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
-
-  CALL SELECTION-SCREEN 1001. " trigger screen
 
 ENDFORM.                    "run
 
