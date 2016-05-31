@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.16'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.17'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16936,9 +16936,9 @@ CLASS lcl_zip DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
       RAISING   lcx_exception.
 
-    CLASS-METHODS export_key
-      IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
-                iv_zip TYPE abap_bool DEFAULT abap_true
+    CLASS-METHODS export
+      IMPORTING io_repo TYPE REF TO lcl_repo
+                iv_zip  TYPE abap_bool DEFAULT abap_true
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -17252,25 +17252,22 @@ CLASS lcl_zip IMPLEMENTATION.
 
   ENDMETHOD.                    "decode_files
 
-  METHOD export_key.
+  METHOD export.
 
-    DATA: lo_repo TYPE REF TO lcl_repo,
-          lo_log  TYPE REF TO lcl_log,
-          lt_zip  TYPE ty_files_item_tt.
+    DATA: lo_log TYPE REF TO lcl_log,
+          lt_zip TYPE ty_files_item_tt.
 
-
-    lo_repo = lcl_repo_srv=>get( iv_key ).
 
     CREATE OBJECT lo_log.
 
-    lt_zip = lo_repo->get_files_local( lo_log ).
+    lt_zip = io_repo->get_files_local( lo_log ).
 
     IF lo_log->count( ) > 0.
       lo_log->show( ).
     ENDIF.
 
     IF iv_zip = abap_true.
-      file_download( iv_package = lo_repo->get_package( )
+      file_download( iv_package = io_repo->get_package( )
                      iv_xstr = encode_files( lt_zip ) ).
     ELSE.
       files_commit( lt_zip ).
@@ -18484,6 +18481,9 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       EXPORTING et_repo_items TYPE tt_repo_items
                 eo_log        TYPE REF TO lcl_log
       RAISING   lcx_exception.
+
+    METHODS package_zip
+      RAISING lcx_exception.
 
     METHODS render_repo_item
       IMPORTING io_repo        TYPE REF TO lcl_repo
@@ -19886,6 +19886,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_betasub.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_cmd = 'sapevent:db' ).
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_cmd = 'sapevent:packagezip' ).
 
     lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
@@ -20217,6 +20218,57 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD package_zip.
+
+    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo,
+          lv_returncode TYPE c,
+          lv_url        TYPE string,
+          lv_package    TYPE devclass,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TDEVC'.
+    <ls_field>-fieldname = 'DEVCLASS'.
+    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Export'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+
+    ls_data-key             = 'DUMMY'.
+    ls_data-package         = <ls_field>-value.
+    ls_data-master_language = sy-langu.
+
+    CREATE OBJECT lo_repo
+      EXPORTING
+        is_data = ls_data.
+
+    lcl_zip=>export( lo_repo ).
+
+  ENDMETHOD.
+
   METHOD abapgit_installation.
 
     CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
@@ -20397,13 +20449,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lcl_zip=>import( lv_key ).
       WHEN 'zipexport'.
         lv_key = iv_getdata.
-        lcl_zip=>export_key( lv_key ).
+        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
       WHEN 'files_commit'.
         lv_key = iv_getdata.
-        lcl_zip=>export_key( iv_key = lv_key
-                             iv_zip = abap_false ).
+        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+                         iv_zip  = abap_false ).
       WHEN 'abapgit_installation'.
         abapgit_installation( ).
+      WHEN 'packagezip'.
+        package_zip( ).
       WHEN OTHERS.
         _raise 'Unknown action'.
     ENDCASE.
