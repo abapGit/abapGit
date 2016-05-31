@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.15'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.16'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13431,6 +13431,12 @@ CLASS lcl_file_status IMPLEMENTATION.
       READ TABLE rt_results WITH KEY filename = <ls_remote>-filename
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
+        IF io_repo->get_dot_abapgit( )->is_ignored(
+            iv_path = <ls_remote>-path
+            iv_filename = <ls_remote>-filename ) = abap_true.
+          CONTINUE.
+        ENDIF.
+
         CLEAR ls_result.
         ls_result-match    = abap_true.
         ls_result-filename = <ls_remote>-filename.
@@ -18426,19 +18432,19 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
-    TYPES:  BEGIN OF ty_repo_file,
-              path        TYPE string,
-              filename    TYPE string,
-              is_changed  TYPE abap_bool,
-            END OF ty_repo_file.
+    TYPES: BEGIN OF ty_repo_file,
+             path       TYPE string,
+             filename   TYPE string,
+             is_changed TYPE abap_bool,
+           END OF ty_repo_file.
     TYPES   tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
-    TYPES:  BEGIN OF ty_repo_item,
-              obj_type    TYPE tadir-object,
-              obj_name    TYPE tadir-obj_name,
-              is_first    TYPE abap_bool,
-              files       TYPE tt_repo_files,
-            END OF ty_repo_item.
+    TYPES: BEGIN OF ty_repo_item,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             is_first TYPE abap_bool,
+             files    TYPE tt_repo_files,
+           END OF ty_repo_item.
     TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
     CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
@@ -18529,8 +18535,8 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RAISING   lcx_exception.
 
     CLASS-METHODS diff
-      IMPORTING is_file   TYPE ty_repo_file
-                iv_key    TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING is_file TYPE ty_repo_file
+                iv_key  TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS file_encode
@@ -19588,8 +19594,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD file_encode.
 
-    DATA: lt_fields    TYPE tihttpnvp,
-          ls_field     LIKE LINE OF lt_fields.
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
 
     ls_field-name = 'KEY'.
     ls_field-value = iv_key.
@@ -20140,11 +20146,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo_item.
     DATA:
-          lv_link     TYPE string,
-          lv_icon     TYPE string,
-          lv_difflink TYPE string,
-          ls_file     TYPE ty_repo_file,
-          lv_trclass  TYPE string.
+      lv_link     TYPE string,
+      lv_icon     TYPE string,
+      lv_difflink TYPE string,
+      ls_file     TYPE ty_repo_file,
+      lv_trclass  TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -20326,11 +20332,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: ls_file   TYPE ty_repo_file,
-          lv_url    TYPE string,
-          lv_key    TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item   TYPE ty_item,
-          lo_db     TYPE REF TO lcl_gui_page_db.
+    DATA: ls_file TYPE ty_repo_file,
+          lv_url  TYPE string,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item TYPE ty_item,
+          lo_db   TYPE REF TO lcl_gui_page_db.
 
 
     CASE iv_action.
