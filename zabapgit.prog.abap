@@ -19546,22 +19546,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_string TYPE string.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-*                   <lg_any>   TYPE any.
 
-
+    CLEAR: ev_key, es_file.
     lv_string = iv_string.     " type conversion
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
-*    LOOP AT lt_fields ASSIGNING <ls_field>.
-*      ASSIGN COMPONENT <ls_field>-name OF STRUCTURE es_file TO <lg_any>.
-*      IF sy-subrc <> 0.
-*        CONTINUE. " more structures might be encoded in same string
-*      ENDIF.
-*
-*      <lg_any> = <ls_field>-value.
-*    ENDLOOP.
-
-    CLEAR: ev_key, es_file.
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
     IF sy-subrc = 0.
       ev_key = <ls_field>-value.
@@ -19600,24 +19589,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD file_encode.
 
     DATA: lt_fields    TYPE tihttpnvp,
-*          lo_descr_ref TYPE REF TO cl_abap_structdescr,
           ls_field     LIKE LINE OF lt_fields.
-
-*    FIELD-SYMBOLS: <ls_comp> LIKE LINE OF lo_descr_ref->components,
-*                   <lg_any>  TYPE any.
-*
-*
-*    lo_descr_ref ?= cl_abap_typedescr=>describe_by_data( is_file ).
-*
-*    LOOP AT lo_descr_ref->components ASSIGNING <ls_comp>.
-*
-*      ASSIGN COMPONENT <ls_comp>-name OF STRUCTURE is_file TO <lg_any>.
-*      ASSERT sy-subrc = 0.
-*
-*      ls_field-name = <ls_comp>-name.
-*      ls_field-value = <lg_any>.
-*      APPEND ls_field TO lt_fields.
-*    ENDLOOP.
 
     ls_field-name = 'KEY'.
     ls_field-value = iv_key.
