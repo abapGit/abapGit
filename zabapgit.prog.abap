@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.18'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.10.0'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2651,6 +2651,13 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
+    DEFINE _add_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING pattern     = &1
+                  ignore_case = abap_true.
+      APPEND lo_regex TO lt_regex_set.
+    END-OF-DEFINITION.
+
     DATA: lv_beacon    TYPE i,
           lv_offs      TYPE i,
           lv_code_line TYPE string,
@@ -2659,12 +2666,6 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-    DEFINE _add_regex.
-      CREATE OBJECT lo_regex
-        EXPORTING pattern     = &1
-                  ignore_case = abap_true.
-      APPEND lo_regex TO lt_regex_set.
-    END-OF-DEFINITION.
 
     _add_regex '^\s*(CLASS|FORM|MODULE|REPORT)\s'.
     _add_regex '^\s*START-OF-'.
@@ -13144,6 +13145,13 @@ CLASS lcl_objects DEFINITION FINAL.
         IMPORTING it_results        TYPE lcl_file_status=>ty_results_tt
         RETURNING VALUE(rt_results) TYPE lcl_file_status=>ty_results_tt.
 
+    CLASS-METHODS
+      path_to_package
+        IMPORTING iv_top            TYPE devclass
+                  iv_path           TYPE string
+        RETURNING VALUE(rv_package) TYPE devclass
+        RAISING   lcx_exception.
+
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE ty_item
       RETURNING VALUE(rv_class_name) TYPE string.
@@ -13314,18 +13322,30 @@ ENDCLASS.                    "lcl_tadir IMPLEMENTATION
 CLASS lcl_sap_package DEFINITION FINAL.
 
   PUBLIC SECTION.
+    TYPES: ty_devclass_tt TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY.
+
     CLASS-METHODS:
       check
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE lcl_file_status=>ty_results_tt
                   iv_start   TYPE string
                   iv_top     TYPE devclass,
+      list_subpackages IMPORTING iv_package     TYPE devclass
+                       RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
       create_local
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
       create
-        IMPORTING is_package TYPE scompkdtln
-        RAISING   lcx_exception.
+        IMPORTING is_package        TYPE scompkdtln
+        RETURNING VALUE(ri_package) TYPE REF TO if_package
+        RAISING   lcx_exception,
+      create_child
+        IMPORTING iv_parent TYPE devclass
+                  iv_child  TYPE devclass
+        RAISING   lcx_exception,
+      exists
+        IMPORTING iv_package     TYPE devclass
+        RETURNING VALUE(rv_bool) TYPE abap_bool.
 
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -13599,11 +13619,57 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.                    "check
 
+  METHOD exists.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5 ).
+    rv_bool = boolc( sy-subrc <> 1 ).
+
+  ENDMETHOD.
+
+  METHOD create_child.
+
+    DATA: li_parent TYPE REF TO if_package,
+          ls_child  TYPE scompkdtln.
+
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_parent
+      IMPORTING
+        e_package                  = li_parent
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5 ).
+    IF sy-subrc <> 0.
+      _raise 'error reading parent package'.
+    ENDIF.
+
+    ls_child-devclass  = iv_child.
+    ls_child-ctext     = iv_child.
+    ls_child-parentcl  = iv_parent.
+    ls_child-component = li_parent->transport_layer.
+    ls_child-as4user   = sy-uname.
+
+    create( ls_child ).
+
+  ENDMETHOD.
+
   METHOD create.
 
     DATA: lv_err     TYPE string,
-          ls_package LIKE is_package,
-          li_package TYPE REF TO if_package.
+          li_super   TYPE REF TO if_package,
+          ls_package LIKE is_package.
 
 
     ASSERT NOT is_package-devclass IS INITIAL.
@@ -13628,7 +13694,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
         i_reuse_deleted_object     = abap_true
 *        i_suppress_dialog          = abap_true " does not exist in 730
       IMPORTING
-        e_package                  = li_package
+        e_package                  = ri_package
       CHANGING
         c_package_data             = ls_package
       EXCEPTIONS
@@ -13659,7 +13725,26 @@ CLASS lcl_sap_package IMPLEMENTATION.
       _raise lv_err.
     ENDIF.
 
-    li_package->save(
+*    IF NOT ls_package-pdevclass IS INITIAL.
+*      cl_package_factory=>load_package(
+*        EXPORTING
+*          i_package_name             = is_package-pdevclass
+*        IMPORTING
+*          e_package                  = li_super
+*        EXCEPTIONS
+*          object_not_existing        = 1
+*          unexpected_error           = 2
+*          intern_err                 = 3
+*          no_access                  = 4
+*          object_locked_and_modified = 5 ).
+*      IF sy-subrc <> 0.
+*        _raise 'error reading super package'.
+*      ENDIF.
+
+*      ri_package->set_super_package_name( PARENTCL ).
+*    ENDIF.
+
+    ri_package->save(
 *      EXPORTING
 *        i_suppress_dialog     = abap_true    " Controls whether popups can be transmitted
       EXCEPTIONS
@@ -13676,6 +13761,25 @@ CLASS lcl_sap_package IMPLEMENTATION.
       _raise lv_err.
     ENDIF.
 
+    ri_package->set_changeable( abap_false ).
+
+  ENDMETHOD.
+
+  METHOD list_subpackages.
+
+    DATA: lt_list     LIKE rt_list,
+          lv_devclass LIKE LINE OF rt_list.
+
+
+    SELECT devclass INTO TABLE rt_list
+      FROM tdevc WHERE parentcl = iv_package.
+
+* note the recursion, since packages are added to the list
+    LOOP AT rt_list INTO lv_devclass.
+      lt_list = list_subpackages( lv_devclass ).
+      APPEND LINES OF lt_list TO rt_list.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD create_local.
@@ -13685,7 +13789,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
     ls_package-devclass  = iv_package.
     ls_package-ctext     = iv_package.
-    ls_package-pdevclass = '$TMP'.
+    ls_package-parentcl  = '$TMP'.
     ls_package-component = 'LOCAL'.
     ls_package-as4user   = sy-uname.
 
@@ -13807,16 +13911,23 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD update_package_tree.
 
-    DATA: lv_tree TYPE dirtree-tname.
+    DATA: lt_packages TYPE lcl_sap_package=>ty_devclass_tt,
+          lv_package  LIKE LINE OF lt_packages,
+          lv_tree     TYPE dirtree-tname.
 
 
+    lt_packages = lcl_sap_package=>list_subpackages( iv_package ).
+    APPEND iv_package TO lt_packages.
+
+    LOOP AT lt_packages INTO lv_package.
 * update package tree for SE80
-    lv_tree = 'EU_' && iv_package.
-    CALL FUNCTION 'WB_TREE_ACTUALIZE'
-      EXPORTING
-        tree_name              = lv_tree
-        without_crossreference = abap_true
-        with_tcode_index       = abap_true.
+      lv_tree = 'EU_' && lv_package.
+      CALL FUNCTION 'WB_TREE_ACTUALIZE'
+        EXPORTING
+          tree_name              = lv_tree
+          without_crossreference = abap_true
+          with_tcode_index       = abap_true.
+    ENDLOOP.
 
   ENDMETHOD.                    "update_package_tree
 
@@ -13927,6 +14038,28 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.                    "exists
+
+  METHOD path_to_package.
+
+    DATA: lv_length TYPE i.
+
+
+    CONCATENATE iv_top iv_path INTO rv_package.
+
+    TRANSLATE rv_package USING '/_'.
+
+    lv_length = strlen( rv_package ) - 1.
+
+    rv_package = rv_package(lv_length).
+
+    TRANSLATE rv_package TO UPPER CASE.
+
+    IF lcl_sap_package=>exists( rv_package ) = abap_false.
+      lcl_sap_package=>create_child( iv_parent = iv_top
+                                     iv_child = rv_package ).
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD class_name.
 
@@ -14188,14 +14321,16 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD deserialize.
 
     TYPES: BEGIN OF ty_late,
-             obj TYPE REF TO lif_object,
-             xml TYPE REF TO lcl_xml_input,
+             obj     TYPE REF TO lif_object,
+             xml     TYPE REF TO lcl_xml_input,
+             package TYPE devclass,
            END OF ty_late.
 
     DATA: ls_item    TYPE ty_item,
           lv_cancel  TYPE abap_bool,
           li_obj     TYPE REF TO lif_object,
           lt_remote  TYPE ty_files_tt,
+          lv_package TYPE devclass,
           lo_files   TYPE REF TO lcl_objects_files,
           lo_xml     TYPE REF TO lcl_xml_input,
           lt_results TYPE lcl_file_status=>ty_results_tt,
@@ -14251,14 +14386,18 @@ CLASS lcl_objects IMPLEMENTATION.
 
       li_obj->mo_files = lo_files.
 
+      lv_package = path_to_package( iv_top  = io_repo->get_package( )
+                                    iv_path = <ls_result>-path ).
+
       IF li_obj->get_metadata( )-late_deser = abap_true.
         APPEND INITIAL LINE TO lt_late ASSIGNING <ls_late>.
         <ls_late>-obj = li_obj.
         <ls_late>-xml = lo_xml.
+        <ls_late>-package = lv_package.
         CONTINUE.
       ENDIF.
 
-      li_obj->deserialize( iv_package = io_repo->get_package( )
+      li_obj->deserialize( iv_package = lv_package
                            io_xml     = lo_xml ).
 
     ENDLOOP.
@@ -14266,7 +14405,7 @@ CLASS lcl_objects IMPLEMENTATION.
     lcl_objects_activation=>activate( ).
 
     LOOP AT lt_late ASSIGNING <ls_late>.
-      <ls_late>-obj->deserialize( iv_package = io_repo->get_package( )
+      <ls_late>-obj->deserialize( iv_package = <ls_late>-package
                                   io_xml     = <ls_late>-xml ).
     ENDLOOP.
 
@@ -20053,7 +20192,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error      TYPE REF TO lcx_exception,
           lo_log        TYPE REF TO lcl_log.
 
-    FIELD-SYMBOLS <item> TYPE ty_repo_item.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+
 
     CREATE OBJECT ro_html.
 
@@ -20074,8 +20214,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                          && '<center>Empty package</center>'
                          && '</td></tr>' ) ##NO_TEXT.
           ELSE.
-            LOOP AT lt_repo_items ASSIGNING <item>.
-              ro_html->add( render_repo_item( io_repo = io_repo is_item = <item> ) ).
+            LOOP AT lt_repo_items ASSIGNING <ls_item>.
+              ro_html->add( render_repo_item( io_repo = io_repo is_item = <ls_item> ) ).
             ENDLOOP.
           ENDIF.
 
@@ -20359,7 +20499,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ENDIF.
 
       IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
-        lv_err = |Installation to package { lv_package } detected. Cancelling installation|.
+        lv_err = |Installation to package { lv_package
+          } detected. Cancelling installation|.
         _raise lv_err.
       ENDIF.
 
