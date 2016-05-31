@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.10.0'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.10.1'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17944,8 +17944,17 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD back.
 
-    DATA: lv_index TYPE i.
+    DATA: lv_index TYPE i,
+          lv_url   TYPE c LENGTH 100.
 
+
+* workaround for explore page
+    go_html_viewer->get_current_url( IMPORTING url = lv_url ).
+    cl_gui_cfw=>flush( ).
+    IF lv_url CP 'http*'.
+      go_html_viewer->go_back( ).
+      RETURN.
+    ENDIF.
 
     lv_index = lines( gt_stack ).
 
