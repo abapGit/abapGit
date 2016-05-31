@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.9.17'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.9.18'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -2347,15 +2347,18 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD is_ignored.
 
-    DATA: lv_name TYPE string.
+    DATA: lv_name   TYPE string,
+          lv_ignore TYPE string.
 
 
     lv_name = iv_path && iv_filename.
 
-    READ TABLE ms_data-ignore FROM lv_name
-      TRANSPORTING NO FIELDS.
-
-    rv_ignored = boolc( sy-subrc = 0 ).
+    LOOP AT ms_data-ignore INTO lv_ignore.
+      IF lv_name CP lv_ignore.
+        rv_ignored = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
