@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.10.2'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.10.3'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -424,9 +424,9 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF iv_as_droplist_with_label IS INITIAL.
-      lv_class = 'menu'.
+      lv_class = 'menu' ##NO_TEXT.
     ELSE.
-      lv_class = 'dropdown'.
+      lv_class = 'dropdown' ##NO_TEXT.
     ENDIF.
 
     ro_html->add( |<div class="{ lv_class }">| ).
@@ -434,7 +434,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     IF iv_as_droplist_with_label IS NOT INITIAL.
       lv_class = 'dropbtn'.
       IF iv_no_separator = abap_true.
-        lv_class = lv_class && ' menu_end'.
+        lv_class = lv_class && ' menu_end' ##NO_TEXT.
       ENDIF.
       ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ro_html->add( '<div class="dropdown_content">' ).
@@ -449,10 +449,10 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
           lv_class = 'menu_end'.
         ENDIF.
         IF <ls_item>-emphasis = abap_true.
-          lv_class = lv_class && ' emphasis'.
+          lv_class = lv_class && ' emphasis' ##NO_TEXT.
         ENDIF.
         IF <ls_item>-cancel = abap_true.
-          lv_class = lv_class && ' attention'.
+          lv_class = lv_class && ' attention' ##NO_TEXT.
         ENDIF.
         IF lv_class IS NOT INITIAL.
           SHIFT lv_class LEFT DELETING LEADING space.
@@ -12863,7 +12863,7 @@ CLASS lcl_persistence_db DEFINITION FINAL.
              value    TYPE ty_value,
              data_str TYPE string,
            END OF ty_content,
-           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY value.
+           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value.
 
     METHODS list_by_type
       IMPORTING iv_type           TYPE ty_type
@@ -12906,6 +12906,123 @@ CLASS lcl_persistence_db DEFINITION FINAL.
                 iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
       RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_persistence_background DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CONSTANTS: BEGIN OF c_method,
+                 nothing TYPE string VALUE 'nothing',
+                 pull    TYPE string VALUE 'pull',
+                 push    TYPE string VALUE 'push',
+               END OF c_method.
+
+    TYPES: BEGIN OF ty_xml,
+             method   TYPE string,
+             username TYPE string,
+             password TYPE string,
+           END OF ty_xml.
+
+    TYPES: BEGIN OF ty_background,
+             key TYPE lcl_persistence_db=>ty_value.
+        INCLUDE TYPE ty_xml.
+    TYPES: END OF ty_background.
+    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
+
+    METHODS constructor.
+
+    METHODS list
+      RETURNING VALUE(rt_list) TYPE tt_background
+      RAISING   lcx_exception.
+
+    METHODS modify
+      IMPORTING is_data TYPE ty_background
+      RAISING   lcx_exception.
+
+    METHODS delete
+      IMPORTING iv_key TYPE ty_background-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
+
+    DATA: mo_db TYPE REF TO lcl_persistence_db.
+
+    METHODS from_xml
+      IMPORTING iv_string     TYPE string
+      RETURNING VALUE(rs_xml) TYPE ty_xml
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_background    TYPE ty_background
+      RETURNING VALUE(rv_string) TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_persistence_background IMPLEMENTATION.
+
+  METHOD constructor.
+    CREATE OBJECT mo_db.
+  ENDMETHOD.
+
+  METHOD list.
+
+    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
+          ls_xml  TYPE ty_xml.
+
+    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
+                   <ls_output> LIKE LINE OF rt_list.
+
+
+    lt_list = mo_db->list_by_type( c_type ).
+
+    LOOP AT lt_list ASSIGNING <ls_list>.
+      ls_xml = from_xml( <ls_list>-data_str ).
+
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
+      MOVE-CORRESPONDING ls_xml TO <ls_output>.
+      <ls_output>-key = <ls_list>-value.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD modify.
+    mo_db->modify(
+      iv_type  = c_type
+      iv_value = is_data-key
+      iv_data  = to_xml( is_data ) ).
+  ENDMETHOD.
+
+  METHOD delete.
+    TRY.
+        mo_db->read( iv_type  = c_type
+                     iv_value = iv_key ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
+
+    mo_db->delete( iv_type  = c_type
+                   iv_value = iv_key ).
+  ENDMETHOD.
+
+  METHOD from_xml.
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML iv_string
+      RESULT data = rs_xml ##NO_TEXT.
+  ENDMETHOD.
+
+  METHOD to_xml.
+    DATA: ls_xml TYPE ty_xml.
+
+    MOVE-CORRESPONDING is_background TO ls_xml.
+
+    CALL TRANSFORMATION id
+      SOURCE data = ls_xml
+      RESULT XML rv_string.
+  ENDMETHOD.
 
 ENDCLASS.
 
@@ -13668,7 +13785,6 @@ CLASS lcl_sap_package IMPLEMENTATION.
   METHOD create.
 
     DATA: lv_err     TYPE string,
-          li_super   TYPE REF TO if_package,
           ls_package LIKE is_package.
 
 
@@ -13724,25 +13840,6 @@ CLASS lcl_sap_package IMPLEMENTATION.
       lv_err = |Package { is_package-devclass } could not be created|.
       _raise lv_err.
     ENDIF.
-
-*    IF NOT ls_package-pdevclass IS INITIAL.
-*      cl_package_factory=>load_package(
-*        EXPORTING
-*          i_package_name             = is_package-pdevclass
-*        IMPORTING
-*          e_package                  = li_super
-*        EXCEPTIONS
-*          object_not_existing        = 1
-*          unexpected_error           = 2
-*          intern_err                 = 3
-*          no_access                  = 4
-*          object_locked_and_modified = 5 ).
-*      IF sy-subrc <> 0.
-*        _raise 'error reading super package'.
-*      ENDIF.
-
-*      ri_package->set_super_package_name( PARENTCL ).
-*    ENDIF.
 
     ri_package->save(
 *      EXPORTING
@@ -19062,31 +19159,92 @@ CLASS lcl_gui_page_background DEFINITION FINAL INHERITING FROM lcl_gui_page_supe
       lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
+
     METHODS:
+      parse_fields
+        IMPORTING iv_getdata       TYPE clike
+        RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background,
       render_data
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      save
+        IMPORTING iv_getdata TYPE clike
         RAISING   lcx_exception.
 
 ENDCLASS.
 
 CLASS lcl_gui_page_background IMPLEMENTATION.
 
+  METHOD parse_fields.
+
+    DEFINE _field.
+      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1.
+      IF sy-subrc = 0.
+        rs_fields-&2 = <ls_field>-value.
+      ENDIF.
+    END-OF-DEFINITION.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    lv_string = iv_getdata.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    _field 'key' key.
+    _field 'method' method.
+    _field 'username' username.
+    _field 'password' password.
+
+    ASSERT NOT rs_fields IS INITIAL.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
-*      WHEN 'apush'.
-*      WHEN 'apull'.
+      WHEN 'save'.
+        save( iv_getdata ).
+        lcl_gui=>render( ).
       WHEN OTHERS.
         _raise 'Unknown action, background'.
     ENDCASE.
 
   ENDMETHOD.
 
+  METHOD save.
+
+    DATA: ls_fields      TYPE lcl_persistence_background=>ty_background,
+          lo_persistence TYPE REF TO lcl_persistence_background.
+
+
+    ls_fields = parse_fields( iv_getdata ).
+
+    CREATE OBJECT lo_persistence.
+
+    IF ls_fields-method = lcl_persistence_background=>c_method-nothing.
+      lo_persistence->delete( ls_fields-key ).
+    ELSE.
+      lo_persistence->modify( ls_fields ).
+    ENDIF.
+
+    COMMIT WORK.
+
+  ENDMETHOD.
+
   METHOD render_data.
 
-    DATA: lo_repo   TYPE REF TO lcl_repo,
-          lo_online TYPE REF TO lcl_repo_online,
-          lt_list   TYPE lcl_repo_srv=>ty_repo_tt.
+    DATA: lo_repo    TYPE REF TO lcl_repo,
+          lo_online  TYPE REF TO lcl_repo_online,
+          lo_per     TYPE REF TO lcl_persistence_background,
+          lt_per     TYPE lcl_persistence_background=>tt_background,
+          ls_per     LIKE LINE OF lt_per,
+          lv_nothing TYPE string,
+          lv_push    TYPE string,
+          lv_pull    TYPE string,
+          lt_list    TYPE lcl_repo_srv=>ty_repo_tt.
 
 
     CREATE OBJECT ro_html.
@@ -19095,12 +19253,57 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ro_html->add( 'Listing online repositories' ).
     ro_html->add( '<br><br>' ).
 
+    CREATE OBJECT lo_per.
+    lt_per = lo_per->list( ).
     lt_list = lcl_repo_srv=>list( ).
+
     LOOP AT lt_list INTO lo_repo.
       IF lo_repo->is_offline( ) = abap_false.
         lo_online ?= lo_repo.
-        ro_html->add( lo_online->get_name( ) && '<br>' ).
-        ro_html->add( 'Automatic push | Automatic pull' && '<br>' ).
+
+        READ TABLE lt_per INTO ls_per WITH KEY key = lo_online->get_key( ).
+        IF sy-subrc <> 0.
+          CLEAR ls_per.
+        ENDIF.
+
+        CLEAR lv_push.
+        CLEAR lv_pull.
+        CLEAR lv_nothing.
+        CASE ls_per-method.
+          WHEN lcl_persistence_background=>c_method-push.
+            lv_push = ' checked'.
+          WHEN lcl_persistence_background=>c_method-pull.
+            lv_pull = ' checked'.
+          WHEN OTHERS.
+            lv_nothing = ' checked'.
+        ENDCASE.
+
+        ro_html->add( '<h1>' && lo_online->get_name( ) && '</h1>' ).
+        ro_html->add( '<form method="get" action="sapevent:save">' ).
+        ro_html->add( '<input type="hidden" name="key" value="' &&
+          lo_repo->get_key( ) && '">' ).
+        ro_html->add( '<input type="radio" name="method" value="nothing"' &&
+          lv_nothing && '>Do nothing<br>' ).
+        ro_html->add( '<input type="radio" name="method" value="push"' &&
+          lv_push && '>Automatic push<br>' ).
+        ro_html->add( '<input type="radio" name="method" value="pull"' &&
+          lv_pull && '>Automatic pull<br>' ).
+        ro_html->add( '<br>' ).
+        ro_html->add( 'Authentication, optional(password will be saved in clear text)<br>' ).
+        ro_html->add( '<table>' ).
+        ro_html->add( '<tr>' ).
+        ro_html->add( '<td>Username:</td><td><input type="text" name="username" value="' &&
+          ls_per-username && '"></td>' ).
+        ro_html->add( '</tr>' ).
+        ro_html->add( '<tr>' ).
+        ro_html->add( '<td>Password:</td><td><input type="text" name="password" value="' &&
+          ls_per-password && '"></td>' ).
+        ro_html->add( '</tr>' ).
+        ro_html->add( '<tr><td colspan="2" align="right">' ).
+        ro_html->add( '<input type="submit" value="Save">' ).
+        ro_html->add( '</td></tr>' ).
+        ro_html->add( '</table>' ).
+        ro_html->add( '</form>' ).
         ro_html->add( '<br>' ).
       ENDIF.
     ENDLOOP.
@@ -20325,6 +20528,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
 
+
+    CLEAR et_repo_items.
+
     IF io_repo->is_offline( ) = abap_true.
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -20445,7 +20651,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_data       TYPE lcl_persistence_repo=>ty_repo,
           lv_returncode TYPE c,
           lv_url        TYPE string,
-          lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -22364,6 +22569,11 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD delete.
+
+    DATA: lo_background TYPE REF TO lcl_persistence_background.
+
+    CREATE OBJECT lo_background.
+    lo_background->delete( iv_key ).
 
     mo_db->delete( iv_type  = c_type_repo
                    iv_value = iv_key ).
