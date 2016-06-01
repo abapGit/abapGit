@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.0'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.1'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -20512,9 +20512,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_repo_menu.
-    DATA lo_toolbar     TYPE REF TO lcl_html_toolbar.
-    DATA lv_key         TYPE lcl_persistence_db=>ty_value.
-    DATA lo_repo_online TYPE REF TO lcl_repo_online.
+
+    DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
+          lv_key         TYPE lcl_persistence_db=>ty_value,
+          lo_repo_online TYPE REF TO lcl_repo_online.
+
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
@@ -20522,24 +20524,43 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lv_key = io_repo->get_key( ).
 
     IF go_user->is_hidden( lv_key ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Show'      iv_cmd = |sapevent:unhide?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Show'
+                       iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
       IF io_repo->is_offline( ) = abap_true.
-        lo_toolbar->add( iv_txt = 'Import ZIP'        iv_cmd = |sapevent:zipimport?{ lv_key }| iv_emph = abap_true ).
-        lo_toolbar->add( iv_txt = 'Export ZIP'        iv_cmd = |sapevent:zipexport?{ lv_key }| iv_emph = abap_true ).
-        lo_toolbar->add( iv_txt = 'Export&amp;Commit' iv_cmd = |sapevent:files_commit?{ lv_key }| iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Import ZIP'
+                         iv_cmd = |sapevent:zipimport?{ lv_key }|
+                         iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export ZIP'
+                         iv_cmd = |sapevent:zipexport?{ lv_key }|
+                         iv_emph = abap_true ).
+        lo_toolbar->add( iv_txt = 'Export&amp;Commit'
+                         iv_cmd = |sapevent:files_commit?{ lv_key }|
+                         iv_emph = abap_true ).
       ELSE.
         lo_repo_online ?= io_repo.
-        IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
-          lo_toolbar->add( iv_txt = 'Pull'  iv_cmd = |sapevent:pull?{ lv_key }| iv_emph = abap_true ).
-        ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
-          lo_toolbar->add( iv_txt = 'Stage' iv_cmd = |sapevent:stage?{ lv_key }| iv_emph = abap_true ).
-        ENDIF.
+        TRY.
+            IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
+              lo_toolbar->add( iv_txt = 'Pull'
+                               iv_cmd = |sapevent:pull?{ lv_key }|
+                               iv_emph = abap_true ).
+            ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
+              lo_toolbar->add( iv_txt = 'Stage'
+                               iv_cmd = |sapevent:stage?{ lv_key }|
+                               iv_emph = abap_true ).
+            ENDIF.
+          CATCH lcx_exception.
+* authorization error or repository does not exist
+        ENDTRY.
       ENDIF.
-      lo_toolbar->add( iv_txt = 'Remove'    iv_cmd = |sapevent:remove?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Uninstall' iv_cmd = |sapevent:uninstall?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Refresh'   iv_cmd = |sapevent:refresh?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Hide'      iv_cmd = |sapevent:hide?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Remove'
+                       iv_cmd = |sapevent:remove?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Uninstall'
+                       iv_cmd = |sapevent:uninstall?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Refresh'
+                       iv_cmd = |sapevent:refresh?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Hide'
+                       iv_cmd = |sapevent:hide?{ lv_key }| ).
     ENDIF.
 
     ro_html->add( '<div class="paddings right">' ).
@@ -20597,6 +20618,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo ) ).
+
     ro_html->add( render_repo_menu( io_repo ) ).
 
     IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
@@ -20624,7 +20646,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
             ro_html->add( lo_log->to_html( ) ).
             ro_html->add( '</div>' ).
           ENDIF.
-
         CATCH lcx_exception INTO lx_error.
           ro_html->add( render_error( lx_error ) ).
       ENDTRY.
