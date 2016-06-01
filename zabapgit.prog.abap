@@ -16648,6 +16648,68 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION
 
+CLASS lcl_login_manager DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      load
+        IMPORTING iv_uri type string
+                  ii_client TYPE REF TO if_http_client
+        RAISING   lcx_exception,
+      save
+        IMPORTING iv_uri type string
+                  ii_client TYPE REF TO if_http_client
+        RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_auth,
+             uri           TYPE string,
+             authorization TYPE string,
+           END OF ty_auth.
+
+    CLASS-DATA: gt_auth TYPE TABLE OF ty_auth WITH DEFAULT KEY.
+
+ENDCLASS.
+
+CLASS lcl_login_manager IMPLEMENTATION.
+
+  METHOD load.
+
+    DATA: ls_auth LIKE LINE OF gt_auth.
+
+
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = iv_uri.
+    IF sy-subrc = 0.
+      ii_client->request->set_header_field(
+          name  = 'authorization'
+          value = ls_auth-authorization ).                  "#EC NOTEXT
+      ii_client->propertytype_logon_popup = ii_client->co_disabled.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    DATA: lv_auth TYPE string.
+
+    FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
+
+
+    lv_auth =  ii_client->request->get_header_field( 'authorization' ). "#EC NOTEXT
+
+    IF NOT lv_auth IS INITIAL.
+      READ TABLE gt_auth WITH KEY uri = iv_uri TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
+        <ls_auth>-uri           = iv_uri.
+        <ls_auth>-authorization = lv_auth.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_transport DEFINITION
 *----------------------------------------------------------------------*
@@ -16915,8 +16977,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_uri  TYPE string,
           lv_text TYPE string.
 
-    STATICS: sv_authorization TYPE string.
-
 
     cl_http_client=>create_by_url(
       EXPORTING
@@ -16939,13 +16999,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
     ei_client->request->set_header_field(
         name  = '~request_uri'
         value = lv_uri ).
-    IF NOT sv_authorization IS INITIAL.
-* note this will only work if all repositories uses the same login
-      ei_client->request->set_header_field(
-          name  = 'authorization'
-          value = sv_authorization ).                       "#EC NOTEXT
-      ei_client->propertytype_logon_popup = ei_client->co_disabled.
-    ENDIF.
+
+    lcl_login_manager=>load( iv_uri    = iv_url
+                             ii_client = ei_client ).
+
     ei_client->send( ).
     ei_client->receive(
       EXCEPTIONS
@@ -16974,8 +17031,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
     ENDIF.
 
     check_http_200( ei_client ).
-    sv_authorization = ei_client->request->get_header_field(
-                                                  'authorization' ). "#EC NOTEXT
+
+    lcl_login_manager=>save( iv_uri    = iv_url
+                             ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
     et_branch_list = parse_branch_list( lv_data ).
