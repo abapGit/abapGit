@@ -67,6 +67,11 @@ TYPES: BEGIN OF ty_metadata,
          late_deser TYPE string,
        END OF ty_metadata.
 
+TYPES: BEGIN OF ty_login,
+         username TYPE string,
+         password TYPE string,
+       END OF ty_login.
+
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
              tree   TYPE ty_type VALUE 'tree',              "#EC NOTEXT
@@ -16083,7 +16088,8 @@ CLASS lcl_repo_srv DEFINITION FINAL.
 
     CLASS-METHODS get
       IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
-      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo.
+      RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
+      RAISING   lcx_exception.
 
   PRIVATE SECTION.
 
@@ -16482,6 +16488,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lo_list> LIKE LINE OF gt_list.
 
+
+    IF gv_init = abap_false.
+      refresh( ).
+    ENDIF.
 
     LOOP AT gt_list ASSIGNING <lo_list>.
       IF <lo_list>->get_key( ) = iv_key.
@@ -20987,15 +20997,89 @@ ENDCLASS.
 CLASS lcl_background DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: run.
+    CLASS-METHODS: run
+      RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: push
+      IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                iv_username TYPE string
+                iv_password TYPE string
+      RAISING   lcx_exception.
 
 ENDCLASS.
 
 CLASS lcl_background IMPLEMENTATION.
 
+  METHOD push.
+
+    DATA: ls_comment TYPE ty_comment,
+          ls_files   TYPE lcl_stage_logic=>ty_stage_files,
+          ls_login   TYPE ty_login,
+          lo_stage   TYPE REF TO lcl_stage.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files-local.
+
+
+    ls_files = lcl_stage_logic=>get( io_repo ).
+    IF lines( ls_files-local ) = 0.
+      WRITE: / 'nothing to stage'.
+      RETURN.
+    ENDIF.
+
+    ls_comment-username = 'foobar'.
+    ls_comment-email    = 'foo@bar.com'.
+    ls_comment-comment  = 'background mode'.
+
+    CREATE OBJECT lo_stage.
+    LOOP AT ls_files-local ASSIGNING <ls_file>.
+      WRITE: / 'stage', <ls_file>-file-filename.
+      lo_stage->add( <ls_file>-file ).
+    ENDLOOP.
+
+    ls_login-username = iv_username.
+    ls_login-password = iv_password.
+
+* todo
+
+    io_repo->push( is_comment = ls_comment
+                   io_stage   = lo_stage ).
+
+  ENDMETHOD.
+
   METHOD run.
-* see https://github.com/larshp/abapGit/issues/236
-    WRITE: / 'background mode, todo, WIP'.
+
+    DATA: lo_per  TYPE REF TO lcl_persistence_background,
+          lo_repo TYPE REF TO lcl_repo_online,
+          lt_list TYPE lcl_persistence_background=>tt_background.
+
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+
+
+    CREATE OBJECT lo_per.
+    lt_list = lo_per->list( ).
+
+    WRITE: / 'Background mode'.
+
+    LOOP AT lt_list ASSIGNING <ls_list>.
+      lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
+      WRITE: / <ls_list>-method, lo_repo->get_name( ).
+      CASE <ls_list>-method.
+        WHEN lcl_persistence_background=>c_method-pull.
+          lo_repo->deserialize( ).
+        WHEN lcl_persistence_background=>c_method-push.
+          push( io_repo     = lo_repo
+                iv_username = <ls_list>-username
+                iv_password = <ls_list>-password ).
+        WHEN OTHERS.
+          _raise 'background, unknown mode'.
+      ENDCASE.
+    ENDLOOP.
+
+    IF lines( lt_list ) = 0.
+      WRITE: / 'Nothing configured'.
+    ENDIF.
+
   ENDMETHOD.
 
 ENDCLASS.
