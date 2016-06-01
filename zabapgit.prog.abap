@@ -19096,7 +19096,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
     ro_html->add(   '<th>@REMOTE</th>' ).                   "#EC NOTEXT
-    ro_html->add(   '<th class="cmd"><a href=#diff_1>&#x25BC; 1</a></th>' ). "#EC NOTEXT
     ro_html->add(   '</tr>' ).                              "#EC NOTEXT
     ro_html->add( render_lines( ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT
@@ -19107,17 +19106,18 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_lines.
+
     DATA: lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
           lv_local        TYPE string,
           lv_remote       TYPE string,
           lv_attr_local   TYPE string,
           lv_attr_remote  TYPE string,
           lv_anchor_count LIKE sy-tabix,
-          lv_href         TYPE string,
           lv_beacon       TYPE string,
           lv_insert_nav   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
+
 
     CREATE OBJECT ro_html.
     lt_diffs = mo_diff->get( ).
@@ -19137,7 +19137,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
         ro_html->add( '<tr class="diff_nav_line">').
         ro_html->add( '<td class="num"></td>' ).
-        ro_html->add( |<td colspan="4">@@ { <ls_diff>-local_line } @@ { lv_beacon }</td>| ).
+        ro_html->add( |<td colspan="3">@@ { <ls_diff>-local_line } @@ { lv_beacon }</td>| ).
         ro_html->add( '</tr>' ).
         lv_insert_nav = abap_false.
       ENDIF.
@@ -19156,24 +19156,11 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           lv_attr_remote = ' class="diff_upd"'.             "#EC NOTEXT
       ENDCASE.
 
-      CLEAR lv_href.  " Create link to next change
-      IF <ls_diff>-result IS NOT INITIAL.
-        lv_anchor_count = lv_anchor_count + 1.
-        IF lv_anchor_count < ms_stats-insert + ms_stats-delete + ms_stats-update.
-          lv_href = |<a name="diff_{ lv_anchor_count }"|
-                 && |   href="#diff_{ lv_anchor_count + 1 }|
-                 && |">&#x25BC; { lv_anchor_count + 1 }</a>|.
-        ELSE.
-          lv_href = |<a name="diff_{ lv_anchor_count }"></a>|.
-        ENDIF.
-      ENDIF.
-
       ro_html->add( '<tr>' ).                               "#EC NOTEXT
       ro_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
       ro_html->add( |<td{ lv_attr_local }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
       ro_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
       ro_html->add( |<td{ lv_attr_remote }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
-      ro_html->add( |<td class="cmd">{ lv_href }</td>| ).   "#EC NOTEXT
       ro_html->add( '</tr>' ).                              "#EC NOTEXT
 
     ENDLOOP.
