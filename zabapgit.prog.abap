@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.10.3'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.0'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -66,11 +66,6 @@ TYPES: BEGIN OF ty_metadata,
          version    TYPE string,
          late_deser TYPE string,
        END OF ty_metadata.
-
-TYPES: BEGIN OF ty_login,
-         username TYPE string,
-         password TYPE string,
-       END OF ty_login.
 
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
@@ -16653,13 +16648,18 @@ CLASS lcl_login_manager DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       load
-        IMPORTING iv_uri type string
+        IMPORTING iv_uri    TYPE string
                   ii_client TYPE REF TO if_http_client
         RAISING   lcx_exception,
       save
-        IMPORTING iv_uri type string
+        IMPORTING iv_uri    TYPE string
                   ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception.
+        RAISING   lcx_exception,
+      set
+        IMPORTING iv_uri         TYPE string
+                  iv_username    TYPE string
+                  iv_password    TYPE string
+        RETURNING VALUE(rv_auth) TYPE string.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_auth,
@@ -16669,9 +16669,63 @@ CLASS lcl_login_manager DEFINITION FINAL.
 
     CLASS-DATA: gt_auth TYPE TABLE OF ty_auth WITH DEFAULT KEY.
 
+    CLASS-METHODS:
+      append
+        IMPORTING iv_uri  TYPE string
+                  iv_auth TYPE string.
+
+ENDCLASS.
+
+CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      test1 FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_login_manager IMPLEMENTATION.
+
+  METHOD test1.
+
+    DATA: lv_auth TYPE string.
+
+    lv_auth = lcl_login_manager=>set(
+      iv_uri      = 'foobar'
+      iv_username = 'Aladdin'
+      iv_password = 'OpenSesame' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        act = lv_auth
+        exp = 'Basic QWxhZGRpbjpPcGVuU2VzYW1l' ).
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_login_manager IMPLEMENTATION.
+
+  METHOD set.
+
+    DATA: lv_concat TYPE string.
+
+
+    ASSERT NOT iv_uri IS INITIAL.
+
+    IF iv_username IS INITIAL OR iv_password IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CONCATENATE iv_username ':' iv_password INTO lv_concat.
+
+    rv_auth = cl_http_utility=>if_http_utility~encode_base64( lv_concat ).
+
+    CONCATENATE 'Basic' rv_auth INTO rv_auth SEPARATED BY space.
+
+    append( iv_uri  = iv_uri
+            iv_auth = rv_auth ).
+
+  ENDMETHOD.
 
   METHOD load.
 
@@ -16692,18 +16746,26 @@ CLASS lcl_login_manager IMPLEMENTATION.
 
     DATA: lv_auth TYPE string.
 
-    FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
-
 
     lv_auth =  ii_client->request->get_header_field( 'authorization' ). "#EC NOTEXT
 
     IF NOT lv_auth IS INITIAL.
-      READ TABLE gt_auth WITH KEY uri = iv_uri TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-        <ls_auth>-uri           = iv_uri.
-        <ls_auth>-authorization = lv_auth.
-      ENDIF.
+      append( iv_uri = iv_uri
+              iv_auth = lv_auth ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD append.
+
+    FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
+
+
+    READ TABLE gt_auth WITH KEY uri = iv_uri TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
+      <ls_auth>-uri           = iv_uri.
+      <ls_auth>-authorization = iv_auth.
     ENDIF.
 
   ENDMETHOD.
@@ -21060,9 +21122,7 @@ CLASS lcl_background DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS: push
-      IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                iv_username TYPE string
-                iv_password TYPE string
+      IMPORTING io_repo TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -21073,7 +21133,6 @@ CLASS lcl_background IMPLEMENTATION.
 
     DATA: ls_comment TYPE ty_comment,
           ls_files   TYPE lcl_stage_logic=>ty_stage_files,
-          ls_login   TYPE ty_login,
           lo_stage   TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files-local.
@@ -21094,11 +21153,6 @@ CLASS lcl_background IMPLEMENTATION.
       WRITE: / 'stage', <ls_file>-file-filename.
       lo_stage->add( <ls_file>-file ).
     ENDLOOP.
-
-    ls_login-username = iv_username.
-    ls_login-password = iv_password.
-
-* todo
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = lo_stage ).
@@ -21122,13 +21176,17 @@ CLASS lcl_background IMPLEMENTATION.
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
       WRITE: / <ls_list>-method, lo_repo->get_name( ).
+
+      lcl_login_manager=>set(
+        iv_uri      = lo_repo->get_url( )
+        iv_username = <ls_list>-username
+        iv_password = <ls_list>-password ).
+
       CASE <ls_list>-method.
         WHEN lcl_persistence_background=>c_method-pull.
           lo_repo->deserialize( ).
         WHEN lcl_persistence_background=>c_method-push.
-          push( io_repo     = lo_repo
-                iv_username = <ls_list>-username
-                iv_password = <ls_list>-password ).
+          push( lo_repo ).
         WHEN OTHERS.
           _raise 'background, unknown mode'.
       ENDCASE.
