@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.1'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.2'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -10618,7 +10618,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include TYPE rs38l-include,
           lv_area    TYPE rs38l-area,
-          lt_source  TYPE TABLE OF rssource.
+          lt_source  TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
