@@ -18403,6 +18403,10 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
                 io_menu        TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
+    METHODS redirect
+      IMPORTING iv_url         TYPE string
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
   PRIVATE SECTION.
     CLASS-METHODS load_images.
     METHODS styles RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -18655,6 +18659,17 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
   ENDMETHOD.                    "render html footer & logo
 
+  METHOD redirect.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html><head>' ).                         "#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ iv_url }">| )."#EC NOTEXT
+    ro_html->add( '</head></html>').                        "#EC NOTEXT
+
+  ENDMETHOD.
+
   METHOD styles.
 
     CREATE OBJECT ro_html.
@@ -18798,6 +18813,31 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
   ENDMETHOD.                    "common styles
 
 ENDCLASS.
+
+CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+  PUBLIC SECTION.
+    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS lif_gui_page~render   REDEFINITION.
+ENDCLASS.                       "lcl_gui_page_explore DEFINITION
+
+CLASS lcl_gui_page_explore IMPLEMENTATION.
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN OTHERS.
+        _raise 'Unknown action'.                            "#EC NOTEXT
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( redirect( 'http://larshp.github.io/abapGit/explore.html' ) ).
+
+  ENDMETHOD.
+
+ENDCLASS.                       "lcl_gui_page_explore IMPLEMENTATION
 
 
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
@@ -20956,13 +20996,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_item       TYPE ty_item,
           lo_db         TYPE REF TO lcl_gui_page_db.
 
+    DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
 
     CASE iv_action.
       WHEN 'install'.
         lv_url = iv_getdata.
         install( lv_url ).
       WHEN 'explore'.
-        lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
+        CREATE OBJECT lo_page_explore.
+        lcl_gui=>call_page( lo_page_explore ).
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
       WHEN 'uninstall'.
@@ -21183,7 +21225,9 @@ CLASS lcl_background IMPLEMENTATION.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
-      WRITE: / <ls_list>-method, lo_repo->get_name( ).
+      DATA lv_repo_name TYPE string.
+      lv_repo_name = lo_repo->get_name( ).
+      WRITE: / <ls_list>-method, lv_repo_name.
 
       lcl_login_manager=>set(
         iv_uri      = lo_repo->get_url( )
