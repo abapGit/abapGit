@@ -15988,9 +15988,31 @@ INTERFACE lif_gui_page.
 ENDINTERFACE.
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_view DEFINITION
+*       CLASS lcl_gui_router DEFINITION
 *----------------------------------------------------------------------*
-*
+CLASS lcl_gui_router DEFINITION FINAL.
+  PUBLIC SECTION.
+    CONSTANTS: c_not_handled VALUE 0,
+               c_re_render   VALUE 1,
+               c_new_page    VALUE 2.
+
+    METHODS on_event
+      IMPORTING iv_action      TYPE clike
+                iv_frame       TYPE clike OPTIONAL
+                iv_getdata     TYPE clike OPTIONAL
+                it_postdata    TYPE cnht_post_data_tab OPTIONAL
+                it_query_table TYPE cnht_query_table   OPTIONAL
+      EXPORTING
+                eo_page        TYPE REF TO lif_gui_page
+                ev_result      TYPE i
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    METHODS get_home_page RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_gui DEFINITION FINAL.
 
@@ -16001,6 +16023,9 @@ CLASS lcl_gui DEFINITION FINAL.
 
     CLASS-METHODS back
       RETURNING VALUE(rv_exit) TYPE xfeld
+      RAISING   lcx_exception.
+
+    CLASS-METHODS go_home
       RAISING   lcx_exception.
 
     CLASS-METHODS call_page
@@ -16029,6 +16054,7 @@ CLASS lcl_gui DEFINITION FINAL.
     CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
                 gt_stack       TYPE TABLE OF REF TO lif_gui_page,
                 gt_assets      TYPE char40_t,
+                go_router      TYPE REF TO lcl_gui_router,
                 go_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     CLASS-METHODS view
@@ -18242,6 +18268,20 @@ CLASS lcl_gui IMPLEMENTATION.
     render( ).
 
   ENDMETHOD.
+
+  METHOD go_home.
+    " REDO ALL
+
+    DATA li_page TYPE REF TO lif_gui_page.
+    CREATE OBJECT go_router.
+
+    go_router->on_event( EXPORTING iv_action = 'home'
+                         IMPORTING eo_page   = li_page ).
+
+    call_page( li_page ).
+
+  ENDMETHOD.
+
 
   METHOD startup.
 
@@ -21294,7 +21334,6 @@ ENDCLASS.
 FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception,
-        lo_main      TYPE REF TO lcl_gui_page_main,
         lv_ind       TYPE t000-ccnocliind.
 
 
@@ -21314,9 +21353,7 @@ FORM run.
         lcl_background=>run( ).
       ELSE.
         lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
-
-        CREATE OBJECT lo_main.
-        lcl_gui=>call_page( lo_main ).
+        lcl_gui=>go_home( ).
 
         CALL SELECTION-SCREEN 1001. " trigger screen
       ENDIF.
@@ -23691,6 +23728,31 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui_router IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_gui_router IMPLEMENTATION.
+
+  METHOD on_event.
+    CASE iv_action.
+      WHEN 'home'.
+        eo_page   = get_home_page( ).
+        ev_result = c_new_page.
+      WHEN OTHERS.
+        ev_result = c_not_handled.
+    ENDCASE.
+  ENDMETHOD.        " on_event
+
+  METHOD get_home_page.
+    DATA lo_home TYPE REF TO lcl_gui_page_main.
+    CREATE OBJECT lo_home.
+    ro_page = lo_home.
+  ENDMETHOD.        " get_home_page
+
+ENDCLASS.           " lcl_gui_router
+
 
 CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
