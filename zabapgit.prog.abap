@@ -99,6 +99,8 @@ CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
+CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
+
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception
     EXPORTING
@@ -16014,7 +16016,16 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    METHODS get_home_page RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
+    METHODS get_home_page    RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
+    METHODS get_explore_page RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
+
+    METHODS abapgit_installation
+      RAISING lcx_exception.
+
+    METHODS repo_clone
+      IMPORTING iv_url TYPE string
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -16136,6 +16147,12 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
+    CLASS-METHODS is_repo_installed
+      IMPORTING iv_url              TYPE string
+                iv_target_package   TYPE devclass OPTIONAL
+      RETURNING VALUE(rv_installed) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     CLASS-DATA: gv_init        TYPE abap_bool VALUE abap_false,
@@ -16146,12 +16163,9 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS:
-      validate_package
-        IMPORTING
-          iv_package TYPE devclass
-        RAISING
-          lcx_exception.
+    CLASS-METHODS validate_package
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
 
@@ -16690,6 +16704,40 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.                    "delete
+
+  METHOD is_repo_installed.
+
+    DATA: lt_repo        TYPE lcl_repo_srv=>ty_repo_tt,
+          lo_repo        TYPE REF TO lcl_repo,
+          lv_url         TYPE string,
+          lv_package     TYPE devclass,
+          lo_repo_online TYPE REF TO lcl_repo_online,
+          lv_err         TYPE string.
+
+    lt_repo = list( ).
+
+    LOOP AT lt_repo INTO lo_repo.
+      CHECK lo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= lo_repo.
+
+      lv_url     = lo_repo_online->get_url( ).
+      lv_package = lo_repo_online->get_package( ).
+      CHECK to_upper( lv_url ) = to_upper( iv_url ).
+
+      " Validate bindings
+      "TODO refactor: move this message out of this method
+      IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
+        lv_err = |Installation to package { lv_package } detected. |
+              && |Cancelling installation|.
+        _raise lv_err.
+      ENDIF.
+
+      rv_installed = abap_true.
+      EXIT.
+    ENDLOOP.
+
+  ENDMETHOD. "is_repo_installed
+
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION
 
@@ -18267,7 +18315,8 @@ CLASS lcl_gui IMPLEMENTATION.
           lv_url   TYPE c LENGTH 100.
 
 
-* workaround for explore page
+    " workaround for explore page
+    "TODO fix bug with redirected pages -> should also remove it from stack
     mo_html_viewer->get_current_url( IMPORTING url = lv_url ).
     cl_gui_cfw=>flush( ).
     IF lv_url CP 'http*'.
@@ -18925,23 +18974,30 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 iv_obj_name    TYPE tadir-obj_name
       RETURNING VALUE(rv_html) TYPE string.
 
-    CLASS-METHODS render_explore
+    METHODS render_explore
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    CLASS-METHODS jump_encode
+    METHODS jump_encode
       IMPORTING iv_obj_type      TYPE tadir-object
                 iv_obj_name      TYPE tadir-obj_name
       RETURNING VALUE(rv_string) TYPE string.
 
-    CLASS-METHODS jump_decode
+    METHODS jump_decode
       IMPORTING iv_string   TYPE clike
       EXPORTING ev_obj_type TYPE tadir-object
                 ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
 
-    CLASS-METHODS install
-      IMPORTING iv_url TYPE string
+    CLASS-METHODS file_encode
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+                is_file          TYPE ty_repo_file
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS file_decode
+      IMPORTING iv_string TYPE clike
+      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
+                es_file   TYPE ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS newoffline
@@ -18966,26 +19022,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     CLASS-METHODS diff
       IMPORTING is_file TYPE ty_repo_file
                 iv_key  TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE ty_repo_file
-      RETURNING VALUE(rv_string) TYPE string.
-
-    CLASS-METHODS file_decode
-      IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE ty_repo_file
-      RAISING   lcx_exception.
-
-    CLASS-METHODS abapgit_installation
-      RAISING lcx_exception.
-
-    CLASS-METHODS is_repo_installed
-      IMPORTING iv_url              TYPE string
-                iv_target_package   TYPE devclass OPTIONAL
-      RETURNING VALUE(rv_installed) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS needs_installation
@@ -20354,93 +20390,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "newoffline
 
-  METHOD install.
-
-    DATA: lv_returncode  TYPE c,
-          lv_url         TYPE string,
-          lv_package     TYPE devclass,
-          lv_branch_name TYPE string,
-          lv_icon_ok     TYPE icon-name,
-          lv_icon_br     TYPE icon-name,
-          lv_icon_msg    TYPE icon-name,
-          lo_repo        TYPE REF TO lcl_repo_online,
-          lt_fields      TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Git Clone Url'.                 "#EC NOTEXT
-    <ls_field>-value     = iv_url.
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TEXTL'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
-    <ls_field>-value     = 'refs/heads/master'.             "#EC NOTEXT
-    <ls_field>-field_attr = '05'.
-
-    lv_icon_ok = icon_okay.
-    lv_icon_br = icon_workflow_fork.
-    lv_icon_msg = icon_msg.
-
-    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
-      EXPORTING
-        popup_title       = 'Clone'
-        programname       = sy-repid
-        formname          = 'BRANCH_POPUP'
-        ok_pushbuttontext = 'OK'
-        icon_ok_push      = lv_icon_ok
-        first_pushbutton  = 'Select branch'
-        icon_button_1     = lv_icon_br
-        second_pushbutton = 'Create package'
-        icon_button_2     = lv_icon_msg
-      IMPORTING
-        returncode        = lv_returncode
-      TABLES
-        fields            = lt_fields
-      EXCEPTIONS
-        error_in_fields   = 1
-        OTHERS            = 2.                              "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
-    lcl_url=>name( lv_url ).         " validate
-
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_branch_name = <ls_field>-value.
-
-    lo_repo = lcl_repo_srv=>new_online(
-      iv_url         = lv_url
-      iv_branch_name = lv_branch_name
-      iv_package     = lv_package ).
-    lo_repo->status( ). " check for errors
-    lo_repo->deserialize( ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "install
-
   METHOD build_main_menu.
 
     DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
@@ -20861,101 +20810,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD abapgit_installation.
-
-    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
-    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
-
-    DATA lv_text            TYPE c LENGTH 100.
-    DATA lv_answer          TYPE c LENGTH 1.
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_url             TYPE string.
-    DATA lv_target_package  TYPE devclass.
-
-    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
-            && |and plugins to { lc_package_plugins }|.
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Install abapGit'
-        text_question         = lv_text
-        text_button_1         = 'Continue'
-        text_button_2         = 'Cancel'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer ##no_text.
-    IF lv_answer <> '1'.
-      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    ENDIF.
-
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          lv_url            = 'https://github.com/larshp/abapGit.git'.
-          lv_target_package = lc_package_abapgit.
-        WHEN 2.
-          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
-          lv_target_package = lc_package_plugins.
-      ENDCASE.
-
-      IF abap_false = is_repo_installed(
-          iv_url              = lv_url
-          iv_target_package   = lv_target_package ).
-
-        lcl_sap_package=>create_local( lv_target_package ).
-
-        lo_repo = lcl_repo_srv=>new_online(
-          iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master'
-          iv_package     = lv_target_package ) ##NO_TEXT.
-
-        lo_repo->status( ). " check for errors
-        lo_repo->deserialize( ).
-      ENDIF.
-    ENDDO.
-
-    COMMIT WORK.
-
-  ENDMETHOD. "abapgit_installation
-
-  METHOD is_repo_installed.
-
-    DATA: lt_repo        TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo        TYPE REF TO lcl_repo,
-          lv_url         TYPE string,
-          lv_package     TYPE devclass,
-          lo_repo_online TYPE REF TO lcl_repo_online,
-          lv_err         TYPE string.
-
-
-    lt_repo = lcl_repo_srv=>list( ).
-
-* find abapgit and abapgit-plugins-repos and validate bindings
-    LOOP AT lt_repo INTO lo_repo.
-      TRY.
-          lo_repo_online ?= lo_repo.
-        CATCH cx_sy_move_cast_error.
-          CONTINUE. "the repositories we're looking for are online-repositories
-      ENDTRY.
-
-      lv_url     = lo_repo_online->get_url( ).
-      lv_package = lo_repo_online->get_package( ).
-      IF to_upper( lv_url ) <> to_upper( iv_url ).
-        CONTINUE.
-      ENDIF.
-
-      IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
-        lv_err = |Installation to package { lv_package
-          } detected. Cancelling installation|.
-        _raise lv_err.
-      ENDIF.
-
-      rv_installed = abap_true.
-    ENDLOOP.
-
-  ENDMETHOD. "is_repo_installed
-
   METHOD needs_installation.
 
     CONSTANTS:
@@ -20963,12 +20817,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     TRY.
-        IF is_repo_installed( lc_abapgit ) = abap_false
-            OR is_repo_installed( lc_plugins ) = abap_false.
+        IF lcl_repo_srv=>is_repo_installed( lc_abapgit ) = abap_false
+        OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
-* cannot be installed anyway in this case, e.g. no connection
+        " cannot be installed anyway in this case, e.g. no connection
         rv_not_completely_installed = abap_false.
     ENDTRY.
   ENDMETHOD.                    "needs_installation
@@ -20985,22 +20839,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
 
     CASE iv_action.
-      WHEN 'install'.
-        lv_url = iv_getdata.
-        install( lv_url ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'explore'.
-        CREATE OBJECT lo_page_explore.
-        lcl_gui=>get( )->call_page( lo_page_explore ).
-      WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
-      WHEN 'uninstall'.
-        lv_key = iv_getdata.
-        uninstall( lv_key ).
-      WHEN 'remove'.
-        lv_key = iv_getdata.
-        remove( lv_key ).
-        rv_state = gc_event_state-re_render.
       WHEN 'refresh'.
         lv_key = iv_getdata.
         IF lv_key IS INITIAL. " Refresh all or single
@@ -21009,58 +20847,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lcl_repo_srv=>get( lv_key )->refresh( ).
         ENDIF.
         rv_state = gc_event_state-re_render.
-      WHEN 'hide'.
-        lv_key = iv_getdata.
-        go_user->hide( lv_key ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'unhide'.
-        lv_key = iv_getdata.
-        go_user->unhide( lv_key ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'stage'.
-        lv_key = iv_getdata.
-        stage( lv_key ).
-      WHEN 'diff'.
-        file_decode( EXPORTING iv_string = iv_getdata
-                     IMPORTING ev_key    = lv_key
-                               es_file   = ls_file ).
-        diff( is_file   = ls_file
-              iv_key    = lv_key ).
-      WHEN 'jump'.
-        CLEAR ls_item.
-        jump_decode( EXPORTING iv_string = iv_getdata
-                     IMPORTING ev_obj_type = ls_item-obj_type
-                               ev_obj_name = ls_item-obj_name ).
-        lcl_objects=>jump( ls_item ).
-      WHEN 'pull'.
-        lv_key = iv_getdata.
-        pull( lv_key ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'newoffline'.
-        newoffline( ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'db'.
-        CREATE OBJECT lo_db.
-        lcl_gui=>get( )->call_page( lo_db ).
-      WHEN 'background'.
-        CREATE OBJECT lo_background.
-        lcl_gui=>get( )->call_page( lo_background ).
-      WHEN 'zipimport'.
-        lv_key = iv_getdata.
-        lcl_zip=>import( lv_key ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'zipexport'.
-        lv_key = iv_getdata.
-        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
-      WHEN 'files_commit'.
-        lv_key = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
-                         iv_zip  = abap_false ).
-      WHEN 'abapgit_installation'.
-        abapgit_installation( ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'packagezip'.
-        package_zip( ).
     ENDCASE.
 
   ENDMETHOD.
@@ -23733,20 +23519,259 @@ ENDCLASS.
 CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
+    DATA: lv_url        TYPE string.
+*          ls_file       TYPE ty_repo_file,
+*          lo_background TYPE REF TO lcl_gui_page_background,
+*          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+*          ls_item       TYPE ty_item,
+*          lo_db         TYPE REF TO lcl_gui_page_db.
+
+
     CASE iv_action.
       WHEN 'home'.
         eo_page  = get_home_page( ).
         ev_state = gc_event_state-new_page.
+      WHEN 'explore'.
+        eo_page  = get_explore_page( ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'abapgithome'.
+        cl_gui_frontend_services=>execute( document = gc_abapgit_homepage ).
+      WHEN 'abapgit_installation'.
+        abapgit_installation( ).
+        ev_state = gc_event_state-re_render.
+
+      " REPOSITORIES
+      WHEN 'install'.
+        lv_url   = iv_getdata.
+        repo_clone( lv_url ).
+        ev_state = gc_event_state-re_render.
+*      WHEN 'uninstall'.
+*        lv_key = iv_getdata.
+*        uninstall( lv_key ).
+*      WHEN 'remove'.
+*        lv_key = iv_getdata.
+*        remove( lv_key ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'hide'.
+*        lv_key = iv_getdata.
+*        go_user->hide( lv_key ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'unhide'.
+*        lv_key = iv_getdata.
+*        go_user->unhide( lv_key ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'stage'.
+*        lv_key = iv_getdata.
+*        stage( lv_key ).
+*      WHEN 'diff'.
+*        file_decode( EXPORTING iv_string = iv_getdata
+*                     IMPORTING ev_key    = lv_key
+*                               es_file   = ls_file ).
+*        diff( is_file   = ls_file
+*              iv_key    = lv_key ).
+*      WHEN 'jump'.
+*        CLEAR ls_item.
+*        jump_decode( EXPORTING iv_string = iv_getdata
+*                     IMPORTING ev_obj_type = ls_item-obj_type
+*                               ev_obj_name = ls_item-obj_name ).
+*        lcl_objects=>jump( ls_item ).
+*      WHEN 'pull'.
+*        lv_key = iv_getdata.
+*        pull( lv_key ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'newoffline'.
+*        newoffline( ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'db'.
+*        CREATE OBJECT lo_db.
+*        lcl_gui=>get( )->call_page( lo_db ).
+*      WHEN 'background'.
+*        CREATE OBJECT lo_background.
+*        lcl_gui=>get( )->call_page( lo_background ).
+*      WHEN 'zipimport'.
+*        lv_key = iv_getdata.
+*        lcl_zip=>import( lv_key ).
+*        rv_state = gc_event_state-re_render.
+*      WHEN 'zipexport'.
+*        lv_key = iv_getdata.
+*        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
+*      WHEN 'files_commit'.
+*        lv_key = iv_getdata.
+*        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+*                         iv_zip  = abap_false ).
+*      WHEN 'packagezip'.
+*        package_zip( ).
+
+
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
     ENDCASE.
   ENDMETHOD.        " on_event
 
   METHOD get_home_page.
+
     DATA lo_home TYPE REF TO lcl_gui_page_main.
+
     CREATE OBJECT lo_home.
     ro_page = lo_home.
+
   ENDMETHOD.        " get_home_page
+
+  METHOD get_explore_page.
+
+    DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
+
+    CREATE OBJECT lo_page_explore.
+    ro_page = lo_page_explore.
+
+  ENDMETHOD.        " get_explore_page
+
+  METHOD abapgit_installation.
+
+    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
+    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
+
+    DATA lv_text            TYPE c LENGTH 100.
+    DATA lv_answer          TYPE c LENGTH 1.
+    DATA lo_repo            TYPE REF TO lcl_repo_online.
+    DATA lv_url             TYPE string.
+    DATA lv_target_package  TYPE devclass.
+
+    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
+           && |and plugins to { lc_package_plugins }|.
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Install abapGit'
+        text_question         = lv_text
+        text_button_1         = 'Continue'
+        text_button_2         = 'Cancel'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer ##no_text.
+    IF lv_answer <> '1'.
+      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    ENDIF.
+
+    DO 2 TIMES.
+      CASE sy-index.
+        WHEN 1.
+          lv_url            = 'https://github.com/larshp/abapGit.git'.
+          lv_target_package = lc_package_abapgit.
+        WHEN 2.
+          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
+          lv_target_package = lc_package_plugins.
+      ENDCASE.
+
+      IF abap_false = lcl_repo_srv=>is_repo_installed(
+          iv_url              = lv_url
+          iv_target_package   = lv_target_package ).
+
+        lcl_sap_package=>create_local( lv_target_package ).
+
+        lo_repo = lcl_repo_srv=>new_online(
+          iv_url         = lv_url
+          iv_branch_name = 'refs/heads/master'
+          iv_package     = lv_target_package ) ##NO_TEXT.
+
+        lo_repo->status( ). " check for errors
+        lo_repo->deserialize( ).
+      ENDIF.
+    ENDDO.
+
+    COMMIT WORK.
+
+  ENDMETHOD. "abapgit_installation
+
+  METHOD repo_clone.
+
+    DATA: lv_returncode  TYPE c,
+          lv_url         TYPE string,
+          lv_package     TYPE devclass,
+          lv_branch_name TYPE string,
+          lv_icon_ok     TYPE icon-name,
+          lv_icon_br     TYPE icon-name,
+          lv_icon_msg    TYPE icon-name,
+          lo_repo        TYPE REF TO lcl_repo_online,
+          lt_fields      TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'ABAPTXT255'.
+    <ls_field>-fieldname = 'LINE'.
+    <ls_field>-fieldtext = 'Git Clone Url'.                 "#EC NOTEXT
+    <ls_field>-value     = iv_url.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TDEVC'.
+    <ls_field>-fieldname = 'DEVCLASS'.
+    <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TEXTL'.
+    <ls_field>-fieldname = 'LINE'.
+    <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
+    <ls_field>-value     = 'refs/heads/master'.             "#EC NOTEXT
+    <ls_field>-field_attr = '05'.
+
+    lv_icon_ok  = icon_okay.
+    lv_icon_br  = icon_workflow_fork.
+    lv_icon_msg = icon_msg.
+
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+      EXPORTING
+        popup_title       = 'Clone'
+        programname       = sy-repid
+        formname          = 'BRANCH_POPUP'
+        ok_pushbuttontext = 'OK'
+        icon_ok_push      = lv_icon_ok
+        first_pushbutton  = 'Select branch'
+        icon_button_1     = lv_icon_br
+        second_pushbutton = 'Create package'
+        icon_button_2     = lv_icon_msg
+      IMPORTING
+        returncode        = lv_returncode
+      TABLES
+        fields            = lt_fields
+      EXCEPTIONS
+        error_in_fields   = 1
+        OTHERS            = 2.                              "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_url = <ls_field>-value.
+    lcl_url=>name( lv_url ).         " validate
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_branch_name = <ls_field>-value.
+
+    lo_repo = lcl_repo_srv=>new_online(
+      iv_url         = lv_url
+      iv_branch_name = lv_branch_name
+      iv_package     = lv_package ).
+    lo_repo->status( ). " check for errors
+    lo_repo->deserialize( ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_clone
+
+
 
 ENDCLASS.           " lcl_gui_router
 
