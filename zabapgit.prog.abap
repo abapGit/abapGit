@@ -16289,9 +16289,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
     METHODS go_home
       RAISING lcx_exception.
 
-    METHODS render
-      RAISING lcx_exception.
-
     METHODS back
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
@@ -16330,6 +16327,9 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
     METHODS show_url
       IMPORTING iv_url TYPE clike.
+
+    METHODS render
+      RAISING lcx_exception.
 
     METHODS view
       IMPORTING iv_html TYPE string.
@@ -23202,11 +23202,13 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           EXPORTING
             is_key = ls_key.
         lcl_gui=>get( )->call_page( lo_display ).
+        rv_state = gc_event_state-no_more_act.
       WHEN 'edit'.
         CREATE OBJECT lo_edit
           EXPORTING
             is_key = ls_key.
         lcl_gui=>get( )->call_page( lo_edit ).
+        rv_state = gc_event_state-no_more_act.
       WHEN 'delete'.
         delete( ls_key ).
         rv_state = gc_event_state-re_render.
@@ -23292,7 +23294,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         eo_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( document = gc_abapgit_homepage ).
+        cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
+                                           EXCEPTIONS OTHERS = 1 ).
+        IF sy-subrc <> 0.
+          _raise 'Opening page in external browser failed.'.
+        ENDIF.
         ev_state = gc_event_state-no_more_act.
       WHEN 'abapgit_installation'.
         abapgit_installation( ).
