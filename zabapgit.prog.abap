@@ -16014,50 +16014,59 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_gui DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL.
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    CLASS-METHODS render
+    CLASS-METHODS get
+      RETURNING VALUE(ro_instance) TYPE REF TO lcl_gui
+      RAISING   lcx_exception.
+
+    METHODS go_home
       RAISING lcx_exception.
 
-    CLASS-METHODS back
+    METHODS render
+      RAISING lcx_exception.
+
+    METHODS back
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
-    CLASS-METHODS go_home
-      RAISING   lcx_exception.
-
-    CLASS-METHODS call_page
+    METHODS call_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    CLASS-METHODS set_page
+    METHODS set_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    CLASS-METHODS on_event
+    METHODS on_event
                   FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
-    CLASS-METHODS show_url
-      IMPORTING iv_url TYPE clike.
+  PRIVATE SECTION.
+    CLASS-DATA go_instance  TYPE REF TO lcl_gui.
 
-    CLASS-METHODS cache_image
+    DATA: mi_cur_page       TYPE REF TO lif_gui_page,
+          mt_stack          TYPE TABLE OF REF TO lif_gui_page,
+          mt_assets         TYPE char40_t,
+          mo_router         TYPE REF TO lcl_gui_router,
+          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
+
+    METHODS constructor
+      RAISING lcx_exception.
+
+    METHODS startup
+      RAISING lcx_exception.
+
+    METHODS cache_image
       IMPORTING iv_url    TYPE char40
                 iv_base64 TYPE string.
 
-    CLASS-METHODS startup
-      RAISING lcx_exception.
+    METHODS show_url
+      IMPORTING iv_url TYPE clike.
 
-  PRIVATE SECTION.
-    CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
-                gt_stack       TYPE TABLE OF REF TO lif_gui_page,
-                gt_assets      TYPE char40_t,
-                go_router      TYPE REF TO lcl_gui_router,
-                go_html_viewer TYPE REF TO cl_gui_html_viewer.
-
-    CLASS-METHODS view
+    METHODS view
       IMPORTING iv_html TYPE string.
 
 ENDCLASS.                    "lcl_gui DEFINITION
@@ -17688,7 +17697,7 @@ CLASS lcl_zip IMPLEMENTATION.
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "import
 
@@ -18179,9 +18188,25 @@ ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
 
+  METHOD get.
+
+    IF go_instance IS NOT BOUND.
+      CREATE OBJECT go_instance.
+    ENDIF.
+    ro_instance = go_instance.
+
+  ENDMETHOD.
+
+  METHOD constructor.
+
+    startup( ).
+
+  ENDMETHOD.
+
+
   METHOD show_url.
 
-    go_html_viewer->show_url( iv_url ).
+    mo_html_viewer->show_url( iv_url ).
 
   ENDMETHOD.
 
@@ -18191,7 +18216,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
     TRY.
-        gi_page->on_event(
+        mi_cur_page->on_event(
           iv_action      = action
           iv_frame       = frame
           iv_getdata     = getdata
@@ -18211,24 +18236,24 @@ CLASS lcl_gui IMPLEMENTATION.
 
 
 * workaround for explore page
-    go_html_viewer->get_current_url( IMPORTING url = lv_url ).
+    mo_html_viewer->get_current_url( IMPORTING url = lv_url ).
     cl_gui_cfw=>flush( ).
     IF lv_url CP 'http*'.
-      go_html_viewer->go_back( ).
+      mo_html_viewer->go_back( ).
       RETURN.
     ENDIF.
 
-    lv_index = lines( gt_stack ).
+    lv_index = lines( mt_stack ).
 
     IF lv_index = 0.
       rv_exit = abap_true.
       RETURN.
     ENDIF.
 
-    READ TABLE gt_stack INDEX lv_index INTO gi_page.
+    READ TABLE mt_stack INDEX lv_index INTO mi_cur_page.
     ASSERT sy-subrc = 0.
 
-    DELETE gt_stack INDEX lv_index.
+    DELETE mt_stack INDEX lv_index.
     ASSERT sy-subrc = 0.
 
     render( ).
@@ -18240,20 +18265,16 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA          lt_assets  TYPE tt_web_assets.
     FIELD-SYMBOLS <ls_asset> TYPE ty_web_asset.
 
-    IF NOT go_html_viewer IS BOUND.
-      startup( ).
-    ENDIF.
-
-    IF NOT gi_page IS INITIAL.
-      APPEND gi_page TO gt_stack.
+    IF NOT mi_cur_page IS INITIAL.
+      APPEND mi_cur_page TO mt_stack.
     ENDIF.
 
     ii_page->get_assets( IMPORTING et_assets = lt_assets ).
     IF lines( lt_assets ) > 0.
       LOOP AT lt_assets ASSIGNING <ls_asset>.
-        READ TABLE gt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
+        READ TABLE mt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
         CHECK sy-subrc IS NOT INITIAL.
-        APPEND <ls_asset>-url TO gt_assets.
+        APPEND <ls_asset>-url TO mt_assets.
         cache_image( iv_url = <ls_asset>-url iv_base64 = <ls_asset>-content ).
       ENDLOOP.
     ENDIF.
@@ -18264,7 +18285,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD set_page.
 
-    gi_page = ii_page.
+    mi_cur_page = ii_page.
     render( ).
 
   ENDMETHOD.
@@ -18273,9 +18294,8 @@ CLASS lcl_gui IMPLEMENTATION.
     " REDO ALL
 
     DATA li_page TYPE REF TO lif_gui_page.
-    CREATE OBJECT go_router.
 
-    go_router->on_event( EXPORTING iv_action = 'home'
+    mo_router->on_event( EXPORTING iv_action = 'home'
                          IMPORTING eo_page   = li_page ).
 
     call_page( li_page ).
@@ -18289,52 +18309,45 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_event  LIKE LINE OF lt_events.
 
 
-    CREATE OBJECT go_html_viewer
+    CREATE OBJECT mo_router.
+    CREATE OBJECT mo_html_viewer
       EXPORTING
         parent = cl_gui_container=>screen0.
 
     CLEAR ls_event.
-    ls_event-eventid = go_html_viewer->m_id_sapevent.
+    ls_event-eventid = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
-    go_html_viewer->set_registered_events( lt_events ).
+    mo_html_viewer->set_registered_events( lt_events ).
 
-    SET HANDLER lcl_gui=>on_event FOR go_html_viewer.
+    SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "init
 
   METHOD render.
 
-    view( gi_page->render( )->mv_html ).
+    view( mi_cur_page->render( )->mv_html ).
 
   ENDMETHOD.
 
   METHOD view.
 
     DATA: lt_data TYPE TABLE OF text200,
-          lv_html TYPE string,
           lv_url  TYPE text200.
 
+    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
+      EXPORTING
+        text      = iv_html
+      TABLES
+        ftext_tab = lt_data.
 
-    lv_html = iv_html.
-
-    WHILE strlen( lv_html ) > 0.
-      IF strlen( lv_html ) < 200.
-        APPEND lv_html TO lt_data.
-        CLEAR lv_html.
-      ELSE.
-        APPEND lv_html(200) TO lt_data.
-        lv_html = lv_html+200.
-      ENDIF.
-    ENDWHILE.
-
-    go_html_viewer->load_data(
+    mo_html_viewer->load_data(
       IMPORTING
         assigned_url = lv_url
       CHANGING
         data_table   = lt_data ).
 
-    go_html_viewer->show_url( lv_url ).
+    mo_html_viewer->show_url( lv_url ).
 
   ENDMETHOD.                    "view
 
@@ -18362,7 +18375,7 @@ CLASS lcl_gui IMPLEMENTATION.
       TABLES
         binary_tab    = lt_xdata.
 
-    go_html_viewer->load_data(
+    mo_html_viewer->load_data(
       EXPORTING  type         = 'image'
                  subtype      = 'png'
                  size         = lv_size
@@ -19256,7 +19269,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CASE iv_action.
       WHEN 'save'.
         save( iv_getdata ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN OTHERS.
         _raise 'Unknown action, background'.
     ENDCASE.
@@ -19465,7 +19478,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>back( ).
+    lcl_gui=>get( )->back( ).
 
   ENDMETHOD.
 
@@ -19537,7 +19550,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
       WHEN 'post'.
         push( it_postdata ).
       WHEN 'cancel'.
-        lcl_gui=>back( ).
+        lcl_gui=>get( )->back( ).
       WHEN OTHERS.
         _raise 'Unknown action, commit'.
     ENDCASE.
@@ -19685,7 +19698,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       EXPORTING
         io_repo  = mo_repo
         io_stage = mo_stage.
-    lcl_gui=>set_page( lo_commit ).
+    lcl_gui=>get( )->set_page( lo_commit ).
 
   ENDMETHOD.
 
@@ -19763,21 +19776,21 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       WHEN 'add'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->add( ls_file ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'all'.
         all( ).
       WHEN 'reset'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->reset( ls_file ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'ignore'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->ignore( ls_file ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'rm'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->rm( ls_file ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'commit'.
         call_commit( ).
       WHEN OTHERS.
@@ -19950,7 +19963,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         is_local  = <ls_local>-file
         is_remote = <ls_remote>.
 
-    lcl_gui=>call_page( lo_page ).
+    lcl_gui=>get( )->call_page( lo_page ).
 
   ENDMETHOD.                    "diff
 
@@ -19967,7 +19980,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "pull
 
@@ -19986,7 +19999,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       EXPORTING
         io_repo = lo_repo.
 
-    lcl_gui=>call_page( lo_stage ).
+    lcl_gui=>get( )->call_page( lo_stage ).
 
   ENDMETHOD.
 
@@ -20152,7 +20165,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "uninstall
 
@@ -20199,7 +20212,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "remove
 
@@ -20256,7 +20269,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "newoffline
 
@@ -20345,7 +20358,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.                    "install
 
@@ -20825,7 +20838,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD. "abapgit_installation
 
@@ -20900,7 +20913,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         install( lv_url ).
       WHEN 'explore'.
         CREATE OBJECT lo_page_explore.
-        lcl_gui=>call_page( lo_page_explore ).
+        lcl_gui=>get( )->call_page( lo_page_explore ).
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
       WHEN 'uninstall'.
@@ -20916,15 +20929,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ELSE.
           lcl_repo_srv=>get( lv_key )->refresh( ).
         ENDIF.
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'hide'.
         lv_key = iv_getdata.
         go_user->hide( lv_key ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'unhide'.
         lv_key = iv_getdata.
         go_user->unhide( lv_key ).
-        lcl_gui=>render( ).
+        lcl_gui=>get( )->render( ).
       WHEN 'stage'.
         lv_key = iv_getdata.
         stage( lv_key ).
@@ -20947,10 +20960,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         newoffline( ).
       WHEN 'db'.
         CREATE OBJECT lo_db.
-        lcl_gui=>call_page( lo_db ).
+        lcl_gui=>get( )->call_page( lo_db ).
       WHEN 'background'.
         CREATE OBJECT lo_background.
-        lcl_gui=>call_page( lo_background ).
+        lcl_gui=>get( )->call_page( lo_background ).
       WHEN 'zipimport'.
         lv_key = iv_getdata.
         lcl_zip=>import( lv_key ).
@@ -21356,9 +21369,7 @@ FORM run.
       IF sy-batch = abap_true.
         lcl_background=>run( ).
       ELSE.
-        lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
-        lcl_gui=>go_home( ).
-
+        lcl_gui=>get( )->go_home( ).
         CALL SELECTION-SCREEN 1001. " trigger screen
       ENDIF.
     CATCH lcx_exception INTO lx_exception.
@@ -23490,7 +23501,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>back( ).
+    lcl_gui=>get( )->back( ).
 
   ENDMETHOD.
 
@@ -23576,7 +23587,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>render( ).
+    lcl_gui=>get( )->render( ).
 
   ENDMETHOD.
 
@@ -23667,12 +23678,12 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         CREATE OBJECT lo_display
           EXPORTING
             is_key = ls_key.
-        lcl_gui=>call_page( lo_display ).
+        lcl_gui=>get( )->call_page( lo_display ).
       WHEN 'edit'.
         CREATE OBJECT lo_edit
           EXPORTING
             is_key = ls_key.
-        lcl_gui=>call_page( lo_edit ).
+        lcl_gui=>get( )->call_page( lo_edit ).
       WHEN 'delete'.
         delete( ls_key ).
       WHEN OTHERS.
@@ -23878,7 +23889,7 @@ AT SELECTION-SCREEN OUTPUT.
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF lcl_gui=>back( ) IS INITIAL.
+      IF lcl_gui=>get( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
