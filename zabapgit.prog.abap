@@ -100,6 +100,7 @@ CONSTANTS: BEGIN OF gc_event_state,
              re_render   VALUE 1,
              new_page    VALUE 2,
              go_back     VALUE 3,
+             no_more_act VALUE 4,
            END OF gc_event_state.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
@@ -16158,11 +16159,39 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_diff
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_stage
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS abapgit_installation
       RAISING lcx_exception.
 
     METHODS repo_clone
       IMPORTING iv_url TYPE string
+      RAISING   lcx_exception.
+
+    METHODS repo_purge
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_remove
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_new_offline
+      RAISING lcx_exception.
+
+    METHODS repo_package_zip
+      RAISING lcx_exception.
+
+    METHODS repo_pull
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -18437,6 +18466,8 @@ CLASS lcl_gui IMPLEMENTATION.
             call_page( li_page ).
           WHEN gc_event_state-go_back.
             back( ).
+          WHEN gc_event_state-no_more_act.
+            " Do nothing, handling completed
           WHEN OTHERS.
             _raise 'Unknown action'.
         ENDCASE.
@@ -19093,9 +19124,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 eo_log        TYPE REF TO lcl_log
       RAISING   lcx_exception.
 
-    METHODS package_zip
-      RAISING lcx_exception.
-
     METHODS render_repo_item
       IMPORTING io_repo        TYPE REF TO lcl_repo
                 is_item        TYPE ty_repo_item
@@ -19109,30 +19137,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
     METHODS render_explore
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    CLASS-METHODS newoffline
-      RAISING lcx_exception.
-
-    CLASS-METHODS uninstall
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS remove
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS stage
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS diff
-      IMPORTING is_file TYPE ty_repo_file
-                iv_key  TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     CLASS-METHODS needs_installation
@@ -20165,78 +20169,6 @@ ENDCLASS.
 
 CLASS lcl_gui_page_main IMPLEMENTATION.
 
-  METHOD diff.
-
-    DATA: lt_remote TYPE ty_files_tt,
-          lt_local  TYPE ty_files_item_tt,
-          lo_page   TYPE REF TO lcl_gui_page_diff,
-          lo_repo   TYPE REF TO lcl_repo_online.
-
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
-                   <ls_local>  LIKE LINE OF lt_local.
-
-
-    lo_repo  ?= lcl_repo_srv=>get( iv_key ).
-    lt_remote = lo_repo->get_files_remote( ).
-    lt_local  = lo_repo->get_files_local( ).
-
-    READ TABLE lt_remote ASSIGNING <ls_remote>
-      WITH KEY filename = is_file-filename
-               path     = is_file-path.
-    IF sy-subrc <> 0.
-      _raise 'file not found remotely'.
-    ENDIF.
-
-    READ TABLE lt_local ASSIGNING <ls_local>
-      WITH KEY file-filename = is_file-filename
-               file-path     = is_file-path.
-    IF sy-subrc <> 0.
-      _raise 'file not found locally'.
-    ENDIF.
-
-    CREATE OBJECT lo_page
-      EXPORTING
-        is_local  = <ls_local>-file
-        is_remote = <ls_remote>.
-
-    lcl_gui=>get( )->call_page( lo_page ).
-
-  ENDMETHOD.                    "diff
-
-  METHOD pull.
-
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
-
-    lo_repo->refresh( ).
-
-    lo_repo->deserialize( ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "pull
-
-  METHOD stage.
-
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          lo_stage TYPE REF TO lcl_gui_page_stage.
-
-
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
-
-* force refresh on stage, to make sure the latest local and remote files are used
-    lo_repo->refresh( ).
-
-    CREATE OBJECT lo_stage
-      EXPORTING
-        io_repo = lo_repo.
-
-    lcl_gui=>get( )->call_page( lo_stage ).
-
-  ENDMETHOD.
-
   METHOD render_obj_jump_link.
 
     DATA: lv_encode TYPE string.
@@ -20247,165 +20179,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     rv_html = |<a href="sapevent:jump?{ lv_encode }">{ iv_obj_name }</a>|.
 
   ENDMETHOD.
-
-  METHOD uninstall.
-
-    DATA: lt_tadir    TYPE lcl_tadir=>ty_tadir_tt,
-          lv_count    TYPE c LENGTH 3,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_repo_srv=>get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    lt_tadir = lcl_tadir=>read( lv_package ).
-
-    IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
-
-      CONCATENATE 'This will delete all objects in package' lv_package
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CONCATENATE lv_question '(' lv_count 'objects)'
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          titlebar              = 'Uninstall'
-          text_question         = lv_question
-          text_button_1         = 'Delete'
-          icon_button_1         = 'ICON_DELETE'
-          text_button_2         = 'Cancel'
-          icon_button_2         = 'ICON_CANCEL'
-          default_button        = '2'
-          display_cancel_button = abap_false
-        IMPORTING
-          answer                = lv_answer
-        EXCEPTIONS
-          text_not_found        = 1
-          OTHERS                = 2.                        "#EC NOTEXT
-      IF sy-subrc <> 0.
-        _raise 'error from POPUP_TO_CONFIRM'.
-      ENDIF.
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-
-      lcl_objects=>delete( lt_tadir ).
-
-    ENDIF.
-
-    lcl_repo_srv=>delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "uninstall
-
-  METHOD remove.
-
-    DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_repo_srv=>get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    CONCATENATE 'This will remove the repository reference to the package'
-      lv_package
-      INTO lv_question
-      SEPARATED BY space.                                   "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Remove'
-        text_question         = lv_question
-        text_button_1         = 'Remove'
-        icon_button_1         = 'ICON_WF_UNLINK'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                          "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
-    ENDIF.
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_repo_srv=>delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "remove
-
-  METHOD newoffline.
-
-    DATA: lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lv_package    TYPE devclass,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Name'.                          "#EC NOTEXT
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'New Offline Project'             "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
-
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    lcl_repo_srv=>new_offline(
-      iv_url     = lv_url
-      iv_package = lv_package ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "newoffline
 
   METHOD build_main_menu.
 
@@ -20418,12 +20191,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_cmd = 'sapevent:packagezip' ).
     lo_betasub->add( iv_txt = 'Background mode'  iv_cmd = 'sapevent:background' ).
 
-    lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
+    lo_toolbar->add( iv_txt = 'Refresh all'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
     lo_toolbar->add( iv_txt = 'Explore'          iv_cmd = 'sapevent:explore' ).
-    lo_toolbar->add( iv_txt = 'New Offline Repo' iv_cmd = 'sapevent:newoffline' ).
+    lo_toolbar->add( iv_txt = 'New offline repo' iv_cmd = 'sapevent:newoffline' ).
     IF needs_installation( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
+      lo_toolbar->add( iv_txt = 'Get Abapgit'    iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
     lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
@@ -20775,56 +20548,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( '</tr>' ).
-
-  ENDMETHOD.
-
-  METHOD package_zip.
-
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Export'             "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    TRANSLATE <ls_field>-value TO UPPER CASE.
-
-    ls_data-key             = 'DUMMY'.
-    ls_data-package         = <ls_field>-value.
-    ls_data-master_language = sy-langu.
-
-    CREATE OBJECT lo_repo
-      EXPORTING
-        is_data = ls_data.
-
-    lcl_zip=>export( lo_repo ).
 
   ENDMETHOD.
 
@@ -23536,81 +23259,93 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_gui_router IMPLEMENTATION.
 
-  METHOD on_event.
-    DATA: lv_url        TYPE string.
-*          ls_file       TYPE ty_repo_file,
-*          lo_background TYPE REF TO lcl_gui_page_background,
-*          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
-*          ls_item       TYPE ty_item,
-*          lo_db         TYPE REF TO lcl_gui_page_db.
+  DEFINE _add_dialog_fld.
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname    = &1.                       "#EC NOTEXT
+    <ls_field>-fieldname  = &2.                       "#EC NOTEXT
+    <ls_field>-fieldtext  = &3.                       "#EC NOTEXT
+    <ls_field>-value      = &4.                       "#EC NOTEXT
+    <ls_field>-field_attr = &5.                       "#EC NOTEXT
+  END-OF-DEFINITION.
 
+  METHOD on_event.
+    DATA: lv_url        TYPE string,
+          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item       TYPE ty_item.
 
     CASE iv_action.
+      " General routing
       WHEN 'main' OR 'explore' OR 'db' OR 'background'.
         eo_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( document = gc_abapgit_homepage ).
+        ev_state = gc_event_state-no_more_act.
       WHEN 'abapgit_installation'.
         abapgit_installation( ).
         ev_state = gc_event_state-re_render.
+      WHEN 'jump'.
+        lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
+                                            IMPORTING ev_obj_type = ls_item-obj_type
+                                                      ev_obj_name = ls_item-obj_name ).
+        lcl_objects=>jump( ls_item ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'diff'.
+        eo_page  = get_page_diff( iv_getdata ).
+        ev_state = gc_event_state-new_page.
 
-
-      " REPOSITORIES
+      " Repository state actions
       WHEN 'install'.
         lv_url   = iv_getdata.
         repo_clone( lv_url ).
         ev_state = gc_event_state-re_render.
-*      WHEN 'uninstall'.
-*        lv_key = iv_getdata.
-*        uninstall( lv_key ).
-*      WHEN 'remove'.
-*        lv_key = iv_getdata.
-*        remove( lv_key ).
-*        rv_state = gc_event_state-re_render.
+      WHEN 'uninstall'.
+        lv_key   = iv_getdata.
+        repo_purge( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'remove'.
+        lv_key   = iv_getdata.
+        repo_remove( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'zipimport'.
+        lv_key   = iv_getdata.
+        lcl_zip=>import( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'zipexport'.
+        lv_key   = iv_getdata.
+        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'newoffline'.
+        repo_new_offline( ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'files_commit'. "TODO refactor name ?
+        lv_key   = iv_getdata.
+        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+                         iv_zip  = abap_false ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'packagezip'. "TODO refactor name ?
+        repo_package_zip( ).
+        ev_state = gc_event_state-no_more_act.
+
+      " Repository online actions
+      WHEN 'pull'.
+        lv_key   = iv_getdata.
+        repo_pull( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'stage'.
+        lv_key   = iv_getdata.
+        eo_page  = get_page_stage( lv_key ).
+        ev_state = gc_event_state-new_page.
+
+
 *      WHEN 'hide'.
 *        lv_key = iv_getdata.
 *        go_user->hide( lv_key ).
-*        rv_state = gc_event_state-re_render.
+*        ev_state = gc_event_state-re_render.
 *      WHEN 'unhide'.
 *        lv_key = iv_getdata.
 *        go_user->unhide( lv_key ).
-*        rv_state = gc_event_state-re_render.
-*      WHEN 'stage'.
-*        lv_key = iv_getdata.
-*        stage( lv_key ).
-*      WHEN 'diff'.
-*        file_decode( EXPORTING iv_string = iv_getdata
-*                     IMPORTING ev_key    = lv_key
-*                               es_file   = ls_file ).
-*        diff( is_file   = ls_file
-*              iv_key    = lv_key ).
-*      WHEN 'jump'.
-*        CLEAR ls_item.
-*        jump_decode( EXPORTING iv_string = iv_getdata
-*                     IMPORTING ev_obj_type = ls_item-obj_type
-*                               ev_obj_name = ls_item-obj_name ).
-*        lcl_objects=>jump( ls_item ).
-*      WHEN 'pull'.
-*        lv_key = iv_getdata.
-*        pull( lv_key ).
-*        rv_state = gc_event_state-re_render.
-*      WHEN 'newoffline'.
-*        newoffline( ).
-*        rv_state = gc_event_state-re_render.
-*      WHEN 'zipimport'.
-*        lv_key = iv_getdata.
-*        lcl_zip=>import( lv_key ).
-*        rv_state = gc_event_state-re_render.
-*      WHEN 'zipexport'.
-*        lv_key = iv_getdata.
-*        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
-*      WHEN 'files_commit'.
-*        lv_key = iv_getdata.
-*        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
-*                         iv_zip  = abap_false ).
-*      WHEN 'packagezip'.
-*        package_zip( ).
+*        ev_state = gc_event_state-re_render.
 
 
       WHEN OTHERS.
@@ -23633,6 +23368,49 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.        " get_home_page
+
+  METHOD get_page_diff.
+
+    DATA: lt_remote TYPE ty_files_tt,
+          lt_local  TYPE ty_files_item_tt,
+          lo_page   TYPE REF TO lcl_gui_page_diff,
+          lo_repo   TYPE REF TO lcl_repo_online,
+          ls_file   TYPE ty_repo_file,
+          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
+                   <ls_local>  LIKE LINE OF lt_local.
+
+    lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
+                                        IMPORTING ev_key    = lv_key
+                                                  es_file   = ls_file ).
+
+    lo_repo  ?= lcl_repo_srv=>get( lv_key ).
+    lt_remote = lo_repo->get_files_remote( ).
+    lt_local  = lo_repo->get_files_local( ).
+
+    READ TABLE lt_remote ASSIGNING <ls_remote>
+      WITH KEY filename = ls_file-filename
+               path     = ls_file-path.
+    IF sy-subrc <> 0.
+      _raise 'file not found remotely'.
+    ENDIF.
+
+    READ TABLE lt_local ASSIGNING <ls_local>
+      WITH KEY file-filename = ls_file-filename
+               file-path     = ls_file-path.
+    IF sy-subrc <> 0.
+      _raise 'file not found locally'.
+    ENDIF.
+
+    CREATE OBJECT lo_page
+      EXPORTING
+        is_local  = <ls_local>-file
+        is_remote = <ls_remote>.
+
+    ri_page = lo_page.
+
+  ENDMETHOD.
 
   METHOD abapgit_installation.
 
@@ -23706,24 +23484,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Git Clone Url'.                 "#EC NOTEXT
-    <ls_field>-value     = iv_url.
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TEXTL'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
-    <ls_field>-value     = 'refs/heads/master'.             "#EC NOTEXT
-    <ls_field>-field_attr = '05'.
+    "               TAB           FLD       LABEL            DEF                 ATTR
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  ''                  ''.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' ''                  ''.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         'refs/heads/master' '05'.
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.
@@ -23779,6 +23543,235 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_clone
 
+  METHOD repo_purge.
+
+    DATA: lt_tadir    TYPE lcl_tadir=>ty_tadir_tt,
+          lv_count    TYPE c LENGTH 3,
+          lv_answer   TYPE c LENGTH 1,
+          lo_repo     TYPE REF TO lcl_repo,
+          lv_package  TYPE devclass,
+          lv_question TYPE c LENGTH 100.
+
+
+    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lv_package = lo_repo->get_package( ).
+
+    lt_tadir = lcl_tadir=>read( lv_package ).
+
+    IF lines( lt_tadir ) > 0.
+      lv_count = lines( lt_tadir ).
+
+      CONCATENATE 'This will delete all objects in package' lv_package
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CONCATENATE lv_question '(' lv_count 'objects)'
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Uninstall'
+          text_question         = lv_question
+          text_button_1         = 'Delete'
+          icon_button_1         = 'ICON_DELETE'
+          text_button_2         = 'Cancel'
+          icon_button_2         = 'ICON_CANCEL'
+          default_button        = '2'
+          display_cancel_button = abap_false
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.                        "#EC NOTEXT
+      IF sy-subrc <> 0.
+        _raise 'error from POPUP_TO_CONFIRM'.
+      ENDIF.
+
+      IF lv_answer = '2'.
+        RETURN.
+      ENDIF.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+    lcl_repo_srv=>delete( lo_repo ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_purge
+
+  METHOD repo_remove.
+
+    DATA: lv_answer   TYPE c LENGTH 1,
+          lo_repo     TYPE REF TO lcl_repo,
+          lv_package  TYPE devclass,
+          lv_question TYPE c LENGTH 100.
+
+
+    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lv_package = lo_repo->get_package( ).
+
+    CONCATENATE 'This will remove the repository reference to the package'
+      lv_package
+      INTO lv_question
+      SEPARATED BY space.                                   "#EC NOTEXT
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Remove'
+        text_question         = lv_question
+        text_button_1         = 'Remove'
+        icon_button_1         = 'ICON_WF_UNLINK'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                          "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
+    ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    lcl_repo_srv=>delete( lo_repo ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_remove
+
+  METHOD repo_new_offline.
+
+    DATA: lv_returncode TYPE c,
+          lv_url        TYPE string,
+          lv_package    TYPE devclass,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL     DEF                 ATTR
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Name'    ''                  ''.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'New Offline Project'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_url = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    lcl_repo_srv=>new_offline(
+      iv_url     = lv_url
+      iv_package = lv_package ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_new_offline
+
+  METHOD repo_package_zip.
+
+    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo,
+          lv_returncode TYPE c,
+          lv_url        TYPE string,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL     DEF                 ATTR
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Export'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+
+    ls_data-key             = 'DUMMY'.
+    ls_data-package         = <ls_field>-value.
+    ls_data-master_language = sy-langu.
+
+    CREATE OBJECT lo_repo
+      EXPORTING
+        is_data = ls_data.
+
+    lcl_zip=>export( lo_repo ).
+
+  ENDMETHOD.                    "repo_package_zip
+
+  METHOD repo_pull.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo->refresh( ).
+    lo_repo->deserialize( ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "pull
+
+  METHOD get_page_stage.
+
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+          lo_stage TYPE REF TO lcl_gui_page_stage.
+
+
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+
+    " force refresh on stage, to make sure the latest local and remote files are used
+    lo_repo->refresh( ).
+
+    CREATE OBJECT lo_stage
+      EXPORTING
+        io_repo = lo_repo.
+
+    ri_page = lo_stage.
+
+  ENDMETHOD.
 
 
 ENDCLASS.           " lcl_gui_router
