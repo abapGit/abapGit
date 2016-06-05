@@ -16137,6 +16137,80 @@ INTERFACE lif_gui_page.
 ENDINTERFACE.
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_persistence_user DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_persistence_user DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
+
+    METHODS set_username
+      IMPORTING iv_username TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_username
+      RETURNING VALUE(rv_username) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_email
+      IMPORTING iv_email TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_email
+      RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS is_hidden
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_hidden) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS hide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS unhide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
+
+    DATA: mv_user TYPE xubname.
+
+    TYPES:
+      ty_repo_hidden_tt
+        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
+        WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_user,
+             username    TYPE string,
+             email       TYPE string,
+             repo_hidden TYPE ty_repo_hidden_tt,
+           END OF ty_user.
+
+    METHODS from_xml
+      IMPORTING iv_xml         TYPE string
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_user       TYPE ty_user
+      RETURNING VALUE(rv_xml) TYPE string.
+
+    METHODS read
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS update
+      IMPORTING is_user TYPE ty_user
+      RAISING   lcx_exception.
+
+ENDCLASS.             "lcl_persistence_user DEFINITION
+
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_gui_router DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_gui_router DEFINITION FINAL.
@@ -16154,6 +16228,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
+
     METHODS get_page_by_name
       IMPORTING iv_name        TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
@@ -16207,6 +16282,10 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
       RETURNING VALUE(ro_instance) TYPE REF TO lcl_gui
       RAISING   lcx_exception.
 
+    CLASS-METHODS get_user
+      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
+      RAISING   lcx_exception.
+
     METHODS go_home
       RAISING lcx_exception.
 
@@ -16236,6 +16315,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
           mt_stack          TYPE TABLE OF REF TO lif_gui_page,
           mt_assets         TYPE char40_t,
           mo_router         TYPE REF TO lcl_gui_router,
+          mo_user           TYPE REF TO lcl_persistence_user,
           mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
@@ -18417,6 +18497,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_user.
+
+    ro_user = get( )->mo_user.
+
+  ENDMETHOD.
+
   METHOD constructor.
 
     startup( ).
@@ -18552,8 +18638,8 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events.
 
-
     CREATE OBJECT mo_router.
+    CREATE OBJECT mo_user.
     CREATE OBJECT mo_html_viewer
       EXPORTING
         parent = cl_gui_container=>screen0.
@@ -18632,76 +18718,6 @@ CLASS lcl_gui IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_gui IMPLEMENTATION
-
-CLASS lcl_persistence_user DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
-
-    METHODS set_username
-      IMPORTING iv_username TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_username
-      RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS set_email
-      IMPORTING iv_email TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_email
-      RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS is_hidden
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(rv_hidden) TYPE abap_bool
-      RAISING   lcx_exception.
-
-    METHODS hide
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS unhide
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
-
-    DATA: mv_user TYPE xubname.
-
-    TYPES:
-      ty_repo_hidden_tt
-        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
-        WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_user,
-             username    TYPE string,
-             email       TYPE string,
-             repo_hidden TYPE ty_repo_hidden_tt,
-           END OF ty_user.
-
-    METHODS from_xml
-      IMPORTING iv_xml         TYPE string
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_user       TYPE ty_user
-      RETURNING VALUE(rv_xml) TYPE string.
-
-    METHODS read
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING is_user TYPE ty_user
-      RAISING   lcx_exception.
-
-ENDCLASS.
 
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
@@ -19086,8 +19102,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
            END OF ty_repo_item.
     TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
-    CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
-
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -19139,7 +19153,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    CLASS-METHODS needs_installation
+    METHODS needs_installation
       RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
 
 ENDCLASS.
@@ -20290,7 +20304,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
-    IF go_user->is_hidden( lv_key ) = abap_true.
+    IF lcl_gui=>get_user( )->is_hidden( lv_key ) = abap_true.
       lo_toolbar->add( iv_txt = 'Show'
                        iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
@@ -20388,7 +20402,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( render_repo_menu( io_repo ) ).
 
-    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
+    IF lcl_gui=>get_user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           extract_repo_content( EXPORTING io_repo       = io_repo
                                 IMPORTING et_repo_items = lt_repo_items
@@ -20650,7 +20664,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     CREATE OBJECT ro_html.
-    CREATE OBJECT go_user.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'HOME' io_menu = build_main_menu( ) ) ).
@@ -23326,6 +23339,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'packagezip'. "TODO refactor name ?
         repo_package_zip( ).
         ev_state = gc_event_state-no_more_act.
+      WHEN 'hide'.
+        lv_key   = iv_getdata.
+        lcl_gui=>get_user( )->hide( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'unhide'.
+        lv_key   = iv_getdata.
+        lcl_gui=>get_user( )->unhide( lv_key ).
+        ev_state = gc_event_state-re_render.
 
       " Repository online actions
       WHEN 'pull'.
@@ -23336,17 +23357,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         eo_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page.
-
-
-*      WHEN 'hide'.
-*        lv_key = iv_getdata.
-*        go_user->hide( lv_key ).
-*        ev_state = gc_event_state-re_render.
-*      WHEN 'unhide'.
-*        lv_key = iv_getdata.
-*        go_user->unhide( lv_key ).
-*        ev_state = gc_event_state-re_render.
-
 
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
