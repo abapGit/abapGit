@@ -18511,7 +18511,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     ro_html->add( '<td class="headpad"><span class="page_title">' ). "#EC NOTEXT
-    ro_html->add( |&#x25BA;{ iv_page_title }| ).            "#EC NOTEXT
+    ro_html->add( |&#x25BA; { iv_page_title }| ).            "#EC NOTEXT
     ro_html->add( '</span></td>' ).                         "#EC NOTEXT
 
     IF io_menu IS BOUND.
@@ -18614,9 +18614,9 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('span.page_title {').
     ro_html->add('  font-weight: normal;').
-    ro_html->add('  font-size: 20pt;').
+    ro_html->add('  font-size: 18pt;').
     ro_html->add('  color: #bbb;').
-    ro_html->add('  padding-left: 0.2em;').
+    ro_html->add('  padding-left: 0.4em;').
     ro_html->add('}').
 
     " Menu styles
@@ -20386,6 +20386,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('  font-weight: bold;').
     ro_html->add('  font-size: 16pt;').
     ro_html->add('}').
+    ro_html->add('.repo_name img {').
+    ro_html->add('  vertical-align: baseline;').
+    ro_html->add('  margin: 0 5px 0 5px;').
+    ro_html->add('}').
     ro_html->add('.repo_attr {').
     ro_html->add('  color: grey;').
     ro_html->add('  font-size: 12pt;').
@@ -21153,15 +21157,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ls_image-url     = 'img/repo_online'.
     ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABZUlEQVQ4jY3TsWuTYRAG'
-      && '8N8XQuggpVgIVKwgdNLNQRxEWggOdZWEUtTFgtBBiiCIgydOoo4iCqZ/gDgUlW5t6aLW'
-      && '0bp1U0sRB5FQRCQ4fO8HHyEJOXg5uId77p67ezNDLCLO4BlO4QNu4je+RQSoDEkexzr2'
-      && '0EIXX/AV7yNiArIByWOp8mVMRsTfRHgVG1jDPq4MIniKeTyIiHYf/Bweopb1AHX8wmc8'
-      && 'iYgXQyQ28CYrBW4n1hYWUMddbEdENyIqyU+k+EX8yEoD+44j2EkEq7iAOWzjNV7hOO6j'
-      && 'jXvV1EAzJcNZvMQSVvAOB6mjefk2lovZFGu81iNxFpt4niQ9wmlMYRqHxR1UI2IG5/vM'
-      && '6Rg+YQs/cQcnSvgudqt9qpetisYArFUQfMQiagkYeJ1y/fAHnaLCJdwYklS2f+mN4THe'
-      && 'VuQbGNVaOJk6aRYddHB0RII5+TorShJW5B9nfASC68kf4Bb8B2i6ZO2+FsBYAAAAAElF'
-      && 'TkSuQmCC'.
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAApVBMVEUAAABQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJz+TJ01AAAANnRSTlMAAQIDBAcJCgwSFBocHygqMTM1NkRHSU1QUWFiZGlweHuDiImL'
+      && 'lZiio6a5vsfT3uTo6e3x9fsxY2JuAAAAgUlEQVQYGXXB6RaBUBSA0e+IEuIiMs9zhlDn'
+      && '/R/NZWmt/LA3f1RcoaB50SydCbn20wjedkPu3sKSpMGH21PhLdZ0BATZ+cCXtxtDHGLV'
+      && 'pgFW9QqJj2U0wvJvMF+5jiNGI3HK9dMQSouH6sRoFGoWd8l1dEDRWlWPQsFS98KPvvDH'
+      && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
     APPEND ls_image TO et_assets.
 
     ls_image-url     = 'img/repo_offline'.
