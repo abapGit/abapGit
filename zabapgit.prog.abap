@@ -73,6 +73,13 @@ TYPES: BEGIN OF ty_web_asset,
        END OF ty_web_asset.
 TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
 
+TYPES: BEGIN OF ty_repo_file,
+         path       TYPE string,
+         filename   TYPE string,
+         is_changed TYPE abap_bool,
+       END OF ty_repo_file.
+TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
+
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
              tree   TYPE ty_type VALUE 'tree',              "#EC NOTEXT
@@ -13127,6 +13134,136 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
 ENDCLASS.
 
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_action_utils DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_html_action_utils DEFINITION FINAL.
+  PUBLIC SECTION.
+    CLASS-METHODS jump_encode
+      IMPORTING iv_obj_type      TYPE tadir-object
+                iv_obj_name      TYPE tadir-obj_name
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS jump_decode
+      IMPORTING iv_string   TYPE clike
+      EXPORTING ev_obj_type TYPE tadir-object
+                ev_obj_name TYPE tadir-obj_name
+      RAISING   lcx_exception.
+
+    CLASS-METHODS file_encode
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+                is_file          TYPE ty_repo_file
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS file_decode
+      IMPORTING iv_string TYPE clike
+      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
+                es_file   TYPE ty_repo_file
+      RAISING   lcx_exception.
+ENDCLASS.       "lcl_html_action_utils DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_action_utils IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_html_action_utils IMPLEMENTATION.
+
+  METHOD jump_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+
+    ls_field-name = 'TYPE'.
+    ls_field-value = iv_obj_type.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'NAME'.
+    ls_field-value = iv_obj_name.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "jump_encode
+
+  METHOD jump_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
+    IF sy-subrc = 0.
+      ev_obj_type = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_type.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
+    IF sy-subrc = 0.
+      ev_obj_name = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_name.
+    ENDIF.
+
+  ENDMETHOD.                    "jump_decode
+
+  METHOD file_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name = 'KEY'.
+    ls_field-value = iv_key.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'PATH'.
+    ls_field-value = is_file-path.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'FILENAME'.
+    ls_field-value = is_file-filename.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "file_encode
+
+  METHOD file_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    CLEAR: ev_key, es_file.
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
+    IF sy-subrc = 0.
+      ev_key = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
+    IF sy-subrc = 0.
+      es_file-path = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
+    IF sy-subrc = 0.
+      es_file-filename = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.                    "file_decode
+
+ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
@@ -16016,8 +16153,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    METHODS get_home_page    RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
-    METHODS get_explore_page RETURNING VALUE(ro_page) TYPE REF TO lif_gui_page.
+    METHODS get_page_by_name
+      IMPORTING iv_name        TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
 
     METHODS abapgit_installation
       RAISING lcx_exception.
@@ -18373,7 +18512,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = 'home' ).
+    on_event( action = 'main' ).
 
   ENDMETHOD.
 
@@ -18907,12 +19046,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~get_assets REDEFINITION.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_repo_file,
-             path       TYPE string,
-             filename   TYPE string,
-             is_changed TYPE abap_bool,
-           END OF ty_repo_file.
-    TYPES   tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_item,
              obj_type TYPE tadir-object,
@@ -18976,28 +19109,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
     METHODS render_explore
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS jump_encode
-      IMPORTING iv_obj_type      TYPE tadir-object
-                iv_obj_name      TYPE tadir-obj_name
-      RETURNING VALUE(rv_string) TYPE string.
-
-    METHODS jump_decode
-      IMPORTING iv_string   TYPE clike
-      EXPORTING ev_obj_type TYPE tadir-object
-                ev_obj_name TYPE tadir-obj_name
-      RAISING   lcx_exception.
-
-    CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE ty_repo_file
-      RETURNING VALUE(rv_string) TYPE string.
-
-    CLASS-METHODS file_decode
-      IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS newoffline
@@ -20126,106 +20237,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD jump_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      ev_obj_type = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_type.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
-    IF sy-subrc = 0.
-      ev_obj_name = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_name.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD file_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    CLEAR: ev_key, es_file.
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
-    IF sy-subrc = 0.
-      ev_key = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
-    IF sy-subrc = 0.
-      es_file-path = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
-    IF sy-subrc = 0.
-      es_file-filename = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.                    "struct_decode
-
-  METHOD jump_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-
-    ls_field-name = 'TYPE'.
-    ls_field-value = iv_obj_type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'NAME'.
-    ls_field-value = iv_obj_name.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-  METHOD file_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-    ls_field-name = 'KEY'.
-    ls_field-value = iv_key.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'PATH'.
-    ls_field-value = is_file-path.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'FILENAME'.
-    ls_field-value = is_file-filename.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.                    "encode_struct
-
   METHOD render_obj_jump_link.
 
     DATA: lv_encode TYPE string.
 
-    lv_encode = jump_encode( iv_obj_type = iv_obj_type
-                             iv_obj_name = iv_obj_name ).
+    lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = iv_obj_type
+                                                    iv_obj_name = iv_obj_name ).
 
     rv_html = |<a href="sapevent:jump?{ lv_encode }">{ iv_obj_name }</a>|.
 
@@ -20745,7 +20762,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ELSE.
         LOOP AT is_item-files INTO ls_file.
           IF ls_file-is_changed = abap_true.
-            lv_difflink = file_encode( iv_key = io_repo->get_key( ) is_file = ls_file ).
+            lv_difflink = lcl_html_action_utils=>file_encode( iv_key = io_repo->get_key( )
+                                                              is_file = ls_file ).
             ro_html->add( |<a href="sapevent:diff?{ lv_difflink }">diff</a>| ).
           ELSE.
             ro_html->add( |<span>&nbsp;</span>| ).
@@ -23528,17 +23546,15 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
 
     CASE iv_action.
-      WHEN 'home'.
-        eo_page  = get_home_page( ).
-        ev_state = gc_event_state-new_page.
-      WHEN 'explore'.
-        eo_page  = get_explore_page( ).
+      WHEN 'main' OR 'explore' OR 'db' OR 'background'.
+        eo_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( document = gc_abapgit_homepage ).
       WHEN 'abapgit_installation'.
         abapgit_installation( ).
         ev_state = gc_event_state-re_render.
+
 
       " REPOSITORIES
       WHEN 'install'.
@@ -23582,12 +23598,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 *      WHEN 'newoffline'.
 *        newoffline( ).
 *        rv_state = gc_event_state-re_render.
-*      WHEN 'db'.
-*        CREATE OBJECT lo_db.
-*        lcl_gui=>get( )->call_page( lo_db ).
-*      WHEN 'background'.
-*        CREATE OBJECT lo_background.
-*        lcl_gui=>get( )->call_page( lo_background ).
 *      WHEN 'zipimport'.
 *        lv_key = iv_getdata.
 *        lcl_zip=>import( lv_key ).
@@ -23608,23 +23618,21 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ENDCASE.
   ENDMETHOD.        " on_event
 
-  METHOD get_home_page.
+  METHOD get_page_by_name.
 
-    DATA lo_home TYPE REF TO lcl_gui_page_main.
+    DATA: lv_page_class TYPE string,
+          lv_message    TYPE string.
 
-    CREATE OBJECT lo_home.
-    ro_page = lo_home.
+    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
+
+    TRY.
+        CREATE OBJECT ri_page TYPE (lv_page_class).
+      CATCH cx_sy_create_object_error.
+        lv_message = |Cannot create page class { lv_page_class }|.
+        _raise lv_message.
+    ENDTRY.
 
   ENDMETHOD.        " get_home_page
-
-  METHOD get_explore_page.
-
-    DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
-
-    CREATE OBJECT lo_page_explore.
-    ro_page = lo_page_explore.
-
-  ENDMETHOD.        " get_explore_page
 
   METHOD abapgit_installation.
 
