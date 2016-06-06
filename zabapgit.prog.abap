@@ -43,6 +43,7 @@ TYPES: BEGIN OF ty_file,
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_comment,
          username TYPE string,
@@ -67,6 +68,19 @@ TYPES: BEGIN OF ty_metadata,
          late_deser TYPE string,
        END OF ty_metadata.
 
+TYPES: BEGIN OF ty_web_asset,
+         url     TYPE w3url,
+         content TYPE string,
+       END OF ty_web_asset.
+TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
+
+TYPES: BEGIN OF ty_repo_file,
+         path       TYPE string,
+         filename   TYPE string,
+         is_changed TYPE abap_bool,
+       END OF ty_repo_file.
+TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
+
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
              tree   TYPE ty_type VALUE 'tree',              "#EC NOTEXT
@@ -82,9 +96,19 @@ CONSTANTS: BEGIN OF gc_chmod,
              dir        TYPE ty_chmod VALUE '40000 ',
            END OF gc_chmod.
 
+CONSTANTS: BEGIN OF gc_event_state,
+             not_handled VALUE 0,
+             re_render   VALUE 1,
+             new_page    VALUE 2,
+             go_back     VALUE 3,
+             no_more_act VALUE 4,
+           END OF gc_event_state.
+
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
+
+CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
 
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception
@@ -13112,6 +13136,136 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
 ENDCLASS.
 
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_action_utils DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_html_action_utils DEFINITION FINAL.
+  PUBLIC SECTION.
+    CLASS-METHODS jump_encode
+      IMPORTING iv_obj_type      TYPE tadir-object
+                iv_obj_name      TYPE tadir-obj_name
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS jump_decode
+      IMPORTING iv_string   TYPE clike
+      EXPORTING ev_obj_type TYPE tadir-object
+                ev_obj_name TYPE tadir-obj_name
+      RAISING   lcx_exception.
+
+    CLASS-METHODS file_encode
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+                is_file          TYPE ty_repo_file
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS file_decode
+      IMPORTING iv_string TYPE clike
+      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
+                es_file   TYPE ty_repo_file
+      RAISING   lcx_exception.
+ENDCLASS.       "lcl_html_action_utils DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_html_action_utils IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_html_action_utils IMPLEMENTATION.
+
+  METHOD jump_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+
+    ls_field-name = 'TYPE'.
+    ls_field-value = iv_obj_type.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'NAME'.
+    ls_field-value = iv_obj_name.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "jump_encode
+
+  METHOD jump_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
+    IF sy-subrc = 0.
+      ev_obj_type = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_type.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
+    IF sy-subrc = 0.
+      ev_obj_name = <ls_field>-value.
+    ELSE.
+      CLEAR ev_obj_name.
+    ENDIF.
+
+  ENDMETHOD.                    "jump_decode
+
+  METHOD file_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name = 'KEY'.
+    ls_field-value = iv_key.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'PATH'.
+    ls_field-value = is_file-path.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'FILENAME'.
+    ls_field-value = is_file-filename.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "file_encode
+
+  METHOD file_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    CLEAR: ev_key, es_file.
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
+    IF sy-subrc = 0.
+      ev_key = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
+    IF sy-subrc = 0.
+      es_file-path = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
+    IF sy-subrc = 0.
+      es_file-filename = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.                    "file_decode
+
+ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
@@ -15965,64 +16119,220 @@ ENDCLASS.                    "lcl_porcelain DEFINITION
 *----------------------------------------------------------------------*
 INTERFACE lif_gui_page.
 
-  METHODS:
-    on_event
-      IMPORTING iv_action      TYPE clike
-                iv_frame       TYPE clike
-                iv_getdata     TYPE clike
-                it_postdata    TYPE cnht_post_data_tab
-                it_query_table TYPE cnht_query_table
-      RAISING   lcx_exception,
-    render
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+  METHODS on_event
+      IMPORTING iv_action        TYPE clike
+                iv_frame         TYPE clike
+                iv_getdata       TYPE clike
+                it_postdata      TYPE cnht_post_data_tab
+                it_query_table   TYPE cnht_query_table
+      RETURNING VALUE(rv_state)  TYPE i
       RAISING   lcx_exception.
+
+  METHODS render
+      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
+  METHODS get_assets
+      RETURNING VALUE(rt_assets) TYPE tt_web_assets.
 
 ENDINTERFACE.
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_view DEFINITION
+*       CLASS lcl_persistence_user DEFINITION
 *----------------------------------------------------------------------*
-*
+CLASS lcl_persistence_user DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
+
+    METHODS set_username
+      IMPORTING iv_username TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_username
+      RETURNING VALUE(rv_username) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_email
+      IMPORTING iv_email TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_email
+      RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS is_hidden
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_hidden) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS hide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS unhide
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
+
+    DATA: mv_user TYPE xubname.
+
+    TYPES:
+      ty_repo_hidden_tt
+        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
+        WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_user,
+             username    TYPE string,
+             email       TYPE string,
+             repo_hidden TYPE ty_repo_hidden_tt,
+           END OF ty_user.
+
+    METHODS from_xml
+      IMPORTING iv_xml         TYPE string
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_user       TYPE ty_user
+      RETURNING VALUE(rv_xml) TYPE string.
+
+    METHODS read
+      RETURNING VALUE(rs_user) TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS update
+      IMPORTING is_user TYPE ty_user
+      RAISING   lcx_exception.
+
+ENDCLASS.             "lcl_persistence_user DEFINITION
+
+
 *----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL.
+*       CLASS lcl_gui_router DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_gui_router DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    METHODS on_event
+      IMPORTING iv_action      TYPE clike
+                iv_frame       TYPE clike OPTIONAL
+                iv_getdata     TYPE clike OPTIONAL
+                it_postdata    TYPE cnht_post_data_tab OPTIONAL
+                it_query_table TYPE cnht_query_table   OPTIONAL
+      EXPORTING
+                eo_page        TYPE REF TO lif_gui_page
+                ev_state       TYPE i
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    METHODS get_page_by_name
+      IMPORTING iv_name        TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_diff
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_stage
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS abapgit_installation
+      RAISING lcx_exception.
+
+    METHODS repo_clone
+      IMPORTING iv_url TYPE string
+      RAISING   lcx_exception.
+
+    METHODS repo_purge
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_remove
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_new_offline
+      RAISING lcx_exception.
+
+    METHODS repo_package_zip
+      RAISING lcx_exception.
+
+    METHODS repo_pull
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    CLASS-METHODS render
+    CLASS-METHODS get
+      RETURNING VALUE(ro_instance) TYPE REF TO lcl_gui
+      RAISING   lcx_exception.
+
+    CLASS-METHODS get_user
+      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
+      RAISING   lcx_exception.
+
+    METHODS go_home
       RAISING lcx_exception.
 
-    CLASS-METHODS back
+    METHODS back
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
-    CLASS-METHODS call_page
+    METHODS call_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    CLASS-METHODS set_page
+    METHODS set_page
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    CLASS-METHODS on_event
+    METHODS on_event
                   FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
-    CLASS-METHODS show_url
-      IMPORTING iv_url TYPE clike.
+  PRIVATE SECTION.
+    CLASS-DATA go_instance  TYPE REF TO lcl_gui.
 
-    CLASS-METHODS cache_image
-      IMPORTING iv_url    TYPE char40
-                iv_base64 TYPE string.
+    DATA: mi_cur_page       TYPE REF TO lif_gui_page,
+          mt_stack          TYPE TABLE OF REF TO lif_gui_page,
+          mt_assets         TYPE tt_w3urls,
+          mo_router         TYPE REF TO lcl_gui_router,
+          mo_user           TYPE REF TO lcl_persistence_user,
+          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
 
-    CLASS-METHODS startup
+    METHODS constructor
       RAISING lcx_exception.
 
-  PRIVATE SECTION.
-    CLASS-DATA: gi_page        TYPE REF TO lif_gui_page,
-                gt_stack       TYPE TABLE OF REF TO lif_gui_page,
-                go_html_viewer TYPE REF TO cl_gui_html_viewer.
+    METHODS startup
+      RAISING lcx_exception.
 
-    CLASS-METHODS view
+    METHODS cache_image
+      IMPORTING iv_url    TYPE w3url
+                iv_base64 TYPE string.
+
+    METHODS show_url
+      IMPORTING iv_url TYPE clike.
+
+    METHODS render
+      RAISING lcx_exception.
+
+    METHODS view
       IMPORTING iv_html TYPE string.
 
 ENDCLASS.                    "lcl_gui DEFINITION
@@ -16086,6 +16396,12 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
+    CLASS-METHODS is_repo_installed
+      IMPORTING iv_url              TYPE string
+                iv_target_package   TYPE devclass OPTIONAL
+      RETURNING VALUE(rv_installed) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     CLASS-DATA: gv_init        TYPE abap_bool VALUE abap_false,
@@ -16096,12 +16412,9 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS:
-      validate_package
-        IMPORTING
-          iv_package TYPE devclass
-        RAISING
-          lcx_exception.
+    CLASS-METHODS validate_package
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
 
@@ -16640,6 +16953,40 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.                    "delete
+
+  METHOD is_repo_installed.
+
+    DATA: lt_repo        TYPE lcl_repo_srv=>ty_repo_tt,
+          lo_repo        TYPE REF TO lcl_repo,
+          lv_url         TYPE string,
+          lv_package     TYPE devclass,
+          lo_repo_online TYPE REF TO lcl_repo_online,
+          lv_err         TYPE string.
+
+    lt_repo = list( ).
+
+    LOOP AT lt_repo INTO lo_repo.
+      CHECK lo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= lo_repo.
+
+      lv_url     = lo_repo_online->get_url( ).
+      lv_package = lo_repo_online->get_package( ).
+      CHECK to_upper( lv_url ) = to_upper( iv_url ).
+
+      " Validate bindings
+      "TODO refactor: move this message out of this method
+      IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
+        lv_err = |Installation to package { lv_package } detected. |
+              && |Cancelling installation|.
+        _raise lv_err.
+      ENDIF.
+
+      rv_installed = abap_true.
+      EXIT.
+    ENDLOOP.
+
+  ENDMETHOD. "is_repo_installed
+
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION
 
@@ -17653,8 +18000,6 @@ CLASS lcl_zip IMPLEMENTATION.
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 
-    lcl_gui=>render( ).
-
   ENDMETHOD.                    "import
 
   METHOD files_commit.
@@ -18144,24 +18489,76 @@ ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
 
+  METHOD get.
+
+    IF go_instance IS NOT BOUND.
+      CREATE OBJECT go_instance.
+    ENDIF.
+    ro_instance = go_instance.
+
+  ENDMETHOD.
+
+  METHOD get_user.
+
+    ro_user = get( )->mo_user.
+
+  ENDMETHOD.
+
+  METHOD constructor.
+
+    startup( ).
+
+  ENDMETHOD.
+
+
   METHOD show_url.
 
-    go_html_viewer->show_url( iv_url ).
+    mo_html_viewer->show_url( iv_url ).
 
   ENDMETHOD.
 
   METHOD on_event.
 
-    DATA: lx_exception TYPE REF TO lcx_exception.
-
+    DATA: lx_exception TYPE REF TO lcx_exception,
+          li_page      TYPE REF TO lif_gui_page,
+          lv_state     TYPE i.
 
     TRY.
-        gi_page->on_event(
-          iv_action      = action
-          iv_frame       = frame
-          iv_getdata     = getdata
-          it_postdata    = postdata
-          it_query_table = query_table ).
+        IF mi_cur_page IS BOUND.
+          lv_state = mi_cur_page->on_event(
+            iv_action      = action
+            iv_frame       = frame
+            iv_getdata     = getdata
+            it_postdata    = postdata
+            it_query_table = query_table ).
+        ENDIF.
+
+        IF lv_state IS INITIAL.
+          mo_router->on_event(
+            EXPORTING
+              iv_action      = action
+              iv_frame       = frame
+              iv_getdata     = getdata
+              it_postdata    = postdata
+              it_query_table = query_table
+            IMPORTING
+              eo_page        = li_page
+              ev_state       = lv_state ).
+        ENDIF.
+
+        CASE lv_state.
+          WHEN gc_event_state-re_render.
+            render( ).
+          WHEN gc_event_state-new_page.
+            call_page( li_page ).
+          WHEN gc_event_state-go_back.
+            back( ).
+          WHEN gc_event_state-no_more_act.
+            " Do nothing, handling completed
+          WHEN OTHERS.
+            _raise 'Unknown action'.
+        ENDCASE.
+
       CATCH lcx_exception INTO lx_exception.
         ROLLBACK WORK.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
@@ -18174,26 +18571,17 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lv_index TYPE i,
           lv_url   TYPE c LENGTH 100.
 
-
-* workaround for explore page
-    go_html_viewer->get_current_url( IMPORTING url = lv_url ).
-    cl_gui_cfw=>flush( ).
-    IF lv_url CP 'http*'.
-      go_html_viewer->go_back( ).
-      RETURN.
-    ENDIF.
-
-    lv_index = lines( gt_stack ).
+    lv_index = lines( mt_stack ).
 
     IF lv_index = 0.
       rv_exit = abap_true.
       RETURN.
     ENDIF.
 
-    READ TABLE gt_stack INDEX lv_index INTO gi_page.
+    READ TABLE mt_stack INDEX lv_index INTO mi_cur_page.
     ASSERT sy-subrc = 0.
 
-    DELETE gt_stack INDEX lv_index.
+    DELETE mt_stack INDEX lv_index.
     ASSERT sy-subrc = 0.
 
     render( ).
@@ -18202,12 +18590,21 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    IF NOT go_html_viewer IS BOUND.
-      startup( ).
+    DATA          lt_assets  TYPE tt_web_assets.
+    FIELD-SYMBOLS <ls_asset> TYPE ty_web_asset.
+
+    IF NOT mi_cur_page IS INITIAL.
+      APPEND mi_cur_page TO mt_stack.
     ENDIF.
 
-    IF NOT gi_page IS INITIAL.
-      APPEND gi_page TO gt_stack.
+    lt_assets = ii_page->get_assets( ).
+    IF lines( lt_assets ) > 0.
+      LOOP AT lt_assets ASSIGNING <ls_asset>.
+        READ TABLE mt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
+        CHECK sy-subrc IS NOT INITIAL.
+        APPEND <ls_asset>-url TO mt_assets.
+        cache_image( iv_url = <ls_asset>-url iv_base64 = <ls_asset>-content ).
+      ENDLOOP.
     ENDIF.
 
     set_page( ii_page ).
@@ -18216,8 +18613,14 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD set_page.
 
-    gi_page = ii_page.
+    mi_cur_page = ii_page.
     render( ).
+
+  ENDMETHOD.
+
+  METHOD go_home.
+
+    on_event( action = 'main' ).
 
   ENDMETHOD.
 
@@ -18226,53 +18629,46 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events.
 
-
-    CREATE OBJECT go_html_viewer
+    CREATE OBJECT mo_router.
+    CREATE OBJECT mo_user.
+    CREATE OBJECT mo_html_viewer
       EXPORTING
         parent = cl_gui_container=>screen0.
 
     CLEAR ls_event.
-    ls_event-eventid = go_html_viewer->m_id_sapevent.
+    ls_event-eventid = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
-    go_html_viewer->set_registered_events( lt_events ).
+    mo_html_viewer->set_registered_events( lt_events ).
 
-    SET HANDLER lcl_gui=>on_event FOR go_html_viewer.
+    SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "init
 
   METHOD render.
 
-    view( gi_page->render( )->mv_html ).
+    view( mi_cur_page->render( )->mv_html ).
 
   ENDMETHOD.
 
   METHOD view.
 
     DATA: lt_data TYPE TABLE OF text200,
-          lv_html TYPE string,
           lv_url  TYPE text200.
 
+    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
+      EXPORTING
+        text      = iv_html
+      TABLES
+        ftext_tab = lt_data.
 
-    lv_html = iv_html.
-
-    WHILE strlen( lv_html ) > 0.
-      IF strlen( lv_html ) < 200.
-        APPEND lv_html TO lt_data.
-        CLEAR lv_html.
-      ELSE.
-        APPEND lv_html(200) TO lt_data.
-        lv_html = lv_html+200.
-      ENDIF.
-    ENDWHILE.
-
-    go_html_viewer->load_data(
+    mo_html_viewer->load_data(
       IMPORTING
         assigned_url = lv_url
       CHANGING
         data_table   = lt_data ).
 
-    go_html_viewer->show_url( lv_url ).
+    mo_html_viewer->show_url( lv_url ).
 
   ENDMETHOD.                    "view
 
@@ -18300,7 +18696,7 @@ CLASS lcl_gui IMPLEMENTATION.
       TABLES
         binary_tab    = lt_xdata.
 
-    go_html_viewer->load_data(
+    mo_html_viewer->load_data(
       EXPORTING  type         = 'image'
                  subtype      = 'png'
                  size         = lv_size
@@ -18314,80 +18710,9 @@ CLASS lcl_gui IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_gui IMPLEMENTATION
 
-CLASS lcl_persistence_user DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
-
-    METHODS set_username
-      IMPORTING iv_username TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_username
-      RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS set_email
-      IMPORTING iv_email TYPE string
-      RAISING   lcx_exception.
-
-    METHODS get_email
-      RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS is_hidden
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(rv_hidden) TYPE abap_bool
-      RAISING   lcx_exception.
-
-    METHODS hide
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS unhide
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
-
-    DATA: mv_user TYPE xubname.
-
-    TYPES:
-      ty_repo_hidden_tt
-        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
-        WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_user,
-             username    TYPE string,
-             email       TYPE string,
-             repo_hidden TYPE ty_repo_hidden_tt,
-           END OF ty_user.
-
-    METHODS from_xml
-      IMPORTING iv_xml         TYPE string
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_user       TYPE ty_user
-      RETURNING VALUE(rv_xml) TYPE string.
-
-    METHODS read
-      RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING is_user TYPE ty_user
-      RAISING   lcx_exception.
-
-ENDCLASS.
-
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
-    INTERFACES lif_gui_page ALL METHODS ABSTRACT.
-    CLASS-METHODS class_constructor.
+    INTERFACES lif_gui_page ABSTRACT METHODS render.
 
   PROTECTED SECTION.
     METHODS header
@@ -18403,187 +18728,16 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
                 io_menu        TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
+    METHODS redirect
+      IMPORTING iv_url         TYPE string
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
   PRIVATE SECTION.
-    CLASS-METHODS load_images.
     METHODS styles RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
 CLASS lcl_gui_page_super IMPLEMENTATION.
-
-  METHOD class_constructor.
-    load_images( ).
-  ENDMETHOD.
-
-  METHOD load_images.
-
-    DATA lv_image TYPE string.
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
-      && 'AAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9y'
-      && 'Z5vuPBoAAA8VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQ'
-      && 'cEkDJWmTltLStGkoDCkzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8Il'
-      && 'UByIsS1sLEu75+0fu5JXu9/etAJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfa'
-      && 'Hfx02pPPd469sgk+7misYnyjpWXy5IOG7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu'
-      && '2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqoQUwrZTAhygrFQshjfaGmZ/M7yxQtm'
-      && 'xGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4KcYLwpupoOmCO+5Z2dXPfE'
-      && 'xk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY4HFyogghxN2n7Sw'
-      && 'IendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO5wv2m0rq'
-      && 'DezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJa'
-      && 'F7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2T'
-      && 'xpHVre7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBo'
-      && 'g3tK2A2xHns0oMrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfA'
-      && 'O+932weStno1zghps6Q7GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90o'
-      && 'MZYhRADJ+bv725vmj6Q8tHWffPKUD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYO'
-      && 'kH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AF'
-      && 'CWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPivX5SssqOwuzPSqk71mN3ymw5ZtdK'
-      && 'dmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv625tOMRd6DLF4v0lWmQO8'
-      && 'qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLNbvkh1QheV5DNN'
-      && 'TZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlkbNbmlR'
-      && 'deXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZeb'
-      && 'Y1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLz'
-      && 'u05s/huMx4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN'
-      && '+5s7t9jz5TgdbdBMvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5R'
-      && 'hULpL9Yaxkcj7g3QT6zK397ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjU'
-      && 'GmZ3NOI2mdnVnX32eHZZ7903hGXfBG8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8f'
-      && 'oLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48'
-      && 'ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO+Uor3AIbOx7QV2TeBMPu3vKYA'
-      && 'Sw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Tek2R3286YzWiK4eQltk'
-      && '9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsqiXsyClHMHK6'
-      && '0hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqalxE0'
-      && 'mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSron'
-      && 'M0FytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpj'
-      && 'FjBYTj3l4KY9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6U'
-      && 's5VWZbOFnQtsyMqvc56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62'
-      && 'hfrE8EWsJ3mFsGYs+OQqze+A1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexM'
-      && 'PG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0'
-      && 'J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj36RWY5ZyX2WCLukvbX67ZYHFLHZtGw'
-      && '+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6x+j4dCx6eF/BEtwDBkbx7Fe'
-      && '29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H121hXIIZNrxou9oW'
-      && '6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9tJD4Ur5umg'
-      && 'PSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gfsB'
-      && '2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83M'
-      && 'B7XQEdEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsA'
-      && 'cqJDfIi9oayfW8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdb'
-      && 'xD1hjI5AklJ+ydgTUGz6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7q'
-      && 'Bqh7uqu7f3nzdw3uKFJszEIcpqVRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/F'
-      && 'MZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XN'
-      && 'Dj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Swn8JFhr4VQnMze5uKnv0ugOHfUXa3'
-      && 'ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pOr6H03QRIIZeYnUj1njhid'
-      && '8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJsSnNgZufBdCkmsN'
-      && '60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ0kXAjnD'
-      && 'cazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM'
-      && 'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaF'
-      && 'qqxeZn813n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2'
-      && 'A5g/c/qaTasC8krC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJ'
-      && 'h0oqaefF++zmzh5bu7bbXrBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEF'
-      && 'jiQlHeIXEaRIPZAVRMVCTDcQCUh8LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJ'
-      && 'oUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rMr5mnUyru6xl0LZAeFvDG3l83DF5199muk'
-      && 'oJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4HXW9KcrEyKApTa7s9BVSyLaF3Ik'
-      && 'SbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos1vtLYCE551QKNuCKW63'
-      && '+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/uM5/MTJlU7S/Z'
-      && 'N6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kwM3dQa'
-      && 'VgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFo'
-      && 'bQjdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbL'
-      && 'OcJsq1ejD2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81y'
-      && 'trTsWLtiixpgQNLZ4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOI'
-      && 'AFjRVaZhus3g2az0WuA0wcIi5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4L'
-      && 'ECKAM1gG9tVR5UP+RkqZN5s7a0yBnwUEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnln'
-      && 'n31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyWI/dmZ0R77O7LNXLBkWy9CE7Pd6XvNih'
-      && 'QkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBdwIslNL0N+JnMvravxiraFO/s'
-      && 'tm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzESSlixgnhMLzXAeXp+3'
-      && 'hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2o3YJiWs5Wx'
-      && 'zbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcAcw0'
-      && '8Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7c'
-      && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
-      && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
-      && 'cpUAAAAASUVORK5CYII='.
-    lcl_gui=>cache_image( iv_url = 'img/logo' iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
-      && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
-      && 'AABJRU5ErkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/toc'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABZUlEQVQ4jY3TsWuTYRAG'
-      && '8N8XQuggpVgIVKwgdNLNQRxEWggOdZWEUtTFgtBBiiCIgydOoo4iCqZ/gDgUlW5t6aLW'
-      && '0bp1U0sRB5FQRCQ4fO8HHyEJOXg5uId77p67ezNDLCLO4BlO4QNu4je+RQSoDEkexzr2'
-      && '0EIXX/AV7yNiArIByWOp8mVMRsTfRHgVG1jDPq4MIniKeTyIiHYf/Bweopb1AHX8wmc8'
-      && 'iYgXQyQ28CYrBW4n1hYWUMddbEdENyIqyU+k+EX8yEoD+44j2EkEq7iAOWzjNV7hOO6j'
-      && 'jXvV1EAzJcNZvMQSVvAOB6mjefk2lovZFGu81iNxFpt4niQ9wmlMYRqHxR1UI2IG5/vM'
-      && '6Rg+YQs/cQcnSvgudqt9qpetisYArFUQfMQiagkYeJ1y/fAHnaLCJdwYklS2f+mN4THe'
-      && 'VuQbGNVaOJk6aRYddHB0RII5+TorShJW5B9nfASC68kf4Bb8B2i6ZO2+FsBYAAAAAElF'
-      && 'TkSuQmCC'.
-    lcl_gui=>cache_image( iv_url = 'img/repo_online'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
-      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNrEkr1KxFAQhe9P/iS6goLWiiB2PoCN'
-      && 'lYW9ChbbiFhYRAQ7MaS2SOdT2PkSvoGPINiF1YTNz/WceC+sohDYwoFvZ/Zm78mcmZXG'
-      && 'GDFPKDFn/L+AdEWWZUIptRmG4bLWeglHNXjHjGoppUa9CiaoX3ieJEl/z3MCXdfdIKXT'
-      && '6bRFju2xYeASJ618338Dl6gf8zw3FOktpGk6QrrFmyPP82J0IgmCHxq1F0URBdbxuzuw'
-      && '9nMGR2CRltCBbJpG1HUtmNGZcN/tynfAgbPgBMbWxp/DcmIIDaFdWOjtK7S/hbxnDQu0'
-      && 'LGBFBEHQg7YNbAnCZ5xJWZbnRVFsuw7GM4P8hhXkPLgh0batqKqKFmM8O3FbeAanIOAM'
-      && 'cJFQWNoBLpAv/e6D4PKEK3UCh+DiN9/sgG8lbhSWCNyDJ2U3MDSOwQa7cfc828rKQIF9'
-      && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
-    lcl_gui=>cache_image( iv_url = 'img/repo_offline'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
-      && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
-      && 'BWVjT7hwOQ+HEzEbMhU7jrTd69q2KhtFRU2nrvS927dm3pyqPXcuNRVD7sxiRIQlDSc+'
-      && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
-      && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
-      && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/pkg'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgID/OyosAAAAN3RSTlMAAQIDBAYICQ8TFRweJScoKSo3Oj1FRk1dYWJjZmhzdIaJ'
-      && 'j5GVm6CwsrS5vsHDyszV19ne7/X583teZAAAAIFJREFUGFdVytkagVAYheFvFzJlnqc0'
-      && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
-      && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
-      && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/branch'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICVwFMKAAAAHnRSTlMAAwQFBgcK'
-      && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
-      && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
-      && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
-    lcl_gui=>cache_image( iv_url = 'img/link'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
-      && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
-      && 'rkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/code'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
-      && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
-      && 'RotPsQAAAABJRU5ErkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/bin'  iv_base64 = lv_image ).
-
-    lv_image =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
-      && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
-      && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
-    lcl_gui=>cache_image( iv_url = 'img/obj'  iv_base64 = lv_image ).
-
-  ENDMETHOD.
 
   METHOD header.
 
@@ -18621,7 +18775,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     ro_html->add( '<td class="headpad"><span class="page_title">' ). "#EC NOTEXT
-    ro_html->add( |&#x25BA;{ iv_page_title }| ).            "#EC NOTEXT
+    ro_html->add( |&#x25BA; { iv_page_title }| ).            "#EC NOTEXT
     ro_html->add( '</span></td>' ).                         "#EC NOTEXT
 
     IF io_menu IS BOUND.
@@ -18654,6 +18808,17 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</html>').                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html footer & logo
+
+  METHOD redirect.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html><head>' ).                         "#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ iv_url }">| )."#EC NOTEXT
+    ro_html->add( '</head></html>').                        "#EC NOTEXT
+
+  ENDMETHOD.
 
   METHOD styles.
 
@@ -18713,9 +18878,9 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('span.page_title {').
     ro_html->add('  font-weight: normal;').
-    ro_html->add('  font-size: 20pt;').
+    ro_html->add('  font-size: 18pt;').
     ro_html->add('  color: #bbb;').
-    ro_html->add('  padding-left: 0.2em;').
+    ro_html->add('  padding-left: 0.4em;').
     ro_html->add('}').
 
     " Menu styles
@@ -18797,22 +18962,126 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
   ENDMETHOD.                    "common styles
 
+  METHOD lif_gui_page~get_assets. " Common images here
+
+    DATA ls_image TYPE ty_web_asset.
+
+    ls_image-url     = 'img/logo'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
+      && 'AAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9y'
+      && 'Z5vuPBoAAA8VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQ'
+      && 'cEkDJWmTltLStGkoDCkzwBAuCemUlksDNCkhJTTTljJpZhIuBQxxAWPvyuYiW7UkG8Il'
+      && 'UByIsS1sLEu75+0fu5JXu9/etAJz0TOzM/rOec85765+37m+3yczY8w0NU3qrwv9npfa'
+      && 'Hfx02pPPd469sgk+7misYnyjpWXy5IOG7kd8ZjjNjEtr13TdOm7eTfCxwo2lUJAQASRu'
+      && '2dnRfMn4uDbBx42yxZhPiMNMCHKCsVK2GGuqqqoQUwrZTAhygrFQshjfaGmZ/M7yxQtm'
+      && 'xGL9/qDqzwLxQvYTgpygXEoS4/DQ7LE1O05atLBu1YZdE4KcYLwpupoOmCO+5Z2dXPfE'
+      && 'xk07Tm2ZroGhBwX1wAygKqiOiVX2Rw9Jam/gyH0wuGGzvTEudRYSY4HFyogghxN2n7Sw'
+      && 'IendvcCioLoOtCCXNeqohOf0oDwPq9f3Wt/77dOHlWhYzUj/BRybTnrGEnZO5wv2m0rq'
+      && 'DezJoOiqeZbzegzpk6TVPPWJTT39y5svMogF1ZcesjlQgkwYp4F+EJQXwv4E+MiLUZJa'
+      && 'F7AIcRq4hWZ2mMRhQD/oZcErXv7FScaja3rt/wpU9E/sFyLACQq57wB/XIl/gWIstn2T'
+      && 'xpHVre7ZW71p8sFDeQscSEHKu3pTBadNH2Lq61VT57iwNazLgaNSqYaUaWXLDZCJIbBo'
+      && 'g3tK2A2xHns0oMrm3CRrqdTPnAVMiUIEmLlz2XGLMxNmH7YrifFcoUIHalHj8f8p6UfA'
+      && 'O+932weStno1zghps6Q7GBFiUYRxopkeaZ2vIwLyfxtQ4vV8lbWHNScacf+T/vwqn90o'
+      && 'MZYhRADJ+bv725vmj6Q8tHWffPKUD6IgO/tsfawneRHYd97Pdg8kSyJaZiGtBY4pYPYO'
+      && 'kH84C0Cyv8tKSiK7OZ99EpYAJ2V8AhkRY5lCHGaxhaq+BLCzY/EXd5y0aOG0td1vf1AF'
+      && 'CWCw7/1u80DQEtahQvcB03MyjQfM7Hwnmxfv9dPivX5SssqOwuzPSqk71mN3ymw5ZtdK'
+      && 'dmVIdly8xx7JZ29yy0qptwrGLMRRCA6T1w93nLTo5Lq13Zv625tOMRd6DLF4v0lWmQO8'
+      && 'qPko45y7TWaHZyUnwa6M99mN2fYbuu1V4K5oxF1B4Z4UgFifrQHWFLNbvkh1QheV5DNN'
+      && 'TZMqFWIGs5zX48M95PTqGa3TZ4erzbvj8/WUErf0L2++uNyGJLn2Js1oDeuYlkbNbmlR'
+      && 'deXup2hq0qS2es2VlHMDFaOlRdXL5uuwlnodG23QTEljCkbJV3d7WHOK+dXWqHqZnZeb'
+      && 'Y1fGe3OFOArRU5GTGbSHNWdwUL8Epo1qIQ9V/bXu3HES4jCznNfjb7e1zZ8Ri/UD1MLz'
+      && 'u05s/huMx4IKGNy4+8Tj/2Pqk8++Vaji86TQqxEuNNM5rWGtSCaokSDkgd0QjbidoPvN'
+      && '+5s7t9jz5TgdbdBMvLsG2cop6FgLUdUaZk804jYKuyrWa6vzlT2+XrOqQnxd6KwQOj5R'
+      && 'hULpL9Yaxkcj7g3QT6zK397ZbdtGtbtAZ+B0U3adkt0c67E7OyI6fFDuSpktC6HGpJjU'
+      && 'GmZ3NOI2mdnVnX32eHZZ7903hGXfBG8mp3J7sd/B0DPCTgUmBf9O7lmMybk56or3Jn8f'
+      && 'oLVB7Q5dZ9Iy4OBsw2jYbUUk96fwQrzHf955iBZzsDA+aL9k1owZ20fNzaY/tfFXwK48'
+      && 'ldQkSZ5YqJXmZk15JaJfmOmfgdOAmgCzWrCvyum5aIO+Uor3AIbOx7QV2TeBMPu3vKYA'
+      && 'Sw091hbWt4PKRhu0oDqkmND1wAnk3vkOmAN2lRLa2hrWMVm5Tek2R3286YzWiK4eQltk'
+      && '9g1gMfsFMhVYKunR1obQddk+SXZqwLe8acMGe7fYb9HZk7wm3utrBmpsqiXsyClHMHK6'
+      && '0hLWoRjHBfmLbP9K3bPYjFPIFWLaQeZnlZ8H4JyFflrMwcK4wG63v3/ycZnXOzqalxE0'
+      && 'mU7x9rvvVv93oVZqBtzNGGeU7Jbp9pZGzS7ReiVQVyDfmXRda4PaA9p5mBLmWGmmSron'
+      && 'M0FytUGGgjPTAi8UIeVk9u1og5YOJ0QbNBOjIac+Y22JPgLQ1WV7Ol+w36xebYnhtGpj'
+      && 'FjBYTj3l4KY9/dx6My4d74pN/Ki/Y9HpSG5HR/Nyh/1DHtO9OM6dvWFDwbtWslOykt6U'
+      && 's5VWZbOFnQtsyMqvc56Ty3T7NeBhLGAfDZDpe5nX6V5uXpbZ43K2NGQ2V9glwLas/I62'
+      && 'hfrE8EWsJ3mFsGYs+OQqze+A1cBLgbmma4f/9AmOJGBe5vKVLYN1W6wnOWSHmdkVhexM'
+      && 'PG6yC0x2AbmjoQ3njdh4uwrSw1Htmq5bd3Y0I3FLpQ5n0GTSQ7s6Fva70RPYTPbi+Pz0'
+      && 'J7ryboRC+m5PnRfsJjVEAfp5bLNflTb52dKIBj36RWY5ZyX2WCLukvbX67ZYHFLHZtGw'
+      && '+1fD/jDL8qQljWpav9m6Uw3wKYzXgUNJTxsk+0Fssw0L6x+j4dCx6eF/BEtwDBkbx7Fe'
+      && '29gWCa0yrC2rvXXO26WZfrWG3V2kji8zWbm0QUev67GX5ZgZ8A0H121hXIIZNrxou9oW'
+      && '6m4b4m/z2aTP+fsAohF3PaNHROvssZ8ElRs5DnyPBAkovxDFF4oJESDeY9tJD4Ur5umg'
+      && 'PSFm1Uy23Zk2SaM7e43p5Y4uxUMzu2f4H56+tuZmff2gfTqHrGEy5DkW6Abo7LH7gfsB'
+      && '2uo1LQGzBmoYFSwg57vNcjqqo4F1JXh2S7Zfx83TZZNqdD6MXkQkU369jONgcmfxe83M'
+      && 'B7XQEdEhg1B0HzDk2ZHpy3vBqLPpMQhyi/f2AIA3WyPZG6KkeVpKiE925awEi7H6JRsA'
+      && 'cqJDfIi9oayfW8ZB5dY/TFeX7YlGQg+RmgJkcnSQfWyr9QP92enmGcgeNCvx67mXbGdb'
+      && 'xD1hjI5AklJ+ydgTUGz6iiZNXd09+gYGGIRlQgXn6wDesZYSRFsJOYES5QjSw7fqnu7q'
+      && 'Bqh7uqu7f3nzdw3uKFJszEIcpqVRs12SRuAYiTrJ1YXMzSGgS6iQnHmWyQWe70pySz/F'
+      && 'MZagMWnMlaiTuTqTTih7s7IIHm1T1ncVI37l3BAAA4McAYF7iAvG17uxExi1U6Igd9XN'
+      && 'Dj+UmZA8qPrf3MDQbeSPIN8Ldub0JzeWLcT2I3Swn8JFhr4VQnMze5uKnv0ugOHfUXa3'
+      && 'ZhySedkR0eGDuMtbw/rTZCI1pA9PF0yWf4e3MnJ7YKXm0pOr6H03QRIIZeYnUj1njhid'
+      && '8aaRscKX/VGWSRLsCjnK2rcdC3njGUsQ5PSdv92yqJaMk5WBoRMpJsSnNgZufBdCkmsN'
+      && '60FgRbllK8PNzOlttT/qpz2sOUnpeWGHvq9ewcyc28/7XQCru213NOL+l6wgZ0kXAjnD'
+      && 'cazP7gXuTdu41rCyxbgr3mt/P16+F6LgUVXtmq5bC237yNsNu5YtPBZgx4kLFznZ1XlM'
+      && 'BzB/1liECBAN801yhfiq0HflbKXz1ojZ4qCylSBsbm6q/93wX0n0Q1Ir6UzWYXaZyZaF'
+      && 'qqxeZn813n4ZlhPWJWXMo00P5OTDF5c0qmm8fRlPip6bFhHk6Ti3ddfy5i3OXBemJQE2'
+      && 'A5g/c/qaTasC8krC0KdzE+3qWG/y6thmW7Vui/UkQ7w51vqDaGnRZFInPdlshNQ2C8oJ'
+      && 'h0oqaefF++zmzh5bu7bbXrBxjp88bp5qgZzNdyfWD/9t+B+TO4GW8/p+R0SHcGBxLWEF'
+      && 'jiQlHeIXEaRIPZAVRMVCTDcQCUh8LfOyaqjgCcr+YpY7NRFa2VY/egsqtNtdw8ie5gjJ'
+      && 'oUTqicjofOYA2f/YgcR03s5MMBF4wlIa7rMr5mnUyru6xl0LZAeFvDG3l83DF5199muk'
+      && 'oJO1FUMoviSi8Nh9Kg+Ru7qvUvCqPO+cMZsxbPsM4HXW9KcrEyKApTa7s9BVSyLaF3Ik'
+      && 'SbLSQros18RyInkkV2u5q+6zLaS+aCT0oJl/QVI78IWcsvDos1vtLYCE551QKNuCKW63'
+      && '+157g36cMOYI9yWhC3K+j4KDEHKxC9+t0altDaFHwL/kvVZIBJw761/uM5/MTJlU7S/Z'
+      && 'N6hTBNlhZA0OPReNuGdM6nL4jR4G5ZnRusAtKmVHwg1Slcxe11nODZJKh1fJ6kwM3dQa'
+      && 'VgOw3omjkGuL9/o/L/vFTzs7mi8pQZBpIT4f9PxE2bRFQncY9pdjKDoExDH7ebzPbgFo'
+      && 'bQjdng48KBfvzZau77ORN61FI66PsW2N7ARiZnZTZ589BtAWCV1v5J1zF+JNVdui2CbL'
+      && 'OcJsq1ejD2lVgCDL4e14r58J0N6k+cmEu0HYIssdrbxgnaGeeG9yJEg32hC6GbOix81y'
+      && 'trTsWLtiixpgQNLZ4yVEgCT++xSP0H7C0N1ZadVAh6SR3kRm2WfJO0H/XqTuQcn+IlOI'
+      && 'AFjRVaZhus3g2az0WuA0wcIi5QP3DDNIIPtakBABYltts7AO4OEi9eTFYGCksSRzwM4L'
+      && 'ECKAM1gG9tVR5UP+RkqZN5s7a0yBnwUEOSDp7GlPPp83BH0srO+1PmQrDIIen9wOdnln'
+      && 'n31G5n9ZtDLL6ck2x3uTf6DUee8rASX6vNnyWI/dmZ0R77O7LNXLBkWy9CE7Pd6XvNih'
+      && 'QkEQeZHZl9PBFtsDstebtyWFwv0B4r32UrzXn+6xDtBdwIslNL0N+JnMvravxiraFO/s'
+      && 'tm0y+xzQlcfkddCNCe/vGfP7GQH6lzdfbHAjqSCBHZK+PN5CzESSlixgnhMLzXAeXp+3'
+      && 'hWfuM0sWL10abQv1CdtHixzvmtiYPhcvSFOTJk1NEPEQkWdPUry4oc96y2o3YJiWs5Wx'
+      && 'zbYq83THHHu9Y1N2kG45tDRqdsgzxxuznKPOGbsTsN2M7d6zfXhePJ5Ici1h6mUcAcw0'
+      && '8Zo5fp35NoqKxAjwTrRhZmLSpPY9ySmPzV27dm+lTn9cKSTGA+XT+03Jq+l8HBLv2Q7c'
+      && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
+      && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
+      && 'cpUAAAAASUVORK5CYII='.
+    APPEND ls_image TO rt_assets.
+
+  ENDMETHOD.                    "lif_gui_page~get_assets
+
+  METHOD lif_gui_page~on_event.
+    rv_state = gc_event_state-not_handled.
+  ENDMETHOD.                    "lif_gui_page~on_event
+
 ENDCLASS.
+
+CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+  PUBLIC SECTION.
+    METHODS lif_gui_page~render   REDEFINITION.
+ENDCLASS.                       "lcl_gui_page_explore DEFINITION
+
+CLASS lcl_gui_page_explore IMPLEMENTATION.
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( redirect( 'http://larshp.github.io/abapGit/explore.html' ) ).
+
+  ENDMETHOD.
+
+ENDCLASS.                       "lcl_gui_page_explore IMPLEMENTATION
 
 
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
-    METHODS lif_gui_page~render   REDEFINITION.
+    METHODS lif_gui_page~on_event   REDEFINITION.
+    METHODS lif_gui_page~render     REDEFINITION.
+    METHODS lif_gui_page~get_assets REDEFINITION.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_repo_file,
-             path       TYPE string,
-             filename   TYPE string,
-             is_changed TYPE abap_bool,
-           END OF ty_repo_file.
-    TYPES   tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_item,
              obj_type TYPE tadir-object,
@@ -18821,8 +19090,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
              files    TYPE tt_repo_files,
            END OF ty_repo_item.
     TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
-
-    CLASS-DATA: go_user TYPE REF TO lcl_persistence_user.
 
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -18860,9 +19127,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 eo_log        TYPE REF TO lcl_log
       RAISING   lcx_exception.
 
-    METHODS package_zip
-      RAISING lcx_exception.
-
     METHODS render_repo_item
       IMPORTING io_repo        TYPE REF TO lcl_repo
                 is_item        TYPE ty_repo_item
@@ -18874,70 +19138,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 iv_obj_name    TYPE tadir-obj_name
       RETURNING VALUE(rv_html) TYPE string.
 
-    CLASS-METHODS render_explore
+    METHODS render_explore
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-    CLASS-METHODS jump_encode
-      IMPORTING iv_obj_type      TYPE tadir-object
-                iv_obj_name      TYPE tadir-obj_name
-      RETURNING VALUE(rv_string) TYPE string.
-
-    CLASS-METHODS jump_decode
-      IMPORTING iv_string   TYPE clike
-      EXPORTING ev_obj_type TYPE tadir-object
-                ev_obj_name TYPE tadir-obj_name
-      RAISING   lcx_exception.
-
-    CLASS-METHODS install
-      IMPORTING iv_url TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS newoffline
-      RAISING lcx_exception.
-
-    CLASS-METHODS uninstall
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS remove
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS stage
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS diff
-      IMPORTING is_file TYPE ty_repo_file
-                iv_key  TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE ty_repo_file
-      RETURNING VALUE(rv_string) TYPE string.
-
-    CLASS-METHODS file_decode
-      IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE ty_repo_file
-      RAISING   lcx_exception.
-
-    CLASS-METHODS abapgit_installation
-      RAISING lcx_exception.
-
-    CLASS-METHODS is_repo_installed
-      IMPORTING iv_url              TYPE string
-                iv_target_package   TYPE devclass OPTIONAL
-      RETURNING VALUE(rv_installed) TYPE abap_bool
-      RAISING   lcx_exception.
-
-    CLASS-METHODS needs_installation
+    METHODS needs_installation
       RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
 
 ENDCLASS.
@@ -18950,7 +19155,6 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         is_local  TYPE ty_file
         is_remote TYPE ty_file.
 
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
@@ -19167,15 +19371,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN OTHERS.
-        _raise 'Unknown action'.                            "#EC NOTEXT
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD lif_gui_page~render.
 
     CREATE OBJECT ro_html.
@@ -19324,9 +19519,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CASE iv_action.
       WHEN 'save'.
         save( iv_getdata ).
-        lcl_gui=>render( ).
-      WHEN OTHERS.
-        _raise 'Unknown action, background'.
+        rv_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -19533,8 +19726,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>back( ).
-
   ENDMETHOD.
 
   METHOD parse.
@@ -19604,10 +19795,9 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CASE iv_action.
       WHEN 'post'.
         push( it_postdata ).
+        rv_state = gc_event_state-go_back.
       WHEN 'cancel'.
-        lcl_gui=>back( ).
-      WHEN OTHERS.
-        _raise 'Unknown action, commit'.
+        rv_state = gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
@@ -19753,7 +19943,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       EXPORTING
         io_repo  = mo_repo
         io_stage = mo_stage.
-    lcl_gui=>set_page( lo_commit ).
+    lcl_gui=>get( )->set_page( lo_commit ).
 
   ENDMETHOD.
 
@@ -19831,25 +20021,24 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       WHEN 'add'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->add( ls_file ).
-        lcl_gui=>render( ).
+        rv_state = gc_event_state-re_render.
       WHEN 'all'.
         all( ).
       WHEN 'reset'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->reset( ls_file ).
-        lcl_gui=>render( ).
+        rv_state = gc_event_state-re_render.
       WHEN 'ignore'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->ignore( ls_file ).
-        lcl_gui=>render( ).
+        rv_state = gc_event_state-re_render.
       WHEN 'rm'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->rm( ls_file ).
-        lcl_gui=>render( ).
+        rv_state = gc_event_state-re_render.
       WHEN 'commit'.
         call_commit( ).
-      WHEN OTHERS.
-        _raise 'Unknown action, stage'.
+        rv_state = gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.
@@ -19984,438 +20173,16 @@ ENDCLASS.
 
 CLASS lcl_gui_page_main IMPLEMENTATION.
 
-  METHOD diff.
-
-    DATA: lt_remote TYPE ty_files_tt,
-          lt_local  TYPE ty_files_item_tt,
-          lo_page   TYPE REF TO lcl_gui_page_diff,
-          lo_repo   TYPE REF TO lcl_repo_online.
-
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
-                   <ls_local>  LIKE LINE OF lt_local.
-
-
-    lo_repo  ?= lcl_repo_srv=>get( iv_key ).
-    lt_remote = lo_repo->get_files_remote( ).
-    lt_local  = lo_repo->get_files_local( ).
-
-    READ TABLE lt_remote ASSIGNING <ls_remote>
-      WITH KEY filename = is_file-filename
-               path     = is_file-path.
-    IF sy-subrc <> 0.
-      _raise 'file not found remotely'.
-    ENDIF.
-
-    READ TABLE lt_local ASSIGNING <ls_local>
-      WITH KEY file-filename = is_file-filename
-               file-path     = is_file-path.
-    IF sy-subrc <> 0.
-      _raise 'file not found locally'.
-    ENDIF.
-
-    CREATE OBJECT lo_page
-      EXPORTING
-        is_local  = <ls_local>-file
-        is_remote = <ls_remote>.
-
-    lcl_gui=>call_page( lo_page ).
-
-  ENDMETHOD.                    "diff
-
-  METHOD pull.
-
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
-
-    lo_repo->refresh( ).
-
-    lo_repo->deserialize( ).
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD.                    "pull
-
-  METHOD stage.
-
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          lo_stage TYPE REF TO lcl_gui_page_stage.
-
-
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
-
-* force refresh on stage, to make sure the latest local and remote files are used
-    lo_repo->refresh( ).
-
-    CREATE OBJECT lo_stage
-      EXPORTING
-        io_repo = lo_repo.
-
-    lcl_gui=>call_page( lo_stage ).
-
-  ENDMETHOD.
-
-  METHOD jump_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      ev_obj_type = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_type.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
-    IF sy-subrc = 0.
-      ev_obj_name = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_name.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD file_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    CLEAR: ev_key, es_file.
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
-    IF sy-subrc = 0.
-      ev_key = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
-    IF sy-subrc = 0.
-      es_file-path = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
-    IF sy-subrc = 0.
-      es_file-filename = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.                    "struct_decode
-
-  METHOD jump_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-
-    ls_field-name = 'TYPE'.
-    ls_field-value = iv_obj_type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'NAME'.
-    ls_field-value = iv_obj_name.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-  METHOD file_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-    ls_field-name = 'KEY'.
-    ls_field-value = iv_key.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'PATH'.
-    ls_field-value = is_file-path.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'FILENAME'.
-    ls_field-value = is_file-filename.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.                    "encode_struct
-
   METHOD render_obj_jump_link.
 
     DATA: lv_encode TYPE string.
 
-    lv_encode = jump_encode( iv_obj_type = iv_obj_type
-                             iv_obj_name = iv_obj_name ).
+    lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = iv_obj_type
+                                                    iv_obj_name = iv_obj_name ).
 
     rv_html = |<a href="sapevent:jump?{ lv_encode }">{ iv_obj_name }</a>|.
 
   ENDMETHOD.
-
-  METHOD uninstall.
-
-    DATA: lt_tadir    TYPE lcl_tadir=>ty_tadir_tt,
-          lv_count    TYPE c LENGTH 3,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_repo_srv=>get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    lt_tadir = lcl_tadir=>read( lv_package ).
-
-    IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
-
-      CONCATENATE 'This will delete all objects in package' lv_package
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CONCATENATE lv_question '(' lv_count 'objects)'
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          titlebar              = 'Uninstall'
-          text_question         = lv_question
-          text_button_1         = 'Delete'
-          icon_button_1         = 'ICON_DELETE'
-          text_button_2         = 'Cancel'
-          icon_button_2         = 'ICON_CANCEL'
-          default_button        = '2'
-          display_cancel_button = abap_false
-        IMPORTING
-          answer                = lv_answer
-        EXCEPTIONS
-          text_not_found        = 1
-          OTHERS                = 2.                        "#EC NOTEXT
-      IF sy-subrc <> 0.
-        _raise 'error from POPUP_TO_CONFIRM'.
-      ENDIF.
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-
-      lcl_objects=>delete( lt_tadir ).
-
-    ENDIF.
-
-    lcl_repo_srv=>delete( lo_repo ).
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD.                    "uninstall
-
-  METHOD remove.
-
-    DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_repo_srv=>get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    CONCATENATE 'This will remove the repository reference to the package'
-      lv_package
-      INTO lv_question
-      SEPARATED BY space.                                   "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Remove'
-        text_question         = lv_question
-        text_button_1         = 'Remove'
-        icon_button_1         = 'ICON_WF_UNLINK'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                          "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
-    ENDIF.
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_repo_srv=>delete( lo_repo ).
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD.                    "remove
-
-  METHOD newoffline.
-
-    DATA: lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lv_package    TYPE devclass,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Name'.                          "#EC NOTEXT
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'New Offline Project'             "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
-
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    lcl_repo_srv=>new_offline(
-      iv_url     = lv_url
-      iv_package = lv_package ).
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD.                    "newoffline
-
-  METHOD install.
-
-    DATA: lv_returncode  TYPE c,
-          lv_url         TYPE string,
-          lv_package     TYPE devclass,
-          lv_branch_name TYPE string,
-          lv_icon_ok     TYPE icon-name,
-          lv_icon_br     TYPE icon-name,
-          lv_icon_msg    TYPE icon-name,
-          lo_repo        TYPE REF TO lcl_repo_online,
-          lt_fields      TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Git Clone Url'.                 "#EC NOTEXT
-    <ls_field>-value     = iv_url.
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Target Package'.                "#EC NOTEXT
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TEXTL'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Branch'.                        "#EC NOTEXT
-    <ls_field>-value     = 'refs/heads/master'.             "#EC NOTEXT
-    <ls_field>-field_attr = '05'.
-
-    lv_icon_ok = icon_okay.
-    lv_icon_br = icon_workflow_fork.
-    lv_icon_msg = icon_msg.
-
-    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
-      EXPORTING
-        popup_title       = 'Clone'
-        programname       = sy-repid
-        formname          = 'BRANCH_POPUP'
-        ok_pushbuttontext = 'OK'
-        icon_ok_push      = lv_icon_ok
-        first_pushbutton  = 'Select branch'
-        icon_button_1     = lv_icon_br
-        second_pushbutton = 'Create package'
-        icon_button_2     = lv_icon_msg
-      IMPORTING
-        returncode        = lv_returncode
-      TABLES
-        fields            = lt_fields
-      EXCEPTIONS
-        error_in_fields   = 1
-        OTHERS            = 2.                              "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
-    lcl_url=>name( lv_url ).         " validate
-
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    lv_branch_name = <ls_field>-value.
-
-    lo_repo = lcl_repo_srv=>new_online(
-      iv_url         = lv_url
-      iv_branch_name = lv_branch_name
-      iv_package     = lv_package ).
-    lo_repo->status( ). " check for errors
-    lo_repo->deserialize( ).
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD.                    "install
 
   METHOD build_main_menu.
 
@@ -20428,12 +20195,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_cmd = 'sapevent:packagezip' ).
     lo_betasub->add( iv_txt = 'Background mode'  iv_cmd = 'sapevent:background' ).
 
-    lo_toolbar->add( iv_txt = 'Refresh All'      iv_cmd = 'sapevent:refresh' ).
+    lo_toolbar->add( iv_txt = 'Refresh all'      iv_cmd = 'sapevent:refresh' ).
     lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
     lo_toolbar->add( iv_txt = 'Explore'          iv_cmd = 'sapevent:explore' ).
-    lo_toolbar->add( iv_txt = 'New Offline Repo' iv_cmd = 'sapevent:newoffline' ).
+    lo_toolbar->add( iv_txt = 'New offline repo' iv_cmd = 'sapevent:newoffline' ).
     IF needs_installation( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Install'        iv_cmd = 'sapevent:abapgit_installation' ).
+      lo_toolbar->add( iv_txt = 'Get Abapgit'    iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
     lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
@@ -20453,6 +20220,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('.repo_name span {').
     ro_html->add('  font-weight: bold;').
     ro_html->add('  font-size: 16pt;').
+    ro_html->add('}').
+    ro_html->add('.repo_name img {').
+    ro_html->add('  vertical-align: baseline;').
+    ro_html->add('  margin: 0 5px 0 5px;').
     ro_html->add('}').
     ro_html->add('.repo_attr {').
     ro_html->add('  color: grey;').
@@ -20523,7 +20294,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
-    IF go_user->is_hidden( lv_key ) = abap_true.
+    IF lcl_gui=>get_user( )->is_hidden( lv_key ) = abap_true.
       lo_toolbar->add( iv_txt = 'Show'
                        iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
@@ -20621,7 +20392,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( render_repo_menu( io_repo ) ).
 
-    IF go_user->is_hidden( io_repo->get_key( ) ) = abap_false.
+    IF lcl_gui=>get_user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           extract_repo_content( EXPORTING io_repo       = io_repo
                                 IMPORTING et_repo_items = lt_repo_items
@@ -20768,7 +20539,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ELSE.
         LOOP AT is_item-files INTO ls_file.
           IF ls_file-is_changed = abap_true.
-            lv_difflink = file_encode( iv_key = io_repo->get_key( ) is_file = ls_file ).
+            lv_difflink = lcl_html_action_utils=>file_encode( iv_key = io_repo->get_key( )
+                                                              is_file = ls_file ).
             ro_html->add( |<a href="sapevent:diff?{ lv_difflink }">diff</a>| ).
           ELSE.
             ro_html->add( |<span>&nbsp;</span>| ).
@@ -20783,153 +20555,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD package_zip.
-
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'TDEVC'.
-    <ls_field>-fieldname = 'DEVCLASS'.
-    <ls_field>-fieldtext = 'Package'.                       "#EC NOTEXT
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Export'             "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    TRANSLATE <ls_field>-value TO UPPER CASE.
-
-    ls_data-key             = 'DUMMY'.
-    ls_data-package         = <ls_field>-value.
-    ls_data-master_language = sy-langu.
-
-    CREATE OBJECT lo_repo
-      EXPORTING
-        is_data = ls_data.
-
-    lcl_zip=>export( lo_repo ).
-
-  ENDMETHOD.
-
-  METHOD abapgit_installation.
-
-    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
-    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
-
-    DATA lv_text            TYPE c LENGTH 100.
-    DATA lv_answer          TYPE c LENGTH 1.
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_url             TYPE string.
-    DATA lv_target_package  TYPE devclass.
-
-    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
-            && |and plugins to { lc_package_plugins }|.
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Install abapGit'
-        text_question         = lv_text
-        text_button_1         = 'Continue'
-        text_button_2         = 'Cancel'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer ##no_text.
-    IF lv_answer <> '1'.
-      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    ENDIF.
-
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          lv_url            = 'https://github.com/larshp/abapGit.git'.
-          lv_target_package = lc_package_abapgit.
-        WHEN 2.
-          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
-          lv_target_package = lc_package_plugins.
-      ENDCASE.
-
-      IF abap_false = is_repo_installed(
-          iv_url              = lv_url
-          iv_target_package   = lv_target_package ).
-
-        lcl_sap_package=>create_local( lv_target_package ).
-
-        lo_repo = lcl_repo_srv=>new_online(
-          iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master'
-          iv_package     = lv_target_package ) ##NO_TEXT.
-
-        lo_repo->status( ). " check for errors
-        lo_repo->deserialize( ).
-      ENDIF.
-    ENDDO.
-
-    COMMIT WORK.
-
-    lcl_gui=>render( ).
-
-  ENDMETHOD. "abapgit_installation
-
-  METHOD is_repo_installed.
-
-    DATA: lt_repo        TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo        TYPE REF TO lcl_repo,
-          lv_url         TYPE string,
-          lv_package     TYPE devclass,
-          lo_repo_online TYPE REF TO lcl_repo_online,
-          lv_err         TYPE string.
-
-
-    lt_repo = lcl_repo_srv=>list( ).
-
-* find abapgit and abapgit-plugins-repos and validate bindings
-    LOOP AT lt_repo INTO lo_repo.
-      TRY.
-          lo_repo_online ?= lo_repo.
-        CATCH cx_sy_move_cast_error.
-          CONTINUE. "the repositories we're looking for are online-repositories
-      ENDTRY.
-
-      lv_url     = lo_repo_online->get_url( ).
-      lv_package = lo_repo_online->get_package( ).
-      IF to_upper( lv_url ) <> to_upper( iv_url ).
-        CONTINUE.
-      ENDIF.
-
-      IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
-        lv_err = |Installation to package { lv_package
-          } detected. Cancelling installation|.
-        _raise lv_err.
-      ENDIF.
-
-      rv_installed = abap_true.
-    ENDLOOP.
-
-  ENDMETHOD. "is_repo_installed
-
   METHOD needs_installation.
 
     CONSTANTS:
@@ -20937,12 +20562,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     TRY.
-        IF is_repo_installed( lc_abapgit ) = abap_false
-            OR is_repo_installed( lc_plugins ) = abap_false.
+        IF lcl_repo_srv=>is_repo_installed( lc_abapgit ) = abap_false
+        OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
-* cannot be installed anyway in this case, e.g. no connection
+        " cannot be installed anyway in this case, e.g. no connection
         rv_not_completely_installed = abap_false.
     ENDTRY.
   ENDMETHOD.                    "needs_installation
@@ -20956,21 +20581,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_item       TYPE ty_item,
           lo_db         TYPE REF TO lcl_gui_page_db.
 
+    DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
 
     CASE iv_action.
-      WHEN 'install'.
-        lv_url = iv_getdata.
-        install( lv_url ).
-      WHEN 'explore'.
-        lcl_gui=>show_url( 'http://larshp.github.io/abapGit/explore.html' ).
-      WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( document = 'http://www.abapgit.org' ).
-      WHEN 'uninstall'.
-        lv_key = iv_getdata.
-        uninstall( lv_key ).
-      WHEN 'remove'.
-        lv_key = iv_getdata.
-        remove( lv_key ).
       WHEN 'refresh'.
         lv_key = iv_getdata.
         IF lv_key IS INITIAL. " Refresh all or single
@@ -20978,57 +20591,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ELSE.
           lcl_repo_srv=>get( lv_key )->refresh( ).
         ENDIF.
-        lcl_gui=>render( ).
-      WHEN 'hide'.
-        lv_key = iv_getdata.
-        go_user->hide( lv_key ).
-        lcl_gui=>render( ).
-      WHEN 'unhide'.
-        lv_key = iv_getdata.
-        go_user->unhide( lv_key ).
-        lcl_gui=>render( ).
-      WHEN 'stage'.
-        lv_key = iv_getdata.
-        stage( lv_key ).
-      WHEN 'diff'.
-        file_decode( EXPORTING iv_string = iv_getdata
-                     IMPORTING ev_key    = lv_key
-                               es_file   = ls_file ).
-        diff( is_file   = ls_file
-              iv_key    = lv_key ).
-      WHEN 'jump'.
-        CLEAR ls_item.
-        jump_decode( EXPORTING iv_string = iv_getdata
-                     IMPORTING ev_obj_type = ls_item-obj_type
-                               ev_obj_name = ls_item-obj_name ).
-        lcl_objects=>jump( ls_item ).
-      WHEN 'pull'.
-        lv_key = iv_getdata.
-        pull( lv_key ).
-      WHEN 'newoffline'.
-        newoffline( ).
-      WHEN 'db'.
-        CREATE OBJECT lo_db.
-        lcl_gui=>call_page( lo_db ).
-      WHEN 'background'.
-        CREATE OBJECT lo_background.
-        lcl_gui=>call_page( lo_background ).
-      WHEN 'zipimport'.
-        lv_key = iv_getdata.
-        lcl_zip=>import( lv_key ).
-      WHEN 'zipexport'.
-        lv_key = iv_getdata.
-        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
-      WHEN 'files_commit'.
-        lv_key = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
-                         iv_zip  = abap_false ).
-      WHEN 'abapgit_installation'.
-        abapgit_installation( ).
-      WHEN 'packagezip'.
-        package_zip( ).
-      WHEN OTHERS.
-        _raise 'Unknown action'.
+        rv_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -21091,10 +20654,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 
     CREATE OBJECT ro_html.
-    CREATE OBJECT go_user.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'MAIN' io_menu = build_main_menu( ) ) ).
+    ro_html->add( title( iv_page_title = 'HOME' io_menu = build_main_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_repo_srv=>list( ).
@@ -21117,6 +20679,105 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( footer( ) ).
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~get_assets.
+
+    DATA ls_image TYPE ty_web_asset.
+
+    rt_assets = super->lif_gui_page~get_assets( ).
+
+    ls_image-url     = 'img/toc'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
+      && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
+      && 'AABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/repo_online'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAApVBMVEUAAABQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
+      && 'bJz+TJ01AAAANnRSTlMAAQIDBAcJCgwSFBocHygqMTM1NkRHSU1QUWFiZGlweHuDiImL'
+      && 'lZiio6a5vsfT3uTo6e3x9fsxY2JuAAAAgUlEQVQYGXXB6RaBUBSA0e+IEuIiMs9zhlDn'
+      && '/R/NZWmt/LA3f1RcoaB50SydCbn20wjedkPu3sKSpMGH21PhLdZ0BATZ+cCXtxtDHGLV'
+      && 'pgFW9QqJj2U0wvJvMF+5jiNGI3HK9dMQSouH6sRoFGoWd8l1dEDRWlWPQsFS98KPvvDH'
+      && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/repo_offline'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
+      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNrEkr1KxFAQhe9P/iS6goLWiiB2PoCN'
+      && 'lYW9ChbbiFhYRAQ7MaS2SOdT2PkSvoGPINiF1YTNz/WceC+sohDYwoFvZ/Zm78mcmZXG'
+      && 'GDFPKDFn/L+AdEWWZUIptRmG4bLWeglHNXjHjGoppUa9CiaoX3ieJEl/z3MCXdfdIKXT'
+      && '6bRFju2xYeASJ618338Dl6gf8zw3FOktpGk6QrrFmyPP82J0IgmCHxq1F0URBdbxuzuw'
+      && '9nMGR2CRltCBbJpG1HUtmNGZcN/tynfAgbPgBMbWxp/DcmIIDaFdWOjtK7S/hbxnDQu0'
+      && 'LGBFBEHQg7YNbAnCZ5xJWZbnRVFsuw7GM4P8hhXkPLgh0batqKqKFmM8O3FbeAanIOAM'
+      && 'cJFQWNoBLpAv/e6D4PKEK3UCh+DiN9/sgG8lbhSWCNyDJ2U3MDSOwQa7cfc828rKQIF9'
+      && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/pkg'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
+      && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
+      && 'BWVjT7hwOQ+HEzEbMhU7jrTd69q2KhtFRU2nrvS927dm3pyqPXcuNRVD7sxiRIQlDSc+'
+      && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
+      && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
+      && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/branch'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgID/OyosAAAAN3RSTlMAAQIDBAYICQ8TFRweJScoKSo3Oj1FRk1dYWJjZmhzdIaJ'
+      && 'j5GVm6CwsrS5vsHDyszV19ne7/X583teZAAAAIFJREFUGFdVytkagVAYheFvFzJlnqc0'
+      && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
+      && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
+      && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/link'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICVwFMKAAAAHnRSTlMAAwQFBgcK'
+      && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
+      && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
+      && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/code'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
+      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
+      && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
+      && 'rkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/bin'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
+      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
+      && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
+      && 'RotPsQAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/obj'.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
+      && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
+      && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
 
   ENDMETHOD.
 
@@ -21169,9 +20830,10 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lo_per  TYPE REF TO lcl_persistence_background,
-          lo_repo TYPE REF TO lcl_repo_online,
-          lt_list TYPE lcl_persistence_background=>tt_background.
+    DATA: lo_per       TYPE REF TO lcl_persistence_background,
+          lo_repo      TYPE REF TO lcl_repo_online,
+          lt_list      TYPE lcl_persistence_background=>tt_background,
+          lv_repo_name TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -21183,7 +20845,8 @@ CLASS lcl_background IMPLEMENTATION.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
-      WRITE: / <ls_list>-method, lo_repo->get_name( ).
+      lv_repo_name = lo_repo->get_name( ).
+      WRITE: / <ls_list>-method, lv_repo_name.
 
       lcl_login_manager=>set(
         iv_uri      = lo_repo->get_url( )
@@ -21216,7 +20879,6 @@ ENDCLASS.
 FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception,
-        lo_main      TYPE REF TO lcl_gui_page_main,
         lv_ind       TYPE t000-ccnocliind.
 
 
@@ -21235,11 +20897,7 @@ FORM run.
       IF sy-batch = abap_true.
         lcl_background=>run( ).
       ELSE.
-        lcl_gui=>startup( ). " TODO: refactor, probably make it class constructor
-
-        CREATE OBJECT lo_main.
-        lcl_gui=>call_page( lo_main ).
-
+        lcl_gui=>get( )->go_home( ).
         CALL SELECTION-SCREEN 1001. " trigger screen
       ENDIF.
     CATCH lcx_exception INTO lx_exception.
@@ -23245,7 +22903,6 @@ ENDCLASS.
 CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
     METHODS: constructor
@@ -23261,15 +22918,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN OTHERS.
-        _raise 'Unknown action'.
-    ENDCASE.
-
   ENDMETHOD.
 
   METHOD lif_gui_page~render.
@@ -23371,8 +23019,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lcl_gui=>back( ).
-
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -23380,8 +23026,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     CASE iv_action.
       WHEN 'post'.
         save( it_postdata ).
-      WHEN OTHERS.
-        _raise 'Unknown action'.
+        rv_state = gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
@@ -23456,8 +23101,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
                    iv_value = is_key-value ).
 
     COMMIT WORK.
-
-    lcl_gui=>render( ).
 
   ENDMETHOD.
 
@@ -23548,16 +23191,17 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         CREATE OBJECT lo_display
           EXPORTING
             is_key = ls_key.
-        lcl_gui=>call_page( lo_display ).
+        lcl_gui=>get( )->call_page( lo_display ).
+        rv_state = gc_event_state-no_more_act.
       WHEN 'edit'.
         CREATE OBJECT lo_edit
           EXPORTING
             is_key = ls_key.
-        lcl_gui=>call_page( lo_edit ).
+        lcl_gui=>get( )->call_page( lo_edit ).
+        rv_state = gc_event_state-no_more_act.
       WHEN 'delete'.
         delete( ls_key ).
-      WHEN OTHERS.
-        _raise 'Unknown action'.
+        rv_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -23613,6 +23257,531 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui_router IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_gui_router IMPLEMENTATION.
+
+  DEFINE _add_dialog_fld.
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname    = &1.                       "#EC NOTEXT
+    <ls_field>-fieldname  = &2.                       "#EC NOTEXT
+    <ls_field>-fieldtext  = &3.                       "#EC NOTEXT
+    <ls_field>-value      = &4.                       "#EC NOTEXT
+    <ls_field>-field_attr = &5.                       "#EC NOTEXT
+  END-OF-DEFINITION.
+
+  METHOD on_event.
+    DATA: lv_url        TYPE string,
+          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item       TYPE ty_item.
+
+    CASE iv_action.
+      " General routing
+      WHEN 'main' OR 'explore' OR 'db' OR 'background'.
+        eo_page  = get_page_by_name( iv_action ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'abapgithome'.
+        cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
+                                           EXCEPTIONS OTHERS = 1 ).
+        IF sy-subrc <> 0.
+          _raise 'Opening page in external browser failed.'.
+        ENDIF.
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'abapgit_installation'.
+        abapgit_installation( ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'jump'.
+        lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
+                                            IMPORTING ev_obj_type = ls_item-obj_type
+                                                      ev_obj_name = ls_item-obj_name ).
+        lcl_objects=>jump( ls_item ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'diff'.
+        eo_page  = get_page_diff( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+
+      " Repository state actions
+      WHEN 'install'.
+        lv_url   = iv_getdata.
+        repo_clone( lv_url ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'uninstall'.
+        lv_key   = iv_getdata.
+        repo_purge( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'remove'.
+        lv_key   = iv_getdata.
+        repo_remove( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'zipimport'.
+        lv_key   = iv_getdata.
+        lcl_zip=>import( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'zipexport'.
+        lv_key   = iv_getdata.
+        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'newoffline'.
+        repo_new_offline( ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'files_commit'. "TODO refactor name ?
+        lv_key   = iv_getdata.
+        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+                         iv_zip  = abap_false ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'packagezip'. "TODO refactor name ?
+        repo_package_zip( ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'hide'.
+        lv_key   = iv_getdata.
+        lcl_gui=>get_user( )->hide( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'unhide'.
+        lv_key   = iv_getdata.
+        lcl_gui=>get_user( )->unhide( lv_key ).
+        ev_state = gc_event_state-re_render.
+
+      " Repository online actions
+      WHEN 'pull'.
+        lv_key   = iv_getdata.
+        repo_pull( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'stage'.
+        lv_key   = iv_getdata.
+        eo_page  = get_page_stage( lv_key ).
+        ev_state = gc_event_state-new_page.
+
+      WHEN OTHERS.
+        ev_state = gc_event_state-not_handled.
+    ENDCASE.
+  ENDMETHOD.        " on_event
+
+  METHOD get_page_by_name.
+
+    DATA: lv_page_class TYPE string,
+          lv_message    TYPE string.
+
+    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
+
+    TRY.
+        CREATE OBJECT ri_page TYPE (lv_page_class).
+      CATCH cx_sy_create_object_error.
+        lv_message = |Cannot create page class { lv_page_class }|.
+        _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.        " get_home_page
+
+  METHOD get_page_diff.
+
+    DATA: lt_remote TYPE ty_files_tt,
+          lt_local  TYPE ty_files_item_tt,
+          lo_page   TYPE REF TO lcl_gui_page_diff,
+          lo_repo   TYPE REF TO lcl_repo_online,
+          ls_file   TYPE ty_repo_file,
+          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
+                   <ls_local>  LIKE LINE OF lt_local.
+
+    lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
+                                        IMPORTING ev_key    = lv_key
+                                                  es_file   = ls_file ).
+
+    lo_repo  ?= lcl_repo_srv=>get( lv_key ).
+    lt_remote = lo_repo->get_files_remote( ).
+    lt_local  = lo_repo->get_files_local( ).
+
+    READ TABLE lt_remote ASSIGNING <ls_remote>
+      WITH KEY filename = ls_file-filename
+               path     = ls_file-path.
+    IF sy-subrc <> 0.
+      _raise 'file not found remotely'.
+    ENDIF.
+
+    READ TABLE lt_local ASSIGNING <ls_local>
+      WITH KEY file-filename = ls_file-filename
+               file-path     = ls_file-path.
+    IF sy-subrc <> 0.
+      _raise 'file not found locally'.
+    ENDIF.
+
+    CREATE OBJECT lo_page
+      EXPORTING
+        is_local  = <ls_local>-file
+        is_remote = <ls_remote>.
+
+    ri_page = lo_page.
+
+  ENDMETHOD.
+
+  METHOD abapgit_installation.
+
+    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
+    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
+
+    DATA lv_text            TYPE c LENGTH 100.
+    DATA lv_answer          TYPE c LENGTH 1.
+    DATA lo_repo            TYPE REF TO lcl_repo_online.
+    DATA lv_url             TYPE string.
+    DATA lv_target_package  TYPE devclass.
+
+    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
+           && |and plugins to { lc_package_plugins }|.
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Install abapGit'
+        text_question         = lv_text
+        text_button_1         = 'Continue'
+        text_button_2         = 'Cancel'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer ##no_text.
+    IF lv_answer <> '1'.
+      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    ENDIF.
+
+    DO 2 TIMES.
+      CASE sy-index.
+        WHEN 1.
+          lv_url            = 'https://github.com/larshp/abapGit.git'.
+          lv_target_package = lc_package_abapgit.
+        WHEN 2.
+          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
+          lv_target_package = lc_package_plugins.
+      ENDCASE.
+
+      IF abap_false = lcl_repo_srv=>is_repo_installed(
+          iv_url              = lv_url
+          iv_target_package   = lv_target_package ).
+
+        lcl_sap_package=>create_local( lv_target_package ).
+
+        lo_repo = lcl_repo_srv=>new_online(
+          iv_url         = lv_url
+          iv_branch_name = 'refs/heads/master'
+          iv_package     = lv_target_package ) ##NO_TEXT.
+
+        lo_repo->status( ). " check for errors
+        lo_repo->deserialize( ).
+      ENDIF.
+    ENDDO.
+
+    COMMIT WORK.
+
+  ENDMETHOD. "abapgit_installation
+
+  METHOD repo_clone.
+
+    DATA: lv_returncode  TYPE c,
+          lv_url         TYPE string,
+          lv_package     TYPE devclass,
+          lv_branch_name TYPE string,
+          lv_icon_ok     TYPE icon-name,
+          lv_icon_br     TYPE icon-name,
+          lv_icon_msg    TYPE icon-name,
+          lo_repo        TYPE REF TO lcl_repo_online,
+          lt_fields      TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL            DEF                 ATTR
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  ''                  ''.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' ''                  ''.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         'refs/heads/master' '05'.
+
+    lv_icon_ok  = icon_okay.
+    lv_icon_br  = icon_workflow_fork.
+    lv_icon_msg = icon_msg.
+
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+      EXPORTING
+        popup_title       = 'Clone'
+        programname       = sy-repid
+        formname          = 'BRANCH_POPUP'
+        ok_pushbuttontext = 'OK'
+        icon_ok_push      = lv_icon_ok
+        first_pushbutton  = 'Select branch'
+        icon_button_1     = lv_icon_br
+        second_pushbutton = 'Create package'
+        icon_button_2     = lv_icon_msg
+      IMPORTING
+        returncode        = lv_returncode
+      TABLES
+        fields            = lt_fields
+      EXCEPTIONS
+        error_in_fields   = 1
+        OTHERS            = 2.                              "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_url = <ls_field>-value.
+    lcl_url=>name( lv_url ).         " validate
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_branch_name = <ls_field>-value.
+
+    lo_repo = lcl_repo_srv=>new_online(
+      iv_url         = lv_url
+      iv_branch_name = lv_branch_name
+      iv_package     = lv_package ).
+    lo_repo->status( ). " check for errors
+    lo_repo->deserialize( ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_clone
+
+  METHOD repo_purge.
+
+    DATA: lt_tadir    TYPE lcl_tadir=>ty_tadir_tt,
+          lv_count    TYPE c LENGTH 3,
+          lv_answer   TYPE c LENGTH 1,
+          lo_repo     TYPE REF TO lcl_repo,
+          lv_package  TYPE devclass,
+          lv_question TYPE c LENGTH 100.
+
+
+    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lv_package = lo_repo->get_package( ).
+
+    lt_tadir = lcl_tadir=>read( lv_package ).
+
+    IF lines( lt_tadir ) > 0.
+      lv_count = lines( lt_tadir ).
+
+      CONCATENATE 'This will delete all objects in package' lv_package
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CONCATENATE lv_question '(' lv_count 'objects)'
+        INTO lv_question
+        SEPARATED BY space.                                 "#EC NOTEXT
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Uninstall'
+          text_question         = lv_question
+          text_button_1         = 'Delete'
+          icon_button_1         = 'ICON_DELETE'
+          text_button_2         = 'Cancel'
+          icon_button_2         = 'ICON_CANCEL'
+          default_button        = '2'
+          display_cancel_button = abap_false
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.                        "#EC NOTEXT
+      IF sy-subrc <> 0.
+        _raise 'error from POPUP_TO_CONFIRM'.
+      ENDIF.
+
+      IF lv_answer = '2'.
+        RETURN.
+      ENDIF.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+    lcl_repo_srv=>delete( lo_repo ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_purge
+
+  METHOD repo_remove.
+
+    DATA: lv_answer   TYPE c LENGTH 1,
+          lo_repo     TYPE REF TO lcl_repo,
+          lv_package  TYPE devclass,
+          lv_question TYPE c LENGTH 100.
+
+
+    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lv_package = lo_repo->get_package( ).
+
+    CONCATENATE 'This will remove the repository reference to the package'
+      lv_package
+      INTO lv_question
+      SEPARATED BY space.                                   "#EC NOTEXT
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Remove'
+        text_question         = lv_question
+        text_button_1         = 'Remove'
+        icon_button_1         = 'ICON_WF_UNLINK'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                          "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
+    ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    lcl_repo_srv=>delete( lo_repo ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_remove
+
+  METHOD repo_new_offline.
+
+    DATA: lv_returncode TYPE c,
+          lv_url        TYPE string,
+          lv_package    TYPE devclass,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL     DEF                 ATTR
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Name'    ''                  ''.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'New Offline Project'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_url = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    lv_package = <ls_field>-value.
+    TRANSLATE lv_package TO UPPER CASE.
+
+    lcl_repo_srv=>new_offline(
+      iv_url     = lv_url
+      iv_package = lv_package ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "repo_new_offline
+
+  METHOD repo_package_zip.
+
+    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo,
+          lv_returncode TYPE c,
+          lv_url        TYPE string,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL     DEF                 ATTR
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Export'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_GET_VALUES'.
+    ENDIF.
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+
+    ls_data-key             = 'DUMMY'.
+    ls_data-package         = <ls_field>-value.
+    ls_data-master_language = sy-langu.
+
+    CREATE OBJECT lo_repo
+      EXPORTING
+        is_data = ls_data.
+
+    lcl_zip=>export( lo_repo ).
+
+  ENDMETHOD.                    "repo_package_zip
+
+  METHOD repo_pull.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo->refresh( ).
+    lo_repo->deserialize( ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "pull
+
+  METHOD get_page_stage.
+
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+          lo_stage TYPE REF TO lcl_gui_page_stage.
+
+
+    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+
+    " force refresh on stage, to make sure the latest local and remote files are used
+    lo_repo->refresh( ).
+
+    CREATE OBJECT lo_stage
+      EXPORTING
+        io_repo = lo_repo.
+
+    ri_page = lo_stage.
+
+  ENDMETHOD.
+
+
+ENDCLASS.           " lcl_gui_router
+
 
 CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
@@ -23734,7 +23903,7 @@ AT SELECTION-SCREEN OUTPUT.
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF lcl_gui=>back( ) IS INITIAL.
+      IF lcl_gui=>get( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
