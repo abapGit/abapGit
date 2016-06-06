@@ -43,6 +43,7 @@ TYPES: BEGIN OF ty_file,
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_comment,
          username TYPE string,
@@ -68,7 +69,7 @@ TYPES: BEGIN OF ty_metadata,
        END OF ty_metadata.
 
 TYPES: BEGIN OF ty_web_asset,
-         url     TYPE char40,
+         url     TYPE w3url,
          content TYPE string,
        END OF ty_web_asset.
 TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
@@ -16119,20 +16120,20 @@ ENDCLASS.                    "lcl_porcelain DEFINITION
 INTERFACE lif_gui_page.
 
   METHODS on_event
-      IMPORTING iv_action       TYPE clike
-                iv_frame        TYPE clike
-                iv_getdata      TYPE clike
-                it_postdata     TYPE cnht_post_data_tab
-                it_query_table  TYPE cnht_query_table
-      RETURNING VALUE(rv_state) TYPE i
+      IMPORTING iv_action        TYPE clike
+                iv_frame         TYPE clike
+                iv_getdata       TYPE clike
+                it_postdata      TYPE cnht_post_data_tab
+                it_query_table   TYPE cnht_query_table
+      RETURNING VALUE(rv_state)  TYPE i
       RAISING   lcx_exception.
 
   METHODS render
-      RETURNING VALUE(ro_html)  TYPE REF TO lcl_html_helper
+      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
   METHODS get_assets
-      EXPORTING et_assets       TYPE tt_web_assets.
+      RETURNING VALUE(rt_assets) TYPE tt_web_assets.
 
 ENDINTERFACE.
 
@@ -16310,7 +16311,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
     DATA: mi_cur_page       TYPE REF TO lif_gui_page,
           mt_stack          TYPE TABLE OF REF TO lif_gui_page,
-          mt_assets         TYPE char40_t,
+          mt_assets         TYPE tt_w3urls,
           mo_router         TYPE REF TO lcl_gui_router,
           mo_user           TYPE REF TO lcl_persistence_user,
           mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
@@ -16322,7 +16323,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
       RAISING lcx_exception.
 
     METHODS cache_image
-      IMPORTING iv_url    TYPE char40
+      IMPORTING iv_url    TYPE w3url
                 iv_base64 TYPE string.
 
     METHODS show_url
@@ -18570,16 +18571,6 @@ CLASS lcl_gui IMPLEMENTATION.
     DATA: lv_index TYPE i,
           lv_url   TYPE c LENGTH 100.
 
-
-    " workaround for explore page
-    "TODO fix bug with redirected pages -> should also remove it from stack
-    mo_html_viewer->get_current_url( IMPORTING url = lv_url ).
-    cl_gui_cfw=>flush( ).
-    IF lv_url CP 'http*'.
-      mo_html_viewer->go_back( ).
-      RETURN.
-    ENDIF.
-
     lv_index = lines( mt_stack ).
 
     IF lv_index = 0.
@@ -18606,7 +18597,7 @@ CLASS lcl_gui IMPLEMENTATION.
       APPEND mi_cur_page TO mt_stack.
     ENDIF.
 
-    ii_page->get_assets( IMPORTING et_assets = lt_assets ).
+    lt_assets = ii_page->get_assets( ).
     IF lines( lt_assets ) > 0.
       LOOP AT lt_assets ASSIGNING <ls_asset>.
         READ TABLE mt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
@@ -18975,8 +18966,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     DATA ls_image TYPE ty_web_asset.
 
-    CLEAR et_assets.
-
     ls_image-url     = 'img/logo'.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
@@ -19058,7 +19047,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
       && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
       && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
       && 'cpUAAAAASUVORK5CYII='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
   ENDMETHOD.                    "lif_gui_page~get_assets
 
@@ -20697,7 +20686,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA ls_image TYPE ty_web_asset.
 
-    super->lif_gui_page~get_assets( IMPORTING et_assets = et_assets ).
+    rt_assets = super->lif_gui_page~get_assets( ).
 
     ls_image-url     = 'img/toc'.
     ls_image-content =
@@ -20705,7 +20694,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
       && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
       && 'AABJRU5ErkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/repo_online'.
     ls_image-content =
@@ -20718,7 +20707,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && '/R/NZWmt/LA3f1RcoaB50SydCbn20wjedkPu3sKSpMGH21PhLdZ0BATZ+cCXtxtDHGLV'
       && 'pgFW9QqJj2U0wvJvMF+5jiNGI3HK9dMQSouH6sRoFGoWd8l1dEDRWlWPQsFS98KPvvDH'
       && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/repo_offline'.
     ls_image-content =
@@ -20731,7 +20720,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'LGBFBEHQg7YNbAnCZ5xJWZbnRVFsuw7GM4P8hhXkPLgh0batqKqKFmM8O3FbeAanIOAM'
       && 'cJFQWNoBLpAv/e6D4PKEK3UCh+DiN9/sgG8lbhSWCNyDJ2U3MDSOwQa7cfc828rKQIF9'
       && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/pkg'.
     ls_image-content =
@@ -20741,7 +20730,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
       && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
       && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/branch'.
     ls_image-content =
@@ -20754,7 +20743,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
       && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
       && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/link'.
     ls_image-content =
@@ -20764,7 +20753,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
       && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
       && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/code'.
     ls_image-content =
@@ -20772,7 +20761,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
       && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
       && 'rkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/bin'.
     ls_image-content =
@@ -20780,7 +20769,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
       && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
       && 'RotPsQAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/obj'.
     ls_image-content =
@@ -20788,7 +20777,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
       && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
       && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO et_assets.
+    APPEND ls_image TO rt_assets.
 
   ENDMETHOD.
 
