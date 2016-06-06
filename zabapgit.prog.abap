@@ -20830,9 +20830,10 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lo_per  TYPE REF TO lcl_persistence_background,
-          lo_repo TYPE REF TO lcl_repo_online,
-          lt_list TYPE lcl_persistence_background=>tt_background.
+    DATA: lo_per       TYPE REF TO lcl_persistence_background,
+          lo_repo      TYPE REF TO lcl_repo_online,
+          lt_list      TYPE lcl_persistence_background=>tt_background,
+          lv_repo_name TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -20844,7 +20845,6 @@ CLASS lcl_background IMPLEMENTATION.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
-      DATA lv_repo_name TYPE string.
       lv_repo_name = lo_repo->get_name( ).
       WRITE: / <ls_list>-method, lv_repo_name.
 
