@@ -16328,6 +16328,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_getdata     TYPE clike
       RAISING   lcx_exception.
 
+    METHODS db_save
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -23005,7 +23009,6 @@ ENDCLASS.
 CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
     METHODS: constructor
@@ -23014,10 +23017,6 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
-    METHODS: save
-      IMPORTING it_postdata TYPE cnht_post_data_tab
-      RAISING   lcx_exception.
-
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit IMPLEMENTATION.
@@ -23025,53 +23024,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
-  ENDMETHOD.
-
-  METHOD save.
-
-    DATA: lv_string  TYPE string,
-          ls_content TYPE lcl_persistence_db=>ty_content,
-          lo_db      TYPE REF TO lcl_persistence_db,
-          lt_fields  TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-type = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-value = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-data_str = <ls_field>-value+1. " hmm
-
-    CREATE OBJECT lo_db.
-
-    lo_db->update(
-      iv_type  = ls_content-type
-      iv_value = ls_content-value
-      iv_data  = ls_content-data_str ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'post'.
-        save( it_postdata ).
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
   ENDMETHOD.
 
   METHOD lif_gui_page~render.
@@ -23112,7 +23064,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( '<b>Value:</b><br>' ).
     ro_html->add( ms_key-value && '<br><br>' ).
     ro_html->add( '<b>Data:</b><br>' ).
-    ro_html->add( '<form method="post" action="sapevent:post">' ).
+    ro_html->add( '<form method="post" action="sapevent:db_save">' ).
     ro_html->add( '<input type="hidden" name="type" value="' && ms_key-type && '">' ).
     ro_html->add( '<input type="hidden" name="value" value="' && ms_key-value && '">' ).
     ro_html->add( '<textarea rows="20" cols="100" name="xmldata">' ).
@@ -23231,6 +23183,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'db_delete'.
         db_delete( iv_getdata = iv_getdata ).
         ev_state = gc_event_state-re_render.
+      WHEN 'db_save'.
+        db_save( it_postdata ).
+        ev_state = gc_event_state-go_back.
 
       " Repository state actions
       WHEN 'install'.
@@ -23764,6 +23719,43 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lo_db->delete( iv_type  = ls_key-type
                    iv_value = ls_key-value ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
+
+  METHOD db_save.
+
+    DATA: lv_string  TYPE string,
+          ls_content TYPE lcl_persistence_db=>ty_content,
+          lo_db      TYPE REF TO lcl_persistence_db,
+          lt_fields  TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    ls_content-type = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    ls_content-value = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    ls_content-data_str = <ls_field>-value+1. " hmm
+
+    CREATE OBJECT lo_db.
+
+    lo_db->update(
+      iv_type  = ls_content-type
+      iv_value = ls_content-value
+      iv_data  = ls_content-data_str ).
 
     COMMIT WORK.
 
