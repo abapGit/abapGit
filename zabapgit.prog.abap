@@ -22963,6 +22963,9 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_supe
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_db_display IMPLEMENTATION.
@@ -22977,9 +22980,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
           lo_db   TYPE REF TO lcl_persistence_db.
 
-
-    CREATE OBJECT ro_html.
-
     CREATE OBJECT lo_db.
     TRY.
         lv_data = lo_db->read(
@@ -22993,21 +22993,51 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_page_title = 'CONFIG' ) ).
+    CREATE OBJECT ro_html.
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'CONFIG DISPLAY' ) ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<b>Type:</b><br>' ).
-    ro_html->add( ms_key-type && '<br><br>' ).
-    ro_html->add( '<b>Value:</b><br>' ).
-    ro_html->add( ms_key-value && '<br><br>' ).
-    ro_html->add( '<b>Data:</b><br>' ).
-    ro_html->add( '<pre>' && lv_data && '</pre><br>' ).
+    ro_html->add( '<div class="db_entry">' ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
+                  |  <td>{ ms_key-type }</td></tr></table>| ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
+                  |  <td>{ ms_key-value }</td></tr></table>| ).
+    ro_html->add( |<pre>{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRY DISPLAY */').
+    ro_html->add('div.db_entry {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+
+    ro_html->add('div.db_entry pre { ').
+    ro_html->add('  display: block; ').
+    ro_html->add('  overflow: hidden; ').
+    ro_html->add('  word-wrap:break-word; ').
+    ro_html->add('  white-space: pre-wrap; ').
+    ro_html->add('  background-color: #eaeaea;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('  width: 50em; ').
+    ro_html->add('}').
+
+    ro_html->add('table.tag {').
+    ro_html->add('  display: inline-block;').
+    ro_html->add('  border: 1px #b3c1cc solid;').
+    ro_html->add('  background-color: #eee;').
+    ro_html->add('  margin-right: 0.5em; ').
+    ro_html->add('}').
+    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
+    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+
+  ENDMETHOD.            "styles
 
 ENDCLASS.
 
@@ -23021,6 +23051,9 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
+
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -23037,7 +23070,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
           lo_db   TYPE REF TO lcl_persistence_db.
 
 
-    CREATE OBJECT ro_html.
 
     CREATE OBJECT lo_db.
     TRY.
@@ -23056,29 +23088,56 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( header( ) ).
+    CREATE OBJECT ro_html.
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'CONFIG EDIT' ) ).
 
     "TODO refactor
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Edit</h1>' ).
-    ro_html->add( '</div>' ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<b>Type:</b><br>' ).
-    ro_html->add( ms_key-type && '<br><br>' ).
-    ro_html->add( '<b>Value:</b><br>' ).
-    ro_html->add( ms_key-value && '<br><br>' ).
-    ro_html->add( '<b>Data:</b><br>' ).
+    ro_html->add( '<div class="db_entry">' ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
+                  |  <td>{ ms_key-type }</td></tr></table>| ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
+                  |  <td>{ ms_key-value }</td></tr></table>| ).
+
     ro_html->add( '<form method="post" action="sapevent:db_save">' ).
-    ro_html->add( '<input type="hidden" name="type" value="' && ms_key-type && '">' ).
-    ro_html->add( '<input type="hidden" name="value" value="' && ms_key-value && '">' ).
+    ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
+    ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( '<textarea rows="20" cols="100" name="xmldata">' ).
     ro_html->add( lv_data ).
-    ro_html->add( '</textarea><br><input type="submit" value="Update"></form>' ).
+    ro_html->add( '</textarea>' ).
+    ro_html->add( '<input class="cmd" type="submit" value="Update">' ).
+    ro_html->add( '</form>' ).
+
     ro_html->add( '</div>' ).
+
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRY DISPLAY */').
+    ro_html->add('div.db_entry {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('div.db_entry textarea { margin: 0.5em 0em; }').
+    ro_html->add('div.db_entry input.cmd { ').
+    ro_html->add('  display: block;').
+    ro_html->add('  color: #4078c0;').
+    ro_html->add('}').
+    ro_html->add('table.tag {').
+    ro_html->add('  display: inline-block;').
+    ro_html->add('  border: 1px #b3c1cc solid;').
+    ro_html->add('  background-color: #eee;').
+    ro_html->add('  margin-right: 0.5em; ').
+    ro_html->add('}').
+    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
+    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+
+  ENDMETHOD.            "styles
 
 ENDCLASS.
 
@@ -23089,6 +23148,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
           lv_escaped TYPE string,
           lv_action  TYPE string,
+          lv_trclass TYPE string,
           lo_db      TYPE REF TO lcl_persistence_db,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
 
@@ -23116,6 +23176,11 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     " Lines
     LOOP AT lt_data ASSIGNING <ls_data>.
+      CLEAR lv_trclass.
+      IF sy-tabix = 1.
+        lv_trclass = ' class="firstrow"'.
+      ENDIF.
+
       lv_escaped = escape( val    = <ls_data>-data_str(250)
                            format = cl_abap_format=>e_html_attr ).
 
@@ -23126,7 +23191,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Edit'    iv_cmd = |sapevent:db_edit?{ lv_action }| ).
       lo_toolbar->add( iv_txt = 'Delete'  iv_cmd = |sapevent:db_delete?{ lv_action }| ).
 
-      ro_html->add( '<tr>' ).
+      ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
       ro_html->add( |<td><pre>{ lv_escaped }</pre></td>| ).
@@ -23157,8 +23222,8 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add('  word-wrap:break-word; ').
     ro_html->add('  white-space: pre-wrap; ').
     ro_html->add('  background-color: #eaeaea;').
-*    ro_html->add('  padding: 2px;').
-    ro_html->add('  width: 60em; ').
+    ro_html->add('  padding: 3px;').
+    ro_html->add('  width: 50em; ').
     ro_html->add('}').
     ro_html->add('table.db_tab tr.firstrow td { padding-top: 0.5em; } ').
     ro_html->add('table.db_tab th {').
