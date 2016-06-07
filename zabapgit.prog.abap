@@ -13163,6 +13163,15 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
                 es_file   TYPE ty_repo_file
       RAISING   lcx_exception.
+
+    CLASS-METHODS dbkey_encode
+        IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
+        RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS dbkey_decode
+        IMPORTING iv_string     TYPE clike
+        RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
 *----------------------------------------------------------------------*
@@ -13263,6 +13272,45 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "file_decode
+
+  METHOD dbkey_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name = 'TYPE'.
+    ls_field-value = is_key-type.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'VALUE'.
+    ls_field-value = is_key-value.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "dbkey_encode
+
+  METHOD dbkey_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
+    IF sy-subrc = 0.
+      rs_key-type = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'VALUE'.
+    IF sy-subrc = 0.
+      rs_key-value = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.                    "dbkey_decode
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
 
@@ -16245,6 +16293,12 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_db_by_name
+      IMPORTING iv_name        TYPE clike
+                iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS abapgit_installation
       RAISING lcx_exception.
 
@@ -16268,6 +16322,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS db_delete
+      IMPORTING iv_getdata     TYPE clike
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -20152,23 +20210,7 @@ ENDCLASS.
 CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
-
-  PRIVATE SECTION.
-    METHODS:
-      delete
-        IMPORTING is_key TYPE lcl_persistence_db=>ty_content
-        RAISING   lcx_exception,
-      delete_popup
-        RETURNING VALUE(rv_continue) TYPE abap_bool
-        RAISING   lcx_exception,
-      key_encode
-        IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
-        RETURNING VALUE(rv_string) TYPE string,
-      key_decode
-        IMPORTING iv_string     TYPE clike
-        RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
 
 ENDCLASS.
 
@@ -23085,128 +23127,6 @@ ENDCLASS.
 
 CLASS lcl_gui_page_db IMPLEMENTATION.
 
-  METHOD delete.
-
-    DATA: lo_db       TYPE REF TO lcl_persistence_db,
-          lv_continue TYPE abap_bool.
-
-
-    lv_continue = delete_popup( ).
-    IF lv_continue = abap_false.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_db.
-
-    lo_db->delete( iv_type  = is_key-type
-                   iv_value = is_key-value ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD delete_popup.
-
-    DATA: lv_answer TYPE c LENGTH 1.
-
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Warning'
-        text_question         = 'Delete?'
-        text_button_1         = 'Ok'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                        "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
-    ENDIF.
-
-    IF lv_answer <> '2'.
-      rv_continue = abap_true.
-    ELSE.
-      rv_continue = abap_false.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD key_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-
-    ls_field-name = 'TYPE'.
-    ls_field-value = is_key-type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'VALUE'.
-    ls_field-value = is_key-value.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-  METHOD key_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      rs_key-type = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'VALUE'.
-    IF sy-subrc = 0.
-      rs_key-value = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    DATA: lo_display TYPE REF TO lcl_gui_page_db_display,
-          lo_edit    TYPE REF TO lcl_gui_page_db_edit,
-          ls_key     TYPE lcl_persistence_db=>ty_content.
-
-
-    ls_key = key_decode( iv_getdata ).
-
-    CASE iv_action.
-      WHEN 'display'.
-        CREATE OBJECT lo_display
-          EXPORTING
-            is_key = ls_key.
-        lcl_gui=>get( )->call_page( lo_display ).
-        rv_state = gc_event_state-no_more_act.
-      WHEN 'edit'.
-        CREATE OBJECT lo_edit
-          EXPORTING
-            is_key = ls_key.
-        lcl_gui=>get( )->call_page( lo_edit ).
-        rv_state = gc_event_state-no_more_act.
-      WHEN 'delete'.
-        delete( ls_key ).
-        rv_state = gc_event_state-re_render.
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD lif_gui_page~render.
 
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
@@ -23237,16 +23157,16 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       lv_escaped = escape( val    = <ls_data>-data_str(150)
                            format = cl_abap_format=>e_html_attr ).
 
-      lv_encode = key_encode( <ls_data> ).
+      lv_encode = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
       ro_html->add( '<tr>' ).
       ro_html->add( '<td valign="top">' && <ls_data>-type && '</td>' ).
       ro_html->add( '<td valign="top">' && <ls_data>-value && '</td>' ).
       ro_html->add( '<td><pre>' && lv_escaped && '</pre>' ).
       ro_html->add( '<br><br>' ).
-      ro_html->add( '<a href="sapevent:display?' && lv_encode && '">Display</a>' ).
-      ro_html->add( '<a href="sapevent:edit?' && lv_encode && '">Edit</a>' ).
-      ro_html->add( '<a href="sapevent:delete?' && lv_encode && '">Delete</a></td>' ).
+      ro_html->add( '<a href="sapevent:db_display?' && lv_encode && '">Display</a>' ).
+      ro_html->add( '<a href="sapevent:db_edit?' && lv_encode && '">Edit</a>' ).
+      ro_html->add( '<a href="sapevent:db_delete?' && lv_encode && '">Delete</a></td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
 
@@ -23303,6 +23223,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'diff'.
         eo_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
+
+      " DB actions
+      WHEN 'db_display' or 'db_edit'.
+        eo_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'db_delete'.
+        db_delete( iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-re_render.
 
       " Repository state actions
       WHEN 'install'.
@@ -23374,7 +23302,28 @@ CLASS lcl_gui_router IMPLEMENTATION.
         _raise lv_message.
     ENDTRY.
 
-  ENDMETHOD.        " get_home_page
+  ENDMETHOD.        " get_page_by_name
+
+  METHOD get_page_db_by_name.
+
+    DATA: lv_page_class TYPE string,
+          lv_message    TYPE string,
+          ls_key        TYPE lcl_persistence_db=>ty_content.
+
+    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
+    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+
+    TRY.
+        CREATE OBJECT ri_page TYPE (lv_page_class)
+          EXPORTING
+            is_key = ls_key.
+
+      CATCH cx_sy_create_object_error.
+        lv_message = |Cannot create page class { lv_page_class }|.
+        _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.        " get_page_db_by_name
 
   METHOD get_page_diff.
 
@@ -23780,6 +23729,45 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD db_delete.
+
+    DATA: lo_db       TYPE REF TO lcl_persistence_db,
+          lv_answer   TYPE c LENGTH 1,
+          ls_key      TYPE lcl_persistence_db=>ty_content.
+
+    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Warning'
+        text_question         = 'Delete?'
+        text_button_1         = 'Ok'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                        "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
+    ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_db.
+
+    lo_db->delete( iv_type  = ls_key-type
+                   iv_value = ls_key-value ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
 
 ENDCLASS.           " lcl_gui_router
 
