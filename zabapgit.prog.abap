@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.3'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.4'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -23491,7 +23491,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
     "               TAB           FLD       LABEL            DEF                 ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  ''                  ''.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url              ''.
     _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' ''                  ''.
     _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         'refs/heads/master' '05'.
 
