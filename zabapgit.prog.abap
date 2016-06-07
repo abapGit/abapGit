@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.4'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.5'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -20024,6 +20024,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         rv_state = gc_event_state-re_render.
       WHEN 'all'.
         all( ).
+        rv_state = gc_event_state-no_more_act.
       WHEN 'reset'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->reset( ls_file ).
