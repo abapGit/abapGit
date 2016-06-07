@@ -18964,6 +18964,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('.dropdown_content {').
     ro_html->add('    display: none;').
+    ro_html->add('    z-index: 1;').
     ro_html->add('    position: absolute;').
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
@@ -20215,6 +20216,10 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
     METHODS lif_gui_page~render   REDEFINITION.
+
+  PRIVATE SECTION.
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -23083,8 +23088,9 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
           lv_escaped TYPE string,
-          lv_encode  TYPE string,
-          lo_db      TYPE REF TO lcl_persistence_db.
+          lv_action  TYPE string,
+          lo_db      TYPE REF TO lcl_persistence_db,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
@@ -23094,31 +23100,39 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
+    ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<table>' ).
+    ro_html->add( '<div class="db_list">' ).
+    ro_html->add( '<table width="100%" class="db_tab">' ).
+
+    " Header
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td><b>Type</b></td>' ).
-    ro_html->add( '<td><b>Value</b></td>' ).
-    ro_html->add( '<td><b>Data</b></td>' ).
+    ro_html->add( '<th>Type</th>' ).
+    ro_html->add( '<th>Value</th>' ).
+    ro_html->add( '<th>Data</th>' ).
+    ro_html->add( '<th></th>' ).
     ro_html->add( '</tr>' ).
 
+    " Lines
     LOOP AT lt_data ASSIGNING <ls_data>.
-      lv_escaped = escape( val    = <ls_data>-data_str(150)
+      lv_escaped = escape( val    = <ls_data>-data_str(250)
                            format = cl_abap_format=>e_html_attr ).
 
-      lv_encode = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
+      lv_action = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
+
+      CREATE OBJECT lo_toolbar.
+      lo_toolbar->add( iv_txt = 'Display' iv_cmd = |sapevent:db_display?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_cmd = |sapevent:db_edit?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_cmd = |sapevent:db_delete?{ lv_action }| ).
 
       ro_html->add( '<tr>' ).
-      ro_html->add( '<td valign="top">' && <ls_data>-type && '</td>' ).
-      ro_html->add( '<td valign="top">' && <ls_data>-value && '</td>' ).
-      ro_html->add( '<td><pre>' && lv_escaped && '</pre>' ).
-      ro_html->add( '<br><br>' ).
-      ro_html->add( '<a href="sapevent:db_display?' && lv_encode && '">Display</a>' ).
-      ro_html->add( '<a href="sapevent:db_edit?' && lv_encode && '">Edit</a>' ).
-      ro_html->add( '<a href="sapevent:db_delete?' && lv_encode && '">Delete</a></td>' ).
+      ro_html->add( |<td>{ <ls_data>-type }</td>| ).
+      ro_html->add( |<td>{ <ls_data>-value }</td>| ).
+      ro_html->add( |<td><pre>{ lv_escaped }</pre></td>| ).
+      ro_html->add( '<td>' ).
+      ro_html->add( lo_toolbar->render( iv_as_droplist_with_label = 'action' ) ).
+      ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
 
@@ -23127,7 +23141,39 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.            "lif_gui_page~render
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRIES */').
+    ro_html->add('div.db_list {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('table.db_tab pre { ').
+    ro_html->add('  display: block; ').
+    ro_html->add('  overflow: hidden; ').
+    ro_html->add('  word-wrap:break-word; ').
+    ro_html->add('  white-space: pre-wrap; ').
+    ro_html->add('  background-color: #eaeaea;').
+*    ro_html->add('  padding: 2px;').
+    ro_html->add('  width: 60em; ').
+    ro_html->add('}').
+    ro_html->add('table.db_tab tr.firstrow td { padding-top: 0.5em; } ').
+    ro_html->add('table.db_tab th {').
+    ro_html->add('  text-align: left;').
+    ro_html->add('  color: #888;').
+    ro_html->add('  padding: 0.2em;').
+    ro_html->add('  border-bottom: 1px #ddd solid;').
+    ro_html->add('}').
+    ro_html->add('table.db_tab td {').
+    ro_html->add('  color: #333;').
+    ro_html->add('  padding: 0.2em;').
+    ro_html->add('  vertical-align: top;').
+    ro_html->add('}').
+
+  ENDMETHOD.            "styles
 
 ENDCLASS.
 
