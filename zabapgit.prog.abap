@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.2'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.3'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -20200,7 +20200,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_toolbar->add( iv_txt = 'Explore'          iv_cmd = 'sapevent:explore' ).
     lo_toolbar->add( iv_txt = 'New offline repo' iv_cmd = 'sapevent:newoffline' ).
     IF needs_installation( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Get Abapgit'    iv_cmd = 'sapevent:abapgit_installation' ).
+      lo_toolbar->add( iv_txt = 'Get abapGit'    iv_cmd = 'sapevent:abapgit_installation' ).
     ENDIF.
     lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
