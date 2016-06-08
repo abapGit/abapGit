@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.7'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.8'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13562,6 +13562,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS
       path_to_package
         IMPORTING iv_top            TYPE devclass
+                  iv_start          TYPE string
                   iv_path           TYPE string
         RETURNING VALUE(rv_package) TYPE devclass
         RAISING   lcx_exception.
@@ -14435,10 +14436,14 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD path_to_package.
 
-    DATA: lv_length TYPE i.
+    DATA: lv_length TYPE i,
+          lv_path   TYPE string.
 
 
-    CONCATENATE iv_top iv_path INTO rv_package.
+    lv_length = strlen( iv_start ) - 1.
+    lv_path = iv_path+lv_length.
+
+    CONCATENATE iv_top lv_path INTO rv_package.
 
     TRANSLATE rv_package USING '/_'.
 
@@ -14780,8 +14785,10 @@ CLASS lcl_objects IMPLEMENTATION.
 
       li_obj->mo_files = lo_files.
 
-      lv_package = path_to_package( iv_top  = io_repo->get_package( )
-                                    iv_path = <ls_result>-path ).
+      lv_package = path_to_package(
+        iv_top   = io_repo->get_package( )
+        iv_start = io_repo->get_dot_abapgit( )->get_starting_folder( )
+        iv_path  = <ls_result>-path ).
 
       IF li_obj->get_metadata( )-late_deser = abap_true.
         APPEND INITIAL LINE TO lt_late ASSIGNING <ls_late>.
