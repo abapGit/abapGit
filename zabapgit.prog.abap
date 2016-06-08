@@ -22232,15 +22232,24 @@ CLASS lcl_persistence_user IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_xml.
+
+* fix downward compatibility
+    REPLACE ALL OCCURRENCES OF '<_--28C_TYPE_USER_--29>' IN lv_xml WITH '<USER>'.
+    REPLACE ALL OCCURRENCES OF '</_--28C_TYPE_USER_--29>' IN lv_xml WITH '</USER>'.
+
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_xml
-      RESULT (c_type_user) = rs_user ##NO_TEXT.
+      SOURCE XML lv_xml
+      RESULT user = rs_user ##NO_TEXT.
   ENDMETHOD.
 
   METHOD to_xml.
     CALL TRANSFORMATION id
-      SOURCE (c_type_user) = is_user
+      SOURCE user = is_user
       RESULT XML rv_xml.
   ENDMETHOD.
 
@@ -22609,10 +22618,19 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_repo_xml_string.
+
+* fix downward compatibility
+    REPLACE ALL OCCURRENCES OF '<_--28C_TYPE_REPO_--29>' IN lv_xml WITH '<REPO>'.
+    REPLACE ALL OCCURRENCES OF '</_--28C_TYPE_REPO_--29>' IN lv_xml WITH '</REPO>'.
+
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_repo_xml_string
-      RESULT (c_type_repo) = rs_repo ##NO_TEXT.
+      SOURCE XML lv_xml
+      RESULT repo = rs_repo ##NO_TEXT.
 
     IF rs_repo IS INITIAL.
       _raise 'Inconsistent repo metadata'.
@@ -22632,7 +22650,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     MOVE-CORRESPONDING is_repo TO ls_xml.
 
     CALL TRANSFORMATION id
-      SOURCE (c_type_repo) = ls_xml
+      SOURCE repo = ls_xml
       RESULT XML rv_repo_xml_string.
   ENDMETHOD.
 
