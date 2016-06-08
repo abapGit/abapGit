@@ -13163,6 +13163,15 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
                 es_file   TYPE ty_repo_file
       RAISING   lcx_exception.
+
+    CLASS-METHODS dbkey_encode
+        IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
+        RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS dbkey_decode
+        IMPORTING iv_string     TYPE clike
+        RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
 *----------------------------------------------------------------------*
@@ -13263,6 +13272,45 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "file_decode
+
+  METHOD dbkey_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name = 'TYPE'.
+    ls_field-value = is_key-type.
+    APPEND ls_field TO lt_fields.
+
+    ls_field-name = 'VALUE'.
+    ls_field-value = is_key-value.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "dbkey_encode
+
+  METHOD dbkey_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
+    IF sy-subrc = 0.
+      rs_key-type = <ls_field>-value.
+    ENDIF.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'VALUE'.
+    IF sy-subrc = 0.
+      rs_key-value = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.                    "dbkey_decode
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
 
@@ -16245,6 +16293,12 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_db_by_name
+      IMPORTING iv_name        TYPE clike
+                iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS abapgit_installation
       RAISING lcx_exception.
 
@@ -16268,6 +16322,14 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS db_delete
+      IMPORTING iv_getdata     TYPE clike
+      RAISING   lcx_exception.
+
+    METHODS db_save
+      IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -18902,6 +18964,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('.dropdown_content {').
     ro_html->add('    display: none;').
+    ro_html->add('    z-index: 1;').
     ro_html->add('    position: absolute;').
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
@@ -20152,23 +20215,11 @@ ENDCLASS.
 CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
-    METHODS:
-      delete
-        IMPORTING is_key TYPE lcl_persistence_db=>ty_content
-        RAISING   lcx_exception,
-      delete_popup
-        RETURNING VALUE(rv_continue) TYPE abap_bool
-        RAISING   lcx_exception,
-      key_encode
-        IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
-        RETURNING VALUE(rv_string) TYPE string,
-      key_decode
-        IMPORTING iv_string     TYPE clike
-        RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -22912,6 +22963,9 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_supe
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_db_display IMPLEMENTATION.
@@ -22926,9 +22980,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
           lo_db   TYPE REF TO lcl_persistence_db.
 
-
-    CREATE OBJECT ro_html.
-
     CREATE OBJECT lo_db.
     TRY.
         lv_data = lo_db->read(
@@ -22942,28 +22993,57 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_page_title = 'CONFIG' ) ).
+    CREATE OBJECT ro_html.
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'CONFIG DISPLAY' ) ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<b>Type:</b><br>' ).
-    ro_html->add( ms_key-type && '<br><br>' ).
-    ro_html->add( '<b>Value:</b><br>' ).
-    ro_html->add( ms_key-value && '<br><br>' ).
-    ro_html->add( '<b>Data:</b><br>' ).
-    ro_html->add( '<pre>' && lv_data && '</pre><br>' ).
+    ro_html->add( '<div class="db_entry">' ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
+                  |  <td>{ ms_key-type }</td></tr></table>| ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
+                  |  <td>{ ms_key-value }</td></tr></table>| ).
+    ro_html->add( |<pre>{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
 
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRY DISPLAY */').
+    ro_html->add('div.db_entry {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+
+    ro_html->add('div.db_entry pre { ').
+    ro_html->add('  display: block; ').
+    ro_html->add('  overflow: hidden; ').
+    ro_html->add('  word-wrap:break-word; ').
+    ro_html->add('  white-space: pre-wrap; ').
+    ro_html->add('  background-color: #eaeaea;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('  width: 50em; ').
+    ro_html->add('}').
+
+    ro_html->add('table.tag {').
+    ro_html->add('  display: inline-block;').
+    ro_html->add('  border: 1px #b3c1cc solid;').
+    ro_html->add('  background-color: #eee;').
+    ro_html->add('  margin-right: 0.5em; ').
+    ro_html->add('}').
+    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
+    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+
+  ENDMETHOD.            "styles
+
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
     METHODS: constructor
@@ -22972,9 +23052,8 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
-    METHODS: save
-      IMPORTING it_postdata TYPE cnht_post_data_tab
-      RAISING   lcx_exception.
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -22985,60 +23064,12 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ms_key = is_key.
   ENDMETHOD.
 
-  METHOD save.
-
-    DATA: lv_string  TYPE string,
-          ls_content TYPE lcl_persistence_db=>ty_content,
-          lo_db      TYPE REF TO lcl_persistence_db,
-          lt_fields  TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-type = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-value = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-data_str = <ls_field>-value+1. " hmm
-
-    CREATE OBJECT lo_db.
-
-    lo_db->update(
-      iv_type  = ls_content-type
-      iv_value = ls_content-value
-      iv_data  = ls_content-data_str ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'post'.
-        save( it_postdata ).
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD lif_gui_page~render.
 
     DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
           lo_db   TYPE REF TO lcl_persistence_db.
 
 
-    CREATE OBJECT ro_html.
 
     CREATE OBJECT lo_db.
     TRY.
@@ -23057,162 +23088,68 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     lv_data = escape( val    = lv_data
                       format = cl_abap_format=>e_html_attr ).
 
-    ro_html->add( header( ) ).
+    CREATE OBJECT ro_html.
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'CONFIG EDIT' ) ).
 
     "TODO refactor
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Edit</h1>' ).
+
+    ro_html->add( '<div class="db_entry">' ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
+                  |  <td>{ ms_key-type }</td></tr></table>| ).
+    ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
+                  |  <td>{ ms_key-value }</td></tr></table>| ).
+
+    ro_html->add( '<form method="post" action="sapevent:db_save">' ).
+    ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
+    ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
+    ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
+                     }</textarea>| ).
+    ro_html->add( '<input class="cmd" type="submit" value="Update">' ).
+    ro_html->add( '</form>' ).
+
     ro_html->add( '</div>' ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<b>Type:</b><br>' ).
-    ro_html->add( ms_key-type && '<br><br>' ).
-    ro_html->add( '<b>Value:</b><br>' ).
-    ro_html->add( ms_key-value && '<br><br>' ).
-    ro_html->add( '<b>Data:</b><br>' ).
-    ro_html->add( '<form method="post" action="sapevent:post">' ).
-    ro_html->add( '<input type="hidden" name="type" value="' && ms_key-type && '">' ).
-    ro_html->add( '<input type="hidden" name="value" value="' && ms_key-value && '">' ).
-    ro_html->add( '<textarea rows="20" cols="100" name="xmldata">' ).
-    ro_html->add( lv_data ).
-    ro_html->add( '</textarea><br><input type="submit" value="Update"></form>' ).
-    ro_html->add( '</div>' ).
     ro_html->add( footer( ) ).
 
   ENDMETHOD.
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRY DISPLAY */').
+    ro_html->add('div.db_entry {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('div.db_entry textarea { margin: 0.5em 0em; }').
+    ro_html->add('div.db_entry input.cmd { ').
+    ro_html->add('  display: block;').
+    ro_html->add('  color: #4078c0;').
+    ro_html->add('}').
+    ro_html->add('table.tag {').
+    ro_html->add('  display: inline-block;').
+    ro_html->add('  border: 1px #b3c1cc solid;').
+    ro_html->add('  background-color: #eee;').
+    ro_html->add('  margin-right: 0.5em; ').
+    ro_html->add('}').
+    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
+    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+
+  ENDMETHOD.            "styles
 
 ENDCLASS.
 
 CLASS lcl_gui_page_db IMPLEMENTATION.
 
-  METHOD delete.
-
-    DATA: lo_db       TYPE REF TO lcl_persistence_db,
-          lv_continue TYPE abap_bool.
-
-
-    lv_continue = delete_popup( ).
-    IF lv_continue = abap_false.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_db.
-
-    lo_db->delete( iv_type  = is_key-type
-                   iv_value = is_key-value ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD delete_popup.
-
-    DATA: lv_answer TYPE c LENGTH 1.
-
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Warning'
-        text_question         = 'Delete?'
-        text_button_1         = 'Ok'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                        "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
-    ENDIF.
-
-    IF lv_answer <> '2'.
-      rv_continue = abap_true.
-    ELSE.
-      rv_continue = abap_false.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD key_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-
-    ls_field-name = 'TYPE'.
-    ls_field-value = is_key-type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'VALUE'.
-    ls_field-value = is_key-value.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-  METHOD key_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      rs_key-type = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'VALUE'.
-    IF sy-subrc = 0.
-      rs_key-value = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    DATA: lo_display TYPE REF TO lcl_gui_page_db_display,
-          lo_edit    TYPE REF TO lcl_gui_page_db_edit,
-          ls_key     TYPE lcl_persistence_db=>ty_content.
-
-
-    ls_key = key_decode( iv_getdata ).
-
-    CASE iv_action.
-      WHEN 'display'.
-        CREATE OBJECT lo_display
-          EXPORTING
-            is_key = ls_key.
-        lcl_gui=>get( )->call_page( lo_display ).
-        rv_state = gc_event_state-no_more_act.
-      WHEN 'edit'.
-        CREATE OBJECT lo_edit
-          EXPORTING
-            is_key = ls_key.
-        lcl_gui=>get( )->call_page( lo_edit ).
-        rv_state = gc_event_state-no_more_act.
-      WHEN 'delete'.
-        delete( ls_key ).
-        rv_state = gc_event_state-re_render.
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD lif_gui_page~render.
 
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
           lv_escaped TYPE string,
-          lv_encode  TYPE string,
-          lo_db      TYPE REF TO lcl_persistence_db.
+          lv_action  TYPE string,
+          lv_trclass TYPE string,
+          lo_db      TYPE REF TO lcl_persistence_db,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
@@ -23222,31 +23159,44 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
+    ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( '<table>' ).
+    ro_html->add( '<div class="db_list">' ).
+    ro_html->add( '<table width="100%" class="db_tab">' ).
+
+    " Header
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td><b>Type</b></td>' ).
-    ro_html->add( '<td><b>Value</b></td>' ).
-    ro_html->add( '<td><b>Data</b></td>' ).
+    ro_html->add( '<th>Type</th>' ).
+    ro_html->add( '<th>Value</th>' ).
+    ro_html->add( '<th>Data</th>' ).
+    ro_html->add( '<th></th>' ).
     ro_html->add( '</tr>' ).
 
+    " Lines
     LOOP AT lt_data ASSIGNING <ls_data>.
-      lv_escaped = escape( val    = <ls_data>-data_str(150)
+      CLEAR lv_trclass.
+      IF sy-tabix = 1.
+        lv_trclass = ' class="firstrow"'.
+      ENDIF.
+
+      lv_escaped = escape( val    = <ls_data>-data_str(250)
                            format = cl_abap_format=>e_html_attr ).
 
-      lv_encode = key_encode( <ls_data> ).
+      lv_action = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
-      ro_html->add( '<tr>' ).
-      ro_html->add( '<td valign="top">' && <ls_data>-type && '</td>' ).
-      ro_html->add( '<td valign="top">' && <ls_data>-value && '</td>' ).
-      ro_html->add( '<td><pre>' && lv_escaped && '</pre>' ).
-      ro_html->add( '<br><br>' ).
-      ro_html->add( '<a href="sapevent:display?' && lv_encode && '">Display</a>' ).
-      ro_html->add( '<a href="sapevent:edit?' && lv_encode && '">Edit</a>' ).
-      ro_html->add( '<a href="sapevent:delete?' && lv_encode && '">Delete</a></td>' ).
+      CREATE OBJECT lo_toolbar.
+      lo_toolbar->add( iv_txt = 'Display' iv_cmd = |sapevent:db_display?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_cmd = |sapevent:db_edit?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_cmd = |sapevent:db_delete?{ lv_action }| ).
+
+      ro_html->add( |<tr{ lv_trclass }>| ).
+      ro_html->add( |<td>{ <ls_data>-type }</td>| ).
+      ro_html->add( |<td>{ <ls_data>-value }</td>| ).
+      ro_html->add( |<td><pre>{ lv_escaped }</pre></td>| ).
+      ro_html->add( '<td>' ).
+      ro_html->add( lo_toolbar->render( iv_as_droplist_with_label = 'action' ) ).
+      ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
 
@@ -23255,7 +23205,39 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.            "lif_gui_page~render
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* DB ENTRIES */').
+    ro_html->add('div.db_list {').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('table.db_tab pre { ').
+    ro_html->add('  display: block; ').
+    ro_html->add('  overflow: hidden; ').
+    ro_html->add('  word-wrap:break-word; ').
+    ro_html->add('  white-space: pre-wrap; ').
+    ro_html->add('  background-color: #eaeaea;').
+    ro_html->add('  padding: 3px;').
+    ro_html->add('  width: 50em; ').
+    ro_html->add('}').
+    ro_html->add('table.db_tab tr.firstrow td { padding-top: 0.5em; } ').
+    ro_html->add('table.db_tab th {').
+    ro_html->add('  text-align: left;').
+    ro_html->add('  color: #888;').
+    ro_html->add('  padding: 0.2em;').
+    ro_html->add('  border-bottom: 1px #ddd solid;').
+    ro_html->add('}').
+    ro_html->add('table.db_tab td {').
+    ro_html->add('  color: #333;').
+    ro_html->add('  padding: 0.2em;').
+    ro_html->add('  vertical-align: top;').
+    ro_html->add('}').
+
+  ENDMETHOD.            "styles
 
 ENDCLASS.
 
@@ -23303,6 +23285,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'diff'.
         eo_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
+
+      " DB actions
+      WHEN 'db_display' or 'db_edit'.
+        eo_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'db_delete'.
+        db_delete( iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'db_save'.
+        db_save( it_postdata ).
+        ev_state = gc_event_state-go_back.
 
       " Repository state actions
       WHEN 'install'.
@@ -23374,7 +23367,28 @@ CLASS lcl_gui_router IMPLEMENTATION.
         _raise lv_message.
     ENDTRY.
 
-  ENDMETHOD.        " get_home_page
+  ENDMETHOD.        " get_page_by_name
+
+  METHOD get_page_db_by_name.
+
+    DATA: lv_page_class TYPE string,
+          lv_message    TYPE string,
+          ls_key        TYPE lcl_persistence_db=>ty_content.
+
+    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
+    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+
+    TRY.
+        CREATE OBJECT ri_page TYPE (lv_page_class)
+          EXPORTING
+            is_key = ls_key.
+
+      CATCH cx_sy_create_object_error.
+        lv_message = |Cannot create page class { lv_page_class }|.
+        _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.        " get_page_db_by_name
 
   METHOD get_page_diff.
 
@@ -23780,6 +23794,84 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD db_delete.
+
+    DATA: lo_db       TYPE REF TO lcl_persistence_db,
+          lv_answer   TYPE c LENGTH 1,
+          ls_key      TYPE lcl_persistence_db=>ty_content.
+
+    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Warning'
+        text_question         = 'Delete?'
+        text_button_1         = 'Ok'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                        "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
+    ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT lo_db.
+
+    lo_db->delete( iv_type  = ls_key-type
+                   iv_value = ls_key-value ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
+
+  METHOD db_save.
+
+    DATA: lv_string  TYPE string,
+          ls_content TYPE lcl_persistence_db=>ty_content,
+          lo_db      TYPE REF TO lcl_persistence_db,
+          lt_fields  TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    ls_content-type = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    ls_content-value = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    IF <ls_field>-value(1) <> '<'.
+      ls_content-data_str = <ls_field>-value+1. " hmm
+    ENDIF.
+
+    CREATE OBJECT lo_db.
+
+    lo_db->update(
+      iv_type  = ls_content-type
+      iv_value = ls_content-value
+      iv_data  = ls_content-data_str ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
 
 ENDCLASS.           " lcl_gui_router
 
