@@ -23103,9 +23103,8 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( '<form method="post" action="sapevent:db_save">' ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
-    ro_html->add( '<textarea rows="20" cols="100" name="xmldata">' ).
-    ro_html->add( lv_data ).
-    ro_html->add( '</textarea>' ).
+    ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
+                     }</textarea>| ).
     ro_html->add( '<input class="cmd" type="submit" value="Update">' ).
     ro_html->add( '</form>' ).
 
@@ -23859,7 +23858,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
     ASSERT sy-subrc = 0.
-    ls_content-data_str = <ls_field>-value+1. " hmm
+    IF <ls_field>-value(1) <> '<'.
+      ls_content-data_str = <ls_field>-value+1. " hmm
+    ENDIF.
 
     CREATE OBJECT lo_db.
 
