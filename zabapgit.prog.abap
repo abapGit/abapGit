@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.5'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.6'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13165,12 +13165,12 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS dbkey_encode
-        IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
-        RETURNING VALUE(rv_string) TYPE string.
+      IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
+      RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS dbkey_decode
-        IMPORTING iv_string     TYPE clike
-        RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+      IMPORTING iv_string     TYPE clike
+      RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -16168,20 +16168,20 @@ ENDCLASS.                    "lcl_porcelain DEFINITION
 INTERFACE lif_gui_page.
 
   METHODS on_event
-      IMPORTING iv_action        TYPE clike
-                iv_frame         TYPE clike
-                iv_getdata       TYPE clike
-                it_postdata      TYPE cnht_post_data_tab
-                it_query_table   TYPE cnht_query_table
-      RETURNING VALUE(rv_state)  TYPE i
-      RAISING   lcx_exception.
+    IMPORTING iv_action       TYPE clike
+              iv_frame        TYPE clike
+              iv_getdata      TYPE clike
+              it_postdata     TYPE cnht_post_data_tab
+              it_query_table  TYPE cnht_query_table
+    RETURNING VALUE(rv_state) TYPE i
+    RAISING   lcx_exception.
 
   METHODS render
-      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
+    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+    RAISING   lcx_exception.
 
   METHODS get_assets
-      RETURNING VALUE(rt_assets) TYPE tt_web_assets.
+    RETURNING VALUE(rt_assets) TYPE tt_web_assets.
 
 ENDINTERFACE.
 
@@ -16289,7 +16289,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS get_page_stage
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
@@ -16325,7 +16325,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS db_delete
-      IMPORTING iv_getdata     TYPE clike
+      IMPORTING iv_getdata TYPE clike
       RAISING   lcx_exception.
 
     METHODS db_save
@@ -16371,12 +16371,12 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
   PRIVATE SECTION.
     CLASS-DATA go_instance  TYPE REF TO lcl_gui.
 
-    DATA: mi_cur_page       TYPE REF TO lif_gui_page,
-          mt_stack          TYPE TABLE OF REF TO lif_gui_page,
-          mt_assets         TYPE tt_w3urls,
-          mo_router         TYPE REF TO lcl_gui_router,
-          mo_user           TYPE REF TO lcl_persistence_user,
-          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
+    DATA: mi_cur_page    TYPE REF TO lif_gui_page,
+          mt_stack       TYPE TABLE OF REF TO lif_gui_page,
+          mt_assets      TYPE tt_w3urls,
+          mo_router      TYPE REF TO lcl_gui_router,
+          mo_user        TYPE REF TO lcl_persistence_user,
+          mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
       RAISING lcx_exception.
@@ -16475,8 +16475,8 @@ CLASS lcl_repo_srv DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS validate_package
-        IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception.
+      IMPORTING iv_package TYPE devclass
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
 
@@ -18695,7 +18695,8 @@ CLASS lcl_gui IMPLEMENTATION.
     CREATE OBJECT mo_user.
     CREATE OBJECT mo_html_viewer
       EXPORTING
-        parent = cl_gui_container=>screen0.
+        query_table_disabled = abap_true
+        parent               = cl_gui_container=>screen0.
 
     CLEAR ls_event.
     ls_event-eventid = mo_html_viewer->m_id_sapevent.
@@ -18837,7 +18838,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     ro_html->add( '<td class="headpad"><span class="page_title">' ). "#EC NOTEXT
-    ro_html->add( |&#x25BA; { iv_page_title }| ).            "#EC NOTEXT
+    ro_html->add( |&#x25BA; { iv_page_title }| ).           "#EC NOTEXT
     ro_html->add( '</span></td>' ).                         "#EC NOTEXT
 
     IF io_menu IS BOUND.
@@ -18877,7 +18878,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html><head>' ).                         "#EC NOTEXT
-    ro_html->add( |<meta http-equiv="refresh" content="0; url={ iv_url }">| )."#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ iv_url }">| ). "#EC NOTEXT
     ro_html->add( '</head></html>').                        "#EC NOTEXT
 
   ENDMETHOD.
@@ -23249,20 +23250,20 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   DEFINE _add_dialog_fld.
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname    = &1.                       "#EC NOTEXT
-    <ls_field>-fieldname  = &2.                       "#EC NOTEXT
-    <ls_field>-fieldtext  = &3.                       "#EC NOTEXT
-    <ls_field>-value      = &4.                       "#EC NOTEXT
-    <ls_field>-field_attr = &5.                       "#EC NOTEXT
+    <ls_field>-tabname    = &1.                             "#EC NOTEXT
+    <ls_field>-fieldname  = &2.                             "#EC NOTEXT
+    <ls_field>-fieldtext  = &3.                             "#EC NOTEXT
+    <ls_field>-value      = &4.                             "#EC NOTEXT
+    <ls_field>-field_attr = &5.                             "#EC NOTEXT
   END-OF-DEFINITION.
 
   METHOD on_event.
-    DATA: lv_url        TYPE string,
-          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item       TYPE ty_item.
+    DATA: lv_url  TYPE string,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item TYPE ty_item.
 
     CASE iv_action.
-      " General routing
+        " General routing
       WHEN 'main' OR 'explore' OR 'db' OR 'background'.
         eo_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
@@ -23286,8 +23287,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
         eo_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
 
-      " DB actions
-      WHEN 'db_display' or 'db_edit'.
+        " DB actions
+      WHEN 'db_display' OR 'db_edit'.
         eo_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
         ev_state = gc_event_state-new_page.
       WHEN 'db_delete'.
@@ -23297,7 +23298,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         db_save( it_postdata ).
         ev_state = gc_event_state-go_back.
 
-      " Repository state actions
+        " Repository state actions
       WHEN 'install'.
         lv_url   = iv_getdata.
         repo_clone( lv_url ).
@@ -23338,7 +23339,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_gui=>get_user( )->unhide( lv_key ).
         ev_state = gc_event_state-re_render.
 
-      " Repository online actions
+        " Repository online actions
       WHEN 'pull'.
         lv_key   = iv_getdata.
         repo_pull( lv_key ).
@@ -23796,9 +23797,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD db_delete.
 
-    DATA: lo_db       TYPE REF TO lcl_persistence_db,
-          lv_answer   TYPE c LENGTH 1,
-          ls_key      TYPE lcl_persistence_db=>ty_content.
+    DATA: lo_db     TYPE REF TO lcl_persistence_db,
+          lv_answer TYPE c LENGTH 1,
+          ls_key    TYPE lcl_persistence_db=>ty_content.
 
     ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
 
