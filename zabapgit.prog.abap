@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.6'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.7'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -5559,10 +5559,27 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
-    METHODS serialize_abap
+    METHODS serialize_abap_old
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE ty_string_tt
       RAISING   lcx_exception.
+
+    METHODS deserialize_abap_source_old
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception.
+
+    METHODS deserialize_abap_source_new
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception
+                cx_sy_dyn_call_error.
+
+    METHODS serialize_abap_new
+      IMPORTING is_clskey        TYPE seoclskey
+      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RAISING   lcx_exception
+                cx_sy_dyn_call_error.
 
     METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
@@ -5799,8 +5816,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_macro
 
-  METHOD serialize_abap.
-
+  METHOD serialize_abap_old.
+* for old ABAP AS versions
     DATA: lo_source TYPE REF TO cl_oo_source.
 
 
@@ -5819,6 +5836,30 @@ CLASS lcl_object_clas IMPLEMENTATION.
     remove_signatures( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.                    "serialize_abap
+
+  METHOD serialize_abap_new.
+
+    DATA: lo_source   TYPE REF TO object,
+          lo_instance TYPE REF TO object.
+
+* do not call the class/methods statically, as it will
+* give syntax errors on old versions
+    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
+      RECEIVING
+        result = lo_instance.
+
+    CALL METHOD lo_instance->('CREATE_CLIF_SOURCE')
+      EXPORTING
+        clif_name = is_clskey-clsname
+        version   = 'A'
+      RECEIVING
+        result    = lo_source.
+
+    CALL METHOD lo_source->('GET_SOURCE')
+      IMPORTING
+        source = rt_source.
+
+  ENDMETHOD.
 
   METHOD remove_signatures.
 
@@ -5875,7 +5916,12 @@ CLASS lcl_object_clas IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-    lt_source = serialize_abap( ls_clskey ).
+    TRY.
+        lt_source = serialize_abap_new( ls_clskey ).
+      CATCH cx_sy_dyn_call_error.
+        lt_source = serialize_abap_old( ls_clskey ).
+    ENDTRY.
+
     mo_files->add_abap( lt_source ).
 
     IF ms_item-obj_type = 'CLAS'.
@@ -6085,7 +6131,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
     DATA: ls_vseoclass   TYPE vseoclass,
           ls_vseointerf  TYPE vseointerf,
           lt_source      TYPE seop_source_string,
-          lo_source      TYPE REF TO cl_oo_source,
           lt_locals_def  TYPE seop_source_string,
           lt_locals_imp  TYPE seop_source_string,
           lt_locals_mac  TYPE seop_source_string,
@@ -6179,9 +6224,29 @@ CLASS lcl_object_clas IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    TRY.
+        deserialize_abap_source_new(
+          is_clskey = ls_clskey
+          it_source = lt_source ).
+      CATCH cx_sy_dyn_call_error.
+        deserialize_abap_source_old(
+          is_clskey = ls_clskey
+          it_source = lt_source ).
+    ENDTRY.
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
+
+  METHOD deserialize_abap_source_old.
+* for backwards compatability down to 702
+
+    DATA: lo_source TYPE REF TO cl_oo_source.
+
+
     CREATE OBJECT lo_source
       EXPORTING
-        clskey             = ls_clskey
+        clskey             = is_clskey
       EXCEPTIONS
         class_not_existing = 1
         OTHERS             = 2.
@@ -6191,7 +6256,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     TRY.
         lo_source->access_permission( seok_access_modify ).
-        lo_source->set_source( lt_source ).
+        lo_source->set_source( it_source ).
         lo_source->save( ).
         lo_source->access_permission( seok_access_free ).
       CATCH cx_oo_access_permission.
@@ -6200,9 +6265,39 @@ CLASS lcl_object_clas IMPLEMENTATION.
         _raise 'save failure'.
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+  ENDMETHOD.
 
-  ENDMETHOD.                    "deserialize
+  METHOD deserialize_abap_source_new.
+
+    DATA: lo_factory TYPE REF TO object,
+          lo_source  TYPE REF TO object.
+
+
+    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
+      RECEIVING
+        result = lo_factory.
+
+    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
+      EXPORTING
+        clif_name = is_clskey-clsname
+      RECEIVING
+        result    = lo_source.
+
+    TRY.
+        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
+      CATCH cx_oo_access_permission.
+        _raise 'source_new, access permission exception'.
+    ENDTRY.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
+      EXPORTING
+        source = it_source.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
@@ -16271,8 +16366,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 iv_getdata     TYPE clike OPTIONAL
                 it_postdata    TYPE cnht_post_data_tab OPTIONAL
                 it_query_table TYPE cnht_query_table   OPTIONAL
-      EXPORTING
-                eo_page        TYPE REF TO lif_gui_page
+      EXPORTING ei_page        TYPE REF TO lif_gui_page
                 ev_state       TYPE i
       RAISING   lcx_exception.
 
@@ -18604,7 +18698,7 @@ CLASS lcl_gui IMPLEMENTATION.
               it_postdata    = postdata
               it_query_table = query_table
             IMPORTING
-              eo_page        = li_page
+              ei_page        = li_page
               ev_state       = lv_state ).
         ENDIF.
 
@@ -18630,8 +18724,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD back.
 
-    DATA: lv_index TYPE i,
-          lv_url   TYPE c LENGTH 100.
+    DATA: lv_index TYPE i.
 
     lv_index = lines( mt_stack ).
 
@@ -18653,7 +18746,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD call_page.
 
     DATA          lt_assets  TYPE tt_web_assets.
-    FIELD-SYMBOLS <ls_asset> TYPE ty_web_asset.
+    FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     IF NOT mi_cur_page IS INITIAL.
       APPEND mi_cur_page TO mt_stack.
@@ -19375,14 +19468,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lt_diffs        TYPE lcl_diff=>ty_diffs_tt,
-          lv_local        TYPE string,
-          lv_remote       TYPE string,
-          lv_attr_local   TYPE string,
-          lv_attr_remote  TYPE string,
-          lv_anchor_count LIKE sy-tabix,
-          lv_beacon       TYPE string,
-          lv_insert_nav   TYPE abap_bool.
+    DATA: lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
+          lv_local       TYPE string,
+          lv_remote      TYPE string,
+          lv_attr_local  TYPE string,
+          lv_attr_remote TYPE string,
+          lv_beacon      TYPE string,
+          lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
@@ -20539,7 +20631,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lv_link     TYPE string,
       lv_icon     TYPE string,
       lv_difflink TYPE string,
-      ls_file     TYPE ty_repo_file,
+      ls_file     LIKE LINE OF is_item-files,
       lv_trclass  TYPE string.
 
     CREATE OBJECT ro_html.
@@ -20616,7 +20708,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     TRY.
         IF lcl_repo_srv=>is_repo_installed( lc_abapgit ) = abap_false
-        OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
+            OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
@@ -20627,14 +20719,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: ls_file       TYPE ty_repo_file,
-          lv_url        TYPE string,
-          lo_background TYPE REF TO lcl_gui_page_background,
-          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item       TYPE ty_item,
-          lo_db         TYPE REF TO lcl_gui_page_db.
+    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
 
-    DATA lo_page_explore TYPE REF TO lcl_gui_page_explore.
 
     CASE iv_action.
       WHEN 'refresh'.
@@ -23283,7 +23369,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     CASE iv_action.
         " General routing
       WHEN 'main' OR 'explore' OR 'db' OR 'background'.
-        eo_page  = get_page_by_name( iv_action ).
+        ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
@@ -23302,12 +23388,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_objects=>jump( ls_item ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'diff'.
-        eo_page  = get_page_diff( iv_getdata ).
+        ei_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
 
         " DB actions
       WHEN 'db_display' OR 'db_edit'.
-        eo_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
         ev_state = gc_event_state-new_page.
       WHEN 'db_delete'.
         db_delete( iv_getdata = iv_getdata ).
@@ -23364,7 +23450,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN 'stage'.
         lv_key   = iv_getdata.
-        eo_page  = get_page_stage( lv_key ).
+        ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page.
 
       WHEN OTHERS.
@@ -23740,7 +23826,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lo_repo       TYPE REF TO lcl_repo_offline,
           ls_data       TYPE lcl_persistence_repo=>ty_repo,
           lv_returncode TYPE c,
-          lv_url        TYPE string,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
