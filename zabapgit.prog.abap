@@ -21029,7 +21029,12 @@ CLASS lcl_app IMPLEMENTATION.
 
   METHOD run.
 
-    gui( )->go_home( ).
+    IF sy-batch = abap_true.
+      lcl_background=>run( ).
+    ELSE.
+      gui( )->go_home( ).
+      CALL SELECTION-SCREEN 1001. " trigger screen
+    ENDIF.
 
   ENDMETHOD.      "run
 
@@ -21096,13 +21101,7 @@ FORM run.
 
   TRY.
       lcl_persistence_migrate=>run( ).
-
-      IF sy-batch = abap_true.
-        lcl_background=>run( ).
-      ELSE.
-        lcl_app=>run( ).
-        CALL SELECTION-SCREEN 1001. " trigger screen
-      ENDIF.
+      lcl_app=>run( ).
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
