@@ -97,11 +97,13 @@ CONSTANTS: BEGIN OF gc_chmod,
            END OF gc_chmod.
 
 CONSTANTS: BEGIN OF gc_event_state,
-             not_handled VALUE 0,
-             re_render   VALUE 1,
-             new_page    VALUE 2,
-             go_back     VALUE 3,
-             no_more_act VALUE 4,
+             not_handled         VALUE 0,
+             re_render           VALUE 1,
+             new_page            VALUE 2,
+             go_back             VALUE 3,
+             no_more_act         VALUE 4,
+             new_page_w_bookmark VALUE 5,
+             go_back_to_bookmark VALUE 6,
            END OF gc_event_state.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
@@ -16332,11 +16334,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING lcx_exception.
 
     METHODS back
+      IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
     METHODS call_page
-      IMPORTING ii_page TYPE REF TO lif_gui_page
+      IMPORTING ii_page          TYPE REF TO lif_gui_page
+                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
     METHODS set_page
@@ -16348,8 +16352,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PRIVATE SECTION.
 
+    TYPES: BEGIN OF ty_page_stack,
+             page     TYPE REF TO lif_gui_page,
+             bookmark TYPE abap_bool,
+           END OF ty_page_stack.
+
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
-          mt_stack       TYPE TABLE OF REF TO lif_gui_page,
+          mt_stack       TYPE TABLE OF ty_page_stack,
           mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
           mo_user        TYPE REF TO lcl_persistence_user,
@@ -18720,8 +18729,12 @@ CLASS lcl_gui IMPLEMENTATION.
             render( ).
           WHEN gc_event_state-new_page.
             call_page( li_page ).
+          WHEN gc_event_state-new_page_w_bookmark.
+            call_page( ii_page = li_page iv_with_bookmark = abap_true ).
           WHEN gc_event_state-go_back.
             back( ).
+          WHEN gc_event_state-go_back_to_bookmark.
+            back( iv_to_bookmark = abap_true ).
           WHEN gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
@@ -18737,7 +18750,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD back.
 
-    DATA: lv_index TYPE i.
+    DATA: lv_index TYPE i,
+          ls_stack TYPE ty_page_stack.
 
     lv_index = lines( mt_stack ).
 
@@ -18746,23 +18760,35 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE mt_stack INDEX lv_index INTO mi_cur_page.
-    ASSERT sy-subrc = 0.
+    DO lv_index TIMES.
+      READ TABLE mt_stack INDEX lv_index INTO ls_stack.
+      ASSERT sy-subrc = 0.
 
-    DELETE mt_stack INDEX lv_index.
-    ASSERT sy-subrc = 0.
+      DELETE mt_stack INDEX lv_index.
+      ASSERT sy-subrc = 0.
 
+      lv_index = lv_index - 1.
+
+      IF iv_to_bookmark = abap_false OR ls_stack-bookmark = abap_true.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+    mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
   ENDMETHOD.
 
   METHOD call_page.
 
-    DATA          lt_assets  TYPE tt_web_assets.
+    DATA:         lt_assets  TYPE tt_web_assets,
+                  ls_stack   TYPE ty_page_stack.
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     IF NOT mi_cur_page IS INITIAL.
-      APPEND mi_cur_page TO mt_stack.
+      ls_stack-page     = mi_cur_page.
+      ls_stack-bookmark = iv_with_bookmark.
+      APPEND ls_stack TO mt_stack.
     ENDIF.
 
     lt_assets = ii_page->get_assets( ).
@@ -19963,7 +19989,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CASE iv_action.
       WHEN 'post'.
         push( it_postdata ).
-        rv_state = gc_event_state-go_back.
+        rv_state = gc_event_state-go_back_to_bookmark.
       WHEN 'cancel'.
         rv_state = gc_event_state-go_back.
     ENDCASE.
@@ -23495,7 +23521,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'stage'.
         lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page.
+        ev_state = gc_event_state-new_page_w_bookmark.
 
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
