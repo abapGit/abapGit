@@ -16494,30 +16494,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 ENDCLASS.                    "lcl_gui DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_app DEFINITION
-*----------------------------------------------------------------------*
-CLASS lcl_app DEFINITION FINAL.
-  PUBLIC SECTION.
-
-    CLASS-METHODS run
-      RAISING   lcx_exception.
-
-    CLASS-METHODS gui
-      RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
-      RAISING   lcx_exception.
-
-    CLASS-METHODS user
-      IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
-      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
-                go_current_user TYPE REF TO lcl_persistence_user.
-
-ENDCLASS.   "lcl_app
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
@@ -16535,44 +16511,42 @@ ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_srv DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_repo_srv DEFINITION FINAL.
+CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
     TYPES: ty_repo_tt TYPE STANDARD TABLE OF REF TO lcl_repo WITH DEFAULT KEY.
 
-    CLASS-METHODS class_constructor.
-
-    CLASS-METHODS list
+    METHODS list
       RETURNING VALUE(rt_list) TYPE ty_repo_tt
       RAISING   lcx_exception.
 
-    CLASS-METHODS refresh
+    METHODS refresh
       RAISING lcx_exception.
 
-    CLASS-METHODS new_online
+    METHODS new_online
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
-    CLASS-METHODS new_offline
+    METHODS new_offline
       IMPORTING iv_url         TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
       RAISING   lcx_exception.
 
-    CLASS-METHODS delete
+    METHODS delete
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS get
+    METHODS get
       IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS is_repo_installed
+    METHODS is_repo_installed
       IMPORTING iv_url              TYPE string
                 iv_target_package   TYPE devclass OPTIONAL
       RETURNING VALUE(rv_installed) TYPE abap_bool
@@ -16580,19 +16554,49 @@ CLASS lcl_repo_srv DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CLASS-DATA: gv_init        TYPE abap_bool VALUE abap_false,
-                go_persistence TYPE REF TO lcl_persistence_repo,
-                gt_list        TYPE ty_repo_tt.
+    METHODS constructor.
 
-    CLASS-METHODS add
+    DATA: mv_init        TYPE abap_bool VALUE abap_false,
+          mo_persistence TYPE REF TO lcl_persistence_repo,
+          mt_list        TYPE ty_repo_tt.
+
+    METHODS add
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS validate_package
+    METHODS validate_package
       IMPORTING iv_package TYPE devclass
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_app DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_app DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    CLASS-METHODS run
+      RAISING   lcx_exception.
+
+    CLASS-METHODS gui
+      RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
+      RAISING   lcx_exception.
+
+    CLASS-METHODS user
+      IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
+      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
+      RAISING   lcx_exception.
+
+    CLASS-METHODS repo_srv
+      RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
+
+  PRIVATE SECTION.
+    CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
+                go_current_user TYPE REF TO lcl_persistence_user,
+                go_repo_srv     TYPE REF TO lcl_repo_srv.
+
+ENDCLASS.   "lcl_app
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online IMPLEMENTATION
@@ -16954,30 +16958,30 @@ ENDCLASS.                    "lcl_repo IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_repo_srv IMPLEMENTATION.
 
-  METHOD class_constructor.
-    CREATE OBJECT go_persistence.
+  METHOD constructor.
+    CREATE OBJECT mo_persistence.
   ENDMETHOD.                    "class_constructor
 
   METHOD list.
 
-    IF gv_init = abap_false.
+    IF mv_init = abap_false.
       refresh( ).
     ENDIF.
 
-    rt_list = gt_list.
+    rt_list = mt_list.
 
   ENDMETHOD.                    "list
 
   METHOD get.
 
-    FIELD-SYMBOLS: <lo_list> LIKE LINE OF gt_list.
+    FIELD-SYMBOLS: <lo_list> LIKE LINE OF mt_list.
 
 
-    IF gv_init = abap_false.
+    IF mv_init = abap_false.
       refresh( ).
     ENDIF.
 
-    LOOP AT gt_list ASSIGNING <lo_list>.
+    LOOP AT mt_list ASSIGNING <lo_list>.
       IF <lo_list>->get_key( ) = iv_key.
         ro_repo = <lo_list>.
         RETURN.
@@ -16997,24 +17001,24 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
 
-    CLEAR gt_list.
+    CLEAR mt_list.
 
-    lt_list = go_persistence->list( ).
+    lt_list = mo_persistence->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
       IF <ls_list>-offline = abap_false.
         CREATE OBJECT lo_online
           EXPORTING
             is_data = <ls_list>.
-        APPEND lo_online TO gt_list.
+        APPEND lo_online TO mt_list.
       ELSE.
         CREATE OBJECT lo_offline
           EXPORTING
             is_data = <ls_list>.
-        APPEND lo_offline TO gt_list.
+        APPEND lo_offline TO mt_list.
       ENDIF.
     ENDLOOP.
 
-    gv_init = abap_true.
+    mv_init = abap_true.
 
   ENDMETHOD.                    "refresh
 
@@ -17026,13 +17030,13 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     validate_package( iv_package ).
 
-    lv_key = go_persistence->add(
+    lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
       iv_package     = iv_package ).
 
     TRY.
-        ls_repo = go_persistence->read( lv_key ).
+        ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
         _raise 'new_online not found'.
     ENDTRY.
@@ -17053,14 +17057,14 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     validate_package( iv_package ).
 
-    lv_key = go_persistence->add(
+    lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = ''
       iv_package     = iv_package
       iv_offline     = abap_true ).
 
     TRY.
-        ls_repo = go_persistence->read( lv_key ).
+        ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
         _raise 'new_offline not found'.
     ENDTRY.
@@ -17075,10 +17079,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD add.
 
-    DATA: lo_repo LIKE LINE OF gt_list.
+    DATA: lo_repo LIKE LINE OF mt_list.
 
 
-    LOOP AT gt_list INTO lo_repo.
+    LOOP AT mt_list INTO lo_repo.
       IF lo_repo->get_key( ) = io_repo->get_key( ).
         IF lo_repo = io_repo.
           RETURN.
@@ -17087,7 +17091,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    APPEND io_repo TO gt_list.
+    APPEND io_repo TO mt_list.
 
   ENDMETHOD.                    "add
 
@@ -17112,8 +17116,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       _raise 'package not found or not allowed'.
     ENDIF.
 
-* make sure its not already in use for a different repository
-    lt_repos = go_persistence->list( ).
+    " make sure its not already in use for a different repository
+    lt_repos = mo_persistence->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
       _raise 'Package already in use'.
@@ -17125,7 +17129,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     io_repo->delete( ).
 
-    DELETE TABLE gt_list FROM io_repo.
+    DELETE TABLE mt_list FROM io_repo.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.                    "delete
@@ -18172,7 +18176,7 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lo_repo TYPE REF TO lcl_repo_offline.
 
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 
@@ -19725,7 +19729,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
     CREATE OBJECT lo_per.
     lt_per = lo_per->list( ).
-    lt_list = lcl_repo_srv=>list( ).
+    lt_list = lcl_app=>repo_srv( )->list( ).
 
     LOOP AT lt_list INTO lo_repo.
       IF lo_repo->is_offline( ) = abap_false.
@@ -20711,8 +20715,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     TRY.
-        IF lcl_repo_srv=>is_repo_installed( lc_abapgit ) = abap_false
-            OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
+        IF lcl_app=>repo_srv( )->is_repo_installed( lc_abapgit ) = abap_false
+            OR lcl_app=>repo_srv( )->is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
@@ -20730,9 +20734,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'refresh'.
         lv_key = iv_getdata.
         IF lv_key IS INITIAL. " Refresh all or single
-          lcl_repo_srv=>refresh( ).
+          lcl_app=>repo_srv( )->refresh( ).
         ELSE.
-          lcl_repo_srv=>get( lv_key )->refresh( ).
+          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
         ENDIF.
         rv_state = gc_event_state-re_render.
     ENDCASE.
@@ -20802,7 +20806,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( title( iv_page_title = 'HOME' io_menu = build_main_menu( ) ) ).
 
     TRY.
-        lt_repos = lcl_repo_srv=>list( ).
+        lt_repos = lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception INTO lx_error.
         ro_html->add( render_error( lx_error ) ).
     ENDTRY.
@@ -20987,7 +20991,7 @@ CLASS lcl_background IMPLEMENTATION.
     WRITE: / 'Background mode'.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
-      lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
+      lo_repo ?= lcl_app=>repo_srv( )->get( <ls_list>-key ).
       lv_repo_name = lo_repo->get_name( ).
       WRITE: / <ls_list>-method, lv_repo_name.
 
@@ -21046,6 +21050,15 @@ CLASS lcl_app IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.      "user
+
+  METHOD repo_srv.
+
+    IF go_repo_srv IS NOT BOUND.
+      CREATE OBJECT go_repo_srv.
+    ENDIF.
+    ro_repo_srv = go_repo_srv.
+
+  ENDMETHOD.      "repo_srv
 
 ENDCLASS.   "lcl_app
 
@@ -22305,7 +22318,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lt_types = lcl_objects=>supported_list( ).
 
-    lo_repo = lcl_repo_srv=>new_online(
+    lo_repo = lcl_app=>repo_srv( )->new_online(
       iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
@@ -22341,7 +22354,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -23456,14 +23469,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN 'zipexport'.
         lv_key   = iv_getdata.
-        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
+        lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'newoffline'.
         repo_new_offline( ).
         ev_state = gc_event_state-re_render.
       WHEN 'files_commit'. "TODO refactor name ?
         lv_key   = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+        lcl_zip=>export( io_repo = lcl_app=>repo_srv( )->get( lv_key )
                          iv_zip  = abap_false ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'packagezip'. "TODO refactor name ?
@@ -23546,7 +23559,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
                                         IMPORTING ev_key    = lv_key
                                                   es_file   = ls_file ).
 
-    lo_repo  ?= lcl_repo_srv=>get( lv_key ).
+    lo_repo  ?= lcl_app=>repo_srv( )->get( lv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
 
@@ -23611,13 +23624,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_target_package = lc_package_plugins.
       ENDCASE.
 
-      IF abap_false = lcl_repo_srv=>is_repo_installed(
+      IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
           iv_url              = lv_url
           iv_target_package   = lv_target_package ).
 
         lcl_sap_package=>create_local( lv_target_package ).
 
-        lo_repo = lcl_repo_srv=>new_online(
+        lo_repo = lcl_app=>repo_srv( )->new_online(
           iv_url         = lv_url
           iv_branch_name = 'refs/heads/master'
           iv_package     = lv_target_package ) ##NO_TEXT.
@@ -23693,7 +23706,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lv_branch_name = <ls_field>-value.
 
-    lo_repo = lcl_repo_srv=>new_online(
+    lo_repo = lcl_app=>repo_srv( )->new_online(
       iv_url         = lv_url
       iv_branch_name = lv_branch_name
       iv_package     = lv_package ).
@@ -23714,7 +23727,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_question TYPE c LENGTH 100.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
     lv_package = lo_repo->get_package( ).
 
     lt_tadir = lcl_tadir=>read( lv_package ).
@@ -23757,7 +23770,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ENDIF.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -23771,7 +23784,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_question TYPE c LENGTH 100.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
     lv_package = lo_repo->get_package( ).
 
     CONCATENATE 'This will remove the repository reference to the package'
@@ -23802,7 +23815,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -23848,7 +23861,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     lv_package = <ls_field>-value.
     TRANSLATE lv_package TO UPPER CASE.
 
-    lcl_repo_srv=>new_offline(
+    lcl_app=>repo_srv( )->new_offline(
       iv_url     = lv_url
       iv_package = lv_package ).
 
@@ -23906,7 +23919,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online.
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
     lo_repo->refresh( ).
     lo_repo->deserialize( ).
 
@@ -23920,7 +23933,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lo_stage TYPE REF TO lcl_gui_page_stage.
 
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
