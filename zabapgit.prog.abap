@@ -127,6 +127,8 @@ SELECTION-SCREEN END OF SCREEN 1001.
 START-OF-SELECTION.
   PERFORM run.
 
+CLASS lcl_app DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS LCX_EXCEPTION DEFINITION
 *----------------------------------------------------------------------*
@@ -16290,11 +16292,9 @@ ENDINTERFACE.
 *----------------------------------------------------------------------*
 *       CLASS lcl_persistence_user DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_persistence_user DEFINITION FINAL.
+CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
 
     METHODS set_username
       IMPORTING iv_username TYPE string
@@ -16340,6 +16340,9 @@ CLASS lcl_persistence_user DEFINITION FINAL.
              email       TYPE string,
              repo_hidden TYPE ty_repo_hidden_tt,
            END OF ty_user.
+
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
 
     METHODS from_xml
       IMPORTING iv_xml         TYPE string
@@ -16438,17 +16441,9 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_gui DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
-
-    CLASS-METHODS get
-      RETURNING VALUE(ro_instance) TYPE REF TO lcl_gui
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_user
-      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
-      RAISING   lcx_exception.
 
     METHODS go_home
       RAISING lcx_exception.
@@ -16465,12 +16460,10 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS on_event
-                  FOR EVENT sapevent OF cl_gui_html_viewer
+    METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
   PRIVATE SECTION.
-    CLASS-DATA go_instance  TYPE REF TO lcl_gui.
 
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
           mt_stack       TYPE TABLE OF REF TO lif_gui_page,
@@ -16501,9 +16494,31 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 ENDCLASS.                    "lcl_gui DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_repo_offline IMPLEMENTATION
+*       CLASS lcl_app DEFINITION
 *----------------------------------------------------------------------*
-*
+CLASS lcl_app DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    CLASS-METHODS run
+      RAISING   lcx_exception.
+
+    CLASS-METHODS gui
+      RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
+      RAISING   lcx_exception.
+
+    CLASS-METHODS user
+      IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
+      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
+                go_current_user TYPE REF TO lcl_persistence_user.
+
+ENDCLASS.   "lcl_app
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
 
@@ -16519,8 +16534,6 @@ ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_srv DEFINITION
-*----------------------------------------------------------------------*
-*
 *----------------------------------------------------------------------*
 CLASS lcl_repo_srv DEFINITION FINAL.
 
@@ -18652,21 +18665,6 @@ ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
 
-  METHOD get.
-
-    IF go_instance IS NOT BOUND.
-      CREATE OBJECT go_instance.
-    ENDIF.
-    ro_instance = go_instance.
-
-  ENDMETHOD.
-
-  METHOD get_user.
-
-    ro_user = get( )->mo_user.
-
-  ENDMETHOD.
-
   METHOD constructor.
 
     startup( ).
@@ -18792,7 +18790,6 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_event  LIKE LINE OF lt_events.
 
     CREATE OBJECT mo_router.
-    CREATE OBJECT mo_user.
     CREATE OBJECT mo_html_viewer
       EXPORTING
         query_table_disabled = abap_true
@@ -19849,7 +19846,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     DATA: lo_user TYPE REF TO lcl_persistence_user.
 
-    CREATE OBJECT lo_user.
+    lo_user = lcl_app=>user( ).
     lo_user->set_username( is_fields-username ).
     lo_user->set_email( is_fields-email ).
 
@@ -19974,7 +19971,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    CREATE OBJECT lo_user.
+    lo_user = lcl_app=>user( ).
     lv_user = lo_user->get_username( ).
     lv_email = lo_user->get_email( ).
 
@@ -20106,7 +20103,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       EXPORTING
         io_repo  = mo_repo
         io_stage = mo_stage.
-    lcl_gui=>get( )->set_page( lo_commit ).
+    lcl_app=>gui( )->set_page( lo_commit ).
 
   ENDMETHOD.
 
@@ -20446,7 +20443,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
-    IF lcl_gui=>get_user( )->is_hidden( lv_key ) = abap_true.
+    IF lcl_app=>user( )->is_hidden( lv_key ) = abap_true.
       lo_toolbar->add( iv_txt = 'Show'
                        iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
@@ -20544,7 +20541,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( render_repo_menu( io_repo ) ).
 
-    IF lcl_gui=>get_user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
+    IF lcl_app=>user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           extract_repo_content( EXPORTING io_repo       = io_repo
                                 IMPORTING et_repo_items = lt_repo_items
@@ -21017,11 +21014,45 @@ CLASS lcl_background IMPLEMENTATION.
 
 ENDCLASS.
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_app IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_app IMPLEMENTATION.
+
+  METHOD run.
+
+    gui( )->go_home( ).
+
+  ENDMETHOD.      "run
+
+  METHOD gui.
+
+    IF go_gui IS NOT BOUND.
+      CREATE OBJECT go_gui.
+    ENDIF.
+    ro_gui = go_gui.
+
+  ENDMETHOD.      "gui
+
+  METHOD user.
+
+    IF iv_user = sy-uname.
+      IF go_current_user IS NOT BOUND.
+        CREATE OBJECT go_current_user.
+      ENDIF.
+      ro_user = go_current_user.
+    ELSE.
+      CREATE OBJECT ro_user EXPORTING iv_user = iv_user.
+    ENDIF.
+
+  ENDMETHOD.      "user
+
+ENDCLASS.   "lcl_app
+
+
 *&---------------------------------------------------------------------*
 *&      Form  run
 *&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
 FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception,
@@ -21043,7 +21074,7 @@ FORM run.
       IF sy-batch = abap_true.
         lcl_background=>run( ).
       ELSE.
-        lcl_gui=>get( )->go_home( ).
+        lcl_app=>run( ).
         CALL SELECTION-SCREEN 1001. " trigger screen
       ENDIF.
     CATCH lcx_exception INTO lx_exception.
@@ -22810,10 +22841,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
     lt_users = lcl_user=>list( ).
     LOOP AT lt_users ASSIGNING <ls_user>.
-      CREATE OBJECT lo_user
-        EXPORTING
-          iv_user = <ls_user>-user.
-
+      lo_user = lcl_app=>user( <ls_user>-user ).
       lo_user->set_username( <ls_user>-username ).
       lo_user->set_email( <ls_user>-email ).
     ENDLOOP.
@@ -23443,11 +23471,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-no_more_act.
       WHEN 'hide'.
         lv_key   = iv_getdata.
-        lcl_gui=>get_user( )->hide( lv_key ).
+        lcl_app=>user( )->hide( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN 'unhide'.
         lv_key   = iv_getdata.
-        lcl_gui=>get_user( )->unhide( lv_key ).
+        lcl_app=>user( )->unhide( lv_key ).
         ev_state = gc_event_state-re_render.
 
         " Repository online actions
@@ -23986,7 +24014,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
 ENDCLASS.           " lcl_gui_router
 
-
 CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -24107,7 +24134,7 @@ AT SELECTION-SCREEN OUTPUT.
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF lcl_gui=>get( )->back( ) IS INITIAL.
+      IF lcl_app=>gui( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
