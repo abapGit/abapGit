@@ -12969,7 +12969,7 @@ ENDCLASS.                    "lcl_object_W3MI DEFINITION
 CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
 ENDCLASS.                    "lcl_object_W3HT DEFINITION
 
-CLASS lcl_persistence_db DEFINITION FINAL.
+CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
     CONSTANTS:
@@ -13027,123 +13027,6 @@ CLASS lcl_persistence_db DEFINITION FINAL.
                 iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
       RAISING   lcx_exception.
-
-ENDCLASS.
-
-CLASS lcl_persistence_background DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing',
-                 pull    TYPE string VALUE 'pull',
-                 push    TYPE string VALUE 'push',
-               END OF c_method.
-
-    TYPES: BEGIN OF ty_xml,
-             method   TYPE string,
-             username TYPE string,
-             password TYPE string,
-           END OF ty_xml.
-
-    TYPES: BEGIN OF ty_background,
-             key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_xml.
-    TYPES: END OF ty_background.
-    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
-
-    METHODS constructor.
-
-    METHODS list
-      RETURNING VALUE(rt_list) TYPE tt_background
-      RAISING   lcx_exception.
-
-    METHODS modify
-      IMPORTING is_data TYPE ty_background
-      RAISING   lcx_exception.
-
-    METHODS delete
-      IMPORTING iv_key TYPE ty_background-key
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
-
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
-
-    METHODS from_xml
-      IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rs_xml) TYPE ty_xml
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_background    TYPE ty_background
-      RETURNING VALUE(rv_string) TYPE string.
-
-ENDCLASS.
-
-CLASS lcl_persistence_background IMPLEMENTATION.
-
-  METHOD constructor.
-    CREATE OBJECT mo_db.
-  ENDMETHOD.
-
-  METHOD list.
-
-    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
-          ls_xml  TYPE ty_xml.
-
-    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
-                   <ls_output> LIKE LINE OF rt_list.
-
-
-    lt_list = mo_db->list_by_type( c_type ).
-
-    LOOP AT lt_list ASSIGNING <ls_list>.
-      ls_xml = from_xml( <ls_list>-data_str ).
-
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
-      MOVE-CORRESPONDING ls_xml TO <ls_output>.
-      <ls_output>-key = <ls_list>-value.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD modify.
-    mo_db->modify(
-      iv_type  = c_type
-      iv_value = is_data-key
-      iv_data  = to_xml( is_data ) ).
-  ENDMETHOD.
-
-  METHOD delete.
-    TRY.
-        mo_db->read( iv_type  = c_type
-                     iv_value = iv_key ).
-      CATCH lcx_not_found.
-        RETURN.
-    ENDTRY.
-
-    mo_db->delete( iv_type  = c_type
-                   iv_value = iv_key ).
-  ENDMETHOD.
-
-  METHOD from_xml.
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_string
-      RESULT data = rs_xml ##NO_TEXT.
-  ENDMETHOD.
-
-  METHOD to_xml.
-    DATA: ls_xml TYPE ty_xml.
-
-    MOVE-CORRESPONDING is_background TO ls_xml.
-
-    CALL TRANSFORMATION id
-      SOURCE data = ls_xml
-      RESULT XML rv_string.
-  ENDMETHOD.
 
 ENDCLASS.
 
@@ -16591,12 +16474,133 @@ CLASS lcl_app DEFINITION FINAL.
     CLASS-METHODS repo_srv
       RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
 
+    CLASS-METHODS db
+      RETURNING VALUE(ro_db) TYPE REF TO lcl_persistence_db.
+
   PRIVATE SECTION.
     CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
                 go_current_user TYPE REF TO lcl_persistence_user,
+                go_db           TYPE REF TO lcl_persistence_db,
                 go_repo_srv     TYPE REF TO lcl_repo_srv.
 
 ENDCLASS.   "lcl_app
+
+CLASS lcl_persistence_background DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CONSTANTS: BEGIN OF c_method,
+                 nothing TYPE string VALUE 'nothing',
+                 pull    TYPE string VALUE 'pull',
+                 push    TYPE string VALUE 'push',
+               END OF c_method.
+
+    TYPES: BEGIN OF ty_xml,
+             method   TYPE string,
+             username TYPE string,
+             password TYPE string,
+           END OF ty_xml.
+
+    TYPES: BEGIN OF ty_background,
+             key TYPE lcl_persistence_db=>ty_value.
+        INCLUDE TYPE ty_xml.
+    TYPES: END OF ty_background.
+    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
+
+    METHODS constructor.
+
+    METHODS list
+      RETURNING VALUE(rt_list) TYPE tt_background
+      RAISING   lcx_exception.
+
+    METHODS modify
+      IMPORTING is_data TYPE ty_background
+      RAISING   lcx_exception.
+
+    METHODS delete
+      IMPORTING iv_key TYPE ty_background-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
+
+    DATA: mo_db TYPE REF TO lcl_persistence_db.
+
+    METHODS from_xml
+      IMPORTING iv_string     TYPE string
+      RETURNING VALUE(rs_xml) TYPE ty_xml
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_background    TYPE ty_background
+      RETURNING VALUE(rv_string) TYPE string.
+
+ENDCLASS.     "lcl_persistence_background DEFINITION
+
+CLASS lcl_persistence_background IMPLEMENTATION.
+
+  METHOD constructor.
+    mo_db = lcl_app=>db( ).
+  ENDMETHOD.
+
+  METHOD list.
+
+    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
+          ls_xml  TYPE ty_xml.
+
+    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
+                   <ls_output> LIKE LINE OF rt_list.
+
+
+    lt_list = mo_db->list_by_type( c_type ).
+
+    LOOP AT lt_list ASSIGNING <ls_list>.
+      ls_xml = from_xml( <ls_list>-data_str ).
+
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
+      MOVE-CORRESPONDING ls_xml TO <ls_output>.
+      <ls_output>-key = <ls_list>-value.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD modify.
+    mo_db->modify(
+      iv_type  = c_type
+      iv_value = is_data-key
+      iv_data  = to_xml( is_data ) ).
+  ENDMETHOD.
+
+  METHOD delete.
+    TRY.
+        mo_db->read( iv_type  = c_type
+                     iv_value = iv_key ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
+
+    mo_db->delete( iv_type  = c_type
+                   iv_value = iv_key ).
+  ENDMETHOD.
+
+  METHOD from_xml.
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML iv_string
+      RESULT data = rs_xml ##NO_TEXT.
+  ENDMETHOD.
+
+  METHOD to_xml.
+    DATA: ls_xml TYPE ty_xml.
+
+    MOVE-CORRESPONDING is_background TO ls_xml.
+
+    CALL TRANSFORMATION id
+      SOURCE data = ls_xml
+      RESULT XML rv_string.
+  ENDMETHOD.
+
+ENDCLASS.         " lcl_persistence_background IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online IMPLEMENTATION
@@ -21060,6 +21064,15 @@ CLASS lcl_app IMPLEMENTATION.
 
   ENDMETHOD.      "repo_srv
 
+  METHOD db.
+
+    IF go_db IS NOT BOUND.
+      CREATE OBJECT go_db.
+    ENDIF.
+    ro_db = go_db.
+
+  ENDMETHOD.      "repo_srv
+
 ENDCLASS.   "lcl_app
 
 
@@ -22392,14 +22405,10 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lv_xml TYPE string,
-          lo_db  TYPE REF TO lcl_persistence_db.
-
-
-    CREATE OBJECT lo_db.
+    DATA: lv_xml TYPE string.
 
     TRY.
-        lv_xml = lo_db->read(
+        lv_xml = lcl_app=>db( )->read(
           iv_type  = c_type_user
           iv_value = mv_user ).
       CATCH lcx_not_found.
@@ -22412,15 +22421,11 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   METHOD update.
 
-    DATA: lv_xml TYPE string,
-          lo_db  TYPE REF TO lcl_persistence_db.
-
+    DATA: lv_xml TYPE string.
 
     lv_xml = to_xml( is_user ).
 
-    CREATE OBJECT lo_db.
-
-    lo_db->modify(
+    lcl_app=>db( )->modify(
       iv_type  = c_type_user
       iv_value = mv_user
       iv_data  = lv_xml ).
@@ -22792,7 +22797,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    CREATE OBJECT mo_db.
+    mo_db = lcl_app=>db( ).
   ENDMETHOD.
 
   METHOD lock.
@@ -23130,12 +23135,10 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_db   TYPE REF TO lcl_persistence_db.
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
 
-    CREATE OBJECT lo_db.
     TRY.
-        lv_data = lo_db->read(
+        lv_data = lcl_app=>db( )->read(
           iv_type = ms_key-type
           iv_value = ms_key-value ).
       CATCH lcx_not_found ##NO_HANDLER.
@@ -23219,20 +23222,16 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_db   TYPE REF TO lcl_persistence_db.
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
 
-
-
-    CREATE OBJECT lo_db.
     TRY.
-        lv_data = lo_db->read(
+        lv_data = lcl_app=>db( )->read(
           iv_type  = ms_key-type
           iv_value = ms_key-value ).
       CATCH lcx_not_found ##NO_HANDLER.
     ENDTRY.
 
-    lo_db->lock(
+    lcl_app=>db( )->lock(
       iv_type  = ms_key-type
       iv_value = ms_key-value ).
 
@@ -23301,14 +23300,12 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           lv_escaped TYPE string,
           lv_action  TYPE string,
           lv_trclass TYPE string,
-          lo_db      TYPE REF TO lcl_persistence_db,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
 
-    CREATE OBJECT lo_db.
-    lt_data = lo_db->list( ).
+    lt_data = lcl_app=>db( )->list( ).
 
     CREATE OBJECT ro_html.
 
@@ -23948,8 +23945,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD db_delete.
 
-    DATA: lo_db     TYPE REF TO lcl_persistence_db,
-          lv_answer TYPE c LENGTH 1,
+    DATA: lv_answer TYPE c LENGTH 1,
           ls_key    TYPE lcl_persistence_db=>ty_content.
 
     ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
@@ -23977,9 +23973,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_db.
-
-    lo_db->delete( iv_type  = ls_key-type
+    lcl_app=>db( )->delete( iv_type  = ls_key-type
                    iv_value = ls_key-value ).
 
     COMMIT WORK.
@@ -23990,7 +23984,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_string  TYPE string,
           ls_content TYPE lcl_persistence_db=>ty_content,
-          lo_db      TYPE REF TO lcl_persistence_db,
           lt_fields  TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -24014,9 +24007,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       ls_content-data_str = <ls_field>-value+1. " hmm
     ENDIF.
 
-    CREATE OBJECT lo_db.
-
-    lo_db->update(
+    lcl_app=>db( )->update(
       iv_type  = ls_content-type
       iv_value = ls_content-value
       iv_data  = ls_content-data_str ).
