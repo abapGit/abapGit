@@ -127,6 +127,8 @@ SELECTION-SCREEN END OF SCREEN 1001.
 START-OF-SELECTION.
   PERFORM run.
 
+CLASS lcl_app DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS LCX_EXCEPTION DEFINITION
 *----------------------------------------------------------------------*
@@ -12967,7 +12969,7 @@ ENDCLASS.                    "lcl_object_W3MI DEFINITION
 CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
 ENDCLASS.                    "lcl_object_W3HT DEFINITION
 
-CLASS lcl_persistence_db DEFINITION FINAL.
+CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
     CONSTANTS:
@@ -13025,123 +13027,6 @@ CLASS lcl_persistence_db DEFINITION FINAL.
                 iv_type  TYPE ty_type
                 iv_value TYPE ty_content-value
       RAISING   lcx_exception.
-
-ENDCLASS.
-
-CLASS lcl_persistence_background DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing',
-                 pull    TYPE string VALUE 'pull',
-                 push    TYPE string VALUE 'push',
-               END OF c_method.
-
-    TYPES: BEGIN OF ty_xml,
-             method   TYPE string,
-             username TYPE string,
-             password TYPE string,
-           END OF ty_xml.
-
-    TYPES: BEGIN OF ty_background,
-             key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_xml.
-    TYPES: END OF ty_background.
-    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
-
-    METHODS constructor.
-
-    METHODS list
-      RETURNING VALUE(rt_list) TYPE tt_background
-      RAISING   lcx_exception.
-
-    METHODS modify
-      IMPORTING is_data TYPE ty_background
-      RAISING   lcx_exception.
-
-    METHODS delete
-      IMPORTING iv_key TYPE ty_background-key
-      RAISING   lcx_exception.
-
-  PRIVATE SECTION.
-    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
-
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
-
-    METHODS from_xml
-      IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rs_xml) TYPE ty_xml
-      RAISING   lcx_exception.
-
-    METHODS to_xml
-      IMPORTING is_background    TYPE ty_background
-      RETURNING VALUE(rv_string) TYPE string.
-
-ENDCLASS.
-
-CLASS lcl_persistence_background IMPLEMENTATION.
-
-  METHOD constructor.
-    CREATE OBJECT mo_db.
-  ENDMETHOD.
-
-  METHOD list.
-
-    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
-          ls_xml  TYPE ty_xml.
-
-    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
-                   <ls_output> LIKE LINE OF rt_list.
-
-
-    lt_list = mo_db->list_by_type( c_type ).
-
-    LOOP AT lt_list ASSIGNING <ls_list>.
-      ls_xml = from_xml( <ls_list>-data_str ).
-
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
-      MOVE-CORRESPONDING ls_xml TO <ls_output>.
-      <ls_output>-key = <ls_list>-value.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD modify.
-    mo_db->modify(
-      iv_type  = c_type
-      iv_value = is_data-key
-      iv_data  = to_xml( is_data ) ).
-  ENDMETHOD.
-
-  METHOD delete.
-    TRY.
-        mo_db->read( iv_type  = c_type
-                     iv_value = iv_key ).
-      CATCH lcx_not_found.
-        RETURN.
-    ENDTRY.
-
-    mo_db->delete( iv_type  = c_type
-                   iv_value = iv_key ).
-  ENDMETHOD.
-
-  METHOD from_xml.
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_string
-      RESULT data = rs_xml ##NO_TEXT.
-  ENDMETHOD.
-
-  METHOD to_xml.
-    DATA: ls_xml TYPE ty_xml.
-
-    MOVE-CORRESPONDING is_background TO ls_xml.
-
-    CALL TRANSFORMATION id
-      SOURCE data = ls_xml
-      RESULT XML rv_string.
-  ENDMETHOD.
 
 ENDCLASS.
 
@@ -16290,11 +16175,9 @@ ENDINTERFACE.
 *----------------------------------------------------------------------*
 *       CLASS lcl_persistence_user DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_persistence_user DEFINITION FINAL.
+CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
 
     METHODS set_username
       IMPORTING iv_username TYPE string
@@ -16340,6 +16223,9 @@ CLASS lcl_persistence_user DEFINITION FINAL.
              email       TYPE string,
              repo_hidden TYPE ty_repo_hidden_tt,
            END OF ty_user.
+
+    METHODS constructor
+      IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
 
     METHODS from_xml
       IMPORTING iv_xml         TYPE string
@@ -16438,17 +16324,9 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_gui DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
-
-    CLASS-METHODS get
-      RETURNING VALUE(ro_instance) TYPE REF TO lcl_gui
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_user
-      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
-      RAISING   lcx_exception.
 
     METHODS go_home
       RAISING lcx_exception.
@@ -16465,12 +16343,10 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
       IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS on_event
-                  FOR EVENT sapevent OF cl_gui_html_viewer
+    METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
   PRIVATE SECTION.
-    CLASS-DATA go_instance  TYPE REF TO lcl_gui.
 
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
           mt_stack       TYPE TABLE OF REF TO lif_gui_page,
@@ -16503,8 +16379,6 @@ ENDCLASS.                    "lcl_gui DEFINITION
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
 
   METHOD set_files_remote.
@@ -16520,46 +16394,42 @@ ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_srv DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_repo_srv DEFINITION FINAL.
+CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
     TYPES: ty_repo_tt TYPE STANDARD TABLE OF REF TO lcl_repo WITH DEFAULT KEY.
 
-    CLASS-METHODS class_constructor.
-
-    CLASS-METHODS list
+    METHODS list
       RETURNING VALUE(rt_list) TYPE ty_repo_tt
       RAISING   lcx_exception.
 
-    CLASS-METHODS refresh
+    METHODS refresh
       RAISING lcx_exception.
 
-    CLASS-METHODS new_online
+    METHODS new_online
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
-    CLASS-METHODS new_offline
+    METHODS new_offline
       IMPORTING iv_url         TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
       RAISING   lcx_exception.
 
-    CLASS-METHODS delete
+    METHODS delete
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS get
+    METHODS get
       IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS is_repo_installed
+    METHODS is_repo_installed
       IMPORTING iv_url              TYPE string
                 iv_target_package   TYPE devclass OPTIONAL
       RETURNING VALUE(rv_installed) TYPE abap_bool
@@ -16567,19 +16437,170 @@ CLASS lcl_repo_srv DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CLASS-DATA: gv_init        TYPE abap_bool VALUE abap_false,
-                go_persistence TYPE REF TO lcl_persistence_repo,
-                gt_list        TYPE ty_repo_tt.
+    METHODS constructor.
 
-    CLASS-METHODS add
+    DATA: mv_init        TYPE abap_bool VALUE abap_false,
+          mo_persistence TYPE REF TO lcl_persistence_repo,
+          mt_list        TYPE ty_repo_tt.
+
+    METHODS add
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    CLASS-METHODS validate_package
+    METHODS validate_package
       IMPORTING iv_package TYPE devclass
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_app DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_app DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    CLASS-METHODS run
+      RAISING   lcx_exception.
+
+    CLASS-METHODS gui
+      RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
+      RAISING   lcx_exception.
+
+    CLASS-METHODS user
+      IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
+      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
+      RAISING   lcx_exception.
+
+    CLASS-METHODS repo_srv
+      RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
+
+    CLASS-METHODS db
+      RETURNING VALUE(ro_db) TYPE REF TO lcl_persistence_db.
+
+  PRIVATE SECTION.
+    CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
+                go_current_user TYPE REF TO lcl_persistence_user,
+                go_db           TYPE REF TO lcl_persistence_db,
+                go_repo_srv     TYPE REF TO lcl_repo_srv.
+
+ENDCLASS.   "lcl_app
+
+CLASS lcl_persistence_background DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CONSTANTS: BEGIN OF c_method,
+                 nothing TYPE string VALUE 'nothing',
+                 pull    TYPE string VALUE 'pull',
+                 push    TYPE string VALUE 'push',
+               END OF c_method.
+
+    TYPES: BEGIN OF ty_xml,
+             method   TYPE string,
+             username TYPE string,
+             password TYPE string,
+           END OF ty_xml.
+
+    TYPES: BEGIN OF ty_background,
+             key TYPE lcl_persistence_db=>ty_value.
+        INCLUDE TYPE ty_xml.
+    TYPES: END OF ty_background.
+    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
+
+    METHODS constructor.
+
+    METHODS list
+      RETURNING VALUE(rt_list) TYPE tt_background
+      RAISING   lcx_exception.
+
+    METHODS modify
+      IMPORTING is_data TYPE ty_background
+      RAISING   lcx_exception.
+
+    METHODS delete
+      IMPORTING iv_key TYPE ty_background-key
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
+
+    DATA: mo_db TYPE REF TO lcl_persistence_db.
+
+    METHODS from_xml
+      IMPORTING iv_string     TYPE string
+      RETURNING VALUE(rs_xml) TYPE ty_xml
+      RAISING   lcx_exception.
+
+    METHODS to_xml
+      IMPORTING is_background    TYPE ty_background
+      RETURNING VALUE(rv_string) TYPE string.
+
+ENDCLASS.     "lcl_persistence_background DEFINITION
+
+CLASS lcl_persistence_background IMPLEMENTATION.
+
+  METHOD constructor.
+    mo_db = lcl_app=>db( ).
+  ENDMETHOD.
+
+  METHOD list.
+
+    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
+          ls_xml  TYPE ty_xml.
+
+    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
+                   <ls_output> LIKE LINE OF rt_list.
+
+
+    lt_list = mo_db->list_by_type( c_type ).
+
+    LOOP AT lt_list ASSIGNING <ls_list>.
+      ls_xml = from_xml( <ls_list>-data_str ).
+
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
+      MOVE-CORRESPONDING ls_xml TO <ls_output>.
+      <ls_output>-key = <ls_list>-value.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD modify.
+    mo_db->modify(
+      iv_type  = c_type
+      iv_value = is_data-key
+      iv_data  = to_xml( is_data ) ).
+  ENDMETHOD.
+
+  METHOD delete.
+    TRY.
+        mo_db->read( iv_type  = c_type
+                     iv_value = iv_key ).
+      CATCH lcx_not_found.
+        RETURN.
+    ENDTRY.
+
+    mo_db->delete( iv_type  = c_type
+                   iv_value = iv_key ).
+  ENDMETHOD.
+
+  METHOD from_xml.
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML iv_string
+      RESULT data = rs_xml ##NO_TEXT.
+  ENDMETHOD.
+
+  METHOD to_xml.
+    DATA: ls_xml TYPE ty_xml.
+
+    MOVE-CORRESPONDING is_background TO ls_xml.
+
+    CALL TRANSFORMATION id
+      SOURCE data = ls_xml
+      RESULT XML rv_string.
+  ENDMETHOD.
+
+ENDCLASS.         " lcl_persistence_background IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online IMPLEMENTATION
@@ -16941,30 +16962,30 @@ ENDCLASS.                    "lcl_repo IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_repo_srv IMPLEMENTATION.
 
-  METHOD class_constructor.
-    CREATE OBJECT go_persistence.
+  METHOD constructor.
+    CREATE OBJECT mo_persistence.
   ENDMETHOD.                    "class_constructor
 
   METHOD list.
 
-    IF gv_init = abap_false.
+    IF mv_init = abap_false.
       refresh( ).
     ENDIF.
 
-    rt_list = gt_list.
+    rt_list = mt_list.
 
   ENDMETHOD.                    "list
 
   METHOD get.
 
-    FIELD-SYMBOLS: <lo_list> LIKE LINE OF gt_list.
+    FIELD-SYMBOLS: <lo_list> LIKE LINE OF mt_list.
 
 
-    IF gv_init = abap_false.
+    IF mv_init = abap_false.
       refresh( ).
     ENDIF.
 
-    LOOP AT gt_list ASSIGNING <lo_list>.
+    LOOP AT mt_list ASSIGNING <lo_list>.
       IF <lo_list>->get_key( ) = iv_key.
         ro_repo = <lo_list>.
         RETURN.
@@ -16984,24 +17005,24 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
 
-    CLEAR gt_list.
+    CLEAR mt_list.
 
-    lt_list = go_persistence->list( ).
+    lt_list = mo_persistence->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
       IF <ls_list>-offline = abap_false.
         CREATE OBJECT lo_online
           EXPORTING
             is_data = <ls_list>.
-        APPEND lo_online TO gt_list.
+        APPEND lo_online TO mt_list.
       ELSE.
         CREATE OBJECT lo_offline
           EXPORTING
             is_data = <ls_list>.
-        APPEND lo_offline TO gt_list.
+        APPEND lo_offline TO mt_list.
       ENDIF.
     ENDLOOP.
 
-    gv_init = abap_true.
+    mv_init = abap_true.
 
   ENDMETHOD.                    "refresh
 
@@ -17013,13 +17034,13 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     validate_package( iv_package ).
 
-    lv_key = go_persistence->add(
+    lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
       iv_package     = iv_package ).
 
     TRY.
-        ls_repo = go_persistence->read( lv_key ).
+        ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
         _raise 'new_online not found'.
     ENDTRY.
@@ -17040,14 +17061,14 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     validate_package( iv_package ).
 
-    lv_key = go_persistence->add(
+    lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = ''
       iv_package     = iv_package
       iv_offline     = abap_true ).
 
     TRY.
-        ls_repo = go_persistence->read( lv_key ).
+        ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
         _raise 'new_offline not found'.
     ENDTRY.
@@ -17062,10 +17083,10 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD add.
 
-    DATA: lo_repo LIKE LINE OF gt_list.
+    DATA: lo_repo LIKE LINE OF mt_list.
 
 
-    LOOP AT gt_list INTO lo_repo.
+    LOOP AT mt_list INTO lo_repo.
       IF lo_repo->get_key( ) = io_repo->get_key( ).
         IF lo_repo = io_repo.
           RETURN.
@@ -17074,7 +17095,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    APPEND io_repo TO gt_list.
+    APPEND io_repo TO mt_list.
 
   ENDMETHOD.                    "add
 
@@ -17099,8 +17120,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       _raise 'package not found or not allowed'.
     ENDIF.
 
-* make sure its not already in use for a different repository
-    lt_repos = go_persistence->list( ).
+    " make sure its not already in use for a different repository
+    lt_repos = mo_persistence->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
       _raise 'Package already in use'.
@@ -17112,7 +17133,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     io_repo->delete( ).
 
-    DELETE TABLE gt_list FROM io_repo.
+    DELETE TABLE mt_list FROM io_repo.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.                    "delete
@@ -18159,7 +18180,7 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lo_repo TYPE REF TO lcl_repo_offline.
 
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 
@@ -18652,21 +18673,6 @@ ENDCLASS.                    "lcl_porcelain IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
 
-  METHOD get.
-
-    IF go_instance IS NOT BOUND.
-      CREATE OBJECT go_instance.
-    ENDIF.
-    ro_instance = go_instance.
-
-  ENDMETHOD.
-
-  METHOD get_user.
-
-    ro_user = get( )->mo_user.
-
-  ENDMETHOD.
-
   METHOD constructor.
 
     startup( ).
@@ -18792,7 +18798,6 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_event  LIKE LINE OF lt_events.
 
     CREATE OBJECT mo_router.
-    CREATE OBJECT mo_user.
     CREATE OBJECT mo_html_viewer
       EXPORTING
         query_table_disabled = abap_true
@@ -19728,7 +19733,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
     CREATE OBJECT lo_per.
     lt_per = lo_per->list( ).
-    lt_list = lcl_repo_srv=>list( ).
+    lt_list = lcl_app=>repo_srv( )->list( ).
 
     LOOP AT lt_list INTO lo_repo.
       IF lo_repo->is_offline( ) = abap_false.
@@ -19849,7 +19854,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     DATA: lo_user TYPE REF TO lcl_persistence_user.
 
-    CREATE OBJECT lo_user.
+    lo_user = lcl_app=>user( ).
     lo_user->set_username( is_fields-username ).
     lo_user->set_email( is_fields-email ).
 
@@ -19974,7 +19979,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    CREATE OBJECT lo_user.
+    lo_user = lcl_app=>user( ).
     lv_user = lo_user->get_username( ).
     lv_email = lo_user->get_email( ).
 
@@ -20106,7 +20111,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       EXPORTING
         io_repo  = mo_repo
         io_stage = mo_stage.
-    lcl_gui=>get( )->set_page( lo_commit ).
+    lcl_app=>gui( )->set_page( lo_commit ).
 
   ENDMETHOD.
 
@@ -20446,7 +20451,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
-    IF lcl_gui=>get_user( )->is_hidden( lv_key ) = abap_true.
+    IF lcl_app=>user( )->is_hidden( lv_key ) = abap_true.
       lo_toolbar->add( iv_txt = 'Show'
                        iv_cmd = |sapevent:unhide?{ lv_key }| ).
     ELSE.
@@ -20544,7 +20549,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( render_repo_menu( io_repo ) ).
 
-    IF lcl_gui=>get_user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
+    IF lcl_app=>user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           extract_repo_content( EXPORTING io_repo       = io_repo
                                 IMPORTING et_repo_items = lt_repo_items
@@ -20714,8 +20719,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     TRY.
-        IF lcl_repo_srv=>is_repo_installed( lc_abapgit ) = abap_false
-            OR lcl_repo_srv=>is_repo_installed( lc_plugins ) = abap_false.
+        IF lcl_app=>repo_srv( )->is_repo_installed( lc_abapgit ) = abap_false
+            OR lcl_app=>repo_srv( )->is_repo_installed( lc_plugins ) = abap_false.
           rv_not_completely_installed = abap_true.
         ENDIF.
       CATCH lcx_exception.
@@ -20733,9 +20738,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN 'refresh'.
         lv_key = iv_getdata.
         IF lv_key IS INITIAL. " Refresh all or single
-          lcl_repo_srv=>refresh( ).
+          lcl_app=>repo_srv( )->refresh( ).
         ELSE.
-          lcl_repo_srv=>get( lv_key )->refresh( ).
+          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
         ENDIF.
         rv_state = gc_event_state-re_render.
     ENDCASE.
@@ -20805,7 +20810,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( title( iv_page_title = 'HOME' io_menu = build_main_menu( ) ) ).
 
     TRY.
-        lt_repos = lcl_repo_srv=>list( ).
+        lt_repos = lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception INTO lx_error.
         ro_html->add( render_error( lx_error ) ).
     ENDTRY.
@@ -20990,7 +20995,7 @@ CLASS lcl_background IMPLEMENTATION.
     WRITE: / 'Background mode'.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
-      lo_repo ?= lcl_repo_srv=>get( <ls_list>-key ).
+      lo_repo ?= lcl_app=>repo_srv( )->get( <ls_list>-key ).
       lv_repo_name = lo_repo->get_name( ).
       WRITE: / <ls_list>-method, lv_repo_name.
 
@@ -21017,11 +21022,68 @@ CLASS lcl_background IMPLEMENTATION.
 
 ENDCLASS.
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_app IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_app IMPLEMENTATION.
+
+  METHOD run.
+
+    IF sy-batch = abap_true.
+      lcl_background=>run( ).
+    ELSE.
+      gui( )->go_home( ).
+      CALL SELECTION-SCREEN 1001. " trigger screen
+    ENDIF.
+
+  ENDMETHOD.      "run
+
+  METHOD gui.
+
+    IF go_gui IS NOT BOUND.
+      CREATE OBJECT go_gui.
+    ENDIF.
+    ro_gui = go_gui.
+
+  ENDMETHOD.      "gui
+
+  METHOD user.
+
+    IF iv_user = sy-uname.
+      IF go_current_user IS NOT BOUND.
+        CREATE OBJECT go_current_user.
+      ENDIF.
+      ro_user = go_current_user.
+    ELSE.
+      CREATE OBJECT ro_user EXPORTING iv_user = iv_user.
+    ENDIF.
+
+  ENDMETHOD.      "user
+
+  METHOD repo_srv.
+
+    IF go_repo_srv IS NOT BOUND.
+      CREATE OBJECT go_repo_srv.
+    ENDIF.
+    ro_repo_srv = go_repo_srv.
+
+  ENDMETHOD.      "repo_srv
+
+  METHOD db.
+
+    IF go_db IS NOT BOUND.
+      CREATE OBJECT go_db.
+    ENDIF.
+    ro_db = go_db.
+
+  ENDMETHOD.      "repo_srv
+
+ENDCLASS.   "lcl_app
+
+
 *&---------------------------------------------------------------------*
 *&      Form  run
 *&---------------------------------------------------------------------*
-*       text
-*----------------------------------------------------------------------*
 FORM run.
 
   DATA: lx_exception TYPE REF TO lcx_exception,
@@ -21039,13 +21101,7 @@ FORM run.
 
   TRY.
       lcl_persistence_migrate=>run( ).
-
-      IF sy-batch = abap_true.
-        lcl_background=>run( ).
-      ELSE.
-        lcl_gui=>get( )->go_home( ).
-        CALL SELECTION-SCREEN 1001. " trigger screen
-      ENDIF.
+      lcl_app=>run( ).
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
@@ -22274,7 +22330,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lt_types = lcl_objects=>supported_list( ).
 
-    lo_repo = lcl_repo_srv=>new_online(
+    lo_repo = lcl_app=>repo_srv( )->new_online(
       iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
@@ -22310,7 +22366,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -22348,14 +22404,10 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lv_xml TYPE string,
-          lo_db  TYPE REF TO lcl_persistence_db.
-
-
-    CREATE OBJECT lo_db.
+    DATA: lv_xml TYPE string.
 
     TRY.
-        lv_xml = lo_db->read(
+        lv_xml = lcl_app=>db( )->read(
           iv_type  = c_type_user
           iv_value = mv_user ).
       CATCH lcx_not_found.
@@ -22368,15 +22420,11 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   METHOD update.
 
-    DATA: lv_xml TYPE string,
-          lo_db  TYPE REF TO lcl_persistence_db.
-
+    DATA: lv_xml TYPE string.
 
     lv_xml = to_xml( is_user ).
 
-    CREATE OBJECT lo_db.
-
-    lo_db->modify(
+    lcl_app=>db( )->modify(
       iv_type  = c_type_user
       iv_value = mv_user
       iv_data  = lv_xml ).
@@ -22748,7 +22796,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    CREATE OBJECT mo_db.
+    mo_db = lcl_app=>db( ).
   ENDMETHOD.
 
   METHOD lock.
@@ -22810,10 +22858,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
     lt_users = lcl_user=>list( ).
     LOOP AT lt_users ASSIGNING <ls_user>.
-      CREATE OBJECT lo_user
-        EXPORTING
-          iv_user = <ls_user>-user.
-
+      lo_user = lcl_app=>user( <ls_user>-user ).
       lo_user->set_username( <ls_user>-username ).
       lo_user->set_email( <ls_user>-email ).
     ENDLOOP.
@@ -23089,12 +23134,10 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_db   TYPE REF TO lcl_persistence_db.
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
 
-    CREATE OBJECT lo_db.
     TRY.
-        lv_data = lo_db->read(
+        lv_data = lcl_app=>db( )->read(
           iv_type = ms_key-type
           iv_value = ms_key-value ).
       CATCH lcx_not_found ##NO_HANDLER.
@@ -23178,20 +23221,16 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_db   TYPE REF TO lcl_persistence_db.
+    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
 
-
-
-    CREATE OBJECT lo_db.
     TRY.
-        lv_data = lo_db->read(
+        lv_data = lcl_app=>db( )->read(
           iv_type  = ms_key-type
           iv_value = ms_key-value ).
       CATCH lcx_not_found ##NO_HANDLER.
     ENDTRY.
 
-    lo_db->lock(
+    lcl_app=>db( )->lock(
       iv_type  = ms_key-type
       iv_value = ms_key-value ).
 
@@ -23260,14 +23299,12 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           lv_escaped TYPE string,
           lv_action  TYPE string,
           lv_trclass TYPE string,
-          lo_db      TYPE REF TO lcl_persistence_db,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
 
-    CREATE OBJECT lo_db.
-    lt_data = lo_db->list( ).
+    lt_data = lcl_app=>db( )->list( ).
 
     CREATE OBJECT ro_html.
 
@@ -23428,14 +23465,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN 'zipexport'.
         lv_key   = iv_getdata.
-        lcl_zip=>export( lcl_repo_srv=>get( lv_key ) ).
+        lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'newoffline'.
         repo_new_offline( ).
         ev_state = gc_event_state-re_render.
       WHEN 'files_commit'. "TODO refactor name ?
         lv_key   = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_repo_srv=>get( lv_key )
+        lcl_zip=>export( io_repo = lcl_app=>repo_srv( )->get( lv_key )
                          iv_zip  = abap_false ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'packagezip'. "TODO refactor name ?
@@ -23443,11 +23480,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-no_more_act.
       WHEN 'hide'.
         lv_key   = iv_getdata.
-        lcl_gui=>get_user( )->hide( lv_key ).
+        lcl_app=>user( )->hide( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN 'unhide'.
         lv_key   = iv_getdata.
-        lcl_gui=>get_user( )->unhide( lv_key ).
+        lcl_app=>user( )->unhide( lv_key ).
         ev_state = gc_event_state-re_render.
 
         " Repository online actions
@@ -23518,7 +23555,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
                                         IMPORTING ev_key    = lv_key
                                                   es_file   = ls_file ).
 
-    lo_repo  ?= lcl_repo_srv=>get( lv_key ).
+    lo_repo  ?= lcl_app=>repo_srv( )->get( lv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
 
@@ -23583,13 +23620,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_target_package = lc_package_plugins.
       ENDCASE.
 
-      IF abap_false = lcl_repo_srv=>is_repo_installed(
+      IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
           iv_url              = lv_url
           iv_target_package   = lv_target_package ).
 
         lcl_sap_package=>create_local( lv_target_package ).
 
-        lo_repo = lcl_repo_srv=>new_online(
+        lo_repo = lcl_app=>repo_srv( )->new_online(
           iv_url         = lv_url
           iv_branch_name = 'refs/heads/master'
           iv_package     = lv_target_package ) ##NO_TEXT.
@@ -23665,7 +23702,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lv_branch_name = <ls_field>-value.
 
-    lo_repo = lcl_repo_srv=>new_online(
+    lo_repo = lcl_app=>repo_srv( )->new_online(
       iv_url         = lv_url
       iv_branch_name = lv_branch_name
       iv_package     = lv_package ).
@@ -23686,7 +23723,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_question TYPE c LENGTH 100.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
     lv_package = lo_repo->get_package( ).
 
     lt_tadir = lcl_tadir=>read( lv_package ).
@@ -23729,7 +23766,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ENDIF.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -23743,7 +23780,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_question TYPE c LENGTH 100.
 
 
-    lo_repo = lcl_repo_srv=>get( iv_key ).
+    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
     lv_package = lo_repo->get_package( ).
 
     CONCATENATE 'This will remove the repository reference to the package'
@@ -23774,7 +23811,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lcl_repo_srv=>delete( lo_repo ).
+    lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -23820,7 +23857,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     lv_package = <ls_field>-value.
     TRANSLATE lv_package TO UPPER CASE.
 
-    lcl_repo_srv=>new_offline(
+    lcl_app=>repo_srv( )->new_offline(
       iv_url     = lv_url
       iv_package = lv_package ).
 
@@ -23878,7 +23915,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online.
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
     lo_repo->refresh( ).
     lo_repo->deserialize( ).
 
@@ -23892,7 +23929,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lo_stage TYPE REF TO lcl_gui_page_stage.
 
 
-    lo_repo ?= lcl_repo_srv=>get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
@@ -23907,8 +23944,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD db_delete.
 
-    DATA: lo_db     TYPE REF TO lcl_persistence_db,
-          lv_answer TYPE c LENGTH 1,
+    DATA: lv_answer TYPE c LENGTH 1,
           ls_key    TYPE lcl_persistence_db=>ty_content.
 
     ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
@@ -23936,9 +23972,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CREATE OBJECT lo_db.
-
-    lo_db->delete( iv_type  = ls_key-type
+    lcl_app=>db( )->delete( iv_type  = ls_key-type
                    iv_value = ls_key-value ).
 
     COMMIT WORK.
@@ -23949,7 +23983,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_string  TYPE string,
           ls_content TYPE lcl_persistence_db=>ty_content,
-          lo_db      TYPE REF TO lcl_persistence_db,
           lt_fields  TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -23973,9 +24006,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       ls_content-data_str = <ls_field>-value+1. " hmm
     ENDIF.
 
-    CREATE OBJECT lo_db.
-
-    lo_db->update(
+    lcl_app=>db( )->update(
       iv_type  = ls_content-type
       iv_value = ls_content-value
       iv_data  = ls_content-data_str ).
@@ -23985,7 +24016,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.           " lcl_gui_router
-
 
 CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
@@ -24107,7 +24137,7 @@ AT SELECTION-SCREEN OUTPUT.
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF lcl_gui=>get( )->back( ) IS INITIAL.
+      IF lcl_app=>gui( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
