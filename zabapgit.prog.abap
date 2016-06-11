@@ -111,6 +111,12 @@ CONSTANTS: BEGIN OF html_opt,
              cancel TYPE c VALUE 'C',
            END OF html_opt.
 
+CONSTANTS: BEGIN OF action_type,
+             sapevent TYPE c VALUE 'E',
+             url      TYPE c VALUE 'U',
+             onclick  TYPE c VALUE 'C',
+           END OF action_type.
+
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
@@ -308,11 +314,11 @@ CLASS lcl_html_helper DEFINITION FINAL.
     METHODS add IMPORTING iv_chunk TYPE any.
     METHODS reset.
 
-    METHODS add_anchor IMPORTING iv_txt      TYPE string
-                                 iv_act      TYPE string
-                                 iv_opt      TYPE c OPTIONAL
-                                 iv_sapevent TYPE abap_bool DEFAULT abap_true
-                                 iv_class    TYPE string OPTIONAL.
+    METHODS add_anchor IMPORTING iv_txt   TYPE string
+                                 iv_act   TYPE string
+                                 iv_opt   TYPE char1  OPTIONAL
+                                 iv_typ   TYPE char1  DEFAULT action_type-sapevent
+                                 iv_class TYPE string OPTIONAL.
 
   PRIVATE SECTION.
     METHODS _add_str IMPORTING iv_str  TYPE csequence.
@@ -405,8 +411,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
   ENDMETHOD.                    "_add_htm
 
   METHOD add_anchor.
-    DATA: lv_class TYPE string,
-          lv_href  TYPE string.
+    DATA: lv_class   TYPE string,
+          lv_href    TYPE string.
 
     lv_class = iv_class.
 
@@ -421,13 +427,19 @@ CLASS lcl_html_helper IMPLEMENTATION.
       lv_class = | class="{ lv_class }"|.
     ENDIF.
 
-    if iv_sapevent = abap_true.
-      lv_href = 'sapevent:' && iv_act.
-    else.
-      lv_href = iv_act.
-    endif.
+    IF iv_act IS NOT INITIAL.
+      CASE iv_typ.
+        WHEN action_type-url.
+          lv_href = | href="{ iv_act }"|.
+        WHEN action_type-sapevent.
+          lv_href = | href="sapevent:{ iv_act }"|.
+        WHEN action_type-onclick.
+          lv_href = | onclick="{ iv_act }"|.
+        WHEN OTHERS.
+      ENDCASE.
+    ENDIF.
 
-    _add_str( |<a{ lv_class } href="{ lv_href }">{ iv_txt }</a>| ).
+    _add_str( |<a{ lv_class }{ lv_href }>{ iv_txt }</a>| ).
 
   ENDMETHOD.                    "add_action
 
@@ -438,14 +450,11 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS add    IMPORTING iv_txt  TYPE string
-                             io_sub  TYPE REF TO lcl_html_toolbar OPTIONAL
-                             iv_act  TYPE string    OPTIONAL
-                             iv_opt  TYPE c         OPTIONAL.
-
-    METHODS addurl IMPORTING iv_txt  TYPE string
-                             iv_url  TYPE string
-                             iv_opt  TYPE c         OPTIONAL.
+    METHODS add    IMPORTING iv_txt TYPE string
+                             io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_act TYPE string    OPTIONAL
+                             iv_opt TYPE c         OPTIONAL
+                             iv_typ TYPE c         DEFAULT action_type-sapevent.
 
     METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
                              iv_no_separator           TYPE abap_bool OPTIONAL
@@ -456,11 +465,11 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
-             txt         TYPE string,
-             act         TYPE string,
-             sub         TYPE REF TO lcl_html_toolbar,
-             opt         TYPE char1,
-             is_sapevent TYPE abap_bool,
+             txt TYPE string,
+             act TYPE string,
+             sub TYPE REF TO lcl_html_toolbar,
+             opt TYPE char1,
+             typ TYPE char1,
            END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
@@ -483,22 +492,13 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ASSERT iv_act IS INITIAL AND io_sub IS NOT INITIAL
       OR   iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
-    ls_item-txt         = iv_txt.
-    ls_item-act         = iv_act.
-    ls_item-sub         = io_sub.
-    ls_item-opt         = iv_opt.
-    ls_item-is_sapevent = abap_true.
+    ls_item-txt = iv_txt.
+    ls_item-act = iv_act.
+    ls_item-sub = io_sub.
+    ls_item-opt = iv_opt.
+    ls_item-typ = iv_typ.
     APPEND ls_item TO mt_items.
   ENDMETHOD.  "add
-
-  METHOD addurl.
-    DATA ls_item TYPE ty_item.
-
-    ls_item-txt       = iv_txt.
-    ls_item-act       = iv_url.
-    ls_item-opt       = iv_opt.
-    APPEND ls_item TO mt_items.
-  ENDMETHOD.  "addurl
 
   METHOD render.
     DATA:
@@ -542,7 +542,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ro_html->add_anchor( iv_txt      = <ls_item>-txt
                              iv_act      = <ls_item>-act
                              iv_opt      = <ls_item>-opt
-                             iv_sapevent = <ls_item>-is_sapevent
+                             iv_typ      = <ls_item>-typ
                              iv_class    = lv_class ).
       ELSE.
         ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
@@ -19150,9 +19150,21 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  color:            #4078c0;').
     ro_html->add('  text-decoration:  none;').
     ro_html->add('}').
-    ro_html->add('a:hover, a:active { text-decoration:  underline; }').
+    ro_html->add('a:hover, a:active {').
+    ro_html->add('  cursor: pointer;').
+    ro_html->add('  text-decoration: underline;').
+    ro_html->add('}').
     ro_html->add('img               { border: 0px; vertical-align: middle; }').
     ro_html->add('table             { border-collapse: collapse; }').
+    ro_html->add('pre               { display: inline; }').
+
+    ro_html->add('form input, textarea {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  padding: 3px 6px;').
+    ro_html->add('}').
+    ro_html->add('form input:focus, textarea:focus {').
+    ro_html->add('  border: 1px solid #8cadd9;').
+    ro_html->add('}').
 
     " Modifiers
     ro_html->add('/* MODIFIERS */').
@@ -19225,7 +19237,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
     ro_html->add('    background-color: #f9f9f9;').
-    ro_html->add('    min-width: 10em;').
+    ro_html->add('    white-space: nowrap;').
+*    ro_html->add('    min-width: 10em;').
     ro_html->add('    border-bottom: 1px solid lightgrey;').
     ro_html->add('}').
     ro_html->add('.dropdown_content a {').
@@ -19239,42 +19252,19 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     " Other and outdated (?) styles
     ro_html->add('/* MISC AND REFACTOR */').
-    ro_html->add('a.grey:link {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('a.grey:visited {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('a.plain:link {').
-    ro_html->add('  color: black;').
-    ro_html->add('  text-decoration: none;').
-    ro_html->add('}').
-    ro_html->add('a.plain:visited {').
-    ro_html->add('  color: black;').
-    ro_html->add('  text-decoration: none;').
-    ro_html->add('}').
-    ro_html->add('a.bkg:link {').
-    ro_html->add('  color: #E8E8E8;').
-    ro_html->add('}').
-    ro_html->add('a.bkg:visited {').
-    ro_html->add('  color: #E8E8E8;').
-    ro_html->add('}').
-    ro_html->add('h1 {').
-    ro_html->add('  display: inline;').
-    ro_html->add('}').
-    ro_html->add('h2 {').
-    ro_html->add('  display: inline;').
-    ro_html->add('}').
+    ro_html->add('a.grey:link {color: grey; font-size: smaller;}').
+    ro_html->add('a.grey:visited {color: grey; font-size: smaller;}').
+    ro_html->add('a.plain:link {color: black; text-decoration: none;}').
+    ro_html->add('a.plain:visited {color: black; text-decoration: none;}').
+    ro_html->add('a.bkg:link {color: #E8E8E8;}').
+    ro_html->add('a.bkg:visited {color: #E8E8E8;}').
+    ro_html->add('h1 {display: inline;}').
+    ro_html->add('h2 {display: inline;}').
     ro_html->add('h3 {').
     ro_html->add('  display: inline;').
     ro_html->add('  color: grey;').
     ro_html->add('  font-weight:normal;').
     ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('pre {').
-    ro_html->add('  display: inline;').
     ro_html->add('}').
 
     ro_html->add('</style>').
@@ -19983,21 +19973,33 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
              body     TYPE string,
            END OF ty_fields.
 
-    METHODS:
-      render_files
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      push
+    METHODS push
         IMPORTING it_postdata TYPE cnht_post_data_tab
-        RAISING   lcx_exception,
-      update_userdata
+        RAISING   lcx_exception.
+
+    METHODS update_userdata
         IMPORTING is_fields TYPE ty_fields
-        RAISING   lcx_exception,
-      parse
+        RAISING   lcx_exception.
+
+    METHODS parse
         IMPORTING it_postdata      TYPE cnht_post_data_tab
         RETURNING VALUE(rs_fields) TYPE ty_fields.
 
+    METHODS render_menu
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS render_stage
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
+    METHODS render_form
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
     METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS scripts
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
@@ -20018,6 +20020,20 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user = lcl_app=>user( ).
     lo_user->set_username( is_fields-username ).
     lo_user->set_email( is_fields-email ).
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN 'commit_post'.
+        push( it_postdata ).
+        "lcl_app=>repo_srv( )->free_stage( ??? ).
+*        MESSAGE 'POST PUSHED' TYPE 'S' DISPLAY LIKE 'S'.
+        rv_state = gc_event_state-go_back_to_bookmark.
+      WHEN 'commit_cancel'.
+        rv_state = gc_event_state-go_back.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -20092,117 +20108,131 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_files.
+  METHOD render_stage.
 
     DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
-
     CREATE OBJECT ro_html.
 
     lt_stage = mo_stage->get_all( ).
 
-    ro_html->add( '<table>' ).
+    ro_html->add( '<table class="stage_tab">' ).
+    ro_html->add( '<tr class="title firstrow">').
+    ro_html->add( '<td colspan="2">Staged files</td>').
+    ro_html->add( '</tr>' ).
+
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
+      ro_html->add( '<td class="method">' ).
+      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
+      ro_html->add( '</td>' ).
       ro_html->add( '<td>' ).
       ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
       ro_html->add( '</td>' ).
-      ro_html->add( '<td>' ).
-      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
-      ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
+
     ro_html->add( '</table>' ).
-    ro_html->add( '<br>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.    "render_stage
 
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'post'.
-        push( it_postdata ).
-        "lcl_app=>repo_srv( )->free_stage( ??? ).
-        rv_state = gc_event_state-go_back_to_bookmark.
-      WHEN 'cancel'.
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~render.
-
+  METHOD render_form.
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
           lv_email TYPE string.
-
-
-    CREATE OBJECT ro_html.
-
-    lo_user = lcl_app=>user( ).
-    lv_user = lo_user->get_username( ).
-    lv_email = lo_user->get_email( ).
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
+    lo_user  = lcl_app=>user( ).
+    lv_user  = lo_user->get_username( ).
+    lv_email = lo_user->get_email( ).
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="form_div">' ).
+
+    ro_html->add( '<form id="commit_form" method="post" action="sapevent:commit_post">' ).
+    ro_html->add( '<table>' ).
+
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td class="field_name">username</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( |<input name="username" type="text" size="50" value="{ lv_user }">| ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr>' ).
+
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td class="field_name">email</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( |<input name="email" type="text" size="50" value="{ lv_email }">| ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr>' ).
+
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td class="field_name">comment</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( '<input name="comment" type="text"' &&
+                  ' id="commit_msg" maxlength="50" size="50">' ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr>' ).
+
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td class="field_name">body</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( '<textarea name="body" rows="10" cols="50"></textarea>' ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr>' ).
+
+    ro_html->add( '</table>' ).
+    ro_html->add( '</form>' ).
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.    "render_form
+
+  METHOD render_menu.
+
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lo_toolbar->add( iv_act = 'submitCommit();'
+                     iv_txt = 'Commit'
+                     iv_typ = action_type-onclick
+                     iv_opt = html_opt-emphas ).
+
+    lo_toolbar->add( iv_act = 'commit_cancel'
+                     iv_txt = 'Cancel'
+                     iv_opt = html_opt-cancel ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.      "render_menu
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'COMMIT' ) ).
 
-
     ro_html->add( '<div class="repo">' ).
-
     ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
-
-    " UNDER CONSTRUCTION
-    ro_html->add( render_files( ) ).
-
-*    ro_html->add( '<a href="sapevent:cancel">Cancel</a>' ).
-
-    ro_html->add( '<form method="post" action="sapevent:post">' ).
-    ro_html->add( '<table>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>username</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( '<input name="username" type="text" value="' && lv_user && '">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>email</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( '<input name="email" type="text" value="' && lv_email && '">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>comment</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( '<input name="comment" type="text" id="cmt" maxlength="50" size="50">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td colspan="2">' ).
-    ro_html->add( 'body <br>' ) ##NO_TEXT.
-    ro_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td colspan="2" align="right">' ).
-    ro_html->add( '<input type="submit" value="Push">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
-    ro_html->add( '</form>' ).
-    ro_html->add( '<script>' ).
-    ro_html->add( 'document.getElementById("cmt").focus();' ).
-    ro_html->add( '</script>' ).
+    ro_html->add( render_menu( ) ).
+    ro_html->add( render_form( ) ).
+    ro_html->add( render_stage( ) ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
+    ro_html->add( footer( io_include_script = scripts( ) ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "lif_gui_page~render
 
   METHOD styles.
     CREATE OBJECT ro_html.
@@ -20240,11 +20270,58 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add('  text-overflow: ellipsis;').
     ro_html->add('}').
 
+    ro_html->add('/* STAGE */').
+    ro_html->add('.stage_tab {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  background: #fff;').
+    ro_html->add('  margin-top: 0.2em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td {').
+    ro_html->add('  border-top: 1px solid #eee;').
+    ro_html->add('  color: #333;').
+    ro_html->add('  vertical-align: middle;').
+    ro_html->add('  padding: 2px 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td.method {').
+    ro_html->add('  color: #ccc;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab tr.firstrow td { border-top: 0px; } ' ).
+    ro_html->add('.stage_tab tr.title td {').
+    ro_html->add('  color: #BBB;').
+    ro_html->add('  font-size: 10pt;').
+    ro_html->add('  background-color: #edf2f9;').
+    ro_html->add('  padding: 4px 0.5em;').
+    ro_html->add('  text-align: center;').
+    ro_html->add('}').
+
     ro_html->add('/* COMMIT */').
+    ro_html->add('div.form_div {').
+    ro_html->add('  margin: 0.5em 0em;').
+    ro_html->add('  background-color: #F8F8F8;').
+    ro_html->add('  padding: 1em 1em;').
+    ro_html->add('}').
+    ro_html->add('div.form_div td.field_name {').
+    ro_html->add('  color: #BBB;').
+    ro_html->add('  padding-right: 1em;').
+    ro_html->add('}').
 
-  ENDMETHOD.
+  ENDMETHOD.    "styles
 
-ENDCLASS.
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'function setInitialFocus() {' ).
+    ro_html->add( '  document.getElementById("commit_msg").focus();' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'function submitCommit() {' ).
+    ro_html->add( '  document.getElementById("commit_form").submit();' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'setInitialFocus();' ).
+
+  ENDMETHOD.    "scripts
+
+ENDCLASS.       "lcl_gui_page_commit
 
 CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
@@ -23484,6 +23561,9 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
+    METHODS scripts
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit IMPLEMENTATION.
@@ -23495,7 +23575,8 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
+    DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     TRY.
         lv_data = lcl_app=>db( )->read(
@@ -23514,28 +23595,40 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
                       format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'CONFIG EDIT' ) ).
 
-    "TODO refactor
-
     ro_html->add( '<div class="db_entry">' ).
+
+    " Banners
     ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
                   |  <td>{ ms_key-type }</td></tr></table>| ).
     ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
                   |  <td>{ ms_key-value }</td></tr></table>| ).
 
-    ro_html->add( '<form method="post" action="sapevent:db_save">' ).
+    " Form
+    ro_html->add( '<form id="db_form" method="post" action="sapevent:db_save">' ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
                      }</textarea>| ).
-    ro_html->add( '<input class="cmd" type="submit" value="Update">' ).
     ro_html->add( '</form>' ).
 
+    " Menu
+    lo_toolbar->add( iv_act = 'submitDBForm();'
+                     iv_txt = 'Save'
+                     iv_typ = action_type-onclick
+                     iv_opt = html_opt-emphas ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
+    ro_html->add( '</div>' ). "db_entry
+
+    ro_html->add( footer( io_include_script = scripts( ) ) ).
 
   ENDMETHOD.
 
@@ -23548,10 +23641,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add('  padding: 0.5em;').
     ro_html->add('}').
     ro_html->add('div.db_entry textarea { margin: 0.5em 0em; }').
-    ro_html->add('div.db_entry input.cmd { ').
-    ro_html->add('  display: block;').
-    ro_html->add('  color: #4078c0;').
-    ro_html->add('}').
     ro_html->add('table.tag {').
     ro_html->add('  display: inline-block;').
     ro_html->add('  border: 1px #b3c1cc solid;').
@@ -23562,6 +23651,16 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
 
   ENDMETHOD.            "styles
+
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'function submitDBForm() {' ).
+    ro_html->add( '  document.getElementById("db_form").submit();' ).
+    ro_html->add( '}' ).
+
+  ENDMETHOD.    "scripts
 
 ENDCLASS.
 
@@ -24415,4 +24514,3 @@ AT SELECTION-SCREEN ON EXIT-COMMAND.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
-  
