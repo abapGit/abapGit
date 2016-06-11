@@ -407,6 +407,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
                              iv_canc TYPE abap_bool OPTIONAL.
     METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
                              iv_no_separator           TYPE abap_bool OPTIONAL
+                             iv_vertical               TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
@@ -452,7 +453,11 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF iv_as_droplist_with_label IS INITIAL.
-      lv_class = 'menu' ##NO_TEXT.
+      IF iv_vertical = abap_true.
+        lv_class = 'menu_vertical' ##NO_TEXT.
+      ELSE.
+        lv_class = 'menu' ##NO_TEXT.
+      ENDIF.
     ELSE.
       lv_class = 'dropdown' ##NO_TEXT.
     ENDIF.
@@ -19142,6 +19147,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  border-right: 1px solid lightgrey;').
     ro_html->add('  font-size: 12pt;').
     ro_html->add('}').
+    ro_html->add('div.menu_vertical   { display: inline; }').
+    ro_html->add('div.menu_vertical a {').
+    ro_html->add('  display: block; ').
+    ro_html->add('  font-size: 12pt;').
+    ro_html->add('}').
 
     " Drop down styles
     ro_html->add('/*DROP DOWN*/').
@@ -23403,7 +23413,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
       ro_html->add( |<td><pre>{ lv_escaped }</pre></td>| ).
       ro_html->add( '<td>' ).
-      ro_html->add( lo_toolbar->render( iv_as_droplist_with_label = 'action' ) ).
+      ro_html->add( lo_toolbar->render( iv_vertical = abap_true ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
