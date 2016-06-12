@@ -123,6 +123,9 @@ CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
 CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
 
+CONSTANTS: c_root_dir    TYPE string VALUE '/',
+           c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
+
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception
     EXPORTING
@@ -13498,8 +13501,6 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    CONSTANTS: c_root        TYPE string VALUE '/',
-               c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
 
     DATA: mt_local       TYPE ty_files_item_tt,
           mt_remote      TYPE ty_files_tt,
@@ -16048,6 +16049,10 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
       IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value
       RAISING   lcx_exception.
 
+    METHODS update_and_add_dot_abapgit
+      IMPORTING iv_data     TYPE ty_file-data
+      RAISING   lcx_exception.
+
     METHODS:
       add
         IMPORTING iv_path          TYPE ty_file-path
@@ -16934,8 +16939,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD handle_stage_ignore.
 
-    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt,
-          ls_file  TYPE ty_file.
+    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -16948,17 +16952,12 @@ CLASS lcl_repo_online IMPLEMENTATION.
         iv_path     = <ls_stage>-file-path
         iv_filename = <ls_stage>-file-filename ).
 
-* remove it from the staging object, as the action is handled here
-*      CLEAR ls_file.
-*      ls_file-path     = <ls_stage>-file-path.
-*      ls_file-filename = <ls_stage>-file-filename.
-*      io_stage->reset( ls_file ).
-*
-*      CLEAR ls_file.
-*      ls_file-path     = c_root.
-*      ls_file-filename = c_dot_abapgit.
-*      ls_file-data     = mo_dot_abapgit->serialize( ).
-*      io_stage->add( ls_file ).
+      " remove it from the staging object, as the action is handled here
+      io_stage->reset( iv_path     = <ls_stage>-file-path
+                       iv_filename = <ls_stage>-file-filename ).
+
+      io_stage->update_and_add_dot_abapgit( mo_dot_abapgit->serialize( ) ).
+
     ENDLOOP.
 
   ENDMETHOD.
@@ -16986,7 +16985,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = c_root
+      WITH KEY path = c_root_dir
       filename = c_dot_abapgit.
     IF sy-subrc = 0.
       mo_dot_abapgit = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
@@ -17091,7 +17090,7 @@ CLASS lcl_repo IMPLEMENTATION.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
     ENDIF.
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = c_root.
+    <ls_return>-file-path     = c_root_dir.
     <ls_return>-file-filename = c_dot_abapgit.
     <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
@@ -19930,6 +19929,26 @@ CLASS lcl_stage IMPLEMENTATION.
 
   ENDMETHOD.        "check_work_file_exists
 
+  METHOD update_and_add_dot_abapgit.
+
+    FIELD-SYMBOLS <dot_abapgit> LIKE LINE OF mt_workarea.
+
+    READ TABLE mt_workarea ASSIGNING <dot_abapgit>
+      WITH KEY file-path     = c_root_dir
+               file-filename = c_dot_abapgit.
+    IF sy-subrc <> 0.
+      APPEND INITIAL LINE TO mt_workarea ASSIGNING <dot_abapgit>.
+      <dot_abapgit>-type          = c_wftype-local.
+      <dot_abapgit>-file-path     = c_root_dir.
+      <dot_abapgit>-file-filename = c_dot_abapgit.
+    ENDIF.
+
+    <dot_abapgit>-file-data = iv_data.
+
+    add( iv_path = c_root_dir iv_filename = c_dot_abapgit ).
+
+  ENDMETHOD.        "update_and_add_dot_abapgit
+
 ENDCLASS.
 
 CLASS lcl_gui_page_background DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
@@ -21213,8 +21232,9 @@ CLASS lcl_background IMPLEMENTATION.
     lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
 
     LOOP AT ls_files-local ASSIGNING <ls_file>.
-      WRITE: / 'stage', <ls_file>-file-filename.
-*      lo_stage->add( <ls_file>-file ).
+      WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename.
+      lo_stage->add( iv_path     = <ls_file>-file-path
+                     iv_filename = <ls_file>-file-filename ).
     ENDLOOP.
 
     io_repo->push( is_comment = ls_comment
@@ -23784,8 +23804,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " Commit
       WHEN 'commit_post'.
-        MESSAGE 'POST' TYPE 'S'.
-*        commit_push( it_postdata ).
+        commit_push( it_postdata ).
         ev_state = gc_event_state-go_back_to_bookmark.
       WHEN 'commit_cancel'.
         ev_state = gc_event_state-go_back.
