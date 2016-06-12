@@ -13180,6 +13180,15 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_html_action_utils DEFINITION FINAL.
   PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_commit_fields, "TODO refactor ! Move to normal place
+             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
+             username TYPE string,
+             email    TYPE string,
+             comment  TYPE string,
+             body     TYPE string,
+           END OF ty_commit_fields.
+
     CLASS-METHODS jump_encode
       IMPORTING iv_obj_type      TYPE tadir-object
                 iv_obj_name      TYPE tadir-obj_name
@@ -13209,6 +13218,10 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
     CLASS-METHODS dbkey_decode
       IMPORTING iv_string        TYPE clike
       RETURNING VALUE(rs_key)    TYPE lcl_persistence_db=>ty_content.
+
+    CLASS-METHODS parse_commit_request
+        IMPORTING it_postdata      TYPE cnht_post_data_tab
+        RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -13360,6 +13373,42 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "dbkey_decode
+
+  METHOD parse_commit_request.
+
+    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'username' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-username = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'email' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-email = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'comment' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-comment = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-body = <ls_field>-value.
+    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
+
+  ENDMETHOD.                    "parse_commit_request
+
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
 
@@ -16391,6 +16440,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS db_save
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      RAISING   lcx_exception.
+
+    METHODS commit_push
       IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
@@ -19959,31 +20012,11 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           mo_stage TYPE REF TO lcl_stage.
-
-    TYPES: BEGIN OF ty_fields,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-             body     TYPE string,
-           END OF ty_fields.
-
-    METHODS push
-        IMPORTING it_postdata TYPE cnht_post_data_tab
-        RAISING   lcx_exception.
-
-    METHODS update_userdata
-        IMPORTING is_fields TYPE ty_fields
-        RAISING   lcx_exception.
-
-    METHODS parse
-        IMPORTING it_postdata      TYPE cnht_post_data_tab
-        RETURNING VALUE(rs_fields) TYPE ty_fields.
 
     METHODS render_menu
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -20011,101 +20044,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     mo_repo ?= lcl_app=>repo_srv( )->get( iv_repo_key ).
     mo_stage = lcl_app=>repo_srv( )->get_stage( iv_repo_key ).
-  ENDMETHOD.
-
-  METHOD update_userdata.
-
-    DATA: lo_user TYPE REF TO lcl_persistence_user.
-
-    lo_user = lcl_app=>user( ).
-    lo_user->set_username( is_fields-username ).
-    lo_user->set_email( is_fields-email ).
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'commit_post'.
-        push( it_postdata ).
-        "lcl_app=>repo_srv( )->free_stage( ??? ).
-*        MESSAGE 'POST PUSHED' TYPE 'S' DISPLAY LIKE 'S'.
-        rv_state = gc_event_state-go_back_to_bookmark.
-      WHEN 'commit_cancel'.
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD push.
-
-    DATA: ls_fields  TYPE ty_fields,
-          ls_comment TYPE ty_comment.
-
-
-    ls_fields = parse( it_postdata ).
-
-    update_userdata( ls_fields ).
-
-    IF ls_fields-username IS INITIAL.
-      _raise 'empty username'.
-    ENDIF.
-    IF ls_fields-email IS INITIAL.
-      _raise 'empty email'.
-    ENDIF.
-    IF ls_fields-comment IS INITIAL.
-      _raise 'empty comment'.
-    ENDIF.
-
-    ls_comment-username = ls_fields-username.
-    ls_comment-email    = ls_fields-email.
-    ls_comment-comment  = ls_fields-comment.
-
-    IF NOT ls_fields-body IS INITIAL.
-      CONCATENATE ls_comment-comment gc_newline ls_fields-body
-        INTO ls_comment-comment.
-    ENDIF.
-
-    mo_repo->push( is_comment = ls_comment
-                   io_stage   = mo_stage ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD parse.
-
-    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'username' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-username = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'email' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-email = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'comment' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-comment = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-body = <ls_field>-value.
-    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
-
   ENDMETHOD.
 
   METHOD render_stage.
@@ -23870,6 +23808,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page_w_bookmark.
 
+        " Commit
+      WHEN 'commit_post'.
+        commit_push( it_postdata ).
+        ev_state = gc_event_state-go_back_to_bookmark.
+      WHEN 'commit_cancel'.
+        ev_state = gc_event_state-go_back.
+
+
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
     ENDCASE.
@@ -24387,6 +24333,49 @@ CLASS lcl_gui_router IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.
+
+  METHOD commit_push.
+
+    DATA: ls_fields  TYPE lcl_html_action_utils=>ty_commit_fields,
+          ls_comment TYPE ty_comment,
+          lo_stage   TYPE REF TO lcl_stage,
+          lo_repo    TYPE REF TO lcl_repo_online,
+          lo_user    TYPE REF TO lcl_persistence_user.
+
+    ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
+
+    lo_user = lcl_app=>user( ).   " TODO refactor - password manager
+    lo_user->set_username( ls_fields-username ).
+    lo_user->set_email( ls_fields-email ).
+
+    IF ls_fields-username IS INITIAL.
+      _raise 'empty username'.
+    ENDIF.
+    IF ls_fields-email IS INITIAL.
+      _raise 'empty email'.
+    ENDIF.
+    IF ls_fields-comment IS INITIAL.
+      _raise 'empty comment'.
+    ENDIF.
+
+    lo_repo            ?= lcl_app=>repo_srv( )->get( ls_fields-repo_key ).
+    lo_stage            = lcl_app=>repo_srv( )->get_stage( ls_fields-repo_key ).
+    ls_comment-username = ls_fields-username.
+    ls_comment-email    = ls_fields-email.
+    ls_comment-comment  = ls_fields-comment.
+
+    IF NOT ls_fields-body IS INITIAL.
+      CONCATENATE ls_comment-comment gc_newline ls_fields-body
+        INTO ls_comment-comment.
+    ENDIF.
+
+    lo_repo->push( is_comment = ls_comment
+                   io_stage   = lo_stage ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.      "commit_push
+
 
 ENDCLASS.           " lcl_gui_router
 
