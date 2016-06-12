@@ -16540,15 +16540,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
-    METHODS call_page
-      IMPORTING ii_page          TYPE REF TO lif_gui_page
-                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
-
-    METHODS set_page
-      IMPORTING ii_page TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
-
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
@@ -16576,14 +16567,17 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING iv_url    TYPE w3url
                 iv_base64 TYPE string.
 
-    METHODS show_url
-      IMPORTING iv_url TYPE clike.
+    METHODS cache_html
+      IMPORTING iv_html       TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
       RAISING lcx_exception.
 
-    METHODS view
-      IMPORTING iv_html TYPE string.
+    METHODS call_page
+      IMPORTING ii_page          TYPE REF TO lif_gui_page
+                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -18934,14 +18928,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     startup( ).
 
-  ENDMETHOD.
-
-
-  METHOD show_url.
-
-    mo_html_viewer->show_url( iv_url ).
-
-  ENDMETHOD.
+  ENDMETHOD.            "constructor
 
   METHOD on_event.
 
@@ -19025,7 +19012,7 @@ CLASS lcl_gui IMPLEMENTATION.
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "back
 
   METHOD call_page.
 
@@ -19049,22 +19036,16 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    set_page( ii_page ).
-
-  ENDMETHOD.
-
-  METHOD set_page.
-
     mi_cur_page = ii_page.
     render( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "call_page
 
   METHOD go_home.
 
     on_event( action = 'main' ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "go_home
 
   METHOD startup.
 
@@ -19085,18 +19066,21 @@ CLASS lcl_gui IMPLEMENTATION.
 
     SET HANDLER me->on_event FOR mo_html_viewer.
 
-  ENDMETHOD.                    "init
+  ENDMETHOD.                    "startup
 
   METHOD render.
 
-    view( mi_cur_page->render( )->mv_html ).
+    DATA lv_url TYPE w3url.
 
-  ENDMETHOD.
+    lv_url = cache_html( mi_cur_page->render( )->mv_html ).
 
-  METHOD view.
+    mo_html_viewer->show_url( lv_url ).
 
-    DATA: lt_data TYPE TABLE OF text200,
-          lv_url  TYPE text200.
+  ENDMETHOD.                    "render
+
+  METHOD cache_html.
+
+    DATA: lt_data TYPE TABLE OF text200.
 
     CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
       EXPORTING
@@ -19106,13 +19090,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
     mo_html_viewer->load_data(
       IMPORTING
-        assigned_url = lv_url
+        assigned_url = rv_url
       CHANGING
         data_table   = lt_data ).
 
-    mo_html_viewer->show_url( lv_url ).
-
-  ENDMETHOD.                    "view
+  ENDMETHOD.                    "cache_html
 
   METHOD cache_image.
 
@@ -19148,9 +19130,9 @@ CLASS lcl_gui IMPLEMENTATION.
 
     ASSERT sy-subrc = 0. " Image data error
 
-  ENDMETHOD.
+  ENDMETHOD.                  "cache_image
 
-ENDCLASS.                    "lcl_gui IMPLEMENTATION
+ENDCLASS.                     "lcl_gui IMPLEMENTATION
 
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
@@ -19515,7 +19497,6 @@ ENDCLASS.                       "lcl_gui_page_explore IMPLEMENTATION
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event   REDEFINITION.
     METHODS lif_gui_page~render     REDEFINITION.
     METHODS lif_gui_page~get_assets REDEFINITION.
 
@@ -21007,24 +20988,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         rv_not_completely_installed = abap_false.
     ENDTRY.
   ENDMETHOD.                    "needs_installation
-
-  METHOD lif_gui_page~on_event.
-
-    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
-
-
-    CASE iv_action.
-      WHEN 'refresh'.
-        lv_key = iv_getdata.
-        IF lv_key IS INITIAL. " Refresh all or single
-          lcl_app=>repo_srv( )->refresh( ).
-        ELSE.
-          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-        ENDIF.
-        rv_state = gc_event_state-re_render.
-    ENDCASE.
-
-  ENDMETHOD.
 
   METHOD render_toc.
 
@@ -23787,6 +23750,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'unhide'.
         lv_key   = iv_getdata.
         lcl_app=>user( )->unhide( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'refresh'.
+        lv_key = iv_getdata.
+        IF lv_key IS INITIAL. " Refresh all or single
+          lcl_app=>repo_srv( )->refresh( ).
+        ELSE.
+          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+        ENDIF.
         ev_state = gc_event_state-re_render.
 
         " Repository online actions
