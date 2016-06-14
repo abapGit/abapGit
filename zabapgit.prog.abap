@@ -123,6 +123,9 @@ CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
 CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
 
+CONSTANTS: c_root_dir    TYPE string VALUE '/',
+           c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
+
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception
     EXPORTING
@@ -13180,6 +13183,15 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_html_action_utils DEFINITION FINAL.
   PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_commit_fields, "TODO refactor ! Move to normal place
+             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
+             username TYPE string,
+             email    TYPE string,
+             comment  TYPE string,
+             body     TYPE string,
+           END OF ty_commit_fields.
+
     CLASS-METHODS jump_encode
       IMPORTING iv_obj_type      TYPE tadir-object
                 iv_obj_name      TYPE tadir-obj_name
@@ -13209,6 +13221,18 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
     CLASS-METHODS dbkey_decode
       IMPORTING iv_string        TYPE clike
       RETURNING VALUE(rs_key)    TYPE lcl_persistence_db=>ty_content.
+
+    CLASS-METHODS parse_commit_request
+        IMPORTING it_postdata      TYPE cnht_post_data_tab
+        RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
+
+    CLASS-METHODS repo_key_encode
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS repo_key_decode
+      IMPORTING iv_string        TYPE clike
+      RETURNING VALUE(rv_key)    TYPE lcl_persistence_repo=>ty_repo-key.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -13361,6 +13385,75 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.                    "dbkey_decode
 
+  METHOD parse_commit_request.
+
+    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'key' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-repo_key = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'username' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-username = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'email' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-email = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'comment' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-comment = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_fields-body = <ls_field>-value.
+    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
+
+  ENDMETHOD.                    "parse_commit_request
+
+  METHOD repo_key_encode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name = 'KEY'.
+    ls_field-value = iv_key.
+    APPEND ls_field TO lt_fields.
+
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "repo_key_encode
+
+  METHOD repo_key_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lv_string = iv_string.     " type conversion
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
+    IF sy-subrc = 0.
+      rv_key = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.                    "repo_key_decode
+
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -13408,8 +13501,6 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    CONSTANTS: c_root        TYPE string VALUE '/',
-               c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
 
     DATA: mt_local       TYPE ty_files_item_tt,
           mt_remote      TYPE ty_files_tt,
@@ -15927,6 +16018,11 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
                  ignore TYPE ty_method VALUE 'I',
                END OF c_method.
 
+    CONSTANTS: BEGIN OF c_wftype,
+                 local  TYPE char1 VALUE 'L',
+                 remote TYPE char1 VALUE 'R',
+               END OF c_wftype.
+
     TYPES: BEGIN OF ty_stage,
              file   TYPE ty_file,
              method TYPE ty_method,
@@ -15935,44 +16031,68 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
     TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
       WITH UNIQUE KEY file-path file-filename.
 
-    DATA mv_repo_key TYPE lcl_persistence_db=>ty_value READ-ONLY.
+    TYPES: BEGIN OF ty_work_file,
+             type     TYPE char1,
+             file     TYPE ty_file,
+           END OF ty_work_file.
 
-    CLASS-METHODS:
-      method_description
-        IMPORTING iv_method             TYPE ty_method
-        RETURNING VALUE(rv_description) TYPE string
-        RAISING   lcx_exception.
+    DATA mv_repo_key  TYPE lcl_persistence_db=>ty_value READ-ONLY.
+    DATA mv_local_cnt TYPE i READ-ONLY.
+    DATA mt_workarea  TYPE STANDARD TABLE OF ty_work_file READ-ONLY.
 
-    METHODS constructor IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value.
+    CLASS-METHODS method_description
+      IMPORTING iv_method             TYPE ty_method
+      RETURNING VALUE(rv_description) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS constructor
+      IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value
+      RAISING   lcx_exception.
+
+    METHODS update_and_add_dot_abapgit
+      IMPORTING iv_data     TYPE ty_file-data
+      RAISING   lcx_exception.
 
     METHODS:
       add
-        IMPORTING is_file TYPE ty_file
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
         RAISING   lcx_exception,
       reset
-        IMPORTING is_file TYPE ty_file
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
         RAISING   lcx_exception,
       rm
-        IMPORTING is_file TYPE ty_file
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
         RAISING   lcx_exception,
       ignore
-        IMPORTING is_file TYPE ty_file
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
         RAISING   lcx_exception,
-      count
-        RETURNING VALUE(rv_count) TYPE i,
       lookup
         IMPORTING iv_path          TYPE ty_file-path
                   iv_filename      TYPE ty_file-filename
         RETURNING VALUE(rv_method) TYPE ty_method,
+      count
+        RETURNING VALUE(rv_count)  TYPE i,
       get_all
-        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
+        RETURNING VALUE(rt_stage)  TYPE ty_stage_tt.
 
   PRIVATE SECTION.
     DATA: mt_stage TYPE ty_stage_tt.
 
-    METHODS: append
-      IMPORTING is_file   TYPE ty_file
-                iv_method TYPE ty_method.
+    METHODS append
+      IMPORTING iv_path            TYPE ty_file-path
+                iv_filename        TYPE ty_file-filename
+                iv_method          TYPE ty_method
+      RAISING   lcx_exception.
+
+    METHODS find_work_file
+      IMPORTING iv_path            TYPE ty_file-path
+                iv_filename        TYPE ty_file-filename
+      RETURNING VALUE(rs_file)     TYPE ty_file
+      RAISING   lcx_exception.
 
 ENDCLASS.   "lcl_stage DEFINITION
 
@@ -16056,7 +16176,7 @@ ENDCLASS.
 CLASS lcl_stage_logic IMPLEMENTATION.
 
   METHOD get.
-    rs_files-local = io_repo->get_files_local( ).
+    rs_files-local  = io_repo->get_files_local( ).
     rs_files-remote = io_repo->get_files_remote( ).
     remove_identical( CHANGING cs_files = rs_files ).
     remove_ignored( EXPORTING io_repo = io_repo
@@ -16355,6 +16475,11 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_commit
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS get_page_db_by_name
       IMPORTING iv_name        TYPE clike
                 iv_getdata     TYPE clike
@@ -16394,6 +16519,15 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
+    METHODS commit_push
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      RAISING   lcx_exception.
+
+    METHODS stage_handle_action
+      IMPORTING iv_getdata  TYPE clike
+                iv_action   TYPE clike
+      RAISING   lcx_exception.
+
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -16409,15 +16543,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     METHODS back
       IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_exit) TYPE xfeld
-      RAISING   lcx_exception.
-
-    METHODS call_page
-      IMPORTING ii_page          TYPE REF TO lif_gui_page
-                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
-
-    METHODS set_page
-      IMPORTING ii_page TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
@@ -16447,14 +16572,17 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING iv_url    TYPE w3url
                 iv_base64 TYPE string.
 
-    METHODS show_url
-      IMPORTING iv_url TYPE clike.
+    METHODS cache_html
+      IMPORTING iv_html       TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
       RAISING lcx_exception.
 
-    METHODS view
-      IMPORTING iv_html TYPE string.
+    METHODS call_page
+      IMPORTING ii_page          TYPE REF TO lif_gui_page
+                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_gui DEFINITION
 
@@ -16811,8 +16939,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD handle_stage_ignore.
 
-    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt,
-          ls_file  TYPE ty_file.
+    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -16825,17 +16952,12 @@ CLASS lcl_repo_online IMPLEMENTATION.
         iv_path     = <ls_stage>-file-path
         iv_filename = <ls_stage>-file-filename ).
 
-* remove it from the staging object, as the action is handled here
-      CLEAR ls_file.
-      ls_file-path     = <ls_stage>-file-path.
-      ls_file-filename = <ls_stage>-file-filename.
-      io_stage->reset( ls_file ).
+      " remove it from the staging object, as the action is handled here
+      io_stage->reset( iv_path     = <ls_stage>-file-path
+                       iv_filename = <ls_stage>-file-filename ).
 
-      CLEAR ls_file.
-      ls_file-path     = c_root.
-      ls_file-filename = c_dot_abapgit.
-      ls_file-data     = mo_dot_abapgit->serialize( ).
-      io_stage->add( ls_file ).
+      io_stage->update_and_add_dot_abapgit( mo_dot_abapgit->serialize( ) ).
+
     ENDLOOP.
 
   ENDMETHOD.
@@ -16863,7 +16985,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = c_root
+      WITH KEY path = c_root_dir
       filename = c_dot_abapgit.
     IF sy-subrc = 0.
       mo_dot_abapgit = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
@@ -16968,7 +17090,7 @@ CLASS lcl_repo IMPLEMENTATION.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
     ENDIF.
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = c_root.
+    <ls_return>-file-path     = c_root_dir.
     <ls_return>-file-filename = c_dot_abapgit.
     <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
@@ -18805,14 +18927,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     startup( ).
 
-  ENDMETHOD.
-
-
-  METHOD show_url.
-
-    mo_html_viewer->show_url( iv_url ).
-
-  ENDMETHOD.
+  ENDMETHOD.            "constructor
 
   METHOD on_event.
 
@@ -18896,7 +19011,7 @@ CLASS lcl_gui IMPLEMENTATION.
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "back
 
   METHOD call_page.
 
@@ -18920,22 +19035,16 @@ CLASS lcl_gui IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    set_page( ii_page ).
-
-  ENDMETHOD.
-
-  METHOD set_page.
-
     mi_cur_page = ii_page.
     render( ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "call_page
 
   METHOD go_home.
 
     on_event( action = 'main' ).
 
-  ENDMETHOD.
+  ENDMETHOD.                "go_home
 
   METHOD startup.
 
@@ -18956,18 +19065,21 @@ CLASS lcl_gui IMPLEMENTATION.
 
     SET HANDLER me->on_event FOR mo_html_viewer.
 
-  ENDMETHOD.                    "init
+  ENDMETHOD.                    "startup
 
   METHOD render.
 
-    view( mi_cur_page->render( )->mv_html ).
+    DATA lv_url TYPE w3url.
 
-  ENDMETHOD.
+    lv_url = cache_html( mi_cur_page->render( )->mv_html ).
 
-  METHOD view.
+    mo_html_viewer->show_url( lv_url ).
 
-    DATA: lt_data TYPE TABLE OF text200,
-          lv_url  TYPE text200.
+  ENDMETHOD.                    "render
+
+  METHOD cache_html.
+
+    DATA: lt_data TYPE TABLE OF text200.
 
     CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
       EXPORTING
@@ -18977,13 +19089,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
     mo_html_viewer->load_data(
       IMPORTING
-        assigned_url = lv_url
+        assigned_url = rv_url
       CHANGING
         data_table   = lt_data ).
 
-    mo_html_viewer->show_url( lv_url ).
-
-  ENDMETHOD.                    "view
+  ENDMETHOD.                    "cache_html
 
   METHOD cache_image.
 
@@ -19019,9 +19129,9 @@ CLASS lcl_gui IMPLEMENTATION.
 
     ASSERT sy-subrc = 0. " Image data error
 
-  ENDMETHOD.
+  ENDMETHOD.                  "cache_image
 
-ENDCLASS.                    "lcl_gui IMPLEMENTATION
+ENDCLASS.                     "lcl_gui IMPLEMENTATION
 
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
@@ -19267,6 +19377,15 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  font-size: smaller;').
     ro_html->add('}').
 
+    ro_html->add('.hidden-submit {').
+    ro_html->add('  border: 0 none;').
+    ro_html->add('  height: 0;').
+    ro_html->add('  width: 0;').
+    ro_html->add('  padding: 0;').
+    ro_html->add('  margin: 0;').
+    ro_html->add('  overflow: hidden;').
+    ro_html->add('}').
+
     ro_html->add('</style>').
 
   ENDMETHOD.                    "common styles
@@ -19386,7 +19505,6 @@ ENDCLASS.                       "lcl_gui_page_explore IMPLEMENTATION
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~on_event   REDEFINITION.
     METHODS lif_gui_page~render     REDEFINITION.
     METHODS lif_gui_page~get_assets REDEFINITION.
 
@@ -19468,7 +19586,6 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     DATA: mv_filename TYPE string,
-          ms_stats    TYPE lcl_diff=>ty_count,
           mo_diff     TYPE REF TO lcl_diff.
 
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -19577,15 +19694,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_head.
-    DATA lo_html  TYPE REF TO lcl_html_helper.
+    DATA: lo_html  TYPE REF TO lcl_html_helper,
+          ls_stats  TYPE lcl_diff=>ty_count.
+
     CREATE OBJECT lo_html.
 
-    ms_stats = mo_diff->stats( ).
+    ls_stats = mo_diff->stats( ).
 
     lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_ins">+ { ms_stats-insert }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_del">- { ms_stats-delete }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_upd">~ { ms_stats-update }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
+    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
     lo_html->add( |{ mv_filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
@@ -19695,10 +19814,32 @@ ENDCLASS.
 CLASS lcl_stage IMPLEMENTATION.
 
   METHOD constructor.
+    DATA: ls_files     TYPE lcl_stage_logic=>ty_stage_files,
+          lo_repo      TYPE REF TO lcl_repo_online,
+          ls_work_file LIKE LINE OF mt_workarea.
+
+    FIELD-SYMBOLS: <ls_local>  LIKE LINE OF ls_files-local,
+                   <ls_remote> LIKE LINE OF ls_files-remote.
 
     mv_repo_key = iv_repo_key.
+    lo_repo    ?= lcl_app=>repo_srv( )->get( iv_repo_key ).
+    ls_files    = lcl_stage_logic=>get( lo_repo ).
 
-  ENDMETHOD.
+    " Unify structures
+    LOOP AT ls_files-local ASSIGNING <ls_local>.
+      ls_work_file-type     = c_wftype-local.
+      ls_work_file-file     = <ls_local>-file.
+      APPEND ls_work_file TO mt_workarea.
+      mv_local_cnt = mv_local_cnt + 1.
+    ENDLOOP.
+
+    LOOP AT ls_files-remote ASSIGNING <ls_remote>.
+      ls_work_file-type     = c_wftype-remote.
+      ls_work_file-file     = <ls_remote>.
+      APPEND ls_work_file TO mt_workarea.
+    ENDLOOP.
+
+  ENDMETHOD.        "constructor
 
   METHOD lookup.
     DATA ls_stage LIKE LINE OF mt_stage.
@@ -19710,33 +19851,35 @@ CLASS lcl_stage IMPLEMENTATION.
       rv_method = ls_stage-method.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.        "lookup
 
   METHOD get_all.
     rt_stage = mt_stage.
-  ENDMETHOD.
+  ENDMETHOD.        "get_all
 
   METHOD append.
 
-    DATA: ls_stage LIKE LINE OF mt_stage.
+    DATA: ls_stage LIKE LINE OF mt_stage,
+          ls_file  TYPE ty_file.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF mt_stage.
 
+    ls_file = find_work_file( iv_path = iv_path iv_filename = iv_filename ).
 
     READ TABLE mt_stage WITH KEY
-      file-path = is_file-path
-      file-filename = is_file-filename
+      file-path     = ls_file-path
+      file-filename = ls_file-filename
       ASSIGNING <ls_stage>.
     IF sy-subrc = 0.
-      <ls_stage>-file-data = is_file-data.
-      <ls_stage>-method = iv_method.
+      <ls_stage>-file-data = ls_file-data.
+      <ls_stage>-method    = iv_method.
     ELSE.
-      ls_stage-file   = is_file.
+      ls_stage-file   = ls_file.
       ls_stage-method = iv_method.
       INSERT ls_stage INTO TABLE mt_stage.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.        "append
 
   METHOD method_description.
 
@@ -19751,32 +19894,69 @@ CLASS lcl_stage IMPLEMENTATION.
         _raise 'unknown staging method type'.
     ENDCASE.
 
-  ENDMETHOD.
+  ENDMETHOD.        "method_description
 
   METHOD add.
-    append( is_file   = is_file
-            iv_method = c_method-add ).
-  ENDMETHOD.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-add ).
+  ENDMETHOD.        "add
 
   METHOD reset.
-    DELETE mt_stage WHERE file-path = is_file-path
-      AND file-filename = is_file-filename.
+    DELETE mt_stage WHERE file-path     = iv_path
+                    AND   file-filename = iv_filename.
     ASSERT sy-subrc = 0.
-  ENDMETHOD.
+  ENDMETHOD.        "reset
 
   METHOD rm.
-    append( is_file   = is_file
-            iv_method = c_method-rm ).
-  ENDMETHOD.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-rm ).
+  ENDMETHOD.        "rm
 
   METHOD ignore.
-    append( is_file   = is_file
-            iv_method = c_method-ignore ).
-  ENDMETHOD.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-ignore ).
+  ENDMETHOD.        "ignore
 
   METHOD count.
     rv_count = lines( mt_stage ).
-  ENDMETHOD.
+  ENDMETHOD.        "count
+
+  METHOD find_work_file.
+    DATA ls_work_file LIKE LINE OF mt_workarea.
+
+    READ TABLE mt_workarea INTO ls_work_file
+      WITH KEY file-path     = iv_path
+               file-filename = iv_filename.
+    IF sy-subrc = 0.
+      rs_file = ls_work_file-file.
+    ELSE.
+      _raise 'File not found in workarea'.
+    ENDIF.
+
+  ENDMETHOD.        "check_work_file_exists
+
+  METHOD update_and_add_dot_abapgit.
+
+    FIELD-SYMBOLS <dot_abapgit> LIKE LINE OF mt_workarea.
+
+    READ TABLE mt_workarea ASSIGNING <dot_abapgit>
+      WITH KEY file-path     = c_root_dir
+               file-filename = c_dot_abapgit.
+    IF sy-subrc <> 0.
+      APPEND INITIAL LINE TO mt_workarea ASSIGNING <dot_abapgit>.
+      <dot_abapgit>-type          = c_wftype-local.
+      <dot_abapgit>-file-path     = c_root_dir.
+      <dot_abapgit>-file-filename = c_dot_abapgit.
+    ENDIF.
+
+    <dot_abapgit>-file-data = iv_data.
+
+    add( iv_path = c_root_dir iv_filename = c_dot_abapgit ).
+
+  ENDMETHOD.        "update_and_add_dot_abapgit
 
 ENDCLASS.
 
@@ -19959,31 +20139,11 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           mo_stage TYPE REF TO lcl_stage.
-
-    TYPES: BEGIN OF ty_fields,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-             body     TYPE string,
-           END OF ty_fields.
-
-    METHODS push
-        IMPORTING it_postdata TYPE cnht_post_data_tab
-        RAISING   lcx_exception.
-
-    METHODS update_userdata
-        IMPORTING is_fields TYPE ty_fields
-        RAISING   lcx_exception.
-
-    METHODS parse
-        IMPORTING it_postdata      TYPE cnht_post_data_tab
-        RETURNING VALUE(rs_fields) TYPE ty_fields.
 
     METHODS render_menu
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -20011,101 +20171,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     mo_repo ?= lcl_app=>repo_srv( )->get( iv_repo_key ).
     mo_stage = lcl_app=>repo_srv( )->get_stage( iv_repo_key ).
-  ENDMETHOD.
-
-  METHOD update_userdata.
-
-    DATA: lo_user TYPE REF TO lcl_persistence_user.
-
-    lo_user = lcl_app=>user( ).
-    lo_user->set_username( is_fields-username ).
-    lo_user->set_email( is_fields-email ).
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'commit_post'.
-        push( it_postdata ).
-        "lcl_app=>repo_srv( )->free_stage( ??? ).
-*        MESSAGE 'POST PUSHED' TYPE 'S' DISPLAY LIKE 'S'.
-        rv_state = gc_event_state-go_back_to_bookmark.
-      WHEN 'commit_cancel'.
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD push.
-
-    DATA: ls_fields  TYPE ty_fields,
-          ls_comment TYPE ty_comment.
-
-
-    ls_fields = parse( it_postdata ).
-
-    update_userdata( ls_fields ).
-
-    IF ls_fields-username IS INITIAL.
-      _raise 'empty username'.
-    ENDIF.
-    IF ls_fields-email IS INITIAL.
-      _raise 'empty email'.
-    ENDIF.
-    IF ls_fields-comment IS INITIAL.
-      _raise 'empty comment'.
-    ENDIF.
-
-    ls_comment-username = ls_fields-username.
-    ls_comment-email    = ls_fields-email.
-    ls_comment-comment  = ls_fields-comment.
-
-    IF NOT ls_fields-body IS INITIAL.
-      CONCATENATE ls_comment-comment gc_newline ls_fields-body
-        INTO ls_comment-comment.
-    ENDIF.
-
-    mo_repo->push( is_comment = ls_comment
-                   io_stage   = mo_stage ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD parse.
-
-    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'username' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-username = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'email' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-email = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'comment' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-comment = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-body = <ls_field>-value.
-    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
-
   ENDMETHOD.
 
   METHOD render_stage.
@@ -20141,6 +20206,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD render_form.
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
+          lv_key   TYPE string,
           lv_email TYPE string.
 
 * see https://git-scm.com/book/ch5-2.html
@@ -20150,12 +20216,13 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user  = lcl_app=>user( ).
     lv_user  = lo_user->get_username( ).
     lv_email = lo_user->get_email( ).
+    lv_key   = mo_repo->get_key( ).
 
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="form_div">' ).
-
     ro_html->add( '<form id="commit_form" method="post" action="sapevent:commit_post">' ).
+    ro_html->add( |<input name="key" type="hidden" value="{ lv_key }">| ).
     ro_html->add( '<table>' ).
 
     ro_html->add( '<tr>' ).
@@ -20184,6 +20251,9 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '<td class="field_name">body</td>' ).
     ro_html->add( '<td>' ).
     ro_html->add( '<textarea name="body" rows="10" cols="50"></textarea>' ).
+
+    ro_html->add( '<input type="submit" class="hidden-submit">' ). "Hmmm ... reconsider
+
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
 
@@ -20330,32 +20400,11 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       IMPORTING io_repo TYPE REF TO lcl_repo_online
       RAISING   lcx_exception.
 
-    METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
-
-    CONSTANTS: c_local  TYPE char1 VALUE 'L',
-               c_remote TYPE char1 VALUE 'R'.
-
-    TYPES: BEGIN OF ty_work_file,
-             type     TYPE char1,
-             file     TYPE ty_file,
-           END OF ty_work_file.
 
   PRIVATE SECTION.
     DATA: mo_repo      TYPE REF TO lcl_repo_online,
-          mo_stage     TYPE REF TO lcl_stage,
-          mv_local_cnt TYPE i,
-          mt_workarea  TYPE STANDARD TABLE OF ty_work_file.
-
-    METHODS:
-      file_decode
-        IMPORTING iv_string      TYPE clike
-        RETURNING VALUE(rs_file) TYPE ty_file
-        RAISING   lcx_exception,
-      all
-        RAISING lcx_exception,
-      call_commit
-        RAISING lcx_exception.
+          mo_stage     TYPE REF TO lcl_stage.
 
     METHODS render_lines
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -20372,121 +20421,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: ls_files     TYPE lcl_stage_logic=>ty_stage_files,
-          lt_local     TYPE ty_files_item_tt,
-          lt_remote    TYPE ty_files_tt,
-          ls_work_file LIKE LINE OF mt_workarea.
-
-    FIELD-SYMBOLS: <ls_local>  LIKE LINE OF lt_local,
-                   <ls_remote> LIKE LINE OF lt_remote.
-
     super->constructor( ).
     mo_repo   = io_repo.
     mo_stage  = lcl_app=>repo_srv( )->get_stage( iv_repo_key = mo_repo->get_key( )
-                                                iv_new      = abap_true ).
-
-    ls_files  = lcl_stage_logic=>get( mo_repo ).
-    lt_local  = ls_files-local.
-    lt_remote = ls_files-remote.
-
-    " Unify structures
-    " TODO potentially move this to stage_logic
-    LOOP AT lt_local ASSIGNING <ls_local>.
-      ls_work_file-type     = c_local.
-      ls_work_file-file     = <ls_local>-file.
-      APPEND ls_work_file TO mt_workarea.
-      mv_local_cnt = mv_local_cnt + 1.
-
-      "the file should not exist in both local and remote at same time
-      READ TABLE lt_remote TRANSPORTING NO FIELDS
-        WITH KEY path     = <ls_local>-file-path
-                 filename = <ls_local>-file-filename.
-      ASSERT sy-subrc <> 0.
-    ENDLOOP.
-
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
-      ls_work_file-type     = c_remote.
-      ls_work_file-file     = <ls_remote>.
-      APPEND ls_work_file TO mt_workarea.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD all.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_workarea.
-
-    ASSERT mo_stage->count( ) = 0.
-
-    LOOP AT mt_workarea ASSIGNING <ls_file> WHERE type = c_local.
-      mo_stage->add( <ls_file>-file ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD call_commit.
-
-    DATA: lo_commit TYPE REF TO lcl_gui_page_commit.
-
-    CREATE OBJECT lo_commit
-      EXPORTING
-        iv_repo_key = mo_repo->get_key( ).
-
-    lcl_app=>gui( )->set_page( lo_commit ).
-
-  ENDMETHOD.
-
-  METHOD file_decode.
-
-    DATA: ls_file      TYPE ty_file,
-          ls_work_file LIKE LINE OF mt_workarea,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
-
-    lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_string
-                                        IMPORTING ev_key    = lv_key
-                                                  es_file   = ls_file ).
-
-    READ TABLE mt_workarea INTO ls_work_file
-      WITH KEY file-path     = ls_file-path
-               file-filename = ls_file-filename.
-    IF sy-subrc = 0.
-      rs_file = ls_work_file-file.
-    ELSE.
-      _raise 'File not found in workarea'.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    DATA: ls_file   TYPE ty_file.
-
-    CASE iv_action.
-      WHEN 'stage_add'.
-        ls_file = file_decode( iv_getdata ).
-        mo_stage->add( ls_file ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'stage_all'.
-        all( ).
-        call_commit( ).
-        rv_state = gc_event_state-no_more_act.
-      WHEN 'stage_reset'.
-        ls_file = file_decode( iv_getdata ).
-        mo_stage->reset( ls_file ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'stage_ignore'.
-        ls_file = file_decode( iv_getdata ).
-        mo_stage->ignore( ls_file ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'stage_rm'.
-        ls_file = file_decode( iv_getdata ).
-        mo_stage->rm( ls_file ).
-        rv_state = gc_event_state-re_render.
-      WHEN 'stage_commit'.
-        call_commit( ).
-        rv_state = gc_event_state-no_more_act.
-    ENDCASE.
-
+                                                 iv_new      = abap_true ).
   ENDMETHOD.
 
   METHOD render_lines.
@@ -20496,12 +20434,12 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           lv_status  TYPE string,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_workarea.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mo_stage->mt_workarea.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
 
-    LOOP AT mt_workarea ASSIGNING <ls_file>.
+    LOOP AT mo_stage->mt_workarea ASSIGNING <ls_file>.
 
       AT NEW type. " Local/remote header line
         IF sy-tabix = 1.
@@ -20509,7 +20447,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         ELSE.
           ro_html->add('<tr class="separator">').
         ENDIF.
-        IF <ls_file>-type = c_local.
+        IF <ls_file>-type = lcl_stage=>c_wftype-local.
           ro_html->add( '<td></td><td colspan="2">LOCAL</td>' ) ##NO_TEXT.
         ElSE. "c_remote
           ro_html->add( '<td></td><td colspan="2">REMOTE</td>' ) ##NO_TEXT.
@@ -20523,7 +20461,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                                                       is_file = <ls_file>-file ).
 
       lo_toolbar->reset( ). " Build line actions
-      IF <ls_file>-type = c_local.
+      IF <ls_file>-type = lcl_stage=>c_wftype-local.
         IF lv_method IS NOT INITIAL.
           lo_toolbar->add( iv_txt = 'reset' iv_act = 'stage_reset?' && lv_param ).
         ELSE.
@@ -20578,17 +20516,20 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD render_menu.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA: lo_toolbar TYPE REF TO lcl_html_toolbar,
+          lv_action  TYPE string.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
 
+    lv_action = lcl_html_action_utils=>repo_key_encode( mo_repo->get_key( ) ).
+
     IF mo_stage->count( ) > 0.
-      lo_toolbar->add( iv_act = 'stage_commit'
+      lo_toolbar->add( iv_act = |stage_commit?{ lv_action }|
                        iv_txt = 'Commit'
                        iv_opt = html_opt-emphas ).
-    ELSEIF mv_local_cnt > 0.
-      lo_toolbar->add( iv_act = 'stage_all'
+    ELSEIF mo_stage->mv_local_cnt > 0.
+      lo_toolbar->add( iv_act = |stage_all?{ lv_action }|
                        iv_txt = 'Add all and commit').
     ENDIF.
 
@@ -21079,24 +21020,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.                    "needs_installation
 
-  METHOD lif_gui_page~on_event.
-
-    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
-
-
-    CASE iv_action.
-      WHEN 'refresh'.
-        lv_key = iv_getdata.
-        IF lv_key IS INITIAL. " Refresh all or single
-          lcl_app=>repo_srv( )->refresh( ).
-        ELSE.
-          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-        ENDIF.
-        rv_state = gc_event_state-re_render.
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD render_toc.
 
     DATA: lo_repo    LIKE LINE OF it_list,
@@ -21321,8 +21244,9 @@ CLASS lcl_background IMPLEMENTATION.
     lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
 
     LOOP AT ls_files-local ASSIGNING <ls_file>.
-      WRITE: / 'stage', <ls_file>-file-filename.
-      lo_stage->add( <ls_file>-file ).
+      WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename.
+      lo_stage->add( iv_path     = <ls_file>-file-path
+                     iv_filename = <ls_file>-file-filename ).
     ENDLOOP.
 
     io_repo->push( is_comment = ls_comment
@@ -23864,6 +23788,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         lcl_app=>user( )->unhide( lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN 'refresh'.
+        lv_key = iv_getdata.
+        IF lv_key IS INITIAL. " Refresh all or single
+          lcl_app=>repo_srv( )->refresh( ).
+        ELSE.
+          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+        ENDIF.
+        ev_state = gc_event_state-re_render.
 
         " Repository online actions
       WHEN 'pull'.
@@ -23874,6 +23806,25 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page_w_bookmark.
+
+        " Stage
+      WHEN 'stage_commit'.
+        ei_page  = get_page_commit( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'stage_all'.
+        stage_handle_action( iv_getdata = iv_getdata iv_action = iv_action ).
+        ei_page  = get_page_commit( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'stage_add' OR 'stage_reset' OR 'stage_ignore' OR 'stage_rm'.
+        stage_handle_action( iv_getdata = iv_getdata iv_action = iv_action ).
+        ev_state = gc_event_state-re_render.
+
+        " Commit
+      WHEN 'commit_post'.
+        commit_push( it_postdata ).
+        ev_state = gc_event_state-go_back_to_bookmark.
+      WHEN 'commit_cancel'.
+        ev_state = gc_event_state-go_back.
 
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
@@ -24392,6 +24343,100 @@ CLASS lcl_gui_router IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.
+
+  METHOD commit_push.
+
+    DATA: ls_fields  TYPE lcl_html_action_utils=>ty_commit_fields,
+          ls_comment TYPE ty_comment,
+          lo_stage   TYPE REF TO lcl_stage,
+          lo_repo    TYPE REF TO lcl_repo_online,
+          lo_user    TYPE REF TO lcl_persistence_user.
+
+    ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
+
+    lo_user = lcl_app=>user( ).   " TODO refactor - password manager
+    lo_user->set_username( ls_fields-username ).
+    lo_user->set_email( ls_fields-email ).
+
+    IF ls_fields-username IS INITIAL.
+      _raise 'empty username'.
+    ENDIF.
+    IF ls_fields-email IS INITIAL.
+      _raise 'empty email'.
+    ENDIF.
+    IF ls_fields-comment IS INITIAL.
+      _raise 'empty comment'.
+    ENDIF.
+
+    lo_repo            ?= lcl_app=>repo_srv( )->get( ls_fields-repo_key ).
+    lo_stage            = lcl_app=>repo_srv( )->get_stage( ls_fields-repo_key ).
+    ls_comment-username = ls_fields-username.
+    ls_comment-email    = ls_fields-email.
+    ls_comment-comment  = ls_fields-comment.
+
+    IF NOT ls_fields-body IS INITIAL.
+      CONCATENATE ls_comment-comment gc_newline ls_fields-body
+        INTO ls_comment-comment.
+    ENDIF.
+
+    lo_repo->push( is_comment = ls_comment
+                   io_stage   = lo_stage ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.      "commit_push
+
+  METHOD get_page_commit.
+
+    DATA: lo_commit_page TYPE REF TO lcl_gui_page_commit,
+          lv_key         TYPE lcl_persistence_repo=>ty_repo-key.
+
+    lv_key = lcl_html_action_utils=>repo_key_decode( iv_getdata ).
+
+    CREATE OBJECT lo_commit_page
+      EXPORTING
+        iv_repo_key = lv_key.
+
+    ri_page ?= lo_commit_page.
+
+  ENDMETHOD.
+
+  METHOD stage_handle_action.
+
+    DATA: ls_file   TYPE ty_file,
+          lo_stage  TYPE REF TO lcl_stage,
+          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lo_stage->mt_workarea.
+
+    IF iv_action = 'stage_all'.
+      lv_key = lcl_html_action_utils=>repo_key_decode( iv_getdata ).
+    ELSE.
+      lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
+                                          IMPORTING ev_key    = lv_key
+                                                    es_file   = ls_file ).
+    ENDIF.
+
+    lo_stage = lcl_app=>repo_srv( )->get_stage( lv_key ).
+
+    CASE iv_action.
+      WHEN 'stage_add'.
+        lo_stage->add( iv_path = ls_file-path iv_filename = ls_file-filename ).
+      WHEN 'stage_all'.
+        LOOP AT lo_stage->mt_workarea ASSIGNING <ls_file>
+          WHERE type = lcl_stage=>c_wftype-local.
+          lo_stage->add( iv_path     = <ls_file>-file-path
+                         iv_filename = <ls_file>-file-filename ).
+        ENDLOOP.
+      WHEN 'stage_reset'.
+        lo_stage->reset( iv_path = ls_file-path iv_filename = ls_file-filename ).
+      WHEN 'stage_ignore'.
+        lo_stage->ignore( iv_path = ls_file-path iv_filename = ls_file-filename ).
+      WHEN 'stage_rm'.
+        lo_stage->rm( iv_path = ls_file-path iv_filename = ls_file-filename ).
+    ENDCASE.
+
+  ENDMETHOD.        "stage_handle_action
 
 ENDCLASS.           " lcl_gui_router
 
