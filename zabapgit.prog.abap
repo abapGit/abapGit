@@ -13164,7 +13164,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         OTHERS             = 4.
 
     IF sy-subrc <> 0.
-       _raise 'error from BMENU_DELETE_TREE, SHI3'.
+      _raise 'error from BMENU_DELETE_TREE, SHI3'.
     ENDIF.
 
   ENDMETHOD.                    "delete
