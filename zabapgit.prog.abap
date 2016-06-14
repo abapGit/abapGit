@@ -13124,7 +13124,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         OTHERS                = 4.
 
     IF sy-subrc <> 0.
-       _raise 'error from ABAP4_CALL_TRANSACTION, SHI3'.
+      _raise 'error from ABAP4_CALL_TRANSACTION, SHI3'.
     ENDIF.
 
   ENDMETHOD.                    "jump_se43
