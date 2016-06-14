@@ -19377,6 +19377,15 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  font-size: smaller;').
     ro_html->add('}').
 
+    ro_html->add('.hidden-submit {').
+    ro_html->add('  border: 0 none;').
+    ro_html->add('  height: 0;').
+    ro_html->add('  width: 0;').
+    ro_html->add('  padding: 0;').
+    ro_html->add('  margin: 0;').
+    ro_html->add('  overflow: hidden;').
+    ro_html->add('}').
+
     ro_html->add('</style>').
 
   ENDMETHOD.                    "common styles
@@ -20242,6 +20251,9 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '<td class="field_name">body</td>' ).
     ro_html->add( '<td>' ).
     ro_html->add( '<textarea name="body" rows="10" cols="50"></textarea>' ).
+
+    ro_html->add( '<input type="submit" class="hidden-submit">' ). "Hmmm ... reconsider
+
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
 
