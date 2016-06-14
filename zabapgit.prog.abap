@@ -97,12 +97,25 @@ CONSTANTS: BEGIN OF gc_chmod,
            END OF gc_chmod.
 
 CONSTANTS: BEGIN OF gc_event_state,
-             not_handled VALUE 0,
-             re_render   VALUE 1,
-             new_page    VALUE 2,
-             go_back     VALUE 3,
-             no_more_act VALUE 4,
+             not_handled         VALUE 0,
+             re_render           VALUE 1,
+             new_page            VALUE 2,
+             go_back             VALUE 3,
+             no_more_act         VALUE 4,
+             new_page_w_bookmark VALUE 5,
+             go_back_to_bookmark VALUE 6,
            END OF gc_event_state.
+
+CONSTANTS: BEGIN OF html_opt,
+             emphas TYPE c VALUE 'E',
+             cancel TYPE c VALUE 'C',
+           END OF html_opt.
+
+CONSTANTS: BEGIN OF action_type,
+             sapevent TYPE c VALUE 'E',
+             url      TYPE c VALUE 'U',
+             onclick  TYPE c VALUE 'C',
+           END OF action_type.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
@@ -293,13 +306,19 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_html_helper DEFINITION FINAL.
   PUBLIC SECTION.
-    CONSTANTS c_indent_size TYPE i VALUE 2.
+    CONSTANTS: c_indent_size TYPE i VALUE 2.
 
     DATA mv_html   TYPE string READ-ONLY.
     DATA mv_indent TYPE i READ-ONLY.
 
     METHODS add IMPORTING iv_chunk TYPE any.
     METHODS reset.
+
+    METHODS add_anchor IMPORTING iv_txt   TYPE string
+                                 iv_act   TYPE string
+                                 iv_opt   TYPE char1  OPTIONAL
+                                 iv_typ   TYPE char1  DEFAULT action_type-sapevent
+                                 iv_class TYPE string OPTIONAL.
 
   PRIVATE SECTION.
     METHODS _add_str IMPORTING iv_str  TYPE csequence.
@@ -391,6 +410,39 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
   ENDMETHOD.                    "_add_htm
 
+  METHOD add_anchor.
+    DATA: lv_class   TYPE string,
+          lv_href    TYPE string.
+
+    lv_class = iv_class.
+
+    IF iv_opt = html_opt-emphas.
+      lv_class = lv_class && ' emphasis' ##NO_TEXT.
+    ENDIF.
+    IF iv_opt = html_opt-cancel.
+      lv_class = lv_class && ' attention' ##NO_TEXT.
+    ENDIF.
+    IF lv_class IS NOT INITIAL.
+      SHIFT lv_class LEFT DELETING LEADING space.
+      lv_class = | class="{ lv_class }"|.
+    ENDIF.
+
+    IF iv_act IS NOT INITIAL.
+      CASE iv_typ.
+        WHEN action_type-url.
+          lv_href = | href="{ iv_act }"|.
+        WHEN action_type-sapevent.
+          lv_href = | href="sapevent:{ iv_act }"|.
+        WHEN action_type-onclick.
+          lv_href = | onclick="{ iv_act }"|.
+        WHEN OTHERS.
+      ENDCASE.
+    ENDIF.
+
+    _add_str( |<a{ lv_class }{ lv_href }>{ iv_txt }</a>| ).
+
+  ENDMETHOD.                    "add_action
+
 ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -398,22 +450,26 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
   PUBLIC SECTION.
-    METHODS add    IMPORTING iv_txt  TYPE string
-                             io_sub  TYPE REF TO lcl_html_toolbar OPTIONAL
-                             iv_cmd  TYPE string    OPTIONAL
-                             iv_emph TYPE abap_bool OPTIONAL
-                             iv_canc TYPE abap_bool OPTIONAL.
+    METHODS add    IMPORTING iv_txt TYPE string
+                             io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+                             iv_act TYPE string    OPTIONAL
+                             iv_opt TYPE c         OPTIONAL
+                             iv_typ TYPE c         DEFAULT action_type-sapevent.
+
     METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
                              iv_no_separator           TYPE abap_bool OPTIONAL
+                             iv_vertical               TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
+
+    METHODS reset.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
-             txt      TYPE string,
-             cmd      TYPE string,
-             sub      TYPE REF TO lcl_html_toolbar,
-             emphasis TYPE abap_bool,
-             cancel   TYPE abap_bool,
+             txt TYPE string,
+             act TYPE string,
+             sub TYPE REF TO lcl_html_toolbar,
+             opt TYPE char1,
+             typ TYPE char1,
            END OF ty_item.
     TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
@@ -426,19 +482,23 @@ ENDCLASS. "lcl_html_toolbar DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar IMPLEMENTATION.
 
+  METHOD reset.
+    CLEAR mt_items.
+  ENDMETHOD.  "reset
+
   METHOD add.
     DATA ls_item TYPE ty_item.
 
-    ASSERT iv_cmd IS INITIAL AND io_sub IS NOT INITIAL
-      OR   iv_cmd IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
+    ASSERT iv_act IS INITIAL AND io_sub IS NOT INITIAL
+      OR   iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
-    ls_item-txt       = iv_txt.
-    ls_item-cmd       = iv_cmd.
-    ls_item-sub       = io_sub.
-    ls_item-emphasis  = iv_emph.
-    ls_item-cancel    = iv_canc.
+    ls_item-txt = iv_txt.
+    ls_item-act = iv_act.
+    ls_item-sub = io_sub.
+    ls_item-opt = iv_opt.
+    ls_item-typ = iv_typ.
     APPEND ls_item TO mt_items.
-  ENDMETHOD.
+  ENDMETHOD.  "add
 
   METHOD render.
     DATA:
@@ -450,7 +510,11 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF iv_as_droplist_with_label IS INITIAL.
-      lv_class = 'menu' ##NO_TEXT.
+      IF iv_vertical = abap_true.
+        lv_class = 'menu_vertical' ##NO_TEXT.
+      ELSE.
+        lv_class = 'menu' ##NO_TEXT.
+      ENDIF.
     ELSE.
       lv_class = 'dropdown' ##NO_TEXT.
     ENDIF.
@@ -471,21 +535,15 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
       IF <ls_item>-sub IS INITIAL.
         CLEAR lv_class.
-        IF lv_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
+        IF iv_no_separator = abap_true
+           OR lv_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
           lv_class = 'menu_end'.
         ENDIF.
-        IF <ls_item>-emphasis = abap_true.
-          lv_class = lv_class && ' emphasis' ##NO_TEXT.
-        ENDIF.
-        IF <ls_item>-cancel = abap_true.
-          lv_class = lv_class && ' attention' ##NO_TEXT.
-        ENDIF.
-        IF lv_class IS NOT INITIAL.
-          SHIFT lv_class LEFT DELETING LEADING space.
-          lv_class = | class="{ lv_class }"|.
-        ENDIF.
-
-        ro_html->add( |<a{ lv_class } href="{ <ls_item>-cmd }">{ <ls_item>-txt }</a>| ).
+        ro_html->add_anchor( iv_txt      = <ls_item>-txt
+                             iv_act      = <ls_item>-act
+                             iv_opt      = <ls_item>-opt
+                             iv_typ      = <ls_item>-typ
+                             iv_class    = lv_class ).
       ELSE.
         ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
                                              iv_no_separator           = lv_last ) ).
@@ -499,7 +557,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render
 
 ENDCLASS. "lcl_html_toolbar IMPLEMENTATION
 
@@ -13128,20 +13186,20 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS jump_decode
-      IMPORTING iv_string   TYPE clike
-      EXPORTING ev_obj_type TYPE tadir-object
-                ev_obj_name TYPE tadir-obj_name
+      IMPORTING iv_string        TYPE clike
+      EXPORTING ev_obj_type      TYPE tadir-object
+                ev_obj_name      TYPE tadir-obj_name
       RAISING   lcx_exception.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE ty_repo_file
+                is_file          TYPE ANY "ty_repo_file
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
-      IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE ty_repo_file
+      IMPORTING iv_string        TYPE clike
+      EXPORTING ev_key           TYPE lcl_persistence_repo=>ty_repo-key
+                es_file          TYPE ANY "ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS dbkey_encode
@@ -13149,8 +13207,8 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS dbkey_decode
-      IMPORTING iv_string     TYPE clike
-      RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+      IMPORTING iv_string        TYPE clike
+      RETURNING VALUE(rs_key)    TYPE lcl_persistence_db=>ty_content.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -13209,16 +13267,22 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           ls_field  LIKE LINE OF lt_fields.
 
+    FIELD-SYMBOLS <field> TYPE string.
+
     ls_field-name = 'KEY'.
     ls_field-value = iv_key.
     APPEND ls_field TO lt_fields.
 
     ls_field-name = 'PATH'.
-    ls_field-value = is_file-path.
+    ASSIGN COMPONENT ls_field-name OF STRUCTURE is_file TO <field>.
+    ASSERT <field> IS ASSIGNED.
+    ls_field-value = <field>.
     APPEND ls_field TO lt_fields.
 
     ls_field-name = 'FILENAME'.
-    ls_field-value = is_file-filename.
+    ASSIGN COMPONENT ls_field-name OF STRUCTURE is_file TO <field>.
+    ASSERT <field> IS ASSIGNED.
+    ls_field-value = <field>.
     APPEND ls_field TO lt_fields.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
@@ -13230,7 +13294,8 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           lv_string TYPE string.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
+                   <field>    TYPE string.
 
     CLEAR: ev_key, es_file.
     lv_string = iv_string.     " type conversion
@@ -13243,12 +13308,16 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
     IF sy-subrc = 0.
-      es_file-path = <ls_field>-value.
+      ASSIGN COMPONENT 'PATH' OF STRUCTURE es_file TO <field>.
+      ASSERT <field> IS ASSIGNED.
+      <field> = <ls_field>-value.
     ENDIF.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
     IF sy-subrc = 0.
-      es_file-filename = <ls_field>-value.
+      ASSIGN COMPONENT 'FILENAME' OF STRUCTURE es_file TO <field>.
+      ASSERT <field> IS ASSIGNED.
+      <field> = <ls_field>-value.
     ENDIF.
 
   ENDMETHOD.                    "file_decode
@@ -15842,7 +15911,12 @@ CLASS lcl_persistence IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 
-CLASS lcl_stage DEFINITION FINAL.
+CLASS lcl_repo_srv DEFINITION DEFERRED.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_stage DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
 
   PUBLIC SECTION.
     TYPES: ty_method TYPE c LENGTH 1.
@@ -15861,11 +15935,15 @@ CLASS lcl_stage DEFINITION FINAL.
     TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
       WITH UNIQUE KEY file-path file-filename.
 
+    DATA mv_repo_key TYPE lcl_persistence_db=>ty_value READ-ONLY.
+
     CLASS-METHODS:
       method_description
         IMPORTING iv_method             TYPE ty_method
         RETURNING VALUE(rv_description) TYPE string
         RAISING   lcx_exception.
+
+    METHODS constructor IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value.
 
     METHODS:
       add
@@ -15883,10 +15961,9 @@ CLASS lcl_stage DEFINITION FINAL.
       count
         RETURNING VALUE(rv_count) TYPE i,
       lookup
-        IMPORTING iv_path         TYPE ty_file-path
-                  iv_filename     TYPE ty_file-filename
-        RETURNING VALUE(rs_stage) TYPE ty_stage
-        RAISING   lcx_not_found,
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
+        RETURNING VALUE(rv_method) TYPE ty_method,
       get_all
         RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
 
@@ -15897,12 +15974,10 @@ CLASS lcl_stage DEFINITION FINAL.
       IMPORTING is_file   TYPE ty_file
                 iv_method TYPE ty_method.
 
-ENDCLASS.
+ENDCLASS.   "lcl_stage DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_online DEFINITION
-*----------------------------------------------------------------------*
-*
 *----------------------------------------------------------------------*
 CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
 
@@ -16332,11 +16407,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING lcx_exception.
 
     METHODS back
+      IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
     METHODS call_page
-      IMPORTING ii_page TYPE REF TO lif_gui_page
+      IMPORTING ii_page          TYPE REF TO lif_gui_page
+                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
     METHODS set_page
@@ -16348,8 +16425,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PRIVATE SECTION.
 
+    TYPES: BEGIN OF ty_page_stack,
+             page     TYPE REF TO lif_gui_page,
+             bookmark TYPE abap_bool,
+           END OF ty_page_stack.
+
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
-          mt_stack       TYPE TABLE OF REF TO lif_gui_page,
+          mt_stack       TYPE TABLE OF ty_page_stack,
           mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
           mo_user        TYPE REF TO lcl_persistence_user,
@@ -16435,12 +16517,27 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_installed) TYPE abap_bool
       RAISING   lcx_exception.
 
+    METHODS get_stage
+      IMPORTING iv_repo_key     TYPE lcl_persistence_db=>ty_value
+                iv_new          TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(ro_stage) TYPE REF TO lcl_stage
+      RAISING   lcx_exception.
+
+    METHODS free_stage
+      IMPORTING iv_repo_key     TYPE lcl_persistence_db=>ty_value.
+
   PRIVATE SECTION.
+
+    TYPES: BEGIN OF ty_stage_list,
+             repo_key TYPE lcl_persistence_db=>ty_value,
+             stage    TYPE REF TO lcl_stage,
+           END OF ty_stage_list.
 
     METHODS constructor.
 
     DATA: mv_init        TYPE abap_bool VALUE abap_false,
           mo_persistence TYPE REF TO lcl_persistence_repo,
+          mt_stages      TYPE TABLE OF ty_stage_list,
           mt_list        TYPE ty_repo_tt.
 
     METHODS add
@@ -16696,6 +16793,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     DATA: lv_branch TYPE ty_sha1.
 
+    ASSERT get_key( ) = io_stage->mv_repo_key.
 
     handle_stage_ignore( io_stage ).
 
@@ -16718,6 +16816,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
+    ASSERT get_key( ) = io_stage->mv_repo_key.
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
@@ -17171,6 +17270,35 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   ENDMETHOD. "is_repo_installed
 
+  METHOD get_stage.
+
+    DATA ls_stage LIKE LINE OF mt_stages.
+
+    IF iv_new = abap_true.
+
+      free_stage( iv_repo_key ). " Kill existing stage if any
+      CREATE OBJECT ls_stage-stage EXPORTING iv_repo_key = iv_repo_key.
+      ls_stage-repo_key = iv_repo_key.
+      APPEND ls_stage TO mt_stages.
+
+    ELSE.
+
+      READ TABLE mt_stages INTO ls_stage WITH KEY repo_key = iv_repo_key.
+      IF sy-subrc <> 0.
+        _raise 'Existing stage not found'.
+      ENDIF.
+
+    ENDIF.
+
+    ro_stage = ls_stage-stage.
+
+  ENDMETHOD. "get_stage
+
+  METHOD free_stage.
+
+    DELETE mt_stages WHERE repo_key = iv_repo_key. " Kill existing stage if any
+
+  ENDMETHOD. "free_stage
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION
 
@@ -18720,8 +18848,12 @@ CLASS lcl_gui IMPLEMENTATION.
             render( ).
           WHEN gc_event_state-new_page.
             call_page( li_page ).
+          WHEN gc_event_state-new_page_w_bookmark.
+            call_page( ii_page = li_page iv_with_bookmark = abap_true ).
           WHEN gc_event_state-go_back.
             back( ).
+          WHEN gc_event_state-go_back_to_bookmark.
+            back( iv_to_bookmark = abap_true ).
           WHEN gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
@@ -18737,7 +18869,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD back.
 
-    DATA: lv_index TYPE i.
+    DATA: lv_index TYPE i,
+          ls_stack TYPE ty_page_stack.
 
     lv_index = lines( mt_stack ).
 
@@ -18746,23 +18879,35 @@ CLASS lcl_gui IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE mt_stack INDEX lv_index INTO mi_cur_page.
-    ASSERT sy-subrc = 0.
+    DO lv_index TIMES.
+      READ TABLE mt_stack INDEX lv_index INTO ls_stack.
+      ASSERT sy-subrc = 0.
 
-    DELETE mt_stack INDEX lv_index.
-    ASSERT sy-subrc = 0.
+      DELETE mt_stack INDEX lv_index.
+      ASSERT sy-subrc = 0.
 
+      lv_index = lv_index - 1.
+
+      IF iv_to_bookmark = abap_false OR ls_stack-bookmark = abap_true.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+    mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
   ENDMETHOD.
 
   METHOD call_page.
 
-    DATA          lt_assets  TYPE tt_web_assets.
+    DATA:         lt_assets  TYPE tt_web_assets,
+                  ls_stack   TYPE ty_page_stack.
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     IF NOT mi_cur_page IS INITIAL.
-      APPEND mi_cur_page TO mt_stack.
+      ls_stack-page     = mi_cur_page.
+      ls_stack-bookmark = iv_with_bookmark.
+      APPEND ls_stack TO mt_stack.
     ENDIF.
 
     lt_assets = ii_page->get_assets( ).
@@ -19005,9 +19150,21 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  color:            #4078c0;').
     ro_html->add('  text-decoration:  none;').
     ro_html->add('}').
-    ro_html->add('a:hover, a:active { text-decoration:  underline; }').
+    ro_html->add('a:hover, a:active {').
+    ro_html->add('  cursor: pointer;').
+    ro_html->add('  text-decoration: underline;').
+    ro_html->add('}').
     ro_html->add('img               { border: 0px; vertical-align: middle; }').
     ro_html->add('table             { border-collapse: collapse; }').
+    ro_html->add('pre               { display: inline; }').
+
+    ro_html->add('form input, textarea {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  padding: 3px 6px;').
+    ro_html->add('}').
+    ro_html->add('form input:focus, textarea:focus {').
+    ro_html->add('  border: 1px solid #8cadd9;').
+    ro_html->add('}').
 
     " Modifiers
     ro_html->add('/* MODIFIERS */').
@@ -19061,6 +19218,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('  border-right: 1px solid lightgrey;').
     ro_html->add('  font-size: 12pt;').
     ro_html->add('}').
+    ro_html->add('div.menu_vertical   { display: inline; }').
+    ro_html->add('div.menu_vertical a {').
+    ro_html->add('  display: block; ').
+    ro_html->add('  font-size: 12pt;').
+    ro_html->add('}').
 
     " Drop down styles
     ro_html->add('/*DROP DOWN*/').
@@ -19075,7 +19237,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add('    right: 0;').
     ro_html->add('    top: 1.1em; /*IE7 woraround*/').
     ro_html->add('    background-color: #f9f9f9;').
-    ro_html->add('    min-width: 10em;').
+    ro_html->add('    white-space: nowrap;').
+*    ro_html->add('    min-width: 10em;').
     ro_html->add('    border-bottom: 1px solid lightgrey;').
     ro_html->add('}').
     ro_html->add('.dropdown_content a {').
@@ -19089,42 +19252,19 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     " Other and outdated (?) styles
     ro_html->add('/* MISC AND REFACTOR */').
-    ro_html->add('a.grey:link {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('a.grey:visited {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('a.plain:link {').
-    ro_html->add('  color: black;').
-    ro_html->add('  text-decoration: none;').
-    ro_html->add('}').
-    ro_html->add('a.plain:visited {').
-    ro_html->add('  color: black;').
-    ro_html->add('  text-decoration: none;').
-    ro_html->add('}').
-    ro_html->add('a.bkg:link {').
-    ro_html->add('  color: #E8E8E8;').
-    ro_html->add('}').
-    ro_html->add('a.bkg:visited {').
-    ro_html->add('  color: #E8E8E8;').
-    ro_html->add('}').
-    ro_html->add('h1 {').
-    ro_html->add('  display: inline;').
-    ro_html->add('}').
-    ro_html->add('h2 {').
-    ro_html->add('  display: inline;').
-    ro_html->add('}').
+    ro_html->add('a.grey:link {color: grey; font-size: smaller;}').
+    ro_html->add('a.grey:visited {color: grey; font-size: smaller;}').
+    ro_html->add('a.plain:link {color: black; text-decoration: none;}').
+    ro_html->add('a.plain:visited {color: black; text-decoration: none;}').
+    ro_html->add('a.bkg:link {color: #E8E8E8;}').
+    ro_html->add('a.bkg:visited {color: #E8E8E8;}').
+    ro_html->add('h1 {display: inline;}').
+    ro_html->add('h2 {display: inline;}').
     ro_html->add('h3 {').
     ro_html->add('  display: inline;').
     ro_html->add('  color: grey;').
     ro_html->add('  font-weight:normal;').
     ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
-    ro_html->add('pre {').
-    ro_html->add('  display: inline;').
     ro_html->add('}').
 
     ro_html->add('</style>').
@@ -19250,6 +19390,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render     REDEFINITION.
     METHODS lif_gui_page~get_assets REDEFINITION.
 
+    CLASS-METHODS render_repo_top
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_repo_item,
@@ -19274,11 +19419,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
-
-    METHODS render_repo_top
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
 
     METHODS render_repo_menu
       IMPORTING io_repo        TYPE REF TO lcl_repo
@@ -19554,13 +19694,22 @@ ENDCLASS.
 
 CLASS lcl_stage IMPLEMENTATION.
 
+  METHOD constructor.
+
+    mv_repo_key = iv_repo_key.
+
+  ENDMETHOD.
+
   METHOD lookup.
-    READ TABLE mt_stage INTO rs_stage
-      WITH KEY file-path = iv_path
-      file-filename = iv_filename.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_not_found.
+    DATA ls_stage LIKE LINE OF mt_stage.
+
+    READ TABLE mt_stage INTO ls_stage
+      WITH KEY file-path     = iv_path
+               file-filename = iv_filename.
+    IF sy-subrc = 0.
+      rv_method = ls_stage-method.
     ENDIF.
+
   ENDMETHOD.
 
   METHOD get_all.
@@ -19807,8 +19956,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
     METHODS constructor
-      IMPORTING io_repo  TYPE REF TO lcl_repo_online
-                io_stage TYPE REF TO lcl_stage
+      IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     METHODS lif_gui_page~on_event REDEFINITION.
@@ -19825,19 +19973,34 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
              body     TYPE string,
            END OF ty_fields.
 
-    METHODS:
-      render_files
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      push
+    METHODS push
         IMPORTING it_postdata TYPE cnht_post_data_tab
-        RAISING   lcx_exception,
-      update_userdata
+        RAISING   lcx_exception.
+
+    METHODS update_userdata
         IMPORTING is_fields TYPE ty_fields
-        RAISING   lcx_exception,
-      parse
+        RAISING   lcx_exception.
+
+    METHODS parse
         IMPORTING it_postdata      TYPE cnht_post_data_tab
         RETURNING VALUE(rs_fields) TYPE ty_fields.
+
+    METHODS render_menu
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS render_stage
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
+    METHODS render_form
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS scripts
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -19846,8 +20009,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
 
-    mo_repo  = io_repo.
-    mo_stage = io_stage.
+    mo_repo ?= lcl_app=>repo_srv( )->get( iv_repo_key ).
+    mo_stage = lcl_app=>repo_srv( )->get_stage( iv_repo_key ).
   ENDMETHOD.
 
   METHOD update_userdata.
@@ -19857,6 +20020,20 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user = lcl_app=>user( ).
     lo_user->set_username( is_fields-username ).
     lo_user->set_email( is_fields-email ).
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN 'commit_post'.
+        push( it_postdata ).
+        "lcl_app=>repo_srv( )->free_stage( ??? ).
+*        MESSAGE 'POST PUSHED' TYPE 'S' DISPLAY LIKE 'S'.
+        rv_state = gc_event_state-go_back_to_bookmark.
+      WHEN 'commit_cancel'.
+        rv_state = gc_event_state-go_back.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -19931,115 +20108,220 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_files.
+  METHOD render_stage.
 
     DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
-
     CREATE OBJECT ro_html.
 
     lt_stage = mo_stage->get_all( ).
 
-    ro_html->add( '<table>' ).
+    ro_html->add( '<table class="stage_tab">' ).
+    ro_html->add( '<tr class="title firstrow">').
+    ro_html->add( '<td colspan="2">Staged files</td>').
+    ro_html->add( '</tr>' ).
+
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
+      ro_html->add( '<td class="method">' ).
+      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
+      ro_html->add( '</td>' ).
       ro_html->add( '<td>' ).
       ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
       ro_html->add( '</td>' ).
-      ro_html->add( '<td>' ).
-      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
-      ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
+
     ro_html->add( '</table>' ).
-    ro_html->add( '<br>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.    "render_stage
 
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'post'.
-        push( it_postdata ).
-        rv_state = gc_event_state-go_back.
-      WHEN 'cancel'.
-        rv_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~render.
-
+  METHOD render_form.
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
           lv_email TYPE string.
-
-
-    CREATE OBJECT ro_html.
-
-    lo_user = lcl_app=>user( ).
-    lv_user = lo_user->get_username( ).
-    lv_email = lo_user->get_email( ).
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    ro_html->add( header( ) ).
+    lo_user  = lcl_app=>user( ).
+    lv_user  = lo_user->get_username( ).
+    lv_email = lo_user->get_email( ).
 
-    "TODO refactor
-    ro_html->add( '<div id="header">' ).
-    ro_html->add( '<h1>Commit</h1>' ).
-    ro_html->add( '<a href="sapevent:cancel">Cancel</a>' ).
-    ro_html->add( '</div>' ).
+    CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( render_files( ) ).
-    ro_html->add( '<form method="post" action="sapevent:post">' ).
+    ro_html->add( '<div class="form_div">' ).
+
+    ro_html->add( '<form id="commit_form" method="post" action="sapevent:commit_post">' ).
     ro_html->add( '<table>' ).
+
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>username</td>' ).
+    ro_html->add( '<td class="field_name">username</td>' ).
     ro_html->add( '<td>' ).
-    ro_html->add( '<input name="username" type="text" value="' && lv_user && '">' ).
+    ro_html->add( |<input name="username" type="text" size="50" value="{ lv_user }">| ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
+
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>email</td>' ).
+    ro_html->add( '<td class="field_name">email</td>' ).
     ro_html->add( '<td>' ).
-    ro_html->add( '<input name="email" type="text" value="' && lv_email && '">' ).
+    ro_html->add( |<input name="email" type="text" size="50" value="{ lv_email }">| ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
+
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>comment</td>' ).
+    ro_html->add( '<td class="field_name">comment</td>' ).
     ro_html->add( '<td>' ).
-    ro_html->add( '<input name="comment" type="text" id="cmt" maxlength="50" size="50">' ).
+    ro_html->add( '<input name="comment" type="text"' &&
+                  ' id="commit_msg" maxlength="50" size="50">' ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
+
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td colspan="2">' ).
-    ro_html->add( 'body <br>' ) ##NO_TEXT.
-    ro_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
+    ro_html->add( '<td class="field_name">body</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( '<textarea name="body" rows="10" cols="50"></textarea>' ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td colspan="2" align="right">' ).
-    ro_html->add( '<input type="submit" value="Push">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
+
     ro_html->add( '</table>' ).
     ro_html->add( '</form>' ).
-    ro_html->add( '<script>' ).
-    ro_html->add( 'document.getElementById("cmt").focus();' ).
-    ro_html->add( '</script>' ).
+
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
+  ENDMETHOD.    "render_form
 
-  ENDMETHOD.
+  METHOD render_menu.
 
-ENDCLASS.
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lo_toolbar->add( iv_act = 'submitCommit();'
+                     iv_txt = 'Commit'
+                     iv_typ = action_type-onclick
+                     iv_opt = html_opt-emphas ).
+
+    lo_toolbar->add( iv_act = 'commit_cancel'
+                     iv_txt = 'Cancel'
+                     iv_opt = html_opt-cancel ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.      "render_menu
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_page_title = 'COMMIT' ) ).
+
+    ro_html->add( '<div class="repo">' ).
+    ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
+    ro_html->add( render_menu( ) ).
+    ro_html->add( render_form( ) ).
+    ro_html->add( render_stage( ) ).
+    ro_html->add( '</div>' ).
+
+    ro_html->add( footer( io_include_script = scripts( ) ) ).
+
+  ENDMETHOD.  "lif_gui_page~render
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* REPOSITORY */').
+    ro_html->add('div.repo {').
+    ro_html->add('  margin-top:       3px;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_name span {').
+    ro_html->add('  color: #333;').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: 14pt;').
+    ro_html->add('}').
+    ro_html->add('.repo_name img {').
+    ro_html->add('  vertical-align: baseline;').
+    ro_html->add('  margin: 0 5px 0 5px;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: 12pt;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr span {').
+    ro_html->add('  margin-left: 0.2em;').
+    ro_html->add('  margin-right: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr input {').
+    ro_html->add('  color: grey;').     " Input wants it personaly
+    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
+    ro_html->add('  margin-left: 0.5em;').
+    ro_html->add('  margin-right: 0.5em;').
+    ro_html->add('  background-color: transparent;').
+    ro_html->add('  border-style: none;').
+    ro_html->add('  text-overflow: ellipsis;').
+    ro_html->add('}').
+
+    ro_html->add('/* STAGE */').
+    ro_html->add('.stage_tab {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  background: #fff;').
+    ro_html->add('  margin-top: 0.2em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td {').
+    ro_html->add('  border-top: 1px solid #eee;').
+    ro_html->add('  color: #333;').
+    ro_html->add('  vertical-align: middle;').
+    ro_html->add('  padding: 2px 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td.method {').
+    ro_html->add('  color: #ccc;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab tr.firstrow td { border-top: 0px; } ' ).
+    ro_html->add('.stage_tab tr.title td {').
+    ro_html->add('  color: #BBB;').
+    ro_html->add('  font-size: 10pt;').
+    ro_html->add('  background-color: #edf2f9;').
+    ro_html->add('  padding: 4px 0.5em;').
+    ro_html->add('  text-align: center;').
+    ro_html->add('}').
+
+    ro_html->add('/* COMMIT */').
+    ro_html->add('div.form_div {').
+    ro_html->add('  margin: 0.5em 0em;').
+    ro_html->add('  background-color: #F8F8F8;').
+    ro_html->add('  padding: 1em 1em;').
+    ro_html->add('}').
+    ro_html->add('div.form_div td.field_name {').
+    ro_html->add('  color: #BBB;').
+    ro_html->add('  padding-right: 1em;').
+    ro_html->add('}').
+
+  ENDMETHOD.    "styles
+
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'function setInitialFocus() {' ).
+    ro_html->add( '  document.getElementById("commit_msg").focus();' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'function submitCommit() {' ).
+    ro_html->add( '  document.getElementById("commit_form").submit();' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'setInitialFocus();' ).
+
+  ENDMETHOD.    "scripts
+
+ENDCLASS.       "lcl_gui_page_commit
 
 CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
@@ -20051,55 +20333,94 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~on_event REDEFINITION.
     METHODS lif_gui_page~render   REDEFINITION.
 
+    CONSTANTS: c_local  TYPE char1 VALUE 'L',
+               c_remote TYPE char1 VALUE 'R'.
+
+    TYPES: BEGIN OF ty_work_file,
+             type     TYPE char1,
+             file     TYPE ty_file,
+           END OF ty_work_file.
+
   PRIVATE SECTION.
-    DATA: mo_repo   TYPE REF TO lcl_repo_online,
-          mt_remote TYPE ty_files_tt,
-          mo_stage  TYPE REF TO lcl_stage,
-          mt_local  TYPE ty_files_item_tt.
+    DATA: mo_repo      TYPE REF TO lcl_repo_online,
+          mo_stage     TYPE REF TO lcl_stage,
+          mv_local_cnt TYPE i,
+          mt_workarea  TYPE STANDARD TABLE OF ty_work_file.
 
     METHODS:
-      file_encode
-        IMPORTING is_file          TYPE ty_file
-        RETURNING VALUE(rv_string) TYPE string,
       file_decode
         IMPORTING iv_string      TYPE clike
         RETURNING VALUE(rs_file) TYPE ty_file
         RAISING   lcx_exception,
-      refresh
-        RAISING lcx_exception,
       all
         RAISING lcx_exception,
       call_commit
-        RAISING lcx_exception,
-      render_local
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
-      render_remote
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+        RAISING lcx_exception.
+
+    METHODS render_lines
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS render_menu
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS styles
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
 CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
-    super->constructor( ).
 
-    mo_repo = io_repo.
-    refresh( ).
+    DATA: ls_files     TYPE lcl_stage_logic=>ty_stage_files,
+          lt_local     TYPE ty_files_item_tt,
+          lt_remote    TYPE ty_files_tt,
+          ls_work_file LIKE LINE OF mt_workarea.
+
+    FIELD-SYMBOLS: <ls_local>  LIKE LINE OF lt_local,
+                   <ls_remote> LIKE LINE OF lt_remote.
+
+    super->constructor( ).
+    mo_repo   = io_repo.
+    mo_stage  = lcl_app=>repo_srv( )->get_stage( iv_repo_key = mo_repo->get_key( )
+                                                iv_new      = abap_true ).
+
+    ls_files  = lcl_stage_logic=>get( mo_repo ).
+    lt_local  = ls_files-local.
+    lt_remote = ls_files-remote.
+
+    " Unify structures
+    " TODO potentially move this to stage_logic
+    LOOP AT lt_local ASSIGNING <ls_local>.
+      ls_work_file-type     = c_local.
+      ls_work_file-file     = <ls_local>-file.
+      APPEND ls_work_file TO mt_workarea.
+      mv_local_cnt = mv_local_cnt + 1.
+
+      "the file should not exist in both local and remote at same time
+      READ TABLE lt_remote TRANSPORTING NO FIELDS
+        WITH KEY path     = <ls_local>-file-path
+                 filename = <ls_local>-file-filename.
+      ASSERT sy-subrc <> 0.
+    ENDLOOP.
+
+    LOOP AT lt_remote ASSIGNING <ls_remote>.
+      ls_work_file-type     = c_remote.
+      ls_work_file-file     = <ls_remote>.
+      APPEND ls_work_file TO mt_workarea.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD all.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_local.
-
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_workarea.
 
     ASSERT mo_stage->count( ) = 0.
-    ASSERT lines( mt_local ) > 0.
 
-    LOOP AT mt_local ASSIGNING <ls_file>.
+    LOOP AT mt_workarea ASSIGNING <ls_file> WHERE type = c_local.
       mo_stage->add( <ls_file>-file ).
     ENDLOOP.
-
-    call_commit( ).
 
   ENDMETHOD.
 
@@ -20109,74 +20430,30 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT lo_commit
       EXPORTING
-        io_repo  = mo_repo
-        io_stage = mo_stage.
+        iv_repo_key = mo_repo->get_key( ).
+
     lcl_app=>gui( )->set_page( lo_commit ).
-
-  ENDMETHOD.
-
-  METHOD file_encode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
-
-
-    ls_field-name = 'PATH'.
-    ls_field-value = is_file-path.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'FILENAME'.
-    ls_field-value = is_file-filename.
-    APPEND ls_field TO lt_fields.
-
-    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.
 
   METHOD file_decode.
 
-    DATA: lt_fields   TYPE tihttpnvp,
-          lv_path     TYPE string,
-          lv_filename TYPE string,
-          ls_local    LIKE LINE OF mt_local,
-          lv_string   TYPE string.
+    DATA: ls_file      TYPE ty_file,
+          ls_work_file LIKE LINE OF mt_workarea,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+    lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_string
+                                        IMPORTING ev_key    = lv_key
+                                                  es_file   = ls_file ).
 
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
-    ASSERT sy-subrc = 0.
-    lv_path = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
-    ASSERT sy-subrc = 0.
-    lv_filename = <ls_field>-value.
-
-* the file should exist in either mt_lcoal or mt_remote, not in both at same time
-    READ TABLE mt_local INTO ls_local
-      WITH KEY file-path = lv_path
-      file-filename = lv_filename.
+    READ TABLE mt_workarea INTO ls_work_file
+      WITH KEY file-path     = ls_file-path
+               file-filename = ls_file-filename.
     IF sy-subrc = 0.
-      rs_file = ls_local-file.
+      rs_file = ls_work_file-file.
     ELSE.
-      READ TABLE mt_remote INTO rs_file WITH KEY path = lv_path filename = lv_filename.
+      _raise 'File not found in workarea'.
     ENDIF.
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-  METHOD refresh.
-
-    DATA: ls_files TYPE lcl_stage_logic=>ty_stage_files.
-
-    CREATE OBJECT mo_stage.
-
-    ls_files = lcl_stage_logic=>get( mo_repo ).
-    mt_local = ls_files-local.
-    mt_remote = ls_files-remote.
 
   ENDMETHOD.
 
@@ -20184,136 +20461,204 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     DATA: ls_file   TYPE ty_file.
 
-
     CASE iv_action.
-      WHEN 'add'.
+      WHEN 'stage_add'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->add( ls_file ).
         rv_state = gc_event_state-re_render.
-      WHEN 'all'.
+      WHEN 'stage_all'.
         all( ).
+        call_commit( ).
         rv_state = gc_event_state-no_more_act.
-      WHEN 'reset'.
+      WHEN 'stage_reset'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->reset( ls_file ).
         rv_state = gc_event_state-re_render.
-      WHEN 'ignore'.
+      WHEN 'stage_ignore'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->ignore( ls_file ).
         rv_state = gc_event_state-re_render.
-      WHEN 'rm'.
+      WHEN 'stage_rm'.
         ls_file = file_decode( iv_getdata ).
         mo_stage->rm( ls_file ).
         rv_state = gc_event_state-re_render.
-      WHEN 'commit'.
+      WHEN 'stage_commit'.
         call_commit( ).
         rv_state = gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.
 
-  METHOD render_local.
+  METHOD render_lines.
 
-    DATA: lv_encode TYPE string.
+    DATA: lv_method  TYPE lcl_stage=>ty_method,
+          lv_param   TYPE string,
+          lv_status  TYPE string,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_local.
-
-
-    CREATE OBJECT ro_html.
-
-    IF lines( mt_local ) = 0.
-      RETURN.
-    ENDIF.
-
-    ro_html->add( 'Local:<br>' ) ##NO_TEXT.
-
-    ro_html->add( '<table>' ).
-    LOOP AT mt_local ASSIGNING <ls_file>.
-      ro_html->add( '<tr>' ).
-      lv_encode = file_encode( <ls_file>-file ).
-
-      ro_html->add( '<td>' ).
-      ro_html->add( <ls_file>-file-path && <ls_file>-file-filename ).
-      ro_html->add( '</td>' ).
-
-      ro_html->add( '<td>' ).
-      TRY.
-          mo_stage->lookup( iv_path = <ls_file>-file-path iv_filename = <ls_file>-file-filename ).
-          ro_html->add( '<a href="sapevent:reset?' && lv_encode && '">reset</a>' ).
-        CATCH lcx_not_found.
-          ro_html->add( '<a href="sapevent:add?' && lv_encode && '">add</a>' ).
-      ENDTRY.
-      ro_html->add( '</td>' ).
-
-      ro_html->add( '</tr>' ).
-    ENDLOOP.
-    ro_html->add( '</table>' ).
-
-  ENDMETHOD.
-
-  METHOD render_remote.
-
-    DATA: lv_encode TYPE string.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_remote.
-
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_workarea.
 
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
 
-    IF lines( mt_remote ) = 0.
-      RETURN.
-    ENDIF.
+    LOOP AT mt_workarea ASSIGNING <ls_file>.
 
-    ro_html->add( 'Remote:<br>' ) ##NO_TEXT.
+      AT NEW type. " Local/remote header line
+        IF sy-tabix = 1.
+          ro_html->add('<tr class="separator firstrow">').
+        ELSE.
+          ro_html->add('<tr class="separator">').
+        ENDIF.
+        IF <ls_file>-type = c_local.
+          ro_html->add( '<td></td><td colspan="2">LOCAL</td>' ) ##NO_TEXT.
+        ElSE. "c_remote
+          ro_html->add( '<td></td><td colspan="2">REMOTE</td>' ) ##NO_TEXT.
+        ENDIF.
+        ro_html->add('</tr>').
+      ENDAT.
 
-    ro_html->add( '<table>' ).
-    LOOP AT mt_remote ASSIGNING <ls_file>.
+      lv_method = mo_stage->lookup( iv_path     = <ls_file>-file-path
+                                    iv_filename = <ls_file>-file-filename ).
+      lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
+                                                      is_file = <ls_file>-file ).
+
+      lo_toolbar->reset( ). " Build line actions
+      IF <ls_file>-type = c_local.
+        IF lv_method IS NOT INITIAL.
+          lo_toolbar->add( iv_txt = 'reset' iv_act = 'stage_reset?' && lv_param ).
+        ELSE.
+          lo_toolbar->add( iv_txt = 'add'   iv_act = 'stage_add?' && lv_param ).
+        ENDIF.
+      ELSE. "c_remote
+        IF lv_method IS NOT INITIAL.
+          lo_toolbar->add( iv_txt = 'reset'  iv_act = 'stage_reset?' && lv_param ).
+        ELSE.
+          lo_toolbar->add( iv_txt = 'ignore' iv_act = 'stage_ignore?' && lv_param ).
+          lo_toolbar->add( iv_txt = 'remove' iv_act = 'stage_rm?' && lv_param ).
+        ENDIF.
+      ENDIF.
+
+      IF lv_method IS INITIAL.
+        lv_status = '<span class="grey">?</span>'.
+      ELSE.
+        lv_status = lv_method.
+      ENDIF.
+
       ro_html->add( '<tr>' ).
-      lv_encode = file_encode( <ls_file> ).
-
+      ro_html->add( |<td class="status">{ lv_status }</td>| ).
+      ro_html->add( |<td>{ <ls_file>-file-path && <ls_file>-file-filename }</td>| ).
       ro_html->add( '<td>' ).
-      ro_html->add( <ls_file>-path && <ls_file>-filename ).
+      ro_html->add( lo_toolbar->render( iv_no_separator = abap_true ) ).
       ro_html->add( '</td>' ).
-
-      ro_html->add( '<td>' ).
-      TRY.
-          mo_stage->lookup( iv_path = <ls_file>-path iv_filename = <ls_file>-filename ).
-          ro_html->add( '<a href="sapevent:reset?' && lv_encode && '">reset</a>' ).
-        CATCH lcx_not_found.
-          ro_html->add( '<a href="sapevent:ignore?' && lv_encode && '">ignore</a>' ).
-          ro_html->add( '<a href="sapevent:rm?' && lv_encode && '">rm</a>' ).
-      ENDTRY.
-      ro_html->add( '</td>' ).
-
       ro_html->add( '</tr>' ).
-    ENDLOOP.
-    ro_html->add( '</table>' ).
 
-  ENDMETHOD.
+    ENDLOOP.
+
+  ENDMETHOD.      "render_lines
 
   METHOD lif_gui_page~render.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
+    ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'STAGE' ) ).
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( render_local( ) ).
-    ro_html->add( '<br>' ).
-    ro_html->add( render_remote( ) ).
-    ro_html->add( '<br>' ).
+    ro_html->add( '<div class="repo">' ).
+    ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
+    ro_html->add( render_menu( ) ).
 
-    IF mo_stage->count( ) > 0.
-      ro_html->add( '<a href="sapevent:commit">commit</a>' ).
-    ELSEIF lines( mt_local ) > 0.
-      ro_html->add( '<a href="sapevent:all">add all and commit</a>' ).
-    ENDIF.
+    ro_html->add( '<table class="stage_tab">' ).
+    ro_html->add( render_lines( ) ).
+    ro_html->add( '</table>' ).
 
     ro_html->add( '</div>' ).
     ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.      "lif_gui_page~render
+
+  METHOD render_menu.
+
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    IF mo_stage->count( ) > 0.
+      lo_toolbar->add( iv_act = 'stage_commit'
+                       iv_txt = 'Commit'
+                       iv_opt = html_opt-emphas ).
+    ELSEIF mv_local_cnt > 0.
+      lo_toolbar->add( iv_act = 'stage_all'
+                       iv_txt = 'Add all and commit').
+    ENDIF.
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.      "render_menu
+
+  METHOD styles.
+    CREATE OBJECT ro_html.
+
+    ro_html->add('/* REPOSITORY */').
+    ro_html->add('div.repo {').
+    ro_html->add('  margin-top:       3px;').
+    ro_html->add('  background-color: #f2f2f2;').
+    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
+    ro_html->add('}').
+    ro_html->add('.repo_name span {').
+    ro_html->add('  color: #333;').
+    ro_html->add('  font-weight: bold;').
+    ro_html->add('  font-size: 14pt;').
+    ro_html->add('}').
+    ro_html->add('.repo_name img {').
+    ro_html->add('  vertical-align: baseline;').
+    ro_html->add('  margin: 0 5px 0 5px;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr {').
+    ro_html->add('  color: grey;').
+    ro_html->add('  font-size: 12pt;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr span {').
+    ro_html->add('  margin-left: 0.2em;').
+    ro_html->add('  margin-right: 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.repo_attr input {').
+    ro_html->add('  color: grey;').     " Input wants it personaly
+    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
+    ro_html->add('  margin-left: 0.5em;').
+    ro_html->add('  margin-right: 0.5em;').
+    ro_html->add('  background-color: transparent;').
+    ro_html->add('  border-style: none;').
+    ro_html->add('  text-overflow: ellipsis;').
+    ro_html->add('}').
+
+    ro_html->add('/* STAGE */').
+    ro_html->add('.stage_tab {').
+    ro_html->add('  border: 1px solid #DDD;').
+    ro_html->add('  background: #fff;').
+    ro_html->add('  margin-top: 0.2em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td {').
+    ro_html->add('  border-top: 1px solid #eee;').
+    ro_html->add('  color: #333;').
+    ro_html->add('  vertical-align: middle;').
+    ro_html->add('  padding: 2px 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab td.status {').
+    ro_html->add('  width: 2em;').
+    ro_html->add('  text-align: center;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab tr.separator td {').
+    ro_html->add('  color: #BBB;').
+    ro_html->add('  font-size: 10pt;').
+    ro_html->add('  background-color: #edf2f9;').
+    ro_html->add('  padding: 4px 0.5em;').
+    ro_html->add('}').
+    ro_html->add('.stage_tab tr.firstrow td { border-top: 0px; } ' ).
+
+  ENDMETHOD.    "styles
 
 ENDCLASS.
 
@@ -20332,12 +20677,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_obj_jump_link.
 
-    DATA: lv_encode TYPE string.
+    DATA: lv_encode TYPE string,
+          lo_html   TYPE REF TO lcl_html_helper.
 
     lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = iv_obj_type
                                                     iv_obj_name = iv_obj_name ).
 
-    rv_html = |<a href="sapevent:jump?{ lv_encode }">{ iv_obj_name }</a>|.
+    CREATE OBJECT lo_html.
+    lo_html->add_anchor( iv_txt = |{ iv_obj_name }| iv_act = |jump?{ lv_encode }| ).
+    rv_html = lo_html->mv_html.
 
   ENDMETHOD.
 
@@ -20348,16 +20696,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
     CREATE OBJECT lo_betasub.
 
-    lo_betasub->add( iv_txt = 'Database util'    iv_cmd = 'sapevent:db' ).
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_cmd = 'sapevent:packagezip' ).
-    lo_betasub->add( iv_txt = 'Background mode'  iv_cmd = 'sapevent:background' ).
+    lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ).
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ).
+    lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ).
 
-    lo_toolbar->add( iv_txt = 'Refresh all'      iv_cmd = 'sapevent:refresh' ).
-    lo_toolbar->add( iv_txt = 'Clone'            iv_cmd = 'sapevent:install' ).
-    lo_toolbar->add( iv_txt = 'Explore'          iv_cmd = 'sapevent:explore' ).
-    lo_toolbar->add( iv_txt = 'New offline repo' iv_cmd = 'sapevent:newoffline' ).
+    lo_toolbar->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ).
+    lo_toolbar->add( iv_txt = 'Clone'            iv_act = 'install' ).
+    lo_toolbar->add( iv_txt = 'Explore'          iv_act = 'explore' ).
+    lo_toolbar->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ).
     IF needs_installation( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Get abapGit'    iv_cmd = 'sapevent:abapgit_installation' ).
+      lo_toolbar->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ).
     ENDIF.
     lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
@@ -20376,7 +20724,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('}').
     ro_html->add('.repo_name span {').
     ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: 16pt;').
+    ro_html->add('  color: #333;').
+    ro_html->add('  font-size: 14pt;').
     ro_html->add('}').
     ro_html->add('.repo_name img {').
     ro_html->add('  vertical-align: baseline;').
@@ -20410,6 +20759,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add('.repo_tab td {').
     ro_html->add('  border-top: 1px solid #eee;').
     ro_html->add('  vertical-align: middle;').
+    ro_html->add('  color: #333;').
     ro_html->add('  padding-top: 2px;').
     ro_html->add('  padding-bottom: 2px;').
     ro_html->add('}').
@@ -20453,42 +20803,42 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF lcl_app=>user( )->is_hidden( lv_key ) = abap_true.
       lo_toolbar->add( iv_txt = 'Show'
-                       iv_cmd = |sapevent:unhide?{ lv_key }| ).
+                       iv_act = |unhide?{ lv_key }| ).
     ELSE.
       IF io_repo->is_offline( ) = abap_true.
         lo_toolbar->add( iv_txt = 'Import ZIP'
-                         iv_cmd = |sapevent:zipimport?{ lv_key }|
-                         iv_emph = abap_true ).
+                         iv_act = |zipimport?{ lv_key }|
+                         iv_opt = html_opt-emphas ).
         lo_toolbar->add( iv_txt = 'Export ZIP'
-                         iv_cmd = |sapevent:zipexport?{ lv_key }|
-                         iv_emph = abap_true ).
+                         iv_act = |zipexport?{ lv_key }|
+                         iv_opt = html_opt-emphas ).
         lo_toolbar->add( iv_txt = 'Export&amp;Commit'
-                         iv_cmd = |sapevent:files_commit?{ lv_key }|
-                         iv_emph = abap_true ).
+                         iv_act = |files_commit?{ lv_key }|
+                         iv_opt = html_opt-emphas ).
       ELSE.
         lo_repo_online ?= io_repo.
         TRY.
             IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
               lo_toolbar->add( iv_txt = 'Pull'
-                               iv_cmd = |sapevent:pull?{ lv_key }|
-                               iv_emph = abap_true ).
+                               iv_act = |pull?{ lv_key }|
+                               iv_opt = html_opt-emphas ).
             ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
               lo_toolbar->add( iv_txt = 'Stage'
-                               iv_cmd = |sapevent:stage?{ lv_key }|
-                               iv_emph = abap_true ).
+                               iv_act = |stage?{ lv_key }|
+                               iv_opt = html_opt-emphas ).
             ENDIF.
           CATCH lcx_exception.
-* authorization error or repository does not exist
+            " authorization error or repository does not exist
         ENDTRY.
       ENDIF.
       lo_toolbar->add( iv_txt = 'Remove'
-                       iv_cmd = |sapevent:remove?{ lv_key }| ).
+                       iv_act = |remove?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Uninstall'
-                       iv_cmd = |sapevent:uninstall?{ lv_key }| ).
+                       iv_act = |uninstall?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Refresh'
-                       iv_cmd = |sapevent:refresh?{ lv_key }| ).
+                       iv_act = |refresh?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Hide'
-                       iv_cmd = |sapevent:hide?{ lv_key }| ).
+                       iv_act = |hide?{ lv_key }| ).
     ENDIF.
 
     ro_html->add( '<div class="paddings right">' ).
@@ -20698,7 +21048,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           IF ls_file-is_changed = abap_true.
             lv_difflink = lcl_html_action_utils=>file_encode( iv_key = io_repo->get_key( )
                                                               is_file = ls_file ).
-            ro_html->add( |<a href="sapevent:diff?{ lv_difflink }">diff</a>| ).
+            ro_html->add_anchor( iv_txt = 'diff' iv_act = |diff?{ lv_difflink }| ).
           ELSE.
             ro_html->add( |<span>&nbsp;</span>| ).
           ENDIF.
@@ -20761,7 +21111,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     LOOP AT it_list INTO lo_repo.
       lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                       iv_cmd = |#repo{ lo_repo->get_key( ) }| ).
+                       iv_act = |#repo{ lo_repo->get_key( ) }| ).
     ENDLOOP.
 
     ro_html->add( '<div id="toc">' ) ##NO_TEXT.
@@ -20789,7 +21139,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
 
     lo_toolbar->add( iv_txt = 'Explore new projects'
-                     iv_cmd = 'explore' ).
+                     iv_act = 'explore' ).
 
     ro_html->add( '<div class="dummydiv">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -20968,7 +21318,8 @@ CLASS lcl_background IMPLEMENTATION.
     ls_comment-email    = 'foo@bar.com'.
     ls_comment-comment  = 'background mode'.
 
-    CREATE OBJECT lo_stage.
+    lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
+
     LOOP AT ls_files-local ASSIGNING <ls_file>.
       WRITE: / 'stage', <ls_file>-file-filename.
       lo_stage->add( <ls_file>-file ).
@@ -23210,6 +23561,9 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
+    METHODS scripts
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit IMPLEMENTATION.
@@ -23221,7 +23575,8 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
+    DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
 
     TRY.
         lv_data = lcl_app=>db( )->read(
@@ -23240,28 +23595,40 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
                       format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( iv_page_title = 'CONFIG EDIT' ) ).
 
-    "TODO refactor
-
     ro_html->add( '<div class="db_entry">' ).
+
+    " Banners
     ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
                   |  <td>{ ms_key-type }</td></tr></table>| ).
     ro_html->add( |<table class="tag"><tr><td class="label">Value:</td>| &&
                   |  <td>{ ms_key-value }</td></tr></table>| ).
 
-    ro_html->add( '<form method="post" action="sapevent:db_save">' ).
+    " Form
+    ro_html->add( '<form id="db_form" method="post" action="sapevent:db_save">' ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
                      }</textarea>| ).
-    ro_html->add( '<input class="cmd" type="submit" value="Update">' ).
     ro_html->add( '</form>' ).
 
+    " Menu
+    lo_toolbar->add( iv_act = 'submitDBForm();'
+                     iv_txt = 'Save'
+                     iv_typ = action_type-onclick
+                     iv_opt = html_opt-emphas ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
+    ro_html->add( '</div>' ). "db_entry
+
+    ro_html->add( footer( io_include_script = scripts( ) ) ).
 
   ENDMETHOD.
 
@@ -23274,10 +23641,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add('  padding: 0.5em;').
     ro_html->add('}').
     ro_html->add('div.db_entry textarea { margin: 0.5em 0em; }').
-    ro_html->add('div.db_entry input.cmd { ').
-    ro_html->add('  display: block;').
-    ro_html->add('  color: #4078c0;').
-    ro_html->add('}').
     ro_html->add('table.tag {').
     ro_html->add('  display: inline-block;').
     ro_html->add('  border: 1px #b3c1cc solid;').
@@ -23288,6 +23651,16 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
 
   ENDMETHOD.            "styles
+
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'function submitDBForm() {' ).
+    ro_html->add( '  document.getElementById("db_form").submit();' ).
+    ro_html->add( '}' ).
+
+  ENDMETHOD.    "scripts
 
 ENDCLASS.
 
@@ -23335,16 +23708,16 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       lv_action = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display' iv_cmd = |sapevent:db_display?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'    iv_cmd = |sapevent:db_edit?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_cmd = |sapevent:db_delete?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Display' iv_act = |db_display?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |db_edit?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |db_delete?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
       ro_html->add( |<td><pre>{ lv_escaped }</pre></td>| ).
       ro_html->add( '<td>' ).
-      ro_html->add( lo_toolbar->render( iv_as_droplist_with_label = 'action' ) ).
+      ro_html->add( lo_toolbar->render( iv_vertical = abap_true ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
@@ -23495,7 +23868,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'stage'.
         lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page.
+        ev_state = gc_event_state-new_page_w_bookmark.
 
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
@@ -23925,8 +24298,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          lo_stage TYPE REF TO lcl_gui_page_stage.
+    DATA: lo_repo       TYPE REF TO lcl_repo_online,
+          lo_stage_page TYPE REF TO lcl_gui_page_stage.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -23934,11 +24307,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
 
-    CREATE OBJECT lo_stage
+    CREATE OBJECT lo_stage_page
       EXPORTING
         io_repo = lo_repo.
 
-    ri_page = lo_stage.
+    ri_page = lo_stage_page.
 
   ENDMETHOD.
 
