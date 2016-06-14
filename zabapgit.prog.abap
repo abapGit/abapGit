@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.8'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.9'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -23626,8 +23626,13 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lv_trclass = ' class="firstrow"'.
       ENDIF.
 
-      lv_escaped = escape( val    = <ls_data>-data_str(250)
-                           format = cl_abap_format=>e_html_attr ).
+      IF strlen( <ls_data>-data_str ) >= 250.
+        lv_escaped = escape( val    = <ls_data>-data_str(250)
+                             format = cl_abap_format=>e_html_attr ).
+      ELSE.
+        lv_escaped = escape( val    = <ls_data>-data_str
+                             format = cl_abap_format=>e_html_attr ).
+      ENDIF.
 
       lv_action = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
