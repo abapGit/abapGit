@@ -143,8 +143,6 @@ SELECTION-SCREEN END OF SCREEN 1001.
 START-OF-SELECTION.
   PERFORM run.
 
-  CLASS lcl_app DEFINITION DEFERRED.
-
 *----------------------------------------------------------------------*
 *       CLASS LCX_EXCEPTION DEFINITION
 *----------------------------------------------------------------------*
@@ -178,6 +176,8 @@ CLASS lcx_exception IMPLEMENTATION.
   ENDMETHOD.                    "CONSTRUCTOR
 
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
+
+CLASS lcl_app DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS LCX_NOT_FOUND DEFINITION
