@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.10'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.11'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -6754,6 +6754,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     CLEAR ls_icfservice-icfnodguid.
     CLEAR ls_icfservice-icfparguid.
+    CLEAR ls_icfservice-icf_user.
 
     io_xml->add( iv_name = 'URL'
                  ig_data = lv_url ).
