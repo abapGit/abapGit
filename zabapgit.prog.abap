@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.9'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.10'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -143,7 +143,7 @@ SELECTION-SCREEN END OF SCREEN 1001.
 START-OF-SELECTION.
   PERFORM run.
 
-CLASS lcl_app DEFINITION DEFERRED.
+  CLASS lcl_app DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS LCX_EXCEPTION DEFINITION
@@ -414,8 +414,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
   ENDMETHOD.                    "_add_htm
 
   METHOD add_anchor.
-    DATA: lv_class   TYPE string,
-          lv_href    TYPE string.
+    DATA: lv_class TYPE string,
+          lv_href  TYPE string.
 
     lv_class = iv_class.
 
@@ -13058,7 +13058,7 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
           mt_map     TYPE ts_id_map. " SORTED !
 
     METHODS jump_se43
-      RAISING  lcx_exception.
+      RAISING lcx_exception.
 
     METHODS strip_stamps
       CHANGING cs_head  TYPE ttree
@@ -13073,7 +13073,7 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS replace_id
       IMPORTING iv_id            TYPE clike
       RETURNING VALUE(rv_new_id) TYPE ttree-id
-      RAISING  lcx_exception.
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_shi3 DEFINITION
 
@@ -13326,27 +13326,27 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
       lif_object~delete( ).
     ENDIF.
 
-    call function 'STREE_HIERARCHY_SAVE'
-      exporting
+    CALL FUNCTION 'STREE_HIERARCHY_SAVE'
+      EXPORTING
         structure_id             = mv_tree_id
         structure_type           = 'BMENU'
         structure_description    = space
         structure_masterlanguage = mv_language
         structure_responsible    = sy-uname
         development_class        = iv_package
-      importing
+      IMPORTING
         message                  = ls_msg
-      tables
+      TABLES
         list_of_nodes            = lt_nodes
         list_of_references       = lt_refs
         list_of_texts            = lt_texts
         structure_descriptions   = lt_titles
-      exceptions
+      EXCEPTIONS
         no_nodes_given           = 1
-        others                   = 2.
-    if sy-subrc <> 0.
+        OTHERS                   = 2.
+    IF sy-subrc <> 0.
       _raise 'Error from STREE_HIERARCHY_SAVE, SHI3'.
-    endif.
+    ENDIF.
 
   ENDMETHOD.                    "deserialize
 
@@ -13520,20 +13520,20 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS jump_decode
-      IMPORTING iv_string        TYPE clike
-      EXPORTING ev_obj_type      TYPE tadir-object
-                ev_obj_name      TYPE tadir-obj_name
+      IMPORTING iv_string   TYPE clike
+      EXPORTING ev_obj_type TYPE tadir-object
+                ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE ANY "ty_repo_file
+                is_file          TYPE any "ty_repo_file
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
-      IMPORTING iv_string        TYPE clike
-      EXPORTING ev_key           TYPE lcl_persistence_repo=>ty_repo-key
-                es_file          TYPE ANY "ty_repo_file
+      IMPORTING iv_string TYPE clike
+      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
+                es_file   TYPE any "ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS dbkey_encode
@@ -13541,20 +13541,20 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS dbkey_decode
-      IMPORTING iv_string        TYPE clike
-      RETURNING VALUE(rs_key)    TYPE lcl_persistence_db=>ty_content.
+      IMPORTING iv_string     TYPE clike
+      RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
 
     CLASS-METHODS parse_commit_request
-        IMPORTING it_postdata      TYPE cnht_post_data_tab
-        RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
+      IMPORTING it_postdata      TYPE cnht_post_data_tab
+      RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
 
     CLASS-METHODS repo_key_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS repo_key_decode
-      IMPORTING iv_string        TYPE clike
-      RETURNING VALUE(rv_key)    TYPE lcl_persistence_repo=>ty_repo-key.
+      IMPORTING iv_string     TYPE clike
+      RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -16354,8 +16354,8 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
       WITH UNIQUE KEY file-path file-filename.
 
     TYPES: BEGIN OF ty_work_file,
-             type     TYPE char1,
-             file     TYPE ty_file,
+             type TYPE char1,
+             file TYPE ty_file,
            END OF ty_work_file.
 
     DATA mv_repo_key  TYPE lcl_persistence_db=>ty_value READ-ONLY.
@@ -16372,48 +16372,48 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
       RAISING   lcx_exception.
 
     METHODS update_and_add_dot_abapgit
-      IMPORTING iv_data     TYPE ty_file-data
+      IMPORTING iv_data TYPE ty_file-data
       RAISING   lcx_exception.
 
     METHODS:
       add
-        IMPORTING iv_path          TYPE ty_file-path
-                  iv_filename      TYPE ty_file-filename
+        IMPORTING iv_path     TYPE ty_file-path
+                  iv_filename TYPE ty_file-filename
         RAISING   lcx_exception,
       reset
-        IMPORTING iv_path          TYPE ty_file-path
-                  iv_filename      TYPE ty_file-filename
+        IMPORTING iv_path     TYPE ty_file-path
+                  iv_filename TYPE ty_file-filename
         RAISING   lcx_exception,
       rm
-        IMPORTING iv_path          TYPE ty_file-path
-                  iv_filename      TYPE ty_file-filename
+        IMPORTING iv_path     TYPE ty_file-path
+                  iv_filename TYPE ty_file-filename
         RAISING   lcx_exception,
       ignore
-        IMPORTING iv_path          TYPE ty_file-path
-                  iv_filename      TYPE ty_file-filename
+        IMPORTING iv_path     TYPE ty_file-path
+                  iv_filename TYPE ty_file-filename
         RAISING   lcx_exception,
       lookup
         IMPORTING iv_path          TYPE ty_file-path
                   iv_filename      TYPE ty_file-filename
         RETURNING VALUE(rv_method) TYPE ty_method,
       count
-        RETURNING VALUE(rv_count)  TYPE i,
+        RETURNING VALUE(rv_count) TYPE i,
       get_all
-        RETURNING VALUE(rt_stage)  TYPE ty_stage_tt.
+        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
 
   PRIVATE SECTION.
     DATA: mt_stage TYPE ty_stage_tt.
 
     METHODS append
-      IMPORTING iv_path            TYPE ty_file-path
-                iv_filename        TYPE ty_file-filename
-                iv_method          TYPE ty_method
+      IMPORTING iv_path     TYPE ty_file-path
+                iv_filename TYPE ty_file-filename
+                iv_method   TYPE ty_method
       RAISING   lcx_exception.
 
     METHODS find_work_file
-      IMPORTING iv_path            TYPE ty_file-path
-                iv_filename        TYPE ty_file-filename
-      RETURNING VALUE(rs_file)     TYPE ty_file
+      IMPORTING iv_path        TYPE ty_file-path
+                iv_filename    TYPE ty_file-filename
+      RETURNING VALUE(rs_file) TYPE ty_file
       RAISING   lcx_exception.
 
 ENDCLASS.   "lcl_stage DEFINITION
@@ -16846,8 +16846,8 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS stage_handle_action
-      IMPORTING iv_getdata  TYPE clike
-                iv_action   TYPE clike
+      IMPORTING iv_getdata TYPE clike
+                iv_action  TYPE clike
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -16974,7 +16974,7 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS free_stage
-      IMPORTING iv_repo_key     TYPE lcl_persistence_db=>ty_value.
+      IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value.
 
   PRIVATE SECTION.
 
@@ -17007,7 +17007,7 @@ CLASS lcl_app DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS run
-      RAISING   lcx_exception.
+      RAISING lcx_exception.
 
     CLASS-METHODS gui
       RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
@@ -17939,7 +17939,8 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS parse
       EXPORTING ev_pack TYPE xstring
-      CHANGING  cv_data TYPE xstring.
+      CHANGING  cv_data TYPE xstring
+      RAISING   lcx_exception.
 
     CLASS-METHODS length_utf8_hex
       IMPORTING iv_data       TYPE xstring
@@ -18303,6 +18304,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     WHILE xstrlen( cv_data ) >= 4.
       lv_len = length_utf8_hex( cv_data ).
+
+      IF lv_len > xstrlen( cv_data ).
+        _raise 'parse, string length too large'.
+      ENDIF.
 
       lv_contents = cv_data(lv_len).
       IF lv_len = 0.
@@ -19337,8 +19342,8 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    DATA:         lt_assets  TYPE tt_web_assets,
-                  ls_stack   TYPE ty_page_stack.
+    DATA: lt_assets TYPE tt_web_assets,
+          ls_stack  TYPE ty_page_stack.
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     IF NOT mi_cur_page IS INITIAL.
@@ -20017,7 +20022,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_head.
     DATA: lo_html  TYPE REF TO lcl_html_helper,
-          ls_stats  TYPE lcl_diff=>ty_count.
+          ls_stats TYPE lcl_diff=>ty_count.
 
     CREATE OBJECT lo_html.
 
@@ -20471,12 +20476,12 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     METHODS render_stage
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
 
     METHODS render_form
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
 
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -20725,8 +20730,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo      TYPE REF TO lcl_repo_online,
-          mo_stage     TYPE REF TO lcl_stage.
+    DATA: mo_repo  TYPE REF TO lcl_repo_online,
+          mo_stage TYPE REF TO lcl_stage.
 
     METHODS render_lines
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -20771,7 +20776,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         ENDIF.
         IF <ls_file>-type = lcl_stage=>c_wftype-local.
           ro_html->add( '<td></td><td colspan="2">LOCAL</td>' ) ##NO_TEXT.
-        ElSE. "c_remote
+        ELSE. "c_remote
           ro_html->add( '<td></td><td colspan="2">REMOTE</td>' ) ##NO_TEXT.
         ENDIF.
         ro_html->add('</tr>').
@@ -24725,9 +24730,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD stage_handle_action.
 
-    DATA: ls_file   TYPE ty_file,
-          lo_stage  TYPE REF TO lcl_stage,
-          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_file  TYPE ty_file,
+          lo_stage TYPE REF TO lcl_stage,
+          lv_key   TYPE lcl_persistence_repo=>ty_repo-key.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lo_stage->mt_workarea.
 
