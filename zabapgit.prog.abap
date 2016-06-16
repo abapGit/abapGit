@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.11'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.12'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17945,7 +17945,8 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS length_utf8_hex
       IMPORTING iv_data       TYPE xstring
-      RETURNING VALUE(rv_len) TYPE i.
+      RETURNING VALUE(rv_len) TYPE i
+      RAISING   lcx_exception.
 
     CLASS-METHODS parse_branch_list
       IMPORTING iv_data        TYPE string
@@ -18284,8 +18285,12 @@ CLASS lcl_git_transport IMPLEMENTATION.
         encoding = 'UTF-8' ).
     lv_len = xstrlen( lv_xstring ).
 
-    lo_obj->read( EXPORTING n    = lv_len
-                  IMPORTING data = lv_string ).
+    TRY.
+        lo_obj->read( EXPORTING n    = lv_len
+                      IMPORTING data = lv_string ).
+      CATCH cx_sy_conversion_codepage.
+        _raise 'error converting to hex, LENGTH_UTF8_HEX'.
+    ENDTRY.
 
     lv_char4 = lv_string.
     TRANSLATE lv_char4 TO UPPER CASE.
