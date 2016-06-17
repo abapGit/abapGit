@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.12'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.13'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -17752,18 +17752,21 @@ CLASS lcl_login_manager DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       load
-        IMPORTING iv_uri    TYPE string
-                  ii_client TYPE REF TO if_http_client
+        IMPORTING iv_uri                  TYPE string
+                  ii_client               TYPE REF TO if_http_client OPTIONAL
+        RETURNING VALUE(rv_authorization) TYPE string
         RAISING   lcx_exception,
       save
         IMPORTING iv_uri    TYPE string
                   ii_client TYPE REF TO if_http_client
         RAISING   lcx_exception,
+      clear,
       set
         IMPORTING iv_uri         TYPE string
                   iv_username    TYPE string
                   iv_password    TYPE string
-        RETURNING VALUE(rv_auth) TYPE string.
+        RETURNING VALUE(rv_auth) TYPE string
+        RAISING   lcx_exception.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_auth,
@@ -17776,38 +17779,82 @@ CLASS lcl_login_manager DEFINITION FINAL.
     CLASS-METHODS:
       append
         IMPORTING iv_uri  TYPE string
-                  iv_auth TYPE string.
+                  iv_auth TYPE string
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
 CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
+    CONSTANTS: c_username TYPE string VALUE 'Aladdin',
+               c_password TYPE string VALUE 'OpenSesame'.
+
     METHODS:
-      test1 FOR TESTING.
+      setup,
+      teardown,
+      encoding FOR TESTING
+        RAISING lcx_exception,
+      same_server FOR TESTING
+        RAISING lcx_exception.
 
 ENDCLASS.
 
 CLASS ltcl_login_manager IMPLEMENTATION.
 
-  METHOD test1.
+  METHOD setup.
+    lcl_login_manager=>clear( ).
+  ENDMETHOD.
+
+  METHOD teardown.
+    lcl_login_manager=>clear( ).
+  ENDMETHOD.
+
+  METHOD encoding.
 
     DATA: lv_auth TYPE string.
 
     lv_auth = lcl_login_manager=>set(
-      iv_uri      = 'foobar'
-      iv_username = 'Aladdin'
-      iv_password = 'OpenSesame' ).
+      iv_uri      = 'https://github.com/larshp/abapGit.git'
+      iv_username = c_username
+      iv_password = c_password ).
 
     cl_abap_unit_assert=>assert_equals(
-        act = lv_auth
-        exp = 'Basic QWxhZGRpbjpPcGVuU2VzYW1l' ).
+      act = lv_auth
+      exp = 'Basic QWxhZGRpbjpPcGVuU2VzYW1l' ).
+
+  ENDMETHOD.
+
+  METHOD same_server.
+
+    CONSTANTS: lc_github1 TYPE string VALUE 'https://github.com/larshp/abapGit.git',
+               lc_github2 TYPE string VALUE 'https://github.com/larshp/Foobar.git'.
+
+    DATA: lv_auth1 TYPE string,
+          lv_auth2 TYPE string.
+
+
+    lcl_login_manager=>set(
+      iv_uri      = lc_github1
+      iv_username = c_username
+      iv_password = c_password ).
+
+    lv_auth1 = lcl_login_manager=>load( lc_github1 ).
+    lv_auth2 = lcl_login_manager=>load( lc_github2 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_auth1
+      exp = lv_auth2 ).
 
   ENDMETHOD.
 
 ENDCLASS.
 
 CLASS lcl_login_manager IMPLEMENTATION.
+
+  METHOD clear.
+    CLEAR gt_auth.
+  ENDMETHOD.
 
   METHOD set.
 
@@ -17836,12 +17883,16 @@ CLASS lcl_login_manager IMPLEMENTATION.
     DATA: ls_auth LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = iv_uri.
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = lcl_url=>host( iv_uri ).
     IF sy-subrc = 0.
-      ii_client->request->set_header_field(
+      rv_authorization = ls_auth-authorization.
+
+      IF NOT ii_client IS INITIAL.
+        ii_client->request->set_header_field(
           name  = 'authorization'
           value = ls_auth-authorization ).                  "#EC NOTEXT
-      ii_client->propertytype_logon_popup = ii_client->co_disabled.
+        ii_client->propertytype_logon_popup = ii_client->co_disabled.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -17851,10 +17902,10 @@ CLASS lcl_login_manager IMPLEMENTATION.
     DATA: lv_auth TYPE string.
 
 
-    lv_auth =  ii_client->request->get_header_field( 'authorization' ). "#EC NOTEXT
+    lv_auth = ii_client->request->get_header_field( 'authorization' ). "#EC NOTEXT
 
     IF NOT lv_auth IS INITIAL.
-      append( iv_uri = iv_uri
+      append( iv_uri  = iv_uri
               iv_auth = lv_auth ).
     ENDIF.
 
@@ -17868,7 +17919,7 @@ CLASS lcl_login_manager IMPLEMENTATION.
     READ TABLE gt_auth WITH KEY uri = iv_uri TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-      <ls_auth>-uri           = iv_uri.
+      <ls_auth>-uri           = lcl_url=>host( iv_uri ).
       <ls_auth>-authorization = iv_auth.
     ENDIF.
 
