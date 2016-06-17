@@ -17916,7 +17916,8 @@ CLASS lcl_login_manager IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth WITH KEY uri = iv_uri TRANSPORTING NO FIELDS.
+    READ TABLE gt_auth WITH KEY uri = lcl_url=>host( iv_uri )
+      TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
       <ls_auth>-uri           = lcl_url=>host( iv_uri ).
