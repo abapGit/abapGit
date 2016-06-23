@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.13'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.14'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -106,16 +106,16 @@ CONSTANTS: BEGIN OF gc_event_state,
              go_back_to_bookmark VALUE 6,
            END OF gc_event_state.
 
-CONSTANTS: BEGIN OF html_opt,
+CONSTANTS: BEGIN OF gc_html_opt,
              emphas TYPE c VALUE 'E',
              cancel TYPE c VALUE 'C',
-           END OF html_opt.
+           END OF gc_html_opt.
 
-CONSTANTS: BEGIN OF action_type,
+CONSTANTS: BEGIN OF gc_action_type,
              sapevent TYPE c VALUE 'E',
              url      TYPE c VALUE 'U',
              onclick  TYPE c VALUE 'C',
-           END OF action_type.
+           END OF gc_action_type.
 
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
@@ -123,8 +123,8 @@ CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
 CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
 
-CONSTANTS: c_root_dir    TYPE string VALUE '/',
-           c_dot_abapgit TYPE string VALUE '.abapgit.xml'.
+CONSTANTS: gc_root_dir    TYPE string VALUE '/',
+           gc_dot_abapgit TYPE string VALUE '.abapgit.xml'.
 
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception
@@ -320,7 +320,7 @@ CLASS lcl_html_helper DEFINITION FINAL.
     METHODS add_anchor IMPORTING iv_txt   TYPE string
                                  iv_act   TYPE string
                                  iv_opt   TYPE char1  OPTIONAL
-                                 iv_typ   TYPE char1  DEFAULT action_type-sapevent
+                                 iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
                                  iv_class TYPE string OPTIONAL.
 
   PRIVATE SECTION.
@@ -419,10 +419,10 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt = html_opt-emphas.
+    IF iv_opt = gc_html_opt-emphas.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt = html_opt-cancel.
+    IF iv_opt = gc_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.
@@ -432,11 +432,11 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     IF iv_act IS NOT INITIAL.
       CASE iv_typ.
-        WHEN action_type-url.
+        WHEN gc_action_type-url.
           lv_href = | href="{ iv_act }"|.
-        WHEN action_type-sapevent.
+        WHEN gc_action_type-sapevent.
           lv_href = | href="sapevent:{ iv_act }"|.
-        WHEN action_type-onclick.
+        WHEN gc_action_type-onclick.
           lv_href = | onclick="{ iv_act }"|.
         WHEN OTHERS.
       ENDCASE.
@@ -457,7 +457,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
                              io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
                              iv_act TYPE string    OPTIONAL
                              iv_opt TYPE c         OPTIONAL
-                             iv_typ TYPE c         DEFAULT action_type-sapevent.
+                             iv_typ TYPE c         DEFAULT gc_action_type-sapevent.
 
     METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
                              iv_no_separator           TYPE abap_bool OPTIONAL
@@ -539,17 +539,19 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       IF <ls_item>-sub IS INITIAL.
         CLEAR lv_class.
         IF iv_no_separator = abap_true
-           OR lv_last = abap_true AND iv_as_droplist_with_label IS INITIAL.
+            OR lv_last = abap_true
+            AND iv_as_droplist_with_label IS INITIAL.
           lv_class = 'menu_end'.
         ENDIF.
-        ro_html->add_anchor( iv_txt      = <ls_item>-txt
-                             iv_act      = <ls_item>-act
-                             iv_opt      = <ls_item>-opt
-                             iv_typ      = <ls_item>-typ
-                             iv_class    = lv_class ).
+        ro_html->add_anchor( iv_txt   = <ls_item>-txt
+                             iv_act   = <ls_item>-act
+                             iv_opt   = <ls_item>-opt
+                             iv_typ   = <ls_item>-typ
+                             iv_class = lv_class ).
       ELSE.
-        ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt
-                                             iv_no_separator           = lv_last ) ).
+        ro_html->add( <ls_item>-sub->render(
+          iv_as_droplist_with_label = <ls_item>-txt
+          iv_no_separator           = lv_last ) ).
       ENDIF.
 
     ENDLOOP.
@@ -2741,7 +2743,7 @@ CLASS lcl_diff IMPLEMENTATION.
     DEFINE _add_regex.
       CREATE OBJECT lo_regex
         EXPORTING pattern     = &1
-                  ignore_case = abap_true.
+                  ignore_case = abap_true ##NO_TEXT.
       APPEND lo_regex TO lt_regex_set.
     END-OF-DEFINITION.
 
@@ -13225,59 +13227,59 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   METHOD strip_stamps.
 
-    FIELD-SYMBOLS <node> LIKE LINE OF ct_nodes.
+    FIELD-SYMBOLS <ls_node> LIKE LINE OF ct_nodes.
 
     CLEAR: cs_head-luser, cs_head-ldate, cs_head-ltime.
     CLEAR: cs_head-fuser, cs_head-fdate, cs_head-ftime.
     CLEAR: cs_head-responsibl.
 
-    LOOP AT ct_nodes ASSIGNING <node>.
-      CLEAR: <node>-luser, <node>-ldate, <node>-ltime.
-      CLEAR: <node>-fuser, <node>-fdate, <node>-ftime.
+    LOOP AT ct_nodes ASSIGNING <ls_node>.
+      CLEAR: <ls_node>-luser, <ls_node>-ldate, <ls_node>-ltime.
+      CLEAR: <ls_node>-fuser, <ls_node>-fdate, <ls_node>-ftime.
     ENDLOOP.
 
   ENDMETHOD.                    "strip_stamps
 
   METHOD regenerate_ids.
 
-    DATA: l_uid  TYPE sys_uid,
+    DATA: ls_uid TYPE sys_uid,
           lt_map TYPE tt_id_map.
 
-    FIELD-SYMBOLS: <node> LIKE LINE OF ct_nodes,
-                   <ref>  LIKE LINE OF ct_refs,
-                   <text> LIKE LINE OF ct_texts,
-                   <map>  LIKE LINE OF mt_map.
+    FIELD-SYMBOLS: <ls_node> LIKE LINE OF ct_nodes,
+                   <ls_ref>  LIKE LINE OF ct_refs,
+                   <ls_text> LIKE LINE OF ct_texts,
+                   <ls_map>  LIKE LINE OF mt_map.
 
     "Build map
-    LOOP AT ct_nodes ASSIGNING <node>.
-      APPEND INITIAL LINE TO lt_map ASSIGNING <map>.
-      IF <node>-parent_id IS INITIAL.
-        <map>-old = <node>-node_id.
-        <map>-new = <node>-node_id. "Root node
+    LOOP AT ct_nodes ASSIGNING <ls_node>.
+      APPEND INITIAL LINE TO lt_map ASSIGNING <ls_map>.
+      IF <ls_node>-parent_id IS INITIAL.
+        <ls_map>-old = <ls_node>-node_id.
+        <ls_map>-new = <ls_node>-node_id. "Root node
       ELSE.
         CALL FUNCTION 'STREE_GET_UNIQUE_ID'
           IMPORTING
-            unique_id = l_uid.
+            unique_id = ls_uid.
 
-        <map>-old = <node>-node_id.
-        <map>-new = l_uid-id.
+        <ls_map>-old = <ls_node>-node_id.
+        <ls_map>-new = ls_uid-id.
       ENDIF.
-      <node>-node_id = <map>-new. "Replace id
+      <ls_node>-node_id = <ls_map>-new. "Replace id
     ENDLOOP.
 
     mt_map = lt_map. "Sort
 
-    LOOP AT ct_nodes ASSIGNING <node>.
-      <node>-parent_id  = replace_id( <node>-parent_id ).
-      <node>-brother_id = replace_id( <node>-brother_id ).
+    LOOP AT ct_nodes ASSIGNING <ls_node>.
+      <ls_node>-parent_id  = replace_id( <ls_node>-parent_id ).
+      <ls_node>-brother_id = replace_id( <ls_node>-brother_id ).
     ENDLOOP.
 
-    LOOP AT ct_refs ASSIGNING <ref>.
-      <ref>-node_id = replace_id( <ref>-node_id ).
+    LOOP AT ct_refs ASSIGNING <ls_ref>.
+      <ls_ref>-node_id = replace_id( <ls_ref>-node_id ).
     ENDLOOP.
 
-    LOOP AT ct_texts ASSIGNING <text>.
-      <text>-node_id = replace_id( <text>-node_id ).
+    LOOP AT ct_texts ASSIGNING <ls_text>.
+      <ls_text>-node_id = replace_id( <ls_text>-node_id ).
     ENDLOOP.
 
   ENDMETHOD.                    "regenerate_ids
@@ -13528,13 +13530,13 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                is_file          TYPE any "ty_repo_file
+                ig_file          TYPE any "ty_repo_file
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_decode
       IMPORTING iv_string TYPE clike
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                es_file   TYPE any "ty_repo_file
+                eg_file   TYPE any "ty_repo_file
       RAISING   lcx_exception.
 
     CLASS-METHODS dbkey_encode
@@ -13614,22 +13616,22 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           ls_field  LIKE LINE OF lt_fields.
 
-    FIELD-SYMBOLS <field> TYPE string.
+    FIELD-SYMBOLS <lv_field> TYPE string.
 
     ls_field-name = 'KEY'.
     ls_field-value = iv_key.
     APPEND ls_field TO lt_fields.
 
     ls_field-name = 'PATH'.
-    ASSIGN COMPONENT ls_field-name OF STRUCTURE is_file TO <field>.
-    ASSERT <field> IS ASSIGNED.
-    ls_field-value = <field>.
+    ASSIGN COMPONENT ls_field-name OF STRUCTURE ig_file TO <lv_field>.
+    ASSERT <lv_field> IS ASSIGNED.
+    ls_field-value = <lv_field>.
     APPEND ls_field TO lt_fields.
 
     ls_field-name = 'FILENAME'.
-    ASSIGN COMPONENT ls_field-name OF STRUCTURE is_file TO <field>.
-    ASSERT <field> IS ASSIGNED.
-    ls_field-value = <field>.
+    ASSIGN COMPONENT ls_field-name OF STRUCTURE ig_file TO <lv_field>.
+    ASSERT <lv_field> IS ASSIGNED.
+    ls_field-value = <lv_field>.
     APPEND ls_field TO lt_fields.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
@@ -13642,9 +13644,9 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
           lv_string TYPE string.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
-                   <field>    TYPE string.
+                   <lv_field> TYPE string.
 
-    CLEAR: ev_key, es_file.
+    CLEAR: ev_key, eg_file.
     lv_string = iv_string.     " type conversion
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
 
@@ -13655,16 +13657,16 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
     IF sy-subrc = 0.
-      ASSIGN COMPONENT 'PATH' OF STRUCTURE es_file TO <field>.
-      ASSERT <field> IS ASSIGNED.
-      <field> = <ls_field>-value.
+      ASSIGN COMPONENT 'PATH' OF STRUCTURE eg_file TO <lv_field>.
+      ASSERT <lv_field> IS ASSIGNED.
+      <lv_field> = <ls_field>-value.
     ENDIF.
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
     IF sy-subrc = 0.
-      ASSIGN COMPONENT 'FILENAME' OF STRUCTURE es_file TO <field>.
-      ASSERT <field> IS ASSIGNED.
-      <field> = <ls_field>-value.
+      ASSIGN COMPONENT 'FILENAME' OF STRUCTURE eg_file TO <lv_field>.
+      ASSERT <lv_field> IS ASSIGNED.
+      <lv_field> = <ls_field>-value.
     ENDIF.
 
   ENDMETHOD.                    "file_decode
@@ -14535,7 +14537,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
 
     SELECT devclass INTO TABLE rt_list
-      FROM tdevc WHERE parentcl = iv_package.
+      FROM tdevc WHERE parentcl = iv_package.           "#EC CI_GENBUFF
 
 * note the recursion, since packages are added to the list
     LOOP AT rt_list INTO lv_devclass.
@@ -16834,6 +16836,18 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
+    METHODS change_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS reset
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS create_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
     METHODS db_delete
       IMPORTING iv_getdata TYPE clike
       RAISING   lcx_exception.
@@ -17308,8 +17322,8 @@ CLASS lcl_repo IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = c_root_dir
-      filename = c_dot_abapgit.
+      WITH KEY path = gc_root_dir
+      filename = gc_dot_abapgit.
     IF sy-subrc = 0.
       mo_dot_abapgit = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
     ENDIF.
@@ -17413,8 +17427,8 @@ CLASS lcl_repo IMPLEMENTATION.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
     ENDIF.
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = c_root_dir.
-    <ls_return>-file-filename = c_dot_abapgit.
+    <ls_return>-file-path     = gc_root_dir.
+    <ls_return>-file-filename = gc_dot_abapgit.
     <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
 
     lt_tadir = lcl_tadir=>read( get_package( ) ).
@@ -17787,8 +17801,8 @@ ENDCLASS.
 CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    CONSTANTS: c_username TYPE string VALUE 'Aladdin',
-               c_password TYPE string VALUE 'OpenSesame'.
+    CONSTANTS: c_username TYPE string VALUE 'Aladdin' ##NO_TEXT,
+               c_password TYPE string VALUE 'OpenSesame' ##NO_TEXT.
 
     METHODS:
       setup,
@@ -17871,7 +17885,8 @@ CLASS lcl_login_manager IMPLEMENTATION.
 
     rv_auth = cl_http_utility=>if_http_utility~encode_base64( lv_concat ).
 
-    CONCATENATE 'Basic' rv_auth INTO rv_auth SEPARATED BY space.
+    CONCATENATE 'Basic' rv_auth INTO rv_auth
+      SEPARATED BY space ##NO_TEXT.
 
     append( iv_uri  = iv_uri
             iv_auth = rv_auth ).
@@ -19370,7 +19385,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD back.
 
     DATA: lv_index TYPE i,
-          ls_stack TYPE ty_page_stack.
+          ls_stack LIKE LINE OF mt_stack.
 
     lv_index = lines( mt_stack ).
 
@@ -20325,21 +20340,22 @@ CLASS lcl_stage IMPLEMENTATION.
 
   METHOD update_and_add_dot_abapgit.
 
-    FIELD-SYMBOLS <dot_abapgit> LIKE LINE OF mt_workarea.
+    FIELD-SYMBOLS <ls_dot_abapgit> LIKE LINE OF mt_workarea.
 
-    READ TABLE mt_workarea ASSIGNING <dot_abapgit>
-      WITH KEY file-path     = c_root_dir
-               file-filename = c_dot_abapgit.
+    READ TABLE mt_workarea ASSIGNING <ls_dot_abapgit>
+      WITH KEY file-path     = gc_root_dir
+               file-filename = gc_dot_abapgit.
     IF sy-subrc <> 0.
-      APPEND INITIAL LINE TO mt_workarea ASSIGNING <dot_abapgit>.
-      <dot_abapgit>-type          = c_wftype-local.
-      <dot_abapgit>-file-path     = c_root_dir.
-      <dot_abapgit>-file-filename = c_dot_abapgit.
+      APPEND INITIAL LINE TO mt_workarea ASSIGNING <ls_dot_abapgit>.
+      <ls_dot_abapgit>-type          = c_wftype-local.
+      <ls_dot_abapgit>-file-path     = gc_root_dir.
+      <ls_dot_abapgit>-file-filename = gc_dot_abapgit.
     ENDIF.
 
-    <dot_abapgit>-file-data = iv_data.
+    <ls_dot_abapgit>-file-data = iv_data.
 
-    add( iv_path = c_root_dir iv_filename = c_dot_abapgit ).
+    add( iv_path     = gc_root_dir
+         iv_filename = gc_dot_abapgit ).
 
   ENDMETHOD.        "update_and_add_dot_abapgit
 
@@ -20481,14 +20497,17 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
         ro_html->add( '<input type="radio" name="method" value="pull"' &&
           lv_pull && '>Automatic pull<br>' ).
         ro_html->add( '<br>' ).
-        ro_html->add( 'Authentication, optional(password will be saved in clear text)<br>' ).
+        ro_html->add( 'Authentication, optional<br>' ).
+        ro_html->add( '(password will be saved in clear text)<br>' ).
         ro_html->add( '<table>' ).
         ro_html->add( '<tr>' ).
-        ro_html->add( '<td>Username:</td><td><input type="text" name="username" value="' &&
+        ro_html->add( '<td>Username:</td>' ).
+        ro_html->add( '<td><input type="text" name="username" value="' &&
           ls_per-username && '"></td>' ).
         ro_html->add( '</tr>' ).
         ro_html->add( '<tr>' ).
-        ro_html->add( '<td>Password:</td><td><input type="text" name="password" value="' &&
+        ro_html->add( '<td>Password:</td>' ).
+        ro_html->add( '<td><input type="text" name="password" value="' &&
           ls_per-password && '"></td>' ).
         ro_html->add( '</tr>' ).
         ro_html->add( '<tr><td colspan="2" align="right">' ).
@@ -20658,12 +20677,12 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     lo_toolbar->add( iv_act = 'submitCommit();'
                      iv_txt = 'Commit'
-                     iv_typ = action_type-onclick
-                     iv_opt = html_opt-emphas ).
+                     iv_typ = gc_action_type-onclick
+                     iv_opt = gc_html_opt-emphas ).
 
     lo_toolbar->add( iv_act = 'commit_cancel'
                      iv_txt = 'Cancel'
-                     iv_opt = html_opt-cancel ).
+                     iv_opt = gc_html_opt-cancel ).
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -20843,7 +20862,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       lv_method = mo_stage->lookup( iv_path     = <ls_file>-file-path
                                     iv_filename = <ls_file>-file-filename ).
       lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                      is_file = <ls_file>-file ).
+                                                      ig_file = <ls_file>-file ).
 
       lo_toolbar->reset( ). " Build line actions
       IF <ls_file>-type = lcl_stage=>c_wftype-local.
@@ -20912,7 +20931,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     IF mo_stage->count( ) > 0.
       lo_toolbar->add( iv_act = |stage_commit?{ lv_action }|
                        iv_txt = 'Commit'
-                       iv_opt = html_opt-emphas ).
+                       iv_opt = gc_html_opt-emphas ).
     ELSEIF mo_stage->mv_local_cnt > 0.
       lo_toolbar->add( iv_act = |stage_all?{ lv_action }|
                        iv_txt = 'Add all and commit').
@@ -21119,6 +21138,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
+          lo_sub         TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
 
@@ -21134,33 +21154,45 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       IF io_repo->is_offline( ) = abap_true.
         lo_toolbar->add( iv_txt = 'Import ZIP'
                          iv_act = |zipimport?{ lv_key }|
-                         iv_opt = html_opt-emphas ).
+                         iv_opt = gc_html_opt-emphas ).
         lo_toolbar->add( iv_txt = 'Export ZIP'
                          iv_act = |zipexport?{ lv_key }|
-                         iv_opt = html_opt-emphas ).
+                         iv_opt = gc_html_opt-emphas ).
         lo_toolbar->add( iv_txt = 'Export&amp;Commit'
                          iv_act = |files_commit?{ lv_key }|
-                         iv_opt = html_opt-emphas ).
+                         iv_opt = gc_html_opt-emphas ).
       ELSE.
         lo_repo_online ?= io_repo.
         TRY.
             IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
               lo_toolbar->add( iv_txt = 'Pull'
                                iv_act = |pull?{ lv_key }|
-                               iv_opt = html_opt-emphas ).
+                               iv_opt = gc_html_opt-emphas ).
             ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
               lo_toolbar->add( iv_txt = 'Stage'
                                iv_act = |stage?{ lv_key }|
-                               iv_opt = html_opt-emphas ).
+                               iv_opt = gc_html_opt-emphas ).
             ENDIF.
-          CATCH lcx_exception.
-            " authorization error or repository does not exist
+          CATCH lcx_exception ##NO_HANDLER.
+* authorization error or repository does not exist
+* ignore error
         ENDTRY.
       ENDIF.
-      lo_toolbar->add( iv_txt = 'Remove'
-                       iv_act = |remove?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Uninstall'
-                       iv_act = |uninstall?{ lv_key }| ).
+
+      CREATE OBJECT lo_sub.
+      lo_sub->add( iv_txt = 'Remove'
+                   iv_act = |remove?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Uninstall'
+                   iv_act = |uninstall?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Change branch'
+                   iv_act = |change_branch?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Reset'
+                   iv_act = |reset?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Create branch'
+                   iv_act = |create_branch?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Advanced'
+                       io_sub = lo_sub ).
+
       lo_toolbar->add( iv_txt = 'Refresh'
                        iv_act = |refresh?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Hide'
@@ -21372,9 +21404,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ELSE.
         LOOP AT is_item-files INTO ls_file.
           IF ls_file-is_changed = abap_true.
-            lv_difflink = lcl_html_action_utils=>file_encode( iv_key = io_repo->get_key( )
-                                                              is_file = ls_file ).
-            ro_html->add_anchor( iv_txt = 'diff' iv_act = |diff?{ lv_difflink }| ).
+            lv_difflink = lcl_html_action_utils=>file_encode(
+              iv_key  = io_repo->get_key( )
+              ig_file = ls_file ).
+            ro_html->add_anchor(
+              iv_txt = 'diff'
+              iv_act = |diff?{ lv_difflink }| ).
           ELSE.
             ro_html->add( |<span>&nbsp;</span>| ).
           ENDIF.
@@ -23928,8 +23963,8 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     " Menu
     lo_toolbar->add( iv_act = 'submitDBForm();'
                      iv_txt = 'Save'
-                     iv_typ = action_type-onclick
-                     iv_opt = html_opt-emphas ).
+                     iv_typ = gc_action_type-onclick
+                     iv_opt = gc_html_opt-emphas ).
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -24191,6 +24226,18 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page_w_bookmark.
+      WHEN 'change_branch'.
+        lv_key   = iv_getdata.
+        change_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'reset'.
+        lv_key   = iv_getdata.
+        reset( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN 'create_branch'.
+        lv_key   = iv_getdata.
+        create_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
 
         " Stage
       WHEN 'stage_commit'.
@@ -24267,7 +24314,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
                                         IMPORTING ev_key    = lv_key
-                                                  es_file   = ls_file ).
+                                                  eg_file   = ls_file ).
 
     lo_repo  ?= lcl_app=>repo_srv( )->get( lv_key ).
     lt_remote = lo_repo->get_files_remote( ).
@@ -24625,6 +24672,48 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_package_zip
 
+  METHOD change_branch.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = 'todo'
+        txt1  = 'see https://github.com/larshp/abapGit/issues/265'
+        txt2  = '' ##NO_TEXT.
+
+  ENDMETHOD.
+
+  METHOD reset.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = 'todo'
+        txt1  = 'see https://github.com/larshp/abapGit/issues/264'
+        txt2  = '' ##NO_TEXT.
+
+  ENDMETHOD.
+
+  METHOD create_branch.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    CALL FUNCTION 'POPUP_TO_INFORM'
+      EXPORTING
+        titel = 'todo'
+        txt1  = 'see https://github.com/larshp/abapGit/issues/266'
+        txt2  = '' ##NO_TEXT.
+
+  ENDMETHOD.
+
   METHOD repo_pull.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online.
@@ -24799,7 +24888,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ELSE.
       lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
                                           IMPORTING ev_key    = lv_key
-                                                    es_file   = ls_file ).
+                                                    eg_file   = ls_file ).
     ENDIF.
 
     lo_stage = lcl_app=>repo_srv( )->get_stage( lv_key ).
@@ -24809,7 +24898,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lo_stage->add( iv_path = ls_file-path iv_filename = ls_file-filename ).
       WHEN 'stage_all'.
         LOOP AT lo_stage->mt_workarea ASSIGNING <ls_file>
-          WHERE type = lcl_stage=>c_wftype-local.
+            WHERE type = lcl_stage=>c_wftype-local.
           lo_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename ).
         ENDLOOP.
