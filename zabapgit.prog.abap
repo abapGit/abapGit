@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.14'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.15'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16774,13 +16774,11 @@ CLASS lcl_gui_router DEFINITION FINAL.
   PUBLIC SECTION.
 
     METHODS on_event
-      IMPORTING iv_action      TYPE clike
-                iv_frame       TYPE clike OPTIONAL
-                iv_getdata     TYPE clike OPTIONAL
-                it_postdata    TYPE cnht_post_data_tab OPTIONAL
-                it_query_table TYPE cnht_query_table   OPTIONAL
-      EXPORTING ei_page        TYPE REF TO lif_gui_page
-                ev_state       TYPE i
+      IMPORTING iv_action   TYPE clike
+                iv_getdata  TYPE clike OPTIONAL
+                it_postdata TYPE cnht_post_data_tab OPTIONAL
+      EXPORTING ei_page     TYPE REF TO lif_gui_page
+                ev_state    TYPE i
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -16896,7 +16894,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
           mt_stack       TYPE TABLE OF ty_page_stack,
           mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
-          mo_user        TYPE REF TO lcl_persistence_user,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
@@ -19348,14 +19345,12 @@ CLASS lcl_gui IMPLEMENTATION.
         IF lv_state IS INITIAL.
           mo_router->on_event(
             EXPORTING
-              iv_action      = action
-              iv_frame       = frame
-              iv_getdata     = getdata
-              it_postdata    = postdata
-              it_query_table = query_table
+              iv_action   = action
+              iv_getdata  = getdata
+              it_postdata = postdata
             IMPORTING
-              ei_page        = li_page
-              ev_state       = lv_state ).
+              ei_page     = li_page
+              ev_state    = lv_state ).
         ENDIF.
 
         CASE lv_state.
@@ -19645,148 +19640,152 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
   METHOD styles.
 
+    DEFINE _add.
+      ro_html->add( &1 ) ##NO_TEXT.
+    END-OF-DEFINITION.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('<style type="text/css">').
+    _add '<style type="text/css">'.
 
     " Global styles
-    ro_html->add('/* GLOBALS */').
-    ro_html->add('body {').
-    ro_html->add('  font-family: Arial,Helvetica,sans-serif;').
-    ro_html->add('  font-size:    12pt;' ).
-    ro_html->add('  background: #E8E8E8;').
-    ro_html->add('}').
-    ro_html->add('a, a:visited {').
-    ro_html->add('  color:            #4078c0;').
-    ro_html->add('  text-decoration:  none;').
-    ro_html->add('}').
-    ro_html->add('a:hover, a:active {').
-    ro_html->add('  cursor: pointer;').
-    ro_html->add('  text-decoration: underline;').
-    ro_html->add('}').
-    ro_html->add('img               { border: 0px; vertical-align: middle; }').
-    ro_html->add('table             { border-collapse: collapse; }').
-    ro_html->add('pre               { display: inline; }').
+    _add '/* GLOBALS */'.
+    _add 'body {'.
+    _add '  font-family: Arial,Helvetica,sans-serif;'.
+    _add '  font-size:    12pt;'.
+    _add '  background: #E8E8E8;'.
+    _add '}'.
+    _add 'a, a:visited {'.
+    _add '  color:            #4078c0;'.
+    _add '  text-decoration:  none;'.
+    _add '}'.
+    _add 'a:hover, a:active {'.
+    _add '  cursor: pointer;'.
+    _add '  text-decoration: underline;'.
+    _add '}'.
+    _add 'img               { border: 0px; vertical-align: middle; }'.
+    _add 'table             { border-collapse: collapse; }'.
+    _add 'pre               { display: inline; }'.
 
-    ro_html->add('form input, textarea {').
-    ro_html->add('  border: 1px solid #DDD;').
-    ro_html->add('  padding: 3px 6px;').
-    ro_html->add('}').
-    ro_html->add('form input:focus, textarea:focus {').
-    ro_html->add('  border: 1px solid #8cadd9;').
-    ro_html->add('}').
+    _add 'form input, textarea {'.
+    _add '  border: 1px solid #DDD;'.
+    _add '  padding: 3px 6px;'.
+    _add '}'.
+    _add 'form input:focus, textarea:focus {'.
+    _add '  border: 1px solid #8cadd9;'.
+    _add '}'.
 
     " Modifiers
-    ro_html->add('/* MODIFIERS */').
-    ro_html->add('.grey             { color: lightgrey  !important; }').
-    ro_html->add('.emphasis         { font-weight: bold !important; }').
-    ro_html->add('.attention        { color: red        !important; }').
-    ro_html->add('.right            { text-align:right; }').
-    ro_html->add('.paddings         { padding: 0.5em 0.5em 0.5em 0.5em; }').
+    _add '/* MODIFIERS */'.
+    _add '.grey             { color: lightgrey  !important; }'.
+    _add '.emphasis         { font-weight: bold !important; }'.
+    _add '.attention        { color: red        !important; }'.
+    _add '.right            { text-align:right; }'.
+    _add '.paddings         { padding: 0.5em 0.5em 0.5em 0.5em; }'.
 
     " Structure div styles: header, footer, toc
-    ro_html->add('/* STRUCTURE DIVS, HEADER & FOOTER */').
-    ro_html->add('td.headpad { padding-top: 11px; }').
-    ro_html->add('td.logo    { width: 164px; }').
-    ro_html->add('div#header {').
-    ro_html->add('  padding:          0.5em 0.5em 0.5em 0.5em;').
-    ro_html->add('  border-bottom:    3px double lightgrey;').
-    ro_html->add('}').
-    ro_html->add('div#toc {').
-    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('}').
-    ro_html->add('div#footer {').
-    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
-    ro_html->add('  border-top:       3px double lightgrey;').
-    ro_html->add('  text-align:       center;').
-    ro_html->add('}').
-    ro_html->add('div.dummydiv {').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding:          0.5em 1em 0.5em 1em;').
-    ro_html->add('  text-align:       center;').
-    ro_html->add('}').
-    ro_html->add('span.version {').
-    ro_html->add('  display: block;').
-    ro_html->add('  color: grey;').
-    ro_html->add('  margin-top: 0.3em;').
-    ro_html->add('}').
-    ro_html->add('span.page_title {').
-    ro_html->add('  font-weight: normal;').
-    ro_html->add('  font-size: 18pt;').
-    ro_html->add('  color: #bbb;').
-    ro_html->add('  padding-left: 0.4em;').
-    ro_html->add('}').
+    _add '/* STRUCTURE DIVS, HEADER & FOOTER */'.
+    _add 'td.headpad { padding-top: 11px; }'.
+    _add 'td.logo    { width: 164px; }'.
+    _add 'div#header {'.
+    _add '  padding:          0.5em 0.5em 0.5em 0.5em;'.
+    _add '  border-bottom:    3px double lightgrey;'.
+    _add '}'.
+    _add 'div#toc {'.
+    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  background-color: #f2f2f2;'.
+    _add '}'.
+    _add 'div#footer {'.
+    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  border-top:       3px double lightgrey;'.
+    _add '  text-align:       center;'.
+    _add '}'.
+    _add 'div.dummydiv {'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  text-align:       center;'.
+    _add '}'.
+    _add 'span.version {'.
+    _add '  display: block;'.
+    _add '  color: grey;'.
+    _add '  margin-top: 0.3em;'.
+    _add '}'.
+    _add 'span.page_title {'.
+    _add '  font-weight: normal;'.
+    _add '  font-size: 18pt;'.
+    _add '  color: #bbb;'.
+    _add '  padding-left: 0.4em;'.
+    _add '}'.
 
     " Menu styles
-    ro_html->add('/* MENU */').
-    ro_html->add('div.menu           { display: inline; }').
-    ro_html->add('div.menu .menu_end { border-right: 0px !important; }').
-    ro_html->add('div.menu a {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('  padding-right: 0.5em;').
-    ro_html->add('  border-right: 1px solid lightgrey;').
-    ro_html->add('  font-size: 12pt;').
-    ro_html->add('}').
-    ro_html->add('div.menu_vertical   { display: inline; }').
-    ro_html->add('div.menu_vertical a {').
-    ro_html->add('  display: block; ').
-    ro_html->add('  font-size: 12pt;').
-    ro_html->add('}').
+    _add '/* MENU */'.
+    _add 'div.menu           { display: inline; }'.
+    _add 'div.menu .menu_end { border-right: 0px !important; }'.
+    _add 'div.menu a {'.
+    _add '  padding-left: 0.5em;'.
+    _add '  padding-right: 0.5em;'.
+    _add '  border-right: 1px solid lightgrey;'.
+    _add '  font-size: 12pt;'.
+    _add '}'.
+    _add 'div.menu_vertical   { display: inline; }'.
+    _add 'div.menu_vertical a {'.
+    _add '  display: block; '.
+    _add '  font-size: 12pt;'.
+    _add '}'.
 
     " Drop down styles
-    ro_html->add('/*DROP DOWN*/').
-    ro_html->add('.dropdown {').
-    ro_html->add('    position: relative;').
-    ro_html->add('    display: inline;').
-    ro_html->add('}').
-    ro_html->add('.dropdown_content {').
-    ro_html->add('    display: none;').
-    ro_html->add('    z-index: 1;').
-    ro_html->add('    position: absolute;').
-    ro_html->add('    right: 0;').
-    ro_html->add('    top: 1.1em; /*IE7 woraround*/').
-    ro_html->add('    background-color: #f9f9f9;').
-    ro_html->add('    white-space: nowrap;').
-*    ro_html->add('    min-width: 10em;').
-    ro_html->add('    border-bottom: 1px solid lightgrey;').
-    ro_html->add('}').
-    ro_html->add('.dropdown_content a {').
-    ro_html->add('    padding: 0.2em;').
-    ro_html->add('    text-decoration: none;').
-    ro_html->add('    display: block;').
-    ro_html->add('}').
-    ro_html->add('.dropdown_content a:hover { background-color: #f1f1f1 }').
-    ro_html->add('.dropdown:hover .dropdown_content { display: block; }').
-    ro_html->add('.dropdown:hover .dropbtn  { color: #79a0d2; }').
+    _add '/*DROP DOWN*/'.
+    _add '.dropdown {'.
+    _add '    position: relative;'.
+    _add '    display: inline;'.
+    _add '}'.
+    _add '.dropdown_content {'.
+    _add '    display: none;'.
+    _add '    z-index: 1;'.
+    _add '    position: absolute;'.
+    _add '    right: 0;'.
+    _add '    top: 1.1em; /*IE7 woraround*/'.
+    _add '    background-color: #f9f9f9;'.
+    _add '    white-space: nowrap;'.
+*    _add '    min-width: 10em;'.
+    _add '    border-bottom: 1px solid lightgrey;'.
+    _add '}'.
+    _add '.dropdown_content a {'.
+    _add '    padding: 0.2em;'.
+    _add '    text-decoration: none;'.
+    _add '    display: block;'.
+    _add '}'.
+    _add '.dropdown_content a:hover { background-color: #f1f1f1 }'.
+    _add '.dropdown:hover .dropdown_content { display: block; }'.
+    _add '.dropdown:hover .dropbtn  { color: #79a0d2; }'.
 
     " Other and outdated (?) styles
-    ro_html->add('/* MISC AND REFACTOR */').
-    ro_html->add('a.grey:link {color: grey; font-size: smaller;}').
-    ro_html->add('a.grey:visited {color: grey; font-size: smaller;}').
-    ro_html->add('a.plain:link {color: black; text-decoration: none;}').
-    ro_html->add('a.plain:visited {color: black; text-decoration: none;}').
-    ro_html->add('a.bkg:link {color: #E8E8E8;}').
-    ro_html->add('a.bkg:visited {color: #E8E8E8;}').
-    ro_html->add('h1 {display: inline;}').
-    ro_html->add('h2 {display: inline;}').
-    ro_html->add('h3 {').
-    ro_html->add('  display: inline;').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-weight:normal;').
-    ro_html->add('  font-size: smaller;').
-    ro_html->add('}').
+    _add '/* MISC AND REFACTOR */'.
+    _add 'a.grey:link {color: grey; font-size: smaller;}'.
+    _add 'a.grey:visited {color: grey; font-size: smaller;}'.
+    _add 'a.plain:link {color: black; text-decoration: none;}'.
+    _add 'a.plain:visited {color: black; text-decoration: none;}'.
+    _add 'a.bkg:link {color: #E8E8E8;}'.
+    _add 'a.bkg:visited {color: #E8E8E8;}'.
+    _add 'h1 {display: inline;}'.
+    _add 'h2 {display: inline;}'.
+    _add 'h3 {'.
+    _add '  display: inline;'.
+    _add '  color: grey;'.
+    _add '  font-weight:normal;'.
+    _add '  font-size: smaller;'.
+    _add '}'.
 
-    ro_html->add('.hidden-submit {').
-    ro_html->add('  border: 0 none;').
-    ro_html->add('  height: 0;').
-    ro_html->add('  width: 0;').
-    ro_html->add('  padding: 0;').
-    ro_html->add('  margin: 0;').
-    ro_html->add('  overflow: hidden;').
-    ro_html->add('}').
+    _add '.hidden-submit {'.
+    _add '  border: 0 none;'.
+    _add '  height: 0;'.
+    _add '  width: 0;'.
+    _add '  padding: 0;'.
+    _add '  margin: 0;'.
+    _add '  overflow: hidden;'.
+    _add '}'.
 
-    ro_html->add('</style>').
+    _add '</style>'.
 
   ENDMETHOD.                    "common styles
 
@@ -20458,7 +20457,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="toc">' ).
-    ro_html->add( 'Listing online repositories' ).
+    ro_html->add( 'Listing online repositories' ) ##NO_TEXT.
     ro_html->add( '<br><br>' ).
 
     CREATE OBJECT lo_per.
@@ -20491,14 +20490,14 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
         ro_html->add( '<input type="hidden" name="key" value="' &&
           lo_repo->get_key( ) && '">' ).
         ro_html->add( '<input type="radio" name="method" value="nothing"' &&
-          lv_nothing && '>Do nothing<br>' ).
+          lv_nothing && '>Do nothing<br>' )  ##NO_TEXT.
         ro_html->add( '<input type="radio" name="method" value="push"' &&
-          lv_push && '>Automatic push<br>' ).
+          lv_push && '>Automatic push<br>' )  ##NO_TEXT.
         ro_html->add( '<input type="radio" name="method" value="pull"' &&
-          lv_pull && '>Automatic pull<br>' ).
+          lv_pull && '>Automatic pull<br>' )  ##NO_TEXT.
         ro_html->add( '<br>' ).
-        ro_html->add( 'Authentication, optional<br>' ).
-        ro_html->add( '(password will be saved in clear text)<br>' ).
+        ro_html->add( 'Authentication, optional<br>' )  ##NO_TEXT.
+        ro_html->add( '(password will be saved in clear text)<br>' )  ##NO_TEXT.
         ro_html->add( '<table>' ).
         ro_html->add( '<tr>' ).
         ro_html->add( '<td>Username:</td>' ).
@@ -20678,11 +20677,11 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitCommit();'
                      iv_txt = 'Commit'
                      iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-emphas ).
+                     iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
 
     lo_toolbar->add( iv_act = 'commit_cancel'
                      iv_txt = 'Cancel'
-                     iv_opt = gc_html_opt-cancel ).
+                     iv_opt = gc_html_opt-cancel ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -21744,13 +21743,15 @@ CLASS lcl_app IMPLEMENTATION.
 
   METHOD user.
 
-    IF iv_user = sy-uname.
+    IF iv_user = sy-uname ##USER_OK.
       IF go_current_user IS NOT BOUND.
         CREATE OBJECT go_current_user.
       ENDIF.
       ro_user = go_current_user.
     ELSE.
-      CREATE OBJECT ro_user EXPORTING iv_user = iv_user.
+      CREATE OBJECT ro_user
+        EXPORTING
+          iv_user = iv_user.
     ENDIF.
 
   ENDMETHOD.      "user
@@ -24674,9 +24675,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD change_branch.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+*    DATA: lo_repo TYPE REF TO lcl_repo_online.
+*
+*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -24688,9 +24689,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+*    DATA: lo_repo TYPE REF TO lcl_repo_online.
+*
+*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -24702,9 +24703,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+*    DATA: lo_repo TYPE REF TO lcl_repo_online.
+*
+*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
