@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.15'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.11.16'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16783,9 +16783,23 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
   PRIVATE SECTION.
 
+    TYPES: BEGIN OF ty_popup,
+             url         TYPE string,
+             package     TYPE devclass,
+             branch_name TYPE string,
+             cancel      TYPE abap_bool,
+           END OF ty_popup.
+
     METHODS get_page_by_name
       IMPORTING iv_name        TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS repo_popup
+      IMPORTING iv_url          TYPE string
+                iv_package      TYPE devclass OPTIONAL
+                iv_branch       TYPE string DEFAULT 'refs/heads/master'
+      RETURNING VALUE(rs_popup) TYPE ty_popup
       RAISING   lcx_exception.
 
     METHODS get_page_diff
@@ -16834,7 +16848,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS change_branch
+    METHODS switch_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
@@ -21183,8 +21197,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    iv_act = |remove?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Uninstall'
                    iv_act = |uninstall?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Change branch'
-                   iv_act = |change_branch?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Switch branch'
+                   iv_act = |switch_branch?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Reset'
                    iv_act = |reset?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Create branch'
@@ -24227,9 +24241,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page_w_bookmark.
-      WHEN 'change_branch'.
+      WHEN 'switch_branch'.
         lv_key   = iv_getdata.
-        change_branch( lv_key ).
+        switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN 'reset'.
         lv_key   = iv_getdata.
@@ -24402,40 +24416,45 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD. "abapgit_installation
 
-  METHOD repo_clone.
+  METHOD repo_popup.
 
-    DATA: lv_returncode  TYPE c,
-          lv_url         TYPE string,
-          lv_package     TYPE devclass,
-          lv_branch_name TYPE string,
-          lv_icon_ok     TYPE icon-name,
-          lv_icon_br     TYPE icon-name,
-          lv_icon_msg    TYPE icon-name,
-          lo_repo        TYPE REF TO lcl_repo_online,
-          lt_fields      TYPE TABLE OF sval.
+    DATA: lv_returncode TYPE c,
+          lv_icon_ok    TYPE icon-name,
+          lv_icon_br    TYPE icon-name,
+          lt_fields     TYPE TABLE OF sval,
+          lv_pattr      TYPE spo_fattr,
+          lv_button2    TYPE svalbutton-buttontext,
+          lv_icon2      TYPE icon-name.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-    "               TAB           FLD       LABEL            DEF                 ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url              ''.
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' ''                  ''.
-    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         'refs/heads/master' '05'.
+
+    IF NOT iv_package IS INITIAL.
+      lv_pattr = '05'.
+    ELSE.
+      lv_button2 = 'Create package'.
+      lv_icon2   = icon_msg.
+    ENDIF.
+
+*                   TAB           FLD       LABEL            DEF        ATTR
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     ''.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' iv_package lv_pattr.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  '05'.
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.
-    lv_icon_msg = icon_msg.
 
     CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
-        popup_title       = 'Clone'
+        popup_title       = 'Repository'
         programname       = sy-repid
         formname          = 'BRANCH_POPUP'
         ok_pushbuttontext = 'OK'
         icon_ok_push      = lv_icon_ok
         first_pushbutton  = 'Select branch'
         icon_button_1     = lv_icon_br
-        second_pushbutton = 'Create package'
-        icon_button_2     = lv_icon_msg
+        second_pushbutton = lv_button2
+        icon_button_2     = lv_icon2
       IMPORTING
         returncode        = lv_returncode
       TABLES
@@ -24447,27 +24466,41 @@ CLASS lcl_gui_router IMPLEMENTATION.
       _raise 'Error from POPUP_GET_VALUES'.
     ENDIF.
     IF lv_returncode = 'A'.
+      rs_popup-cancel = abap_true.
       RETURN.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
-    lcl_url=>name( lv_url ).         " validate
+    rs_popup-url = <ls_field>-value.
+    lcl_url=>name( rs_popup-url ).         " validate
 
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
+    rs_popup-package = <ls_field>-value.
+    TRANSLATE rs_popup-package TO UPPER CASE.
 
     READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_branch_name = <ls_field>-value.
+    rs_popup-branch_name = <ls_field>-value.
+
+  ENDMETHOD.
+
+  METHOD repo_clone.
+
+    DATA: ls_popup TYPE ty_popup,
+          lo_repo  TYPE REF TO lcl_repo_online.
+
+
+    ls_popup = repo_popup( iv_url ).
+    IF ls_popup-cancel = abap_true.
+      RETURN.
+    ENDIF.
 
     lo_repo = lcl_app=>repo_srv( )->new_online(
-      iv_url         = lv_url
-      iv_branch_name = lv_branch_name
-      iv_package     = lv_package ).
+      iv_url         = ls_popup-url
+      iv_branch_name = ls_popup-branch_name
+      iv_package     = ls_popup-package ).
     lo_repo->status( ). " check for errors
     lo_repo->deserialize( ).
 
@@ -24673,17 +24706,32 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_package_zip
 
-  METHOD change_branch.
+  METHOD switch_branch.
 
-*    DATA: lo_repo TYPE REF TO lcl_repo_online.
-*
-*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+          ls_popup TYPE ty_popup.
+
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_popup = repo_popup(
+      iv_url     = lo_repo->get_url( )
+      iv_package = lo_repo->get_package( )
+      iv_branch  = lo_repo->get_branch_name( ) ).
+    IF ls_popup-cancel = abap_true.
+      RETURN.
+    ENDIF.
+
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
         titel = 'todo'
         txt1  = 'see https://github.com/larshp/abapGit/issues/265'
         txt2  = '' ##NO_TEXT.
+
+*1. updating the mv_branch field to the sha1 of the new branch.
+*2. Update the persisted branch name
+*3. call lcl_repo_online->deserialize.
 
   ENDMETHOD.
 
