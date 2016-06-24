@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.1'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.2'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -18027,9 +18027,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * local to remote
     CLASS-METHODS receive_pack
-      IMPORTING io_repo   TYPE REF TO lcl_repo_online
-                iv_commit TYPE ty_sha1
-                iv_pack   TYPE xstring
+      IMPORTING io_repo        TYPE REF TO lcl_repo_online
+                iv_old         TYPE ty_sha1
+                iv_new         TYPE ty_sha1
+                iv_branch_name TYPE string
+                iv_pack        TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS branches
@@ -18338,14 +18340,14 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: li_client  TYPE REF TO if_http_client,
-          lv_cmd_pkt TYPE string,
-          lv_line    TYPE string,
-          lv_tmp     TYPE xstring,
-          lv_xstring TYPE xstring,
-          lv_string  TYPE string,
-          lv_buffer  TYPE string,
-          lv_branch  TYPE ty_sha1.
+    DATA: li_client   TYPE REF TO if_http_client,
+          lv_cmd_pkt  TYPE string,
+          lv_line     TYPE string,
+          lv_tmp      TYPE xstring,
+          lv_xstring  TYPE xstring,
+          lv_string   TYPE string,
+          lv_cap_list TYPE string,
+          lv_buffer   TYPE string.
 
 
     find_branch(
@@ -18353,22 +18355,23 @@ CLASS lcl_git_transport IMPLEMENTATION.
         io_repo    = io_repo
         iv_service = c_service-receive
       IMPORTING
-        ei_client  = li_client
-        ev_branch  = lv_branch ).
+        ei_client  = li_client ).
 
     set_headers(
-        io_repo    = io_repo
-        iv_service = c_service-receive
-        ii_client  = li_client ).
+      io_repo    = io_repo
+      iv_service = c_service-receive
+      ii_client  = li_client ).
 
-    lv_line = lv_branch &&
+    lv_cap_list = 'report-status agent=' && gv_agent.
+
+    lv_line = iv_old &&
               ` ` &&
-              iv_commit &&
+              iv_new &&
               ` ` &&
-              io_repo->get_branch_name( ) &&
+              iv_branch_name &&
               get_null( ) &&
               ` ` &&
-              'report-status agent=' && gv_agent &&
+              lv_cap_list &&
               gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = pkt_string( lv_line ).
 
@@ -19078,10 +19081,16 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lv_pack = lcl_git_pack=>encode( lt_objects ).
 
-    rv_branch = lcl_hash=>sha1( iv_type = gc_type-commit iv_data = lv_commit ).
-    lcl_git_transport=>receive_pack( io_repo   = io_repo
-                                     iv_commit = rv_branch
-                                     iv_pack   = lv_pack ).
+    rv_branch = lcl_hash=>sha1(
+      iv_type = gc_type-commit
+      iv_data = lv_commit ).
+
+    lcl_git_transport=>receive_pack(
+      io_repo        = io_repo
+      iv_old         = io_repo->get_sha1_local( )
+      iv_new         = rv_branch
+      iv_branch_name = io_repo->get_branch_name( )
+      iv_pack        = lv_pack ).
 
   ENDMETHOD.                    "receive_pack
 
