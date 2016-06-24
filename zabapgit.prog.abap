@@ -1,9 +1,9 @@
-REPORT zabapgit.
+REPORT zabapgit LINE-SIZE 100.
 
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.3'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.4'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -19648,7 +19648,7 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
       RETURNING VALUE(ro_html)    TYPE REF TO lcl_html_helper.
 
     METHODS title
-      IMPORTING iv_page_title  TYPE string
+      IMPORTING iv_title       TYPE string
                 io_menu        TYPE REF TO lcl_html_toolbar OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -19699,7 +19699,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).                                "#EC NOTEXT
 
     ro_html->add( '<td class="headpad"><span class="page_title">' ). "#EC NOTEXT
-    ro_html->add( |&#x25BA; { iv_page_title }| ).           "#EC NOTEXT
+    ro_html->add( |&#x25BA; { iv_title }| ).                "#EC NOTEXT
     ro_html->add( '</span></td>' ).                         "#EC NOTEXT
 
     IF io_menu IS BOUND.
@@ -20308,7 +20308,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'DIFF' ) ).
+    ro_html->add( title( 'DIFF' ) ).
     ro_html->add( render_diff( ) ).
     ro_html->add( footer( ) ).
 
@@ -20466,7 +20466,88 @@ CLASS lcl_stage IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_background DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS: run
+      RAISING lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: push
+      IMPORTING io_repo TYPE REF TO lcl_repo_online
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_background_run DEFINITION FINAL
+    INHERITING FROM lcl_gui_page_super.
+
+  PUBLIC SECTION.
+    METHODS:
+      lif_gui_page~on_event REDEFINITION,
+      lif_gui_page~render   REDEFINITION.
+
+  PRIVATE SECTION.
+    DATA: mt_text TYPE TABLE OF string.
+
+    METHODS: run.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_background_run IMPLEMENTATION.
+
+  METHOD lif_gui_page~on_event.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lx_error TYPE REF TO lcx_exception,
+          lv_text  TYPE string,
+          lv_line  TYPE i VALUE 1.
+
+
+    TRY.
+        lcl_background=>run( ).
+
+        DO.
+          READ LINE lv_line LINE VALUE INTO lv_text.
+          IF sy-subrc <> 0.
+            EXIT.
+          ENDIF.
+          APPEND lv_text TO mt_text.
+          lv_line = lv_line + 1.
+        ENDDO.
+      CATCH lcx_exception INTO lx_error.
+        APPEND lx_error->mv_text TO mt_text.
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    DATA: lv_text LIKE LINE OF mt_text.
+
+
+    run( ).
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( ) ).
+    ro_html->add( title( 'BACKGROUND_RUN' ) ).
+    ro_html->add( '<div id="toc">' ).
+    LOOP AT mt_text INTO lv_text.
+      ro_html->add( '<pre>' && lv_text && '</pre><br>' ).
+    ENDLOOP.
+    ro_html->add( '</div>' ).
+    ro_html->add( footer( ) ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_gui_page_background DEFINITION FINAL
+    INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
     METHODS:
@@ -20630,10 +20711,16 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT lo_toolbar.
     CREATE OBJECT ro_html.
 
+    lo_toolbar->add( iv_txt = 'Run background logic'
+                     iv_act = 'background_run' ).
+
     ro_html->add( header( ) ).
-    ro_html->add( title( iv_page_title = 'BACKGROUND' ) ).
+    ro_html->add( title( iv_title = 'BACKGROUND' io_menu = lo_toolbar ) ).
     ro_html->add( render_data( ) ).
     ro_html->add( footer( ) ).
 
@@ -20800,7 +20887,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'COMMIT' ) ).
+    ro_html->add( title( 'COMMIT' ) ).
 
     ro_html->add( '<div class="repo">' ).
     ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
@@ -21008,7 +21095,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'STAGE' ) ).
+    ro_html->add( title( 'STAGE' ) ).
 
     ro_html->add( '<div class="repo">' ).
     ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
@@ -21141,25 +21228,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
     DATA lo_betasub TYPE REF TO lcl_html_toolbar.
-    CREATE OBJECT lo_toolbar.
+
+
+    CREATE OBJECT ro_menu.
     CREATE OBJECT lo_betasub.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ).
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ).
     lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ).
 
-    lo_toolbar->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ).
-    lo_toolbar->add( iv_txt = 'Clone'            iv_act = 'install' ).
-    lo_toolbar->add( iv_txt = 'Explore'          iv_act = 'explore' ).
-    lo_toolbar->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ).
+    ro_menu->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ).
+    ro_menu->add( iv_txt = 'Clone'            iv_act = 'install' ).
+    ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ).
+    ro_menu->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ).
     IF needs_installation( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ).
+      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ).
     ENDIF.
-    lo_toolbar->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
-
-    ro_menu = lo_toolbar.
+    ro_menu->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
   ENDMETHOD.                    "build main_menu
 
@@ -21605,7 +21691,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'HOME' io_menu = build_main_menu( ) ) ).
+    ro_html->add( title( iv_title = 'HOME' io_menu = build_main_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -21729,19 +21815,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     APPEND ls_image TO rt_assets.
 
   ENDMETHOD.
-
-ENDCLASS.
-
-CLASS lcl_background DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS: run
-      RAISING lcx_exception.
-
-  PRIVATE SECTION.
-    CLASS-METHODS: push
-      IMPORTING io_repo TYPE REF TO lcl_repo_online
-      RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -24008,7 +24081,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'CONFIG DISPLAY' ) ).
+    ro_html->add( title( 'CONFIG DISPLAY' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
     ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
@@ -24105,7 +24178,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'CONFIG EDIT' ) ).
+    ro_html->add( title( 'CONFIG EDIT' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
 
@@ -24189,7 +24262,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_page_title = 'DATABASE PERSISTENCY' ) ).
+    ro_html->add( title( 'DATABASE PERSISTENCY' ) ).
 
     ro_html->add( '<div class="db_list">' ).
     ro_html->add( '<table width="100%" class="db_tab">' ).
@@ -24297,7 +24370,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CASE iv_action.
         " General routing
-      WHEN 'main' OR 'explore' OR 'db' OR 'background'.
+      WHEN 'main'
+          OR 'explore'
+          OR 'db'
+          OR 'background'
+          OR 'background_run'.
         ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
