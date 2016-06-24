@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.11.16'.    "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.0'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -13450,12 +13450,22 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
-                iv_branch_sha1 TYPE ty_sha1
+                iv_branch_sha1 TYPE ty_repo_xml-sha1
       RAISING   lcx_exception.
 
     METHODS update_local_checksums
       IMPORTING iv_key       TYPE ty_repo-key
-                it_checksums TYPE ty_local_checksum_tt
+                it_checksums TYPE ty_repo_xml-local_checksums
+      RAISING   lcx_exception.
+
+    METHODS update_url
+      IMPORTING iv_key TYPE ty_repo-key
+                iv_url TYPE ty_repo_xml-url
+      RAISING   lcx_exception.
+
+    METHODS update_branch_name
+      IMPORTING iv_key         TYPE ty_repo-key
+                iv_branch_name TYPE ty_repo_xml-branch_name
       RAISING   lcx_exception.
 
     METHODS add
@@ -13836,8 +13846,10 @@ CLASS lcl_repo DEFINITION ABSTRACT.
       find_dot_abapgit
         RAISING lcx_exception,
       set
-        IMPORTING iv_sha1      TYPE ty_sha1 OPTIONAL
-                  it_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
+        IMPORTING iv_sha1        TYPE ty_sha1 OPTIONAL
+                  it_checksums   TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
+                  iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
+                  iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
@@ -16436,6 +16448,12 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rv_url) TYPE lcl_persistence_repo=>ty_repo-url,
       get_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-branch_name,
+      set_url
+        IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+        RAISING   lcx_exception,
+      set_branch_name
+        IMPORTING iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
+        RAISING   lcx_exception,
       get_sha1_local
         RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
       get_sha1_remote
@@ -17261,6 +17279,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rv_name = ms_data-branch_name.
   ENDMETHOD.                    "get_branch_name
 
+  METHOD set_url.
+
+    mv_initialized = abap_false.
+    set( iv_url = iv_url ).
+
+  ENDMETHOD.
+
+  METHOD set_branch_name.
+
+    mv_initialized = abap_false.
+    set( iv_branch_name = iv_branch_name ).
+
+  ENDMETHOD.
+
   METHOD get_sha1_local.
     rv_sha1 = ms_data-sha1.
   ENDMETHOD.                    "get_sha1_local
@@ -17350,13 +17382,17 @@ CLASS lcl_repo IMPLEMENTATION.
     DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
 
 
-    ASSERT iv_sha1 IS SUPPLIED OR it_checksums IS SUPPLIED.
+    ASSERT iv_sha1 IS SUPPLIED
+      OR it_checksums IS SUPPLIED
+      OR iv_url IS SUPPLIED
+      OR iv_branch_name IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
     IF iv_sha1 IS SUPPLIED.
-      lo_persistence->update_sha1( iv_key         = ms_data-key
-                                   iv_branch_sha1 = iv_sha1 ).
+      lo_persistence->update_sha1(
+        iv_key         = ms_data-key
+        iv_branch_sha1 = iv_sha1 ).
       ms_data-sha1 = iv_sha1.
     ENDIF.
 
@@ -17365,6 +17401,20 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_key       = ms_data-key
         it_checksums = it_checksums ).
       ms_data-local_checksums = it_checksums.
+    ENDIF.
+
+    IF iv_url IS SUPPLIED.
+      lo_persistence->update_url(
+        iv_key = ms_data-key
+        iv_url = iv_url ).
+      ms_data-url = iv_url.
+    ENDIF.
+
+    IF iv_branch_name IS SUPPLIED.
+      lo_persistence->update_branch_name(
+        iv_key         = ms_data-key
+        iv_branch_name = iv_branch_name ).
+      ms_data-branch_name = iv_branch_name.
     ENDIF.
 
   ENDMETHOD.                    "set_sha1
@@ -23383,6 +23433,62 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD update_url.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    IF iv_url IS INITIAL.
+      _raise 'update, url empty'.
+    ENDIF.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        _raise 'key not found'.
+    ENDTRY.
+
+    ls_repo-url = iv_url.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.
+
+  METHOD update_branch_name.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    IF iv_branch_name IS INITIAL.
+      _raise 'update, branch name empty'.
+    ENDIF.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        _raise 'key not found'.
+    ENDTRY.
+
+    ls_repo-branch_name = iv_branch_name.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.
+
   METHOD update_sha1.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
@@ -24722,16 +24828,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    lo_repo->set_url( ls_popup-url ).
+    lo_repo->set_branch_name( ls_popup-branch_name ).
 
-    CALL FUNCTION 'POPUP_TO_INFORM'
-      EXPORTING
-        titel = 'todo'
-        txt1  = 'see https://github.com/larshp/abapGit/issues/265'
-        txt2  = '' ##NO_TEXT.
+    COMMIT WORK.
 
-*1. updating the mv_branch field to the sha1 of the new branch.
-*2. Update the persisted branch name
-*3. call lcl_repo_online->deserialize.
+    lo_repo->deserialize( ).
 
   ENDMETHOD.
 
