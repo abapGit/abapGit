@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.0'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.1'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -24839,15 +24839,36 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD reset.
 
-*    DATA: lo_repo TYPE REF TO lcl_repo_online.
-*
-*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+          lv_answer TYPE c LENGTH 1.
 
-    CALL FUNCTION 'POPUP_TO_INFORM'
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
-        titel = 'todo'
-        txt1  = 'see https://github.com/larshp/abapGit/issues/264'
-        txt2  = '' ##NO_TEXT.
+        titlebar              = 'Warning'
+        text_question         = 'Reset local objects?'
+        text_button_1         = 'Ok'
+        icon_button_1         = 'ICON_OKAY'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = lv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                        "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_TO_CONFIRM'.
+    ENDIF.
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    lo_repo->deserialize( ).
 
   ENDMETHOD.
 
@@ -24901,7 +24922,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lv_answer TYPE c LENGTH 1,
           ls_key    TYPE lcl_persistence_db=>ty_content.
 
-    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+
+    ls_key = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
@@ -24926,8 +24948,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lcl_app=>db( )->delete( iv_type  = ls_key-type
-                   iv_value = ls_key-value ).
+    lcl_app=>db( )->delete(
+      iv_type  = ls_key-type
+      iv_value = ls_key-value ).
 
     COMMIT WORK.
 
