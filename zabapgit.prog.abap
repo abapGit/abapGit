@@ -3,7 +3,7 @@ REPORT zabapgit.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.2'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.3'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -16621,6 +16621,12 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       RETURNING VALUE(rv_branch) TYPE ty_sha1
       RAISING   lcx_exception.
 
+    CLASS-METHODS create_branch
+      IMPORTING io_repo TYPE REF TO lcl_repo_online
+                iv_name TYPE string
+                iv_from TYPE ty_sha1
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_expanded,
              path  TYPE string,
@@ -16872,6 +16878,11 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS create_branch_popup
+      EXPORTING ev_name   TYPE string
+                ev_cancel TYPE abap_bool
       RAISING   lcx_exception.
 
     METHODS create_branch
@@ -19093,6 +19104,28 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       iv_pack        = lv_pack ).
 
   ENDMETHOD.                    "receive_pack
+
+  METHOD create_branch.
+
+    DATA: lv_zero    TYPE ty_sha1,
+          lt_objects TYPE lcl_git_pack=>ty_objects_tt,
+          lv_pack    TYPE xstring.
+
+
+    lv_zero = '0000000000000000000000000000000000000000'.
+
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
+    lv_pack = lcl_git_pack=>encode( lt_objects ).
+
+    lcl_git_transport=>receive_pack(
+      io_repo        = io_repo
+      iv_old         = lv_zero
+      iv_new         = iv_from
+      iv_branch_name = iv_name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
 
   METHOD push.
 
@@ -24881,17 +24914,72 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD create_branch_popup.
+
+    DATA: lv_answer TYPE c LENGTH 1,
+          lt_fields TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CLEAR ev_name.
+    CLEAR ev_cancel.
+
+*                   TAB     FLD   LABEL   DEF                       ATTR
+    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'refs/heads/branch_name'  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        popup_title     = 'Create branch'
+      IMPORTING
+        returncode      = lv_answer
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2 ##NO_TEXT.
+    IF sy-subrc <> 0.
+      _raise 'error from POPUP_GET_VALUES'.
+    ENDIF.
+
+    IF lv_answer = 'A'.
+      ev_cancel = abap_true.
+    ELSE.
+      READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      ev_name = <ls_field>-value.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD create_branch.
 
-*    DATA: lo_repo TYPE REF TO lcl_repo_online.
-*
-*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    DATA: lv_name   TYPE string,
+          lv_cancel TYPE abap_bool,
+          lo_repo   TYPE REF TO lcl_repo_online.
 
-    CALL FUNCTION 'POPUP_TO_INFORM'
-      EXPORTING
-        titel = 'todo'
-        txt1  = 'see https://github.com/larshp/abapGit/issues/266'
-        txt2  = '' ##NO_TEXT.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    create_branch_popup(
+      IMPORTING
+        ev_name   = lv_name
+        ev_cancel = lv_cancel ).
+    IF lv_cancel = abap_true.
+      RETURN.
+    ENDIF.
+
+    ASSERT lv_name CP 'refs/heads/+*'.
+
+    lcl_git_porcelain=>create_branch(
+      io_repo = lo_repo
+      iv_name = lv_name
+      iv_from = lo_repo->get_sha1_local( ) ).
+
+* automatically switch to new branch
+    lo_repo->set_branch_name( lv_name ).
+
+    MESSAGE 'Switched to new branch' TYPE 'S'.
 
   ENDMETHOD.
 
