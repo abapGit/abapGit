@@ -9636,6 +9636,363 @@ CLASS lcl_object_enho IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enhs DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_object_enhs DEFINITION INHERITING FROM lcl_objects_super FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+
+ENDCLASS. "lcl_object_enhs
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enhs IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_object_enhs IMPLEMENTATION.
+
+  METHOD lif_object~deserialize.
+    DATA: lv_message      TYPE string,
+          lv_parent       TYPE enhspotcompositename,
+          lv_spot_name    TYPE enhspotname,
+          lv_enh_shtext   TYPE string,
+          ls_enh_badi     TYPE enh_badi_data,
+          lt_enh_badi     TYPE enh_badi_data_it,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_tool,
+          li_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+
+    lv_spot_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'PARENT_COMP'
+                  CHANGING  cg_data = lv_parent ).
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING  cg_data = lv_enh_shtext ).
+    io_xml->read( EXPORTING iv_name = 'BADI_DATA'
+                  CHANGING  cg_data = lt_enh_badi ).
+
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
+
+    TRY.
+     cl_enh_factory=>create_enhancement_spot(
+        EXPORTING
+          spot_name      = lv_spot_name
+          tooltype       = cl_enh_tool_badi_def=>tooltype  "BADI_DEF
+          dark           = 'X'
+          compositename  = lv_parent
+        IMPORTING
+          spot           = li_spot_ref ).
+
+      li_badidef_tool ?= li_spot_ref.
+
+      li_badidef_tool->if_enh_object_docu~set_shorttext( lv_enh_shtext ).
+
+      LOOP AT lt_enh_badi INTO ls_enh_badi.
+        li_badidef_tool->add_badi_def( ls_enh_badi ).
+      ENDLOOP.
+
+      li_badidef_tool->if_enh_object~save( ).
+      li_badidef_tool->if_enh_object~activate( ).
+      li_badidef_tool->if_enh_object~unlock( ).
+
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while deserializing EHNS: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "deserialize
+
+  METHOD lif_object~serialize.
+    DATA: lv_message      TYPE string,
+          lv_spot_name    TYPE enhspotname,
+          lv_enh_shtext   TYPE string,
+          lv_parent       TYPE enhspotcompositename,
+          lt_enh_badi     TYPE enh_badi_data_it,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_tool,
+          li_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot(
+                    spot_name = lv_spot_name ).
+
+      li_badidef_tool ?= li_spot_ref.
+
+      lv_enh_shtext = li_badidef_tool->if_enh_object_docu~get_shorttext( ).
+
+      "get parent = composite enhs (ENHC)
+      lv_parent = cl_enh_factory=>enh_find_parent_composite( lv_spot_name ).
+      "get subsequent BADI definitions
+      lt_enh_badi = li_badidef_tool->get_badi_defs( ).
+
+      io_xml->add( ig_data = lv_parent
+                   iv_name = 'PARENT_COMP' ).
+      io_xml->add( ig_data = lv_enh_shtext
+                   iv_name = 'SHORTTEXT' ).
+      io_xml->add( ig_data = lt_enh_badi
+                   iv_name = 'BADI_DATA' ).
+
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while serializing EHNS: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "serialize
+
+  METHOD lif_object~exists.
+    DATA: lv_spot_name  TYPE enhspotname,
+          lv_message    TYPE string,
+          li_cx         TYPE REF TO cx_root,
+          li_spot_ref   TYPE REF TO if_enh_spot_tool.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot(
+                    spot_name = lv_spot_name ).
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while checking EHNS: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+    " Check that is is realy a BAdI
+    IF li_spot_ref->get_tool( ) = cl_enh_tool_badi_def=>tooltype. "BADI_DEF"
+      rv_bool = abap_true.
+    ENDIF.
+
+  ENDMETHOD.  "exists
+
+  METHOD lif_object~delete.
+    DATA: lv_spot_name    TYPE enhspotname,
+          lv_message      TYPE string,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_tool,
+          li_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot(
+                    spot_name = lv_spot_name
+                    lock      = 'X' ).
+
+      IF li_spot_ref IS BOUND.
+        li_badidef_tool ?= li_spot_ref.
+         li_badidef_tool->if_enh_object~delete(
+          EXPORTING
+            nevertheless_delete = 'X'
+            run_dark            = 'X' ).
+      ENDIF.
+        li_badidef_tool->if_enh_object~unlock( ).
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while deleting EHNS: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "delete
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.  "get_metadata
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'ENHS'
+        in_new_window = abap_true.
+
+  ENDMETHOD.  "jump
+
+ENDCLASS. "lcl_object_ensc
+
+CLASS lcl_object_ensc DEFINITION INHERITING FROM lcl_objects_super FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+
+ENDCLASS. "lcl_object_ensc
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_ensc IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_object_ensc IMPLEMENTATION.
+
+  METHOD lif_object~deserialize.
+    DATA: lv_spot_name    TYPE enhspotcompositename,
+          lv_message      TYPE string,
+          lv_enh_shtext   TYPE string,
+          ls_enh_spot     TYPE enhspotname,
+          lt_enh_spots    TYPE enhspotname_it,
+          lt_comp_spots   TYPE enhspotname_it,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_composite,
+          lo_spot_ref     TYPE REF TO cl_enh_spot_composite.
+
+    lv_spot_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING  cg_data = lv_enh_shtext ).
+    io_xml->read( EXPORTING iv_name = 'ENH_SPOTS'     "Enhancement spots
+                  CHANGING  cg_data = lt_enh_spots ).
+    io_xml->read( EXPORTING iv_name = 'COMP_ENH_SPOTS' "Composite enhancement spots
+                  CHANGING  cg_data = lt_comp_spots ).
+
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
+
+    TRY.
+     cl_enh_factory=>create_enhancement_spot_comp(
+        EXPORTING
+          name      = lv_spot_name
+          run_dark  = 'X'
+        IMPORTING
+          composite = li_spot_ref ).
+
+      lo_spot_ref ?= li_spot_ref.
+
+      lo_spot_ref->if_enh_object_docu~set_shorttext( lv_enh_shtext ).
+     "Add subsequent enhancement spots
+      LOOP AT lt_enh_spots INTO ls_enh_spot.
+        lo_spot_ref->if_enh_spot_composite~add_enh_spot_child( ls_enh_spot ).
+      ENDLOOP.
+     "Add subsequent composite enhancement spots
+      LOOP AT lt_comp_spots INTO ls_enh_spot.
+        lo_spot_ref->if_enh_spot_composite~add_composite_child( ls_enh_spot ).
+      ENDLOOP.
+
+      lo_spot_ref->if_enh_object~save( ).
+      lo_spot_ref->if_enh_object~activate( ).
+      lo_spot_ref->if_enh_object~unlock( ).
+
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while deserializing ENSC: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "deserialize
+
+  METHOD lif_object~serialize.
+    DATA: lv_spot_name    TYPE enhspotcompositename,
+          lv_message      TYPE string,
+          lv_enh_shtext   TYPE string,
+          lv_parent       TYPE enhspotcompositename,
+          lt_enh_spots    TYPE enhspotname_it,
+          lt_comp_spots   TYPE enhspotname_it,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_composite,
+          lo_spot_ref     TYPE REF TO cl_enh_spot_composite.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+     cl_enh_factory=>get_enhancement_spot_comp(
+       EXPORTING
+         lock      = ''
+         name      = lv_spot_name
+       RECEIVING
+         composite = li_spot_ref ).
+
+      lo_spot_ref ?= li_spot_ref.
+
+      lv_enh_shtext = li_spot_ref->if_enh_object_docu~get_shorttext( ).
+      "find parent = composite enhancement (ENSC)
+      lv_parent = cl_enh_factory=>enh_find_parent_composite( lv_spot_name ).
+      "find subsequent enhancement spots
+      lt_enh_spots = lo_spot_ref->if_enh_spot_composite~get_enh_spot_childs( ).
+      "find subsequent composite enhancement spots
+      lt_comp_spots = lo_spot_ref->if_enh_spot_composite~get_composite_childs( ).
+
+      io_xml->add( ig_data = lv_enh_shtext
+                   iv_name = 'SHORTTEXT' ).
+      io_xml->add( ig_data = lt_enh_spots
+                   iv_name = 'ENH_SPOTS' ).         "Enhancement spots
+      io_xml->add( ig_data = lt_comp_spots
+                   iv_name = 'COMP_ENH_SPOTS' ).    "Composite enhancement spots
+
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while serializing ENSC: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "serialize
+
+  METHOD lif_object~exists.
+    DATA: lv_spot_name  TYPE enhspotcompositename,
+          lv_message    TYPE string,
+          li_cx         TYPE REF TO cx_root,
+          li_spot_ref   TYPE REF TO if_enh_spot_composite.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+     cl_enh_factory=>get_enhancement_spot_comp(
+       EXPORTING
+         lock      = ''
+         name      = lv_spot_name
+       RECEIVING
+         composite = li_spot_ref ).
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while checking ENSC: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+    rv_bool = abap_true.
+
+  ENDMETHOD.  "exists
+
+  METHOD lif_object~delete.
+    DATA: lv_spot_name    TYPE enhspotcompositename,
+          lv_message      TYPE string,
+          li_cx           TYPE REF TO cx_root,
+          li_spot_ref     TYPE REF TO if_enh_spot_composite.
+
+    lv_spot_name = ms_item-obj_name.
+
+    TRY.
+     cl_enh_factory=>get_enhancement_spot_comp(
+       EXPORTING
+         lock      = 'X'
+         name      = lv_spot_name
+       RECEIVING
+         composite = li_spot_ref ).
+
+      IF li_spot_ref IS BOUND.
+         li_spot_ref->if_enh_object~delete(
+          EXPORTING
+            nevertheless_delete = 'X'
+            run_dark            = 'X' ).
+      ENDIF.
+        li_spot_ref->if_enh_object~unlock( ).
+    CATCH cx_enh_root INTO li_cx.
+      lv_message = `Error occured while deleting ENSC: ` && li_cx->get_text( ).
+      _raise lv_message.
+    ENDTRY.
+
+  ENDMETHOD.  "delete
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.  "get_metadata
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'ENSC'
+        in_new_window = abap_true.
+
+  ENDMETHOD.  "jump
+
+ENDCLASS. "lcl_object_ensc
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enqu DEFINITION
