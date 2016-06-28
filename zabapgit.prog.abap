@@ -9679,7 +9679,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
     ENDIF.
 
     TRY.
-     cl_enh_factory=>create_enhancement_spot(
+      cl_enh_factory=>create_enhancement_spot(
         EXPORTING
           spot_name      = lv_spot_name
           tooltype       = cl_enh_tool_badi_def=>tooltype  "BADI_DEF
@@ -9784,10 +9784,9 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
       IF li_spot_ref IS BOUND.
         li_badidef_tool ?= li_spot_ref.
-         li_badidef_tool->if_enh_object~delete(
-          EXPORTING
-            nevertheless_delete = 'X'
-            run_dark            = 'X' ).
+        li_badidef_tool->if_enh_object~delete(
+          nevertheless_delete = 'X'
+          run_dark            = 'X' ).
       ENDIF.
         li_badidef_tool->if_enh_object~unlock( ).
     CATCH cx_enh_root INTO li_cx.
@@ -9851,7 +9850,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     ENDIF.
 
     TRY.
-     cl_enh_factory=>create_enhancement_spot_comp(
+      cl_enh_factory=>create_enhancement_spot_comp(
         EXPORTING
           name      = lv_spot_name
           run_dark  = 'X'
@@ -9895,12 +9894,9 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     lv_spot_name = ms_item-obj_name.
 
     TRY.
-     cl_enh_factory=>get_enhancement_spot_comp(
-       EXPORTING
-         lock      = ''
-         name      = lv_spot_name
-       RECEIVING
-         composite = li_spot_ref ).
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
+        lock = ''
+        name = lv_spot_name ).
 
       lo_spot_ref ?= li_spot_ref.
 
@@ -9935,12 +9931,9 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     lv_spot_name = ms_item-obj_name.
 
     TRY.
-     cl_enh_factory=>get_enhancement_spot_comp(
-       EXPORTING
-         lock      = ''
-         name      = lv_spot_name
-       RECEIVING
-         composite = li_spot_ref ).
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
+        lock = ''
+        name = lv_spot_name ).
     CATCH cx_enh_root INTO li_cx.
       lv_message = `Error occured while checking ENSC: ` && li_cx->get_text( ).
       _raise lv_message.
@@ -9959,18 +9952,14 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     lv_spot_name = ms_item-obj_name.
 
     TRY.
-     cl_enh_factory=>get_enhancement_spot_comp(
-       EXPORTING
-         lock      = 'X'
-         name      = lv_spot_name
-       RECEIVING
-         composite = li_spot_ref ).
+      li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
+        lock = 'X'
+        name = lv_spot_name ).
 
       IF li_spot_ref IS BOUND.
          li_spot_ref->if_enh_object~delete(
-          EXPORTING
-            nevertheless_delete = 'X'
-            run_dark            = 'X' ).
+           nevertheless_delete = 'X'
+           run_dark            = 'X' ).
       ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
     CATCH cx_enh_root INTO li_cx.
