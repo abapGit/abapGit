@@ -9957,9 +9957,9 @@ CLASS lcl_object_ensc IMPLEMENTATION.
         name = lv_spot_name ).
 
       IF li_spot_ref IS BOUND.
-         li_spot_ref->if_enh_object~delete(
-           nevertheless_delete = 'X'
-           run_dark            = 'X' ).
+        li_spot_ref->if_enh_object~delete(
+          nevertheless_delete = 'X'
+          run_dark            = 'X' ).
       ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
     CATCH cx_enh_root INTO li_cx.
