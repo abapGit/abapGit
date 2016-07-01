@@ -15493,8 +15493,13 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
+      lv_package = path_to_package(
+        iv_top   = io_repo->get_package( )
+        iv_start = io_repo->get_dot_abapgit( )->get_starting_folder( )
+        iv_path  = <ls_result>-path ).
+
       lv_cancel = warning_package( is_item    = ls_item
-                                   iv_package = io_repo->get_package( ) ).
+                                   iv_package = lv_package ).
       IF lv_cancel = abap_true.
         _raise 'cancelled'.
       ENDIF.
@@ -15512,11 +15517,6 @@ CLASS lcl_objects IMPLEMENTATION.
                               is_metadata = lo_xml->get_metadata( ) ).
 
       li_obj->mo_files = lo_files.
-
-      lv_package = path_to_package(
-        iv_top   = io_repo->get_package( )
-        iv_start = io_repo->get_dot_abapgit( )->get_starting_folder( )
-        iv_path  = <ls_result>-path ).
 
       IF li_obj->get_metadata( )-late_deser = abap_true.
         APPEND INITIAL LINE TO lt_late ASSIGNING <ls_late>.
