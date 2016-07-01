@@ -6965,10 +6965,21 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   METHOD change_sicf.
 
     DATA: lt_icfhndlist TYPE icfhndlist,
+          lt_existing TYPE TABLE OF icfhandler,
           ls_icfserdesc TYPE icfserdesc.
+
+    FIELD-SYMBOLS: <ls_existing> LIKE LINE OF lt_existing.
 
 
     lt_icfhndlist = to_icfhndlist( it_icfhandler ).
+
+* Do not add handlers if they already exist, it will make the below
+* call to SAP standard code raise an exception
+    SELECT * FROM icfhandler INTO TABLE lt_existing
+      WHERE icf_name = is_icfservice-icf_name.
+    LOOP AT lt_existing ASSIGNING <ls_existing>.
+      DELETE TABLE lt_icfhndlist FROM <ls_existing>-icfhandler.
+    ENDLOOP.
 
     MOVE-CORRESPONDING is_icfservice TO ls_icfserdesc.
 
