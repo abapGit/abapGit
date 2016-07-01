@@ -3,7 +3,7 @@ REPORT zabapgit LINE-SIZE 100.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.4'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.5'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -9728,7 +9728,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
       lv_enh_shtext = li_badidef_tool->if_enh_object_docu~get_shorttext( ).
 
       "get parent = composite enhs (ENHC)
-      lv_parent = cl_enh_factory=>enh_find_parent_composite( lv_spot_name ).
+      lv_parent = CL_R3STANDARD_PERSISTENCE=>enh_find_parent_composite( lv_spot_name ).
       "get subsequent BADI definitions
       lt_enh_badi = li_badidef_tool->get_badi_defs( ).
 
@@ -9902,7 +9902,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
       lv_enh_shtext = li_spot_ref->if_enh_object_docu~get_shorttext( ).
       "find parent = composite enhancement (ENSC)
-      lv_parent = cl_enh_factory=>enh_find_parent_composite( lv_spot_name ).
+      lv_parent = CL_R3STANDARD_PERSISTENCE=>enh_find_parent_composite( lv_spot_name ).
       "find subsequent enhancement spots
       lt_enh_spots = lo_spot_ref->if_enh_spot_composite~get_enh_spot_childs( ).
       "find subsequent composite enhancement spots
