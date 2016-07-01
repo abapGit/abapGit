@@ -9675,8 +9675,10 @@ CLASS lcl_object_enhs IMPLEMENTATION.
           ls_enh_badi     TYPE enh_badi_data,
           lt_enh_badi     TYPE enh_badi_data_it,
           li_cx           TYPE REF TO cx_root,
+          lv_package      LIKE iv_package,
           li_spot_ref     TYPE REF TO if_enh_spot_tool,
           li_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+
 
     lv_spot_name = ms_item-obj_name.
 
@@ -9691,15 +9693,19 @@ CLASS lcl_object_enhs IMPLEMENTATION.
       lif_object~delete( ).
     ENDIF.
 
+    lv_package = iv_package.
+
     TRY.
         cl_enh_factory=>create_enhancement_spot(
           EXPORTING
             spot_name      = lv_spot_name
-            tooltype       = cl_enh_tool_badi_def=>tooltype  "BADI_DEF
-            dark           = 'X'
+            tooltype       = cl_enh_tool_badi_def=>tooltype
+            dark           = abap_true
             compositename  = lv_parent
           IMPORTING
-            spot           = li_spot_ref ).
+            spot           = li_spot_ref
+          CHANGING
+            devclass       = lv_package ).
 
         li_badidef_tool ?= li_spot_ref.
 
@@ -9760,24 +9766,25 @@ CLASS lcl_object_enhs IMPLEMENTATION.
   ENDMETHOD.  "serialize
 
   METHOD lif_object~exists.
+
     DATA: lv_spot_name TYPE enhspotname,
-          lv_message   TYPE string,
-          li_cx        TYPE REF TO cx_root,
           li_spot_ref  TYPE REF TO if_enh_spot_tool.
+
 
     lv_spot_name = ms_item-obj_name.
 
     TRY.
-        li_spot_ref = cl_enh_factory=>get_enhancement_spot(
-                      spot_name = lv_spot_name ).
-      CATCH cx_enh_root INTO li_cx.
-        lv_message = `Error occured while checking EHNS: ` && li_cx->get_text( ).
-        _raise lv_message.
+        li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
+
+* Check that is is realy a BAdI
+        IF li_spot_ref->get_tool( ) = cl_enh_tool_badi_def=>tooltype.
+          rv_bool = abap_true.
+        ELSE.
+          rv_bool = abap_false.
+        ENDIF.
+      CATCH cx_enh_root.
+        rv_bool = abap_false.
     ENDTRY.
-    " Check that is is realy a BAdI
-    IF li_spot_ref->get_tool( ) = cl_enh_tool_badi_def=>tooltype. "BADI_DEF"
-      rv_bool = abap_true.
-    ENDIF.
 
   ENDMETHOD.  "exists
 
@@ -9839,6 +9846,7 @@ ENDCLASS. "lcl_object_ensc
 CLASS lcl_object_ensc IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
+
     DATA: lv_spot_name  TYPE enhspotcompositename,
           lv_message    TYPE string,
           lv_enh_shtext TYPE string,
@@ -9846,8 +9854,10 @@ CLASS lcl_object_ensc IMPLEMENTATION.
           lt_enh_spots  TYPE enhspotname_it,
           lt_comp_spots TYPE enhspotname_it,
           li_cx         TYPE REF TO cx_root,
+          lv_package    LIKE iv_package,
           li_spot_ref   TYPE REF TO if_enh_spot_composite,
           lo_spot_ref   TYPE REF TO cl_enh_spot_composite.
+
 
     lv_spot_name = ms_item-obj_name.
 
@@ -9862,13 +9872,17 @@ CLASS lcl_object_ensc IMPLEMENTATION.
       lif_object~delete( ).
     ENDIF.
 
+    lv_package = iv_package.
+
     TRY.
         cl_enh_factory=>create_enhancement_spot_comp(
           EXPORTING
             name      = lv_spot_name
-            run_dark  = 'X'
+            run_dark  = abap_true
           IMPORTING
-            composite = li_spot_ref ).
+            composite = li_spot_ref
+          CHANGING
+            devclass  = lv_package ).
 
         lo_spot_ref ?= li_spot_ref.
 
@@ -9936,10 +9950,10 @@ CLASS lcl_object_ensc IMPLEMENTATION.
   ENDMETHOD.  "serialize
 
   METHOD lif_object~exists.
+
     DATA: lv_spot_name TYPE enhspotcompositename,
-          lv_message   TYPE string,
-          li_cx        TYPE REF TO cx_root,
           li_spot_ref  TYPE REF TO if_enh_spot_composite.
+
 
     lv_spot_name = ms_item-obj_name.
 
@@ -9947,12 +9961,10 @@ CLASS lcl_object_ensc IMPLEMENTATION.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot_comp(
           lock = ''
           name = lv_spot_name ).
-      CATCH cx_enh_root INTO li_cx.
-        lv_message = `Error occured while checking ENSC: ` && li_cx->get_text( ).
-        _raise lv_message.
+        rv_bool = abap_true.
+      CATCH cx_enh_root.
+        rv_bool = abap_false.
     ENDTRY.
-
-    rv_bool = abap_true.
 
   ENDMETHOD.  "exists
 
