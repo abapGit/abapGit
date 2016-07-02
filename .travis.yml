@@ -5,7 +5,4 @@ notifications:
   email: false
 after_success:
 - abapmerge src/zabapgit.prog.abap > ../zabapgit.abap
-- wc -l ../zabapgit.abap  
-  branches:
-    only:
-      - abapmarge
+- wc -l ../zabapgit.abap
