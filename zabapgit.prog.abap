@@ -17202,6 +17202,11 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_branch_overview
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS get_page_stage
       IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
@@ -20361,9 +20366,57 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
 ENDCLASS.
 
+CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING io_repo TYPE REF TO lcl_repo_online,
+      lif_gui_page~render REDEFINITION.
+
+  PRIVATE SECTION.
+    DATA: mo_repo TYPE REF TO lcl_repo_online.
+
+ENDCLASS.                       "lcl_gui_page_explore DEFINITION
+
+CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
+
+  METHOD constructor.
+    super->constructor( ).
+    mo_repo = io_repo.
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( ) ).
+    ro_html->add( title( 'BRANCH_OVERVIEW' ) ).
+
+    ro_html->add( 'hello world' ).
+    ro_html->add( '<svg width="100" height="100">' ).
+    ro_html->add( '<circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />' ).
+    ro_html->add( '</svg>' ).
+    ro_html->add( '<canvas id="myCanvas" width="200" height="100" style="border:1px solid #000000;">' ).
+    ro_html->add( '</canvas>' ).
+    ro_html->add( '<script>' ).
+    ro_html->add( 'var c = document.getElementById("myCanvas");' ).
+    ro_html->add( 'var ctx = c.getContext("2d");' ).
+    ro_html->add( 'ctx.moveTo(0,0);' ).
+    ro_html->add( 'ctx.lineTo(200,100);' ).
+    ro_html->add( 'ctx.stroke();' ).
+    ro_html->add( '</script>' ).
+
+    ro_html->add( footer( ) ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PUBLIC SECTION.
-    METHODS lif_gui_page~render   REDEFINITION.
+    METHODS lif_gui_page~render REDEFINITION.
+
 ENDCLASS.                       "lcl_gui_page_explore DEFINITION
 
 CLASS lcl_gui_page_explore IMPLEMENTATION.
@@ -21573,7 +21626,7 @@ ENDCLASS.
 CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render   REDEFINITION.
+    METHODS lif_gui_page~render REDEFINITION.
 
   PRIVATE SECTION.
     METHODS styles
@@ -21752,6 +21805,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    iv_act = |reset?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Create branch'
                    iv_act = |create_branch?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Branch overview'
+                   iv_act = |branch_overview?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Advanced'
                        io_sub = lo_sub ).
 
@@ -24851,6 +24906,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         create_branch( lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN 'branch_overview'.
+        ei_page  = get_page_branch_overview( iv_getdata ).
+        ev_state = gc_event_state-new_page.
 
         " Stage
       WHEN 'stage_commit'.
@@ -24912,6 +24970,25 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.        " get_page_db_by_name
+
+  METHOD get_page_branch_overview.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online,
+          lo_page TYPE REF TO lcl_gui_page_branch_overview,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+
+
+    lv_key = iv_getdata.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( lv_key ).
+
+    CREATE OBJECT lo_page
+      EXPORTING
+        io_repo = lo_repo.
+
+    ri_page = lo_page.
+
+  ENDMETHOD.
 
   METHOD get_page_diff.
 
