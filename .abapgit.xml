@@ -3,7 +3,7 @@
  <asx:values>
   <DATA>
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
-   <STARTING_FOLDER>/</STARTING_FOLDER>
+   <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <IGNORE>
     <item>/.travis.yml</item>
     <item>/CONTRIBUTING.md</item>
