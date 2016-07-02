@@ -8,3 +8,8 @@ cp zabapgit.abap pages/build/zabapgit$(date -u "+%Y-%m-%d-%H-%M-%S").abap
 cp zabapgit.abap pages/build/zabapgit.abap
 cd pages
 git status
+git config --global user.email "builds@travis-ci.com"
+git config --global user.name "Travis CI"
+git add build/*.abap
+git commit -m "Travis build $TRAVIS_BUILD_NUMBER"
+git status
