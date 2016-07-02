@@ -13,4 +13,4 @@ git config --global user.name "Travis CI"
 git add build/*.abap
 git commit -m "Travis build $TRAVIS_BUILD_NUMBER"
 #git status
-git push -f -q https://larshp:$GITHUB_API_KEY@github.com/larshp/abapGit gh-pages &2>/dev/null
+git push -f -q https://$GITHUB_API_KEY@github.com/larshp/abapGit.git gh-pages &2>/dev/null
