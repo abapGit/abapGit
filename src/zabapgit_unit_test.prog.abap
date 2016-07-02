@@ -118,7 +118,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
           lt_tadir   TYPE lcl_tadir=>ty_tadir_tt,
           lv_msg     TYPE string,
-          lt_results TYPE lcl_file_status=>ty_results_tt,
+          lt_results TYPE ty_results_tt,
           lt_types   TYPE lcl_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
@@ -788,7 +788,7 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
     METHODS:
       object_blob
         IMPORTING iv_data          TYPE xstring
-        RETURNING VALUE(rs_object) TYPE lcl_git_pack=>ty_object
+        RETURNING VALUE(rs_object) TYPE ty_object
         RAISING   lcx_exception.
 
 ENDCLASS.                    "test DEFINITION
@@ -861,12 +861,12 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     CONSTANTS: lc_data TYPE x LENGTH 15 VALUE '123456789ABCDEF545794254754554',
                lc_sha  TYPE ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
-    DATA: lt_objects TYPE lcl_git_pack=>ty_objects_tt,
+    DATA: lt_objects TYPE ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
           lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
           ls_node    LIKE LINE OF lt_nodes,
           ls_commit  TYPE lcl_git_pack=>ty_commit,
-          lt_result  TYPE lcl_git_pack=>ty_objects_tt,
+          lt_result  TYPE ty_objects_tt,
           lv_data    TYPE xstring.
 
 
@@ -929,9 +929,9 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
     CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
 
-    DATA: lt_objects TYPE lcl_git_pack=>ty_objects_tt,
+    DATA: lt_objects TYPE ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
-          lt_result  TYPE lcl_git_pack=>ty_objects_tt,
+          lt_result  TYPE ty_objects_tt,
           lv_data    TYPE xstring.
 
 
@@ -954,10 +954,10 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
     CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
 
-    DATA: lt_objects TYPE lcl_git_pack=>ty_objects_tt,
+    DATA: lt_objects TYPE ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
           lv_xstring TYPE xstring,
-          lt_result  TYPE lcl_git_pack=>ty_objects_tt,
+          lt_result  TYPE ty_objects_tt,
           lv_data    TYPE xstring.
 
 

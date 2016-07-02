@@ -3,17 +3,17 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZABAPGIT</NAME>
+    <NAME>ZABAPGIT_DOT_ABAPGIT</NAME>
     <STATE>A</STATE>
     <SQLX/>
     <EDTX/>
     <VARCL>X</VARCL>
-    <DBAPL>S</DBAPL>
+    <DBAPL/>
     <DBNA/>
     <CLAS/>
     <TYPE/>
     <OCCURS/>
-    <SUBC>1</SUBC>
+    <SUBC>I</SUBC>
     <APPL/>
     <SECU/>
     <CNAM/>
@@ -24,44 +24,22 @@
     <LEVL/>
     <RSTAT/>
     <RMAND/>
-    <RLOAD/>
-    <FIXPT>X</FIXPT>
+    <RLOAD>E</RLOAD>
+    <FIXPT/>
     <SSET/>
     <SDATE>0000-00-00</SDATE>
     <STIME/>
     <IDATE>0000-00-00</IDATE>
     <ITIME/>
-    <LDBNAME>D$S</LDBNAME>
+    <LDBNAME/>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
-   <DYNPROS/>
-   <CUA>
-    <ADM>
-     <ACTCODE/>
-     <MENCODE/>
-     <PFKCODE/>
-     <DEFAULTACT/>
-     <DEFAULTPFK/>
-     <MOD_LANGU/>
-    </ADM>
-    <STA/>
-    <FUN/>
-    <MEN/>
-    <MTX/>
-    <ACT/>
-    <BUT/>
-    <PFK/>
-    <SET/>
-    <DOC/>
-    <TIT/>
-    <BIV/>
-   </CUA>
    <TPOOL>
     <item>
      <ID>R</ID>
      <KEY/>
-     <ENTRY>abapGit</ENTRY>
-     <LENGTH>7</LENGTH>
+     <ENTRY>Include ZABAPGIT_DOT_ABAPGIT</ENTRY>
+     <LENGTH>28</LENGTH>
      <SPLIT/>
     </item>
    </TPOOL>

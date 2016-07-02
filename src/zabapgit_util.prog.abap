@@ -852,3 +852,110 @@ CLASS lcl_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS lcl_progress DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      show
+        IMPORTING
+          iv_key            TYPE string
+          VALUE(iv_current) TYPE i
+          iv_total          TYPE i
+          iv_text           TYPE csequence.
+
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_stack,
+             key     TYPE string,
+             current TYPE i,
+             total   TYPE i,
+             text    TYPE string,
+           END OF ty_stack.
+
+    CLASS-DATA:
+      gt_stack TYPE STANDARD TABLE OF ty_stack WITH DEFAULT KEY.
+
+    CLASS-METHODS:
+      calc_pct
+        RETURNING VALUE(rv_pct) TYPE i,
+      build_text
+        RETURNING VALUE(rv_text) TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_progress IMPLEMENTATION.
+
+  METHOD show.
+
+    DATA: lv_pct  TYPE i,
+          lv_text TYPE string.
+
+    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
+
+* assumption:
+* all callers must end with calling this method with iv_current = iv_total
+* to clear the progress of that sub element
+    ASSERT lines( gt_stack ) < 10.
+
+    READ TABLE gt_stack INDEX lines( gt_stack ) ASSIGNING <ls_stack>.
+    IF sy-subrc <> 0 OR <ls_stack>-key <> iv_key.
+      APPEND INITIAL LINE TO gt_stack ASSIGNING <ls_stack>.
+    ENDIF.
+    <ls_stack>-key     = iv_key.
+    <ls_stack>-current = iv_current.
+    <ls_stack>-total   = iv_total.
+    <ls_stack>-text    = iv_text.
+
+    lv_pct = calc_pct( ).
+    lv_text = build_text( ).
+
+    CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
+      EXPORTING
+        percentage = lv_pct
+        text       = lv_text.
+
+    IF iv_current = iv_total.
+      DELETE gt_stack INDEX lines( gt_stack ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD build_text.
+
+    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
+
+
+    LOOP AT gt_stack ASSIGNING <ls_stack>.
+      IF sy-tabix = 1.
+        rv_text = |{ <ls_stack>-key } { <ls_stack>-text }|.
+      ELSE.
+        rv_text = |{ rv_text } - { <ls_stack>-key } { <ls_stack>-text }|.
+
+        IF <ls_stack>-current <> 1 AND <ls_stack>-total <> 1.
+          rv_text = |{ rv_text } ({ <ls_stack>-current }/{ <ls_stack>-total })|.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD calc_pct.
+
+    DATA: lv_f TYPE f.
+
+    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
+
+
+    READ TABLE gt_stack ASSIGNING <ls_stack> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    lv_f = ( <ls_stack>-current / <ls_stack>-total ) * 100.
+    rv_pct = lv_f.
+
+    IF rv_pct = 100.
+      rv_pct = 99.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
