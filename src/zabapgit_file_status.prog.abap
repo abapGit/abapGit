@@ -56,7 +56,7 @@ CLASS lcl_file_status IMPLEMENTATION.
           ls_result LIKE LINE OF rt_results,
           lv_type   TYPE string,
           ls_item   TYPE ty_item,
-          lt_tadir  TYPE lcl_tadir=>ty_tadir_tt,
+          lt_tadir  TYPE ty_tadir_tt,
           lt_local  TYPE ty_files_item_tt,
           ls_tadir  TYPE tadir,
           lt_remote TYPE ty_files_tt,

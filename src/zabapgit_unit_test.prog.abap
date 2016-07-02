@@ -103,7 +103,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
   METHOD check_empty_package.
 
-    DATA: lt_tadir TYPE lcl_tadir=>ty_tadir_tt.
+    DATA: lt_tadir TYPE ty_tadir_tt.
 
 
     lt_tadir = lcl_tadir=>read( c_package ).
@@ -116,7 +116,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
   METHOD run.
 
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
-          lt_tadir   TYPE lcl_tadir=>ty_tadir_tt,
+          lt_tadir   TYPE ty_tadir_tt,
           lv_msg     TYPE string,
           lt_results TYPE ty_results_tt,
           lt_types   TYPE lcl_objects=>ty_types_tt.
