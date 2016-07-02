@@ -541,3 +541,83 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   ENDMETHOD.  "render
 
 ENDCLASS. "lcl_html_toolbar IMPLEMENTATION
+
+CLASS lcl_log DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS:
+      add
+        IMPORTING
+          iv_msgv1 TYPE csequence
+          iv_msgv2 TYPE csequence OPTIONAL
+          iv_msgv3 TYPE csequence OPTIONAL
+          iv_msgv4 TYPE csequence OPTIONAL,
+      count
+        RETURNING VALUE(rv_count) TYPE i,
+      to_html
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      show.
+
+  PRIVATE SECTION.
+    DATA: mt_log TYPE rs_t_msg.
+
+ENDCLASS.
+
+CLASS lcl_log IMPLEMENTATION.
+
+  METHOD to_html.
+
+    DATA: lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    CREATE OBJECT ro_html.
+
+    IF count( ) = 0.
+      RETURN.
+    ENDIF.
+
+    ro_html->add( '<br>' ).
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      CONCATENATE <ls_log>-msgv1
+        <ls_log>-msgv2
+        <ls_log>-msgv3
+        <ls_log>-msgv4 INTO lv_string SEPARATED BY space.
+      ro_html->add( lv_string ).
+      ro_html->add( '<br>' ).
+    ENDLOOP.
+    ro_html->add( '<br>' ).
+
+  ENDMETHOD.
+
+  METHOD add.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
+    <ls_log>-msgty = 'W'.
+    <ls_log>-msgid = '00'.
+    <ls_log>-msgno = '001'.
+    <ls_log>-msgv1 = iv_msgv1.
+    <ls_log>-msgv2 = iv_msgv2.
+    <ls_log>-msgv3 = iv_msgv3.
+    <ls_log>-msgv4 = iv_msgv4.
+
+  ENDMETHOD.
+
+  METHOD show.
+    CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
+      EXPORTING
+        i_t_msg           = mt_log
+        i_txt             = 'Warning'
+        i_with_s_on_empty = abap_false
+        i_one_msg_direct  = abap_false
+        i_one_msg_type_s  = abap_false
+        ##no_text.
+  ENDMETHOD.
+
+  METHOD count.
+    rv_count = lines( mt_log ).
+  ENDMETHOD.
+
+ENDCLASS.
