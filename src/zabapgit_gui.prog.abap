@@ -3,6 +3,206 @@
 *&---------------------------------------------------------------------*
 
 *----------------------------------------------------------------------*
+*       INTERFACE lif_gui_page DEFINITION
+*----------------------------------------------------------------------*
+INTERFACE lif_gui_page.
+
+  METHODS on_event
+    IMPORTING iv_action       TYPE clike
+              iv_frame        TYPE clike
+              iv_getdata      TYPE clike
+              it_postdata     TYPE cnht_post_data_tab
+              it_query_table  TYPE cnht_query_table
+    RETURNING VALUE(rv_state) TYPE i
+    RAISING   lcx_exception.
+
+  METHODS render
+    RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+    RAISING   lcx_exception.
+
+  METHODS get_assets
+    RETURNING VALUE(rt_assets) TYPE tt_web_assets.
+
+ENDINTERFACE.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui_router DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_gui_router DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    METHODS on_event
+      IMPORTING iv_action   TYPE clike
+                iv_getdata  TYPE clike OPTIONAL
+                it_postdata TYPE cnht_post_data_tab OPTIONAL
+      EXPORTING ei_page     TYPE REF TO lif_gui_page
+                ev_state    TYPE i
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    TYPES: BEGIN OF ty_popup,
+             url         TYPE string,
+             package     TYPE devclass,
+             branch_name TYPE string,
+             cancel      TYPE abap_bool,
+           END OF ty_popup.
+
+    METHODS get_page_by_name
+      IMPORTING iv_name        TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS repo_popup
+      IMPORTING iv_url          TYPE string
+                iv_package      TYPE devclass OPTIONAL
+                iv_branch       TYPE string DEFAULT 'refs/heads/master'
+      RETURNING VALUE(rs_popup) TYPE ty_popup
+      RAISING   lcx_exception.
+
+    METHODS get_page_diff
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_branch_overview
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_stage
+      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_commit
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS get_page_db_by_name
+      IMPORTING iv_name        TYPE clike
+                iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
+    METHODS abapgit_installation
+      RAISING lcx_exception.
+
+    METHODS repo_clone
+      IMPORTING iv_url TYPE string
+      RAISING   lcx_exception.
+
+    METHODS repo_purge
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_remove
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS repo_new_offline
+      RAISING lcx_exception.
+
+    METHODS repo_package_zip
+      RAISING lcx_exception.
+
+    METHODS repo_pull
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS switch_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS reset
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS create_branch_popup
+      EXPORTING ev_name   TYPE string
+                ev_cancel TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS create_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS db_delete
+      IMPORTING iv_getdata TYPE clike
+      RAISING   lcx_exception.
+
+    METHODS db_save
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      RAISING   lcx_exception.
+
+    METHODS commit_push
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      RAISING   lcx_exception.
+
+    METHODS stage_handle_action
+      IMPORTING iv_getdata TYPE clike
+                iv_action  TYPE clike
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_gui DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
+
+  PUBLIC SECTION.
+
+    METHODS go_home
+      RAISING lcx_exception.
+
+    METHODS back
+      IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(rv_exit) TYPE xfeld
+      RAISING   lcx_exception.
+
+    METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
+      IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
+
+  PRIVATE SECTION.
+
+    TYPES: BEGIN OF ty_page_stack,
+             page     TYPE REF TO lif_gui_page,
+             bookmark TYPE abap_bool,
+           END OF ty_page_stack.
+
+    DATA: mi_cur_page    TYPE REF TO lif_gui_page,
+          mt_stack       TYPE TABLE OF ty_page_stack,
+          mt_assets      TYPE tt_w3urls,
+          mo_router      TYPE REF TO lcl_gui_router,
+          mo_html_viewer TYPE REF TO cl_gui_html_viewer.
+
+    METHODS constructor
+      RAISING lcx_exception.
+
+    METHODS startup
+      RAISING lcx_exception.
+
+    METHODS cache_image
+      IMPORTING iv_url    TYPE w3url
+                iv_base64 TYPE string.
+
+    METHODS cache_html
+      IMPORTING iv_html       TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
+
+    METHODS render
+      RAISING lcx_exception.
+
+    METHODS call_page
+      IMPORTING ii_page          TYPE REF TO lif_gui_page
+                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+      RAISING   lcx_exception.
+
+ENDCLASS.                    "lcl_gui DEFINITION
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_view IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
