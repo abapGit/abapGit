@@ -3,3 +3,9 @@ node_js:
   - "6"
 notifications:
   email: false
+after_success:
+- abapmerge src/zabapgit.prog.abap > ../zabapgit.abap
+- cat ../zabapgit.abap  
+  branches:
+    only:
+      - abapmarge
