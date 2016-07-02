@@ -1,4 +1,4 @@
-Development Guidelines:
+## Development Guidelines
 
 a. Make sure there is an open issue for the stuff that you want to work on. When starting the development add a comment in the issue. This will allow for discussing possible solutions, and avoid having multiple people look into the same issue.
 
@@ -13,5 +13,6 @@ e. commit often, whenever something is working, and is a step in the right direc
 External Links:
 https://guides.github.com/activities/contributing-to-open-source/
 
-Building:
+## Building
+
 Every time a commit is pushed to the master branch, https://travis-ci.org/ will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file which can be downloaded from http://larshp.github.io/abapGit/build/zabapgit.txt
