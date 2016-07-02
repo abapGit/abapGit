@@ -2,7 +2,6 @@
 *&  Include           ZABAPGIT_DEFINITIONS
 *&---------------------------------------------------------------------*
 
-
 TYPE-POOLS seop.
 
 TYPES: ty_type    TYPE c LENGTH 6,
@@ -126,9 +125,3 @@ CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org'.
 
 CONSTANTS: gc_root_dir    TYPE string VALUE '/',
            gc_dot_abapgit TYPE string VALUE '.abapgit.xml'.
-
-DEFINE _raise.
-  RAISE EXCEPTION TYPE lcx_exception
-    EXPORTING
-      iv_text = &1.                                         "#EC NOTEXT
-END-OF-DEFINITION.

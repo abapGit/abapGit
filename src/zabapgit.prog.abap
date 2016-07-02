@@ -33,6 +33,12 @@ SELECTION-SCREEN BEGIN OF SCREEN 1001.
 * dummy for triggering screen
 SELECTION-SCREEN END OF SCREEN 1001.
 
+DEFINE _raise.
+  RAISE EXCEPTION TYPE lcx_exception
+    EXPORTING
+      iv_text = &1.                                         "#EC NOTEXT
+END-OF-DEFINITION.
+
 INCLUDE zabapgit_definitions.
 INCLUDE zabapgit_exceptions.
 INCLUDE zabapgit_zlib.
