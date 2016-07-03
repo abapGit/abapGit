@@ -7543,8 +7543,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       INSERT REPORT lv_include FROM lt_source.
 
-      lcl_objects_activation=>add( iv_type = 'FUNC'
-                                   iv_name = <ls_func>-funcname ).
+*      lcl_objects_activation=>add( iv_type = 'FUNC'
+*                                   iv_name = <ls_func>-funcname ).
 
     ENDLOOP.
 
