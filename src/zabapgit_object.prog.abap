@@ -466,9 +466,11 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: li_obj TYPE REF TO lif_object.
 
 
-    li_obj = create_object( is_item = is_item
-                            iv_language = gc_english ).
-    li_obj->delete( ).
+    IF is_supported( is_item ) = abap_true.
+      li_obj = create_object( is_item     = is_item
+                              iv_language = gc_english ).
+      li_obj->delete( ).
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
