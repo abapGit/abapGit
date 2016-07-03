@@ -65,6 +65,8 @@ INCLUDE zabapgit_object.
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_zip.
+INCLUDE zabapgit_page.
+INCLUDE zabapgit_page_branch_overview.
 INCLUDE zabapgit_gui.
 INCLUDE zabapgit_app_impl.
 INCLUDE zabapgit_unit_test.
