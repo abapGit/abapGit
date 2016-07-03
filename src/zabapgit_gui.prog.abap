@@ -453,6 +453,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
+    METHODS render_menu_hidden
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
     METHODS render_repo
       IMPORTING io_repo        TYPE REF TO lcl_repo
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
@@ -1568,6 +1573,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_menu_hidden.
+
+    DATA: lv_key     TYPE lcl_persistence_db=>ty_value,
+          lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lv_key = io_repo->get_key( ).
+
+    lo_toolbar->add( iv_txt = 'Show'
+                     iv_act = |unhide?{ lv_key }| ).
+
+    ro_html->add( '<div class="paddings right">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
   METHOD render_repo_menu.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
@@ -1581,59 +1606,54 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
-    IF lcl_app=>user( )->is_hidden( lv_key ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Show'
-                       iv_act = |unhide?{ lv_key }| ).
+    IF io_repo->is_offline( ) = abap_true.
+      lo_toolbar->add( iv_txt = 'Import ZIP'
+                       iv_act = |zipimport?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
+      lo_toolbar->add( iv_txt = 'Export ZIP'
+                       iv_act = |zipexport?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
+      lo_toolbar->add( iv_txt = 'Export&amp;Commit'
+                       iv_act = |files_commit?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
     ELSE.
-      IF io_repo->is_offline( ) = abap_true.
-        lo_toolbar->add( iv_txt = 'Import ZIP'
-                         iv_act = |zipimport?{ lv_key }|
-                         iv_opt = gc_html_opt-emphas ).
-        lo_toolbar->add( iv_txt = 'Export ZIP'
-                         iv_act = |zipexport?{ lv_key }|
-                         iv_opt = gc_html_opt-emphas ).
-        lo_toolbar->add( iv_txt = 'Export&amp;Commit'
-                         iv_act = |files_commit?{ lv_key }|
-                         iv_opt = gc_html_opt-emphas ).
-      ELSE.
-        lo_repo_online ?= io_repo.
-        TRY.
-            IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
-              lo_toolbar->add( iv_txt = 'Pull'
-                               iv_act = |pull?{ lv_key }|
-                               iv_opt = gc_html_opt-emphas ).
-            ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
-              lo_toolbar->add( iv_txt = 'Stage'
-                               iv_act = |stage?{ lv_key }|
-                               iv_opt = gc_html_opt-emphas ).
-            ENDIF.
-          CATCH lcx_exception ##NO_HANDLER.
+      lo_repo_online ?= io_repo.
+      TRY.
+          IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
+            lo_toolbar->add( iv_txt = 'Pull'
+                             iv_act = |pull?{ lv_key }|
+                             iv_opt = gc_html_opt-emphas ).
+          ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
+            lo_toolbar->add( iv_txt = 'Stage'
+                             iv_act = |stage?{ lv_key }|
+                             iv_opt = gc_html_opt-emphas ).
+          ENDIF.
+        CATCH lcx_exception ##NO_HANDLER.
 * authorization error or repository does not exist
 * ignore error
-        ENDTRY.
-      ENDIF.
-
-      CREATE OBJECT lo_sub.
-      lo_sub->add( iv_txt = 'Remove'
-                   iv_act = |remove?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Uninstall'
-                   iv_act = |uninstall?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Switch branch'
-                   iv_act = |switch_branch?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Reset'
-                   iv_act = |reset?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Create branch'
-                   iv_act = |create_branch?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Branch overview'
-                   iv_act = |branch_overview?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Advanced'
-                       io_sub = lo_sub ).
-
-      lo_toolbar->add( iv_txt = 'Refresh'
-                       iv_act = |refresh?{ lv_key }| ).
-      lo_toolbar->add( iv_txt = 'Hide'
-                       iv_act = |hide?{ lv_key }| ).
+      ENDTRY.
     ENDIF.
+
+    CREATE OBJECT lo_sub.
+    lo_sub->add( iv_txt = 'Remove'
+                 iv_act = |remove?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Uninstall'
+                 iv_act = |uninstall?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Switch branch'
+                 iv_act = |switch_branch?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Reset'
+                 iv_act = |reset?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Create branch'
+                 iv_act = |create_branch?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Branch overview'
+                 iv_act = |branch_overview?{ lv_key }| ).
+    lo_toolbar->add( iv_txt = 'Advanced'
+                     io_sub = lo_sub ).
+
+    lo_toolbar->add( iv_txt = 'Refresh'
+                     iv_act = |refresh?{ lv_key }| ).
+    lo_toolbar->add( iv_txt = 'Hide'
+                     iv_act = |hide?{ lv_key }| ).
 
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -1691,13 +1711,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo ) ).
 
-    ro_html->add( render_repo_menu( io_repo ) ).
-
     IF lcl_app=>user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
       TRY.
           extract_repo_content( EXPORTING io_repo       = io_repo
                                 IMPORTING et_repo_items = lt_repo_items
                                           eo_log        = lo_log ).
+
+* extract_repo_content must be called before rendering the menu
+* so that lo_log is filled with errors from the serialization
+          ro_html->add( render_repo_menu( io_repo ) ).
 
           ro_html->add( '<table width="100%" class="repo_tab">' ).
 
@@ -1714,14 +1736,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ro_html->add( '</table>' ).
 
           IF io_repo->is_offline( ) = abap_false.
-            ro_html->add( '<div class="log">' ). "TODO ??????
+            ro_html->add( '<div class="log">' ).
+* shows eg. list of unsupported objects
             ro_html->add( lo_log->to_html( ) ).
             ro_html->add( '</div>' ).
           ENDIF.
         CATCH lcx_exception INTO lx_error.
           ro_html->add( render_error( lx_error ) ).
       ENDTRY.
-    ENDIF. " Hidden
+    ELSE.
+      ro_html->add( render_menu_hidden( io_repo ) ).
+    ENDIF.
 
     ro_html->add( '</div>' ).
 

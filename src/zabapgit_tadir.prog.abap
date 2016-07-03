@@ -74,8 +74,12 @@ CLASS lcl_tadir IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
 
-      lv_exists = lcl_objects=>exists( ls_item ).
-      IF lv_exists = abap_true.
+      IF lcl_objects=>is_supported( ls_item ) = abap_true.
+        lv_exists = lcl_objects=>exists( ls_item ).
+        IF lv_exists = abap_true.
+          APPEND <ls_tadir> TO rt_tadir.
+        ENDIF.
+      ELSE.
         APPEND <ls_tadir> TO rt_tadir.
       ENDIF.
     ENDLOOP.
