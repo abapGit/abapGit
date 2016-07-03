@@ -327,18 +327,10 @@ CLASS lcl_repo IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
 
-      IF lcl_objects=>is_supported( ls_item ) = abap_false.
-        IF NOT io_log IS INITIAL.
-          io_log->add( iv_msgv1 = 'Object type ignored, not supported:'
-                       iv_msgv2 = ls_item-obj_type
-                       iv_msgv3 = '-'
-                       iv_msgv4 = ls_item-obj_name ) ##no_text.
-        ENDIF.
-        CONTINUE.
-      ENDIF.
-
-      lt_files = lcl_objects=>serialize( is_item = ls_item
-                                         iv_language = get_master_language( ) ).
+      lt_files = lcl_objects=>serialize(
+        is_item     = ls_item
+        iv_language = get_master_language( )
+        io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
 

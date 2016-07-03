@@ -474,11 +474,20 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: lt_files TYPE ty_files_tt,
-          li_obj   TYPE REF TO lif_object,
+    DATA: li_obj   TYPE REF TO lif_object,
           lo_xml   TYPE REF TO lcl_xml_output,
           lo_files TYPE REF TO lcl_objects_files.
 
+
+    IF is_supported( is_item ) = abap_false.
+      IF NOT io_log IS INITIAL.
+        io_log->add( iv_msgv1 = 'Object type ignored, not supported:'
+                     iv_msgv2 = is_item-obj_type
+                     iv_msgv3 = '-'
+                     iv_msgv4 = is_item-obj_name ) ##no_text.
+      ENDIF.
+      RETURN.
+    ENDIF.
 
     CREATE OBJECT lo_files
       EXPORTING
@@ -494,15 +503,23 @@ CLASS lcl_objects IMPLEMENTATION.
 
     rt_files = lo_files->get_files( ).
 
-* check for duplicates
-    lt_files[] = rt_files[].
+    check_duplicates( rt_files ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD check_duplicates.
+
+    DATA: lt_files TYPE ty_files_tt.
+
+
+    lt_files[] = it_files[].
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
-    IF lines( lt_files ) <> lines( rt_files ).
+    IF lines( lt_files ) <> lines( it_files ).
       _raise 'Duplicates'.
     ENDIF.
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD prioritize_deser.
 

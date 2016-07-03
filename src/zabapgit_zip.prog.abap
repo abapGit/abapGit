@@ -15,8 +15,9 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS export
-      IMPORTING io_repo TYPE REF TO lcl_repo
-                iv_zip  TYPE abap_bool DEFAULT abap_true
+      IMPORTING io_repo   TYPE REF TO lcl_repo
+                iv_zip    TYPE abap_bool DEFAULT abap_true
+                it_filter TYPE scts_tadir OPTIONAL
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -332,8 +333,11 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log TYPE REF TO lcl_log,
-          lt_zip TYPE ty_files_item_tt.
+    DATA: lo_log   TYPE REF TO lcl_log,
+          lv_index TYPE i,
+          lt_zip   TYPE ty_files_item_tt.
+
+    FIELD-SYMBOLS: <ls_zip> LIKE LINE OF lt_zip.
 
 
     CREATE OBJECT lo_log.
@@ -344,9 +348,22 @@ CLASS lcl_zip IMPLEMENTATION.
       lo_log->show( ).
     ENDIF.
 
+    IF lines( it_filter ) > 0.
+      LOOP AT lt_zip ASSIGNING <ls_zip>.
+        lv_index = sy-tabix.
+        READ TABLE it_filter WITH KEY
+          object = <ls_zip>-item-obj_type
+          obj_name = <ls_zip>-item-obj_name
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          DELETE lt_zip INDEX lv_index.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
     IF iv_zip = abap_true.
       file_download( iv_package = io_repo->get_package( )
-                     iv_xstr = encode_files( lt_zip ) ).
+                     iv_xstr    = encode_files( lt_zip ) ).
     ELSE.
       files_commit( lt_zip ).
     ENDIF.

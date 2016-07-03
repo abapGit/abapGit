@@ -29,7 +29,6 @@ CLASS lcl_tadir DEFINITION FINAL.
         RAISING   lcx_exception,
       build
         IMPORTING iv_package      TYPE tadir-devclass
-                  iv_parent       TYPE tadir-devclass
                   iv_path         TYPE string
         RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
         RAISING   lcx_exception.
@@ -87,7 +86,6 @@ CLASS lcl_tadir IMPLEMENTATION.
 
 * start recursion
     rt_tadir = build( iv_package = iv_package
-                      iv_parent  = ''
                       iv_path    = '' ).
 
     rt_tadir = check_exists( rt_tadir ).
@@ -161,7 +159,6 @@ CLASS lcl_tadir IMPLEMENTATION.
       CONCATENATE iv_path lv_path '/' INTO lv_path.
 
       lt_tadir = build( iv_package = <ls_tdevc>-devclass
-                        iv_parent  = iv_package
                         iv_path    = lv_path ).
       APPEND LINES OF lt_tadir TO rt_tadir.
     ENDLOOP.

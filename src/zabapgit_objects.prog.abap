@@ -1389,6 +1389,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
                 iv_language     TYPE spras
+                io_log          TYPE REF TO lcl_log OPTIONAL
       RETURNING VALUE(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
 
@@ -1416,6 +1417,10 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
   PRIVATE SECTION.
+    CLASS-METHODS check_duplicates
+      IMPORTING it_files TYPE ty_files_tt
+      RAISING   lcx_exception.
+
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item
                 iv_language   TYPE spras

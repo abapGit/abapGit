@@ -20,6 +20,8 @@ CLASS lcl_sap_package DEFINITION FINAL.
                   iv_top     TYPE devclass,
       list_subpackages IMPORTING iv_package     TYPE devclass
                        RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
+      list_superpackages IMPORTING iv_package     TYPE devclass
+                         RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
       create_local
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
@@ -268,6 +270,26 @@ CLASS lcl_sap_package IMPLEMENTATION.
     ENDIF.
 
     ri_package->set_changeable( abap_false ).
+
+  ENDMETHOD.
+
+  METHOD list_superpackages.
+
+    DATA: lt_list     LIKE rt_list,
+          lv_parent   TYPE tdevc-parentcl,
+          lv_devclass LIKE LINE OF rt_list.
+
+
+    APPEND iv_package TO rt_list.
+
+    SELECT SINGLE parentcl INTO lv_parent
+      FROM tdevc WHERE devclass = iv_package.           "#EC CI_GENBUFF
+
+    IF NOT lv_parent IS INITIAL.
+      APPEND lv_parent TO rt_list.
+      lt_list = list_superpackages( lv_devclass ).
+      APPEND LINES OF lt_list TO rt_list.
+    ENDIF.
 
   ENDMETHOD.
 
