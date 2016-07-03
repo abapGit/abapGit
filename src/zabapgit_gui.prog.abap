@@ -1478,6 +1478,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ).
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ).
+    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ).
     lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ).
 
     ro_menu->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ).
@@ -2461,8 +2462,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_zip=>export( io_repo = lcl_app=>repo_srv( )->get( lv_key )
                          iv_zip  = abap_false ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'packagezip'. "TODO refactor name ?
+      WHEN 'packagezip'.
         repo_package_zip( ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN 'transportzip'.
+        lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'hide'.
         lv_key   = iv_getdata.
