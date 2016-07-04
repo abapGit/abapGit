@@ -126,7 +126,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
       WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF'
-          OR 'FUNC' OR 'ENHO' OR 'TYPE' OR 'XSLT'.
+          OR 'FUNC' OR 'ENHO' OR 'TYPE' OR 'XSLT' OR 'WEBI'.
 * these seem to go into the workarea automatically
         APPEND INITIAL LINE TO gt_programs ASSIGNING <ls_object>.
         <ls_object>-object   = iv_type.

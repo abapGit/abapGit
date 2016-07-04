@@ -44,7 +44,7 @@ ENDFORM.                    "run
 *      -->##CALLED       text
 *      -->##NEEDED       text
 *----------------------------------------------------------------------*
-FORM branch_popup TABLES   tt_fields STRUCTURE sval
+FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
                   USING    pv_code TYPE clike
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c

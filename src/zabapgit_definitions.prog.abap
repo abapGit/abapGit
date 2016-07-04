@@ -90,6 +90,8 @@ TYPES: BEGIN OF ty_result,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
+TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
+
 CONSTANTS: BEGIN OF gc_chmod,
              file       TYPE ty_chmod VALUE '100644',
              executable TYPE ty_chmod VALUE '100755',
