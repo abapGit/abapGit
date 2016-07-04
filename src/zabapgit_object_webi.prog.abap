@@ -357,12 +357,11 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_name TYPE vepname.
+    DATA: lv_name TYPE vepname,
+          lo_vif TYPE REF TO cl_ws_md_vif_root.
 
 
     lv_name = ms_item-obj_name.
-
-    DATA: lo_vif TYPE REF TO cl_ws_md_vif_root.
 
     CREATE OBJECT lo_vif.
     TRY.
