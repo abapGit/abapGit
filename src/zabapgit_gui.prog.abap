@@ -35,7 +35,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 iv_package      TYPE devclass OPTIONAL
                 iv_branch       TYPE string DEFAULT 'refs/heads/master'
       RETURNING VALUE(rs_popup) TYPE ty_popup
-      RAISING   lcx_exception.
+      RAISING   lcx_exception ##NO_TEXT.
 
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
@@ -303,7 +303,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = 'main' ).
+    on_event( action = 'main' ) ##NO_TEXT.
 
   ENDMETHOD.                "go_home
 
@@ -386,7 +386,7 @@ CLASS lcl_gui IMPLEMENTATION.
                  size         = lv_size
                  url          = iv_url
       CHANGING   data_table   = lt_xdata
-      EXCEPTIONS OTHERS       = 1 ).
+      EXCEPTIONS OTHERS       = 1 ) ##NO_TEXT.
 
     ASSERT sy-subrc = 0. " Image data error
 
@@ -821,7 +821,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
   METHOD parse_fields.
 
     DEFINE _field.
-      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1.
+      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1 ##NO_TEXT.
       IF sy-subrc = 0.
         rs_fields-&2 = <ls_field>-value.
       ENDIF.
@@ -964,7 +964,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lo_toolbar->add( iv_txt = 'Run background logic'
-                     iv_act = 'background_run' ).
+                     iv_act = 'background_run' ) ##NO_TEXT.
 
     ro_html->add( header( ) ).
     ro_html->add( title( iv_title = 'BACKGROUND' io_menu = lo_toolbar ) ).
@@ -1085,8 +1085,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '<tr>' ).
     ro_html->add( '<td class="field_name">comment</td>' ).
     ro_html->add( '<td>' ).
-    ro_html->add( '<input name="comment" type="text"' &&
-                  ' id="commit_msg" maxlength="50" size="50">' ).
+    ro_html->add(
+      '<input name="comment" type="text" id="commit_msg" maxlength="50" size="50">' ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr>' ).
 
@@ -1148,75 +1148,76 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   ENDMETHOD.  "lif_gui_page~render
 
   METHOD styles.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* REPOSITORY */').
-    ro_html->add('div.repo {').
-    ro_html->add('  margin-top:       3px;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_name span {').
-    ro_html->add('  color: #333;').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: 14pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_name img {').
-    ro_html->add('  vertical-align: baseline;').
-    ro_html->add('  margin: 0 5px 0 5px;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: 12pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr span {').
-    ro_html->add('  margin-left: 0.2em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr input {').
-    ro_html->add('  color: grey;').     " Input wants it personaly
-    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
-    ro_html->add('  margin-left: 0.5em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('  background-color: transparent;').
-    ro_html->add('  border-style: none;').
-    ro_html->add('  text-overflow: ellipsis;').
-    ro_html->add('}').
+    _add '/* REPOSITORY */'.
+    _add 'div.repo {'.
+    _add '  margin-top:       3px;'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em 1em 0.5em 1em;'.
+    _add '}'.
+    _add '.repo_name span {'.
+    _add '  color: #333;'.
+    _add '  font-weight: bold;'.
+    _add '  font-size: 14pt;'.
+    _add '}'.
+    _add '.repo_name img {'.
+    _add '  vertical-align: baseline;'.
+    _add '  margin: 0 5px 0 5px;'.
+    _add '}'.
+    _add '.repo_attr {'.
+    _add '  color: grey;'.
+    _add '  font-size: 12pt;'.
+    _add '}'.
+    _add '.repo_attr span {'.
+    _add '  margin-left: 0.2em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '}'.
+    _add '.repo_attr input {'.
+    _add '  color: grey;'.     " Input wants it personaly
+    _add '  font-size: 12pt;'. " Input wants it personaly
+    _add '  margin-left: 0.5em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '  background-color: transparent;'.
+    _add '  border-style: none;'.
+    _add '  text-overflow: ellipsis;'.
+    _add '}'.
 
-    ro_html->add('/* STAGE */').
-    ro_html->add('.stage_tab {').
-    ro_html->add('  border: 1px solid #DDD;').
-    ro_html->add('  background: #fff;').
-    ro_html->add('  margin-top: 0.2em;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab td {').
-    ro_html->add('  border-top: 1px solid #eee;').
-    ro_html->add('  color: #333;').
-    ro_html->add('  vertical-align: middle;').
-    ro_html->add('  padding: 2px 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab td.method {').
-    ro_html->add('  color: #ccc;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab tr.firstrow td { border-top: 0px; } ' ).
-    ro_html->add('.stage_tab tr.title td {').
-    ro_html->add('  color: #BBB;').
-    ro_html->add('  font-size: 10pt;').
-    ro_html->add('  background-color: #edf2f9;').
-    ro_html->add('  padding: 4px 0.5em;').
-    ro_html->add('  text-align: center;').
-    ro_html->add('}').
+    _add '/* STAGE */'.
+    _add '.stage_tab {'.
+    _add '  border: 1px solid #DDD;'.
+    _add '  background: #fff;'.
+    _add '  margin-top: 0.2em;'.
+    _add '}'.
+    _add '.stage_tab td {'.
+    _add '  border-top: 1px solid #eee;'.
+    _add '  color: #333;'.
+    _add '  vertical-align: middle;'.
+    _add '  padding: 2px 0.5em;'.
+    _add '}'.
+    _add '.stage_tab td.method {'.
+    _add '  color: #ccc;'.
+    _add '}'.
+    _add '.stage_tab tr.firstrow td { border-top: 0px; } ' .
+    _add '.stage_tab tr.title td {'.
+    _add '  color: #BBB;'.
+    _add '  font-size: 10pt;'.
+    _add '  background-color: #edf2f9;'.
+    _add '  padding: 4px 0.5em;'.
+    _add '  text-align: center;'.
+    _add '}'.
 
-    ro_html->add('/* COMMIT */').
-    ro_html->add('div.form_div {').
-    ro_html->add('  margin: 0.5em 0em;').
-    ro_html->add('  background-color: #F8F8F8;').
-    ro_html->add('  padding: 1em 1em;').
-    ro_html->add('}').
-    ro_html->add('div.form_div td.field_name {').
-    ro_html->add('  color: #BBB;').
-    ro_html->add('  padding-right: 1em;').
-    ro_html->add('}').
+    _add '/* COMMIT */'.
+    _add 'div.form_div {'.
+    _add '  margin: 0.5em 0em;'.
+    _add '  background-color: #F8F8F8;'.
+    _add '  padding: 1em 1em;'.
+    _add '}'.
+    _add 'div.form_div td.field_name {'.
+    _add '  color: #BBB;'.
+    _add '  padding-right: 1em;'.
+    _add '}'.
 
   ENDMETHOD.    "styles
 
@@ -1224,13 +1225,13 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( 'function setInitialFocus() {' ).
-    ro_html->add( '  document.getElementById("commit_msg").focus();' ).
-    ro_html->add( '}' ).
-    ro_html->add( 'function submitCommit() {' ).
-    ro_html->add( '  document.getElementById("commit_form").submit();' ).
-    ro_html->add( '}' ).
-    ro_html->add( 'setInitialFocus();' ).
+    _add 'function setInitialFocus() {'.
+    _add '  document.getElementById("commit_msg").focus();'.
+    _add '}'.
+    _add 'function submitCommit() {'.
+    _add '  document.getElementById("commit_form").submit();'.
+    _add '}'.
+    _add 'setInitialFocus();'.
 
   ENDMETHOD.    "scripts
 
@@ -1306,9 +1307,11 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       lo_toolbar->reset( ). " Build line actions
       IF <ls_file>-type = lcl_stage=>c_wftype-local.
         IF lv_method IS NOT INITIAL.
-          lo_toolbar->add( iv_txt = 'reset' iv_act = 'stage_reset?' && lv_param ).
+          lo_toolbar->add( iv_txt = 'reset'
+            iv_act = 'stage_reset?' && lv_param ) ##NO_TEXT.
         ELSE.
-          lo_toolbar->add( iv_txt = 'add'   iv_act = 'stage_add?' && lv_param ).
+          lo_toolbar->add( iv_txt = 'add'
+            iv_act = 'stage_add?' && lv_param ) ##NO_TEXT.
         ENDIF.
       ELSE. "c_remote
         IF lv_method IS NOT INITIAL.
@@ -1370,10 +1373,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     IF mo_stage->count( ) > 0.
       lo_toolbar->add( iv_act = |stage_commit?{ lv_action }|
                        iv_txt = 'Commit'
-                       iv_opt = gc_html_opt-emphas ).
+                       iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
     ELSEIF mo_stage->mv_local_cnt > 0.
       lo_toolbar->add( iv_act = |stage_all?{ lv_action }|
-                       iv_txt = 'Add all and commit').
+                       iv_txt = 'Add all and commit') ##NO_TEXT.
     ENDIF.
 
     ro_html->add( '<div class="paddings">' ).
@@ -1383,64 +1386,65 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.      "render_menu
 
   METHOD styles.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* REPOSITORY */').
-    ro_html->add('div.repo {').
-    ro_html->add('  margin-top:       3px;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_name span {').
-    ro_html->add('  color: #333;').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  font-size: 14pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_name img {').
-    ro_html->add('  vertical-align: baseline;').
-    ro_html->add('  margin: 0 5px 0 5px;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: 12pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr span {').
-    ro_html->add('  margin-left: 0.2em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr input {').
-    ro_html->add('  color: grey;').     " Input wants it personaly
-    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
-    ro_html->add('  margin-left: 0.5em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('  background-color: transparent;').
-    ro_html->add('  border-style: none;').
-    ro_html->add('  text-overflow: ellipsis;').
-    ro_html->add('}').
+    _add '/* REPOSITORY */'.
+    _add 'div.repo {'.
+    _add '  margin-top:       3px;'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em 1em 0.5em 1em;'.
+    _add '}'.
+    _add '.repo_name span {'.
+    _add '  color: #333;'.
+    _add '  font-weight: bold;'.
+    _add '  font-size: 14pt;'.
+    _add '}'.
+    _add '.repo_name img {'.
+    _add '  vertical-align: baseline;'.
+    _add '  margin: 0 5px 0 5px;'.
+    _add '}'.
+    _add '.repo_attr {'.
+    _add '  color: grey;'.
+    _add '  font-size: 12pt;'.
+    _add '}'.
+    _add '.repo_attr span {'.
+    _add '  margin-left: 0.2em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '}'.
+    _add '.repo_attr input {'.
+    _add '  color: grey;'.     " Input wants it personaly
+    _add '  font-size: 12pt;'. " Input wants it personaly
+    _add '  margin-left: 0.5em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '  background-color: transparent;'.
+    _add '  border-style: none;'.
+    _add '  text-overflow: ellipsis;'.
+    _add '}'.
 
-    ro_html->add('/* STAGE */').
-    ro_html->add('.stage_tab {').
-    ro_html->add('  border: 1px solid #DDD;').
-    ro_html->add('  background: #fff;').
-    ro_html->add('  margin-top: 0.2em;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab td {').
-    ro_html->add('  border-top: 1px solid #eee;').
-    ro_html->add('  color: #333;').
-    ro_html->add('  vertical-align: middle;').
-    ro_html->add('  padding: 2px 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab td.status {').
-    ro_html->add('  width: 2em;').
-    ro_html->add('  text-align: center;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab tr.separator td {').
-    ro_html->add('  color: #BBB;').
-    ro_html->add('  font-size: 10pt;').
-    ro_html->add('  background-color: #edf2f9;').
-    ro_html->add('  padding: 4px 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.stage_tab tr.firstrow td { border-top: 0px; } ' ).
+    _add '/* STAGE */'.
+    _add '.stage_tab {'.
+    _add '  border: 1px solid #DDD;'.
+    _add '  background: #fff;'.
+    _add '  margin-top: 0.2em;'.
+    _add '}'.
+    _add '.stage_tab td {'.
+    _add '  border-top: 1px solid #eee;'.
+    _add '  color: #333;'.
+    _add '  vertical-align: middle;'.
+    _add '  padding: 2px 0.5em;'.
+    _add '}'.
+    _add '.stage_tab td.status {'.
+    _add '  width: 2em;'.
+    _add '  text-align: center;'.
+    _add '}'.
+    _add '.stage_tab tr.separator td {'.
+    _add '  color: #BBB;'.
+    _add '  font-size: 10pt;'.
+    _add '  background-color: #edf2f9;'.
+    _add '  padding: 4px 0.5em;'.
+    _add '}'.
+    _add '.stage_tab tr.firstrow td { border-top: 0px; } '.
 
   ENDMETHOD.    "styles
 
@@ -1481,17 +1485,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_menu.
     CREATE OBJECT lo_betasub.
 
-    lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ).
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ).
-    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ).
-    lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ).
+    lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ).
-    ro_menu->add( iv_txt = 'Clone'            iv_act = 'install' ).
-    ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ).
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ).
+    ro_menu->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Clone'            iv_act = 'install' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ) ##NO_TEXT.
     IF needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ).
+      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
     ENDIF.
     ro_menu->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
 
@@ -1500,76 +1504,76 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD styles.
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* REPOSITORY */').
-    ro_html->add('div.repo {').
-    ro_html->add('  margin-top:       3px;').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em 1em 0.5em 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_name span {').
-    ro_html->add('  font-weight: bold;').
-    ro_html->add('  color: #333;').
-    ro_html->add('  font-size: 14pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_name img {').
-    ro_html->add('  vertical-align: baseline;').
-    ro_html->add('  margin: 0 5px 0 5px;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr {').
-    ro_html->add('  color: grey;').
-    ro_html->add('  font-size: 12pt;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr span {').
-    ro_html->add('  margin-left: 0.2em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_attr input {').
-    ro_html->add('  color: grey;').     " Input wants it personaly
-    ro_html->add('  font-size: 12pt;'). " Input wants it personaly
-    ro_html->add('  margin-left: 0.5em;').
-    ro_html->add('  margin-right: 0.5em;').
-    ro_html->add('  background-color: transparent;').
-    ro_html->add('  border-style: none;').
-    ro_html->add('  text-overflow: ellipsis;').
-    ro_html->add('}').
+    _add '/* REPOSITORY */'.
+    _add 'div.repo {'.
+    _add '  margin-top:       3px;'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em 1em 0.5em 1em;'.
+    _add '}'.
+    _add '.repo_name span {'.
+    _add '  font-weight: bold;'.
+    _add '  color: #333;'.
+    _add '  font-size: 14pt;'.
+    _add '}'.
+    _add '.repo_name img {'.
+    _add '  vertical-align: baseline;'.
+    _add '  margin: 0 5px 0 5px;'.
+    _add '}'.
+    _add '.repo_attr {'.
+    _add '  color: grey;'.
+    _add '  font-size: 12pt;'.
+    _add '}'.
+    _add '.repo_attr span {'.
+    _add '  margin-left: 0.2em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '}'.
+    _add '.repo_attr input {'.
+    _add '  color: grey;'.     " Input wants it personaly
+    _add '  font-size: 12pt;'. " Input wants it personaly
+    _add '  margin-left: 0.5em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '  background-color: transparent;'.
+    _add '  border-style: none;'.
+    _add '  text-overflow: ellipsis;'.
+    _add '}'.
 
-    ro_html->add('/* REPOSITORY TABLE*/').
-    ro_html->add('.repo_tab {').
-    ro_html->add('  border: 1px solid #DDD;').
-    ro_html->add('  border-radius: 3px;').
-    ro_html->add('  background: #fff;').
-    ro_html->add('  margin-top: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td {').
-    ro_html->add('  border-top: 1px solid #eee;').
-    ro_html->add('  vertical-align: middle;').
-    ro_html->add('  color: #333;').
-    ro_html->add('  padding-top: 2px;').
-    ro_html->add('  padding-bottom: 2px;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.icon {').
-    ro_html->add('  width: 32px;').
-    ro_html->add('  text-align: center;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.type {').
-    ro_html->add('  width: 3em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.object {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.files {').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab td.cmd {').
-    ro_html->add('  text-align: right;').
-    ro_html->add('  padding-left: 0.5em;').
-    ro_html->add('  padding-right: 1em;').
-    ro_html->add('}').
-    ro_html->add('.repo_tab tr.unsupported { color: lightgrey; }').
-    ro_html->add('.repo_tab tr.firstrow td { border-top: 0px; } ' ).
-    ro_html->add('.repo_tab td.files span  { display: block; }').
-    ro_html->add('.repo_tab td.cmd span    { display: block; }').
-    ro_html->add('.repo_tab td.cmd a       { display: block; }').
+    _add '/* REPOSITORY TABLE*/'.
+    _add '.repo_tab {'.
+    _add '  border: 1px solid #DDD;'.
+    _add '  border-radius: 3px;'.
+    _add '  background: #fff;'.
+    _add '  margin-top: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td {'.
+    _add '  border-top: 1px solid #eee;'.
+    _add '  vertical-align: middle;'.
+    _add '  color: #333;'.
+    _add '  padding-top: 2px;'.
+    _add '  padding-bottom: 2px;'.
+    _add '}'.
+    _add '.repo_tab td.icon {'.
+    _add '  width: 32px;'.
+    _add '  text-align: center;'.
+    _add '}'.
+    _add '.repo_tab td.type {'.
+    _add '  width: 3em;'.
+    _add '}'.
+    _add '.repo_tab td.object {'.
+    _add '  padding-left: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td.files {'.
+    _add '  padding-left: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td.cmd {'.
+    _add '  text-align: right;'.
+    _add '  padding-left: 0.5em;'.
+    _add '  padding-right: 1em;'.
+    _add '}'.
+    _add '.repo_tab tr.unsupported { color: lightgrey; }'.
+    _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
+    _add '.repo_tab td.files span  { display: block; }'.
+    _add '.repo_tab td.cmd span    { display: block; }'.
+    _add '.repo_tab td.cmd a       { display: block; }'.
 
   ENDMETHOD.
 
@@ -1648,7 +1652,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_sub->add( iv_txt = 'Branch overview'
                  iv_act = |branch_overview?{ lv_key }| ).
     lo_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = lo_sub ).
+                     io_sub = lo_sub ) ##NO_TEXT.
 
     lo_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |refresh?{ lv_key }| ).
@@ -1662,15 +1666,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_repo_top.
-    DATA  lo_repo_online  TYPE REF TO lcl_repo_online.
-    DATA  lv_icon         TYPE string.
+
+    DATA: lo_repo_online  TYPE REF TO lcl_repo_online,
+          lv_icon         TYPE string.
+
 
     CREATE OBJECT ro_html.
 
     IF io_repo->is_offline( ) = abap_true.
-      lv_icon = 'img/repo_offline'.
+      lv_icon = 'img/repo_offline' ##NO_TEXT.
     ELSE.
-      lv_icon = 'img/repo_online'.
+      lv_icon = 'img/repo_online' ##NO_TEXT.
     ENDIF.
 
     ro_html->add( |<a id="repo{ io_repo->get_key( ) }"></a>| ).
@@ -1945,7 +1951,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
 
     lo_toolbar->add( iv_txt = 'Explore new projects'
-                     iv_act = 'explore' ).
+                     iv_act = 'explore' ) ##NO_TEXT.
 
     ro_html->add( '<div class="dummydiv">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -1995,7 +2001,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     rt_assets = super->lif_gui_page~get_assets( ).
 
-    ls_image-url     = 'img/toc'.
+    ls_image-url     = 'img/toc' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
       && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
@@ -2003,7 +2009,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'AABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/repo_online'.
+    ls_image-url     = 'img/repo_online' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAApVBMVEUAAABQbJxQbJxQ'
       && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
@@ -2016,7 +2022,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/repo_offline'.
+    ls_image-url     = 'img/repo_offline' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
       && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNrEkr1KxFAQhe9P/iS6goLWiiB2PoCN'
@@ -2029,7 +2035,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/pkg'.
+    ls_image-url     = 'img/pkg' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
       && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
@@ -2039,7 +2045,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/branch'.
+    ls_image-url     = 'img/branch' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
       && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
@@ -2052,7 +2058,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/link'.
+    ls_image-url     = 'img/link' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
       && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
@@ -2062,7 +2068,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/code'.
+    ls_image-url     = 'img/code' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
       && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
@@ -2070,7 +2076,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'rkJggg=='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/bin'.
+    ls_image-url     = 'img/bin' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
       && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
@@ -2078,7 +2084,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'RotPsQAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
-    ls_image-url     = 'img/obj'.
+    ls_image-url     = 'img/obj' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
       && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
@@ -2146,32 +2152,33 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD styles.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* DB ENTRY DISPLAY */').
-    ro_html->add('div.db_entry {').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em;').
-    ro_html->add('}').
+    _add '/* DB ENTRY DISPLAY */'.
+    _add 'div.db_entry {'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em;'.
+    _add '}'.
 
-    ro_html->add('div.db_entry pre { ').
-    ro_html->add('  display: block; ').
-    ro_html->add('  overflow: hidden; ').
-    ro_html->add('  word-wrap:break-word; ').
-    ro_html->add('  white-space: pre-wrap; ').
-    ro_html->add('  background-color: #eaeaea;').
-    ro_html->add('  padding: 0.5em;').
-    ro_html->add('  width: 50em; ').
-    ro_html->add('}').
+    _add 'div.db_entry pre {'.
+    _add '  display: block;'.
+    _add '  overflow: hidden;'.
+    _add '  word-wrap:break-word;'.
+    _add '  white-space: pre-wrap;'.
+    _add '  background-color: #eaeaea;'.
+    _add '  padding: 0.5em;'.
+    _add '  width: 50em;'.
+    _add '}'.
 
-    ro_html->add('table.tag {').
-    ro_html->add('  display: inline-block;').
-    ro_html->add('  border: 1px #b3c1cc solid;').
-    ro_html->add('  background-color: #eee;').
-    ro_html->add('  margin-right: 0.5em; ').
-    ro_html->add('}').
-    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
-    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+    _add 'table.tag {'.
+    _add '  display: inline-block;'.
+    _add '  border: 1px #b3c1cc solid;'.
+    _add '  background-color: #eee;'.
+    _add '  margin-right: 0.5em; '.
+    _add '}'.
+    _add 'table.tag td { padding: 0.2em 0.5em; }'.
+    _add 'table.tag td.label { background-color: #b3c1cc; }'.
 
   ENDMETHOD.            "styles
 
@@ -2180,7 +2187,7 @@ ENDCLASS.
 CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render   REDEFINITION.
+    METHODS lif_gui_page~render REDEFINITION.
 
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
@@ -2250,7 +2257,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitDBForm();'
                      iv_txt = 'Save'
                      iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-emphas ).
+                     iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -2263,22 +2270,23 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD styles.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* DB ENTRY DISPLAY */').
-    ro_html->add('div.db_entry {').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('div.db_entry textarea { margin: 0.5em 0em; }').
-    ro_html->add('table.tag {').
-    ro_html->add('  display: inline-block;').
-    ro_html->add('  border: 1px #b3c1cc solid;').
-    ro_html->add('  background-color: #eee;').
-    ro_html->add('  margin-right: 0.5em; ').
-    ro_html->add('}').
-    ro_html->add('table.tag td { padding: 0.2em 0.5em; }').
-    ro_html->add('table.tag td.label { background-color: #b3c1cc; }').
+    _add '/* DB ENTRY DISPLAY */'.
+    _add 'div.db_entry {'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em;'.
+    _add '}'.
+    _add 'div.db_entry textarea { margin: 0.5em 0em; }'.
+    _add 'table.tag {'.
+    _add '  display: inline-block;'.
+    _add '  border: 1px #b3c1cc solid;'.
+    _add '  background-color: #eee;'.
+    _add '  margin-right: 0.5em; '.
+    _add '}'.
+    _add 'table.tag td { padding: 0.2em 0.5em; }'.
+    _add 'table.tag td.label { background-color: #b3c1cc; }'.
 
   ENDMETHOD.            "styles
 
@@ -2286,9 +2294,9 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( 'function submitDBForm() {' ).
-    ro_html->add( '  document.getElementById("db_form").submit();' ).
-    ro_html->add( '}' ).
+    _add 'function submitDBForm() {'.
+    _add '  document.getElementById("db_form").submit();'.
+    _add '}'.
 
   ENDMETHOD.    "scripts
 
@@ -2365,34 +2373,35 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
   ENDMETHOD.            "lif_gui_page~render
 
   METHOD styles.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add('/* DB ENTRIES */').
-    ro_html->add('div.db_list {').
-    ro_html->add('  background-color: #f2f2f2;').
-    ro_html->add('  padding: 0.5em;').
-    ro_html->add('}').
-    ro_html->add('table.db_tab pre { ').
-    ro_html->add('  display: block; ').
-    ro_html->add('  overflow: hidden; ').
-    ro_html->add('  word-wrap:break-word; ').
-    ro_html->add('  white-space: pre-wrap; ').
-    ro_html->add('  background-color: #eaeaea;').
-    ro_html->add('  padding: 3px;').
-    ro_html->add('  width: 50em; ').
-    ro_html->add('}').
-    ro_html->add('table.db_tab tr.firstrow td { padding-top: 0.5em; } ').
-    ro_html->add('table.db_tab th {').
-    ro_html->add('  text-align: left;').
-    ro_html->add('  color: #888;').
-    ro_html->add('  padding: 0.2em;').
-    ro_html->add('  border-bottom: 1px #ddd solid;').
-    ro_html->add('}').
-    ro_html->add('table.db_tab td {').
-    ro_html->add('  color: #333;').
-    ro_html->add('  padding: 0.2em;').
-    ro_html->add('  vertical-align: top;').
-    ro_html->add('}').
+    _add '/* DB ENTRIES */'.
+    _add 'div.db_list {'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em;'.
+    _add '}'.
+    _add 'table.db_tab pre {'.
+    _add '  display: block;'.
+    _add '  overflow: hidden;'.
+    _add '  word-wrap:break-word;'.
+    _add '  white-space: pre-wrap;'.
+    _add '  background-color: #eaeaea;'.
+    _add '  padding: 3px;'.
+    _add '  width: 50em;'.
+    _add '}'.
+    _add 'table.db_tab tr.firstrow td { padding-top: 0.5em; }'.
+    _add 'table.db_tab th {'.
+    _add '  text-align: left;'.
+    _add '  color: #888;'.
+    _add '  padding: 0.2em;'.
+    _add '  border-bottom: 1px #ddd solid;'.
+    _add '}'.
+    _add 'table.db_tab td {'.
+    _add '  color: #333;'.
+    _add '  padding: 0.2em;'.
+    _add '  vertical-align: top;'.
+    _add '}'.
 
   ENDMETHOD.            "styles
 
@@ -2732,7 +2741,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     IF NOT iv_package IS INITIAL.
       lv_pattr = '05'.
     ELSE.
-      lv_button2 = 'Create package'.
+      lv_button2 = 'Create package' ##NO_TEXT.
       lv_icon2   = icon_msg.
     ENDIF.
 
@@ -3131,7 +3140,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 * automatically switch to new branch
     lo_repo->set_branch_name( lv_name ).
 
-    MESSAGE 'Switched to new branch' TYPE 'S'.
+    MESSAGE 'Switched to new branch' TYPE 'S' ##NO_TEXT.
 
   ENDMETHOD.
 

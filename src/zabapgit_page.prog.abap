@@ -137,10 +137,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
   METHOD styles.
 
-    DEFINE _add.
-      ro_html->add( &1 ) ##NO_TEXT.
-    END-OF-DEFINITION.
-
     CREATE OBJECT ro_html.
 
     _add '<style type="text/css">'.

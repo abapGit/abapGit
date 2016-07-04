@@ -6020,7 +6020,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         lo_badidef_tool->if_enh_object~unlock( ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deserializing EHNS: ` && lx_root->get_text( ).
+        lv_message = `Error occured while deserializing EHNS: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 
@@ -6058,7 +6059,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
                      iv_name = 'BADI_DATA' ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while serializing EHNS: ` && lx_root->get_text( ).
+        lv_message = `Error occured while serializing EHNS: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 
@@ -6109,7 +6111,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         ENDIF.
         lo_badidef_tool->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deleting EHNS: ` && lx_root->get_text( ).
+        lv_message = `Error occured while deleting EHNS: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 
@@ -6200,13 +6203,15 @@ CLASS lcl_object_ensc IMPLEMENTATION.
         lo_spot_ref->if_enh_object~unlock( ).
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deserializing ENSC: ` && lx_root->get_text( ).
+        lv_message = `Error occured while deserializing ENSC: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 
   ENDMETHOD.  "deserialize
 
   METHOD lif_object~serialize.
+
     DATA: lv_spot_name  TYPE enhspotcompositename,
           lv_message    TYPE string,
           lv_enh_shtext TYPE string,
@@ -6243,7 +6248,8 @@ CLASS lcl_object_ensc IMPLEMENTATION.
                      iv_name = 'COMP_ENH_SPOTS' ).    "Composite enhancement spots
 
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while serializing ENSC: ` && lx_root->get_text( ).
+        lv_message = `Error occured while serializing ENSC: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 
@@ -6288,7 +6294,8 @@ CLASS lcl_object_ensc IMPLEMENTATION.
         ENDIF.
         li_spot_ref->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
-        lv_message = `Error occured while deleting ENSC: ` && lx_root->get_text( ).
+        lv_message = `Error occured while deleting ENSC: `
+          && lx_root->get_text( ) ##NO_TEXT.
         _raise lv_message.
     ENDTRY.
 

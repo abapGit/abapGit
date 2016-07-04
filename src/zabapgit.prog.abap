@@ -3,7 +3,7 @@ REPORT zabapgit LINE-SIZE 100.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.12.9'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.12.10'.    "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -32,6 +32,10 @@ CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
 SELECTION-SCREEN BEGIN OF SCREEN 1001.
 * dummy for triggering screen
 SELECTION-SCREEN END OF SCREEN 1001.
+
+DEFINE _add.
+  ro_html->add( &1 ) ##NO_TEXT.
+END-OF-DEFINITION.
 
 DEFINE _raise.
   RAISE EXCEPTION TYPE lcx_exception

@@ -28,13 +28,13 @@ CLASS lcl_background IMPLEMENTATION.
 
     ls_files = lcl_stage_logic=>get( io_repo ).
     IF lines( ls_files-local ) = 0.
-      WRITE: / 'nothing to stage'.
+      WRITE: / 'nothing to stage' ##NO_TEXT.
       RETURN.
     ENDIF.
 
-    ls_comment-username = 'foobar'.
-    ls_comment-email    = 'foo@bar.com'.
-    ls_comment-comment  = 'background mode'.
+    ls_comment-username = 'foobar' ##NO_TEXT.
+    ls_comment-email    = 'foo@bar.com' ##NO_TEXT.
+    ls_comment-comment  = 'background mode' ##NO_TEXT.
 
     lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
 
@@ -62,7 +62,7 @@ CLASS lcl_background IMPLEMENTATION.
     CREATE OBJECT lo_per.
     lt_list = lo_per->list( ).
 
-    WRITE: / 'Background mode'.
+    WRITE: / 'Background mode' ##NO_TEXT.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= lcl_app=>repo_srv( )->get( <ls_list>-key ).
@@ -85,7 +85,7 @@ CLASS lcl_background IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( lt_list ) = 0.
-      WRITE: / 'Nothing configured'.
+      WRITE: / 'Nothing configured' ##NO_TEXT.
     ENDIF.
 
   ENDMETHOD.

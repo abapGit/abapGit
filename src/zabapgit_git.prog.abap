@@ -362,7 +362,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       iv_service = c_service-receive
       ii_client  = li_client ).
 
-    lv_cap_list = 'report-status agent=' && gv_agent.
+    lv_cap_list = 'report-status agent=' && gv_agent ##NO_TEXT.
 
     lv_line = iv_old &&
               ` ` &&
