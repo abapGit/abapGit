@@ -20,9 +20,10 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING io_repo   TYPE REF TO lcl_repo_online
-      EXPORTING ev_pack   TYPE xstring
-                ev_branch TYPE ty_sha1
+      IMPORTING io_repo    TYPE REF TO lcl_repo_online
+                iv_deepen  TYPE abap_bool DEFAULT abap_true
+      EXPORTING et_objects TYPE ty_objects_tt
+                ev_branch  TYPE ty_sha1
       RAISING   lcx_exception.
 
 * local to remote
@@ -97,6 +98,96 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RETURNING VALUE(rv_c) TYPE char1.
 
 ENDCLASS.                    "lcl_transport DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_pack DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
+
+  PUBLIC SECTION.
+    TYPES: BEGIN OF ty_node,
+             chmod TYPE ty_chmod,
+             name  TYPE string,
+             sha1  TYPE ty_sha1,
+           END OF ty_node.
+    TYPES: ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_commit,
+             tree      TYPE ty_sha1,
+             parent    TYPE ty_sha1,
+             author    TYPE string,
+             committer TYPE string,
+             body      TYPE string,
+           END OF ty_commit.
+
+    CLASS-METHODS decode
+      IMPORTING iv_data           TYPE xstring
+      RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS decode_tree
+      IMPORTING iv_data         TYPE xstring
+      RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS decode_commit
+      IMPORTING iv_data          TYPE xstring
+      RETURNING VALUE(rs_commit) TYPE ty_commit
+      RAISING   lcx_exception.
+
+    CLASS-METHODS encode
+      IMPORTING it_objects     TYPE ty_objects_tt
+      RETURNING VALUE(rv_data) TYPE xstring
+      RAISING   lcx_exception.
+
+    CLASS-METHODS encode_tree
+      IMPORTING it_nodes       TYPE ty_nodes_tt
+      RETURNING VALUE(rv_data) TYPE xstring.
+
+    CLASS-METHODS encode_commit
+      IMPORTING is_commit      TYPE ty_commit
+      RETURNING VALUE(rv_data) TYPE xstring.
+
+  PRIVATE SECTION.
+    CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
+               c_zlib       TYPE x LENGTH 2 VALUE '789C',
+               c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
+               c_version    TYPE x LENGTH 4 VALUE '00000002'.
+
+    CLASS-METHODS decode_deltas
+      CHANGING ct_objects TYPE ty_objects_tt
+      RAISING  lcx_exception.
+
+    CLASS-METHODS type_and_length
+      IMPORTING is_object         TYPE ty_object
+      RETURNING VALUE(rv_xstring) TYPE xstring
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delta
+      IMPORTING is_object  TYPE ty_object
+      CHANGING  ct_objects TYPE ty_objects_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS delta_header
+      EXPORTING ev_header TYPE i
+      CHANGING  cv_delta  TYPE xstring.
+
+    CLASS-METHODS sort_tree
+      IMPORTING it_nodes        TYPE ty_nodes_tt
+      RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt.
+
+    CLASS-METHODS get_type
+      IMPORTING iv_x           TYPE x
+      RETURNING VALUE(rv_type) TYPE ty_type
+      RAISING   lcx_exception.
+
+    CLASS-METHODS get_length
+      EXPORTING ev_length TYPE i
+      CHANGING  cv_data   TYPE xstring.
+
+ENDCLASS.                    "lcl_pack DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_transport IMPLEMENTATION
@@ -472,6 +563,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_buffer  TYPE string,
           lv_xstring TYPE xstring,
           lv_line    TYPE string,
+          lv_pack    TYPE xstring,
           lv_pkt1    TYPE string,
           lv_pkt2    TYPE string.
 
@@ -497,7 +589,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
               && gc_newline.                                "#EC NOTEXT
     lv_pkt1 = pkt_string( lv_line ).
 
-    lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).       "#EC NOTEXT
+    IF iv_deepen = abap_true.
+      lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).     "#EC NOTEXT
+    ENDIF.
 
     lv_buffer = lv_pkt1
              && lv_pkt2
@@ -512,8 +606,14 @@ CLASS lcl_git_transport IMPLEMENTATION.
     lv_xstring = li_client->response->get_data( ).
     li_client->close( ).
 
-    parse( IMPORTING ev_pack = ev_pack
+    parse( IMPORTING ev_pack = lv_pack
            CHANGING cv_data = lv_xstring ).
+
+    IF lv_pack IS INITIAL.
+      _raise 'empty pack'.
+    ENDIF.
+
+    et_objects = lcl_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.                    "upload_pack
 
@@ -536,96 +636,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
   ENDMETHOD.                    "pkt
 
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_pack DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
-
-  PUBLIC SECTION.
-    TYPES: BEGIN OF ty_node,
-             chmod TYPE ty_chmod,
-             name  TYPE string,
-             sha1  TYPE ty_sha1,
-           END OF ty_node.
-    TYPES: ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_commit,
-             tree      TYPE ty_sha1,
-             parent    TYPE ty_sha1,
-             author    TYPE string,
-             committer TYPE string,
-             body      TYPE string,
-           END OF ty_commit.
-
-    CLASS-METHODS decode
-      IMPORTING iv_data           TYPE xstring
-      RETURNING VALUE(rt_objects) TYPE ty_objects_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS decode_tree
-      IMPORTING iv_data         TYPE xstring
-      RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS decode_deltas
-      CHANGING ct_objects TYPE ty_objects_tt
-      RAISING  lcx_exception.
-
-    CLASS-METHODS decode_commit
-      IMPORTING iv_data          TYPE xstring
-      RETURNING VALUE(rs_commit) TYPE ty_commit
-      RAISING   lcx_exception.
-
-    CLASS-METHODS encode
-      IMPORTING it_objects     TYPE ty_objects_tt
-      RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS encode_tree
-      IMPORTING it_nodes       TYPE ty_nodes_tt
-      RETURNING VALUE(rv_data) TYPE xstring.
-
-    CLASS-METHODS encode_commit
-      IMPORTING is_commit      TYPE ty_commit
-      RETURNING VALUE(rv_data) TYPE xstring.
-
-  PRIVATE SECTION.
-    CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
-               c_zlib       TYPE x LENGTH 2 VALUE '789C',
-               c_zlib_hmm   TYPE x LENGTH 2 VALUE '7801',
-               c_version    TYPE x LENGTH 4 VALUE '00000002'.
-
-    CLASS-METHODS type_and_length
-      IMPORTING is_object         TYPE ty_object
-      RETURNING VALUE(rv_xstring) TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS delta
-      IMPORTING is_object  TYPE ty_object
-      CHANGING  ct_objects TYPE ty_objects_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS delta_header
-      EXPORTING ev_header TYPE i
-      CHANGING  cv_delta  TYPE xstring.
-
-    CLASS-METHODS sort_tree
-      IMPORTING it_nodes        TYPE ty_nodes_tt
-      RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt.
-
-    CLASS-METHODS get_type
-      IMPORTING iv_x           TYPE x
-      RETURNING VALUE(rv_type) TYPE ty_type
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_length
-      EXPORTING ev_length TYPE i
-      CHANGING  cv_data   TYPE xstring.
-
-ENDCLASS.                    "lcl_pack DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_pack IMPLEMENTATION
@@ -1244,6 +1254,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
       _raise 'SHA1 at end of pack doesnt match'.
     ENDIF.
 
+    decode_deltas( CHANGING ct_objects = rt_objects ).
+
   ENDMETHOD.                    "decode
 
   METHOD encode.
@@ -1605,16 +1617,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     CLEAR ev_branch.
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
-                                    IMPORTING ev_pack = lv_pack
+                                    IMPORTING et_objects = et_objects
                                               ev_branch = ev_branch ).
-
-    IF lv_pack IS INITIAL.
-      _raise 'empty pack'.
-    ENDIF.
-
-    et_objects = lcl_git_pack=>decode( lv_pack ).
-
-    lcl_git_pack=>decode_deltas( CHANGING ct_objects = et_objects ).
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_type-commit.
     IF sy-subrc <> 0.
