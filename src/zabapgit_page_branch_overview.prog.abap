@@ -171,7 +171,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * exchange HEAD, and make sure the branch determination starts with the HEAD branch
     READ TABLE gt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
     ASSERT sy-subrc = 0.
-    LOOP AT gt_branches ASSIGNING <ls_branch> WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.
+    LOOP AT gt_branches ASSIGNING <ls_branch>
+        WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.
       <ls_head>-name = <ls_branch>-name.
       DELETE gt_branches INDEX sy-tabix.
       EXIT.
@@ -195,7 +196,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
         IF <ls_commit>-parent1 IS INITIAL.
           EXIT.
         ELSE.
-          READ TABLE gt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_commit>-parent1.
+          READ TABLE gt_commits ASSIGNING <ls_commit>
+              WITH KEY sha1 = <ls_commit>-parent1.
           ASSERT sy-subrc = 0.
         ENDIF.
       ENDDO.
@@ -247,7 +249,8 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     DATA: li_client TYPE REF TO if_http_client,
           lv_url    TYPE string.
 
-    lv_url = 'https://raw.githubusercontent.com/bpatra/gitgraph.js/develop/src/gitgraph.js' ##NO_TEXT.
+    lv_url = 'https://raw.githubusercontent.com/bpatra/'
+      && 'gitgraph.js/develop/src/gitgraph.js' ##NO_TEXT.
 
     cl_http_client=>create_by_url(
       EXPORTING
@@ -289,15 +292,19 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     _add '<script type="text/javascript">'.
 * todo, temporary workaround
-* see https://github.com/nicoespeon/gitgraph.js/pull/88 and https://github.com/nicoespeon/gitgraph.js/issues/86
+* see https://github.com/nicoespeon/gitgraph.js/pull/88
+* and https://github.com/nicoespeon/gitgraph.js/issues/86
+* todo, use https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.2.2/gitgraph.min.js
+* when above issue is fixed
     ro_html->add( get_script( ) ).
     _add '</script>'.
-*    _add '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.2.2/gitgraph.min.js"></script>'.
+
 
     _add '<script type="text/javascript">'.
 
     _add 'var myTemplateConfig = {'.
-    _add 'colors: [ "#979797", "#008fb5", "#f1c109", "#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],'.
+    ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
+      && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ).
     _add 'branch: {'.
     _add '  lineWidth: 8,'.
     _add '  spacingX: 50'.
