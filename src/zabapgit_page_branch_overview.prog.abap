@@ -12,12 +12,14 @@ CLASS lcl_branch_overview DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_commit,
              sha1    TYPE ty_sha1,
-             parent  TYPE ty_sha1,
+             parent1 TYPE ty_sha1,
+             parent2 TYPE ty_sha1,
              author  TYPE string,
              email   TYPE string,
              time    TYPE string,
              message TYPE string,
              branch  TYPE string,
+             merge   TYPE string,
              create  TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
            END OF ty_commit.
 
@@ -36,14 +38,16 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING   lcx_exception,
       determine_branch
         RAISING lcx_exception,
+      determine_merges
+        RAISING lcx_exception,
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
         RETURNING VALUE(rt_objects) TYPE ty_objects_tt
         RAISING   lcx_exception.
 
     CLASS-DATA:
-      mt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
-      mt_commits  TYPE TABLE OF ty_commit.
+      gt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
+      gt_commits  TYPE TABLE OF ty_commit.
 
 ENDCLASS.
 
@@ -54,11 +58,19 @@ CLASS lcl_branch_overview IMPLEMENTATION.
     DATA: lt_objects TYPE ty_objects_tt.
 
 
+    CLEAR gt_branches.
+    CLEAR gt_commits.
+
     lt_objects = get_git_objects( io_repo ).
     parse_commits( lt_objects ).
-    determine_branch( ).
+    CLEAR lt_objects.
 
-    rt_commits = mt_commits.
+    determine_branch( ).
+    determine_merges( ).
+
+    SORT gt_commits BY time ASCENDING.
+
+    rt_commits = gt_commits.
 
   ENDMETHOD.
 
@@ -72,11 +84,11 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
 
-    mt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
+    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
-                                              it_branches = mt_branches
+                                              it_branches = gt_branches
                                     IMPORTING et_objects = rt_objects ).
 
     DELETE rt_objects WHERE type = gc_type-blob.
@@ -85,7 +97,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD parse_commits.
 
-    DATA: ls_commit LIKE LINE OF mt_commits,
+    DATA: ls_commit LIKE LINE OF gt_commits,
           lv_trash  TYPE string,
           ls_raw    TYPE lcl_git_pack=>ty_commit.
 
@@ -93,14 +105,12 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_type-commit.
-*      IF <ls_object>-sha1(3) = '867'.
-*        BREAK-POINT.
-*      ENDIF.
       ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
       ls_commit-sha1 = <ls_object>-sha1.
-      ls_commit-parent = ls_raw-parent.
+      ls_commit-parent1 = ls_raw-parent.
+      ls_commit-parent2 = ls_raw-parent2.
 
       SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
 
@@ -110,11 +120,38 @@ CLASS lcl_branch_overview IMPLEMENTATION.
         ls_commit-author
         ls_commit-email
         ls_commit-time ##NO_TEXT.
-      IF sy-subrc <> 0.
-        BREAK-POINT.
-      ENDIF.
-      APPEND ls_commit TO mt_commits.
+      ASSERT sy-subrc = 0.
+      APPEND ls_commit TO gt_commits.
 
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD determine_merges.
+
+    FIELD-SYMBOLS: <ls_merged> LIKE LINE OF gt_commits,
+                   <ls_commit> LIKE LINE OF gt_commits.
+
+
+* important: start with the newest first and propagate branches
+    SORT gt_commits BY time DESCENDING.
+
+    LOOP AT gt_commits ASSIGNING <ls_commit> WHERE NOT parent2 IS INITIAL.
+      ASSERT NOT <ls_commit>-branch IS INITIAL.
+
+      READ TABLE gt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_commit>-parent2.
+      IF sy-subrc = 0.
+        <ls_commit>-merge = <ls_merged>-branch.
+      ENDIF.
+
+* orphaned, branch has been deleted after merge
+      WHILE <ls_merged>-branch IS INITIAL.
+        <ls_merged>-branch = <ls_commit>-branch.
+        READ TABLE gt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_merged>-parent1.
+        IF sy-subrc <> 0.
+          EXIT.
+        ENDIF.
+      ENDWHILE.
     ENDLOOP.
 
   ENDMETHOD.
@@ -125,25 +162,24 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     DATA: lv_name TYPE string.
 
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
-                   <ls_head>   LIKE LINE OF mt_branches,
-                   <ls_commit> LIKE LINE OF mt_commits,
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF gt_branches,
+                   <ls_head>   LIKE LINE OF gt_branches,
+                   <ls_commit> LIKE LINE OF gt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
 
 
 * exchange HEAD, and make sure the branch determination starts with the HEAD branch
-    READ TABLE mt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
+    READ TABLE gt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
     ASSERT sy-subrc = 0.
-    LOOP AT mt_branches ASSIGNING <ls_branch> WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.
+    LOOP AT gt_branches ASSIGNING <ls_branch> WHERE sha1 = <ls_head>-sha1 AND name <> lc_head.
       <ls_head>-name = <ls_branch>-name.
-      DELETE mt_branches INDEX sy-tabix.
+      DELETE gt_branches INDEX sy-tabix.
       EXIT.
     ENDLOOP.
 
-* todo, merging?
-    LOOP AT mt_branches ASSIGNING <ls_branch>.
+    LOOP AT gt_branches ASSIGNING <ls_branch>.
       lv_name = <ls_branch>-name+11.
-      READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch>-sha1.
+      READ TABLE gt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch>-sha1.
       ASSERT sy-subrc = 0.
 
       DO.
@@ -156,17 +192,15 @@ CLASS lcl_branch_overview IMPLEMENTATION.
           EXIT.
         ENDIF.
 
-        IF <ls_commit>-parent IS INITIAL.
+        IF <ls_commit>-parent1 IS INITIAL.
           EXIT.
         ELSE.
-          READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_commit>-parent.
+          READ TABLE gt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_commit>-parent1.
           ASSERT sy-subrc = 0.
         ENDIF.
       ENDDO.
 
     ENDLOOP.
-
-    SORT mt_commits BY time ASCENDING.
 
   ENDMETHOD.
 
@@ -189,6 +223,12 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      escape_branch
+        IMPORTING iv_string        TYPE string
+        RETURNING VALUE(rv_string) TYPE string,
+      escape_message
+        IMPORTING iv_string        TYPE string
+        RETURNING VALUE(rv_string) TYPE string,
       get_script
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception.
@@ -207,7 +247,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     DATA: li_client TYPE REF TO if_http_client,
           lv_url    TYPE string.
 
-    lv_url = 'https://raw.githubusercontent.com/bpatra/gitgraph.js/develop/src/gitgraph.js'.
+    lv_url = 'https://raw.githubusercontent.com/bpatra/gitgraph.js/develop/src/gitgraph.js' ##NO_TEXT.
 
     cl_http_client=>create_by_url(
       EXPORTING
@@ -237,48 +277,93 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     DATA: lt_commits TYPE lcl_branch_overview=>ty_commit_tt.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF lt_commits,
-                   <lv_create> LIKE LINE OF <ls_commit>-create.
+                   <ls_create> LIKE LINE OF <ls_commit>-create.
 
 
     CREATE OBJECT ro_html.
 
-    _add '<br>'.
-    _add 'todo, see https://github.com/larshp/abapGit/issues/272'.
+    ro_html->add( |Repository: { mo_repo->get_url( ) }| ).
 
+* see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
 
     _add '<script type="text/javascript">'.
 * todo, temporary workaround
-* see https://github.com/nicoespeon/gitgraph.js/pull/88
-* https://github.com/nicoespeon/gitgraph.js/issues/86
+* see https://github.com/nicoespeon/gitgraph.js/pull/88 and https://github.com/nicoespeon/gitgraph.js/issues/86
     ro_html->add( get_script( ) ).
     _add '</script>'.
 *    _add '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.2.2/gitgraph.min.js"></script>'.
 
     _add '<script type="text/javascript">'.
 
+    _add 'var myTemplateConfig = {'.
+    _add 'colors: [ "#979797", "#008fb5", "#f1c109", "#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],'.
+    _add 'branch: {'.
+    _add '  lineWidth: 8,'.
+    _add '  spacingX: 50'.
+    _add '},'.
+    _add 'commit: {'.
+    _add '  spacingY: -40,'.
+    _add '  dot: { size: 12 },'.
+    _add '  message: { font: "normal 14pt Arial" }'.
+    _add '}'.
+    _add '};'.
     _add 'var gitgraph = new GitGraph({'.
-    _add '  template: "metro",'.
+    _add '  template: myTemplateConfig,'.
     _add '  orientation: "vertical-reverse"'.
     _add '});'.
 
     lt_commits = lcl_branch_overview=>run( mo_repo ).
 
+* todo: limit number of commits shown, or squash commits?
     LOOP AT lt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
 * assumption: all branches are created from master
-        ro_html->add( |var var{ <ls_commit>-branch } = gitgraph.branch("{ <ls_commit>-branch }");| ).
+        ro_html->add( |var {
+          escape_branch( <ls_commit>-branch ) } = gitgraph.branch("{
+          <ls_commit>-branch }");| ).
       ENDIF.
 
-      ro_html->add( |var{ <ls_commit>-branch }.commit(\{message: "{ <ls_commit>-message }", author: "{ <ls_commit>-author }", sha1: "{ <ls_commit>-sha1(7) }"\});| ).
+      IF <ls_commit>-merge IS INITIAL.
+        ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
+          escape_message( <ls_commit>-message ) }", author: "{
+          <ls_commit>-author }", sha1: "{
+          <ls_commit>-sha1(7) }"\});| ).
+      ELSE.
+        ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
+          escape_branch( <ls_commit>-branch ) }, \{message: "{
+          escape_message( <ls_commit>-message ) }", author: "{
+          <ls_commit>-author }", sha1: "{
+          <ls_commit>-sha1(7) }"\});| ).
+      ENDIF.
 
-      LOOP AT <ls_commit>-create ASSIGNING <lv_create>.
-        ro_html->add( |var var{ <lv_create>-name } = var{ <lv_create>-parent }.branch("{ <lv_create>-name }");| ).
+      LOOP AT <ls_commit>-create ASSIGNING <ls_create>.
+        ro_html->add( |var { escape_branch( <ls_create>-name ) } = {
+          escape_branch( <ls_create>-parent ) }.branch("{
+          <ls_create>-name }");| ).
       ENDLOOP.
 
     ENDLOOP.
 
     _add '</script>'.
+
+  ENDMETHOD.
+
+  METHOD escape_message.
+
+    rv_string = iv_string.
+
+    REPLACE ALL OCCURRENCES OF '"' IN rv_string WITH '\"'.
+
+  ENDMETHOD.
+
+  METHOD escape_branch.
+
+    rv_string = iv_string.
+
+    TRANSLATE rv_string USING '-_._'.
+
+    rv_string = |branch_{ rv_string }|.
 
   ENDMETHOD.
 
