@@ -118,6 +118,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     TYPES: BEGIN OF ty_commit,
              tree      TYPE ty_sha1,
              parent    TYPE ty_sha1,
+             parent2   TYPE ty_sha1,
              author    TYPE string,
              committer TYPE string,
              body      TYPE string,
@@ -871,8 +872,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
   METHOD decode_commit.
 
     DATA: lv_string TYPE string,
-          lv_mode   TYPE string,
           lv_len    TYPE i,
+          lv_word   TYPE string,
+          lv_trash  TYPE string,
           lt_string TYPE TABLE OF string.
 
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
@@ -882,33 +884,28 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     SPLIT lv_string AT gc_newline INTO TABLE lt_string.
 
-    lv_mode = 'tree'.                                       "#EC NOTEXT
     LOOP AT lt_string ASSIGNING <lv_string>.
-      lv_len = strlen( lv_mode ).
-
-      IF NOT lv_mode IS INITIAL AND <lv_string>(lv_len) = lv_mode.
-        CASE lv_mode.
-          WHEN 'tree'.
-            rs_commit-tree = <lv_string>+5.
-            lv_mode = 'parent'.                             "#EC NOTEXT
-          WHEN 'parent'.
-            rs_commit-parent = <lv_string>+7.
-            lv_mode = 'author'.                             "#EC NOTEXT
-          WHEN 'author'.
-            rs_commit-author = <lv_string>+7.
-            lv_mode = 'committer'.                          "#EC NOTEXT
-          WHEN 'committer'.
-            rs_commit-committer = <lv_string>+10.
-            CLEAR lv_mode.
-        ENDCASE.
-      ELSEIF lv_mode = 'parent' AND <lv_string>(6) = 'author'. "#EC NOTEXT
-* first commit doesnt have parent
-        rs_commit-author = <lv_string>+7.
-        lv_mode = 'committer'.                              "#EC NOTEXT
-      ELSE.
-* body
+      IF NOT rs_commit-committer IS INITIAL.
         CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
           SEPARATED BY gc_newline.
+      ELSE.
+        SPLIT <lv_string> AT space INTO lv_word lv_trash.
+        CASE lv_word.
+          WHEN 'tree'.
+            rs_commit-tree = <lv_string>+5.
+          WHEN 'parent'.
+            IF rs_commit-parent IS INITIAL.
+              rs_commit-parent = <lv_string>+7.
+            ELSE.
+              rs_commit-parent2 = <lv_string>+7.
+            ENDIF.
+          WHEN 'author'.
+            rs_commit-author = <lv_string>+7.
+          WHEN 'committer'.
+            rs_commit-committer = <lv_string>+10.
+          WHEN OTHERS.
+            ASSERT 0 = 1.
+        ENDCASE.
       ENDIF.
     ENDLOOP.
 

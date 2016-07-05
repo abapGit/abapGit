@@ -2,19 +2,9 @@
 *&  Include           ZABAPGIT_PAGE_BRANCH_OVERVIEW
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_branch_overview DEFINITION FINAL.
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo_online,
-      lif_gui_page~render REDEFINITION.
-
-  PRIVATE SECTION.
-    DATA: mo_repo     TYPE REF TO lcl_repo_online,
-          mt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
-          mt_objects  TYPE ty_objects_tt.
-
     TYPES: BEGIN OF ty_create,
              name   TYPE string,
              parent TYPE string,
@@ -31,30 +21,45 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
              create  TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
            END OF ty_commit.
 
-    DATA: mt_commits TYPE TABLE OF ty_commit.
+    TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
 
-* todo, split up in UI and logic classes
-    METHODS:
-      body
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      get_script
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
+    CLASS-METHODS: run
+      IMPORTING io_repo           TYPE REF TO lcl_repo_online
+      RETURNING VALUE(rt_commits) TYPE ty_commit_tt
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS:
       parse_commits
-        RAISING lcx_exception,
+        IMPORTING it_objects TYPE ty_objects_tt
+        RAISING   lcx_exception,
       determine_branch
         RAISING lcx_exception,
       get_git_objects
-        RAISING lcx_exception.
+        IMPORTING io_repo           TYPE REF TO lcl_repo_online
+        RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+        RAISING   lcx_exception.
 
-ENDCLASS.                       "lcl_gui_page_explore DEFINITION
+    CLASS-DATA:
+      mt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
+      mt_commits  TYPE TABLE OF ty_commit.
 
-CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
+ENDCLASS.
 
-  METHOD constructor.
-    super->constructor( ).
-    mo_repo = io_repo.
+CLASS lcl_branch_overview IMPLEMENTATION.
+
+  METHOD run.
+
+    DATA: lt_objects TYPE ty_objects_tt.
+
+
+    lt_objects = get_git_objects( io_repo ).
+    parse_commits( lt_objects ).
+    determine_branch( ).
+
+    rt_commits = mt_commits.
+
   ENDMETHOD.
 
   METHOD get_git_objects.
@@ -62,37 +67,43 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     lcl_progress=>show( iv_key     = 'Get git objects'
                         iv_current = 1
                         iv_total   = 1
-                        iv_text    = mo_repo->get_name( ) ) ##NO_TEXT.
+                        iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
 
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
 
-    mt_branches = lcl_git_transport=>branches( mo_repo->get_url( ) ).
+    mt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo = mo_repo
+    lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
                                               it_branches = mt_branches
-                                    IMPORTING et_objects = mt_objects ).
+                                    IMPORTING et_objects = rt_objects ).
 
-    DELETE mt_objects WHERE type = gc_type-blob.
+    DELETE rt_objects WHERE type = gc_type-blob.
 
   ENDMETHOD.
 
   METHOD parse_commits.
 
     DATA: ls_commit LIKE LINE OF mt_commits,
+          lv_trash  TYPE string,
           ls_raw    TYPE lcl_git_pack=>ty_commit.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF mt_objects.
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
-    LOOP AT mt_objects ASSIGNING <ls_object> WHERE type = gc_type-commit.
+    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_type-commit.
+*      IF <ls_object>-sha1(3) = '867'.
+*        BREAK-POINT.
+*      ENDIF.
       ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
       ls_commit-sha1 = <ls_object>-sha1.
       ls_commit-parent = ls_raw-parent.
-      ls_commit-message = ls_raw-body.
+
+      SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
+
 * todo, handle time zones
       FIND REGEX '^([\w\s]+) <(.*)> (\d{10}) .\d{4}$' IN ls_raw-author
         SUBMATCHES
@@ -159,6 +170,38 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+ENDCLASS.
+
+***********************
+
+CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING io_repo TYPE REF TO lcl_repo_online,
+      lif_gui_page~render REDEFINITION.
+
+  PRIVATE SECTION.
+    DATA: mo_repo TYPE REF TO lcl_repo_online.
+
+    METHODS:
+      body
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      get_script
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
+
+ENDCLASS.                       "lcl_gui_page_explore DEFINITION
+
+CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
+
+  METHOD constructor.
+    super->constructor( ).
+    mo_repo = io_repo.
+  ENDMETHOD.
+
   METHOD get_script.
 
     DATA: li_client TYPE REF TO if_http_client,
@@ -191,16 +234,13 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   METHOD body.
 
-    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
-                   <lv_create> LIKE LINE OF <ls_commit>-create,
-                   <ls_branch> LIKE LINE OF mt_branches.
+    DATA: lt_commits TYPE lcl_branch_overview=>ty_commit_tt.
+
+    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF lt_commits,
+                   <lv_create> LIKE LINE OF <ls_commit>-create.
 
 
     CREATE OBJECT ro_html.
-
-    get_git_objects( ).
-    parse_commits( ).
-    determine_branch( ).
 
     _add '<br>'.
     _add 'todo, see https://github.com/larshp/abapGit/issues/272'.
@@ -222,7 +262,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     _add '  orientation: "vertical-reverse"'.
     _add '});'.
 
-    LOOP AT mt_commits ASSIGNING <ls_commit>.
+    lt_commits = lcl_branch_overview=>run( mo_repo ).
+
+    LOOP AT lt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
 * assumption: all branches are created from master
         ro_html->add( |var var{ <ls_commit>-branch } = gitgraph.branch("{ <ls_commit>-branch }");| ).
