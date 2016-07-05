@@ -38,13 +38,17 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
                         iv_total   = 1
                         iv_text    = mo_repo->get_name( ) ) ##NO_TEXT.
 
-* get objects directly from git, mo_repo is a shallow clone of only the selected branch
-* todo, this only fetches one branch?
+* get objects directly from git, mo_repo only contains a shallow clone of only
+* the selected branch
+
 * todo, memory use?
+    mt_branches = lcl_git_transport=>branches( mo_repo->get_url( ) ).
+
     lcl_git_transport=>upload_pack( EXPORTING io_repo = mo_repo
                                               iv_deepen = abap_false
+                                              it_branches = mt_branches
                                     IMPORTING et_objects = mt_objects ).
-    mt_branches = lcl_git_transport=>branches( mo_repo->get_url( ) ).
+
 
   ENDMETHOD.
 
