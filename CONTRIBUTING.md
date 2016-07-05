@@ -13,6 +13,16 @@ e. commit often, whenever something is working, and is a step in the right direc
 External Links:
 https://guides.github.com/activities/contributing-to-open-source/
 
-## Building
+## Building/Creating a PR
 
-Every time a commit is pushed to the master branch, https://travis-ci.org/ will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file which can be downloaded from http://larshp.github.io/abapGit/build/zabapgit.txt
+1: Install the development version of abapGit by cloning the repository using an online repository, or downloading the zip file and installing it using an offline repository.
+
+2: The abapGit report installed in your system will now consist of multiple includes
+
+3: Do the required changes to includes and/or main program
+
+4: Create the pull request with the changes to the includes
+
+5: After the pull request is merged, abapmerge will automatically run to build the non-include version of abapGit.
+
+Every time a commit is pushed to the master branch, https://travis-ci.org/ will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file, the build can be downloaded from http://larshp.github.io/abapGit/build/zabapgit.txt
