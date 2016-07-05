@@ -20,10 +20,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING io_repo    TYPE REF TO lcl_repo_online
-                iv_deepen  TYPE abap_bool DEFAULT abap_true
-      EXPORTING et_objects TYPE ty_objects_tt
-                ev_branch  TYPE ty_sha1
+      IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                iv_deepen   TYPE abap_bool DEFAULT abap_true
+                it_branches TYPE ty_branch_list_tt OPTIONAL
+      EXPORTING et_objects  TYPE ty_objects_tt
+                ev_branch   TYPE ty_sha1
       RAISING   lcx_exception.
 
 * local to remote
@@ -117,6 +118,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     TYPES: BEGIN OF ty_commit,
              tree      TYPE ty_sha1,
              parent    TYPE ty_sha1,
+             parent2   TYPE ty_sha1,
              author    TYPE string,
              committer TYPE string,
              body      TYPE string,
@@ -559,13 +561,16 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: li_client  TYPE REF TO if_http_client,
-          lv_buffer  TYPE string,
-          lv_xstring TYPE xstring,
-          lv_line    TYPE string,
-          lv_pack    TYPE xstring,
-          lv_pkt1    TYPE string,
-          lv_pkt2    TYPE string.
+    DATA: li_client   TYPE REF TO if_http_client,
+          lv_buffer   TYPE string,
+          lv_xstring  TYPE xstring,
+          lv_line     TYPE string,
+          lv_pack     TYPE xstring,
+          lt_branches TYPE ty_branch_list_tt,
+          lv_capa     TYPE string,
+          lv_pkt1     TYPE string.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
 
     find_branch(
@@ -576,25 +581,34 @@ CLASS lcl_git_transport IMPLEMENTATION.
         ei_client  = li_client
         ev_branch  = ev_branch ).
 
-    set_headers(
-        io_repo    = io_repo
-        iv_service = c_service-upload
-        ii_client  = li_client ).
-
-    lv_line = 'want' &&
-              ` ` &&
-              ev_branch &&
-              ` ` &&
-              'side-band-64k no-progress agent=' && gv_agent
-              && gc_newline.                                "#EC NOTEXT
-    lv_pkt1 = pkt_string( lv_line ).
-
-    IF iv_deepen = abap_true.
-      lv_pkt2 = pkt_string( 'deepen 1' && gc_newline ).     "#EC NOTEXT
+    IF it_branches IS INITIAL.
+      APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
+      <ls_branch>-sha1 = ev_branch.
+    ELSE.
+      lt_branches = it_branches.
     ENDIF.
 
-    lv_buffer = lv_pkt1
-             && lv_pkt2
+    set_headers( io_repo    = io_repo
+                 iv_service = c_service-upload
+                 ii_client  = li_client ).
+
+    LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
+      IF sy-tabix = 1.
+        lv_capa = 'side-band-64k no-progress agent=' && gv_agent.
+        lv_line = 'want' && ` ` && <ls_branch>-sha1
+          && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
+      ELSE.
+        lv_line = 'want' && ` ` && <ls_branch>-sha1
+          && gc_newline.                                    "#EC NOTEXT
+      ENDIF.
+      lv_buffer = lv_buffer && pkt_string( lv_line ).
+    ENDLOOP.
+
+    IF iv_deepen = abap_true.
+      lv_buffer = lv_buffer && pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
+    ENDIF.
+
+    lv_buffer = lv_buffer
              && '0000'
              && '0009done' && gc_newline.
 
@@ -858,8 +872,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
   METHOD decode_commit.
 
     DATA: lv_string TYPE string,
-          lv_mode   TYPE string,
           lv_len    TYPE i,
+          lv_word   TYPE string,
+          lv_trash  TYPE string,
           lt_string TYPE TABLE OF string.
 
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
@@ -869,33 +884,28 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     SPLIT lv_string AT gc_newline INTO TABLE lt_string.
 
-    lv_mode = 'tree'.                                       "#EC NOTEXT
     LOOP AT lt_string ASSIGNING <lv_string>.
-      lv_len = strlen( lv_mode ).
-
-      IF NOT lv_mode IS INITIAL AND <lv_string>(lv_len) = lv_mode.
-        CASE lv_mode.
-          WHEN 'tree'.
-            rs_commit-tree = <lv_string>+5.
-            lv_mode = 'parent'.                             "#EC NOTEXT
-          WHEN 'parent'.
-            rs_commit-parent = <lv_string>+7.
-            lv_mode = 'author'.                             "#EC NOTEXT
-          WHEN 'author'.
-            rs_commit-author = <lv_string>+7.
-            lv_mode = 'committer'.                          "#EC NOTEXT
-          WHEN 'committer'.
-            rs_commit-committer = <lv_string>+10.
-            CLEAR lv_mode.
-        ENDCASE.
-      ELSEIF lv_mode = 'parent' AND <lv_string>(6) = 'author'. "#EC NOTEXT
-* first commit doesnt have parent
-        rs_commit-author = <lv_string>+7.
-        lv_mode = 'committer'.                              "#EC NOTEXT
-      ELSE.
-* body
+      IF NOT rs_commit-committer IS INITIAL.
         CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
           SEPARATED BY gc_newline.
+      ELSE.
+        SPLIT <lv_string> AT space INTO lv_word lv_trash.
+        CASE lv_word.
+          WHEN 'tree'.
+            rs_commit-tree = <lv_string>+5.
+          WHEN 'parent'.
+            IF rs_commit-parent IS INITIAL.
+              rs_commit-parent = <lv_string>+7.
+            ELSE.
+              rs_commit-parent2 = <lv_string>+7.
+            ENDIF.
+          WHEN 'author'.
+            rs_commit-author = <lv_string>+7.
+          WHEN 'committer'.
+            rs_commit-committer = <lv_string>+10.
+          WHEN OTHERS.
+            ASSERT 0 = 1.
+        ENDCASE.
       ENDIF.
     ENDLOOP.
 

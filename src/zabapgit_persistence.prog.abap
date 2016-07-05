@@ -546,9 +546,9 @@ CLASS lcl_persistence_background DEFINITION FINAL.
   PUBLIC SECTION.
 
     CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing',
-                 pull    TYPE string VALUE 'pull',
-                 push    TYPE string VALUE 'push',
+                 nothing TYPE string VALUE 'nothing' ##NO_TEXT,
+                 pull    TYPE string VALUE 'pull' ##NO_TEXT,
+                 push    TYPE string VALUE 'push' ##NO_TEXT,
                END OF c_method.
 
     TYPES: BEGIN OF ty_xml,
