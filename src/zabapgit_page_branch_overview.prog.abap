@@ -322,12 +322,16 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
                  uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
                  compress   TYPE string VALUE 'compress' ##NO_TEXT,
                  refresh    TYPE string VALUE 'refresh' ##NO_TEXT,
+                 merge      TYPE string VALUE 'merge' ##NO_TEXT,
                END OF c_actions.
 
     METHODS:
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      form_select
+        IMPORTING iv_name        TYPE string
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_merge
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
@@ -383,11 +387,38 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD form_select.
+
+    DATA: lv_name     TYPE string,
+          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
+
+
+    CREATE OBJECT ro_html.
+
+    lt_branches = lcl_branch_overview=>get_branches( ).
+
+    ro_html->add( |<select name="{ iv_name }">| ).
+    LOOP AT lt_branches ASSIGNING <ls_branch>.
+      lv_name = <ls_branch>-name+11.
+      ro_html->add( |<option value="{ lv_name }">{ lv_name }</option>| ).
+    ENDLOOP.
+    ro_html->add( '</select>' ).
+
+  ENDMETHOD.
+
   METHOD render_merge.
 
     CREATE OBJECT ro_html.
 
-* todo
+    ro_html->add( '<form id="commit_form" method="post" action="sapevent:merge">' ).
+    ro_html->add( 'Merge' ).
+    ro_html->add( form_select( 'source' ) ).
+    ro_html->add( 'into' ).
+    ro_html->add( form_select( 'target' ) ).
+    ro_html->add( '<input type="submit" value="Submit">' ).
+    ro_html->add( '</form>' ).
 
   ENDMETHOD.
 
@@ -403,7 +434,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |Repository: { mo_repo->get_url( ) }<br>| ).
+    ro_html->add( render_repo_top( mo_repo ) ).
+    ro_html->add( '<br>' ).
+    ro_html->add( '<br>' ).
 
     ro_html->add( render_merge( ) ).
 
@@ -518,13 +551,15 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-refresh.
-        rv_state = gc_event_state-re_render.
+        ev_state = gc_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
-        rv_state = gc_event_state-re_render.
+        ev_state = gc_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
-        rv_state = gc_event_state-re_render.
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-merge.
+        BREAK-POINT.
     ENDCASE.
 
   ENDMETHOD.
@@ -535,9 +570,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     ro_html->add( header( ) ).
     ro_html->add( title( iv_title = 'BRANCH_OVERVIEW' io_menu = build_menu( ) ) ).
-    _add '<div id="toc">'.
+    ro_html->add( '<div id="toc">' ).
     ro_html->add( body( ) ).
-    _add '</div>'.
+    ro_html->add( '</div>' ).
     ro_html->add( footer( ) ).
 
   ENDMETHOD.

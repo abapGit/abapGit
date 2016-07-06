@@ -8,12 +8,11 @@
 INTERFACE lif_gui_page.
 
   METHODS on_event
-    IMPORTING iv_action       TYPE clike
-              iv_frame        TYPE clike
-              iv_getdata      TYPE clike
-              it_postdata     TYPE cnht_post_data_tab
-              it_query_table  TYPE cnht_query_table
-    RETURNING VALUE(rv_state) TYPE i
+    IMPORTING iv_action   TYPE clike
+              iv_getdata  TYPE clike OPTIONAL
+              it_postdata TYPE cnht_post_data_tab OPTIONAL
+    EXPORTING ei_page     TYPE REF TO lif_gui_page
+              ev_state    TYPE i
     RAISING   lcx_exception.
 
   METHODS render
@@ -28,6 +27,11 @@ ENDINTERFACE.
 CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_gui_page ABSTRACT METHODS render.
+
+    CLASS-METHODS render_repo_top
+      IMPORTING io_repo        TYPE REF TO lcl_repo
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
 
   PROTECTED SECTION.
     METHODS header
@@ -53,6 +57,45 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
 ENDCLASS.
 
 CLASS lcl_gui_page_super IMPLEMENTATION.
+
+  METHOD render_repo_top.
+
+    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+          lv_icon        TYPE string.
+
+
+    CREATE OBJECT ro_html.
+
+    IF io_repo->is_offline( ) = abap_true.
+      lv_icon = 'img/repo_offline' ##NO_TEXT.
+    ELSE.
+      lv_icon = 'img/repo_online' ##NO_TEXT.
+    ENDIF.
+
+    ro_html->add( |<a id="repo{ io_repo->get_key( ) }"></a>| ).
+    ro_html->add( '<table width="100%"><tr>' ).
+
+    ro_html->add( '<td class="repo_name">' ).
+    ro_html->add( |<img src="{ lv_icon }">| ).
+    ro_html->add( |<span>{ io_repo->get_name( ) }</span>| ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '<td class="repo_attr right">' ).
+    ro_html->add( '<img src="img/pkg">' ).
+    ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+      ro_html->add( '<img src="img/branch">' ).
+      ro_html->add( |<span>{ lo_repo_online->get_branch_name( ) }</span>| ).
+      ro_html->add( '<img src="img/link">' ).
+      ro_html->add( |<input type="text" value="{ lo_repo_online->get_url( ) }" readonly>| ).
+    ENDIF.
+
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr></table>' ).
+
+  ENDMETHOD.
 
   METHOD header.
 
@@ -252,6 +295,39 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.dropdown:hover .dropdown_content { display: block; }'.
     _add '.dropdown:hover .dropbtn  { color: #79a0d2; }'.
 
+    _add '/* REPOSITORY */'.
+    _add 'div.repo {'.
+    _add '  margin-top:       3px;'.
+    _add '  background-color: #f2f2f2;'.
+    _add '  padding: 0.5em 1em 0.5em 1em;'.
+    _add '}'.
+    _add '.repo_name span {'.
+    _add '  font-weight: bold;'.
+    _add '  color: #333;'.
+    _add '  font-size: 14pt;'.
+    _add '}'.
+    _add '.repo_name img {'.
+    _add '  vertical-align: baseline;'.
+    _add '  margin: 0 5px 0 5px;'.
+    _add '}'.
+    _add '.repo_attr {'.
+    _add '  color: grey;'.
+    _add '  font-size: 12pt;'.
+    _add '}'.
+    _add '.repo_attr span {'.
+    _add '  margin-left: 0.2em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '}'.
+    _add '.repo_attr input {'.
+    _add '  color: grey;'.     " Input wants it personaly
+    _add '  font-size: 12pt;'. " Input wants it personaly
+    _add '  margin-left: 0.5em;'.
+    _add '  margin-right: 0.5em;'.
+    _add '  background-color: transparent;'.
+    _add '  border-style: none;'.
+    _add '  text-overflow: ellipsis;'.
+    _add '}'.
+
     " Other and outdated (?) styles
     _add '/* MISC AND REFACTOR */'.
     _add 'a.grey:link {color: grey; font-size: smaller;}'.
@@ -372,7 +448,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
   ENDMETHOD.                    "lif_gui_page~get_assets
 
   METHOD lif_gui_page~on_event.
-    rv_state = gc_event_state-not_handled.
+    ev_state = gc_event_state-not_handled.
   ENDMETHOD.                    "lif_gui_page~on_event
 
 ENDCLASS.
