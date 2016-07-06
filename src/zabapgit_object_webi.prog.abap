@@ -278,15 +278,14 @@ CLASS lcl_object_webi IMPLEMENTATION.
       li_field->set_type( mi_vi->get_type( typename = <ls_struc>-typeref
                                            version  = sews_c_vif_version-inactive ) ).
 
-      IF lv_index = 1.
-        IF li_struc->if_ws_md_vif_type~has_soap_extension_type(
-            sews_c_vif_version-all ) = abap_false.
-          READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
-            WITH KEY typename = <ls_struc>-typename.
-          IF sy-subrc = 0.
-            li_soap = li_struc->if_ws_md_vif_type~create_soap_extension_type( ).
-            li_soap->set_namespace( <ls_soap>-namespace ).
-          ENDIF.
+      IF lv_index = 1
+          AND li_struc->if_ws_md_vif_type~has_soap_extension_type(
+          sews_c_vif_version-all ) = abap_false.
+        READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
+          WITH KEY typename = <ls_struc>-typename.
+        IF sy-subrc = 0.
+          li_soap = li_struc->if_ws_md_vif_type~create_soap_extension_type( ).
+          li_soap->set_namespace( <ls_soap>-namespace ).
         ENDIF.
       ENDIF.
     ENDLOOP.
