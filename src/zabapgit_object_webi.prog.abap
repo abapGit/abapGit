@@ -332,7 +332,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
     DATA: ls_webi   TYPE ty_webi,
           lv_name   TYPE vepname,
           ls_header LIKE LINE OF ls_webi-pvepheader,
-          lv_text   TYPE string,
+          lv_text   TYPE string ##NEEDED,
           lx_root   TYPE REF TO cx_root,
           lv_exists TYPE abap_bool,
           li_root   TYPE REF TO if_ws_md_vif_root.
@@ -373,7 +373,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
       CATCH cx_ws_md_exception INTO lx_root.
         TRY.
             mi_vi->if_ws_md_lockable_object~unlock( ).
-          CATCH cx_ws_md_exception.
+          CATCH cx_ws_md_exception ##NO_HANDLER.
         ENDTRY.
         lv_text = lx_root->if_message~get_text( ).
         _raise 'error deserializing WEBI'.

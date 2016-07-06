@@ -61,8 +61,6 @@ CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FI
 
     METHODS:
       run FOR TESTING
-        RAISING lcx_exception,
-      check_empty_package
         RAISING lcx_exception.
 
     CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
@@ -100,18 +98,6 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "class_setup
-
-  METHOD check_empty_package.
-
-    DATA: lt_tadir TYPE ty_tadir_tt.
-
-
-    lt_tadir = lcl_tadir=>read( c_package ).
-    IF lines( lt_tadir ) > 0.
-      cl_abap_unit_assert=>fail( 'Prerequsite: package should be empty' ).
-    ENDIF.
-
-  ENDMETHOD.                    "check_empty_package
 
   METHOD run.
 
@@ -762,7 +748,8 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
 
-CLASS ltcl_git_pack_decode_commit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_git_pack_decode_commit DEFINITION FOR TESTING
+    RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PUBLIC SECTION.
     METHODS:

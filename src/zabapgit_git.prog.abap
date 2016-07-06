@@ -567,8 +567,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_line     TYPE string,
           lv_pack     TYPE xstring,
           lt_branches TYPE ty_branch_list_tt,
-          lv_capa     TYPE string,
-          lv_pkt1     TYPE string.
+          lv_capa     TYPE string.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
@@ -594,7 +593,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress agent=' && gv_agent.
+        lv_capa = 'side-band-64k no-progress agent=' && gv_agent ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
       ELSE.
@@ -872,9 +871,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
   METHOD decode_commit.
 
     DATA: lv_string TYPE string,
-          lv_len    TYPE i,
           lv_word   TYPE string,
-          lv_trash  TYPE string,
+          lv_trash  TYPE string ##NEEDED,
           lt_string TYPE TABLE OF string.
 
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
@@ -1618,8 +1616,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
   METHOD pull.
 
     DATA: ls_object LIKE LINE OF et_objects,
-          ls_commit TYPE lcl_git_pack=>ty_commit,
-          lv_pack   TYPE xstring.
+          ls_commit TYPE lcl_git_pack=>ty_commit.
 
 
     CLEAR et_files.

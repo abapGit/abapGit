@@ -39,7 +39,7 @@ CLASS lcl_background IMPLEMENTATION.
     lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
 
     LOOP AT ls_files-local ASSIGNING <ls_file>.
-      WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename.
+      WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename ##NO_TEXT.
       lo_stage->add( iv_path     = <ls_file>-file-path
                      iv_filename = <ls_file>-file-filename ).
     ENDLOOP.

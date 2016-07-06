@@ -11,22 +11,28 @@ CLASS lcl_branch_overview DEFINITION FINAL.
            END OF ty_create.
 
     TYPES: BEGIN OF ty_commit,
-             sha1    TYPE ty_sha1,
-             parent1 TYPE ty_sha1,
-             parent2 TYPE ty_sha1,
-             author  TYPE string,
-             email   TYPE string,
-             time    TYPE string,
-             message TYPE string,
-             branch  TYPE string,
-             merge   TYPE string,
-             create  TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
+             sha1       TYPE ty_sha1,
+             parent1    TYPE ty_sha1,
+             parent2    TYPE ty_sha1,
+             author     TYPE string,
+             email      TYPE string,
+             time       TYPE string,
+             message    TYPE string,
+             branch     TYPE string,
+             merge      TYPE string,
+             create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
+             compressed TYPE abap_bool,
            END OF ty_commit.
 
     TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
 
     CLASS-METHODS: run
       IMPORTING io_repo           TYPE REF TO lcl_repo_online
+      RETURNING VALUE(rt_commits) TYPE ty_commit_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS: compress
+      IMPORTING it_commits        TYPE ty_commit_tt
       RETURNING VALUE(rt_commits) TYPE ty_commit_tt
       RAISING   lcx_exception.
 
@@ -54,6 +60,67 @@ CLASS lcl_branch_overview DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_branch_overview IMPLEMENTATION.
+
+  METHOD compress.
+
+    DATA: lv_previous TYPE i,
+          lv_index    TYPE i,
+          lv_name     TYPE string,
+          lt_temp     LIKE it_commits.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF gt_branches,
+                   <ls_new>    LIKE LINE OF rt_commits,
+                   <ls_temp>   LIKE LINE OF lt_temp,
+                   <ls_commit> LIKE LINE OF it_commits.
+
+    DEFINE _compress.
+      IF lines( lt_temp ) >= 10.
+        READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
+        ASSERT sy-subrc = 0.
+        APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
+        <ls_new>-time       = <ls_temp>-time.
+        <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
+        <ls_new>-branch     = lv_name.
+        <ls_new>-compressed = abap_true.
+      ELSE.
+        APPEND LINES OF lt_temp TO rt_commits.
+      ENDIF.
+    END-OF-DEFINITION.
+
+
+    LOOP AT gt_branches ASSIGNING <ls_branch>.
+
+      CLEAR lt_temp.
+      lv_name = <ls_branch>-name+11.
+
+      LOOP AT it_commits ASSIGNING <ls_commit>
+          WHERE branch = lv_name.
+        lv_index = sy-tabix.
+
+        IF NOT <ls_commit>-merge IS INITIAL
+            OR NOT <ls_commit>-create IS INITIAL.
+* always show these vertices
+          lv_previous = -1.
+        ENDIF.
+
+        IF lv_previous + 1 <> sy-tabix.
+          _compress.
+          CLEAR lt_temp.
+        ENDIF.
+
+        lv_previous = lv_index.
+
+        APPEND <ls_commit> TO lt_temp.
+
+      ENDLOOP.
+
+      _compress.
+
+    ENDLOOP.
+
+    SORT rt_commits BY time ASCENDING.
+
+  ENDMETHOD.
 
   METHOD run.
 
@@ -89,9 +156,9 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
 
-    DELETE gt_branches WHERE name = 'refs/heads/gh-pages'.
-    DELETE gt_branches WHERE name CP 'refs/tags/*'.
-    DELETE gt_branches WHERE name CP 'refs/pull/*'.
+    DELETE gt_branches WHERE name = 'refs/heads/gh-pages' ##NO_TEXT.
+    DELETE gt_branches WHERE name CP 'refs/tags/*' ##NO_TEXT.
+    DELETE gt_branches WHERE name CP 'refs/pull/*' ##NO_TEXT.
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
@@ -105,7 +172,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
   METHOD parse_commits.
 
     DATA: ls_commit LIKE LINE OF gt_commits,
-          lv_trash  TYPE string,
+          lv_trash  TYPE string ##NEEDED,
           ls_raw    TYPE lcl_git_pack=>ty_commit.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
@@ -237,15 +304,25 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online,
+      lif_gui_page~on_event REDEFINITION,
       lif_gui_page~render REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo TYPE REF TO lcl_repo_online.
+    DATA: mo_repo     TYPE REF TO lcl_repo_online,
+          mv_compress TYPE abap_bool VALUE abap_false.
+
+    CONSTANTS: BEGIN OF c_actions,
+                 uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
+                 compress   TYPE string VALUE 'compress' ##NO_TEXT,
+                 refresh    TYPE string VALUE 'refresh' ##NO_TEXT,
+               END OF c_actions.
 
     METHODS:
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      build_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       escape_branch
         IMPORTING iv_string        TYPE string
         RETURNING VALUE(rv_string) TYPE string,
@@ -306,7 +383,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |Repository: { mo_repo->get_url( ) }| ).
+    ro_html->add( |Repository: { mo_repo->get_url( ) }<br>| ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
@@ -325,7 +402,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     _add 'var myTemplateConfig = {'.
     ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
-      && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ).
+      && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ) ##NO_TEXT.
     _add 'branch: {'.
     _add '  lineWidth: 8,'.
     _add '  spacingX: 50'.
@@ -342,6 +419,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     _add '});'.
 
     lt_commits = lcl_branch_overview=>run( mo_repo ).
+    IF mv_compress = abap_true.
+      lt_commits = lcl_branch_overview=>compress( lt_commits ).
+    ENDIF.
 
 * todo: limit number of commits shown, or squash commits?
     LOOP AT lt_commits ASSIGNING <ls_commit>.
@@ -352,7 +432,11 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
           <ls_commit>-branch }");| ).
       ENDIF.
 
-      IF <ls_commit>-merge IS INITIAL.
+      IF <ls_commit>-compressed = abap_true.
+        ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
+          escape_message( <ls_commit>-message )
+          }", dotColor: "black", dotSize: 15, messageHashDisplay: false, messageAuthorDisplay: false\});| ).
+      ELSEIF <ls_commit>-merge IS INITIAL.
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
           escape_message( <ls_commit>-message ) }", author: "{
           <ls_commit>-author }", sha1: "{
@@ -395,12 +479,45 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    IF mv_compress = abap_true.
+      ro_menu->add(
+        iv_txt = 'Uncompress Graph'
+        iv_act = c_actions-uncompress ) ##NO_TEXT.
+    ELSE.
+      ro_menu->add(
+        iv_txt = 'Compress Graph'
+        iv_act = c_actions-compress ) ##NO_TEXT.
+    ENDIF.
+
+    ro_menu->add( iv_txt = 'Refresh' iv_act = c_actions-refresh ) ##NO_TEXT.
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN c_actions-refresh.
+        rv_state = gc_event_state-re_render.
+      WHEN c_actions-uncompress.
+        mv_compress = abap_false.
+        rv_state = gc_event_state-re_render.
+      WHEN c_actions-compress.
+        mv_compress = abap_true.
+        rv_state = gc_event_state-re_render.
+    ENDCASE.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     CREATE OBJECT ro_html.
 
     ro_html->add( header( ) ).
-    ro_html->add( title( 'BRANCH_OVERVIEW' ) ).
+    ro_html->add( title( iv_title = 'BRANCH_OVERVIEW' io_menu = build_menu( ) ) ).
     _add '<div id="toc">'.
     ro_html->add( body( ) ).
     _add '</div>'.
