@@ -310,13 +310,15 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo_online,
+        IMPORTING io_repo TYPE REF TO lcl_repo_online
+        RAISING   lcx_exception,
       lif_gui_page~on_event REDEFINITION,
       lif_gui_page~render REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo     TYPE REF TO lcl_repo_online,
-          mv_compress TYPE abap_bool VALUE abap_false.
+          mv_compress TYPE abap_bool VALUE abap_false,
+          mt_commits  TYPE lcl_branch_overview=>ty_commit_tt.
 
     CONSTANTS: BEGIN OF c_actions,
                  uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
@@ -325,7 +327,14 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
                  merge      TYPE string VALUE 'merge' ##NO_TEXT,
                END OF c_actions.
 
+    TYPES: BEGIN OF ty_merge,
+             source TYPE string,
+             target TYPE string,
+           END OF ty_merge.
+
     METHODS:
+      refresh
+        RAISING lcx_exception,
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
@@ -334,6 +343,10 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_merge
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      decode_merge
+        IMPORTING it_postdata     TYPE cnht_post_data_tab
+        RETURNING VALUE(rs_merge) TYPE ty_merge
         RAISING   lcx_exception,
       build_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
@@ -354,6 +367,16 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     mo_repo = io_repo.
+    refresh( ).
+  ENDMETHOD.
+
+  METHOD refresh.
+
+    mt_commits = lcl_branch_overview=>run( mo_repo ).
+    IF mv_compress = abap_true.
+      mt_commits = lcl_branch_overview=>compress( mt_commits ).
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD get_script.
@@ -424,13 +447,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   METHOD body.
 
-    DATA: lt_commits TYPE lcl_branch_overview=>ty_commit_tt.
-
-    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF lt_commits,
+    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
 
-
-    lt_commits = lcl_branch_overview=>run( mo_repo ).
 
     CREATE OBJECT ro_html.
 
@@ -470,11 +489,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     _add '  orientation: "vertical-reverse"'.
     _add '});'.
 
-    IF mv_compress = abap_true.
-      lt_commits = lcl_branch_overview=>compress( lt_commits ).
-    ENDIF.
-
-    LOOP AT lt_commits ASSIGNING <ls_commit>.
+    LOOP AT mt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
 * assumption: all branches are created from master, todo
         ro_html->add( |var {
@@ -547,19 +562,56 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD decode_merge.
+
+    DATA: lv_string  TYPE string,
+          ls_content TYPE lcl_persistence_db=>ty_content,
+          lt_fields  TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_merge-source = <ls_field>-value.
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'target' ##NO_TEXT.
+    ASSERT sy-subrc = 0.
+    rs_merge-target = <ls_field>-value.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~on_event.
+
+    DATA: ls_merge TYPE ty_merge,
+          lo_merge TYPE REF TO lcl_gui_page_merge.
+
 
     CASE iv_action.
       WHEN c_actions-refresh.
+        refresh( ).
         ev_state = gc_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
+        refresh( ).
         ev_state = gc_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
+        refresh( ).
         ev_state = gc_event_state-re_render.
       WHEN c_actions-merge.
-        BREAK-POINT.
+        ls_merge = decode_merge( it_postdata ).
+        CREATE OBJECT lo_merge
+          EXPORTING
+            io_repo   = mo_repo
+            iv_source = ls_merge-source
+            iv_target = ls_merge-target.
+        ei_page = lo_merge.
+        ev_state = gc_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.

@@ -572,6 +572,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
 
+    CLEAR et_objects.
+
     find_branch(
       EXPORTING
         io_repo    = io_repo
