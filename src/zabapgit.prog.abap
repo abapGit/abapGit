@@ -73,6 +73,7 @@ INCLUDE zabapgit_zip.
 INCLUDE zabapgit_transport.
 INCLUDE zabapgit_page.
 INCLUDE zabapgit_page_branch_overview.
+INCLUDE zabapgit_page_merge.
 INCLUDE zabapgit_gui.
 INCLUDE zabapgit_app_impl.
 INCLUDE zabapgit_unit_test.

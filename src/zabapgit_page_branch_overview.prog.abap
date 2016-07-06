@@ -36,6 +36,9 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       RETURNING VALUE(rt_commits) TYPE ty_commit_tt
       RAISING   lcx_exception.
 
+    CLASS-METHODS: get_branches
+      RETURNING VALUE(rt_branches) TYPE lcl_git_transport=>ty_branch_list_tt.
+
   PRIVATE SECTION.
 
     CLASS-METHODS:
@@ -60,6 +63,10 @@ CLASS lcl_branch_overview DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_branch_overview IMPLEMENTATION.
+
+  METHOD get_branches.
+    rt_branches = gt_branches.
+  ENDMETHOD.
 
   METHOD compress.
 
@@ -321,6 +328,9 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      render_merge
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
       build_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       escape_branch
@@ -373,6 +383,14 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD render_merge.
+
+    CREATE OBJECT ro_html.
+
+* todo
+
+  ENDMETHOD.
+
   METHOD body.
 
     DATA: lt_commits TYPE lcl_branch_overview=>ty_commit_tt.
@@ -381,9 +399,13 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
                    <ls_create> LIKE LINE OF <ls_commit>-create.
 
 
+    lt_commits = lcl_branch_overview=>run( mo_repo ).
+
     CREATE OBJECT ro_html.
 
     ro_html->add( |Repository: { mo_repo->get_url( ) }<br>| ).
+
+    ro_html->add( render_merge( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
@@ -396,10 +418,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 * when above issue is fixed
     ro_html->add( get_script( ) ).
     _add '</script>'.
-
-
     _add '<script type="text/javascript">'.
-
     _add 'var myTemplateConfig = {'.
     ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
       && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ) ##NO_TEXT.
@@ -418,15 +437,13 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     _add '  orientation: "vertical-reverse"'.
     _add '});'.
 
-    lt_commits = lcl_branch_overview=>run( mo_repo ).
     IF mv_compress = abap_true.
       lt_commits = lcl_branch_overview=>compress( lt_commits ).
     ENDIF.
 
-* todo: limit number of commits shown, or squash commits?
     LOOP AT lt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
-* assumption: all branches are created from master
+* assumption: all branches are created from master, todo
         ro_html->add( |var {
           escape_branch( <ls_commit>-branch ) } = gitgraph.branch("{
           <ls_commit>-branch }");| ).
