@@ -195,7 +195,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     _add '.stage_tab td.method {'.
     _add '  color: #ccc;'.
     _add '}'.
-    _add '.stage_tab tr.firstrow td { border-top: 0px; } ' .
+    _add '.stage_tab tr.firstrow td { border-top: 0px; } '.
     _add '.stage_tab tr.title td {'.
     _add '  color: #BBB;'.
     _add '  font-size: 10pt;'.

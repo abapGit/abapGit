@@ -1323,6 +1323,15 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
   PUBLIC SECTION.
 
+    TYPES: BEGIN OF ty_expanded,
+             path  TYPE string,
+             name  TYPE string,
+             sha1  TYPE ty_sha1,
+             chmod TYPE ty_chmod,
+           END OF ty_expanded.
+
+    TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
+
     CLASS-METHODS pull
       IMPORTING io_repo    TYPE REF TO lcl_repo_online
       EXPORTING et_files   TYPE ty_files_tt
@@ -1343,15 +1352,13 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 iv_from TYPE ty_sha1
       RAISING   lcx_exception.
 
-  PRIVATE SECTION.
-    TYPES: BEGIN OF ty_expanded,
-             path  TYPE string,
-             name  TYPE string,
-             sha1  TYPE ty_sha1,
-             chmod TYPE ty_chmod,
-           END OF ty_expanded.
+    CLASS-METHODS full_tree
+      IMPORTING it_objects         TYPE ty_objects_tt
+                iv_branch          TYPE ty_sha1
+      RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
+      RAISING   lcx_exception.
 
-    TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
+  PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_tree,
              path TYPE string,
@@ -1389,12 +1396,6 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       IMPORTING it_objects         TYPE ty_objects_tt
                 iv_tree            TYPE ty_sha1
                 iv_base            TYPE string
-      RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS full_tree
-      IMPORTING it_objects         TYPE ty_objects_tt
-                iv_branch          TYPE ty_sha1
       RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
       RAISING   lcx_exception.
 

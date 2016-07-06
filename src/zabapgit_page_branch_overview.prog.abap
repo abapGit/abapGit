@@ -70,16 +70,6 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD compress.
 
-    DATA: lv_previous TYPE i,
-          lv_index    TYPE i,
-          lv_name     TYPE string,
-          lt_temp     LIKE it_commits.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF gt_branches,
-                   <ls_new>    LIKE LINE OF rt_commits,
-                   <ls_temp>   LIKE LINE OF lt_temp,
-                   <ls_commit> LIKE LINE OF it_commits.
-
     DEFINE _compress.
       IF lines( lt_temp ) >= 10.
         READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
@@ -93,6 +83,16 @@ CLASS lcl_branch_overview IMPLEMENTATION.
         APPEND LINES OF lt_temp TO rt_commits.
       ENDIF.
     END-OF-DEFINITION.
+
+    DATA: lv_previous TYPE i,
+          lv_index    TYPE i,
+          lv_name     TYPE string,
+          lt_temp     LIKE it_commits.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF gt_branches,
+                   <ls_new>    LIKE LINE OF rt_commits,
+                   <ls_temp>   LIKE LINE OF lt_temp,
+                   <ls_commit> LIKE LINE OF it_commits.
 
 
     LOOP AT gt_branches ASSIGNING <ls_branch>.
