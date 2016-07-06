@@ -176,6 +176,11 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
     LOOP AT is_webi-pvepfunction ASSIGNING <ls_function>.
 
+      IF mi_vi->has_function( funcname = <ls_function>-function
+          version = sews_c_vif_version-active ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
       li_function = mi_vi->create_function(
         funcname    = <ls_function>-function
         mapped_name = <ls_function>-mappedname ).
@@ -246,11 +251,14 @@ CLASS lcl_object_webi IMPLEMENTATION.
       li_elem->set_signed( <ls_elem>-signed ).
       li_elem->set_abaptype( <ls_elem>-abaptype ).
 
-      READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
-        WITH KEY typename = <ls_elem>-typename.
-      IF sy-subrc = 0.
-        li_soap = li_elem->if_ws_md_vif_type~create_soap_extension_type( ).
-        li_soap->set_namespace( <ls_soap>-namespace ).
+      IF li_elem->if_ws_md_vif_type~has_soap_extension_type(
+          sews_c_vif_version-all ) = abap_false.
+        READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
+          WITH KEY typename = <ls_elem>-typename.
+        IF sy-subrc = 0.
+          li_soap = li_elem->if_ws_md_vif_type~create_soap_extension_type( ).
+          li_soap->set_namespace( <ls_soap>-namespace ).
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
@@ -258,6 +266,12 @@ CLASS lcl_object_webi IMPLEMENTATION.
       lv_index = sy-tabix.
 
       li_struc = mi_vi->create_type_as_structure( <ls_struc>-typename ).
+
+      IF li_struc->has_field( field_pos = <ls_struc>-fieldpos
+          version = sews_c_vif_version-active ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
       li_field = li_struc->create_field(
         field_name = <ls_struc>-fieldname
         fieldpos = <ls_struc>-fieldpos ).
@@ -265,11 +279,14 @@ CLASS lcl_object_webi IMPLEMENTATION.
                                            version  = sews_c_vif_version-inactive ) ).
 
       IF lv_index = 1.
-        READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
-          WITH KEY typename = <ls_struc>-typename.
-        IF sy-subrc = 0.
-          li_soap = li_struc->if_ws_md_vif_type~create_soap_extension_type( ).
-          li_soap->set_namespace( <ls_soap>-namespace ).
+        IF li_struc->if_ws_md_vif_type~has_soap_extension_type(
+            sews_c_vif_version-all ) = abap_false.
+          READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
+            WITH KEY typename = <ls_struc>-typename.
+          IF sy-subrc = 0.
+            li_soap = li_struc->if_ws_md_vif_type~create_soap_extension_type( ).
+            li_soap->set_namespace( <ls_soap>-namespace ).
+          ENDIF.
         ENDIF.
       ENDIF.
     ENDLOOP.
@@ -279,11 +296,14 @@ CLASS lcl_object_webi IMPLEMENTATION.
       li_table->set_line_type( mi_vi->get_type( typename = <ls_table>-typeref
                                                 version  = sews_c_vif_version-inactive ) ).
 
-      READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
-        WITH KEY typename = <ls_table>-typename.
-      IF sy-subrc = 0.
-        li_soap = li_table->if_ws_md_vif_type~create_soap_extension_type( ).
-        li_soap->set_namespace( <ls_soap>-namespace ).
+      IF li_table->if_ws_md_vif_type~has_soap_extension_type(
+          sews_c_vif_version-all ) = abap_false.
+        READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
+          WITH KEY typename = <ls_table>-typename.
+        IF sy-subrc = 0.
+          li_soap = li_table->if_ws_md_vif_type~create_soap_extension_type( ).
+          li_soap->set_namespace( <ls_soap>-namespace ).
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
@@ -297,6 +317,10 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
     READ TABLE is_webi-pvepvisoapext INDEX 1 INTO ls_soap.
     ASSERT sy-subrc = 0.
+
+    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-active ).
+      RETURN.
+    ENDIF.
 
     li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
     li_soap->set_namespace( ls_soap-namespace ).
@@ -347,6 +371,10 @@ CLASS lcl_object_webi IMPLEMENTATION.
         mi_vi->if_ws_md_lockable_object~save( ).
         mi_vi->if_ws_md_lockable_object~unlock( ).
       CATCH cx_ws_md_exception INTO lx_root.
+        TRY.
+            mi_vi->if_ws_md_lockable_object~unlock( ).
+          CATCH cx_ws_md_exception.
+        ENDTRY.
         lv_text = lx_root->if_message~get_text( ).
         _raise 'error deserializing WEBI'.
     ENDTRY.
@@ -358,7 +386,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: lv_name TYPE vepname,
-          lo_vif TYPE REF TO cl_ws_md_vif_root.
+          lo_vif  TYPE REF TO cl_ws_md_vif_root.
 
 
     lv_name = ms_item-obj_name.
