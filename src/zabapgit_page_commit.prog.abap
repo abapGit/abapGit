@@ -49,6 +49,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
+
     CREATE OBJECT ro_html.
 
     lt_stage = mo_stage->get_all( ).
@@ -74,6 +75,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   ENDMETHOD.    "render_stage
 
   METHOD render_form.
+
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
           lv_key   TYPE string,

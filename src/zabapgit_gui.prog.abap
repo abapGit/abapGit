@@ -1083,7 +1083,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( title( 'STAGE' ) ).
 
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( lcl_gui_page_main=>render_repo_top( mo_repo ) ).
+    ro_html->add( render_repo_top( mo_repo ) ).
     ro_html->add( render_menu( ) ).
 
     ro_html->add( '<table class="stage_tab">' ).

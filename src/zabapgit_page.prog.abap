@@ -28,12 +28,12 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_gui_page ABSTRACT METHODS render.
 
-    CLASS-METHODS render_repo_top
+  PROTECTED SECTION.
+    METHODS render_repo_top
       IMPORTING io_repo        TYPE REF TO lcl_repo
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
-  PROTECTED SECTION.
     METHODS header
       IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
       RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper.
@@ -203,7 +203,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add 'table             { border-collapse: collapse; }'.
     _add 'pre               { display: inline; }'.
 
-    _add 'form input, textarea {'.
+    _add 'form input, textarea, select {'.
     _add '  border: 1px solid #DDD;'.
     _add '  padding: 3px 6px;'.
     _add '}'.
