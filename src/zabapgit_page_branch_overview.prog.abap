@@ -40,6 +40,8 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING lcx_exception,
       determine_merges
         RAISING lcx_exception,
+      fixes
+        RAISING lcx_exception,
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
         RETURNING VALUE(rt_objects) TYPE ty_objects_tt
@@ -67,6 +69,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     determine_branch( ).
     determine_merges( ).
+    fixes( ).
 
     SORT gt_commits BY time ASCENDING.
 
@@ -85,6 +88,10 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * the selected branch
 
     gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
+
+    DELETE gt_branches WHERE name = 'refs/heads/gh-pages'.
+    DELETE gt_branches WHERE name CP 'refs/tags/*'.
+    DELETE gt_branches WHERE name CP 'refs/pull/*'.
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
@@ -123,6 +130,20 @@ CLASS lcl_branch_overview IMPLEMENTATION.
       ASSERT sy-subrc = 0.
       APPEND ls_commit TO gt_commits.
 
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD fixes.
+
+    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF gt_commits.
+
+
+    LOOP AT gt_commits ASSIGNING <ls_commit> WHERE NOT merge IS INITIAL.
+* commits from old branches
+      IF <ls_commit>-branch = <ls_commit>-merge.
+        CLEAR <ls_commit>-merge.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
