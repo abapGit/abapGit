@@ -14,7 +14,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          mt_files TYPE ty_stage_files,
+          ms_files TYPE ty_stage_files,
           mo_stage TYPE REF TO lcl_stage.
 
     METHODS:
@@ -39,7 +39,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     super->constructor( ).
     mo_repo  = io_repo.
 
-    mt_files = lcl_stage_logic=>get( mo_repo ).
+    ms_files = lcl_stage_logic=>get( mo_repo ).
 
     CREATE OBJECT mo_stage.
 
@@ -50,7 +50,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     DATA: ls_file TYPE ty_file,
           lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF mt_files-local.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
 
     IF iv_action = 'stage_all'.
@@ -63,7 +63,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CASE iv_action.
       WHEN 'stage_add'.
-        READ TABLE mt_files-local ASSIGNING <ls_file>
+        READ TABLE ms_files-local ASSIGNING <ls_file>
           WITH KEY file-path = ls_file-path
           file-filename = ls_file-filename.
         ASSERT sy-subrc = 0.
@@ -71,7 +71,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                        iv_filename = <ls_file>-file-filename
                        iv_data     = <ls_file>-file-data ).
       WHEN 'stage_all'.
-        LOOP AT mt_files-local ASSIGNING <ls_file>.
+        LOOP AT ms_files-local ASSIGNING <ls_file>.
           mo_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename
                          iv_data     = <ls_file>-file-data ).
@@ -93,80 +93,82 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           lv_status  TYPE string,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_files-remote,
-                   <ls_local>  LIKE LINE OF mt_files-local.
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF ms_files-remote,
+                   <ls_local>  LIKE LINE OF ms_files-local.
 
 
     CREATE OBJECT ro_html.
 
     ro_html->add( '<table class="stage_tab">' ).
 
-    IF lines( mt_files-local ) > 0.
-      ro_html->add('<tr class="separator firstrow">').
-      ro_html->add( '<td></td><td colspan="2">LOCAL</td>' ).
-      ro_html->add('</tr>').
-      LOOP AT mt_files-local ASSIGNING <ls_local>.
-        lv_method = mo_stage->lookup( iv_path     = <ls_local>-file-path
-                                      iv_filename = <ls_local>-file-filename ).
-        lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                        ig_file = <ls_local>-file ).
+    LOOP AT ms_files-local ASSIGNING <ls_local>.
+      IF sy-tabix = 1.
+        ro_html->add('<tr class="separator firstrow">').
+        ro_html->add( '<td></td><td colspan="2">LOCAL</td>' ).
+        ro_html->add('</tr>').
+      ENDIF.
 
-        CREATE OBJECT lo_toolbar.
-        IF lv_method IS NOT INITIAL.
-          lo_toolbar->add( iv_txt = 'reset'
-            iv_act = 'stage_reset?' && lv_param ) ##NO_TEXT.
-        ELSE.
-          lo_toolbar->add( iv_txt = 'add'
-            iv_act = 'stage_add?' && lv_param ) ##NO_TEXT.
-        ENDIF.
+      lv_method = mo_stage->lookup( iv_path     = <ls_local>-file-path
+                                    iv_filename = <ls_local>-file-filename ).
+      lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
+                                                      ig_file = <ls_local>-file ).
 
-        IF lv_method IS INITIAL.
-          lv_status = '<span class="grey">?</span>'.
-        ELSE.
-          lv_status = lv_method.
-        ENDIF.
-        ro_html->add( '<tr>' ).
-        ro_html->add( |<td class="status">{ lv_status }</td>| ).
-        ro_html->add( |<td>{ <ls_local>-file-path && <ls_local>-file-filename }</td>| ).
-        ro_html->add( '<td>' ).
-        ro_html->add( lo_toolbar->render( iv_no_separator = abap_true ) ).
-        ro_html->add( '</td>' ).
-        ro_html->add( '</tr>' ).
-      ENDLOOP.
-    ENDIF.
+      CREATE OBJECT lo_toolbar.
+      IF lv_method IS NOT INITIAL.
+        lo_toolbar->add( iv_txt = 'reset'
+          iv_act = 'stage_reset?' && lv_param ) ##NO_TEXT.
+      ELSE.
+        lo_toolbar->add( iv_txt = 'add'
+          iv_act = 'stage_add?' && lv_param ) ##NO_TEXT.
+      ENDIF.
 
-    IF lines( mt_files-remote ) > 0.
-      ro_html->add('<tr class="separator">').
-      ro_html->add( '<td></td><td colspan="2">REMOTE</td>' ).
-      ro_html->add('</tr>').
-      LOOP AT mt_files-remote ASSIGNING <ls_remote>.
-        lv_method = mo_stage->lookup( iv_path     = <ls_remote>-path
-                                      iv_filename = <ls_remote>-filename ).
-        lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                        ig_file = <ls_remote> ).
+      IF lv_method IS INITIAL.
+        lv_status = '<span class="grey">?</span>'.
+      ELSE.
+        lv_status = lv_method.
+      ENDIF.
+      ro_html->add( '<tr>' ).
+      ro_html->add( |<td class="status">{ lv_status }</td>| ).
+      ro_html->add( |<td>{ <ls_local>-file-path && <ls_local>-file-filename }</td>| ).
+      ro_html->add( '<td>' ).
+      ro_html->add( lo_toolbar->render( iv_no_separator = abap_true ) ).
+      ro_html->add( '</td>' ).
+      ro_html->add( '</tr>' ).
+    ENDLOOP.
 
-        CREATE OBJECT lo_toolbar.
-        IF lv_method IS NOT INITIAL.
-          lo_toolbar->add( iv_txt = 'reset'  iv_act = 'stage_reset?' && lv_param ).
-        ELSE.
-          lo_toolbar->add( iv_txt = 'ignore' iv_act = 'stage_ignore?' && lv_param ).
-          lo_toolbar->add( iv_txt = 'remove' iv_act = 'stage_rm?' && lv_param ).
-        ENDIF.
+    LOOP AT ms_files-remote ASSIGNING <ls_remote>.
+      IF sy-tabix = 1.
+        ro_html->add('<tr class="separator">').
+        ro_html->add( '<td></td><td colspan="2">REMOTE</td>' ).
+        ro_html->add('</tr>').
+      ENDIF.
 
-        IF lv_method IS INITIAL.
-          lv_status = '<span class="grey">?</span>'.
-        ELSE.
-          lv_status = lv_method.
-        ENDIF.
-        ro_html->add( '<tr>' ).
-        ro_html->add( |<td class="status">{ lv_status }</td>| ).
-        ro_html->add( |<td>{ <ls_remote>-path && <ls_remote>-filename }</td>| ).
-        ro_html->add( '<td>' ).
-        ro_html->add( lo_toolbar->render( iv_no_separator = abap_true ) ).
-        ro_html->add( '</td>' ).
-        ro_html->add( '</tr>' ).
-      ENDLOOP.
-    ENDIF.
+      lv_method = mo_stage->lookup( iv_path     = <ls_remote>-path
+                                    iv_filename = <ls_remote>-filename ).
+      lv_param  = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
+                                                      ig_file = <ls_remote> ).
+
+      CREATE OBJECT lo_toolbar.
+      IF lv_method IS NOT INITIAL.
+        lo_toolbar->add( iv_txt = 'reset'  iv_act = 'stage_reset?' && lv_param ).
+      ELSE.
+        lo_toolbar->add( iv_txt = 'ignore' iv_act = 'stage_ignore?' && lv_param ).
+        lo_toolbar->add( iv_txt = 'remove' iv_act = 'stage_rm?' && lv_param ).
+      ENDIF.
+
+      IF lv_method IS INITIAL.
+        lv_status = '<span class="grey">?</span>'.
+      ELSE.
+        lv_status = lv_method.
+      ENDIF.
+      ro_html->add( '<tr>' ).
+      ro_html->add( |<td class="status">{ lv_status }</td>| ).
+      ro_html->add( |<td>{ <ls_remote>-path && <ls_remote>-filename }</td>| ).
+      ro_html->add( '<td>' ).
+      ro_html->add( lo_toolbar->render( iv_no_separator = abap_true ) ).
+      ro_html->add( '</td>' ).
+      ro_html->add( '</tr>' ).
+    ENDLOOP.
 
     ro_html->add( '</table>' ).
 
@@ -228,7 +230,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       lo_toolbar->add( iv_act = |stage_commit?{ lv_action }|
                        iv_txt = 'Commit'
                        iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
-    ELSEIF lines( mt_files-local ) > 0.
+    ELSEIF lines( ms_files-local ) > 0.
       lo_toolbar->add( iv_act = |stage_all?{ lv_action }|
                        iv_txt = 'Add all and commit') ##NO_TEXT.
     ENDIF.

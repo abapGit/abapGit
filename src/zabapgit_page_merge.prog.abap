@@ -21,6 +21,7 @@ CLASS lcl_merge DEFINITION FINAL.
              ttree  TYPE lcl_git_porcelain=>ty_expanded_tt,
              ctree  TYPE lcl_git_porcelain=>ty_expanded_tt,
              result TYPE lcl_git_porcelain=>ty_expanded_tt,
+             stage  TYPE REF TO lcl_stage,
            END OF ty_merge.
 
     CLASS-METHODS:
@@ -33,7 +34,7 @@ CLASS lcl_merge DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-DATA: gs_merge   TYPE ty_merge,
-                gt_objects TYPE ty_objects_tt.
+                gs_objects TYPE ty_objects_tt.
 
     TYPES: ty_ancestor_tt TYPE STANDARD TABLE OF ty_ancestor WITH DEFAULT KEY.
 
@@ -82,13 +83,13 @@ CLASS lcl_merge IMPLEMENTATION.
                                          it_list2 = lt_atarget ).
 
     gs_merge-stree = lcl_git_porcelain=>full_tree(
-      it_objects = gt_objects
+      it_objects = gs_objects
       iv_branch  = gs_merge-source-sha1 ).
     gs_merge-ttree = lcl_git_porcelain=>full_tree(
-      it_objects = gt_objects
+      it_objects = gs_objects
       iv_branch  = gs_merge-target-sha1 ).
     gs_merge-ctree = lcl_git_porcelain=>full_tree(
-      it_objects = gt_objects
+      it_objects = gs_objects
       iv_branch  = gs_merge-common-commit ).
 
     calculate_result( ).
@@ -231,13 +232,13 @@ CLASS lcl_merge IMPLEMENTATION.
           lv_commit LIKE LINE OF lt_visit.
 
     FIELD-SYMBOLS: <ls_ancestor> LIKE LINE OF rt_ancestors,
-                   <ls_object>   LIKE LINE OF gt_objects.
+                   <ls_object>   LIKE LINE OF gs_objects.
 
 
     APPEND iv_commit TO lt_visit.
 
     LOOP AT lt_visit INTO lv_commit.
-      READ TABLE gt_objects ASSIGNING <ls_object>
+      READ TABLE gs_objects ASSIGNING <ls_object>
         WITH KEY type = gc_type-commit sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 
@@ -283,9 +284,9 @@ CLASS lcl_merge IMPLEMENTATION.
     lcl_git_transport=>upload_pack( EXPORTING io_repo = gs_merge-repo
                                               iv_deepen = abap_false
                                               it_branches = lt_upload
-                                    IMPORTING et_objects = gt_objects ).
+                                    IMPORTING et_objects = gs_objects ).
 
-    DELETE gt_objects WHERE type = gc_type-blob.
+    DELETE gs_objects WHERE type = gc_type-blob.
 
   ENDMETHOD.
 
@@ -338,7 +339,14 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-merge.
-        BREAK-POINT.
+        ASSERT ms_merge-stage->count( ) > 0.
+
+        CREATE OBJECT ei_page TYPE lcl_gui_page_commit
+          EXPORTING
+            io_repo   = mo_repo
+            io_stage  = ms_merge-stage
+            is_branch = ms_merge-target.
+        ev_state = gc_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.

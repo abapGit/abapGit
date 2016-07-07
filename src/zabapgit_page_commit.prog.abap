@@ -7,15 +7,17 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo  TYPE REF TO lcl_repo_online
-                  io_stage TYPE REF TO lcl_stage
+        IMPORTING io_repo   TYPE REF TO lcl_repo_online
+                  io_stage  TYPE REF TO lcl_stage
+                  is_branch TYPE lcl_git_transport=>ty_branch_list OPTIONAL
         RAISING   lcx_exception,
       lif_gui_page~render REDEFINITION,
       lif_gui_page~on_event REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          mo_stage TYPE REF TO lcl_stage.
+    DATA: mo_repo   TYPE REF TO lcl_repo_online,
+          ms_branch TYPE lcl_git_transport=>ty_branch_list,
+          mo_stage  TYPE REF TO lcl_stage.
 
     METHODS:
       render_menu
@@ -41,8 +43,9 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
 
-    mo_repo = io_repo.
-    mo_stage = io_stage.
+    mo_repo   = io_repo.
+    mo_stage  = io_stage.
+    ms_branch = is_branch.
   ENDMETHOD.
 
   METHOD render_stage.
@@ -264,7 +267,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ENDIF.
 
     mo_repo->push( is_comment = ls_comment
-                   io_stage   = mo_stage ).
+                   io_stage   = mo_stage
+                   iv_branch  = ms_branch-sha1 ).
 
     COMMIT WORK.
 

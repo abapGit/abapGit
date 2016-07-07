@@ -402,7 +402,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<form id="commit_form" method="post" action="sapevent:merge">' ).
-    ro_html->add( 'Merge' ).
+    ro_html->add( 'Merge' ) ##NO_TEXT.
     ro_html->add( form_select( 'source' ) ).
     ro_html->add( 'into' ).
     ro_html->add( form_select( 'target' ) ).

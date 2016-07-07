@@ -1343,6 +1343,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
                 is_comment       TYPE ty_comment
                 io_stage         TYPE REF TO lcl_stage
+                iv_branch        TYPE ty_sha1
       RETURNING VALUE(rv_branch) TYPE ty_sha1
       RAISING   lcx_exception.
 
@@ -1555,7 +1556,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                               io_repo    = io_repo
                               it_trees   = lt_trees
                               it_blobs   = lt_blobs
-                              iv_branch  = io_repo->get_sha1_remote( ) ).
+                              iv_branch  = iv_branch ).
 
   ENDMETHOD.                    "push
 
