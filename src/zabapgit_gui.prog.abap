@@ -1174,6 +1174,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
             ro_html->add( '</div>' ).
           ENDIF.
         CATCH lcx_exception INTO lx_error.
+          ro_html->add( render_repo_menu( io_repo ) ).
           ro_html->add( render_error( lx_error ) ).
       ENDTRY.
     ELSE.
