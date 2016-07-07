@@ -126,7 +126,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     DATA: lv_branch TYPE ty_sha1.
 
-    ASSERT get_key( ) = io_stage->mv_repo_key.
 
     handle_stage_ignore( io_stage ).
 
@@ -144,11 +143,11 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD handle_stage_ignore.
 
-    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
+    DATA: lv_add   TYPE abap_bool,
+          lt_stage TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
-    ASSERT get_key( ) = io_stage->mv_repo_key.
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
@@ -161,9 +160,16 @@ CLASS lcl_repo_online IMPLEMENTATION.
       io_stage->reset( iv_path     = <ls_stage>-file-path
                        iv_filename = <ls_stage>-file-filename ).
 
-      io_stage->update_and_add_dot_abapgit( mo_dot_abapgit->serialize( ) ).
+      lv_add = abap_true.
 
     ENDLOOP.
+
+    IF lv_add = abap_true.
+      io_stage->add(
+        iv_path     = gc_root_dir
+        iv_filename = gc_dot_abapgit
+        iv_data     = mo_dot_abapgit->serialize( ) ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -606,35 +612,5 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD. "is_repo_installed
-
-  METHOD get_stage.
-
-    DATA ls_stage LIKE LINE OF mt_stages.
-
-    IF iv_new = abap_true.
-
-      free_stage( iv_repo_key ). " Kill existing stage if any
-      CREATE OBJECT ls_stage-stage EXPORTING iv_repo_key = iv_repo_key.
-      ls_stage-repo_key = iv_repo_key.
-      APPEND ls_stage TO mt_stages.
-
-    ELSE.
-
-      READ TABLE mt_stages INTO ls_stage WITH KEY repo_key = iv_repo_key.
-      IF sy-subrc <> 0.
-        _raise 'Existing stage not found'.
-      ENDIF.
-
-    ENDIF.
-
-    ro_stage = ls_stage-stage.
-
-  ENDMETHOD. "get_stage
-
-  METHOD free_stage.
-
-    DELETE mt_stages WHERE repo_key = iv_repo_key. " Kill existing stage if any
-
-  ENDMETHOD. "free_stage
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION

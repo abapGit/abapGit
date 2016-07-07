@@ -5,32 +5,34 @@
 CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS lif_gui_page~render REDEFINITION.
+    METHODS:
+      constructor
+        IMPORTING io_repo  TYPE REF TO lcl_repo_online
+                  io_stage TYPE REF TO lcl_stage
+        RAISING   lcx_exception,
+      lif_gui_page~render REDEFINITION,
+      lif_gui_page~on_event REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           mo_stage TYPE REF TO lcl_stage.
 
-    METHODS render_menu
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    METHODS render_stage
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS render_form
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS:
+      render_menu
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      render_stage
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      render_form
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      styles
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      scripts
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      commit_push
+        IMPORTING it_postdata TYPE cnht_post_data_tab
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -39,8 +41,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
 
-    mo_repo ?= lcl_app=>repo_srv( )->get( iv_repo_key ).
-    mo_stage = lcl_app=>repo_srv( )->get_stage( iv_repo_key ).
+    mo_repo = io_repo.
+    mo_stage = io_stage.
   ENDMETHOD.
 
   METHOD render_stage.
@@ -158,6 +160,18 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.      "render_menu
 
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN 'commit_post'.
+        commit_push( it_postdata ).
+        ev_state = gc_event_state-go_back_to_bookmark.
+      WHEN 'commit_cancel'.
+        ev_state = gc_event_state-go_back.
+    ENDCASE.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     CREATE OBJECT ro_html.
@@ -216,6 +230,45 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     _add '}'.
 
   ENDMETHOD.    "styles
+
+  METHOD commit_push.
+
+    DATA: ls_fields  TYPE lcl_html_action_utils=>ty_commit_fields,
+          ls_comment TYPE ty_comment,
+          lo_user    TYPE REF TO lcl_persistence_user.
+
+
+    ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
+
+    lo_user = lcl_app=>user( ).
+    lo_user->set_username( ls_fields-username ).
+    lo_user->set_email( ls_fields-email ).
+
+    IF ls_fields-username IS INITIAL.
+      _raise 'empty username'.
+    ENDIF.
+    IF ls_fields-email IS INITIAL.
+      _raise 'empty email'.
+    ENDIF.
+    IF ls_fields-comment IS INITIAL.
+      _raise 'empty comment'.
+    ENDIF.
+
+    ls_comment-username = ls_fields-username.
+    ls_comment-email    = ls_fields-email.
+    ls_comment-comment  = ls_fields-comment.
+
+    IF NOT ls_fields-body IS INITIAL.
+      CONCATENATE ls_comment-comment gc_newline ls_fields-body
+        INTO ls_comment-comment.
+    ENDIF.
+
+    mo_repo->push( is_comment = ls_comment
+                   io_stage   = mo_stage ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.      "commit_push
 
   METHOD scripts.
 

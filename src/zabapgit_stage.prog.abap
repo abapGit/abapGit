@@ -2,10 +2,8 @@
 *&  Include           ZABAPGIT_STAGE
 *&---------------------------------------------------------------------*
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_stage DEFINITION
-*----------------------------------------------------------------------*
-CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
+"! keep the list of staged files, independent of repository and branch
+CLASS lcl_stage DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: ty_method TYPE c LENGTH 1.
@@ -34,27 +32,16 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
              file TYPE ty_file,
            END OF ty_work_file.
 
-    DATA mv_repo_key  TYPE lcl_persistence_db=>ty_value READ-ONLY.
-    DATA mv_local_cnt TYPE i READ-ONLY.
-    DATA mt_workarea  TYPE STANDARD TABLE OF ty_work_file READ-ONLY.
-
     CLASS-METHODS method_description
       IMPORTING iv_method             TYPE ty_method
       RETURNING VALUE(rv_description) TYPE string
-      RAISING   lcx_exception.
-
-    METHODS constructor
-      IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value
-      RAISING   lcx_exception.
-
-    METHODS update_and_add_dot_abapgit
-      IMPORTING iv_data TYPE ty_file-data
       RAISING   lcx_exception.
 
     METHODS:
       add
         IMPORTING iv_path     TYPE ty_file-path
                   iv_filename TYPE ty_file-filename
+                  iv_data     TYPE xstring
         RAISING   lcx_exception,
       reset
         IMPORTING iv_path     TYPE ty_file-path
@@ -80,16 +67,102 @@ CLASS lcl_stage DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_repo_srv.
   PRIVATE SECTION.
     DATA: mt_stage TYPE ty_stage_tt.
 
-    METHODS append
-      IMPORTING iv_path     TYPE ty_file-path
-                iv_filename TYPE ty_file-filename
-                iv_method   TYPE ty_method
-      RAISING   lcx_exception.
-
-    METHODS find_work_file
-      IMPORTING iv_path        TYPE ty_file-path
-                iv_filename    TYPE ty_file-filename
-      RETURNING VALUE(rs_file) TYPE ty_file
-      RAISING   lcx_exception.
+    METHODS:
+      append
+        IMPORTING iv_path     TYPE ty_file-path
+                  iv_filename TYPE ty_file-filename
+                  iv_method   TYPE ty_method
+                  iv_data     TYPE xstring OPTIONAL
+        RAISING   lcx_exception.
 
 ENDCLASS.   "lcl_stage DEFINITION
+
+CLASS lcl_stage IMPLEMENTATION.
+
+  METHOD lookup.
+
+    DATA ls_stage LIKE LINE OF mt_stage.
+
+
+    READ TABLE mt_stage INTO ls_stage
+      WITH KEY file-path     = iv_path
+               file-filename = iv_filename.
+    IF sy-subrc = 0.
+      rv_method = ls_stage-method.
+    ENDIF.
+
+  ENDMETHOD.        "lookup
+
+  METHOD get_all.
+    rt_stage = mt_stage.
+  ENDMETHOD.        "get_all
+
+  METHOD append.
+
+    DATA: ls_stage LIKE LINE OF mt_stage.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF mt_stage.
+
+
+    READ TABLE mt_stage WITH KEY
+      file-path     = iv_path
+      file-filename = iv_filename
+      ASSIGNING <ls_stage>.
+    IF sy-subrc = 0.
+      <ls_stage>-file-data = iv_data.
+      <ls_stage>-method    = iv_method.
+    ELSE.
+      ls_stage-file-path     = iv_path.
+      ls_stage-file-filename = iv_filename.
+      ls_stage-file-data     = iv_data.
+      ls_stage-method        = iv_method.
+      INSERT ls_stage INTO TABLE mt_stage.
+    ENDIF.
+
+  ENDMETHOD.        "append
+
+  METHOD method_description.
+
+    CASE iv_method.
+      WHEN c_method-add.
+        rv_description = 'add'.
+      WHEN c_method-rm.
+        rv_description = 'rm'.
+      WHEN c_method-ignore.
+        rv_description = 'ignore' ##NO_TEXT.
+      WHEN OTHERS.
+        _raise 'unknown staging method type'.
+    ENDCASE.
+
+  ENDMETHOD.        "method_description
+
+  METHOD add.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-add
+            iv_data     = iv_data ).
+  ENDMETHOD.        "add
+
+  METHOD reset.
+    DELETE mt_stage WHERE file-path     = iv_path
+                    AND   file-filename = iv_filename.
+    ASSERT sy-subrc = 0.
+  ENDMETHOD.        "reset
+
+  METHOD rm.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-rm ).
+  ENDMETHOD.        "rm
+
+  METHOD ignore.
+    append( iv_path     = iv_path
+            iv_filename = iv_filename
+            iv_method   = c_method-ignore ).
+  ENDMETHOD.        "ignore
+
+  METHOD count.
+    rv_count = lines( mt_stage ).
+  ENDMETHOD.        "count
+
+ENDCLASS.

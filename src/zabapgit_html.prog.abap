@@ -428,6 +428,7 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *       CLASS lcl_html_toolbar DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
+
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt TYPE string
                              io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
@@ -439,8 +440,6 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
                              iv_no_separator           TYPE abap_bool OPTIONAL
                              iv_vertical               TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
-
-    METHODS reset.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
@@ -460,10 +459,6 @@ ENDCLASS. "lcl_html_toolbar DEFINITION
 *       CLASS lcl_html_toolbar IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar IMPLEMENTATION.
-
-  METHOD reset.
-    CLEAR mt_items.
-  ENDMETHOD.  "reset
 
   METHOD add.
     DATA ls_item TYPE ty_item.

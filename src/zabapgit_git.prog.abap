@@ -1462,6 +1462,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       CLEAR ls_object.
       ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_blob>-data ).
       ls_object-type = gc_type-blob.
+      ASSERT NOT <ls_blob>-data IS INITIAL.
       ls_object-data = <ls_blob>-data.
       APPEND ls_object TO lt_objects.
     ENDLOOP.

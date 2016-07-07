@@ -20,7 +20,7 @@ CLASS lcl_background IMPLEMENTATION.
   METHOD push.
 
     DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE lcl_stage_logic=>ty_stage_files,
+          ls_files   TYPE ty_stage_files,
           lo_stage   TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files-local.
@@ -36,12 +36,13 @@ CLASS lcl_background IMPLEMENTATION.
     ls_comment-email    = 'foo@bar.com' ##NO_TEXT.
     ls_comment-comment  = 'background mode' ##NO_TEXT.
 
-    lo_stage = lcl_app=>repo_srv( )->get_stage( io_repo->get_key( ) ).
+    CREATE OBJECT lo_stage.
 
     LOOP AT ls_files-local ASSIGNING <ls_file>.
       WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename ##NO_TEXT.
       lo_stage->add( iv_path     = <ls_file>-file-path
-                     iv_filename = <ls_file>-file-filename ).
+                     iv_filename = <ls_file>-file-filename
+                     iv_data     = <ls_file>-file-data ).
     ENDLOOP.
 
     io_repo->push( is_comment = ls_comment

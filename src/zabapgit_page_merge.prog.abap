@@ -91,7 +91,6 @@ CLASS lcl_merge IMPLEMENTATION.
       it_objects = gt_objects
       iv_branch  = gs_merge-common-commit ).
 
-    BREAK-POINT.
     calculate_result( ).
 
     rs_merge = gs_merge.
@@ -310,6 +309,14 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           ms_merge TYPE lcl_merge=>ty_merge.
 
+    CONSTANTS: BEGIN OF c_actions,
+                 merge TYPE string VALUE 'merge' ##NO_TEXT,
+               END OF c_actions.
+
+    METHODS:
+      build_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+
 ENDCLASS.                       "lcl_gui_page_merge DEFINITION
 
 CLASS lcl_gui_page_merge IMPLEMENTATION.
@@ -328,7 +335,20 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
-    BREAK-POINT.
+
+    CASE iv_action.
+      WHEN c_actions-merge.
+        BREAK-POINT.
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add( iv_txt = 'Merge' iv_act = c_actions-merge ) ##NO_TEXT.
+
   ENDMETHOD.
 
   METHOD lif_gui_page~render.
@@ -361,7 +381,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( ) ).
-    ro_html->add( title( 'MERGE' ) ).
+    ro_html->add( title( iv_title = 'MERGE' io_menu = build_menu( ) ) ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( render_repo_top( mo_repo ) ).
 
