@@ -195,7 +195,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
       SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
 
-* todo, handle time zones
+* unix time stamps are in same time zone, so ignore the zone,
       FIND REGEX '^([\w\s]+) <(.*)> (\d{10}) .\d{4}$' IN ls_raw-author
         SUBMATCHES
         ls_commit-author
@@ -355,10 +355,7 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
         RETURNING VALUE(rv_string) TYPE string,
       escape_message
         IMPORTING iv_string        TYPE string
-        RETURNING VALUE(rv_string) TYPE string,
-      get_script
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception.
+        RETURNING VALUE(rv_string) TYPE string.
 
 ENDCLASS.                       "lcl_gui_page_explore DEFINITION
 
@@ -376,37 +373,6 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     IF mv_compress = abap_true.
       mt_commits = lcl_branch_overview=>compress( mt_commits ).
     ENDIF.
-
-  ENDMETHOD.
-
-  METHOD get_script.
-
-    DATA: li_client TYPE REF TO if_http_client,
-          lv_url    TYPE string.
-
-    lv_url = 'https://raw.githubusercontent.com/bpatra/'
-      && 'gitgraph.js/develop/src/gitgraph.js' ##NO_TEXT.
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = lv_url
-        ssl_id             = 'ANONYM'
-      IMPORTING
-        client             = li_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      _raise 'error fetching gitgraph.js script'.
-    ENDIF.
-
-    li_client->send( ).
-    li_client->receive( ).
-
-    CREATE OBJECT ro_html.
-    ro_html->add( li_client->response->get_cdata( ) ).
 
   ENDMETHOD.
 
@@ -462,14 +428,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
 
-    _add '<script type="text/javascript">'.
-* todo, temporary workaround
-* see https://github.com/nicoespeon/gitgraph.js/pull/88
-* and https://github.com/nicoespeon/gitgraph.js/issues/86
-* todo, use https://cdnjs.cloudflare.com/ajax/libs/gitgraph.js/1.2.2/gitgraph.min.js
-* when above issue is fixed
-    ro_html->add( get_script( ) ).
-    _add '</script>'.
+    ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
+      'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js"></script>' ).
+
     _add '<script type="text/javascript">'.
     _add 'var myTemplateConfig = {'.
     ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
