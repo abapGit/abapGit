@@ -18,7 +18,8 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
 
     METHODS:
       serialize
-        RETURNING VALUE(rv_xstr) TYPE xstring,
+        RETURNING VALUE(rv_xstr) TYPE xstring
+        RAISING   lcx_exception,
       add_ignore
         IMPORTING iv_path     TYPE string
                   iv_filename TYPE string,
@@ -54,7 +55,8 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
     CLASS-METHODS:
       to_xml
         IMPORTING is_data       TYPE ty_dot_abapgit
-        RETURNING VALUE(rv_xml) TYPE string,
+        RETURNING VALUE(rv_xml) TYPE string
+        RAISING   lcx_exception,
       from_xml
         IMPORTING iv_xml         TYPE string
         RETURNING VALUE(rs_data) TYPE ty_dot_abapgit.

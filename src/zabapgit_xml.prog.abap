@@ -358,8 +358,10 @@ CLASS lcl_xml_pretty DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: print
-      IMPORTING iv_xml        TYPE string
-      RETURNING VALUE(rv_xml) TYPE string.
+      IMPORTING iv_xml           TYPE string
+                iv_ignore_errors TYPE abap_bool DEFAULT abap_true
+      RETURNING VALUE(rv_xml)    TYPE string
+      RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -388,9 +390,12 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
                                         document       = li_xml_doc ).
     li_parser->set_normalizing( abap_true ).
     IF li_parser->parse( ) <> 0.
-* ignore errors
-      rv_xml = iv_xml.
-      RETURN.
+      IF iv_ignore_errors = abap_true.
+        rv_xml = iv_xml.
+        RETURN.
+      ELSE.
+        _raise 'error parsing xml'.
+      ENDIF.
     ENDIF.
     li_istream->close( ).
 
