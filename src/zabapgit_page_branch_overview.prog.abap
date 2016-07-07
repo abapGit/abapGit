@@ -419,7 +419,10 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( render_repo_top( mo_repo ) ).
+    ro_html->add( render_repo_top(
+      io_repo         = mo_repo
+      iv_show_package = abap_false
+      iv_show_branch  = abap_false ) ).
     ro_html->add( '<br>' ).
     ro_html->add( '<br>' ).
 

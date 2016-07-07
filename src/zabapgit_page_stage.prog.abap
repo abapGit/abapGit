@@ -37,11 +37,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    mo_repo  = io_repo.
+    mo_repo = io_repo.
 
     ms_files = lcl_stage_logic=>get( mo_repo ).
 
-    CREATE OBJECT mo_stage.
+    CREATE OBJECT mo_stage
+      EXPORTING
+        iv_branch_name = io_repo->get_branch_name( )
+        iv_branch_sha1 = io_repo->get_sha1_remote( ).
 
   ENDMETHOD.
 

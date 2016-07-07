@@ -129,20 +129,14 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     handle_stage_ignore( io_stage ).
 
-    IF iv_branch IS INITIAL.
-      iv_branch = get_sha1_remote( ).
-    ENDIF.
 
     lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
                                          io_repo    = me
-                                         io_stage   = io_stage
-                                         iv_branch  = iv_branch ).
+                                         io_stage   = io_stage ).
 
-    IF iv_branch = get_sha1_remote( ).
-      set( iv_sha1 = lv_branch ).
-      refresh( ).
-      set( it_checksums = build_local_checksums( ) ).
-    ENDIF.
+    set( iv_sha1 = lv_branch ).
+    refresh( ).
+    set( it_checksums = build_local_checksums( ) ).
 
   ENDMETHOD.                    "push
 

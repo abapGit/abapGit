@@ -36,7 +36,10 @@ CLASS lcl_background IMPLEMENTATION.
     ls_comment-email    = 'foo@bar.com' ##NO_TEXT.
     ls_comment-comment  = 'background mode' ##NO_TEXT.
 
-    CREATE OBJECT lo_stage.
+    CREATE OBJECT lo_stage
+      EXPORTING
+        iv_branch_name = io_repo->get_branch_name( )
+        iv_branch_sha1 = io_repo->get_sha1_remote( ).
 
     LOOP AT ls_files-local ASSIGNING <ls_file>.
       WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename ##NO_TEXT.

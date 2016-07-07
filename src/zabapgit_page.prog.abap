@@ -30,8 +30,11 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
     METHODS render_repo_top
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+      IMPORTING io_repo         TYPE REF TO lcl_repo
+                iv_show_package TYPE abap_bool DEFAULT abap_true
+                iv_show_branch  TYPE abap_bool DEFAULT abap_true
+                iv_branch       TYPE string OPTIONAL
+      RETURNING VALUE(ro_html)  TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
     METHODS header
@@ -81,13 +84,21 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
-    ro_html->add( '<img src="img/pkg">' ).
-    ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+    IF iv_show_package = abap_true.
+      ro_html->add( '<img src="img/pkg">' ).
+      ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+    ENDIF.
 
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
-      ro_html->add( '<img src="img/branch">' ).
-      ro_html->add( |<span>{ lo_repo_online->get_branch_name( ) }</span>| ).
+      IF iv_show_branch = abap_true.
+        ro_html->add( '<img src="img/branch">' ).
+        IF iv_branch IS INITIAL.
+          ro_html->add( |<span>{ lo_repo_online->get_branch_name( ) }</span>| ).
+        ELSE.
+          ro_html->add( |<span>{ iv_branch }</span>| ).
+        ENDIF.
+      ENDIF.
       ro_html->add( '<img src="img/link">' ).
       ro_html->add( |<input type="text" value="{ lo_repo_online->get_url( ) }" readonly>| ).
     ENDIF.

@@ -38,6 +38,13 @@ CLASS lcl_stage DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS:
+      constructor
+        IMPORTING iv_branch_name TYPE string
+                  iv_branch_sha1 TYPE ty_sha1,
+      get_branch_name
+        RETURNING VALUE(rv_branch) TYPE string,
+      get_branch_sha1
+        RETURNING VALUE(rv_branch) TYPE ty_sha1,
       add
         IMPORTING iv_path     TYPE ty_file-path
                   iv_filename TYPE ty_file-filename
@@ -65,7 +72,9 @@ CLASS lcl_stage DEFINITION FINAL.
         RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
 
   PRIVATE SECTION.
-    DATA: mt_stage TYPE ty_stage_tt.
+    DATA: mt_stage       TYPE ty_stage_tt,
+          mv_branch_name TYPE string,
+          mv_branch_sha1 TYPE ty_sha1.
 
     METHODS:
       append
@@ -78,6 +87,19 @@ CLASS lcl_stage DEFINITION FINAL.
 ENDCLASS.   "lcl_stage DEFINITION
 
 CLASS lcl_stage IMPLEMENTATION.
+
+  METHOD constructor.
+    mv_branch_name = iv_branch_name.
+    mv_branch_sha1 = iv_branch_sha1.
+  ENDMETHOD.
+
+  METHOD get_branch_name.
+    rv_branch = mv_branch_name.
+  ENDMETHOD.
+
+  METHOD get_branch_sha1.
+    rv_branch = mv_branch_sha1.
+  ENDMETHOD.
 
   METHOD lookup.
 
