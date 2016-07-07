@@ -136,6 +136,31 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
 
+      IF <ls_dd03p>-comptype = 'E'.
+* type specified via data element
+        CLEAR: <ls_dd03p>-domname,
+          <ls_dd03p>-inttype,
+          <ls_dd03p>-intlen,
+          <ls_dd03p>-mask,
+          <ls_dd03p>-memoryid,
+          <ls_dd03p>-headlen,
+          <ls_dd03p>-scrlen1,
+          <ls_dd03p>-scrlen2,
+          <ls_dd03p>-scrlen3,
+          <ls_dd03p>-datatype,
+          <ls_dd03p>-leng,
+          <ls_dd03p>-outputlen,
+          <ls_dd03p>-entitytab,
+          <ls_dd03p>-dommaster,
+          <ls_dd03p>-domname3l.
+      ENDIF.
+
+      IF <ls_dd03p>-shlporigin = 'D'.
+* search help from domain
+        CLEAR: <ls_dd03p>-shlpfield,
+          <ls_dd03p>-shlpname.
+      ENDIF.
+
 * XML output assumes correct field content
       IF <ls_dd03p>-routputlen = '      '.
         CLEAR <ls_dd03p>-routputlen.
