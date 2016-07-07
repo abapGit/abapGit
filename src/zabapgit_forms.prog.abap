@@ -154,7 +154,7 @@ FORM output.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
-  APPEND: 'CRET' TO lt_ucomm.  "Button Execute
+  APPEND 'CRET' TO lt_ucomm.  "Button Execute
 
   CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
     EXPORTING

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_PROG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <PROGDIR>
+    <NAME>ZABAPGIT_OBJECT_DOCT</NAME>
+    <STATE>A</STATE>
+    <SQLX/>
+    <EDTX/>
+    <VARCL>X</VARCL>
+    <DBAPL/>
+    <DBNA/>
+    <CLAS/>
+    <TYPE/>
+    <OCCURS/>
+    <SUBC>I</SUBC>
+    <APPL/>
+    <SECU/>
+    <CNAM/>
+    <CDAT>0000-00-00</CDAT>
+    <UNAM/>
+    <UDAT>0000-00-00</UDAT>
+    <VERN/>
+    <LEVL/>
+    <RSTAT/>
+    <RMAND/>
+    <RLOAD>E</RLOAD>
+    <FIXPT/>
+    <SSET/>
+    <SDATE>0000-00-00</SDATE>
+    <STIME/>
+    <IDATE>0000-00-00</IDATE>
+    <ITIME/>
+    <LDBNAME/>
+    <UCCHECK>X</UCCHECK>
+   </PROGDIR>
+   <TPOOL>
+    <item>
+     <ID>R</ID>
+     <KEY/>
+     <ENTRY>Include ZABAPGIT_OBJECT_DOCT</ENTRY>
+     <LENGTH>28</LENGTH>
+     <SPLIT/>
+    </item>
+   </TPOOL>
+  </asx:values>
+ </asx:abap>
+</abapGit>

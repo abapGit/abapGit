@@ -404,8 +404,8 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     ro_html->add( '<form id="commit_form" method="post" action="sapevent:merge">' ).
     ro_html->add( 'Merge' ) ##NO_TEXT.
     ro_html->add( form_select( 'source' ) ).
-    ro_html->add( 'into' ).
-    ro_html->add( form_select( 'target' ) ).
+    ro_html->add( 'into' ) ##NO_TEXT.
+    ro_html->add( form_select( 'target' ) ) ##NO_TEXT.
     ro_html->add( '<input type="submit" value="Submit">' ).
     ro_html->add( '</form>' ).
 
@@ -432,7 +432,8 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     _add '<canvas id="gitGraph"></canvas>'.
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
-      'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js"></script>' ).
+      'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js">' &&
+      '</script>' ) ##NO_TEXT.
 
     _add '<script type="text/javascript">'.
     _add 'var myTemplateConfig = {'.
@@ -529,7 +530,6 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
   METHOD decode_merge.
 
     DATA: lv_string  TYPE string,
-          ls_content TYPE lcl_persistence_db=>ty_content,
           lt_fields  TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.

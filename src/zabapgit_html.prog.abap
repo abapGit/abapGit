@@ -428,9 +428,10 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
              opt TYPE char1,
              typ TYPE char1,
            END OF ty_item.
-    TYPES:  tt_items TYPE STANDARD TABLE OF ty_item.
 
-    DATA    mt_items TYPE tt_items.
+    TYPES tt_items TYPE STANDARD TABLE OF ty_item.
+
+    DATA mt_items TYPE tt_items.
 
 ENDCLASS. "lcl_html_toolbar DEFINITION
 
