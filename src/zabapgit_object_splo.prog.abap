@@ -1,0 +1,123 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZABAPGIT_OBJECT_SPLO
+*&---------------------------------------------------------------------*
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_splo DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_splo DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+
+ENDCLASS.                    "lcl_object_splo DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_splo IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_splo IMPLEMENTATION.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "lif_object~get_metadata
+
+  METHOD lif_object~serialize.
+
+    DATA: ls_tsp1t TYPE tsp1t,
+          ls_tsp1d TYPE tsp1d,
+          ls_tsp0p TYPE tsp0p.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tsp1t INTO ls_tsp1t
+      WHERE papart = ms_item-obj_name
+      AND spras = mv_language.            "#EC CI_GENBUFF "#EC CI_SUBRC
+    SELECT SINGLE * FROM tsp1d INTO ls_tsp1d
+      WHERE papart = ms_item-obj_name.                    "#EC CI_SUBRC
+    SELECT SINGLE * FROM tsp0p INTO ls_tsp0p
+      WHERE pdpaper = ms_item-obj_name.                   "#EC CI_SUBRC
+
+    CLEAR: ls_tsp1d-chgname1,
+           ls_tsp1d-chgtstmp1,
+           ls_tsp1d-chgsaprel1,
+           ls_tsp1d-chgsapsys1.
+
+    io_xml->add( iv_name = 'TSPLT'
+                 ig_data = ls_tsp1t ).
+    io_xml->add( iv_name = 'TSPLD'
+                 ig_data = ls_tsp1d ).
+    io_xml->add( iv_name = 'TSP0P'
+                 ig_data = ls_tsp0p ).
+
+  ENDMETHOD.                    "lif_object~serialize
+
+  METHOD lif_object~deserialize.
+
+    DATA: lv_obj_name TYPE e071-obj_name,
+          ls_tsp1t    TYPE tsp1t,
+          ls_tsp1d    TYPE tsp1d,
+          ls_tsp0p    TYPE tsp0p.
+
+
+    io_xml->read( EXPORTING iv_name = 'TSPLT'
+                  CHANGING cg_data = ls_tsp1t ).
+    io_xml->read( EXPORTING iv_name = 'TSPLD'
+                  CHANGING cg_data = ls_tsp1d ).
+    io_xml->read( EXPORTING iv_name = 'TSP0P'
+                  CHANGING cg_data = ls_tsp0p ).
+
+    MODIFY tsp1t FROM ls_tsp1t.                           "#EC CI_SUBRC
+    MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
+    MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
+
+    lv_obj_name = ms_item-obj_name.
+
+    CALL FUNCTION 'TR_TADIR_POPUP_ENTRY_E071'
+      EXPORTING
+        wi_e071_pgmid     = 'R3TR'
+        wi_e071_object    = ms_item-obj_type
+        wi_e071_obj_name  = lv_obj_name
+        wi_tadir_devclass = iv_package.
+
+  ENDMETHOD.                    "lif_object~deserialize
+
+  METHOD lif_object~delete.
+
+    DELETE FROM tsp1t WHERE papart = ms_item-obj_name. "#EC CI_NOFIRST "#EC CI_SUBRC
+    DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
+    DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_delete_tadir_entry = abap_true
+        wi_tadir_pgmid        = 'R3TR'
+        wi_tadir_object       = ms_item-obj_type
+        wi_tadir_obj_name     = ms_item-obj_name
+        wi_test_modus         = abap_false.
+
+  ENDMETHOD.                    "lif_object~delete
+
+  METHOD lif_object~exists.
+
+    DATA: lv_papart TYPE tsp1d-papart.
+
+
+    SELECT SINGLE papart INTO lv_papart FROM tsp1d
+      WHERE papart = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.                    "lif_object~exists
+
+  METHOD lif_object~jump.
+    _raise 'todo, jump, SPLO'.
+  ENDMETHOD.                    "lif_object~jump
+
+ENDCLASS.                    "lcl_object_splo IMPLEMENTATION
