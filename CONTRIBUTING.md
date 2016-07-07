@@ -26,3 +26,5 @@ https://guides.github.com/activities/contributing-to-open-source/
 5: After the pull request is merged, abapmerge will automatically run to build the non-include version of abapGit.
 
 Every time a commit is pushed to the master branch, https://travis-ci.org/ will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file, the build can be downloaded from http://larshp.github.io/abapGit/build/zabapgit.txt
+
+Alternatively, use the GitHub webinterface to change the files and submit a pull request.
