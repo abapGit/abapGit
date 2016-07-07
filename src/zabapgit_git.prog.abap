@@ -29,7 +29,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * local to remote
     CLASS-METHODS receive_pack
-      IMPORTING io_repo        TYPE REF TO lcl_repo_online
+      IMPORTING iv_url         TYPE string
                 iv_old         TYPE ty_sha1
                 iv_new         TYPE ty_sha1
                 iv_branch_name TYPE string
@@ -64,10 +64,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS find_branch
-      IMPORTING io_repo    TYPE REF TO lcl_repo_online
-                iv_service TYPE string
-      EXPORTING ei_client  TYPE REF TO if_http_client
-                ev_branch  TYPE ty_sha1
+      IMPORTING iv_url         TYPE string
+                iv_service     TYPE string
+                iv_branch_name TYPE string
+      EXPORTING ei_client      TYPE REF TO if_http_client
+                ev_branch      TYPE ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
@@ -86,7 +87,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS set_headers
-      IMPORTING io_repo    TYPE REF TO lcl_repo_online
+      IMPORTING iv_url     TYPE string
                 iv_service TYPE string
                 ii_client  TYPE REF TO if_http_client
       RAISING   lcx_exception.
@@ -214,7 +215,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         name  = '~request_method'
         value = 'POST' ).
 
-    lv_value = lcl_url=>path_name( io_repo->get_url( ) ) &&
+    lv_value = lcl_url=>path_name( iv_url ) &&
       '.git/git-' &&
       iv_service &&
       '-pack'.
@@ -326,23 +327,25 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     branch_list(
       EXPORTING
-        iv_url          = io_repo->get_url( )
+        iv_url          = iv_url
         iv_service      = iv_service
       IMPORTING
         ei_client       = ei_client
         et_branch_list  = lt_branch_list ).
 
-    IF io_repo->get_branch_name( ) IS INITIAL.
-      _raise 'branch empty'.
-    ENDIF.
+    IF ev_branch IS SUPPLIED.
+      IF iv_branch_name IS INITIAL.
+        _raise 'branch empty'.
+      ENDIF.
 
-    READ TABLE lt_branch_list INTO ls_branch_list
-      WITH KEY name = io_repo->get_branch_name( ).
-    IF sy-subrc <> 0.
-      _raise 'Branch not found'.
-    ENDIF.
+      READ TABLE lt_branch_list INTO ls_branch_list
+        WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        _raise 'Branch not found'.
+      ENDIF.
 
-    ev_branch = ls_branch_list-sha1.
+      ev_branch = ls_branch_list-sha1.
+    ENDIF.
 
   ENDMETHOD.                    "find_branch
 
@@ -445,13 +448,14 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     find_branch(
       EXPORTING
-        io_repo    = io_repo
-        iv_service = c_service-receive
+        iv_url         = iv_url
+        iv_service     = c_service-receive
+        iv_branch_name = iv_branch_name
       IMPORTING
-        ei_client  = li_client ).
+        ei_client      = li_client ).
 
     set_headers(
-      io_repo    = io_repo
+      iv_url     = iv_url
       iv_service = c_service-receive
       ii_client  = li_client ).
 
@@ -576,11 +580,12 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     find_branch(
       EXPORTING
-        io_repo    = io_repo
-        iv_service = c_service-upload
+        iv_url         = io_repo->get_url( )
+        iv_service     = c_service-upload
+        iv_branch_name = io_repo->get_branch_name( )
       IMPORTING
-        ei_client  = li_client
-        ev_branch  = ev_branch ).
+        ei_client      = li_client
+        ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.
       APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
@@ -589,7 +594,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lt_branches = it_branches.
     ENDIF.
 
-    set_headers( io_repo    = io_repo
+    set_headers( iv_url     = io_repo->get_url( )
                  iv_service = c_service-upload
                  ii_client  = li_client ).
 
@@ -1404,7 +1409,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 io_repo          TYPE REF TO lcl_repo_online
                 it_trees         TYPE ty_trees_tt
                 it_blobs         TYPE ty_files_tt
-                iv_branch        TYPE ty_sha1
+                io_stage         TYPE REF TO lcl_stage
       RETURNING VALUE(rv_branch) TYPE ty_sha1
       RAISING   lcx_exception.
 
@@ -1437,7 +1442,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
 * new commit
     ls_commit-tree      = <ls_tree>-sha1.
-    ls_commit-parent    = iv_branch.
+    ls_commit-parent    = io_stage->get_branch_sha1( ).
     CONCATENATE is_comment-username space '<' is_comment-email '>' space lv_time
       INTO ls_commit-author RESPECTING BLANKS.
     ls_commit-committer = ls_commit-author.
@@ -1474,10 +1479,10 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       iv_data = lv_commit ).
 
     lcl_git_transport=>receive_pack(
-      io_repo        = io_repo
-      iv_old         = io_repo->get_sha1_local( )
+      iv_url = io_repo->get_url( )
+      iv_old         = io_stage->get_branch_sha1( )
       iv_new         = rv_branch
-      iv_branch_name = io_repo->get_branch_name( )
+      iv_branch_name = io_stage->get_branch_name( )
       iv_pack        = lv_pack ).
 
   ENDMETHOD.                    "receive_pack
@@ -1496,7 +1501,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     lv_pack = lcl_git_pack=>encode( lt_objects ).
 
     lcl_git_transport=>receive_pack(
-      io_repo        = io_repo
+      iv_url         = io_repo->get_url( )
       iv_old         = lv_zero
       iv_new         = iv_from
       iv_branch_name = iv_name
@@ -1510,14 +1515,21 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lt_blobs    TYPE ty_files_tt,
           lv_sha1     TYPE ty_sha1,
           lt_trees    TYPE ty_trees_tt,
+          lt_objects  TYPE ty_objects_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage,
                    <ls_exp>   LIKE LINE OF lt_expanded.
 
 
-    lt_expanded = full_tree( it_objects = io_repo->get_objects( )
-                             iv_branch  = io_repo->get_sha1_remote( ) ).
+    IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
+      lt_objects = io_repo->get_objects( ).
+    ELSE.
+      BREAK-POINT.
+    ENDIF.
+
+    lt_expanded = full_tree( it_objects = lt_objects
+                             iv_branch  = io_stage->get_branch_sha1( ) ).
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
@@ -1535,7 +1547,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             <ls_exp>-chmod = gc_chmod-file.
           ENDIF.
 
-          lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_stage>-file-data ).
+          lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob
+                                    iv_data = <ls_stage>-file-data ).
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
@@ -1555,7 +1568,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                               io_repo    = io_repo
                               it_trees   = lt_trees
                               it_blobs   = lt_blobs
-                              iv_branch  = io_repo->get_sha1_remote( ) ).
+                              io_stage   = io_stage ).
 
   ENDMETHOD.                    "push
 

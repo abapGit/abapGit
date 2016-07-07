@@ -129,12 +129,15 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     handle_stage_ignore( io_stage ).
 
-
     lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
                                          io_repo    = me
                                          io_stage   = io_stage ).
 
-    set( iv_sha1 = lv_branch ).
+    IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
+* pushing to the branch currently represented by this repository object
+      set( iv_sha1 = lv_branch ).
+    ENDIF.
+
     refresh( ).
     set( it_checksums = build_local_checksums( ) ).
 
