@@ -1033,6 +1033,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
            rs_progdir-cdat,
            rs_progdir-unam,
            rs_progdir-udat,
+           rs_progdir-levl,
            rs_progdir-vern,
            rs_progdir-rmand,
            rs_progdir-sdate,
