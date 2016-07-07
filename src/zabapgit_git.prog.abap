@@ -823,15 +823,24 @@ CLASS lcl_git_pack IMPLEMENTATION.
     lv_tree_lower = is_commit-tree.
     TRANSLATE lv_tree_lower TO LOWER CASE.
 
-    lv_parent_lower = is_commit-parent.
-    TRANSLATE lv_parent_lower TO LOWER CASE.
-
     lv_string = ''.
 
     CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
     CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
+      lv_parent_lower = is_commit-parent.
+      TRANSLATE lv_parent_lower TO LOWER CASE.
+
+      CONCATENATE 'parent' lv_parent_lower
+        INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
+      CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+    ENDIF.
+
+    IF NOT is_commit-parent2 IS INITIAL.
+      lv_parent_lower = is_commit-parent2.
+      TRANSLATE lv_parent_lower TO LOWER CASE.
+
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
       CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
@@ -1443,6 +1452,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 * new commit
     ls_commit-tree      = <ls_tree>-sha1.
     ls_commit-parent    = io_stage->get_branch_sha1( ).
+    ls_commit-parent2   = io_stage->get_merge_source( ).
     CONCATENATE is_comment-username space '<' is_comment-email '>' space lv_time
       INTO ls_commit-author RESPECTING BLANKS.
     ls_commit-committer = ls_commit-author.
@@ -1516,16 +1526,25 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lv_sha1     TYPE ty_sha1,
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE ty_objects_tt,
+          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
-    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage,
-                   <ls_exp>   LIKE LINE OF lt_expanded.
+    FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,
+                   <ls_branch> LIKE LINE OF lt_branches,
+                   <ls_exp>    LIKE LINE OF lt_expanded.
 
 
     IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
+* objects cached in io_repo can be used, if pushing to the branch configured in repo
       lt_objects = io_repo->get_objects( ).
     ELSE.
-      BREAK-POINT.
+      APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
+      <ls_branch>-name = io_stage->get_branch_name( ).
+      <ls_branch>-sha1 = io_stage->get_branch_sha1( ).
+
+      lcl_git_transport=>upload_pack( EXPORTING io_repo     = io_repo
+                                                it_branches = lt_branches
+                                      IMPORTING et_objects  = lt_objects ).
     ENDIF.
 
     lt_expanded = full_tree( it_objects = lt_objects

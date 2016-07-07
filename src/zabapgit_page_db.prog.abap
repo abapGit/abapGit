@@ -254,7 +254,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     LOOP AT lt_data ASSIGNING <ls_data>.
       CLEAR lv_trclass.
       IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"'.
+        lv_trclass = ' class="firstrow"' ##NO_TEXT.
       ENDIF.
 
       IF strlen( <ls_data>-data_str ) >= 250.

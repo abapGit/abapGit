@@ -67,7 +67,9 @@ CLASS lcl_merge IMPLEMENTATION.
           lt_atarget TYPE ty_ancestor_tt.
 
 
-    ASSERT NOT iv_source = iv_target.
+    IF iv_source = iv_target.
+      _raise 'source = target'.
+    ENDIF.
 
     CLEAR gs_merge.
 
@@ -138,8 +140,9 @@ CLASS lcl_merge IMPLEMENTATION.
 
     CREATE OBJECT gs_merge-stage
       EXPORTING
-        iv_branch_name = gs_merge-target-name
-        iv_branch_sha1 = gs_merge-target-sha1.
+        iv_branch_name  = gs_merge-target-name
+        iv_branch_sha1  = gs_merge-target-sha1
+        iv_merge_source = gs_merge-source-sha1.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
 
@@ -284,17 +287,17 @@ CLASS lcl_merge IMPLEMENTATION.
   METHOD fetch_git.
 
     DEFINE _find.
-      lv_name = 'refs/heads/' && &1.
+      lv_name = 'refs/heads/' && &1 ##NO_TEXT.
       READ TABLE lt_branches INTO &2 WITH KEY name = lv_name.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+        _raise 'branch not found'.
+      ENDIF.
       APPEND &2 TO lt_upload.
     END-OF-DEFINITION.
 
     DATA: lv_name     TYPE string,
           lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
           lt_upload   TYPE lcl_git_transport=>ty_branch_list_tt.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_upload.
 
 
     lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
@@ -358,7 +361,9 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-merge.
-        ASSERT ms_merge-stage->count( ) > 0.
+        IF ms_merge-stage->count( ) = 0.
+          _raise 'nothing to merge'.
+        ENDIF.
 
         CREATE OBJECT ei_page TYPE lcl_gui_page_commit
           EXPORTING

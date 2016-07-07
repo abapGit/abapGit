@@ -50,18 +50,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD stage_handle_action.
 
-    DATA: ls_file TYPE ty_file,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_file TYPE ty_file.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
 
-    IF iv_action = 'stage_all'.
-      lv_key = lcl_html_action_utils=>repo_key_decode( iv_getdata ).
-    ELSE.
+    IF iv_action <> 'stage_all'.
       lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
-                                          IMPORTING ev_key    = lv_key
-                                                    eg_file   = ls_file ).
+                                          IMPORTING eg_file   = ls_file ).
     ENDIF.
 
     CASE iv_action.
@@ -80,11 +76,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                          iv_data     = <ls_file>-file-data ).
         ENDLOOP.
       WHEN 'stage_reset'.
-        mo_stage->reset( iv_path = ls_file-path iv_filename = ls_file-filename ).
+        mo_stage->reset( iv_path     = ls_file-path
+                         iv_filename = ls_file-filename ).
       WHEN 'stage_ignore'.
-        mo_stage->ignore( iv_path = ls_file-path iv_filename = ls_file-filename ).
+        mo_stage->ignore( iv_path     = ls_file-path
+                          iv_filename = ls_file-filename ).
       WHEN 'stage_rm'.
-        mo_stage->rm( iv_path = ls_file-path iv_filename = ls_file-filename ).
+        mo_stage->rm( iv_path     = ls_file-path
+                      iv_filename = ls_file-filename ).
     ENDCASE.
 
   ENDMETHOD.        "stage_handle_action
@@ -153,10 +152,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
       CREATE OBJECT lo_toolbar.
       IF lv_method IS NOT INITIAL.
-        lo_toolbar->add( iv_txt = 'reset'  iv_act = 'stage_reset?' && lv_param ).
+        lo_toolbar->add( iv_txt = 'reset'  iv_act = 'stage_reset?' && lv_param ) ##NO_TEXT.
       ELSE.
-        lo_toolbar->add( iv_txt = 'ignore' iv_act = 'stage_ignore?' && lv_param ).
-        lo_toolbar->add( iv_txt = 'remove' iv_act = 'stage_rm?' && lv_param ).
+        lo_toolbar->add( iv_txt = 'ignore' iv_act = 'stage_ignore?' && lv_param ) ##NO_TEXT.
+        lo_toolbar->add( iv_txt = 'remove' iv_act = 'stage_rm?' && lv_param ) ##NO_TEXT.
       ENDIF.
 
       IF lv_method IS INITIAL.

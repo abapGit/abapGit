@@ -895,11 +895,11 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
         CLEAR lv_nothing.
         CASE ls_per-method.
           WHEN lcl_persistence_background=>c_method-push.
-            lv_push = ' checked'.
+            lv_push = ' checked' ##NO_TEXT.
           WHEN lcl_persistence_background=>c_method-pull.
-            lv_pull = ' checked'.
+            lv_pull = ' checked' ##NO_TEXT.
           WHEN OTHERS.
-            lv_nothing = ' checked'.
+            lv_nothing = ' checked' ##NO_TEXT.
         ENDCASE.
 
         ro_html->add( '<h1>' && lo_online->get_name( ) && '</h1>' ).
@@ -1250,10 +1250,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF is_item-is_first = abap_true. " TR class
-      lv_trclass = 'firstrow'.
+      lv_trclass = 'firstrow' ##NO_TEXT.
     ENDIF.
     IF is_item-obj_name IS INITIAL.
-      lv_trclass = lv_trclass && ' unsupported'.
+      lv_trclass = lv_trclass && ' unsupported' ##NO_TEXT.
     ENDIF.
     IF lv_trclass IS NOT INITIAL.
       SHIFT lv_trclass LEFT DELETING LEADING space.

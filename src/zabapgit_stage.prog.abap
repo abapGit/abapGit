@@ -14,11 +14,6 @@ CLASS lcl_stage DEFINITION FINAL.
                  ignore TYPE ty_method VALUE 'I',
                END OF c_method.
 
-    CONSTANTS: BEGIN OF c_wftype,
-                 local  TYPE char1 VALUE 'L',
-                 remote TYPE char1 VALUE 'R',
-               END OF c_wftype.
-
     TYPES: BEGIN OF ty_stage,
              file   TYPE ty_file,
              method TYPE ty_method,
@@ -27,11 +22,6 @@ CLASS lcl_stage DEFINITION FINAL.
     TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
       WITH UNIQUE KEY file-path file-filename.
 
-    TYPES: BEGIN OF ty_work_file,
-             type TYPE char1,
-             file TYPE ty_file,
-           END OF ty_work_file.
-
     CLASS-METHODS method_description
       IMPORTING iv_method             TYPE ty_method
       RETURNING VALUE(rv_description) TYPE string
@@ -39,8 +29,9 @@ CLASS lcl_stage DEFINITION FINAL.
 
     METHODS:
       constructor
-        IMPORTING iv_branch_name TYPE string
-                  iv_branch_sha1 TYPE ty_sha1,
+        IMPORTING iv_branch_name  TYPE string
+                  iv_branch_sha1  TYPE ty_sha1
+                  iv_merge_source TYPE ty_sha1 OPTIONAL,
       get_branch_name
         RETURNING VALUE(rv_branch) TYPE string,
       get_branch_sha1
@@ -66,15 +57,18 @@ CLASS lcl_stage DEFINITION FINAL.
         IMPORTING iv_path          TYPE ty_file-path
                   iv_filename      TYPE ty_file-filename
         RETURNING VALUE(rv_method) TYPE ty_method,
+      get_merge_source
+        RETURNING VALUE(rv_source) TYPE ty_sha1,
       count
         RETURNING VALUE(rv_count) TYPE i,
       get_all
         RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
 
   PRIVATE SECTION.
-    DATA: mt_stage       TYPE ty_stage_tt,
-          mv_branch_name TYPE string,
-          mv_branch_sha1 TYPE ty_sha1.
+    DATA: mt_stage        TYPE ty_stage_tt,
+          mv_branch_name  TYPE string,
+          mv_branch_sha1  TYPE ty_sha1,
+          mv_merge_source TYPE ty_sha1.
 
     METHODS:
       append
@@ -91,10 +85,15 @@ CLASS lcl_stage IMPLEMENTATION.
   METHOD constructor.
     mv_branch_name = iv_branch_name.
     mv_branch_sha1 = iv_branch_sha1.
+    mv_merge_source = iv_merge_source.
   ENDMETHOD.
 
   METHOD get_branch_name.
     rv_branch = mv_branch_name.
+  ENDMETHOD.
+
+  METHOD get_merge_source.
+    rv_source = mv_merge_source.
   ENDMETHOD.
 
   METHOD get_branch_sha1.
