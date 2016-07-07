@@ -54,6 +54,11 @@ TYPES: BEGIN OF ty_repo_file,
        END OF ty_repo_file.
 TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
+TYPES: BEGIN OF ty_stage_files,
+         local  TYPE ty_files_item_tt,
+         remote TYPE ty_files_tt,
+       END OF ty_stage_files.
+
 CONSTANTS: BEGIN OF gc_type,
              commit TYPE ty_type VALUE 'commit',            "#EC NOTEXT
              tree   TYPE ty_type VALUE 'tree',              "#EC NOTEXT

@@ -21,6 +21,7 @@ CLASS lcl_merge DEFINITION FINAL.
              ttree  TYPE lcl_git_porcelain=>ty_expanded_tt,
              ctree  TYPE lcl_git_porcelain=>ty_expanded_tt,
              result TYPE lcl_git_porcelain=>ty_expanded_tt,
+             stage  TYPE REF TO lcl_stage,
            END OF ty_merge.
 
     CLASS-METHODS:
@@ -66,7 +67,9 @@ CLASS lcl_merge IMPLEMENTATION.
           lt_atarget TYPE ty_ancestor_tt.
 
 
-    ASSERT NOT iv_source = iv_target.
+    IF iv_source = iv_target.
+      _raise 'source = target'.
+    ENDIF.
 
     CLEAR gs_merge.
 
@@ -91,7 +94,6 @@ CLASS lcl_merge IMPLEMENTATION.
       it_objects = gt_objects
       iv_branch  = gs_merge-common-commit ).
 
-    BREAK-POINT.
     calculate_result( ).
 
     rs_merge = gs_merge.
@@ -110,6 +112,17 @@ CLASS lcl_merge IMPLEMENTATION.
 
   METHOD calculate_result.
 
+    DEFINE _from_source.
+      READ TABLE gt_objects ASSIGNING <ls_object>
+        WITH KEY type = gc_type-blob
+        sha1 = <ls_source>-sha1.
+      ASSERT sy-subrc = 0.
+
+      gs_merge-stage->add( iv_path     = <ls_file>-path
+                           iv_filename = <ls_file>-name
+                           iv_data     = <ls_object>-data ).
+    END-OF-DEFINITION.
+
     DATA: lt_files        TYPE lcl_git_porcelain=>ty_expanded_tt,
           lv_found_source TYPE abap_bool,
           lv_found_target TYPE abap_bool,
@@ -119,10 +132,17 @@ CLASS lcl_merge IMPLEMENTATION.
                    <ls_target> LIKE LINE OF lt_files,
                    <ls_common> LIKE LINE OF lt_files,
                    <ls_file>   LIKE LINE OF lt_files,
-                   <ls_result> LIKE LINE OF gs_merge-result.
+                   <ls_result> LIKE LINE OF gs_merge-result,
+                   <ls_object> LIKE LINE OF gt_objects.
 
 
     lt_files = all_files( ).
+
+    CREATE OBJECT gs_merge-stage
+      EXPORTING
+        iv_branch_name  = gs_merge-target-name
+        iv_branch_sha1  = gs_merge-target-sha1
+        iv_merge_source = gs_merge-source-sha1.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
 
@@ -149,6 +169,8 @@ CLASS lcl_merge IMPLEMENTATION.
           AND lv_found_common = abap_true
           AND <ls_target>-sha1 = <ls_common>-sha1.
 * deleted in source, skip
+        gs_merge-stage->rm( iv_path     = <ls_file>-path
+                            iv_filename = <ls_file>-name ).
         CONTINUE.
       ELSEIF lv_found_target = abap_false
           AND lv_found_common = abap_true
@@ -163,6 +185,7 @@ CLASS lcl_merge IMPLEMENTATION.
 
       IF lv_found_target = abap_false.
 * added in source
+        _from_source.
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF lv_found_source = abap_false.
 * added in target
@@ -184,6 +207,7 @@ CLASS lcl_merge IMPLEMENTATION.
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF <ls_target>-sha1 = <ls_common>-sha1.
 * changed in source
+        _from_source.
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF <ls_source>-sha1 = <ls_common>-sha1.
 * changed in target
@@ -263,17 +287,17 @@ CLASS lcl_merge IMPLEMENTATION.
   METHOD fetch_git.
 
     DEFINE _find.
-      lv_name = 'refs/heads/' && &1.
+      lv_name = 'refs/heads/' && &1 ##NO_TEXT.
       READ TABLE lt_branches INTO &2 WITH KEY name = lv_name.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+        _raise 'branch not found'.
+      ENDIF.
       APPEND &2 TO lt_upload.
     END-OF-DEFINITION.
 
     DATA: lv_name     TYPE string,
           lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
           lt_upload   TYPE lcl_git_transport=>ty_branch_list_tt.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_upload.
 
 
     lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
@@ -285,8 +309,6 @@ CLASS lcl_merge IMPLEMENTATION.
                                               iv_deepen = abap_false
                                               it_branches = lt_upload
                                     IMPORTING et_objects = gt_objects ).
-
-    DELETE gt_objects WHERE type = gc_type-blob.
 
   ENDMETHOD.
 
@@ -310,6 +332,14 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           ms_merge TYPE lcl_merge=>ty_merge.
 
+    CONSTANTS: BEGIN OF c_actions,
+                 merge TYPE string VALUE 'merge' ##NO_TEXT,
+               END OF c_actions.
+
+    METHODS:
+      build_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+
 ENDCLASS.                       "lcl_gui_page_merge DEFINITION
 
 CLASS lcl_gui_page_merge IMPLEMENTATION.
@@ -328,7 +358,28 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
-    BREAK-POINT.
+
+    CASE iv_action.
+      WHEN c_actions-merge.
+        IF ms_merge-stage->count( ) = 0.
+          _raise 'nothing to merge'.
+        ENDIF.
+
+        CREATE OBJECT ei_page TYPE lcl_gui_page_commit
+          EXPORTING
+            io_repo  = mo_repo
+            io_stage = ms_merge-stage.
+        ev_state = gc_event_state-new_page.
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add( iv_txt = 'Merge' iv_act = c_actions-merge ) ##NO_TEXT.
+
   ENDMETHOD.
 
   METHOD lif_gui_page~render.
@@ -361,9 +412,12 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( ) ).
-    ro_html->add( title( 'MERGE' ) ).
+    ro_html->add( title( iv_title = 'MERGE' io_menu = build_menu( ) ) ).
     ro_html->add( '<div id="toc">' ).
-    ro_html->add( render_repo_top( mo_repo ) ).
+    ro_html->add( render_repo_top(
+      io_repo         = mo_repo
+      iv_show_package = abap_false
+      iv_show_branch  = abap_false ) ).
 
     _add '<table>'.
     _add '<tr>'.
@@ -415,8 +469,6 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
       ro_html->add( '</tr>' ).
     ENDLOOP.
     ro_html->add( '</table>' ).
-
-    ro_html->add( '<br>Todo' ).
 
     ro_html->add( '</div>' ).
     ro_html->add( footer( ) ).

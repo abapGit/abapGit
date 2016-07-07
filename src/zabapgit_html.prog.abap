@@ -54,10 +54,6 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_string) TYPE string.
 
-    CLASS-METHODS repo_key_decode
-      IMPORTING iv_string     TYPE clike
-      RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key.
-
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
 *----------------------------------------------------------------------*
@@ -261,23 +257,6 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_key_encode
 
-  METHOD repo_key_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
-    IF sy-subrc = 0.
-      rv_key = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.                    "repo_key_decode
-
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -428,6 +407,7 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 *       CLASS lcl_html_toolbar DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar DEFINITION FINAL.
+
   PUBLIC SECTION.
     METHODS add    IMPORTING iv_txt TYPE string
                              io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
@@ -439,8 +419,6 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
                              iv_no_separator           TYPE abap_bool OPTIONAL
                              iv_vertical               TYPE abap_bool OPTIONAL
                    RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
-
-    METHODS reset.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
@@ -460,10 +438,6 @@ ENDCLASS. "lcl_html_toolbar DEFINITION
 *       CLASS lcl_html_toolbar IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar IMPLEMENTATION.
-
-  METHOD reset.
-    CLEAR mt_items.
-  ENDMETHOD.  "reset
 
   METHOD add.
     DATA ls_item TYPE ty_item.

@@ -101,8 +101,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rt_results) TYPE ty_results_tt
         RAISING   lcx_exception,
       push
-        IMPORTING is_comment TYPE ty_comment
-                  io_stage   TYPE REF TO lcl_stage
+        IMPORTING is_comment       TYPE ty_comment
+                  io_stage         TYPE REF TO lcl_stage
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -179,27 +179,12 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_installed) TYPE abap_bool
       RAISING   lcx_exception.
 
-    METHODS get_stage
-      IMPORTING iv_repo_key     TYPE lcl_persistence_db=>ty_value
-                iv_new          TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ro_stage) TYPE REF TO lcl_stage
-      RAISING   lcx_exception.
-
-    METHODS free_stage
-      IMPORTING iv_repo_key TYPE lcl_persistence_db=>ty_value.
-
   PRIVATE SECTION.
-
-    TYPES: BEGIN OF ty_stage_list,
-             repo_key TYPE lcl_persistence_db=>ty_value,
-             stage    TYPE REF TO lcl_stage,
-           END OF ty_stage_list.
 
     METHODS constructor.
 
     DATA: mv_init        TYPE abap_bool VALUE abap_false,
           mo_persistence TYPE REF TO lcl_persistence_repo,
-          mt_stages      TYPE TABLE OF ty_stage_list,
           mt_list        TYPE ty_repo_tt.
 
     METHODS add
