@@ -55,20 +55,12 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS repo_package_zip
-      RAISING lcx_exception.
-
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS create_branch_popup
-      EXPORTING ev_name   TYPE string
-                ev_cancel TYPE abap_bool
       RAISING   lcx_exception.
 
     METHODS create_branch
@@ -684,7 +676,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
                          iv_zip  = abap_false ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'packagezip'.
-        repo_package_zip( ).
+        lcl_popups=>repo_package_zip( ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'transportzip'.
         lcl_transport=>zip( ).
@@ -986,52 +978,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_remove
 
-  METHOD repo_package_zip.
-
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lv_returncode TYPE c,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    "               TAB           FLD       LABEL     DEF                 ATTR
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Export'             "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
-    ENDIF.
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    TRANSLATE <ls_field>-value TO UPPER CASE.
-
-    ls_data-key             = 'DUMMY'.
-    ls_data-package         = <ls_field>-value.
-    ls_data-master_language = sy-langu.
-
-    CREATE OBJECT lo_repo
-      EXPORTING
-        is_data = ls_data.
-
-    lcl_zip=>export( lo_repo ).
-
-  ENDMETHOD.                    "repo_package_zip
-
   METHOD reset.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
@@ -1067,44 +1013,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD create_branch_popup.
-
-    DATA: lv_answer TYPE c LENGTH 1,
-          lt_fields TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CLEAR ev_name.
-    CLEAR ev_cancel.
-
-*                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'refs/heads/branch_name'  ''.
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        popup_title     = 'Create branch'
-      IMPORTING
-        returncode      = lv_answer
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2 ##NO_TEXT.
-    IF sy-subrc <> 0.
-      _raise 'error from POPUP_GET_VALUES'.
-    ENDIF.
-
-    IF lv_answer = 'A'.
-      ev_cancel = abap_true.
-    ELSE.
-      READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-      ASSERT sy-subrc = 0.
-      ev_name = <ls_field>-value.
-    ENDIF.
-
-  ENDMETHOD.
-
   METHOD create_branch.
 
     DATA: lv_name   TYPE string,
@@ -1114,7 +1022,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
-    create_branch_popup(
+    lcl_popups=>create_branch_popup(
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
