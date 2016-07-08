@@ -396,7 +396,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         WHEN 'W3MI' OR 'W3HT'.
           lv_icon = |<img src="img/bin">|.
         WHEN ''.
-          " no icon
+          lv_icon = space. " no icon
         WHEN OTHERS.
           lv_icon = |<img src="img/obj">|.
       ENDCASE.
