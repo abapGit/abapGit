@@ -14,6 +14,13 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
 
+    CONSTANTS: BEGIN OF c_actions,
+                 newoffline    TYPE string VALUE 'newoffline' ##NO_TEXT,
+                 switch_branch TYPE string VALUE 'switch_branch' ##NO_TEXT,
+                 install       TYPE string VALUE 'install' ##NO_TEXT,
+                 show          TYPE string VALUE 'show' ##NO_TEXT,
+               END OF c_actions.
+
     TYPES: BEGIN OF ty_repo_item,
              obj_type TYPE tadir-object,
              obj_name TYPE tadir-obj_name,
@@ -23,7 +30,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
     DATA: mv_show TYPE lcl_persistence_db=>ty_value.
-
 
     METHODS:
       check_show
@@ -137,9 +143,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = 'install' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Clone'            iv_act = c_actions-install ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
     IF needs_installation( ) = abap_true.
       ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
     ENDIF.
@@ -238,7 +244,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_sub->add( iv_txt = 'Uninstall'
                  iv_act = |uninstall?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Switch branch'
-                 iv_act = |switch_branch?{ lv_key }| ).
+                 iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Reset'
                  iv_act = |reset?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Create branch'
@@ -474,7 +480,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     LOOP AT it_list INTO lo_repo.
       IF mv_show = lo_repo->get_key( ).
         lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                         iv_act = |show?{ lo_repo->get_key( ) }|
+                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
                          iv_opt = gc_html_opt-emphas ).
       ELSE.
         lo_toolbar->add( iv_txt = lo_repo->get_name( )
@@ -517,8 +523,28 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
+    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          lo_repo TYPE REF TO lcl_repo,
+          lv_url  TYPE string.
+
+
     CASE iv_action.
-      WHEN 'show'.
+      WHEN c_actions-newoffline.
+        lo_repo = lcl_popups=>repo_new_offline( ).
+        mv_show = lo_repo->get_key( ).
+        lcl_app=>user( )->set_repo_show( mv_show ).
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-switch_branch.
+        lv_key   = iv_getdata.
+        lcl_popups=>switch_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-install.
+        lv_url = iv_getdata.
+        lo_repo = lcl_popups=>repo_clone( lv_url ).
+        mv_show = lo_repo->get_key( ).
+        lcl_app=>user( )->set_repo_show( mv_show ).
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-show.
         mv_show = iv_getdata.
         lcl_app=>user( )->set_repo_show( mv_show ).
         ev_state = gc_event_state-re_render.

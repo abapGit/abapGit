@@ -101,8 +101,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rt_results) TYPE ty_results_tt
         RAISING   lcx_exception,
       push
-        IMPORTING is_comment       TYPE ty_comment
-                  io_stage         TYPE REF TO lcl_stage
+        IMPORTING is_comment TYPE ty_comment
+                  io_stage   TYPE REF TO lcl_stage
         RAISING   lcx_exception.
 
   PRIVATE SECTION.

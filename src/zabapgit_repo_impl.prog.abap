@@ -435,7 +435,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    ASSERT 1 = 0.
+    _raise 'repo not found, get'.
 
   ENDMETHOD.                    "get
 
