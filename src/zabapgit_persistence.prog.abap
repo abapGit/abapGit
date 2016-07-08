@@ -684,17 +684,12 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
-    METHODS is_hidden
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(rv_hidden) TYPE abap_bool
-      RAISING   lcx_exception.
-
-    METHODS hide
+    METHODS set_repo_show
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS unhide
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+    METHODS get_repo_show
+      RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -708,9 +703,9 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_user,
-             username    TYPE string,
-             email       TYPE string,
-             repo_hidden TYPE ty_repo_hidden_tt,
+             username  TYPE string,
+             email     TYPE string,
+             repo_show TYPE lcl_persistence_repo=>ty_repo-key,
            END OF ty_user.
 
     METHODS constructor
@@ -982,6 +977,23 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD set_repo_show.
+
+    DATA: ls_user TYPE ty_user.
+
+
+    ls_user = read( ).
+    ls_user-repo_show = iv_key.
+    update( ls_user ).
+
+  ENDMETHOD.
+
+  METHOD get_repo_show.
+
+    rv_key = read( )-repo_show.
+
+  ENDMETHOD.
+
   METHOD update.
 
     DATA: lv_xml TYPE string.
@@ -1011,43 +1023,6 @@ CLASS lcl_persistence_user IMPLEMENTATION.
   METHOD get_username.
 
     rv_username = read( )-username.
-
-  ENDMETHOD.
-
-  METHOD is_hidden.
-
-    DATA: lt_hidden TYPE ty_repo_hidden_tt.
-
-
-    lt_hidden = read( )-repo_hidden.
-    READ TABLE lt_hidden FROM iv_key TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      rv_hidden = abap_true.
-    ELSE.
-      rv_hidden = abap_false.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD hide.
-
-    DATA: ls_user TYPE ty_user.
-
-
-    ls_user = read( ).
-    APPEND iv_key TO ls_user-repo_hidden.
-    update( ls_user ).
-
-  ENDMETHOD.
-
-  METHOD unhide.
-
-    DATA: ls_user TYPE ty_user.
-
-
-    ls_user = read( ).
-    DELETE TABLE ls_user-repo_hidden FROM iv_key.
-    update( ls_user ).
 
   ENDMETHOD.
 

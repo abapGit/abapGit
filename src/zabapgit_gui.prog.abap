@@ -730,21 +730,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'transportzip'.
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'hide'.
-        lv_key   = iv_getdata.
-        lcl_app=>user( )->hide( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'unhide'.
-        lv_key   = iv_getdata.
-        lcl_app=>user( )->unhide( lv_key ).
-        ev_state = gc_event_state-re_render.
       WHEN 'refresh'.
         lv_key = iv_getdata.
-        IF lv_key IS INITIAL. " Refresh all or single
-          lcl_app=>repo_srv( )->refresh( ).
-        ELSE.
-          lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-        ENDIF.
+        lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
         ev_state = gc_event_state-re_render.
 
         " Repository online actions

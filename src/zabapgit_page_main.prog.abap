@@ -5,8 +5,12 @@
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render     REDEFINITION.
-    METHODS lif_gui_page~get_assets REDEFINITION.
+    METHODS:
+      constructor
+        RAISING lcx_exception,
+      lif_gui_page~render     REDEFINITION,
+      lif_gui_page~on_event   REDEFINITION,
+      lif_gui_page~get_assets REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -16,65 +20,95 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
              is_first TYPE abap_bool,
              files    TYPE tt_repo_files,
            END OF ty_repo_item.
-    TYPES   tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
+    TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    DATA: mv_show TYPE lcl_persistence_db=>ty_value.
 
-    METHODS render_error
-      IMPORTING ix_error       TYPE REF TO lcx_exception
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
-    METHODS render_toc
-      IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS build_main_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
-
-    METHODS render_repo_menu
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS render_menu_hidden
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS render_repo
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS extract_repo_content
-      IMPORTING io_repo       TYPE REF TO lcl_repo
-      EXPORTING et_repo_items TYPE tt_repo_items
-                eo_log        TYPE REF TO lcl_log
-      RAISING   lcx_exception.
-
-    METHODS render_repo_item
-      IMPORTING io_repo        TYPE REF TO lcl_repo
-                is_item        TYPE ty_repo_item
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS render_obj_jump_link
-      IMPORTING iv_obj_type    TYPE tadir-object
-                iv_obj_name    TYPE tadir-obj_name
-      RETURNING VALUE(rv_html) TYPE string.
-
-    METHODS render_explore
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
-    METHODS needs_installation
-      RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+    METHODS:
+      check_show
+        RAISING lcx_exception,
+      styles
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      render_error
+        IMPORTING ix_error       TYPE REF TO lcx_exception
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      render_toc
+        IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      build_main_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+      render_repo_menu
+        IMPORTING io_repo        TYPE REF TO lcl_repo
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      render_repo
+        IMPORTING io_repo        TYPE REF TO lcl_repo
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      extract_repo_content
+        IMPORTING io_repo       TYPE REF TO lcl_repo
+        EXPORTING et_repo_items TYPE tt_repo_items
+                  eo_log        TYPE REF TO lcl_log
+        RAISING   lcx_exception,
+      render_repo_item
+        IMPORTING io_repo        TYPE REF TO lcl_repo
+                  is_item        TYPE ty_repo_item
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      render_obj_jump_link
+        IMPORTING iv_obj_type    TYPE tadir-object
+                  iv_obj_name    TYPE tadir-obj_name
+        RETURNING VALUE(rv_html) TYPE string,
+      render_explore
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      needs_installation
+        RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
 
 ENDCLASS.
 
 CLASS lcl_gui_page_main IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( ).
+
+    mv_show = lcl_app=>user( )->get_repo_show( ).
+
+    check_show( ).
+
+  ENDMETHOD.
+
+  METHOD check_show.
+
+    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
+          lo_repo  LIKE LINE OF lt_repos.
+
+
+    TRY.
+        lt_repos = lcl_app=>repo_srv( )->list( ).
+      CATCH lcx_exception.
+        RETURN.
+    ENDTRY.
+
+    IF mv_show IS INITIAL.
+      READ TABLE lt_repos INTO lo_repo INDEX 1.
+      ASSERT sy-subrc = 0.
+      mv_show = lo_repo->get_key( ).
+    ELSE.
+      TRY.
+* verify the key exists
+          lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+        CATCH lcx_exception.
+          READ TABLE lt_repos INTO lo_repo INDEX 1.
+          ASSERT sy-subrc = 0.
+          mv_show = lo_repo->get_key( ).
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD render_obj_jump_link.
 
@@ -103,7 +137,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Refresh all'      iv_act = 'refresh' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Clone'            iv_act = 'install' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = 'newoffline' ) ##NO_TEXT.
@@ -155,26 +188,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '.repo_tab td.files span  { display: block; }'.
     _add '.repo_tab td.cmd span    { display: block; }'.
     _add '.repo_tab td.cmd a       { display: block; }'.
-
-  ENDMETHOD.
-
-  METHOD render_menu_hidden.
-
-    DATA: lv_key     TYPE lcl_persistence_db=>ty_value,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
-
-
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_toolbar.
-
-    lv_key = io_repo->get_key( ).
-
-    lo_toolbar->add( iv_txt = 'Show'
-                     iv_act = |unhide?{ lv_key }| ).
-
-    ro_html->add( '<div class="paddings right">' ).
-    ro_html->add( lo_toolbar->render( ) ).
-    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -232,13 +245,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                  iv_act = |create_branch?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Branch overview'
                  iv_act = |branch_overview?{ lv_key }| ).
+
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_sub ) ##NO_TEXT.
 
     lo_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |refresh?{ lv_key }| ).
-    lo_toolbar->add( iv_txt = 'Hide'
-                     iv_act = |hide?{ lv_key }| ).
 
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -247,6 +259,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_repo.
+
     DATA: lt_repo_items TYPE tt_repo_items,
           lx_error      TYPE REF TO lcx_exception,
           lo_log        TYPE REF TO lcl_log.
@@ -259,43 +272,38 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo ) ).
 
-    IF lcl_app=>user( )->is_hidden( io_repo->get_key( ) ) = abap_false.
-      TRY.
-          extract_repo_content( EXPORTING io_repo       = io_repo
-                                IMPORTING et_repo_items = lt_repo_items
-                                          eo_log        = lo_log ).
+    TRY.
+        extract_repo_content( EXPORTING io_repo       = io_repo
+                              IMPORTING et_repo_items = lt_repo_items
+                                        eo_log        = lo_log ).
 
 * extract_repo_content must be called before rendering the menu
 * so that lo_log is filled with errors from the serialization
-          ro_html->add( render_repo_menu( io_repo ) ).
+        ro_html->add( render_repo_menu( io_repo ) ).
 
-          ro_html->add( '<table width="100%" class="repo_tab">' ).
-
-          IF lines( lt_repo_items ) = 0.
-            ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
-                         && '<center>Empty package</center>'
-                         && '</td></tr>' ) ##NO_TEXT.
-          ELSE.
-            LOOP AT lt_repo_items ASSIGNING <ls_item>.
-              ro_html->add( render_repo_item( io_repo = io_repo is_item = <ls_item> ) ).
-            ENDLOOP.
-          ENDIF.
-
-          ro_html->add( '</table>' ).
-
-          IF io_repo->is_offline( ) = abap_false.
-            ro_html->add( '<div class="log">' ).
+        IF io_repo->is_offline( ) = abap_false.
+          ro_html->add( '<div class="log">' ).
 * shows eg. list of unsupported objects
-            ro_html->add( lo_log->to_html( ) ).
-            ro_html->add( '</div>' ).
-          ENDIF.
-        CATCH lcx_exception INTO lx_error.
-          ro_html->add( render_repo_menu( io_repo ) ).
-          ro_html->add( render_error( lx_error ) ).
-      ENDTRY.
-    ELSE.
-      ro_html->add( render_menu_hidden( io_repo ) ).
-    ENDIF.
+          ro_html->add( lo_log->to_html( ) ).
+          ro_html->add( '</div>' ).
+        ENDIF.
+
+        ro_html->add( '<table width="100%" class="repo_tab">' ).
+        IF lines( lt_repo_items ) = 0.
+          ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
+                       && '<center>Empty package</center>'
+                       && '</td></tr>' ) ##NO_TEXT.
+        ELSE.
+          LOOP AT lt_repo_items ASSIGNING <ls_item>.
+            ro_html->add( render_repo_item( io_repo = io_repo is_item = <ls_item> ) ).
+          ENDLOOP.
+        ENDIF.
+        ro_html->add( '</table>' ).
+
+      CATCH lcx_exception INTO lx_error.
+        ro_html->add( render_repo_menu( io_repo ) ).
+        ro_html->add( render_error( lx_error ) ).
+    ENDTRY.
 
     ro_html->add( '</div>' ).
 
@@ -464,9 +472,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     LOOP AT it_list INTO lo_repo.
-      lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                       iv_typ = gc_action_type-url
-                       iv_act = |#repo{ lo_repo->get_key( ) }| ).
+      IF mv_show = lo_repo->get_key( ).
+        lo_toolbar->add( iv_txt = lo_repo->get_name( )
+                         iv_act = |show?{ lo_repo->get_key( ) }|
+                         iv_opt = gc_html_opt-emphas ).
+      ELSE.
+        lo_toolbar->add( iv_txt = lo_repo->get_name( )
+                         iv_act = |show?{ lo_repo->get_key( ) }| ).
+      ENDIF.
     ENDLOOP.
 
     ro_html->add( '<div id="toc">' ) ##NO_TEXT.
@@ -502,6 +515,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD lif_gui_page~on_event.
+
+    CASE iv_action.
+      WHEN 'show'.
+        mv_show = iv_getdata.
+        lcl_app=>user( )->set_repo_show( mv_show ).
+        ev_state = gc_event_state-re_render.
+    ENDCASE.
+
+  ENDMETHOD.
+
   METHOD lif_gui_page~render.
 
     DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
@@ -512,7 +536,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_title = 'HOME' io_menu = build_main_menu( ) ) ).
+    ro_html->add( title( iv_title = 'HOME'
+                         io_menu  = build_main_menu( ) ) ).
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -525,13 +550,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
-      LOOP AT lt_repos INTO lo_repo.
-        lcl_progress=>show( iv_key     = 'Render'
-                            iv_current = sy-tabix
-                            iv_total   = lines( lt_repos )
-                            iv_text    = lo_repo->get_name( ) ) ##NO_TEXT.
-        ro_html->add( render_repo( lo_repo ) ).
-      ENDLOOP.
+      check_show( ).
+      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+      ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
     ro_html->add( footer( ) ).
