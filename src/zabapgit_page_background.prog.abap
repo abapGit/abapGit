@@ -125,6 +125,9 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     _field 'method' method.
     _field 'username' username.
     _field 'password' password.
+    _field 'amethod' amethod.
+    _field 'aname' aname.
+    _field 'amail' amail.
 
     ASSERT NOT rs_fields IS INITIAL.
 
@@ -172,6 +175,8 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
           lv_nothing TYPE string,
           lv_push    TYPE string,
           lv_pull    TYPE string,
+          lv_afixed  TYPE string,
+          lv_aauto   TYPE string,
           lt_list    TYPE lcl_repo_srv=>ty_repo_tt.
 
 
@@ -189,9 +194,13 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
       CLEAR ls_per.
     ENDIF.
 
-    CLEAR lv_push.
-    CLEAR lv_pull.
-    CLEAR lv_nothing.
+    IF ls_per-aname IS INITIAL.
+      ls_per-aname = 'foobar' ##NO_TEXT.
+    ENDIF.
+    IF ls_per-amail IS INITIAL.
+      ls_per-amail = 'foo@bar.com' ##NO_TEXT.
+    ENDIF.
+
     CASE ls_per-method.
       WHEN lcl_persistence_background=>c_method-push.
         lv_push = ' checked' ##NO_TEXT.
@@ -201,8 +210,17 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
         lv_nothing = ' checked' ##NO_TEXT.
     ENDCASE.
 
+    CASE ls_per-amethod.
+      WHEN lcl_persistence_background=>c_amethod-auto.
+        lv_aauto = ' checked' ##NO_TEXT.
+      WHEN OTHERS.
+        lv_afixed = ' checked' ##NO_TEXT.
+    ENDCASE.
+
     ro_html->add( render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
+
+    ro_html->add( '<u>Method</u><br>' )  ##NO_TEXT.
     ro_html->add( '<form method="get" action="sapevent:save">' ).
     ro_html->add( '<input type="radio" name="method" value="nothing"' &&
       lv_nothing && '>Do nothing<br>' )  ##NO_TEXT.
@@ -211,7 +229,8 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ro_html->add( '<input type="radio" name="method" value="pull"' &&
       lv_pull && '>Automatic pull<br>' )  ##NO_TEXT.
     ro_html->add( '<br>' ).
-    ro_html->add( 'Authentication, optional<br>' )  ##NO_TEXT.
+
+    ro_html->add( '<u>HTTP Authentication, optional</u><br>' )  ##NO_TEXT.
     ro_html->add( '(password will be saved in clear text)<br>' )  ##NO_TEXT.
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
@@ -224,10 +243,33 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ro_html->add( '<td><input type="text" name="password" value="' &&
       ls_per-password && '"></td>' ).
     ro_html->add( '</tr>' ).
-    ro_html->add( '<tr><td colspan="2" align="right">' ).
-    ro_html->add( '<input type="submit" value="Save">' ).
-    ro_html->add( '</td></tr>' ).
     ro_html->add( '</table>' ).
+
+    ro_html->add( '<br>' ).
+
+    ro_html->add( '<u>Commit author</u><br>' ).
+    ro_html->add( '<input type="radio" name="amethod" value="fixed"' &&
+      lv_afixed && '>Fixed<br>' )  ##NO_TEXT.
+    ro_html->add( '<input type="radio" name="amethod" value="auto"' &&
+      lv_aauto && '>Automatic<br>' )  ##NO_TEXT.
+    ro_html->add( '<br>' ).
+
+    ro_html->add( '<table>' ).
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td>Name:</td>' ).
+    ro_html->add( '<td><input type="text" name="aname" value="' &&
+      ls_per-aname && '"></td>' ).
+    ro_html->add( '</tr>' ).
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td>Email:</td>' ).
+    ro_html->add( '<td><input type="text" name="amail" value="' &&
+      ls_per-amail && '"></td>' ).
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</table>' ).
+
+    ro_html->add( '<br>' ).
+    ro_html->add( '<input type="submit" value="Save">' ).
+
     ro_html->add( '</form>' ).
     ro_html->add( '<br>' ).
 

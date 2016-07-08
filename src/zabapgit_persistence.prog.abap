@@ -554,10 +554,18 @@ CLASS lcl_persistence_background DEFINITION FINAL.
                  push    TYPE string VALUE 'push' ##NO_TEXT,
                END OF c_method.
 
+    CONSTANTS: BEGIN OF c_amethod,
+                 fixed TYPE string VALUE 'fixed' ##NO_TEXT,
+                 auto  TYPE string VALUE 'auto' ##NO_TEXT,
+               END OF c_amethod.
+
     TYPES: BEGIN OF ty_xml,
              method   TYPE string,
              username TYPE string,
              password TYPE string,
+             amethod  TYPE string,
+             aname    TYPE string,
+             amail    TYPE string,
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,

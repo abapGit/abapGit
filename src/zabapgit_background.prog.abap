@@ -10,7 +10,8 @@ CLASS lcl_background DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS: push
-      IMPORTING io_repo TYPE REF TO lcl_repo_online
+      IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                is_settings TYPE lcl_persistence_background=>ty_background
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -32,9 +33,19 @@ CLASS lcl_background IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ls_comment-username = 'foobar' ##NO_TEXT.
-    ls_comment-email    = 'foo@bar.com' ##NO_TEXT.
-    ls_comment-comment  = 'background mode' ##NO_TEXT.
+    CASE is_settings-amethod.
+      WHEN lcl_persistence_background=>c_amethod-fixed.
+        ls_comment-username = is_settings-aname.
+        ls_comment-email    = is_settings-amail.
+        ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
+      WHEN lcl_persistence_background=>c_amethod-auto.
+* todo
+* see https://github.com/larshp/abapGit/issues/245
+        ASSERT 0 = 1.
+      WHEN OTHERS.
+* illegal value
+        ASSERT 0 = 1.
+    ENDCASE.
 
     CREATE OBJECT lo_stage
       EXPORTING
@@ -82,7 +93,8 @@ CLASS lcl_background IMPLEMENTATION.
         WHEN lcl_persistence_background=>c_method-pull.
           lo_repo->deserialize( ).
         WHEN lcl_persistence_background=>c_method-push.
-          push( lo_repo ).
+          push( io_repo     = lo_repo
+                is_settings = <ls_list> ).
         WHEN OTHERS.
           _raise 'background, unknown mode'.
       ENDCASE.
