@@ -373,6 +373,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     DATA ls_image TYPE ty_web_asset.
 
+* see https://github.com/larshp/abapGit/issues/201 for source SVG
     ls_image-url     = 'img/logo'.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'

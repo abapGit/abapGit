@@ -408,16 +408,24 @@ ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
 CLASS lcl_html_toolbar DEFINITION FINAL.
 
   PUBLIC SECTION.
-    METHODS add    IMPORTING iv_txt TYPE string
-                             io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
-                             iv_act TYPE string    OPTIONAL
-                             iv_opt TYPE c         OPTIONAL
-                             iv_typ TYPE c         DEFAULT gc_action_type-sapevent.
-
-    METHODS render IMPORTING iv_as_droplist_with_label TYPE string OPTIONAL
-                             iv_no_separator           TYPE abap_bool OPTIONAL
-                             iv_vertical               TYPE abap_bool OPTIONAL
-                   RETURNING VALUE(ro_html)            TYPE REF TO lcl_html_helper.
+    METHODS:
+      add
+        IMPORTING
+          iv_txt TYPE string
+          io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+          iv_act TYPE string    OPTIONAL
+          iv_opt TYPE c         OPTIONAL
+          iv_typ TYPE c         DEFAULT gc_action_type-sapevent,
+      count
+        RETURNING VALUE(rv_count) TYPE i,
+      render
+        IMPORTING
+          iv_as_droplist_with_label TYPE string OPTIONAL
+          iv_no_separator           TYPE abap_bool OPTIONAL
+          iv_vertical               TYPE abap_bool OPTIONAL
+          iv_sort                   TYPE abap_bool OPTIONAL
+        RETURNING
+          VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
@@ -439,6 +447,10 @@ ENDCLASS. "lcl_html_toolbar DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar IMPLEMENTATION.
 
+  METHOD count.
+    rv_count = lines( mt_items ).
+  ENDMETHOD.
+
   METHOD add.
     DATA ls_item TYPE ty_item.
 
@@ -454,11 +466,12 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   ENDMETHOD.  "add
 
   METHOD render.
-    DATA:
-      lv_class TYPE string,
-      lv_last  TYPE abap_bool.
+
+    DATA: lv_class TYPE string,
+          lv_last  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
+
 
     CREATE OBJECT ro_html.
 
@@ -481,6 +494,10 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       ENDIF.
       ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ro_html->add( '<div class="dropdown_content">' ).
+    ENDIF.
+
+    IF iv_sort = abap_true.
+      SORT mt_items BY txt ASCENDING.
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.

@@ -23,7 +23,15 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+
+    SELECT SINGLE as4user FROM dd04l INTO rv_user
+      WHERE rollname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc <> 0.
+      rv_user = 'UNKNOWN'.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

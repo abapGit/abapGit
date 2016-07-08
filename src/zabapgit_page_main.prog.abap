@@ -13,7 +13,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       lif_gui_page~get_assets REDEFINITION.
 
   PRIVATE SECTION.
-
     CONSTANTS: BEGIN OF c_actions,
                  newoffline    TYPE string VALUE 'newoffline' ##NO_TEXT,
                  switch_branch TYPE string VALUE 'switch_branch' ##NO_TEXT,
@@ -217,9 +216,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Export ZIP'
                        iv_act = |zipexport?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
-      lo_toolbar->add( iv_txt = 'Export&amp;Commit'
-                       iv_act = |files_commit?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
     ELSE.
       lo_repo_online ?= io_repo.
       TRY.
@@ -243,14 +239,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                  iv_act = |remove?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Uninstall'
                  iv_act = |uninstall?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Switch branch'
-                 iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Reset'
-                 iv_act = |reset?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Create branch'
-                 iv_act = |create_branch?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Branch overview'
-                 iv_act = |branch_overview?{ lv_key }| ).
+
+    IF io_repo->is_offline( ) = abap_false.
+      lo_sub->add( iv_txt = 'Switch branch'
+                   iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Reset'
+                   iv_act = |reset?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Create branch'
+                   iv_act = |create_branch?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Branch overview'
+                   iv_act = |branch_overview?{ lv_key }| ).
+    ELSE.
+      lo_sub->add( iv_txt = 'Export &amp; Commit'
+                   iv_act = |files_commit?{ lv_key }|
+                   iv_opt = gc_html_opt-emphas ).
+    ENDIF.
 
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_sub ) ##NO_TEXT.
@@ -466,12 +469,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_toc.
 
-    DATA: lo_repo    LIKE LINE OF it_list,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA: lo_pback      TYPE REF TO lcl_persistence_background,
+          lt_repo_bkg   TYPE lcl_persistence_background=>tt_background,
+          lo_repo       LIKE LINE OF it_list,
+          lv_opt        TYPE c LENGTH 1,
+          lo_online     TYPE REF TO lcl_html_toolbar,
+          lo_background TYPE REF TO lcl_html_toolbar,
+          lo_offline    TYPE REF TO lcl_html_toolbar.
 
 
     CREATE OBJECT ro_html.
-    CREATE OBJECT lo_toolbar.
+    CREATE OBJECT lo_online.
+    CREATE OBJECT lo_offline.
+    CREATE OBJECT lo_background.
+    CREATE OBJECT lo_pback.
+    lt_repo_bkg = lo_pback->list( ).
 
     IF lines( it_list ) = 0.
       RETURN.
@@ -479,18 +491,48 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     LOOP AT it_list INTO lo_repo.
       IF mv_show = lo_repo->get_key( ).
-        lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                         iv_opt = gc_html_opt-emphas ).
+        lv_opt = gc_html_opt-emphas.
       ELSE.
-        lo_toolbar->add( iv_txt = lo_repo->get_name( )
-                         iv_act = |show?{ lo_repo->get_key( ) }| ).
+        CLEAR lv_opt.
       ENDIF.
+
+      IF lo_repo->is_offline( ) = abap_true.
+        lo_offline->add( iv_txt = lo_repo->get_name( )
+                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                         iv_opt = lv_opt ).
+      ELSE.
+        READ TABLE lt_repo_bkg WITH KEY key = lo_repo->get_key( )
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
+          lo_background->add( iv_txt = lo_repo->get_name( )
+                              iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                              iv_opt = lv_opt ).
+        ELSE.
+          lo_online->add( iv_txt = lo_repo->get_name( )
+                          iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                          iv_opt = lv_opt ).
+        ENDIF.
+      ENDIF.
+
     ENDLOOP.
 
     ro_html->add( '<div id="toc">' ) ##NO_TEXT.
-    ro_html->add( '<img src="img/toc">' ).
-    ro_html->add( lo_toolbar->render( ) ).
+
+    IF lo_online->count( ) > 0.
+      ro_html->add( '<img src="img/repo_online">' ).
+      ro_html->add( lo_online->render( iv_sort = abap_true ) ).
+    ENDIF.
+
+    IF lo_offline->count( ) > 0.
+      ro_html->add( '<img src="img/repo_offline">' ).
+      ro_html->add( lo_offline->render( iv_sort = abap_true ) ).
+    ENDIF.
+
+    IF lo_background->count( ) > 0.
+      ro_html->add( '<img src="img/sync">' ).
+      ro_html->add( lo_background->render( iv_sort = abap_true ) ).
+    ENDIF.
+
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -586,10 +628,28 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~get_assets.
+* http://fa2png.io/r/octicons/
+* colour: #808080
+* size: 16
+* https://www.base64-image.de/ can be used to convert images to base64
 
     DATA ls_image TYPE ty_web_asset.
 
+
     rt_assets = super->lif_gui_page~get_assets( ).
+
+    ls_image-url     = 'img/sync' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARn'
+      && 'QU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAE7SURBVDhPnZJBa8JAEEb7'
+      && '0wMeFgy0hNBaMKLgoWAxoYSAkB5aLOyhRQ9FxFKMxcOClgZiQEIO6czOJNVKDu27hM2+'
+      && 'b4eZ3bPij/wrkGUZLYo4Gt+2TNEwDKMhzFY/nMdFsZXD0TJN00TDFSDz8dgRIGoXwRQu'
+      && '8NudkgZw4POlh7a4dCdrOgnYSIdTF74irwxEgyb8toIVq8jX7O66WRbqv2oP0IHIg+PF'
+      && 'YMbqCflul2sbwEAc2nCII3n7N2sZhs/zLflUIY7kvftQV2DhmgddUA+5UhvePmEVWFC/'
+      && 'Lffa5IByz7E1nKd1M1GsIko6OL7K50Dx1MEARKxgwSrM6X3cw+kZdlh2UAXehnxpyNHF'
+      && 'iavRkhwCA3DNe+n5UY5Pw2vbP0/DnyqcJwhHTwMWmK2nsgEMwIc26iAVSZJvJSiWiibm'
+      && 'heIAAAAASUVORK5CYII='.
+    APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/toc' ##NO_TEXT.
     ls_image-content =
