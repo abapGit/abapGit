@@ -751,7 +751,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
     METHODS deserialize_cua
       IMPORTING iv_program_name TYPE programm
-                is_cua TYPE ty_cua
+                is_cua          TYPE ty_cua
       RAISING   lcx_exception.
 
     CLASS-METHODS:
@@ -908,6 +908,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lv_title       TYPE rglif-title,
           ls_progdir_new TYPE progdir.
 
+    FIELD-SYMBOLS: <lg_any> TYPE any.
+
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -928,7 +930,16 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
-    lv_title = ls_tpool-entry.
+    IF sy-subrc = 0.
+* there is a bug in RPY_PROGRAM_UPDATE, the header line of TTAB is not
+* cleared, so the title length might be inherited from a different program.
+      ASSIGN ('(SAPLSIFP)TTAB') TO <lg_any>.
+      IF sy-subrc = 0.
+        CLEAR <lg_any>.
+      ENDIF.
+
+      lv_title = ls_tpool-entry.
+    ENDIF.
 
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = is_progdir-name
