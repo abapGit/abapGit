@@ -750,7 +750,8 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
-      IMPORTING is_cua TYPE ty_cua
+      IMPORTING iv_program_name TYPE programm
+                is_cua TYPE ty_cua
       RAISING   lcx_exception.
 
     CLASS-METHODS:
@@ -1255,7 +1256,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     ls_tr_key-obj_type = ms_item-obj_type.
-    ls_tr_key-obj_name = ms_item-obj_name.
+    ls_tr_key-obj_name = iv_program_name.
     ls_tr_key-sub_type = 'CUAD'.
     ls_tr_key-sub_name = ms_item-obj_name.
 

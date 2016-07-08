@@ -1972,9 +1972,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lt_functions TYPE ty_function_tt,
-          lt_dynpros   TYPE ty_dynpro_tt,
-          ls_cua       TYPE ty_cua.
+    DATA: lv_program_name TYPE programm,
+          lt_functions    TYPE ty_function_tt,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua.
 
 
     deserialize_xml(
@@ -1989,13 +1990,16 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       io_xml     = io_xml
       iv_package = iv_package ).
 
+    lv_program_name = main_name( ).
+
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
-    deserialize_dynpros( lt_dynpros ).
+    deserialize_dynpros( it_dynpros = lt_dynpros ).
 
     io_xml->read( EXPORTING iv_name = 'CUA'
                   CHANGING cg_data = ls_cua ).
-    deserialize_cua( ls_cua ).
+    deserialize_cua( iv_program_name = lv_program_name
+                     is_cua = ls_cua ).
 
   ENDMETHOD.                    "deserialize
 
@@ -2151,13 +2155,15 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_progdir   TYPE ty_progdir,
-          lt_tpool     TYPE textpool_table,
-          lt_dynpros   TYPE ty_dynpro_tt,
-          lt_tpool_ext TYPE ty_tpool_tt,
-          ls_cua       TYPE ty_cua,
-          lt_source    TYPE abaptxt255_tab.
+    DATA: lv_program_name TYPE programm,
+          ls_progdir      TYPE ty_progdir,
+          lt_tpool        TYPE textpool_table,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          lt_tpool_ext    TYPE ty_tpool_tt,
+          ls_cua          TYPE ty_cua,
+          lt_source       TYPE abaptxt255_tab.
 
+    lv_program_name = ms_item-obj_name.
 
     lt_source = mo_files->read_abap( ).
 
@@ -2174,11 +2180,12 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
-    deserialize_dynpros( lt_dynpros ).
+    deserialize_dynpros( it_dynpros = lt_dynpros ).
 
     io_xml->read( EXPORTING iv_name = 'CUA'
                   CHANGING cg_data = ls_cua ).
-    deserialize_cua( ls_cua ).
+    deserialize_cua( iv_program_name = lv_program_name
+                     is_cua = ls_cua ).
 
     deserialize_textpool( lt_tpool ).
 
