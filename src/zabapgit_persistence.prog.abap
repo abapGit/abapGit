@@ -624,13 +624,18 @@ CLASS lcl_persistence_background IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD modify.
+
+    ASSERT NOT is_data-key IS INITIAL.
+
     mo_db->modify(
       iv_type  = c_type
       iv_value = is_data-key
       iv_data  = to_xml( is_data ) ).
+
   ENDMETHOD.
 
   METHOD delete.
+
     TRY.
         mo_db->read( iv_type  = c_type
                      iv_value = iv_key ).
@@ -640,6 +645,7 @@ CLASS lcl_persistence_background IMPLEMENTATION.
 
     mo_db->delete( iv_type  = c_type
                    iv_value = iv_key ).
+
   ENDMETHOD.
 
   METHOD from_xml.

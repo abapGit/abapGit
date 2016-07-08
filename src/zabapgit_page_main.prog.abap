@@ -140,7 +140,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Background mode'  iv_act = 'background' ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Clone'            iv_act = c_actions-install ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
@@ -148,7 +147,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF needs_installation( ) = abap_true.
       ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
     ENDIF.
-    ro_menu->add( iv_txt = '&#x03b2;'         io_sub = lo_betasub ).
+    ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
 
   ENDMETHOD.                    "build main_menu
 
@@ -249,6 +248,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    iv_act = |create_branch?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Branch overview'
                    iv_act = |branch_overview?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Background mode'
+                   iv_act = |background?{ lv_key }| ).
     ELSE.
       lo_sub->add( iv_txt = 'Export &amp; Commit'
                    iv_act = |files_commit?{ lv_key }|

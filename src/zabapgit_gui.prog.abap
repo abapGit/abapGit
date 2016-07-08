@@ -609,18 +609,25 @@ ENDCLASS.
 CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
+
     DATA: lv_url  TYPE string,
           lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
           ls_item TYPE ty_item.
+
 
     CASE iv_action.
         " General routing
       WHEN 'main'
           OR 'explore'
           OR 'db'
-          OR 'background'
           OR 'background_run'.
         ei_page  = get_page_by_name( iv_action ).
+        ev_state = gc_event_state-new_page.
+      WHEN 'background'.
+        lv_key = iv_getdata.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_background
+          EXPORTING
+            iv_key = lv_key.
         ev_state = gc_event_state-new_page.
       WHEN 'abapgithome'.
         cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage

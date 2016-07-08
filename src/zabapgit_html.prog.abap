@@ -497,7 +497,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ENDIF.
 
     IF iv_sort = abap_true.
-      SORT mt_items BY txt ASCENDING.
+      SORT mt_items BY txt ASCENDING AS TEXT.
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.
