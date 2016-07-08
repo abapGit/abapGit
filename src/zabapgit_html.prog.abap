@@ -393,7 +393,6 @@ CLASS lcl_html_helper IMPLEMENTATION.
           lv_href = | href="sapevent:{ iv_act }"|.
         WHEN gc_action_type-onclick.
           lv_href = | onclick="{ iv_act }"|.
-        WHEN OTHERS.
       ENDCASE.
     ENDIF.
 
