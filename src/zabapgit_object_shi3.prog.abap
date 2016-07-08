@@ -54,6 +54,10 @@ ENDCLASS.                    "lcl_object_shi3 DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_shi3 IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD constructor.
     super->constructor( is_item = is_item iv_language = iv_language ).
     mv_tree_id = ms_item-obj_name.

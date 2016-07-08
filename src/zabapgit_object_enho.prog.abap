@@ -47,6 +47,10 @@ CLASS lcl_object_enho IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: ls_tadir TYPE tadir.

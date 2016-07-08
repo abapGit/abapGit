@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_para DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_para IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata

@@ -24,6 +24,10 @@ ENDCLASS. "lcl_object_W3SUPER DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3super IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD init_key.
     rs_key-relid = ms_item-obj_type+2(2).
     rs_key-objid = ms_item-obj_name.

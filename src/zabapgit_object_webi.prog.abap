@@ -62,6 +62,10 @@ ENDCLASS.                    "lcl_object_SFBS DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_webi IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: ls_webi    TYPE ty_webi,

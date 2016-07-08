@@ -750,6 +750,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~exists.
 
     DATA: ls_clskey TYPE seoclskey.
@@ -1502,6 +1506,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SIFP
 * function group SUNI
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
@@ -2058,6 +2066,10 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_prog IMPLEMENTATION.
+
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).

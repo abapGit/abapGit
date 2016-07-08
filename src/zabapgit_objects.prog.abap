@@ -224,6 +224,8 @@ INTERFACE lif_object.
     exists
       RETURNING VALUE(rv_bool) TYPE abap_bool
       RAISING   lcx_exception,
+    changed_by
+      RETURNING VALUE(rv_user) TYPE xubname,
     jump
       RAISING lcx_exception,
     get_metadata
@@ -497,6 +499,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
         rs_metadata = rs_metadata.
 
   ENDMETHOD.                    "lif_object~get_metadata
+
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
 
   METHOD constructor.
 

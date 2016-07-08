@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_xslt DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_xslt IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lv_name       TYPE cxsltdesc,

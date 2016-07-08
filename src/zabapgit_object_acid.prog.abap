@@ -31,6 +31,10 @@ CLASS lcl_object_acid IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD create_object.
 
     DATA: lv_name TYPE aab_id_name.

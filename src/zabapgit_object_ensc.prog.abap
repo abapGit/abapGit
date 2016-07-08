@@ -14,6 +14,10 @@ ENDCLASS. "lcl_object_ensc
 *----------------------------------------------------------------------*
 CLASS lcl_object_ensc IMPLEMENTATION.
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~deserialize.
 
     DATA: lv_spot_name  TYPE enhspotcompositename,

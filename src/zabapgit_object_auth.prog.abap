@@ -26,6 +26,10 @@ CLASS lcl_object_auth IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
+  METHOD lif_object~changed_by.
+    rv_user = 'UNKNOWN'. " todo
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: ls_authx TYPE authx.
