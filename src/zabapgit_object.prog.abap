@@ -279,11 +279,24 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: li_obj TYPE REF TO lif_object.
 
 
-    li_obj = create_object( is_item = is_item
+    li_obj = create_object( is_item     = is_item
                             iv_language = gc_english ).
+
     li_obj->jump( ).
 
   ENDMETHOD.                    "jump
+
+  METHOD changed_by.
+
+    DATA: li_obj TYPE REF TO lif_object.
+
+
+    li_obj = create_object( is_item     = is_item
+                            iv_language = gc_english ).
+
+    rv_user = li_obj->changed_by( ).
+
+  ENDMETHOD.
 
   METHOD delete.
 

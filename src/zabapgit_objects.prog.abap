@@ -1424,6 +1424,11 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item TYPE ty_item
       RAISING   lcx_exception.
 
+    CLASS-METHODS changed_by
+      IMPORTING is_item        TYPE ty_item
+      RETURNING VALUE(rv_user) TYPE xubname
+      RAISING   lcx_exception.
+
     CLASS-METHODS is_supported
       IMPORTING is_item        TYPE ty_item
       RETURNING VALUE(rv_bool) TYPE abap_bool.

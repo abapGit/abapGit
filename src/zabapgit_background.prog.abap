@@ -9,10 +9,18 @@ CLASS lcl_background DEFINITION FINAL.
       RAISING lcx_exception.
 
   PRIVATE SECTION.
-    CLASS-METHODS: push
-      IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                is_settings TYPE lcl_persistence_background=>ty_background
-      RAISING   lcx_exception.
+    CLASS-METHODS:
+      push
+        IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                  is_settings TYPE lcl_persistence_background=>ty_background
+        RAISING   lcx_exception,
+      push_fixed
+        IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                  is_settings TYPE lcl_persistence_background=>ty_background
+        RAISING   lcx_exception,
+      push_auto
+        IMPORTING io_repo TYPE REF TO lcl_repo_online
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -20,47 +28,105 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push.
 
-    DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE ty_stage_files,
-          lo_stage   TYPE REF TO lcl_stage.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files-local.
-
-
-    ls_files = lcl_stage_logic=>get( io_repo ).
-    IF lines( ls_files-local ) = 0.
+    IF lines( lcl_stage_logic=>get( io_repo )-local ) = 0.
       WRITE: / 'nothing to stage' ##NO_TEXT.
       RETURN.
     ENDIF.
 
     CASE is_settings-amethod.
       WHEN lcl_persistence_background=>c_amethod-fixed.
-        ls_comment-username = is_settings-aname.
-        ls_comment-email    = is_settings-amail.
-        ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
+        push_fixed( io_repo     = io_repo
+                    is_settings = is_settings ).
       WHEN lcl_persistence_background=>c_amethod-auto.
-* todo
-* see https://github.com/larshp/abapGit/issues/245
-        ASSERT 0 = 1.
+        push_auto( io_repo ).
       WHEN OTHERS.
-* illegal value
-        ASSERT 0 = 1.
+        _raise 'unknown push method'.
     ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD push_fixed.
+
+    DATA: ls_comment TYPE ty_comment,
+          ls_files   TYPE ty_stage_files,
+          lo_stage   TYPE REF TO lcl_stage.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
+
+
+
+    ls_files = lcl_stage_logic=>get( io_repo ).
+    ASSERT lines( ls_files-local ) > 0.
+
+    ls_comment-username = is_settings-aname.
+    ls_comment-email    = is_settings-amail.
+    ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
 
     CREATE OBJECT lo_stage
       EXPORTING
         iv_branch_name = io_repo->get_branch_name( )
         iv_branch_sha1 = io_repo->get_sha1_remote( ).
 
-    LOOP AT ls_files-local ASSIGNING <ls_file>.
-      WRITE: / 'stage', <ls_file>-file-path, <ls_file>-file-filename ##NO_TEXT.
-      lo_stage->add( iv_path     = <ls_file>-file-path
-                     iv_filename = <ls_file>-file-filename
-                     iv_data     = <ls_file>-file-data ).
+    LOOP AT ls_files-local ASSIGNING <ls_local>.
+      WRITE: / 'stage', <ls_local>-file-path, <ls_local>-file-filename ##NO_TEXT.
+      lo_stage->add( iv_path     = <ls_local>-file-path
+                     iv_filename = <ls_local>-file-filename
+                     iv_data     = <ls_local>-file-data ).
     ENDLOOP.
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = lo_stage ).
+
+  ENDMETHOD.
+
+  METHOD push_auto.
+
+    DATA: ls_comment TYPE ty_comment,
+          ls_files   TYPE ty_stage_files,
+          lo_stage   TYPE REF TO lcl_stage.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
+
+
+
+    ls_files = lcl_stage_logic=>get( io_repo ).
+
+    DO.
+
+      READ TABLE ls_files-local INDEX 1 ASSIGNING <ls_local>.
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+
+      CLEAR ls_comment.
+      ls_comment-username = lcl_objects=>changed_by( <ls_local>-item ).
+      ls_comment-email    = |{ ls_comment-username }@localhost|.
+      ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
+
+      CREATE OBJECT lo_stage
+        EXPORTING
+          iv_branch_name = io_repo->get_branch_name( )
+          iv_branch_sha1 = io_repo->get_sha1_remote( ).
+
+      LOOP AT ls_files-local ASSIGNING <ls_local>.
+        IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-username.
+          WRITE: / 'stage',
+            ls_comment-username,
+            <ls_local>-file-path,
+            <ls_local>-file-filename ##NO_TEXT.
+
+          lo_stage->add( iv_path     = <ls_local>-file-path
+                         iv_filename = <ls_local>-file-filename
+                         iv_data     = <ls_local>-file-data ).
+        ENDIF.
+      ENDLOOP.
+
+      io_repo->push( is_comment = ls_comment
+                     io_stage   = lo_stage ).
+
+      ls_files = lcl_stage_logic=>get( io_repo ).
+
+    ENDDO.
 
   ENDMETHOD.
 
