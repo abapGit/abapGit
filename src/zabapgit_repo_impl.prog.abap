@@ -284,6 +284,9 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD deserialize.
 
+    IF mo_dot_abapgit IS INITIAL.
+      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
+    ENDIF.
     IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
       _raise 'Current login language does not match master language'.
     ENDIF.
