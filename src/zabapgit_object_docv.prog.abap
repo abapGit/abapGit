@@ -19,6 +19,9 @@ CLASS lcl_object_docv DEFINITION INHERITING FROM lcl_objects_super FINAL.
              lines    TYPE tlinet,
            END OF ty_data.
 
+    METHODS: read
+      RETURNING VALUE(rs_data) TYPE ty_data.
+
 ENDCLASS.                    "lcl_object_msag DEFINITION
 
 *----------------------------------------------------------------------*
@@ -29,7 +32,31 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 CLASS lcl_object_docv IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = read( )-head-tdluser.
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: lv_object TYPE dokhl-object,
+          lv_id     TYPE dokhl-id.
+
+
+    lv_id = ms_item-obj_name(2).
+    lv_object = ms_item-obj_name+2.
+
+    CALL FUNCTION 'DOCU_READ'
+      EXPORTING
+        id       = lv_id
+        langu    = mv_language
+        object   = lv_object
+        typ      = c_typ
+        version  = c_version
+      IMPORTING
+        doktitle = rs_data-doctitle
+        head     = rs_data-head
+      TABLES
+        line     = rs_data-lines.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
@@ -104,26 +131,10 @@ CLASS lcl_object_docv IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_object TYPE dokhl-object,
-          ls_data   TYPE ty_data,
-          lv_id     TYPE dokhl-id.
+    DATA: ls_data   TYPE ty_data.
 
 
-    lv_id = ms_item-obj_name(2).
-    lv_object = ms_item-obj_name+2.
-
-    CALL FUNCTION 'DOCU_READ'
-      EXPORTING
-        id       = lv_id
-        langu    = mv_language
-        object   = lv_object
-        typ      = c_typ
-        version  = c_version
-      IMPORTING
-        doktitle = ls_data-doctitle
-        head     = ls_data-head
-      TABLES
-        line     = ls_data-lines.
+    ls_data = read( ).
 
     CLEAR: ls_data-head-tdfuser,
            ls_data-head-tdfreles,

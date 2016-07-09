@@ -23,7 +23,15 @@ ENDCLASS.                    "lcl_object_doma DEFINITION
 CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+
+    SELECT SINGLE as4user FROM dd01l INTO rv_user
+      WHERE domname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

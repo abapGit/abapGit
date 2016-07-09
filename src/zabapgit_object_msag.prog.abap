@@ -23,7 +23,13 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 CLASS lcl_object_msag IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+
+    SELECT SINGLE lastuser FROM t100a INTO rv_user
+      WHERE arbgb = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

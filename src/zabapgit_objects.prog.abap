@@ -440,6 +440,8 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
 
+    CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
+
     DATA: ms_item     TYPE ty_item,
           mv_language TYPE spras.
 
@@ -501,7 +503,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD constructor.

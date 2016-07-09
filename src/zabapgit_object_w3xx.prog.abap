@@ -25,7 +25,7 @@ ENDCLASS. "lcl_object_W3SUPER DEFINITION
 CLASS lcl_object_w3super IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD init_key.

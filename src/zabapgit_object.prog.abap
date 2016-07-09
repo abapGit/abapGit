@@ -296,6 +296,10 @@ CLASS lcl_objects IMPLEMENTATION.
 
     rv_user = li_obj->changed_by( ).
 
+    ASSERT NOT rv_user IS INITIAL.
+
+* todo, fallback to looking at transports if rv_user = 'UNKNOWN'?
+
   ENDMETHOD.
 
   METHOD delete.
@@ -764,7 +768,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -1520,7 +1524,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SUNI
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
@@ -2085,7 +2089,7 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

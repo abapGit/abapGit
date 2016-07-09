@@ -18,7 +18,7 @@ ENDCLASS. "lcl_object_enhs
 CLASS lcl_object_enhs IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+    rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD lif_object~deserialize.

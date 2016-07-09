@@ -27,7 +27,8 @@ CLASS lcl_object_auth IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+* looks like "changed by user" is not stored in the database
+    rv_user = c_user_unknown.
   ENDMETHOD.
 
   METHOD lif_object~serialize.

@@ -23,7 +23,8 @@ ENDCLASS.                    "lcl_object_para DEFINITION
 CLASS lcl_object_para IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = 'UNKNOWN'. " todo
+* looks like "changed by user" is not stored in the database
+    rv_user = c_user_unknown.
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
