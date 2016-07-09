@@ -1476,6 +1476,14 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     LOOP AT it_blobs ASSIGNING <ls_blob>.
       CLEAR ls_object.
       ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_blob>-data ).
+
+      READ TABLE lt_objects WITH KEY type = gc_type-blob sha1 = ls_object-sha1
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+* two identical files added at the same time, only add one blob to the pack
+        CONTINUE.
+      ENDIF.
+
       ls_object-type = gc_type-blob.
       ASSERT NOT <ls_blob>-data IS INITIAL.
       ls_object-data = <ls_blob>-data.
@@ -1554,6 +1562,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       CASE <ls_stage>-method.
         WHEN lcl_stage=>c_method-add.
+
           APPEND <ls_stage>-file TO lt_blobs.
 
           READ TABLE lt_expanded ASSIGNING <ls_exp> WITH KEY

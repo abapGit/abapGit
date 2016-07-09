@@ -132,7 +132,14 @@ CLASS lcl_object_acid IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    _raise 'todo, jump, ACID'.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'ACID'
+        in_new_window = abap_true.
+
   ENDMETHOD.                    "lif_object~jump
 
 ENDCLASS.                    "lcl_object_acid IMPLEMENTATION
