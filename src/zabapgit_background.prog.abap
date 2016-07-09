@@ -68,7 +68,9 @@ CLASS lcl_background IMPLEMENTATION.
         iv_branch_sha1 = io_repo->get_sha1_remote( ).
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      WRITE: / 'stage', <ls_local>-file-path, <ls_local>-file-filename ##NO_TEXT.
+      WRITE: / 'stage' ##NO_TEXT,
+        <ls_local>-file-path,
+        <ls_local>-file-filename.
       lo_stage->add( iv_path     = <ls_local>-file-path
                      iv_filename = <ls_local>-file-filename
                      iv_data     = <ls_local>-file-data ).
@@ -110,10 +112,10 @@ CLASS lcl_background IMPLEMENTATION.
 
       LOOP AT ls_files-local ASSIGNING <ls_local>.
         IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-username.
-          WRITE: / 'stage',
+          WRITE: / 'stage' ##NO_TEXT,
             ls_comment-username,
             <ls_local>-file-path,
-            <ls_local>-file-filename ##NO_TEXT.
+            <ls_local>-file-filename.
 
           lo_stage->add( iv_path     = <ls_local>-file-path
                          iv_filename = <ls_local>-file-filename

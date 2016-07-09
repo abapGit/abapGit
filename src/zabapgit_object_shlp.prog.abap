@@ -23,7 +23,14 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_shlp IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE as4user FROM dd30l INTO rv_user
+      WHERE shlpname = ms_item-obj_name
+      AND as4local = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

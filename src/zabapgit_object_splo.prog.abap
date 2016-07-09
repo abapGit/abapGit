@@ -23,7 +23,13 @@ ENDCLASS.                    "lcl_object_splo DEFINITION
 CLASS lcl_object_splo IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE chgname1 FROM tsp1d INTO rv_user
+      WHERE papart = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

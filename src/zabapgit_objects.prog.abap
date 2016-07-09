@@ -225,7 +225,8 @@ INTERFACE lif_object.
       RETURNING VALUE(rv_bool) TYPE abap_bool
       RAISING   lcx_exception,
     changed_by
-      RETURNING VALUE(rv_user) TYPE xubname,
+      RETURNING VALUE(rv_user) TYPE xubname
+      RAISING   lcx_exception,
     jump
       RAISING lcx_exception,
     get_metadata

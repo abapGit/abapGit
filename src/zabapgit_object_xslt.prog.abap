@@ -13,6 +13,12 @@ CLASS lcl_object_xslt DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
+  PRIVATE SECTION.
+    METHODS:
+      get
+        RETURNING VALUE(ro_xslt) TYPE REF TO cl_o2_api_xsltdesc
+        RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_object_xslt DEFINITION
 
 *----------------------------------------------------------------------*
@@ -26,12 +32,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD get.
 
-    DATA: lv_name       TYPE cxsltdesc,
-          lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
-          lv_source     TYPE string,
-          ls_attributes TYPE o2xsltattr.
+    DATA: lv_name TYPE cxsltdesc.
 
 
     lv_name = ms_item-obj_name.
@@ -40,14 +43,25 @@ CLASS lcl_object_xslt IMPLEMENTATION.
       EXPORTING
         p_xslt_desc        = lv_name
       IMPORTING
-        p_obj              = lo_xslt
+        p_obj              = ro_xslt
       EXCEPTIONS
         not_existing       = 1
         permission_failure = 2
         OTHERS             = 3 ).
     IF sy-subrc <> 0.
-      RETURN.
+      _raise 'error from cl_o2_api_xsltdesc=>load'.
     ENDIF.
+
+  ENDMETHOD.
+
+  METHOD lif_object~serialize.
+
+    DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          lv_source     TYPE string,
+          ls_attributes TYPE o2xsltattr.
+
+
+    lo_xslt = get( ).
 
     ls_attributes = lo_xslt->get_attributes( ).
 

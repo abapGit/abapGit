@@ -12,6 +12,12 @@ CLASS lcl_object_sfbf DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+  PRIVATE SECTION.
+    METHODS:
+      get
+        RETURNING VALUE(ro_bf) TYPE REF TO cl_sfw_bf
+        RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_object_SFBF DEFINITION
 
 *----------------------------------------------------------------------*
@@ -22,7 +28,9 @@ ENDCLASS.                    "lcl_object_SFBF DEFINITION
 CLASS lcl_object_sfbf IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    rv_user = get( )->get_header_data( )-changedby.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
@@ -49,10 +57,27 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
     rv_bool = abap_true.
   ENDMETHOD.                    "lif_object~exists
 
+  METHOD get.
+
+    DATA: lv_bf TYPE sfw_bfunction.
+
+
+    lv_bf = ms_item-obj_name.
+
+    TRY.
+* make sure to clear cache, method GET_BF_FROM_DB does not exist in 702
+        ro_bf = cl_sfw_bf=>get_bf( lv_bf ).
+        ro_bf->free( ).
+        ro_bf = cl_sfw_bf=>get_bf( lv_bf ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        _raise 'Error from CL_SFW_BF=>GET_BF'.
+    ENDTRY.
+
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
-    DATA: lv_bf                TYPE sfw_bfunction,
-          lo_bf                TYPE REF TO cl_sfw_bf,
+    DATA: lo_bf                TYPE REF TO cl_sfw_bf,
           ls_header            TYPE sfw_bf,
           lv_name_32           TYPE sfw_name32,
           lv_name_80           TYPE sfw_name80,
@@ -63,20 +88,12 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
           ls_sfw_bfc_rn        TYPE sfw_bfc_rn,
           lt_parent_bfs        TYPE sfw_bs_bf_outtab.
 
+
     IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    lv_bf = ms_item-obj_name.
-
-    TRY.
-* make sure to clear cache, method GET_BF_FROM_DB does not exist in 702
-        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
-        lo_bf->free( ).
-        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
-      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        _raise 'Error from CL_SFW_BF=>GET_BF'.
-    ENDTRY.
+    lo_bf = get( ).
 
     ls_header = lo_bf->get_header_data( ).
     CLEAR: ls_header-author,

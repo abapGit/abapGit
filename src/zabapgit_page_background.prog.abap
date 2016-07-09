@@ -160,7 +160,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
       lo_persistence->modify( ls_fields ).
     ENDIF.
 
-    MESSAGE 'Saved' TYPE 'S'.
+    MESSAGE 'Saved' TYPE 'S' ##NO_TEXT.
 
     COMMIT WORK.
 

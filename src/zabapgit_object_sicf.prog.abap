@@ -63,7 +63,14 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 CLASS lcl_object_sicf IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA: ls_icfservice TYPE icfservice.
+
+
+    read( IMPORTING es_icfservice = ls_icfservice ).
+
+    rv_user = ls_icfservice-icf_muser.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

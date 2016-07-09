@@ -28,7 +28,13 @@ ENDCLASS.                    "lcl_object_ssst DEFINITION
 CLASS lcl_object_ssst IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE lastuser FROM stxsadm INTO rv_user
+      WHERE stylename = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.

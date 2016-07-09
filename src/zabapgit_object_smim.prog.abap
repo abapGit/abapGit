@@ -43,7 +43,18 @@ ENDCLASS.                    "lcl_object_smim DEFINITION
 CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA: lv_loio TYPE sdok_docid.
+
+
+    lv_loio = ms_item-obj_name.
+
+    SELECT SINGLE chng_user FROM smimloio INTO rv_user
+      WHERE loio_id = lv_loio.                          "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
