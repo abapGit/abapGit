@@ -17,11 +17,11 @@ CLASS lcl_object_doct DEFINITION INHERITING FROM lcl_objects_super FINAL.
     TYPES: BEGIN OF ty_data,
              doctitle TYPE dsyst-doktitle,
              head     TYPE thead,
-             lines    TYPE tlinet,
+             lines    TYPE tline_tab,
            END OF ty_data.
 
     METHODS: read
-      RETURNING VALUE(rs_data) TYPE ty_data.
+      RETURNING value(rs_data) TYPE ty_data.
 
 ENDCLASS.                    "lcl_object_msag DEFINITION
 
@@ -56,11 +56,11 @@ CLASS lcl_object_doct IMPLEMENTATION.
       TABLES
         line     = rs_data-lines.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "read
 
   METHOD lif_object~changed_by.
     rv_user = read( )-head-tdluser.
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~exists.
 

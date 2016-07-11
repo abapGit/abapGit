@@ -64,7 +64,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~serialize.
 
@@ -132,12 +132,14 @@ CLASS lcl_object_webi IMPLEMENTATION.
     io_xml->add( iv_name = 'WEBI'
                  ig_data = ls_webi ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~serialize
 
   METHOD handle_endpoint.
 
     DATA: ls_endpoint LIKE LINE OF is_webi-pvependpoint,
           li_endpoint TYPE REF TO if_ws_md_vif_endpoint_ref.
+
+    FIELD-SYMBOLS: <ls_function> LIKE LINE OF is_webi-pvepfunction.
 
 
     READ TABLE is_webi-pvependpoint INDEX 1 INTO ls_endpoint.
@@ -159,11 +161,17 @@ CLASS lcl_object_webi IMPLEMENTATION.
       _raise 'todo, WEBI BAPI'.
     ENDIF.
 
+    IF lines( is_webi-pvepfunction ) <> 1.
+      _raise 'todo, WEBI, function name'.
+    ENDIF.
+
+* field ls_endpoint-endpointname does not exist in 702
+    READ TABLE is_webi-pvepfunction INDEX 1 ASSIGNING <ls_function>.
     li_endpoint->set_data(
       data_version = '1'
-      data         = ls_endpoint-endpointname ).
+      data         = <ls_function>-function ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "handle_endpoint
 
   METHOD handle_function.
 
@@ -229,7 +237,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "handle_function
 
   METHOD handle_types.
 
@@ -310,7 +318,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "handle_types
 
   METHOD handle_soap.
 
@@ -321,21 +329,21 @@ CLASS lcl_object_webi IMPLEMENTATION.
     READ TABLE is_webi-pvepvisoapext INDEX 1 INTO ls_soap.
     ASSERT sy-subrc = 0.
 
-    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-active ).
+    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-active ) = abap_true.
       RETURN.
     ENDIF.
 
     li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
     li_soap->set_namespace( ls_soap-namespace ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "handle_soap
 
   METHOD lif_object~deserialize.
 
     DATA: ls_webi   TYPE ty_webi,
           lv_name   TYPE vepname,
           ls_header LIKE LINE OF ls_webi-pvepheader,
-          lv_text   TYPE string ##NEEDED,
+          lv_text   TYPE string ##needed,
           lx_root   TYPE REF TO cx_root,
           lv_exists TYPE abap_bool,
           li_root   TYPE REF TO if_ws_md_vif_root.
@@ -376,7 +384,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
       CATCH cx_ws_md_exception INTO lx_root.
         TRY.
             mi_vi->if_ws_md_lockable_object~unlock( ).
-          CATCH cx_ws_md_exception ##NO_HANDLER.
+          CATCH cx_ws_md_exception ##no_handler.
         ENDTRY.
         lv_text = lx_root->if_message~get_text( ).
         _raise 'error deserializing WEBI'.
@@ -384,7 +392,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
     lcl_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~deserialize
 
   METHOD lif_object~delete.
 
@@ -401,7 +409,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
         _raise 'error deleting WEBI'.
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~delete
 
   METHOD lif_object~exists.
 
@@ -414,7 +422,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
       name      = lv_name
       i_version = sews_c_vif_version-active ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
 
@@ -425,10 +433,10 @@ CLASS lcl_object_webi IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~jump
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~get_metadata
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_webi IMPLEMENTATION
