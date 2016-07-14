@@ -1366,6 +1366,11 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 iv_from TYPE ty_sha1
       RAISING   lcx_exception.
 
+    CLASS-METHODS delete_branch
+      IMPORTING io_repo   TYPE REF TO lcl_repo_online
+                is_branch TYPE lcl_git_transport=>ty_branch_list
+      RAISING   lcx_exception.
+
     CLASS-METHODS full_tree
       IMPORTING it_objects         TYPE ty_objects_tt
                 iv_branch          TYPE ty_sha1
@@ -1389,6 +1394,8 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
            END OF ty_folder.
 
     TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
+
+    CONSTANTS: c_zero TYPE ty_sha1 VALUE '0000000000000000000000000000000000000000'.
 
     CLASS-METHODS build_trees
       IMPORTING it_expanded     TYPE ty_expanded_tt
@@ -1505,14 +1512,11 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   ENDMETHOD.                    "receive_pack
 
-  METHOD create_branch.
+  METHOD delete_branch.
 
-    DATA: lv_zero    TYPE ty_sha1,
-          lt_objects TYPE ty_objects_tt,
+    DATA: lt_objects TYPE ty_objects_tt,
           lv_pack    TYPE xstring.
 
-
-    lv_zero = '0000000000000000000000000000000000000000'.
 
 * "client MUST send an empty packfile"
 * https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
@@ -1520,7 +1524,26 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lcl_git_transport=>receive_pack(
       iv_url         = io_repo->get_url( )
-      iv_old         = lv_zero
+      iv_old         = is_branch-sha1
+      iv_new         = c_zero
+      iv_branch_name = is_branch-name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
+
+  METHOD create_branch.
+
+    DATA: lt_objects TYPE ty_objects_tt,
+          lv_pack    TYPE xstring.
+
+
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
+    lv_pack = lcl_git_pack=>encode( lt_objects ).
+
+    lcl_git_transport=>receive_pack(
+      iv_url         = io_repo->get_url( )
+      iv_old         = c_zero
       iv_new         = iv_from
       iv_branch_name = iv_name
       iv_pack        = lv_pack ).

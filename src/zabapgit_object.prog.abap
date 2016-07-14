@@ -771,11 +771,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
 * todo, not sure this is correct, to be tested
     SELECT SINGLE changedby FROM seoclassdf INTO rv_user
       WHERE clsname = ms_item-obj_name
-      AND version = '1'.
+      AND version = '1'.                                "#EC CI_GENBUFF
     IF sy-subrc = 0 AND rv_user IS INITIAL.
       SELECT SINGLE author FROM seoclassdf INTO rv_user
         WHERE clsname = ms_item-obj_name
-        AND version = '1'.
+        AND version = '1'.                              "#EC CI_GENBUFF
     ENDIF.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.

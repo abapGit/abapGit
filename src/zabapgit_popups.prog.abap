@@ -26,6 +26,13 @@ CLASS lcl_popups DEFINITION.
       switch_branch
         IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
         RAISING   lcx_exception,
+      delete_branch
+        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+        RAISING   lcx_exception,
+      branch_list_popup
+        IMPORTING iv_url           TYPE string
+        RETURNING VALUE(rs_branch) TYPE lcl_git_transport=>ty_branch_list
+        RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
                   iv_package      TYPE devclass OPTIONAL
@@ -183,6 +190,81 @@ CLASS lcl_popups IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.                    "repo_new_offline
+
+  METHOD delete_branch.
+
+    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+          ls_branch TYPE lcl_git_transport=>ty_branch_list.
+
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_branch = branch_list_popup( lo_repo->get_url( ) ).
+    IF ls_branch IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    IF ls_branch-name = 'HEAD'.
+      _raise 'cannot delete HEAD'.
+    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
+      _raise 'switch branch before deleting current'.
+    ENDIF.
+
+    lcl_git_porcelain=>delete_branch(
+      io_repo   = lo_repo
+      is_branch = ls_branch ).
+
+    MESSAGE 'Branch deleted' TYPE 'S'.
+
+  ENDMETHOD.
+
+  METHOD branch_list_popup.
+
+    DATA: lt_branches  TYPE lcl_git_transport=>ty_branch_list_tt,
+          lv_answer    TYPE c LENGTH 1,
+          lt_selection TYPE TABLE OF spopli.
+
+    FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
+                   <ls_branch> LIKE LINE OF lt_branches.
+
+
+    lt_branches = lcl_git_transport=>branches( iv_url ).
+
+    LOOP AT lt_branches ASSIGNING <ls_branch>.
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = <ls_branch>-name.
+    ENDLOOP.
+
+    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+      EXPORTING
+        textline1          = 'Select branch'
+        titel              = 'Select branch'
+        start_col          = 5
+        start_row          = 10
+      IMPORTING
+        answer             = lv_answer
+      TABLES
+        t_spopli           = lt_selection
+      EXCEPTIONS
+        not_enough_answers = 1
+        too_much_answers   = 2
+        too_much_marks     = 3
+        OTHERS             = 4.                             "#EC NOTEXT
+    IF sy-subrc <> 0.
+      _raise 'Error from POPUP_TO_DECIDE_LIST'.
+    ENDIF.
+
+    IF lv_answer = 'A'. " cancel
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+    ASSERT sy-subrc = 0.
+
+    READ TABLE lt_branches INTO rs_branch WITH KEY name = <ls_sel>-varoption.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
 
   METHOD switch_branch.
 

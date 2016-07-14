@@ -16,6 +16,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     CONSTANTS: BEGIN OF c_actions,
                  newoffline    TYPE string VALUE 'newoffline' ##NO_TEXT,
                  switch_branch TYPE string VALUE 'switch_branch' ##NO_TEXT,
+                 delete_branch TYPE string VALUE 'delete_branch' ##NO_TEXT,
                  install       TYPE string VALUE 'install' ##NO_TEXT,
                  show          TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
@@ -205,6 +206,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lo_sub         TYPE REF TO lcl_html_toolbar,
+          lo_branch      TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
 
@@ -239,14 +241,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_sub.
-
     IF io_repo->is_offline( ) = abap_false.
-      lo_sub->add( iv_txt = 'Branch overview'
-                   iv_act = |branch_overview?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Switch branch'
-                   iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Create branch'
-                   iv_act = |create_branch?{ lv_key }| ).
+      CREATE OBJECT lo_branch.
+      lo_branch->add( iv_txt = 'Overview'
+                      iv_act = |branch_overview?{ lv_key }| ).
+      lo_branch->add( iv_txt = 'Switch'
+                      iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
+      lo_branch->add( iv_txt = 'Create'
+                      iv_act = |create_branch?{ lv_key }| ).
+      lo_branch->add( iv_txt = 'Delete'
+                      iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Branch'
+                       io_sub = lo_branch ) ##NO_TEXT.
+
       lo_sub->add( iv_txt = 'Reset local'
                    iv_act = |reset?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Background mode'
@@ -255,7 +262,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_sub->add( iv_txt = 'Export &amp; Commit'
                    iv_act = |files_commit?{ lv_key }| ).
     ENDIF.
-
     lo_sub->add( iv_txt = 'Remove'
                  iv_act = |remove?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Uninstall'
@@ -602,6 +608,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lcl_app=>user( )->set_repo_show( mv_show ).
           ev_state = gc_event_state-re_render.
         ENDIF.
+      WHEN c_actions-delete_branch.
+        lv_key   = iv_getdata.
+        lcl_popups=>delete_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
       WHEN c_actions-switch_branch.
         lv_key   = iv_getdata.
         lcl_popups=>switch_branch( lv_key ).

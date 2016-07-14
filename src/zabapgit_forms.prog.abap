@@ -52,16 +52,12 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
   DATA: lv_url          TYPE string,
-        lv_answer       TYPE c,
         lx_error        TYPE REF TO lcx_exception,
-        lt_selection    TYPE TABLE OF spopli,
         ls_package_data TYPE scompkdtln,
-        lt_branches     TYPE lcl_git_transport=>ty_branch_list_tt.
+        ls_branch       TYPE lcl_git_transport=>ty_branch_list.
 
-  FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields,
-                 <ls_branch>  LIKE LINE OF lt_branches,
-                 <ls_sel>     LIKE LINE OF lt_selection,
-                 <ls_furl>    LIKE LINE OF tt_fields.
+  FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
+                 <ls_fbranch> LIKE LINE OF tt_fields.
 
 
   CLEAR cs_error.
@@ -77,44 +73,18 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
     lv_url = <ls_furl>-value.
 
     TRY.
-        lt_branches = lcl_git_transport=>branches( lv_url ).
+        ls_branch = lcl_popups=>branch_list_popup( lv_url ).
       CATCH lcx_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
         RETURN.
     ENDTRY.
-
-    LOOP AT lt_branches ASSIGNING <ls_branch>.
-      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = <ls_branch>-name.
-    ENDLOOP.
-
-    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-      EXPORTING
-        textline1          = 'Select branch'
-        titel              = 'Select branch'
-      IMPORTING
-        answer             = lv_answer
-      TABLES
-        t_spopli           = lt_selection
-      EXCEPTIONS
-        not_enough_answers = 1
-        too_much_answers   = 2
-        too_much_marks     = 3
-        OTHERS             = 4.                             "#EC NOTEXT
-    IF sy-subrc <> 0.
-      _raise 'Error from POPUP_TO_DECIDE_LIST'.
-    ENDIF.
-
-    IF lv_answer = 'A'. " cancel
+    IF ls_branch IS INITIAL.
       RETURN.
     ENDIF.
 
-    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
-    ASSERT sy-subrc = 0.
-
     READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TEXTL'.
     ASSERT sy-subrc = 0.
-    <ls_fbranch>-value = <ls_sel>-varoption.
+    <ls_fbranch>-value = ls_branch-name.
 
   ELSEIF pv_code = 'COD2'.
     cv_show_popup = abap_true.
