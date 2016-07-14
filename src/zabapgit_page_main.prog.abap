@@ -42,6 +42,11 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      render_toc_line
+        IMPORTING io_toolbar     TYPE REF TO lcl_html_toolbar
+                  iv_image_url   TYPE string
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_repo_menu
@@ -234,27 +239,27 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
     CREATE OBJECT lo_sub.
-    lo_sub->add( iv_txt = 'Remove'
-                 iv_act = |remove?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Uninstall'
-                 iv_act = |uninstall?{ lv_key }| ).
 
     IF io_repo->is_offline( ) = abap_false.
-      lo_sub->add( iv_txt = 'Switch branch'
-                   iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Reset'
-                   iv_act = |reset?{ lv_key }| ).
-      lo_sub->add( iv_txt = 'Create branch'
-                   iv_act = |create_branch?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Branch overview'
                    iv_act = |branch_overview?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Switch branch'
+                   iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Create branch'
+                   iv_act = |create_branch?{ lv_key }| ).
+      lo_sub->add( iv_txt = 'Reset local'
+                   iv_act = |reset?{ lv_key }| ).
       lo_sub->add( iv_txt = 'Background mode'
                    iv_act = |background?{ lv_key }| ).
     ELSE.
       lo_sub->add( iv_txt = 'Export &amp; Commit'
-                   iv_act = |files_commit?{ lv_key }|
-                   iv_opt = gc_html_opt-emphas ).
+                   iv_act = |files_commit?{ lv_key }| ).
     ENDIF.
+
+    lo_sub->add( iv_txt = 'Remove'
+                 iv_act = |remove?{ lv_key }| ).
+    lo_sub->add( iv_txt = 'Uninstall'
+                 iv_act = |uninstall?{ lv_key }| ).
 
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_sub ) ##NO_TEXT.
@@ -517,26 +522,43 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ENDLOOP.
 
-    ro_html->add( '<div id="toc">' ) ##NO_TEXT.
+    ro_html->add( '<div id="toc"><div class="toc_grid">' ) ##NO_TEXT.
 
     IF lo_online->count( ) > 0.
-      ro_html->add( '<img src="img/repo_online">' ).
-      ro_html->add( lo_online->render( iv_sort = abap_true ) ).
+      ro_html->add( render_toc_line( io_toolbar   = lo_online
+                                     iv_image_url = 'img/repo_online' ) ).
     ENDIF.
 
     IF lo_offline->count( ) > 0.
-      ro_html->add( '<img src="img/repo_offline">' ).
-      ro_html->add( lo_offline->render( iv_sort = abap_true ) ).
+      ro_html->add( render_toc_line( io_toolbar   = lo_offline
+                                     iv_image_url = 'img/repo_offline' ) ).
     ENDIF.
 
     IF lo_background->count( ) > 0.
-      ro_html->add( '<img src="img/sync">' ).
-      ro_html->add( lo_background->render( iv_sort = abap_true ) ).
+      ro_html->add( render_toc_line( io_toolbar   = lo_background
+                                     iv_image_url = 'img/sync' ) ).
     ENDIF.
 
-    ro_html->add( '</div>' ).
+    ro_html->add( '</div></div>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_toc
+
+  METHOD render_toc_line.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="toc_row"><table><tr>' ).
+
+    ro_html->add( '<td>' ).
+    ro_html->add( |<img src="{ iv_image_url }">| ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '<td>' ).
+    ro_html->add( io_toolbar->render( iv_sort = abap_true ) ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '</tr></table></div>' ).
+
+  ENDMETHOD.  "render_toc_line
 
   METHOD render_error.
 
@@ -573,10 +595,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-newoffline.
-        lo_repo = lcl_popups=>repo_new_offline( ).
-        mv_show = lo_repo->get_key( ).
-        lcl_app=>user( )->set_repo_show( mv_show ).
-        ev_state = gc_event_state-re_render.
+        ev_state = gc_event_state-no_more_act.
+        lo_repo  = lcl_popups=>repo_new_offline( ).
+        IF lo_repo IS BOUND.
+          mv_show = lo_repo->get_key( ).
+          lcl_app=>user( )->set_repo_show( mv_show ).
+          ev_state = gc_event_state-re_render.
+        ENDIF.
       WHEN c_actions-switch_branch.
         lv_key   = iv_getdata.
         lcl_popups=>switch_branch( lv_key ).
@@ -636,20 +661,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA ls_image TYPE ty_web_asset.
 
-
     rt_assets = super->lif_gui_page~get_assets( ).
 
     ls_image-url     = 'img/sync' ##NO_TEXT.
     ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARn'
-      && 'QU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAE7SURBVDhPnZJBa8JAEEb7'
-      && '0wMeFgy0hNBaMKLgoWAxoYSAkB5aLOyhRQ9FxFKMxcOClgZiQEIO6czOJNVKDu27hM2+'
-      && 'b4eZ3bPij/wrkGUZLYo4Gt+2TNEwDKMhzFY/nMdFsZXD0TJN00TDFSDz8dgRIGoXwRQu'
-      && '8NudkgZw4POlh7a4dCdrOgnYSIdTF74irwxEgyb8toIVq8jX7O66WRbqv2oP0IHIg+PF'
-      && 'YMbqCflul2sbwEAc2nCII3n7N2sZhs/zLflUIY7kvftQV2DhmgddUA+5UhvePmEVWFC/'
-      && 'Lffa5IByz7E1nKd1M1GsIko6OL7K50Dx1MEARKxgwSrM6X3cw+kZdlh2UAXehnxpyNHF'
-      && 'iavRkhwCA3DNe+n5UY5Pw2vbP0/DnyqcJwhHTwMWmK2nsgEMwIc26iAVSZJvJSiWiibm'
-      && 'heIAAAAASUVORK5CYII='.
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA6ElEQVQYGY3BIWuUAQAG'
+      && '4Pc7N72xsbGBYNE8tYpVZKDZX2CcYLEZ9yQxOQSz3D/YmkUsVovRQ2SYNJnlkFfH7VZu'
+      && 'wefJgrGHXnjrpQeu5B93smCwr6qqqp54433mDI5Ucds1u577o+p35hyoqe2cMThWVatJ'
+      && '7KiZrZxz18SJqqtJPFXPssRgw0oSH9WNXMCQU76qzSxx2cxxTlk3yhKb6mcSQy7kvjpM'
+      && 'Ylt98tpjN3POyFTdSuKSqppayxkjE/Uhc36p+m7PhhXr7vmmfhhnzpHPJqqqquqdcRY8'
+      && 'spq47sAXMyde2c3/+wvX7Y18BexhBwAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/toc' ##NO_TEXT.
@@ -676,14 +697,33 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ls_image-url     = 'img/repo_offline' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
-      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAAWNJREFUeNrEkr1KxFAQhe9P/iS6goLWiiB2PoCN'
-      && 'lYW9ChbbiFhYRAQ7MaS2SOdT2PkSvoGPINiF1YTNz/WceC+sohDYwoFvZ/Zm78mcmZXG'
-      && 'GDFPKDFn/L+AdEWWZUIptRmG4bLWeglHNXjHjGoppUa9CiaoX3ieJEl/z3MCXdfdIKXT'
-      && '6bRFju2xYeASJ618338Dl6gf8zw3FOktpGk6QrrFmyPP82J0IgmCHxq1F0URBdbxuzuw'
-      && '9nMGR2CRltCBbJpG1HUtmNGZcN/tynfAgbPgBMbWxp/DcmIIDaFdWOjtK7S/hbxnDQu0'
-      && 'LGBFBEHQg7YNbAnCZ5xJWZbnRVFsuw7GM4P8hhXkPLgh0batqKqKFmM8O3FbeAanIOAM'
-      && 'cJFQWNoBLpAv/e6D4PKEK3UCh+DiN9/sgG8lbhSWCNyDJ2U3MDSOwQa7cfc828rKQIF9'
-      && '+x9QsxauwAMYDRA4s/kVXLP4FGAAajajeu7yxJkAAAAASUVORK5CYII='.
+      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAA3hpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/'
+      && 'eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+'
+      && 'IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2Jl'
+      && 'IFhNUCBDb3JlIDUuNi1jMTMyIDc5LjE1OTI4NCwgMjAxNi8wNC8xOS0xMzoxMzo0MCAg'
+      && 'ICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5'
+      && 'LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9'
+      && 'IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHht'
+      && 'bG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3Vy'
+      && 'Y2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHht'
+      && 'cE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkOTZmYmU4Yi0yMjEzLTZlNDct'
+      && 'ODZiZC05NGE1ZTM1ZmJiMzUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDQ2RTFD'
+      && 'MTA0OTkwMTFFNjlCMzk5MTg2OTAzMDVDRDIiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5p'
+      && 'aWQ6NDQ2RTFDMEY0OTkwMTFFNjlCMzk5MTg2OTAzMDVDRDIiIHhtcDpDcmVhdG9yVG9v'
+      && 'bD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUuNSAoV2luZG93cykiPiA8eG1wTU06RGVy'
+      && 'aXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpkOTZmYmU4Yi0yMjEzLTZl'
+      && 'NDctODZiZC05NGE1ZTM1ZmJiMzUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6ZDk2'
+      && 'ZmJlOGItMjIxMy02ZTQ3LTg2YmQtOTRhNWUzNWZiYjM1Ii8+IDwvcmRmOkRlc2NyaXB0'
+      && 'aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+SXqL'
+      && 'ugAAAWVJREFUeNrEk7tKxEAYheeSm0RXUNBaEcTOB7CxsrBXwWIbEQuLiGAnhtQW6XwK'
+      && 'O1/CN/ARBLuwmrC5jOfEGVhFIbCFP3z7zyY7J+f8s5HGGDFPKTFnSbfIskwopTbDMFzW'
+      && 'Wi/hUg3e4bCWUmqsV8EE6xdeT5Kk3+c5ga7rbtDS6XTaosf2smFhE3Mq3/ffwCXWj3me'
+      && 'G4r0EdI0HaHd4smR53kxnEiC4ofG2ouiiALr+N0dWPs5gyOwyEhwIJumEXVdC3Y4E+67'
+      && 'HfgOOHARnMDYxvhzWE4MpSG0iwh9fAX7W+h7NrCAZYEoIgiCHtg2iCUI73EmZVmeF0Wx'
+      && '7RyMZwb5DSvIefCERNu2oqoqRoxx78SdwjM4BQFngI2EwtIOcIF86XcfBJsnPFIncAgu'
+      && 'fstNB3wqcaOwROAePCl7AkPrGGzQjdvnWSsrAwX27X9AzUa4Ag9gNEDgzPZXcN2/C//+'
+      && 'Nn4KMABcS6Z2qzb7wwAAAABJRU5ErkJggg=='.
+
     APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/pkg' ##NO_TEXT.

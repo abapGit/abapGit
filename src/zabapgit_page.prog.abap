@@ -228,28 +228,40 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.emphasis         { font-weight: bold !important; }'.
     _add '.attention        { color: red        !important; }'.
     _add '.right            { text-align:right; }'.
-    _add '.paddings         { padding: 0.5em 0.5em 0.5em 0.5em; }'.
+    _add '.paddings         { padding: 0.5em 0.5em; }'.
 
     " Structure div styles: header, footer, toc
     _add '/* STRUCTURE DIVS, HEADER & FOOTER */'.
     _add 'td.headpad { padding-top: 11px; }'.
     _add 'td.logo    { width: 164px; }'.
     _add 'div#header {'.
-    _add '  padding:          0.5em 0.5em 0.5em 0.5em;'.
+    _add '  padding:          0.5em 0.5em;'.
     _add '  border-bottom:    3px double lightgrey;'.
     _add '}'.
     _add 'div#toc {'.
-    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  padding:          0.5em 1em;'.
     _add '  background-color: #f2f2f2;'.
     _add '}'.
+    _add 'div#toc div.toc_grid {'.
+    _add '  margin:           -0.3em 0em;'.
+    _add '}'.
+    _add 'div#toc div.toc_grid a {'.
+    _add '  color:            #ccc;'.
+    _add '}'.
+    _add 'div#toc:hover div.toc_grid a {'.
+    _add '  color:            #4078c0;'.
+    _add '}'.
+    _add 'div#toc div.toc_row {'.
+    _add '  margin:           0.3em 0em;'.
+    _add '}'.
     _add 'div#footer {'.
-    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  padding:          0.5em 1em;'.
     _add '  border-top:       3px double lightgrey;'.
     _add '  text-align:       center;'.
     _add '}'.
     _add 'div.dummydiv {'.
     _add '  background-color: #f2f2f2;'.
-    _add '  padding:          0.5em 1em 0.5em 1em;'.
+    _add '  padding:          0.5em 1em;'.
     _add '  text-align:       center;'.
     _add '}'.
     _add 'span.version {'.
