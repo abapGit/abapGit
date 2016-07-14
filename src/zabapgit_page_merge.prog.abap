@@ -13,15 +13,16 @@ CLASS lcl_merge DEFINITION FINAL.
            END OF ty_ancestor.
 
     TYPES: BEGIN OF ty_merge,
-             repo   TYPE REF TO lcl_repo_online,
-             source TYPE lcl_git_transport=>ty_branch_list,
-             target TYPE lcl_git_transport=>ty_branch_list,
-             common TYPE ty_ancestor,
-             stree  TYPE lcl_git_porcelain=>ty_expanded_tt,
-             ttree  TYPE lcl_git_porcelain=>ty_expanded_tt,
-             ctree  TYPE lcl_git_porcelain=>ty_expanded_tt,
-             result TYPE lcl_git_porcelain=>ty_expanded_tt,
-             stage  TYPE REF TO lcl_stage,
+             repo     TYPE REF TO lcl_repo_online,
+             source   TYPE lcl_git_transport=>ty_branch_list,
+             target   TYPE lcl_git_transport=>ty_branch_list,
+             common   TYPE ty_ancestor,
+             stree    TYPE lcl_git_porcelain=>ty_expanded_tt,
+             ttree    TYPE lcl_git_porcelain=>ty_expanded_tt,
+             ctree    TYPE lcl_git_porcelain=>ty_expanded_tt,
+             result   TYPE lcl_git_porcelain=>ty_expanded_tt,
+             stage    TYPE REF TO lcl_stage,
+             conflict TYPE string,
            END OF ty_merge.
 
     CLASS-METHODS:
@@ -199,7 +200,7 @@ CLASS lcl_merge IMPLEMENTATION.
       IF lv_found_source = abap_false
           OR lv_found_target = abap_false
           OR lv_found_common = abap_false.
-        _raise 'merge conflict'.
+        _raise 'merge conflict, not found anywhere'.
       ENDIF.
 
       IF <ls_target>-sha1 = <ls_source>-sha1.
@@ -214,7 +215,10 @@ CLASS lcl_merge IMPLEMENTATION.
         <ls_result>-sha1 = <ls_target>-sha1.
       ELSE.
 * changed in source and target, conflict
-        _raise 'merge conflict'.
+        CLEAR gs_merge-result.
+        gs_merge-conflict = |{ <ls_file>-name
+          } merge conflict, changed in source and target branch|.
+        RETURN.
       ENDIF.
 
     ENDLOOP.
@@ -275,12 +279,12 @@ CLASS lcl_merge IMPLEMENTATION.
       <ls_ancestor>-commit = lv_commit.
       <ls_ancestor>-tree = ls_commit-tree.
       <ls_ancestor>-body = ls_commit-body.
-      FIND REGEX '^[\w\s]+ <(.*)> (\d{10}) .\d{4}$' IN ls_commit-author
+      FIND REGEX '^[\w\s]+ <.*> (\d{10}) .\d{4}$' IN ls_commit-author
         SUBMATCHES <ls_ancestor>-time ##NO_TEXT.
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
-    SORT rt_ancestors BY time ASCENDING.
+    SORT rt_ancestors BY time DESCENDING.
 
   ENDMETHOD.
 
@@ -469,7 +473,10 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
       ro_html->add( '</tr>' ).
     ENDLOOP.
     ro_html->add( '</table>' ).
-
+    ro_html->add( '<br>' ).
+    ro_html->add( '<b>' ).
+    ro_html->add( ms_merge-conflict ).
+    ro_html->add( '</b>' ).
     ro_html->add( '</div>' ).
     ro_html->add( footer( ) ).
 
