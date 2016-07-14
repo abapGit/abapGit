@@ -188,6 +188,7 @@ CLASS lcl_merge IMPLEMENTATION.
 * added in source
         _from_source.
         <ls_result>-sha1 = <ls_source>-sha1.
+        CONTINUE.
       ELSEIF lv_found_source = abap_false.
 * added in target
         <ls_result>-sha1 = <ls_target>-sha1.
@@ -200,7 +201,10 @@ CLASS lcl_merge IMPLEMENTATION.
       IF lv_found_source = abap_false
           OR lv_found_target = abap_false
           OR lv_found_common = abap_false.
-        _raise 'merge conflict, not found anywhere'.
+        CLEAR gs_merge-result.
+        gs_merge-conflict = |{ <ls_file>-name
+          } merge conflict, not found anywhere|.
+        RETURN.
       ENDIF.
 
       IF <ls_target>-sha1 = <ls_source>-sha1.
