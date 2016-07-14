@@ -249,6 +249,8 @@ CLASS lcl_repo IMPLEMENTATION.
       ms_data-branch_name = iv_branch_name.
     ENDIF.
 
+    COMMIT WORK.
+
   ENDMETHOD.                    "set_sha1
 
   METHOD build_local_checksums.

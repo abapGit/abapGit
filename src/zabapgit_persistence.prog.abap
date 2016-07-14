@@ -1000,6 +1000,8 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     ls_user-repo_show = iv_key.
     update( ls_user ).
 
+    COMMIT WORK.
+
   ENDMETHOD.
 
   METHOD get_repo_show.
