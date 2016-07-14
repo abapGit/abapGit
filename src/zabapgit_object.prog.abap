@@ -768,7 +768,18 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+* todo, not sure this is correct, to be tested
+    SELECT SINGLE changedby FROM seoclassdf INTO rv_user
+      WHERE clsname = ms_item-obj_name
+      AND version = '1'.
+    IF sy-subrc = 0 AND rv_user IS INITIAL.
+      SELECT SINGLE author FROM seoclassdf INTO rv_user
+        WHERE clsname = ms_item-obj_name
+        AND version = '1'.
+    ENDIF.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -2089,7 +2100,12 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    SELECT SINGLE unam FROM reposrc INTO rv_user
+      WHERE progname = ms_item-obj_name
+      AND r3state = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
