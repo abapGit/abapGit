@@ -237,16 +237,16 @@ CLASS lcl_branch_overview IMPLEMENTATION.
       READ TABLE gt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_commit>-parent2.
       IF sy-subrc = 0.
         <ls_commit>-merge = <ls_merged>-branch.
-      ENDIF.
 
 * orphaned, branch has been deleted after merge
-      WHILE <ls_merged>-branch IS INITIAL.
-        <ls_merged>-branch = <ls_commit>-branch.
-        READ TABLE gt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_merged>-parent1.
-        IF sy-subrc <> 0.
-          EXIT.
-        ENDIF.
-      ENDWHILE.
+        WHILE <ls_merged>-branch IS INITIAL.
+          <ls_merged>-branch = <ls_commit>-branch.
+          READ TABLE gt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_merged>-parent1.
+          IF sy-subrc <> 0.
+            EXIT.
+          ENDIF.
+        ENDWHILE.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -529,8 +529,8 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   METHOD decode_merge.
 
-    DATA: lv_string  TYPE string,
-          lt_fields  TYPE tihttpnvp.
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
