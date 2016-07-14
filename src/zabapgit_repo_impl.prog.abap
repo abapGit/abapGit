@@ -55,6 +55,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     set( iv_sha1 = mv_branch ).
 
+    COMMIT WORK.
+
   ENDMETHOD.                    "deserialize
 
   METHOD refresh.
@@ -248,8 +250,6 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_branch_name = iv_branch_name ).
       ms_data-branch_name = iv_branch_name.
     ENDIF.
-
-    COMMIT WORK.
 
   ENDMETHOD.                    "set_sha1
 
