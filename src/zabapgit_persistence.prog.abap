@@ -1076,6 +1076,9 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   METHOD lock.
 
+    DATA: lv_msg TYPE string.
+
+
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
         mode_zabapgit  = iv_mode
@@ -1086,7 +1089,8 @@ CLASS lcl_persistence_db IMPLEMENTATION.
         system_failure = 2
         OTHERS         = 3.
     IF sy-subrc <> 0.
-      _raise 'Could not aquire lock'.
+      lv_msg = |Could not aquire lock { iv_type } { iv_value }|.
+      _raise lv_msg.
     ENDIF.
 
 * trigger dummy update task to automatically release locks at commit
