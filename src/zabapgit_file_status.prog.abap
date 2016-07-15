@@ -135,6 +135,14 @@ CLASS lcl_file_status IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+* add path information for files
+    LOOP AT lt_remote ASSIGNING <ls_remote>.
+      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_remote>-filename.
+      IF sy-subrc = 0.
+        <ls_result>-path = <ls_remote>-path.
+      ENDIF.
+    ENDLOOP.
+
 * find objects only existing locally
     lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -155,14 +163,14 @@ CLASS lcl_file_status IMPLEMENTATION.
         ls_result-obj_name = <ls_tadir>-obj_name.
         APPEND ls_result TO rt_results.
       ENDIF.
-    ENDLOOP.
 
-* add path information for files
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
-      READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_remote>-filename.
-      IF sy-subrc = 0.
-        <ls_result>-path = <ls_remote>-path.
-      ENDIF.
+      LOOP AT rt_results ASSIGNING <ls_result>
+          WHERE obj_type = <ls_tadir>-object
+          AND obj_name = <ls_tadir>-obj_name
+          AND path IS INITIAL.
+* new file added locally to existing object
+        <ls_result>-path = io_repo->get_dot_abapgit( )->get_starting_folder( ) && <ls_tadir>-path.
+      ENDLOOP.
     ENDLOOP.
 
 * add package information
