@@ -114,8 +114,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
           READ TABLE lt_repos INTO lo_repo INDEX 1.
-          ASSERT sy-subrc = 0.
-          mv_show = lo_repo->get_key( ).
+          IF sy-subrc = 0.
+            mv_show = lo_repo->get_key( ).
+          ENDIF.
       ENDTRY.
     ENDIF.
 
