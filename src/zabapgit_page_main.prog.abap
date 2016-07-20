@@ -106,8 +106,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS INITIAL.
       READ TABLE lt_repos INTO lo_repo INDEX 1.
-      ASSERT sy-subrc = 0.
-      mv_show = lo_repo->get_key( ).
+      IF sy-subrc = 0.
+        mv_show = lo_repo->get_key( ).
+      ENDIF.
     ELSE.
       TRY.
 * verify the key exists
