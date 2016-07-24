@@ -101,9 +101,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
            ls_pinf-attributes-created_on,
            ls_pinf-attributes-changed_by,
            ls_pinf-attributes-changed_on,
-           ls_pinf-attributes-tadir_devc,
-           ls_pinf-attributes-sw_comp_logical_package,
-           ls_pinf-attributes-sw_comp_tadir_package.
+           ls_pinf-attributes-tadir_devc.
+*           ls_pinf-attributes-sw_comp_logical_package,  backport
+*           ls_pinf-attributes-sw_comp_tadir_package.    backport
 
     li_interface->get_elements( IMPORTING e_elements = lt_elements ).
 
@@ -150,9 +150,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
     ii_interface->get_changeable( IMPORTING e_changeable = lv_changeable ).
     IF lv_changeable = abap_false.
 * at creation the object is already in change mode
-      ii_interface->set_changeable(
-        i_changeable      = abap_true
-        i_suppress_dialog = abap_true ).
+      ii_interface->set_changeable( abap_true ).
     ENDIF.
 
     ls_sign-descript       = abap_true.
@@ -194,15 +192,13 @@ CLASS lcl_object_pinf IMPLEMENTATION.
     ls_sign-no_check                   = abap_true.
     ls_sign-useastype                  = abap_true.
     ls_sign-asforgnkey                 = abap_true.
-    ls_sign-deprecation_type           = abap_true.
-    ls_sign-replacement_object_type    = abap_true.
-    ls_sign-replacement_object_name    = abap_true.
-    ls_sign-replacement_subobject_type = abap_true.
-    ls_sign-replacement_subobject_name = abap_true.
+*    ls_sign-deprecation_type           = abap_true. backport
+*    ls_sign-replacement_object_type    = abap_true. backport
+*    ls_sign-replacement_object_name    = abap_true. backport
+*    ls_sign-replacement_subobject_type = abap_true. backport
+*    ls_sign-replacement_subobject_name = abap_true. backport
 
-    ii_interface->set_elements_changeable(
-      i_changeable      = abap_true
-      i_suppress_dialog = abap_true ).
+    ii_interface->set_elements_changeable( abap_true ).
 
     ii_interface->get_elements( IMPORTING e_elements = lt_existing ).
 
@@ -244,7 +240,6 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         EXPORTING
           i_pkg_interface_name    = is_pinf-attributes-intf_name
           i_publisher_pkg_name    = iv_package
-          i_suppress_dialog       = abap_true
         IMPORTING
           e_package_interface     = ri_interface
         EXCEPTIONS
@@ -252,8 +247,6 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           object_just_created     = 2
           interface_name_invalid  = 3
           unexpected_error        = 4
-          no_changes_allowed      = 5
-          check_error_occurred    = 6
           OTHERS                  = 7 ).
       IF sy-subrc <> 0.
         _raise 'error creating new package interface'.
@@ -286,9 +279,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
     FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_elements.
 
 
-    ii_interface->set_elements_changeable(
-      i_changeable      = abap_true
-      i_suppress_dialog = abap_true ).
+    ii_interface->set_elements_changeable( abap_true ).
 
     ii_interface->get_elements( IMPORTING e_elements = lt_elements ).
 
@@ -328,11 +319,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 * can be deleted
     delete_elements( li_interface ).
 
-    li_interface->set_changeable(
-      i_changeable      = abap_true
-      i_suppress_dialog = abap_true ).
+    li_interface->set_changeable( abap_true ).
 
-    li_interface->delete( abap_true ).
+    li_interface->delete( ).
 
     li_interface->save( ).
 
