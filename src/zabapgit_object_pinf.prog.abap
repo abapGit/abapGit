@@ -79,7 +79,8 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           lt_elements  TYPE ty_elements,
           li_interface TYPE REF TO if_package_interface.
 
-    FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_elements,
+    FIELD-SYMBOLS: <lg_any>     TYPE any,
+                   <li_element> LIKE LINE OF lt_elements,
                    <ls_element> LIKE LINE OF ls_pinf-elements.
 
 
@@ -102,8 +103,16 @@ CLASS lcl_object_pinf IMPLEMENTATION.
            ls_pinf-attributes-changed_by,
            ls_pinf-attributes-changed_on,
            ls_pinf-attributes-tadir_devc.
-*           ls_pinf-attributes-sw_comp_logical_package,  backport
-*           ls_pinf-attributes-sw_comp_tadir_package.    backport
+
+* fields does not exist in older SAP versions
+    ASSIGN COMPONENT 'SW_COMP_LOGICAL_PACKAGE' OF STRUCTURE ls_pinf-attributes TO <lg_any>.
+    IF sy-subrc = 0.
+      CLEAR <lg_any>.
+    ENDIF.
+    ASSIGN COMPONENT 'SW_COMP_TADIR_PACKAGE' OF STRUCTURE ls_pinf-attributes TO <lg_any>.
+    IF sy-subrc = 0.
+      CLEAR <lg_any>.
+    ENDIF.
 
     li_interface->get_elements( IMPORTING e_elements = lt_elements ).
 
