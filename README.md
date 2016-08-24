@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
+[![abaplint](http://abaplint.org/badges/larshp/abapGit)](http://abaplint.org/project/larshp/abapGit)
 
 # abapGit #
 
