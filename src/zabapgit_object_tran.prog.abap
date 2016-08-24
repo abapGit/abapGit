@@ -259,7 +259,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         object_not_found = 2
         OTHERS           = 3.
     IF sy-subrc <> 0.
-      _raise 'Error from RPY_TRANSACTION_DELETE'.
+      lcx_exception=>raise( 'Error from RPY_TRANSACTION_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -304,7 +304,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         lv_type = ststc_c_type_parameters.
 * todo, or ststc_c_type_variant?
       WHEN OTHERS.
-        _raise 'Transaction, unknown CINFO'.
+        lcx_exception=>raise( 'Transaction, unknown CINFO' ).
     ENDCASE.
 
     IF ls_tstcp IS NOT INITIAL.
@@ -345,7 +345,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         db_access_error         = 8
         OTHERS                  = 9.
     IF sy-subrc <> 0.
-      _raise 'Error from RPY_TRANSACTION_INSERT'.
+      lcx_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -378,14 +378,14 @@ CLASS lcl_object_tran IMPLEMENTATION.
     IF sy-subrc = 4 OR sy-subrc = 3.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'Error from RPY_TRANSACTION_READ'.
+      lcx_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
     ENDIF.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
       WHERE sprsl = mv_language
       AND tcode = lv_transaction.                       "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      _raise 'Transaction description not found'.
+      lcx_exception=>raise( 'Transaction description not found' ).
     ENDIF.
 
     SELECT SINGLE * FROM tstcp INTO ls_tstcp

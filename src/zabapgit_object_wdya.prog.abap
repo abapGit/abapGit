@@ -57,7 +57,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         rv_bool = abap_false.
       CATCH cx_wdy_md_permission_failure.
-        _raise 'WDYA, permission failure'.
+        lcx_exception=>raise( 'WDYA, permission failure' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object~exists
@@ -82,7 +82,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         RETURN.
       CATCH cx_wdy_md_permission_failure.
-        _raise 'WDYA, permission failure'.
+        lcx_exception=>raise( 'WDYA, permission failure' ).
     ENDTRY.
 
     li_app->if_wdy_md_object~get_definition( IMPORTING definition = es_app ).
@@ -138,7 +138,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
         lo_app->if_wdy_md_lockable_object~save_to_database( ).
       CATCH cx_wdy_md_exception.
-        _raise 'error saving WDYA'.
+        lcx_exception=>raise( 'error saving WDYA' ).
     ENDTRY.
 
   ENDMETHOD.                    "save
@@ -191,7 +191,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         RETURN.
       CATCH cx_wdy_md_exception.
-        _raise 'WDYA, error deleting'.
+        lcx_exception=>raise( 'WDYA, error deleting' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

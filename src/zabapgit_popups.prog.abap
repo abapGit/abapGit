@@ -82,7 +82,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
       RETURN.
@@ -129,7 +129,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2 ##NO_TEXT.
     IF sy-subrc <> 0.
-      _raise 'error from POPUP_GET_VALUES'.
+      lcx_exception=>raise( 'error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = 'A'.
@@ -168,7 +168,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
       RETURN.
@@ -205,9 +205,9 @@ CLASS lcl_popups IMPLEMENTATION.
     ENDIF.
 
     IF ls_branch-name = 'HEAD'.
-      _raise 'cannot delete HEAD'.
+      lcx_exception=>raise( 'cannot delete HEAD' ).
     ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      _raise 'switch branch before deleting current'.
+      lcx_exception=>raise( 'switch branch before deleting current' ).
     ENDIF.
 
     lcl_git_porcelain=>delete_branch(
@@ -251,7 +251,7 @@ CLASS lcl_popups IMPLEMENTATION.
         too_much_marks     = 3
         OTHERS             = 4.                             "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'Error from POPUP_TO_DECIDE_LIST'.
+      lcx_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
 
     IF lv_answer = 'A'. " cancel
@@ -338,7 +338,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields   = 1
         OTHERS            = 2.                              "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
       rs_popup-cancel = abap_true.

@@ -61,7 +61,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      _raise 'error from w3api_template~load'.
+      lcx_exception=>raise( 'error from w3api_template~load' ).
     ENDIF.
 
     li_template->get_attributes( IMPORTING p_attributes = es_attr ).
@@ -163,7 +163,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      _raise 'error from if_w3_api_template~load'.
+      lcx_exception=>raise( 'error from if_w3_api_template~load' ).
     ENDIF.
 
     li_template->if_w3_api_object~set_changeable( abap_true ).
@@ -190,7 +190,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     IF sy-subrc = 1.
       rv_bool = abap_false.
     ELSEIF sy-subrc <> 0.
-      _raise 'error from w3_api_template~load'.
+      lcx_exception=>raise( 'error from w3_api_template~load' ).
     ELSE.
       rv_bool = abap_true.
     ENDIF.
@@ -198,7 +198,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    _raise 'todo, IATU, jump'.
+    lcx_exception=>raise( 'todo, IATU, jump' ).
   ENDMETHOD.                    "lif_object~jump
 
 ENDCLASS.                    "lcl_object_iatu IMPLEMENTATION

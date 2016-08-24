@@ -263,17 +263,17 @@ CLASS lcl_git_transport IMPLEMENTATION.
       WHEN 200.
         RETURN.
       WHEN 302.
-        _raise 'HTTP redirect, check URL'.
+        lcx_exception=>raise( 'HTTP redirect, check URL' ).
       WHEN 401.
-        _raise 'HTTP 401, unauthorized'.
+        lcx_exception=>raise( 'HTTP 401, unauthorized' ).
       WHEN 403.
-        _raise 'HTTP 403, forbidden'.
+        lcx_exception=>raise( 'HTTP 403, forbidden' ).
       WHEN 404.
-        _raise 'HTTP 404, not found'.
+        lcx_exception=>raise( 'HTTP 404, not found' ).
       WHEN 415.
-        _raise 'HTTP 415, unsupported media type'.
+        lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
       WHEN OTHERS.
-        _raise 'HTTP error code'.
+        lcx_exception=>raise( 'HTTP error code' ).
     ENDCASE.
 
   ENDMETHOD.                                                "http_200
@@ -303,7 +303,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        _raise 'No branches, create branch manually by adding file'.
+        lcx_exception=>raise( 'No branches, create branch manually by adding file' ).
       ELSE.
         CONTINUE.
       ENDIF.
@@ -335,13 +335,13 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     IF ev_branch IS SUPPLIED.
       IF iv_branch_name IS INITIAL.
-        _raise 'branch empty'.
+        lcx_exception=>raise( 'branch empty' ).
       ENDIF.
 
       READ TABLE lt_branch_list INTO ls_branch_list
         WITH KEY name = iv_branch_name.
       IF sy-subrc <> 0.
-        _raise 'Branch not found'.
+        lcx_exception=>raise( 'Branch not found' ).
       ENDIF.
 
       ev_branch = ls_branch_list-sha1.
@@ -488,9 +488,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
-      _raise 'unpack not ok'.
+      lcx_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
-      _raise 'pre-receive hook declined'.
+      lcx_exception=>raise( 'pre-receive hook declined' ).
     ENDIF.
 
   ENDMETHOD.                    "receive_pack
@@ -517,7 +517,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lo_obj->read( EXPORTING n    = lv_len
                       IMPORTING data = lv_string ).
       CATCH cx_sy_conversion_codepage.
-        _raise 'error converting to hex, LENGTH_UTF8_HEX'.
+        lcx_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
     ENDTRY.
 
     lv_char4 = lv_string.
@@ -540,7 +540,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lv_len = length_utf8_hex( cv_data ).
 
       IF lv_len > xstrlen( cv_data ).
-        _raise 'parse, string length too large'.
+        lcx_exception=>raise( 'parse, string length too large' ).
       ENDIF.
 
       lv_contents = cv_data(lv_len).
@@ -630,7 +630,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
            CHANGING cv_data = lv_xstring ).
 
     IF lv_pack IS INITIAL.
-      _raise 'empty pack'.
+      lcx_exception=>raise( 'empty pack' ).
     ENDIF.
 
     et_objects = lcl_git_pack=>decode( lv_pack ).
@@ -646,7 +646,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     lv_len = strlen( iv_string ).
 
     IF lv_len >= 255.
-      _raise 'PKT, todo'.
+      lcx_exception=>raise( 'PKT, todo' ).
     ENDIF.
 
     lv_x = lv_len + 4.
@@ -717,7 +717,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       WHEN gc_type-ref_d.
         lv_type = '111'.
       WHEN OTHERS.
-        _raise 'Unexpected object type while encoding pack'.
+        lcx_exception=>raise( 'Unexpected object type while encoding pack' ).
     ENDCASE.
 
     lv_x4 = xstrlen( is_object-data ).
@@ -742,7 +742,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       CONCATENATE lv_result '0' lv_bits+7(7) INTO lv_result.
     ELSE.
 * this IF can be refactored, use shifting?
-      _raise 'Todo, encoding length'.
+      lcx_exception=>raise( 'Todo, encoding length' ).
     ENDIF.
 
 * convert bit string to xstring
@@ -879,7 +879,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       WHEN '111'.
         rv_type = gc_type-ref_d.
       WHEN OTHERS.
-        _raise 'Todo, unknown type'.
+        lcx_exception=>raise( 'Todo, unknown type' ).
     ENDCASE.
 
   ENDMETHOD.                    "get_type
@@ -931,7 +931,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
         OR rs_commit-tree IS INITIAL.
-      _raise 'multiple parents? not supported'.
+      lcx_exception=>raise( 'multiple parents? not supported' ).
     ENDIF.
 
   ENDMETHOD.                    "decode_commit
@@ -980,14 +980,14 @@ CLASS lcl_git_pack IMPLEMENTATION.
     IF sy-subrc <> 0.
       CONCATENATE 'Base not found,' is_object-sha1 INTO lv_message
         SEPARATED BY space.                                 "#EC NOTEXT
-      _raise lv_message.
+      lcx_exception=>raise( lv_message ).
     ELSE.
       lv_base = <ls_object>-data.
     ENDIF.
 
 * sanity check
     IF <ls_object>-type = gc_type-ref_d.
-      _raise 'Delta, base eq delta'.
+      lcx_exception=>raise( 'Delta, base eq delta' ).
     ENDIF.
 
 * skip the 2 headers
@@ -1119,7 +1119,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         IF ls_node-chmod <> gc_chmod-dir
             AND ls_node-chmod <> gc_chmod-file
             AND ls_node-chmod <> gc_chmod-executable.
-          _raise 'Unknown chmod'.
+          lcx_exception=>raise( 'Unknown chmod' ).
         ENDIF.
 
         ls_node-name = lv_name.
@@ -1161,13 +1161,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 * header
     IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
-      _raise 'Unexpected pack header'.
+      lcx_exception=>raise( 'Unexpected pack header' ).
     ENDIF.
     lv_data = lv_data+4.
 
 * version
     IF lv_data(4) <> c_version.
-      _raise 'Version not supported'.
+      lcx_exception=>raise( 'Version not supported' ).
     ENDIF.
     lv_data = lv_data+4.
 
@@ -1193,7 +1193,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * strip header, '789C', CMF + FLG
       lv_zlib = lv_data(2).
       IF lv_zlib <> c_zlib AND lv_zlib <> c_zlib_hmm.
-        _raise 'Unexpected zlib header'.
+        lcx_exception=>raise( 'Unexpected zlib header' ).
       ENDIF.
       lv_data = lv_data+2.
 
@@ -1208,7 +1208,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
             raw_out_len = lv_decompress_len ).
 
         IF lv_expected <> lv_decompress_len.
-          _raise 'Decompression falied'.
+          lcx_exception=>raise( 'Decompression falied' ).
         ENDIF.
 
         cl_abap_gzip=>compress_binary(
@@ -1219,7 +1219,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
             gzip_out_len   = lv_compressed_len ).
 
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
-          _raise 'Compressed data doesnt match'.
+          lcx_exception=>raise( 'Compressed data doesnt match' ).
         ENDIF.
 
         lv_data = lv_data+lv_compressed_len.
@@ -1234,7 +1234,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         lv_decompressed = ls_data-raw.
 
         IF lv_compressed_len IS INITIAL.
-          _raise 'Decompression falied :o/'.
+          lcx_exception=>raise( 'Decompression falied :o/' ).
         ENDIF.
 
         lv_data = lv_data+lv_compressed_len.
@@ -1247,7 +1247,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_data = lv_data+1.
         ENDIF.
         IF lv_data(4) <> lv_adler32.
-          _raise 'Wrong Adler checksum'.
+          lcx_exception=>raise( 'Wrong Adler checksum' ).
         ENDIF.
 
       ENDIF.
@@ -1275,7 +1275,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
     IF to_upper( lv_sha1 ) <> lv_data.
-      _raise 'SHA1 at end of pack doesnt match'.
+      lcx_exception=>raise( 'SHA1 at end of pack doesnt match' ).
     ENDIF.
 
     decode_deltas( CHANGING ct_objects = rt_objects ).
@@ -1609,7 +1609,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             AND path = <ls_stage>-file-path.
           ASSERT sy-subrc = 0.
         WHEN OTHERS.
-          _raise 'stage method not supported, todo'.
+          lcx_exception=>raise( 'stage method not supported, todo' ).
       ENDCASE.
     ENDLOOP.
 
@@ -1637,7 +1637,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       WITH KEY sha1 = iv_tree
       type = gc_type-tree.
     IF sy-subrc <> 0.
-      _raise 'tree not found'.
+      lcx_exception=>raise( 'tree not found' ).
     ENDIF.
     lt_nodes = lcl_git_pack=>decode_tree( ls_object-data ).
 
@@ -1657,7 +1657,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             iv_base    = iv_base && <ls_node>-name && '/' ).
           APPEND LINES OF lt_expanded TO rt_expanded.
         WHEN OTHERS.
-          _raise 'walk_tree: unknown chmod'.
+          lcx_exception=>raise( 'walk_tree: unknown chmod' ).
       ENDCASE.
     ENDLOOP.
 
@@ -1671,7 +1671,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = gc_type-commit.
     IF sy-subrc <> 0.
-      _raise 'commit not found'.
+      lcx_exception=>raise( 'commit not found' ).
     ENDIF.
     ls_commit = lcl_git_pack=>decode_commit( ls_object-data ).
 
@@ -1697,7 +1697,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_type-commit.
     IF sy-subrc <> 0.
-      _raise 'Commit/branch not found'.
+      lcx_exception=>raise( 'Commit/branch not found' ).
     ENDIF.
     ls_commit = lcl_git_pack=>decode_commit( ls_object-data ).
 
@@ -1818,7 +1818,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = gc_type-tree.
     IF sy-subrc <> 0.
-      _raise 'Walk, tree not found'.
+      lcx_exception=>raise( 'Walk, tree not found' ).
     ENDIF.
 
     lt_nodes = lcl_git_pack=>decode_tree( <ls_tree>-data ).
@@ -1828,7 +1828,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
         READ TABLE it_objects ASSIGNING <ls_blob>
           WITH KEY sha1 = <ls_node>-sha1 type = gc_type-blob.
         IF sy-subrc <> 0.
-          _raise 'Walk, blob not found'.
+          lcx_exception=>raise( 'Walk, blob not found' ).
         ENDIF.
 
         CLEAR ls_file.

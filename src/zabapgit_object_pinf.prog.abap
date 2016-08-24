@@ -258,7 +258,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           unexpected_error        = 4
           OTHERS                  = 7 ).
       IF sy-subrc <> 0.
-        _raise 'error creating new package interface'.
+        lcx_exception=>raise( 'error creating new package interface' ).
       ENDIF.
     ELSE.
       cl_package_interface=>load_package_interface(
@@ -275,7 +275,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           object_locked_and_modified = 5
           OTHERS                     = 6 ).
       IF sy-subrc <> 0.
-        _raise 'error loading package interface'.
+        lcx_exception=>raise( 'error loading package interface' ).
       ENDIF.
     ENDIF.
 
@@ -321,7 +321,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         object_locked_and_modified = 5
         OTHERS                     = 6 ).
     IF sy-subrc <> 0.
-      _raise 'error loading package interface, delete'.
+      lcx_exception=>raise( 'error loading package interface, delete' ).
     ENDIF.
 
 * elements must be deleted before the package interface

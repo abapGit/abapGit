@@ -152,7 +152,7 @@ CLASS lcl_stage IMPLEMENTATION.
       WHEN c_method-ignore.
         rv_description = 'ignore' ##NO_TEXT.
       WHEN OTHERS.
-        _raise 'unknown staging method type'.
+        lcx_exception=>raise( 'unknown staging method type' ).
     ENDCASE.
 
   ENDMETHOD.        "method_description

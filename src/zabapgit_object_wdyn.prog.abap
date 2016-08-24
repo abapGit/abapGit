@@ -111,7 +111,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_component->save_to_database( ).
           li_component->unlock( ).
         CATCH cx_wdy_md_exception.
-          _raise 'error creating dummy component'.
+          lcx_exception=>raise( 'error creating dummy component' ).
       ENDTRY.
     ENDIF.
 
@@ -138,7 +138,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_definition
@@ -170,7 +170,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_controller->save_to_database( ).
           li_controller->unlock( ).
         CATCH cx_wdy_md_exception.
-          _raise 'error creating dummy controller'.
+          lcx_exception=>raise( 'error creating dummy controller' ).
       ENDTRY.
     ENDIF.
 
@@ -214,7 +214,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_controller
@@ -245,7 +245,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_view->save_to_database( ).
           li_view->unlock( ).
         CATCH cx_wdy_md_exception.
-          _raise 'error creating dummy view'.
+          lcx_exception=>raise( 'error creating dummy view' ).
       ENDTRY.
     ENDIF.
 
@@ -285,7 +285,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      _raise 'error from SVRS_MAKE_OBJECT_DELTA'.
+      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_view
@@ -383,7 +383,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         not_existing                 = 1
         OTHERS                       = 2.
     IF sy-subrc <> 0.
-      _raise 'error from WDYC_GET_OBJECT'.
+      lcx_exception=>raise( 'error from WDYC_GET_OBJECT' ).
     ENDIF.
 
     APPEND LINES OF lt_components TO mt_components.
@@ -391,7 +391,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     READ TABLE lt_definition INDEX 1 INTO rs_controller-definition.
     IF sy-subrc <> 0.
-      _raise 'WDYC, definition not found'.
+      lcx_exception=>raise( 'WDYC, definition not found' ).
     ENDIF.
 
     CLEAR: rs_controller-definition-author,
@@ -428,12 +428,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'error from WDYD_GET_OBJECT'.
+      lcx_exception=>raise( 'error from WDYD_GET_OBJECT' ).
     ENDIF.
 
     READ TABLE lt_definition INDEX 1 INTO rs_definition-definition.
     IF sy-subrc <> 0.
-      _raise 'WDYD, definition not found'.
+      lcx_exception=>raise( 'WDYD, definition not found' ).
     ENDIF.
 
     CLEAR: rs_definition-definition-author,
@@ -483,7 +483,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         not_existing           = 1
         OTHERS                 = 2.
     IF sy-subrc <> 0.
-      _raise 'error from WDYV_GET_OBJECT'.
+      lcx_exception=>raise( 'error from WDYV_GET_OBJECT' ).
     ENDIF.
 
     READ TABLE lt_definition INDEX 1 ASSIGNING <ls_definition>.

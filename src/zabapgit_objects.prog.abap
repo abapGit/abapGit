@@ -63,7 +63,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
           insert_into_corr_error = 3
           OTHERS                 = 4.
       IF sy-subrc <> 0.
-        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+        lcx_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.
     ENDIF.
 
@@ -81,7 +81,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
           insert_into_corr_error = 3
           OTHERS                 = 4.
       IF sy-subrc <> 0.
-        _raise 'error from RS_WORKING_OBJECTS_ACTIVATE'.
+        lcx_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.
     ENDIF.
 
@@ -114,7 +114,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
             object_not_found = 1
             OTHERS           = 2.
         IF sy-subrc <> 0.
-          _raise 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT'.
+          lcx_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
         ENDIF.
 
         APPEND LINES OF lt_objects TO gt_programs.
@@ -132,7 +132,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
         <ls_object>-object   = iv_type.
         <ls_object>-obj_name = lv_obj_name.
       WHEN OTHERS.
-        _raise 'activate, unknown type'.
+        lcx_exception=>raise( 'activate, unknown type' ).
     ENDCASE.
 
   ENDMETHOD.                    "activate
@@ -271,7 +271,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     READ TABLE mt_files ASSIGNING <ls_html> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
-      _raise 'html not found'.
+      lcx_exception=>raise( 'html not found' ).
     ENDIF.
 
     rv_string = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
@@ -294,7 +294,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     READ TABLE mt_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
       IF iv_error = abap_true.
-        _raise 'abap not found'.
+        lcx_exception=>raise( 'abap not found' ).
       ELSE.
         RETURN.
       ENDIF.
@@ -371,7 +371,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     READ TABLE mt_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
-      _raise 'xml not found'.
+      lcx_exception=>raise( 'xml not found' ).
     ENDIF.
 
     lv_xml = lcl_convert=>xstring_to_string_utf8( <ls_xml>-data ).
@@ -859,7 +859,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     IF sy-subrc = 2.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'Error reading program'.
+      lcx_exception=>raise( 'Error reading program' ).
     ENDIF.
 
     ls_progdir = read_progdir( lv_program_name ).
@@ -927,9 +927,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc = 1.
-      _raise 'Cancelled'.
+      lcx_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      _raise 'error from RS_CORR_INSERT'.
+      lcx_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
@@ -968,9 +968,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
           OTHERS           = 4.
       IF sy-subrc <> 0.
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
-          _raise 'User is currently editing program'.
+          lcx_exception=>raise( 'User is currently editing program' ).
         ELSE.
-          _raise 'PROG, error updating'.
+          lcx_exception=>raise( 'PROG, error updating' ).
         ENDIF.
       ENDIF.
     ELSE.
@@ -981,7 +981,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         STATE 'I'
         PROGRAM TYPE is_progdir-subc.
       IF sy-subrc <> 0.
-        _raise 'error from INSERT REPORT'.
+        lcx_exception=>raise( 'error from INSERT REPORT' ).
       ENDIF.
 
       IF NOT it_tpool[] IS INITIAL.
@@ -990,7 +990,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           LANGUAGE mv_language
           STATE 'I'.
         IF sy-subrc <> 0.
-          _raise 'error from INSERT TEXTPOOL'.
+          lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
         ENDIF.
       ENDIF.
 
@@ -1006,7 +1006,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_exists = 1
         OTHERS     = 2.
     IF sy-subrc <> 0.
-      _raise 'not found in PROGDIR'.
+      lcx_exception=>raise( 'not found in PROGDIR' ).
     ENDIF.
 
 * todo, package?
@@ -1028,7 +1028,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_executed = 1
         OTHERS       = 2.
     IF sy-subrc <> 0.
-      _raise 'PROG, error inserting'.
+      lcx_exception=>raise( 'PROG, error inserting' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'
@@ -1090,7 +1090,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         unknown_version = 2
         OTHERS          = 3.
     IF sy-subrc <> 0.
-      _raise 'error from RS_CUA_INTERNAL_FETCH'.
+      lcx_exception=>raise( 'error from RS_CUA_INTERNAL_FETCH' ).
     ENDIF.
 
   ENDMETHOD.                    "serialize_cua
@@ -1119,7 +1119,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc = 2.
-      _raise 'error from screen_list'.
+      lcx_exception=>raise( 'error from screen_list' ).
     ENDIF.
 
 * loop dynpros and skip generated selection screens
@@ -1141,7 +1141,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           permission_error     = 3
           OTHERS               = 4.
       IF sy-subrc <> 0.
-        _raise 'Error while reading dynpro'.
+        lcx_exception=>raise( 'Error while reading dynpro' ).
       ENDIF.
 
       LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
@@ -1201,7 +1201,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           illegal_field_position = 9
           OTHERS                 = 10.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
-        _raise 'error from RPY_DYNPRO_INSERT'.
+        lcx_exception=>raise( 'error from RPY_DYNPRO_INSERT' ).
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
@@ -1266,7 +1266,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       AND object = ms_item-obj_type
       AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      _raise 'not found in tadir'.
+      lcx_exception=>raise( 'not found in tadir' ).
     ENDIF.
 
     ls_tr_key-obj_type = ms_item-obj_type.
@@ -1298,7 +1298,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc <> 0.
-      _raise 'error from RS_CUA_INTERNAL_WRITE'.
+      lcx_exception=>raise( 'error from RS_CUA_INTERNAL_WRITE' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'CUAD'
@@ -1389,9 +1389,9 @@ CLASS lcl_objects_super IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc = 1.
-      _raise 'Cancelled'.
+      lcx_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      _raise 'error from RS_CORR_INSERT'.
+      lcx_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "corr_insert

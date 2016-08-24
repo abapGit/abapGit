@@ -80,7 +80,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
     TRY.
         li_enh_tool = cl_enh_factory=>get_enhancement( lv_enh_id ).
       CATCH cx_enh_root.
-        _raise 'Error from CL_ENH_FACTORY'.
+        lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
     lv_tool = li_enh_tool->get_tool( ).
 
@@ -100,7 +100,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
 *      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
-        _raise 'Unsupported ENHO type'.
+        lcx_exception=>raise( 'Unsupported ENHO type' ).
     ENDCASE.
 
   ENDMETHOD.                    "serialize
@@ -130,7 +130,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
 *      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
-        _raise 'Unsupported ENHO type'.
+        lcx_exception=>raise( 'Unsupported ENHO type' ).
     ENDCASE.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -179,7 +179,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         lo_badi->if_enh_object~save( ).
         lo_badi->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        _raise 'error deserializing ENHO badi'.
+        lcx_exception=>raise( 'error deserializing ENHO badi' ).
     ENDTRY.
 
   ENDMETHOD.                    "deserialize_badi
@@ -241,7 +241,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         lo_hook_impl->if_enh_object~save( ).
         lo_hook_impl->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        _raise 'error deserializing ENHO hook'.
+        lcx_exception=>raise( 'error deserializing ENHO hook' ).
     ENDTRY.
 
   ENDMETHOD.                    "deserialize_hook
@@ -318,7 +318,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         li_enh_object->save( ).
         li_enh_object->unlock( ).
       CATCH cx_enh_root.
-        _raise 'Error deleting ENHO'.
+        lcx_exception=>raise( 'Error deleting ENHO' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

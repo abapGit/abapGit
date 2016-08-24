@@ -58,7 +58,7 @@ CLASS lcl_objects IMPLEMENTATION.
             text_not_found        = 1
             OTHERS                = 2 ##NO_TEXT.
         IF sy-subrc <> 0.
-          _raise 'error from POPUP_TO_CONFIRM'.
+          lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
         ENDIF.
 
         IF lv_answer = '2'.
@@ -101,7 +101,7 @@ CLASS lcl_objects IMPLEMENTATION.
           text_not_found        = 1
           OTHERS                = 2.                        "#EC NOTEXT
       IF sy-subrc <> 0.
-        _raise 'error from POPUP_TO_CONFIRM'.
+        lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
       ENDIF.
 
       IF lv_answer = '2'.
@@ -182,7 +182,7 @@ CLASS lcl_objects IMPLEMENTATION.
             CONCATENATE 'Object type' is_item-obj_type 'not supported, serialize'
               INTO lv_message
               SEPARATED BY space.                           "#EC NOTEXT
-            _raise lv_message.
+            lcx_exception=>raise( lv_message ).
         ENDTRY.
     ENDTRY.
 
@@ -442,7 +442,7 @@ CLASS lcl_objects IMPLEMENTATION.
           WHEN 'DA'.
             <ls_edge>-to-obj_type = 'TTYP'.
           WHEN OTHERS.
-            _raise 'resolve_ddic, unknown object_cls'.
+            lcx_exception=>raise( 'resolve_ddic, unknown object_cls' ).
         ENDCASE.
       ENDLOOP.
 
@@ -535,7 +535,7 @@ CLASS lcl_objects IMPLEMENTATION.
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
     IF lines( lt_files ) <> lines( it_files ).
-      _raise 'Duplicates'.
+      lcx_exception=>raise( 'Duplicates' ).
     ENDIF.
 
   ENDMETHOD.
@@ -617,7 +617,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_cancel = warning_package( is_item    = ls_item
                                    iv_package = lv_package ).
       IF lv_cancel = abap_true.
-        _raise 'cancelled'.
+        lcx_exception=>raise( 'cancelled' ).
       ENDIF.
 
       CREATE OBJECT lo_files
@@ -834,7 +834,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             other        = 5
             OTHERS       = 6.
         IF sy-subrc <> 0.
-          _raise 'Error from SEO_CLASS_DELETE_COMPLETE'.
+          lcx_exception=>raise( 'Error from SEO_CLASS_DELETE_COMPLETE' ).
         ENDIF.
       WHEN 'INTF'.
         CALL FUNCTION 'SEO_INTERFACE_DELETE_COMPLETE'
@@ -848,10 +848,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
             other        = 5
             OTHERS       = 6.
         IF sy-subrc <> 0.
-          _raise 'Error from SEO_INTERFACE_DELETE_COMPLETE'.
+          lcx_exception=>raise( 'Error from SEO_INTERFACE_DELETE_COMPLETE' ).
         ENDIF.
       WHEN OTHERS.
-        _raise 'class delete, unknown type'.
+        lcx_exception=>raise( 'class delete, unknown type' ).
     ENDCASE.
 
   ENDMETHOD.                    "delete
@@ -971,7 +971,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      _raise 'error from CL_OO_SOURCE'.
+      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
     ENDIF.
 
     lo_source->read( 'A' ).
@@ -1126,7 +1126,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN. " in case only inactive version exists
     ELSEIF sy-subrc <> 0.
-      _raise 'error from seo_clif_get'.
+      lcx_exception=>raise( 'error from seo_clif_get' ).
     ENDIF.
 
     CLEAR: ls_vseoclass-uuid,
@@ -1232,7 +1232,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      _raise 'error from DOCU_UPD'.
+      lcx_exception=>raise( 'error from DOCU_UPD' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize_doku
@@ -1261,7 +1261,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       LANGUAGE mv_language
       STATE 'I'.
     IF sy-subrc <> 0.
-      _raise 'error from INSERT TEXTPOOL'.
+      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPT'
@@ -1318,7 +1318,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             other           = 6
             OTHERS          = 7.
         IF sy-subrc <> 0.
-          _raise 'error from SEO_CLASS_CREATE_COMPLETE'.
+          lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
         ENDIF.
 
       WHEN 'INTF'.
@@ -1340,7 +1340,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             other           = 6
             OTHERS          = 7.
         IF sy-subrc <> 0.
-          _raise 'Error from SEO_INTERFACE_CREATE_COMPLETE'.
+          lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
         ENDIF.
 
       WHEN OTHERS.
@@ -1363,7 +1363,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           locals_not_initialised = 4
           OTHERS                 = 5.
       IF sy-subrc <> 0.
-        _raise 'error from generate_locals'.
+        lcx_exception=>raise( 'error from generate_locals' ).
       ENDIF.
     ENDIF.
 
@@ -1394,7 +1394,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      _raise 'error from CL_OO_SOURCE'.
+      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
     ENDIF.
 
     TRY.
@@ -1403,9 +1403,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
         lo_source->save( ).
         lo_source->access_permission( seok_access_free ).
       CATCH cx_oo_access_permission.
-        _raise 'permission error'.
+        lcx_exception=>raise( 'permission error' ).
       CATCH cx_oo_source_save_failure.
-        _raise 'save failure'.
+        lcx_exception=>raise( 'save failure' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -1429,7 +1429,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     TRY.
         CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
       CATCH cx_oo_access_permission.
-        _raise 'source_new, access permission exception'.
+        lcx_exception=>raise( 'source_new, access permission exception' ).
     ENDTRY.
 
     CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
@@ -1590,7 +1590,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
             error_message            = 1
             OTHERS                   = 2.
         IF sy-subrc <> 0.
-          _raise 'error from FUNCTION_DELETE'.
+          lcx_exception=>raise( 'error from FUNCTION_DELETE' ).
         ENDIF.
       ENDIF.
 
@@ -1625,7 +1625,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           canceled_in_corr        = 10
           OTHERS                  = 11.
       IF sy-subrc <> 0.
-        _raise 'error from RS_FUNCTIONMODULE_INSERT'.
+        lcx_exception=>raise( 'error from RS_FUNCTIONMODULE_INSERT' ).
       ENDIF.
 
       INSERT REPORT lv_include FROM lt_source.
@@ -1705,7 +1705,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      _raise 'error from FUNCTION_INCLUDE_SPLIT'.
+      lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'AREAT'
@@ -1733,7 +1733,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         OTHERS                  = 12.
     IF sy-subrc <> 0 AND sy-subrc <> 1 AND sy-subrc <> 3.
 * todo, change description
-      _raise 'error from RS_FUNCTION_POOL_INSERT'.
+      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize_xml
@@ -1750,7 +1750,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       WHERE spras = mv_language
       AND area = ms_item-obj_name.                      "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      _raise 'not found in TLIBT'.
+      lcx_exception=>raise( 'not found in TLIBT' ).
     ENDIF.
 
     lt_functab = functions( ).
@@ -1791,7 +1791,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         no_program   = 2
         OTHERS       = 3.
     IF sy-subrc <> 0.
-      _raise 'Error from RS_GET_ALL_INCLUDES'.
+      lcx_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
     LOOP AT lt_functab ASSIGNING <ls_func>.
@@ -1842,7 +1842,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         function_pool_not_found = 1
         OTHERS                  = 2.
     IF sy-subrc <> 0.
-      _raise 'Error from RS_FUNCTION_POOL_CONTENTS'.
+      lcx_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
     ENDIF.
 
   ENDMETHOD.                    "functions
@@ -1876,7 +1876,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      _raise 'Error from FUNCTION_INCLUDE_SPLIT'.
+      lcx_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
@@ -1927,7 +1927,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           invalid_name            = 3
           OTHERS                  = 4.
       IF sy-subrc <> 0.
-        _raise 'Error from RPY_FUNCTIONMODULE_READ_NEW'.
+        lcx_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
 
       IF NOT lt_new_source IS INITIAL.
@@ -2055,7 +2055,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         cancelled              = 9
         OTHERS                 = 10.
     IF sy-subrc <> 0.
-      _raise 'error from RS_FUNCTION_POOL_DELETE'.
+      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -2153,7 +2153,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
         reject_deletion    = 4
         OTHERS             = 5.
     IF sy-subrc <> 0.
-      _raise 'error from RS_DELETE_PROGRAM'.
+      lcx_exception=>raise( 'error from RS_DELETE_PROGRAM' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -2170,7 +2170,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
       LANGUAGE mv_language
       STATE 'I'.
     IF sy-subrc <> 0.
-      _raise 'error from INSERT TEXTPOOL'.
+      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPT'

@@ -188,7 +188,7 @@ CLASS lcl_gui IMPLEMENTATION.
           WHEN gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
-            _raise 'Unknown action'.
+            lcx_exception=>raise( 'Unknown action' ).
         ENDCASE.
 
       CATCH lcx_exception INTO lx_exception.
@@ -633,7 +633,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
                                            EXCEPTIONS OTHERS = 1 ).
         IF sy-subrc <> 0.
-          _raise 'Opening page in external browser failed.'.
+          lcx_exception=>raise( 'Opening page in external browser failed.' ).
         ENDIF.
         ev_state = gc_event_state-no_more_act.
       WHEN 'abapgit_installation'.
@@ -735,7 +735,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         CREATE OBJECT ri_page TYPE (lv_page_class).
       CATCH cx_sy_create_object_error.
         lv_message = |Cannot create page class { lv_page_class }|.
-        _raise lv_message.
+        lcx_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.        " get_page_by_name
@@ -756,7 +756,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
       CATCH cx_sy_create_object_error.
         lv_message = |Cannot create page class { lv_page_class }|.
-        _raise lv_message.
+        lcx_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.        " get_page_db_by_name
@@ -804,14 +804,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WITH KEY filename = ls_file-filename
                path     = ls_file-path.
     IF sy-subrc <> 0.
-      _raise 'file not found remotely'.
+      lcx_exception=>raise( 'file not found remotely' ).
     ENDIF.
 
     READ TABLE lt_local ASSIGNING <ls_local>
       WITH KEY file-filename = ls_file-filename
                file-path     = ls_file-path.
     IF sy-subrc <> 0.
-      _raise 'file not found locally'.
+      lcx_exception=>raise( 'file not found locally' ).
     ENDIF.
 
     CREATE OBJECT lo_page
@@ -923,7 +923,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           text_not_found        = 1
           OTHERS                = 2.                        "#EC NOTEXT
       IF sy-subrc <> 0.
-        _raise 'error from POPUP_TO_CONFIRM'.
+        lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
       ENDIF.
 
       IF lv_answer = '2'.
@@ -972,7 +972,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.                          "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
+      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
     IF lv_answer = '2'.
@@ -1009,7 +1009,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.                        "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
+      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
     IF lv_answer = '2'.
@@ -1106,7 +1106,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.                        "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from POPUP_TO_CONFIRM'.
+      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
     IF lv_answer = '2'.

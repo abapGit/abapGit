@@ -56,7 +56,7 @@ CLASS lcl_time IMPLEMENTATION.
         conversion_error = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      _raise 'Timezone error'.
+      lcx_exception=>raise( 'Timezone error' ).
     ENDIF.
 
     CASE lv_utcsign.
@@ -302,7 +302,7 @@ CLASS lcl_hash IMPLEMENTATION.
         internal_error = 3
         OTHERS         = 4.
     IF sy-subrc <> 0.
-      _raise 'Error while calculating SHA1'.
+      lcx_exception=>raise( 'Error while calculating SHA1' ).
     ENDIF.
 
     rv_sha1 = lv_hash.
@@ -405,7 +405,7 @@ CLASS lcl_url IMPLEMENTATION.
     FIND REGEX '(.*://[^/]*)(.*/)(.*).git' IN iv_repo
                      SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
-      _raise 'Malformed URL'.
+      lcx_exception=>raise( 'Malformed URL' ).
     ENDIF.
 
   ENDMETHOD.                    "url

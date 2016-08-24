@@ -249,11 +249,11 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user->set_email( ls_fields-email ).
 
     IF ls_fields-username IS INITIAL.
-      _raise 'empty username'.
+      lcx_exception=>raise( 'empty username' ).
     ELSEIF ls_fields-email IS INITIAL.
-      _raise 'empty email'.
+      lcx_exception=>raise( 'empty email' ).
     ELSEIF ls_fields-comment IS INITIAL.
-      _raise 'empty comment'.
+      lcx_exception=>raise( 'empty comment' ).
     ENDIF.
 
     ls_comment-username = ls_fields-username.

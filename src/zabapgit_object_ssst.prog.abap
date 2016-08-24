@@ -60,7 +60,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
     SELECT SINGLE tdfamily FROM tfo01 INTO lv_tdfamily
       WHERE tdfamily = iv_tdfamily.
     IF sy-subrc <> 0.
-      _raise 'Font family not found'.
+      lcx_exception=>raise( 'Font family not found' ).
     ENDIF.
 
   ENDMETHOD.                    "validate_font
@@ -102,7 +102,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
     IF sy-subrc = 2.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'error from SSF_READ_STYLE'.
+      lcx_exception=>raise( 'error from SSF_READ_STYLE' ).
     ENDIF.
 
     CLEAR ls_header-version.
@@ -163,7 +163,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         illegal_language     = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      _raise 'error from SSF_ACTIVATE_STYLE'.
+      lcx_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -189,13 +189,13 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         illegal_language      = 6
         OTHERS                = 7.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'error from SSF_DELETE_STYLE'.
+      lcx_exception=>raise( 'error from SSF_DELETE_STYLE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    _raise 'todo'.
+    lcx_exception=>raise( 'todo' ).
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_ssst IMPLEMENTATION

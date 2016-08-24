@@ -76,7 +76,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      _raise 'error from RS_DD_DELETE_OBJ, DTEL'.
+      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -101,7 +101,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      _raise 'Error from DDIF_DTEL_GET'.
+      lcx_exception=>raise( 'Error from DDIF_DTEL_GET' ).
     ENDIF.
     IF ls_dd04v IS INITIAL.
       RETURN. " does not exist
@@ -146,7 +146,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      _raise 'error from DDIF_DTEL_PUT'.
+      lcx_exception=>raise( 'error from DDIF_DTEL_PUT' ).
     ENDIF.
 
     lcl_objects_activation=>add_item( ms_item ).

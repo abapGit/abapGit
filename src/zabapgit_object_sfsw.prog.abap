@@ -67,7 +67,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     TRY.
         ro_switch = cl_sfw_sw=>get_switch_from_db( lv_switch_id ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        _raise 'Error from CL_SFW_SW=>GET_SWITCH'.
+        lcx_exception=>raise( 'Error from CL_SFW_SW=>GET_SWITCH' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -144,7 +144,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     TRY.
         lo_switch = cl_sfw_sw=>create_switch( lv_switch_id ).
       CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
-        _raise 'error in CL_SFW_SW=>CREATE_SWITCH'.
+        lcx_exception=>raise( 'error in CL_SFW_SW=>CREATE_SWITCH' ).
     ENDTRY.
 
     ls_header-author = sy-uname.
@@ -162,7 +162,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
         not_saved = 1
         OTHERS    = 2 ).
     IF sy-subrc <> 0.
-      _raise 'error in CL_SFW_SW->SAVE_ALL'.
+      lcx_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -181,7 +181,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
         lo_switch->set_delete_flag( lv_switch_id ).
         lo_switch->save_all( ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        _raise 'Error deleting Switch'.
+        lcx_exception=>raise( 'Error deleting Switch' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

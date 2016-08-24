@@ -94,7 +94,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'error from NUMBER_RANGE_OBJECT_READ'.
+      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_READ' ).
     ENDIF.
 
     io_xml->add( iv_name = 'ATTRIBUTES'
@@ -131,7 +131,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wrong_indicator           = 5
         OTHERS                    = 6.
     IF sy-subrc <> 0.
-      _raise 'error from NUMBER_RANGE_OBJECT_UPDATE'.
+      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
     ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
@@ -140,7 +140,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       EXCEPTIONS
         object_not_initialized = 1.
     IF sy-subrc <> 0.
-      _raise 'error from NUMBER_RANGE_OBJECT_CLOSE'.
+      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
     ENDIF.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
@@ -156,7 +156,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       EXCEPTIONS
         OTHERS              = 1.
     IF sy-subrc <> 0.
-      _raise 'error from TR_TADIR_INTERFACE'.
+      lcx_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -178,14 +178,14 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wrong_indicator    = 3
         OTHERS             = 4.
     IF sy-subrc <> 0.
-      _raise 'error from NUMBER_RANGE_OBJECT_DELETE'.
+      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
 
-    _raise 'todo'.
+    lcx_exception=>raise( 'todo' ).
 
   ENDMETHOD.                    "jump
 

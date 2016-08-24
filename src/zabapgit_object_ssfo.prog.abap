@@ -108,7 +108,7 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
         illegal_formtype      = 6
         OTHERS                = 7.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
-      _raise 'Error from FB_DELETE_FORM'.
+      lcx_exception=>raise( 'Error from FB_DELETE_FORM' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

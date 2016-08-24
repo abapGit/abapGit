@@ -105,7 +105,7 @@ CLASS lcl_xml IMPLEMENTATION.
         txt2  = 'See https://github.com/larshp/abapGit/wiki/XML-Mismatch'
         txt3  = lv_version.                                 "#EC NOTEXT
 
-    _raise 'XML error'.
+    lcx_exception=>raise( 'XML error' ).
 
   ENDMETHOD.                    "display_xml_error
 
@@ -160,7 +160,7 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDDO.
     ENDIF.
 
-    _raise 'Error while parsing XML'.
+    lcx_exception=>raise( 'Error while parsing XML' ).
   ENDMETHOD.                    "error
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
@@ -342,8 +342,7 @@ CLASS lcl_xml_input IMPLEMENTATION.
           SOURCE XML mi_xml_doc
           RESULT (lt_rtab) ##no_text.
       CATCH cx_transformation_error INTO lx_error.
-        lv_text = lx_error->if_message~get_text( ).
-        _raise lv_text.
+        lcx_exception=>raise( lx_error->if_message~get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.                    "read
@@ -394,7 +393,7 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
         rv_xml = iv_xml.
         RETURN.
       ELSE.
-        _raise 'error parsing xml'.
+        lcx_exception=>raise( 'error parsing xml' ).
       ENDIF.
     ENDIF.
     li_istream->close( ).

@@ -60,12 +60,12 @@ CLASS lcl_object_auth IMPLEMENTATION.
     CREATE OBJECT lo_auth.
 
     IF lo_auth->add_afield_to_trkorr( ls_authx-fieldname ) <> 0.
-      _raise 'Error deserializing AUTH'.
+      lcx_exception=>raise( 'Error deserializing AUTH' ).
     ENDIF.
 
     MODIFY authx FROM ls_authx.
     IF sy-subrc <> 0.
-      _raise 'Error deserializing AUTH'.
+      lcx_exception=>raise( 'Error deserializing AUTH' ).
     ENDIF.
 
     CALL FUNCTION 'DB_COMMIT'.
@@ -92,7 +92,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
         no_authority        = 4
         OTHERS              = 5.
     IF sy-subrc <> 0.
-      _raise 'error from SUSR_AUTF_DELETE_FIELD'.
+      lcx_exception=>raise( 'error from SUSR_AUTF_DELETE_FIELD' ).
     ENDIF.
 
   ENDMETHOD.                    "lif_object~delete
@@ -111,7 +111,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    _raise 'todo, AUTH jump'.
+    lcx_exception=>raise( 'todo, AUTH jump' ).
 
   ENDMETHOD.                    "lif_object~jump
 

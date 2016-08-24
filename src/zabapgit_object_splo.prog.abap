@@ -127,7 +127,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    _raise 'todo, jump, SPLO'.
+    lcx_exception=>raise( 'todo, jump, SPLO' ).
   ENDMETHOD.                    "lif_object~jump
 
 ENDCLASS.                    "lcl_object_splo IMPLEMENTATION

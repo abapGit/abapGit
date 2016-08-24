@@ -46,12 +46,12 @@ CLASS lcl_transport IMPLEMENTATION.
     lt_requests = read_requests( lv_trkorr ).
     lt_tadir = resolve( lt_requests ).
     IF lines( lt_tadir ) = 0.
-      _raise 'empty transport'.
+      lcx_exception=>raise( 'empty transport' ).
     ENDIF.
 
     lv_package = find_top_package( lt_tadir ).
     IF lv_package IS INITIAL.
-      _raise 'error finding super package'.
+      lcx_exception=>raise( 'error finding super package' ).
     ENDIF.
 
     ls_data-key             = 'TZIP'.
@@ -124,7 +124,7 @@ CLASS lcl_transport IMPLEMENTATION.
         invalid_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      _raise 'error from TR_READ_REQUEST_WITH_TASKS'.
+      lcx_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
     ENDIF.
 
   ENDMETHOD.
@@ -154,7 +154,7 @@ CLASS lcl_transport IMPLEMENTATION.
               no_mapping     = 1
               OTHERS         = 2.
           IF sy-subrc <> 0.
-            _raise 'error from GET_R3TR_OBJECT_FROM_LIMU_OBJ'.
+            lcx_exception=>raise( 'error from GET_R3TR_OBJECT_FROM_LIMU_OBJ' ).
           ENDIF.
           lv_obj_name = lv_trobj_name.
         ELSE.

@@ -16,6 +16,9 @@ CLASS lcx_exception DEFINITION INHERITING FROM cx_static_check FINAL.
       IMPORTING iv_text     TYPE string
                 ix_previous TYPE REF TO cx_root OPTIONAL.
 
+    CLASS-METHODS: raise IMPORTING iv_text TYPE clike
+                         RAISING   lcx_exception.
+
   PRIVATE SECTION.
     DATA mx_previous TYPE REF TO cx_root.
 
@@ -33,6 +36,12 @@ CLASS lcx_exception IMPLEMENTATION.
     mv_text = iv_text.
     mx_previous = previous.
   ENDMETHOD.                    "CONSTRUCTOR
+
+  METHOD raise.
+    RAISE EXCEPTION TYPE lcx_exception
+      EXPORTING
+        iv_text = iv_text.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcx_exception IMPLEMENTATION
 

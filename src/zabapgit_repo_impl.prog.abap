@@ -290,7 +290,7 @@ CLASS lcl_repo IMPLEMENTATION.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
     ENDIF.
     IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
-      _raise 'Current login language does not match master language'.
+      lcx_exception=>raise( 'Current login language does not match master language' ).
     ENDIF.
 
     lcl_objects=>deserialize( me ).
@@ -440,7 +440,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    _raise 'repo not found, get'.
+    lcx_exception=>raise( 'repo not found, get' ).
 
   ENDMETHOD.                    "get
 
@@ -490,7 +490,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
-        _raise 'new_online not found'.
+        lcx_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
     CREATE OBJECT ro_repo
@@ -518,7 +518,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
-        _raise 'new_offline not found'.
+        lcx_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 
     CREATE OBJECT ro_repo
@@ -539,7 +539,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         IF lo_repo = io_repo.
           RETURN.
         ENDIF.
-        _raise 'identical keys'.
+        lcx_exception=>raise( 'identical keys' ).
       ENDIF.
     ENDLOOP.
 
@@ -554,25 +554,25 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
 
     IF iv_package IS INITIAL.
-      _raise 'add, package empty'.
+      lcx_exception=>raise( 'add, package empty' ).
     ENDIF.
 
     IF iv_package = '$TMP'.
-      _raise 'not possible to use $TMP, create new (local) package'.
+      lcx_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
     SELECT SINGLE devclass FROM tdevc INTO lv_devclass
       WHERE devclass = iv_package
       AND as4user <> 'SAP'.                             "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      _raise 'package not found or not allowed'.
+      lcx_exception=>raise( 'package not found or not allowed' ).
     ENDIF.
 
     " make sure its not already in use for a different repository
     lt_repos = mo_persistence->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      _raise 'Package already in use'.
+      lcx_exception=>raise( 'Package already in use' ).
     ENDIF.
 
   ENDMETHOD.                    "validate_package
@@ -610,7 +610,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
         lv_err = |Installation to package { lv_package } detected. |
               && |Cancelling installation|.
-        _raise lv_err.
+        lcx_exception=>raise( lv_err ).
       ENDIF.
 
       rv_installed = abap_true.

@@ -98,7 +98,7 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
     IF sy-subrc = 1.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
-      _raise 'Function module PB_POPUP_PACKAGE_CREATE does not exist'.
+      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
     ENDIF.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'

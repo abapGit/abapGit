@@ -40,7 +40,7 @@ CLASS lcl_background IMPLEMENTATION.
       WHEN lcl_persistence_background=>c_amethod-auto.
         push_auto( io_repo ).
       WHEN OTHERS.
-        _raise 'unknown push method'.
+        lcx_exception=>raise( 'unknown push method' ).
     ENDCASE.
 
   ENDMETHOD.
@@ -164,7 +164,7 @@ CLASS lcl_background IMPLEMENTATION.
           push( io_repo     = lo_repo
                 is_settings = <ls_list> ).
         WHEN OTHERS.
-          _raise 'background, unknown mode'.
+          lcx_exception=>raise( 'background, unknown mode' ).
       ENDCASE.
     ENDLOOP.
 

@@ -45,7 +45,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
         ro_bfs->free( ).
         ro_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        _raise 'Error from CL_SFW_BFS=>GET_BFS'.
+        lcx_exception=>raise( 'Error from CL_SFW_BFS=>GET_BFS' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -155,7 +155,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
     TRY.
         lo_bfs = cl_sfw_bfs=>create_bfs( lv_bfset ).
       CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
-        _raise 'error in CL_SFW_BFS=>CREATE_BFS'.
+        lcx_exception=>raise( 'error in CL_SFW_BFS=>CREATE_BFS' ).
     ENDTRY.
 
     ls_header-author = sy-uname.
@@ -187,7 +187,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
         lo_bfs->set_delete_flag( lv_bfset ).
         lo_bfs->save_all( ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        _raise 'Error deleting BF'.
+        lcx_exception=>raise( 'Error deleting BF' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

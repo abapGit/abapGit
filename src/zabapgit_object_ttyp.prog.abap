@@ -74,7 +74,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      _raise 'error from RS_DD_DELETE_OBJ, TTYP'.
+      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, TTYP' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -103,7 +103,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      _raise 'error from DDIF_TTYP_GET'.
+      lcx_exception=>raise( 'error from DDIF_TTYP_GET' ).
     ENDIF.
     IF ls_dd40v IS INITIAL.
       RETURN. " does not exist in system
@@ -156,7 +156,7 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      _raise 'error from DDIF_TTYP_PUT'.
+      lcx_exception=>raise( 'error from DDIF_TTYP_PUT' ).
     ENDIF.
 
     lcl_objects_activation=>add_item( ms_item ).

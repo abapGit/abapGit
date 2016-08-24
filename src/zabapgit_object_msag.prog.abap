@@ -70,7 +70,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
         no_permission     = 3
         OTHERS            = 4.
     IF sy-subrc <> 0.
-      _raise 'Error from RS_DELETE_MESSAGE_ID'.
+      lcx_exception=>raise( 'Error from RS_DELETE_MESSAGE_ID' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -103,7 +103,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
         permission_failure  = 02
         unknown_objectclass = 03.
     IF sy-subrc <> 0.
-      _raise 'Error from RS_CORR_INSERT'.
+      lcx_exception=>raise( 'Error from RS_CORR_INSERT' ).
     ENDIF.
 
     LOOP AT lt_t100 ASSIGNING <ls_t100>.

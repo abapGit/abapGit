@@ -58,7 +58,7 @@ CLASS lcl_object_para IMPLEMENTATION.
       WHERE paramid = ms_item-obj_name
       AND sprache = mv_language.                        "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      _raise 'PARA no english description'.
+      lcx_exception=>raise( 'PARA no english description' ).
     ENDIF.
 
     io_xml->add( iv_name = 'TPARA'
@@ -103,7 +103,7 @@ CLASS lcl_object_para IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      _raise 'error from RS_CORR_INSERT, PARA'.
+      lcx_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
     ENDIF.
 
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
@@ -127,7 +127,7 @@ CLASS lcl_object_para IMPLEMENTATION.
         cancelled  = 1
         OTHERS     = 2.
     IF sy-subrc <> 0.
-      _raise 'error from RS_PRAMETER_DELETE'.
+      lcx_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

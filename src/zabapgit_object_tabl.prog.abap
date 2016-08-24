@@ -76,7 +76,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      _raise 'error from RS_DD_DELETE_OBJ, TABL'.
+      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -119,7 +119,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      _raise 'error from DDIF_TABL_GET'.
+      lcx_exception=>raise( 'error from DDIF_TABL_GET' ).
     ENDIF.
     IF ls_dd02v IS INITIAL.
       RETURN. " object does not exits
@@ -260,7 +260,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      _raise 'error from DDIF_TABL_PUT'.
+      lcx_exception=>raise( 'error from DDIF_TABL_PUT' ).
     ENDIF.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -291,7 +291,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        _raise 'error from DDIF_INDX_PUT'.
+        lcx_exception=>raise( 'error from DDIF_INDX_PUT' ).
       ENDIF.
 
       CALL FUNCTION 'DD_DD_TO_E071'

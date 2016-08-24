@@ -89,10 +89,10 @@ CLASS lcl_zip IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      _raise 'Error from POPUP_GET_VALUES'.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
-      _raise 'cancelled'.
+      lcx_exception=>raise( 'cancelled' ).
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
@@ -129,10 +129,10 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).                         "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from file_save_dialog'.
+      lcx_exception=>raise( 'error from file_save_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      _raise 'cancelled'.
+      lcx_exception=>raise( 'cancelled' ).
     ENDIF.
 
     lt_rawdata = cl_bcs_convert=>xstring_to_solix( iv_xstr ).
@@ -170,7 +170,7 @@ CLASS lcl_zip IMPLEMENTATION.
         error_no_gui              = 23
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
-      _raise 'error from gui_download'.
+      lcx_exception=>raise( 'error from gui_download' ).
     ENDIF.
 
   ENDMETHOD.                    "file_download
@@ -204,7 +204,7 @@ CLASS lcl_zip IMPLEMENTATION.
       FIND REGEX '(.*/)(.*)' IN iv_str
         SUBMATCHES lv_path rv_filename.
       IF sy-subrc <> 0.
-        _raise 'Malformed path'.
+        lcx_exception=>raise( 'Malformed path' ).
       ENDIF.
     ELSE.
       rv_filename = iv_str.
@@ -239,10 +239,10 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui    = 4
         OTHERS                  = 5 ).                      "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from file_open_dialog'.
+      lcx_exception=>raise( 'error from file_open_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      _raise 'cancelled'.
+      lcx_exception=>raise( 'cancelled' ).
     ENDIF.
 
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
@@ -278,7 +278,7 @@ CLASS lcl_zip IMPLEMENTATION.
         error_no_gui            = 18
         OTHERS                  = 19 ).
     IF sy-subrc <> 0.
-      _raise 'error from gui_upload'.
+      lcx_exception=>raise( 'error from gui_upload' ).
     ENDIF.
 
     CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.
@@ -303,7 +303,7 @@ CLASS lcl_zip IMPLEMENTATION.
                     zip_parse_error = 1
                     OTHERS          = 2 ).
     IF sy-subrc <> 0.
-      _raise 'error from zip'.
+      lcx_exception=>raise( 'error from zip' ).
     ENDIF.
 
     lt_splice = cl_abap_zip=>splice( iv_xstr ).
@@ -319,7 +319,7 @@ CLASS lcl_zip IMPLEMENTATION.
           zip_decompression_error = 2
           OTHERS                  = 3 ).
       IF sy-subrc <> 0.
-        _raise 'error from zip get'.
+        lcx_exception=>raise( 'error from zip get' ).
       ENDIF.
 
       APPEND INITIAL LINE TO rt_files ASSIGNING <ls_file>.
@@ -403,7 +403,7 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).                         "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from directory_browser'.
+      lcx_exception=>raise( 'error from directory_browser' ).
     ENDIF.
 
     IF lv_folder IS INITIAL.
@@ -450,7 +450,7 @@ CLASS lcl_zip IMPLEMENTATION.
           error_no_gui            = 23
           OTHERS                  = 24 ).
       IF sy-subrc <> 0.
-        _raise 'error from gui_download'.
+        lcx_exception=>raise( 'error from gui_download' ).
       ENDIF.
 
     ENDLOOP.
@@ -474,7 +474,7 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui   = 9
         OTHERS                 = 10 ).                      "#EC NOTEXT
     IF sy-subrc <> 0.
-      _raise 'error from execute'.
+      lcx_exception=>raise( 'error from execute' ).
     ENDIF.
 
 * make sure to set git user.email and user.name manually
@@ -497,7 +497,7 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui   = 9
         OTHERS                 = 10 ).
     IF sy-subrc <> 0.
-      _raise 'error from execute'.
+      lcx_exception=>raise( 'error from execute' ).
     ENDIF.
 
   ENDMETHOD.                    "files_commit

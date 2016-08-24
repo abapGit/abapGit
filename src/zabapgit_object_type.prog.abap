@@ -84,7 +84,7 @@ CLASS lcl_object_type IMPLEMENTATION.
         reps_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      _raise 'error from TYPD_GET_OBJECT'.
+      lcx_exception=>raise( 'error from TYPD_GET_OBJECT' ).
     ENDIF.
 
   ENDMETHOD.                    "read
@@ -138,14 +138,14 @@ CLASS lcl_object_type IMPLEMENTATION.
         illegal_name         = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      _raise 'error from RS_DD_TYGR_INSERT_SOURCES'.
+      lcx_exception=>raise( 'error from RS_DD_TYGR_INSERT_SOURCES' ).
     ENDIF.
 
     CONCATENATE '%_C' lv_typegroup INTO lv_progname.
     UPDATE progdir SET uccheck = abap_true
       WHERE name = lv_progname.
     IF sy-subrc <> 0.
-      _raise 'error setting uccheck'.
+      lcx_exception=>raise( 'error setting uccheck' ).
     ENDIF.
 
   ENDMETHOD.                    "create
@@ -189,7 +189,7 @@ CLASS lcl_object_type IMPLEMENTATION.
         dialog_needed        = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      _raise 'error deleting TYPE'.
+      lcx_exception=>raise( 'error deleting TYPE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

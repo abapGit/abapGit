@@ -69,7 +69,7 @@ CLASS lcl_merge IMPLEMENTATION.
 
 
     IF iv_source = iv_target.
-      _raise 'source = target'.
+      lcx_exception=>raise( 'source = target' ).
     ENDIF.
 
     CLEAR gs_merge.
@@ -244,7 +244,7 @@ CLASS lcl_merge IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    _raise 'error finding common ancestor'.
+    lcx_exception=>raise( 'error finding common ancestor' ).
 
   ENDMETHOD.
 
@@ -298,7 +298,7 @@ CLASS lcl_merge IMPLEMENTATION.
       lv_name = 'refs/heads/' && &1 ##NO_TEXT.
       READ TABLE lt_branches INTO &2 WITH KEY name = lv_name.
       IF sy-subrc <> 0.
-        _raise 'branch not found'.
+        lcx_exception=>raise( 'branch not found' ).
       ENDIF.
       APPEND &2 TO lt_upload.
     END-OF-DEFINITION.
@@ -370,7 +370,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-merge.
         IF ms_merge-stage->count( ) = 0.
-          _raise 'nothing to merge'.
+          lcx_exception=>raise( 'nothing to merge' ).
         ENDIF.
 
         CREATE OBJECT ei_page TYPE lcl_gui_page_commit

@@ -35,7 +35,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   METHOD lif_object~jump.
     " No idea how to just to SMW0
-    _raise 'Please go to SMW0 for W3MI object'.
+    lcx_exception=>raise( 'Please go to SMW0 for W3MI object' ).
   ENDMETHOD.                    "jump
 
   METHOD lif_object~get_metadata.
@@ -101,7 +101,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         import_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot read W3xx data'.
+      lcx_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
     CALL FUNCTION 'WWWPARAMS_READ_ALL'
@@ -114,12 +114,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         entry_not_exists = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot read W3xx data'.
+      lcx_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
     READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = 'filesize' ##NO_TEXT.
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot read W3xx filesize'.
+      lcx_exception=>raise( 'Cannot read W3xx filesize' ).
     ENDIF.
 
     lv_size = ls_wwwparam-value.
@@ -144,11 +144,11 @@ CLASS lcl_object_w3super IMPLEMENTATION.
           EXCEPTIONS
             failed   = 1.
       WHEN OTHERS.
-        _raise 'Wrong W3xx type'.
+        lcx_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot convert W3xx to xstring'.
+      lcx_exception=>raise( 'Cannot convert W3xx to xstring' ).
     ENDIF.
 
     CREATE OBJECT lo_utility.
@@ -226,12 +226,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
           EXCEPTIONS
             failed        = 1.
         IF sy-subrc IS NOT INITIAL.
-          _raise 'Cannot update W3xx params'.
+          lcx_exception=>raise( 'Cannot update W3xx params' ).
         ENDIF.
 
         CLEAR lt_w3mime.
       WHEN OTHERS.
-        _raise 'Wrong W3xx type'.
+        lcx_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
     CALL FUNCTION 'WWWPARAMS_UPDATE'
@@ -241,7 +241,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         update_error = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot update W3xx params'.
+      lcx_exception=>raise( 'Cannot update W3xx params' ).
     ENDIF.
 
     ls_key-tdate    = sy-datum.
@@ -260,7 +260,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         export_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot upload W3xx data'.
+      lcx_exception=>raise( 'Cannot upload W3xx data' ).
     ENDIF.
 
     CONCATENATE 'W3' ls_key-relid INTO lv_tadir_obj.
@@ -300,7 +300,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         OTHERS                         = 99.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot update TADIR for W3xx'.
+      lcx_exception=>raise( 'Cannot update TADIR for W3xx' ).
     ENDIF.
 
   ENDMETHOD.                    "lif_object~deserialize
@@ -321,7 +321,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         delete_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot delete W3xx data'.
+      lcx_exception=>raise( 'Cannot delete W3xx data' ).
     ENDIF.
 
     CALL FUNCTION 'WWWPARAMS_DELETE_ALL'
@@ -331,7 +331,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         delete_error = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      _raise 'Cannot delete W3xx params'.
+      lcx_exception=>raise( 'Cannot delete W3xx params' ).
     ENDIF.
 
   ENDMETHOD.                    "lif_object~delete

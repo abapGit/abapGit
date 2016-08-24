@@ -49,7 +49,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         permission_failure = 2
         OTHERS             = 3 ).
     IF sy-subrc <> 0.
-      _raise 'error from cl_o2_api_xsltdesc=>load'.
+      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
     ENDIF.
 
   ENDMETHOD.
@@ -118,7 +118,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         undefined_name          = 5
         OTHERS                  = 6 ).
     IF sy-subrc <> 0.
-      _raise 'error from cl_o2_api_xsltdesc=>create_new_from_string'.
+      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
     ENDIF.
 
     lo_xslt->save( ).
@@ -149,7 +149,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         version_not_found  = 4
         OTHERS             = 5 ).
     IF sy-subrc <> 0.
-      _raise 'error from cl_o2_api_xsltdesc=>load'.
+      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
     ENDIF.
 
     lo_xslt->set_changeable( abap_true ).
@@ -175,7 +175,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    _raise 'XSLT, jump, todo'.
+    lcx_exception=>raise( 'XSLT, jump, todo' ).
   ENDMETHOD.                    "lif_object~jump
 
   METHOD lif_object~get_metadata.

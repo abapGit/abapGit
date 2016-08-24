@@ -73,7 +73,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
         incomplete_viewcluster = 2
         OTHERS                 = 3.
     IF sy-subrc <> 0.
-      _raise 'error in VIEWCLUSTER_GET_DEFINITION'.
+      lcx_exception=>raise( 'error in VIEWCLUSTER_GET_DEFINITION' ).
     ENDIF.
 
     CLEAR ls_vcldir_entry-author.
@@ -132,7 +132,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-      _raise 'error in OBJ_GENERATE for VCLS'.
+      lcx_exception=>raise( 'error in OBJ_GENERATE for VCLS' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -180,7 +180,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
         missing_corr_number          = 15
         OTHERS                       = 16.
     IF sy-subrc <> 0.
-      _raise 'error in VIEWCLUSTER_MAINTENANCE_CALL'.
+      lcx_exception=>raise( 'error in VIEWCLUSTER_MAINTENANCE_CALL' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

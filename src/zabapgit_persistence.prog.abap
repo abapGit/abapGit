@@ -281,7 +281,7 @@ CLASS lcl_persistence IMPLEMENTATION.
         OTHERS   = 5.
     IF sy-subrc <> 0.
       ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      _raise 'error from SAVE_TEXT'.
+      lcx_exception=>raise( 'error from SAVE_TEXT' ).
     ENDIF.
 
   ENDMETHOD.                    "save_text
@@ -309,7 +309,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
     DELETE lt_repos WHERE url = iv_url AND branch_name = iv_branch_name.
     IF sy-subrc <> 0.
-      _raise 'repo not found, delete'.
+      lcx_exception=>raise( 'repo not found, delete' ).
     ENDIF.
 
     save_text_online( lt_repos ).
@@ -386,7 +386,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     READ TABLE lt_repos WITH KEY url = iv_url branch_name = iv_branch_name
       TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      _raise 'already inserted'.
+      lcx_exception=>raise( 'already inserted' ).
     ENDIF.
 
     APPEND INITIAL LINE TO lt_repos ASSIGNING <ls_repo>.
@@ -409,7 +409,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
 
     IF iv_branch IS INITIAL.
-      _raise 'update, sha empty'.
+      lcx_exception=>raise( 'update, sha empty' ).
     ENDIF.
 
     lt_repos = list( ).
@@ -417,7 +417,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     READ TABLE lt_repos ASSIGNING <ls_repo>
       WITH KEY url = iv_url branch_name = iv_branch_name.
     IF sy-subrc <> 0.
-      _raise 'persist update, repo not found'.
+      lcx_exception=>raise( 'persist update, repo not found' ).
     ENDIF.
 
     <ls_repo>-sha1 = iv_branch.
@@ -454,7 +454,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF sy-subrc = 4.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'Error from READ_TEXT'.
+      lcx_exception=>raise( 'Error from READ_TEXT' ).
     ENDIF.
 
   ENDMETHOD.                    "read_text
@@ -476,7 +476,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF lines( lt_lines ) MOD 4 <> 0.
 * if this happens, delete text ZABAPGIT in SO10 or edit the text
 * manually, so it contains the right information
-      _raise 'Persistence, text broken'.
+      lcx_exception=>raise( 'Persistence, text broken' ).
     ENDIF.
 
     CLEAR ls_repo.
@@ -487,7 +487,7 @@ CLASS lcl_persistence IMPLEMENTATION.
           ls_repo-package = <ls_line>-tdline.
 
           IF ls_repo-url IS INITIAL OR ls_repo-branch_name IS INITIAL.
-            _raise 'Persistence, text broken 2'.
+            lcx_exception=>raise( 'Persistence, text broken 2' ).
           ENDIF.
           APPEND ls_repo TO rt_repos.
           CLEAR ls_repo.
@@ -521,13 +521,13 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF lines( lt_lines ) MOD 2 <> 0.
 * if this happens, delete text ZABAPGIT in SO10 or edit the text
 * manually, so it contains the right information
-      _raise 'Persistence, text broken'.
+      lcx_exception=>raise( 'Persistence, text broken' ).
     ENDIF.
 
     CLEAR ls_repo.
     LOOP AT lt_lines ASSIGNING <ls_line>.
       IF <ls_line>-tdline IS INITIAL.
-        _raise 'Persistence, text broken'.
+        lcx_exception=>raise( 'Persistence, text broken' ).
       ENDIF.
       IF ls_repo-url IS INITIAL.
         ls_repo-url = <ls_line>-tdline.
@@ -831,7 +831,7 @@ CLASS lcl_user IMPLEMENTATION.
         wrong_access_to_archive = 7
         OTHERS                  = 8.
     IF sy-subrc <> 4 AND sy-subrc <> 0.
-      _raise 'error from READ_TEXT'.
+      lcx_exception=>raise( 'error from READ_TEXT' ).
     ENDIF.
 
     READ TABLE lt_lines INTO ls_line INDEX 1.
@@ -870,7 +870,7 @@ CLASS lcl_user IMPLEMENTATION.
         OTHERS   = 5.
     IF sy-subrc <> 0.
       ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      _raise 'error from SAVE_TEXT'.
+      lcx_exception=>raise( 'error from SAVE_TEXT' ).
     ENDIF.
 
     COMMIT WORK.
@@ -1076,9 +1076,6 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   METHOD lock.
 
-    DATA: lv_msg TYPE string.
-
-
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
         mode_zabapgit  = iv_mode
@@ -1089,8 +1086,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
         system_failure = 2
         OTHERS         = 3.
     IF sy-subrc <> 0.
-      lv_msg = |Could not aquire lock { iv_type } { iv_value }|.
-      _raise lv_msg.
+      lcx_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
     ENDIF.
 
 * trigger dummy update task to automatically release locks at commit
@@ -1121,7 +1117,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
       WHERE type = iv_type
       AND value = iv_value.
     IF sy-subrc <> 0.
-      _raise 'DB Delete failed'.
+      lcx_exception=>raise( 'DB Delete failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1145,7 +1141,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
       WHERE type = iv_type
       AND value = iv_value.
     IF sy-subrc <> 0.
-      _raise 'DB update failed'.
+      lcx_exception=>raise( 'DB update failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1163,7 +1159,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
     MODIFY (c_tabname) FROM ls_content.
     IF sy-subrc <> 0.
-      _raise 'DB modify failed'.
+      lcx_exception=>raise( 'DB modify failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1230,7 +1226,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        _raise 'key not found'.
+        lcx_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-local_checksums = it_checksums.
@@ -1250,7 +1246,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 
     IF iv_url IS INITIAL.
-      _raise 'update, url empty'.
+      lcx_exception=>raise( 'update, url empty' ).
     ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -1258,7 +1254,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        _raise 'key not found'.
+        lcx_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-url = iv_url.
@@ -1278,7 +1274,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 
     IF iv_branch_name IS INITIAL.
-      _raise 'update, branch name empty'.
+      lcx_exception=>raise( 'update, branch name empty' ).
     ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -1286,7 +1282,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        _raise 'key not found'.
+        lcx_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-branch_name = iv_branch_name.
@@ -1306,7 +1302,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 
     IF iv_branch_sha1 IS INITIAL.
-      _raise 'update, sha empty'.
+      lcx_exception=>raise( 'update, sha empty' ).
     ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -1314,7 +1310,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        _raise 'key not found'.
+        lcx_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-sha1 = iv_branch_sha1.
@@ -1399,7 +1395,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
       RESULT repo = rs_repo ##NO_TEXT.
 
     IF rs_repo IS INITIAL.
-      _raise 'Inconsistent repo metadata'.
+      lcx_exception=>raise( 'Inconsistent repo metadata' ).
     ENDIF.
 
 * field master_language is new, so default it for old repositories
@@ -1556,7 +1552,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from DDIF_ENQU_PUT'.
+      lcx_exception=>raise( 'migrate, error from DDIF_ENQU_PUT' ).
     ENDIF.
 
     lv_obj_name = lcl_persistence_db=>c_lock.
@@ -1571,7 +1567,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from TR_TADIR_INTERFACE'.
+      lcx_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_ENQU_ACTIVATE'
@@ -1582,7 +1578,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
         put_failure = 2
         OTHERS      = 3.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from DDIF_ENQU_ACTIVATE'.
+      lcx_exception=>raise( 'migrate, error from DDIF_ENQU_ACTIVATE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1656,7 +1652,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from DDIF_TABL_PUT'.
+      lcx_exception=>raise( 'migrate, error from DDIF_TABL_PUT' ).
     ENDIF.
 
     lv_obj_name = lcl_persistence_db=>c_tabname.
@@ -1671,7 +1667,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from TR_TADIR_INTERFACE'.
+      lcx_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
@@ -1682,7 +1678,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
         put_failure = 2
         OTHERS      = 3.
     IF sy-subrc <> 0.
-      _raise 'migrate, error from DDIF_TABL_ACTIVATE'.
+      lcx_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
     ENDIF.
 
   ENDMETHOD.

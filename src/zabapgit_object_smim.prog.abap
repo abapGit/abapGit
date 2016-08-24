@@ -134,7 +134,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
     READ TABLE lt_files ASSIGNING <ls_file> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
-      _raise 'SMIM, file not found'.
+      lcx_exception=>raise( 'SMIM, file not found' ).
     ENDIF.
 
     rv_content = <ls_file>-data.
@@ -188,7 +188,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           permission_failure = 4
           OTHERS             = 5 ).
       IF sy-subrc <> 0.
-        _raise 'error from mime api->get'.
+        lcx_exception=>raise( 'error from mime api->get' ).
       ENDIF.
 
       lv_filename = get_filename( lv_url ).
@@ -242,7 +242,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           folder_exists      = 5
           OTHERS             = 6 ).
       IF sy-subrc <> 5 AND sy-subrc <> 0.
-        _raise 'error frrom SMIM create_folder'.
+        lcx_exception=>raise( 'error frrom SMIM create_folder' ).
       ENDIF.
     ELSE.
       lv_filename = get_filename( lv_url ).
@@ -271,7 +271,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           is_folder               = 7
           OTHERS                  = 8 ).
       IF sy-subrc <> 0.
-        _raise 'error from SMIM put'.
+        lcx_exception=>raise( 'error from SMIM put' ).
       ENDIF.
     ENDIF.
 
@@ -304,13 +304,13 @@ CLASS lcl_object_smim IMPLEMENTATION.
         not_found          = 5
         OTHERS             = 6 ).
     IF sy-subrc <> 0.
-      _raise 'error from delete'.
+      lcx_exception=>raise( 'error from delete' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    _raise 'todo, SMIM, jump'.
+    lcx_exception=>raise( 'todo, SMIM, jump' ).
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_smim IMPLEMENTATION

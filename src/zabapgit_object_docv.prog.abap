@@ -82,7 +82,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    _raise 'todo, jump DOCT'.
+    lcx_exception=>raise( 'todo, jump DOCT' ).
 
   ENDMETHOD.                    "jump
 
@@ -105,7 +105,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      _raise 'error from DOCU_DEL'.
+      lcx_exception=>raise( 'error from DOCU_DEL' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

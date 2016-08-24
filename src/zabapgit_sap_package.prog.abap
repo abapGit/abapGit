@@ -180,7 +180,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
         no_access                  = 4
         object_locked_and_modified = 5 ).
     IF sy-subrc <> 0.
-      _raise 'error reading parent package'.
+      lcx_exception=>raise( 'error reading parent package' ).
     ENDIF.
 
     ls_child-devclass  = iv_child.
@@ -248,8 +248,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 *        error_in_cts_checks        = 21
         OTHERS                     = 18 ).
     IF sy-subrc <> 0.
-      lv_err = |Package { is_package-devclass } could not be created|.
-      _raise lv_err.
+      lcx_exception=>raise( |Package { is_package-devclass } could not be created| ).
     ENDIF.
 
     ri_package->save(
@@ -266,7 +265,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     IF sy-subrc <> 0.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
-      _raise lv_err.
+      lcx_exception=>raise( lv_err ).
     ENDIF.
 
     ri_package->set_changeable( abap_false ).

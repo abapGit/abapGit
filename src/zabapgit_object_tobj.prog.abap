@@ -81,7 +81,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      _raise 'error from CTO_OBJECT_GET'.
+      lcx_exception=>raise( 'error from CTO_OBJECT_GET' ).
     ENDIF.
 
     CLEAR: ls_objh-luser,
@@ -142,7 +142,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     IF sy-subrc <> 0.
 * TOBJ has to be saved/generated after the DDIC tables have been
 * activated - fixed with late deserialization
-      _raise 'error from OBJ_GENERATE'.
+      lcx_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -170,13 +170,13 @@ CLASS lcl_object_tobj IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-      _raise 'error from OBJ_GENERATE'.
+      lcx_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    _raise 'todo, TOBJ jump'.
+    lcx_exception=>raise( 'todo, TOBJ jump' ).
   ENDMETHOD.                    "jump
 
 ENDCLASS.                    "lcl_object_tobj IMPLEMENTATION
