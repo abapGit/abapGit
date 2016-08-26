@@ -227,7 +227,7 @@ CLASS lcl_zip IMPLEMENTATION.
     cl_gui_frontend_services=>file_open_dialog(
       EXPORTING
         window_title            = 'Import ZIP'
-        default_extension       = 'ZIP'
+        default_filename        = '*.zip'
       CHANGING
         file_table              = lt_file_table
         rc                      = lv_rc
