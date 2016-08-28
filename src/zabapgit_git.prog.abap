@@ -103,6 +103,22 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING ii_client      TYPE REF TO if_http_client
       RAISING   lcx_exception.
 
+    CLASS-METHODS check_auth_requested
+      IMPORTING ii_client TYPE REF TO if_http_client
+      RETURNING VALUE(rv_auth_requested) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    CLASS-METHODS acquire_login_details
+      IMPORTING ii_client TYPE REF TO if_http_client
+                iv_url    TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS do_password_popup
+        IMPORTING iv_repo_url  TYPE string
+        EXPORTING ev_user      TYPE string
+                  ev_pass      TYPE string
+        RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_transport DEFINITION
 
 *----------------------------------------------------------------------*
@@ -282,6 +298,91 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                                                "http_200
 
+  METHOD check_auth_requested.
+
+    DATA: lv_code TYPE i.
+
+    ii_client->response->get_status(
+      IMPORTING
+        code   = lv_code ).
+    IF lv_code = 401.
+      rv_auth_requested = abap_true.
+    ENDIF.
+
+  ENDMETHOD.  "check_auth_requested
+
+  METHOD acquire_login_details.
+    DATA:
+          lv_user TYPE string,
+          lv_pass TYPE string.
+
+    do_password_popup(
+      EXPORTING
+        iv_repo_url = iv_url
+      IMPORTING
+        ev_user     = lv_user
+        ev_pass     = lv_pass ).
+
+    IF lv_user IS INITIAL.
+      lcx_exception=>raise( 'HTTP 401, unauthorized' ).
+    ENDIF.
+
+    ii_client->authenticate(
+      username = lv_user
+      password = lv_pass ).
+
+  ENDMETHOD.  "acquire_login_details
+
+  METHOD do_password_popup.
+    DATA: lv_returncode TYPE c,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+* REFACTOR
+    DEFINE _add_dialog_fld.
+      APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+      <ls_field>-tabname    = &1.                             "#EC NOTEXT
+      <ls_field>-fieldname  = &2.                             "#EC NOTEXT
+      <ls_field>-fieldtext  = &3.                             "#EC NOTEXT
+      <ls_field>-value      = &4.                             "#EC NOTEXT
+      <ls_field>-field_attr = &5.                             "#EC NOTEXT
+    END-OF-DEFINITION.
+* REFACTOR
+
+    "               TAB           FLD       LABEL            DEF         ATTR
+    _add_dialog_fld 'ADR12'      'URI_SRCH' 'Repo URL'       iv_repo_url '05'.
+    _add_dialog_fld 'ADRC'       'NAME1'    'Username'       ''          ''.
+    _add_dialog_fld 'ADRC'       'NAME2'    'Pass'           ''          ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        popup_title       = 'Repository login'
+      IMPORTING
+        returncode        = lv_returncode
+      TABLES
+        fields            = lt_fields
+      EXCEPTIONS
+        error_in_fields   = 1
+        OTHERS            = 2.                              "#EC NOTEXT
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_user = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_pass = <ls_field>-value.
+
+  ENDMETHOD.  "do_password_popup
+
   METHOD parse_branch_list.
 
     DATA: lt_result TYPE TABLE OF string,
@@ -371,8 +472,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD branch_list.
 
-    DATA: lv_data TYPE string,
-          lv_uri  TYPE string.
+    DATA: lv_data                  TYPE string,
+          lv_uri                   TYPE string,
+          lv_expect_potentual_auth TYPE abap_bool.
 
 
     cl_http_client=>create_by_url(
@@ -397,10 +499,19 @@ CLASS lcl_git_transport IMPLEMENTATION.
         name  = '~request_uri'
         value = lv_uri ).
 
-    lcl_login_manager=>load( iv_uri    = iv_url
-                             ii_client = ei_client ).
+    " Disable internal auth dialog (due to its unclarity)
+    ei_client->propertytype_logon_popup = if_http_client=>co_disabled.
+
+    lv_expect_potentual_auth = boolc(
+      lcl_login_manager=>load( iv_uri    = iv_url
+                               ii_client = ei_client ) IS INITIAL ).
 
     send_receive( ei_client ).
+    IF lv_expect_potentual_auth = abap_true
+       AND check_auth_requested( ei_client ) = abap_true.
+      acquire_login_details( ii_client = ei_client iv_url = iv_url ).
+      send_receive( ei_client ).
+    ENDIF.
     check_http_200( ei_client ).
 
     lcl_login_manager=>save( iv_uri    = iv_url
