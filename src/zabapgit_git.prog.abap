@@ -99,6 +99,10 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS get_null
       RETURNING VALUE(rv_c) TYPE char1.
 
+    CLASS-METHODS send_receive
+      IMPORTING ii_client      TYPE REF TO if_http_client
+      RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_transport DEFINITION
 
 *----------------------------------------------------------------------*
@@ -202,7 +206,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
   METHOD class_constructor.
 
 * bitbucket require agent prefix = "git/"
-    gv_agent = 'git/abapGit ' && gc_abap_version.
+    gv_agent = 'git/abapGit-' && gc_abap_version.
 
   ENDMETHOD.                    "class_constructor
 
@@ -368,8 +372,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
   METHOD branch_list.
 
     DATA: lv_data TYPE string,
-          lv_uri  TYPE string,
-          lv_text TYPE string.
+          lv_uri  TYPE string.
 
 
     cl_http_client=>create_by_url(
@@ -397,33 +400,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     lcl_login_manager=>load( iv_uri    = iv_url
                              ii_client = ei_client ).
 
-    ei_client->send( ).
-    ei_client->receive(
-      EXCEPTIONS
-        http_communication_failure = 1
-        http_invalid_state         = 2
-        http_processing_failed     = 3
-        OTHERS                     = 4 ).
-    IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-* make sure:
-* a) SSL is setup properly in STRUST
-* b) no firewalls
-* check trace file in transaction SMICM
-          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-        WHEN 2.
-          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-        WHEN 3.
-          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-        WHEN OTHERS.
-          lv_text = 'Another error occured'.                "#EC NOTEXT
-      ENDCASE.
-      RAISE EXCEPTION TYPE lcx_exception
-        EXPORTING
-          iv_text = lv_text.
-    ENDIF.
-
+    send_receive( ei_client ).
     check_http_200( ei_client ).
 
     lcl_login_manager=>save( iv_uri    = iv_url
@@ -433,6 +410,38 @@ CLASS lcl_git_transport IMPLEMENTATION.
     et_branch_list = parse_branch_list( lv_data ).
 
   ENDMETHOD.                    "ref_discovery
+
+  METHOD send_receive.
+
+    DATA lv_text TYPE string.
+
+    ii_client->send( ).
+    ii_client->receive(
+      EXCEPTIONS
+        http_communication_failure = 1
+        http_invalid_state         = 2
+        http_processing_failed     = 3
+        OTHERS                     = 4 ).
+    IF sy-subrc <> 0.
+      CASE sy-subrc.
+        WHEN 1.
+        " make sure:
+        " a) SSL is setup properly in STRUST
+        " b) no firewalls
+        " check trace file in transaction SMICM
+          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
+        WHEN 2.
+          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
+        WHEN 3.
+          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
+        WHEN OTHERS.
+          lv_text = 'Another error occured'.                "#EC NOTEXT
+      ENDCASE.
+      lcx_exception=>raise( lv_text ).
+    ENDIF.
+
+  ENDMETHOD.  "send_receive
+
 
   METHOD receive_pack.
 
@@ -479,8 +488,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     li_client->request->set_data( lv_xstring ).
 
-    li_client->send( ).
-    li_client->receive( ).
+    send_receive( li_client ).
     check_http_200( li_client ).
 
     lv_xstring = li_client->response->get_data( ).
@@ -620,8 +628,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
 * do not use set_cdata as it modifies the Content-Type header field
     li_client->request->set_data( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
-    li_client->send( ).
-    li_client->receive( ).
+    send_receive( li_client ).
     check_http_200( li_client ).
     lv_xstring = li_client->response->get_data( ).
     li_client->close( ).
