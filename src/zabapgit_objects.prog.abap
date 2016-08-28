@@ -349,9 +349,11 @@ CLASS lcl_objects_files IMPLEMENTATION.
                                  iv_ext   = 'xml' ).        "#EC NOTEXT
 
     REPLACE FIRST OCCURRENCE
-      OF '<?xml version="1.0" encoding="utf-16"?>'
+      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN lv_xml
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
+    ASSERT sy-subrc = 0.
+
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
 
     APPEND ls_file TO mt_files.

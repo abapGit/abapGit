@@ -122,7 +122,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     rv_xml = lcl_xml_pretty=>print( rv_xml ).
 
     REPLACE FIRST OCCURRENCE
-      OF '<?xml version="1.0" encoding="utf-16"?>'
+      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
       IN rv_xml
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
