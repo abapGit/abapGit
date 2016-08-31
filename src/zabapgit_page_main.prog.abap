@@ -621,8 +621,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-install.
         lv_url = iv_getdata.
         lo_repo = lcl_popups=>repo_clone( lv_url ).
-        mv_show = lo_repo->get_key( ).
-        lcl_app=>user( )->set_repo_show( mv_show ).
+        IF lo_repo IS BOUND.
+* cancel not pressed
+          mv_show = lo_repo->get_key( ).
+          lcl_app=>user( )->set_repo_show( mv_show ).
+        ENDIF.
         ev_state = gc_event_state-re_render.
       WHEN c_actions-show.
         mv_show = iv_getdata.
