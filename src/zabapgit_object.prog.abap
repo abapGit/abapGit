@@ -683,6 +683,13 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_sotr,
+             header  TYPE sotr_head,
+             entries TYPE sotr_text_tt,
+           END OF ty_sotr.
+
+    TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
+
     DATA mv_skip_testclass TYPE abap_bool.
 
     METHODS deserialize_abap
@@ -747,6 +754,10 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
+      RAISING   lcx_exception.
+
+    METHODS read_sotr
+      RETURNING VALUE(rt_sotr) TYPE ty_sotr_tt
       RAISING   lcx_exception.
 
     METHODS remove_signatures
@@ -1108,6 +1119,66 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+  METHOD read_sotr.
+
+    DATA: lv_concept    TYPE sotr_head-concept,
+          lt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY,
+          ls_header     TYPE sotr_head,
+          lt_entries    TYPE sotr_text_tt.
+
+    FIELD-SYMBOLS: <ls_sotr>       LIKE LINE OF rt_sotr,
+                   <ls_seocompodf> LIKE LINE OF lt_seocompodf,
+                   <ls_entry>      LIKE LINE OF lt_entries.
+
+
+    SELECT * FROM seocompodf
+      INTO TABLE lt_seocompodf
+      WHERE clsname = ms_item-obj_name
+      AND version = '1'
+      AND exposure = '2'
+      AND attdecltyp = '2'
+      AND type = 'SOTR_CONC'
+      ORDER BY PRIMARY KEY.
+
+    LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
+
+      lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
+
+      CALL FUNCTION 'SOTR_GET_CONCEPT'
+        EXPORTING
+          concept        = lv_concept
+        IMPORTING
+          header         = ls_header
+        TABLES
+          entries        = lt_entries
+        EXCEPTIONS
+          no_entry_found = 1
+          OTHERS         = 2.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_GET_CONCEPT' ).
+      ENDIF.
+
+      CLEAR: ls_header-paket,
+             ls_header-crea_name,
+             ls_header-crea_tstut,
+             ls_header-chan_name,
+             ls_header-chan_tstut.
+
+      LOOP AT lt_entries ASSIGNING <ls_entry>.
+        CLEAR: <ls_entry>-crea_name,
+               <ls_entry>-crea_tstut,
+               <ls_entry>-chan_name,
+               <ls_entry>-chan_tstut.
+      ENDLOOP.
+
+      APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
+      <ls_sotr>-header = ls_header.
+      <ls_sotr>-entries = lt_entries.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD serialize_xml.
 
     DATA: ls_vseoclass  TYPE vseoclass,
@@ -1117,6 +1188,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lv_state      TYPE dokhl-dokstate,
           ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey,
+          lt_sotr       TYPE ty_sotr_tt,
           lt_lines      TYPE tlinetab.
 
 
@@ -1169,6 +1241,14 @@ CLASS lcl_object_clas IMPLEMENTATION.
         READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE mv_language. "#EC CI_READ_REP
         io_xml->add( iv_name = 'TPOOL'
                      ig_data = add_tpool( lt_tpool ) ).
+
+        IF ls_vseoclass-category = seoc_category_exception.
+          lt_sotr = read_sotr( ).
+          IF lines( lt_sotr ) > 0.
+            io_xml->add( iv_name = 'SOTR'
+                         ig_data = lt_sotr ).
+          ENDIF.
+        ENDIF.
       WHEN 'INTF'.
         io_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
