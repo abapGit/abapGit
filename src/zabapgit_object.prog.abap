@@ -304,8 +304,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: ls_item  TYPE ty_item,
-          lt_tadir LIKE it_tadir.
+    DATA: ls_item     TYPE ty_item,
+          lv_tabclass TYPE dd02l-tabclass,
+          lt_tadir    LIKE it_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -325,7 +326,17 @@ CLASS lcl_objects IMPLEMENTATION.
         WHEN 'SUSC'.
           <ls_tadir>-korrnum = '5000'.
         WHEN 'TTYP' OR 'TABL' OR 'VIEW'.
-          <ls_tadir>-korrnum = '7000'.
+          SELECT SINGLE tabclass FROM dd02l
+            INTO lv_tabclass
+            WHERE tabname = <ls_tadir>-obj_name
+            AND as4local = 'A'
+            AND as4vers = '0000'.
+          IF sy-subrc = 0 AND lv_tabclass = 'APPEND'.
+* delete append structures before database tables
+            <ls_tadir>-korrnum = '6500'.
+          ELSE.
+            <ls_tadir>-korrnum = '7000'.
+          ENDIF.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
         WHEN 'DOMA'.
