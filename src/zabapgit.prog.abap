@@ -33,29 +33,30 @@ SELECTION-SCREEN BEGIN OF SCREEN 1001.
 * dummy for triggering screen
 SELECTION-SCREEN END OF SCREEN 1001.
 
-DEFINE _add.
-  ro_html->add( &1 ) ##NO_TEXT.
-END-OF-DEFINITION.
+INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
 INCLUDE zabapgit_definitions.
 INCLUDE zabapgit_exceptions.
 INCLUDE zabapgit_zlib.
 INCLUDE zabapgit_util.
 INCLUDE zabapgit_xml.
+
 CLASS lcl_gui DEFINITION DEFERRED.
 CLASS lcl_persistence_user DEFINITION DEFERRED.
 CLASS lcl_repo_srv DEFINITION DEFERRED.
 CLASS lcl_persistence_db DEFINITION DEFERRED.
+
 INCLUDE zabapgit_app.
 INCLUDE zabapgit_persistence.
 INCLUDE zabapgit_html.
 INCLUDE zabapgit_dot_abapgit.
 INCLUDE zabapgit_sap_package.
+
 CLASS lcl_repo_online DEFINITION DEFERRED.
+
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_stage_logic.
-INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
 INCLUDE zabapgit_file_status.
@@ -101,11 +102,14 @@ INCLUDE zabapgit_object_wdya.
 INCLUDE zabapgit_object_wdyn.
 INCLUDE zabapgit_object_webi.
 INCLUDE zabapgit_object_xslt.
+
+INCLUDE zabapgit_git.
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_zip.
 INCLUDE zabapgit_transport.
 INCLUDE zabapgit_popups.
+
 INCLUDE zabapgit_page.
 INCLUDE zabapgit_page_commit.
 INCLUDE zabapgit_page_merge.
@@ -119,13 +123,25 @@ INCLUDE zabapgit_app_impl.
 INCLUDE zabapgit_unit_test.
 INCLUDE zabapgit_forms.
 
+INITIALIZATION.
+  lcl_password_dialog=>on_screen_init( ).
+
 START-OF-SELECTION.
   PERFORM run.
 
 * Hide Execute button from screen
 AT SELECTION-SCREEN OUTPUT.
-  PERFORM output.
+  IF sy-dynnr = lcl_password_dialog=>DYNNR.
+    lcl_password_dialog=>on_screen_output( ).
+  ELSE.
+    PERFORM output.
+  ENDIF.
 
 * SAP back command re-direction
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   PERFORM exit.
+
+AT SELECTION-SCREEN.
+  IF sy-dynnr = lcl_password_dialog=>DYNNR.
+    lcl_password_dialog=>on_screen_event( sscrfields-ucomm ).
+  ENDIF.
