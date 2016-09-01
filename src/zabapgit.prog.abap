@@ -35,10 +35,6 @@ SELECTION-SCREEN END OF SCREEN 1001.
 
 INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
-DEFINE _add.
-  ro_html->add( &1 ) ##NO_TEXT.
-END-OF-DEFINITION.
-
 INCLUDE zabapgit_definitions.
 INCLUDE zabapgit_exceptions.
 INCLUDE zabapgit_zlib.
