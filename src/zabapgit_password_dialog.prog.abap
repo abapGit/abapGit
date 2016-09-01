@@ -62,6 +62,8 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       CLEAR: cv_user, cv_pass.
     ENDIF.
 
+    CLEAR: p_url, p_user, p_pass.
+
   ENDMETHOD.  "popup
 
   METHOD on_screen_init.
