@@ -113,12 +113,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_url    TYPE string
       RAISING   lcx_exception.
 
-    CLASS-METHODS do_password_popup
-        IMPORTING iv_repo_url  TYPE string
-        EXPORTING ev_user      TYPE string
-                  ev_pass      TYPE string
-        RAISING   lcx_exception.
-
 ENDCLASS.                    "lcl_transport DEFINITION
 
 *----------------------------------------------------------------------*
@@ -316,12 +310,12 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_user TYPE string,
           lv_pass TYPE string.
 
-    do_password_popup(
+    lcl_password_dialog=>popup(
       EXPORTING
         iv_repo_url = iv_url
-      IMPORTING
-        ev_user     = lv_user
-        ev_pass     = lv_pass ).
+      CHANGING
+        cv_user     = lv_user
+        cv_pass     = lv_pass ).
 
     IF lv_user IS INITIAL.
       lcx_exception=>raise( 'HTTP 401, unauthorized' ).
@@ -332,56 +326,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
       password = lv_pass ).
 
   ENDMETHOD.  "acquire_login_details
-
-  METHOD do_password_popup.
-    DATA: lv_returncode TYPE c,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-* REFACTOR
-    DEFINE _add_dialog_fld.
-      APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-      <ls_field>-tabname    = &1.                             "#EC NOTEXT
-      <ls_field>-fieldname  = &2.                             "#EC NOTEXT
-      <ls_field>-fieldtext  = &3.                             "#EC NOTEXT
-      <ls_field>-value      = &4.                             "#EC NOTEXT
-      <ls_field>-field_attr = &5.                             "#EC NOTEXT
-    END-OF-DEFINITION.
-* REFACTOR
-
-    "               TAB           FLD       LABEL            DEF         ATTR
-    _add_dialog_fld 'ADR12'      'URI_SRCH' 'Repo URL'       iv_repo_url '05'.
-    _add_dialog_fld 'ADRC'       'NAME1'    'Username'       ''          ''.
-    _add_dialog_fld 'ADRC'       'NAME2'    'Pass'           ''          ''.
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        popup_title       = 'Repository login'
-      IMPORTING
-        returncode        = lv_returncode
-      TABLES
-        fields            = lt_fields
-      EXCEPTIONS
-        error_in_fields   = 1
-        OTHERS            = 2.                              "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
-    ENDIF.
-
-    IF lv_returncode = 'A'.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    ev_user = <ls_field>-value.
-
-    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    ev_pass = <ls_field>-value.
-
-  ENDMETHOD.  "do_password_popup
 
   METHOD parse_branch_list.
 

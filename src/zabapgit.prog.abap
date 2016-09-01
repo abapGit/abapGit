@@ -33,6 +33,8 @@ SELECTION-SCREEN BEGIN OF SCREEN 1001.
 * dummy for triggering screen
 SELECTION-SCREEN END OF SCREEN 1001.
 
+INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
+
 DEFINE _add.
   ro_html->add( &1 ) ##NO_TEXT.
 END-OF-DEFINITION.
@@ -125,13 +127,25 @@ INCLUDE zabapgit_app_impl.
 INCLUDE zabapgit_unit_test.
 INCLUDE zabapgit_forms.
 
+INITIALIZATION.
+  lcl_password_dialog=>on_screen_init( ).
+
 START-OF-SELECTION.
   PERFORM run.
 
 * Hide Execute button from screen
 AT SELECTION-SCREEN OUTPUT.
-  PERFORM output.
+  IF sy-dynnr = lcl_password_dialog=>DYNNR.
+    lcl_password_dialog=>on_screen_output( ).
+  ELSE.
+    PERFORM output.
+  ENDIF.
 
 * SAP back command re-direction
 AT SELECTION-SCREEN ON EXIT-COMMAND.
   PERFORM exit.
+
+AT SELECTION-SCREEN.
+  IF sy-dynnr = lcl_password_dialog=>DYNNR.
+    lcl_password_dialog=>on_screen_event( sscrfields-ucomm ).
+  ENDIF.
