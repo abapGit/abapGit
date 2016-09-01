@@ -683,6 +683,13 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_sotr,
+             header  TYPE sotr_head,
+             entries TYPE sotr_text_tt,
+           END OF ty_sotr.
+
+    TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
+
     DATA mv_skip_testclass TYPE abap_bool.
 
     METHODS deserialize_abap
@@ -696,6 +703,11 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     METHODS deserialize_docu
       IMPORTING io_xml TYPE REF TO lcl_xml_input
+      RAISING   lcx_exception.
+
+    METHODS deserialize_sotr
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
       RAISING   lcx_exception.
 
     METHODS serialize_abap_old
@@ -747,6 +759,10 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
+      RAISING   lcx_exception.
+
+    METHODS read_sotr
+      RETURNING VALUE(rt_sotr) TYPE ty_sotr_tt
       RAISING   lcx_exception.
 
     METHODS remove_signatures
@@ -1108,6 +1124,66 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+  METHOD read_sotr.
+
+    DATA: lv_concept    TYPE sotr_head-concept,
+          lt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY,
+          ls_header     TYPE sotr_head,
+          lt_entries    TYPE sotr_text_tt.
+
+    FIELD-SYMBOLS: <ls_sotr>       LIKE LINE OF rt_sotr,
+                   <ls_seocompodf> LIKE LINE OF lt_seocompodf,
+                   <ls_entry>      LIKE LINE OF lt_entries.
+
+
+    SELECT * FROM seocompodf
+      INTO TABLE lt_seocompodf
+      WHERE clsname = ms_item-obj_name
+      AND version = '1'
+      AND exposure = '2'
+      AND attdecltyp = '2'
+      AND type = 'SOTR_CONC'
+      ORDER BY PRIMARY KEY.
+
+    LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
+
+      lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
+
+      CALL FUNCTION 'SOTR_GET_CONCEPT'
+        EXPORTING
+          concept        = lv_concept
+        IMPORTING
+          header         = ls_header
+        TABLES
+          entries        = lt_entries
+        EXCEPTIONS
+          no_entry_found = 1
+          OTHERS         = 2.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_GET_CONCEPT' ).
+      ENDIF.
+
+      CLEAR: ls_header-paket,
+             ls_header-crea_name,
+             ls_header-crea_tstut,
+             ls_header-chan_name,
+             ls_header-chan_tstut.
+
+      LOOP AT lt_entries ASSIGNING <ls_entry>.
+        CLEAR: <ls_entry>-crea_name,
+               <ls_entry>-crea_tstut,
+               <ls_entry>-chan_name,
+               <ls_entry>-chan_tstut.
+      ENDLOOP.
+
+      APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
+      <ls_sotr>-header = ls_header.
+      <ls_sotr>-entries = lt_entries.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD serialize_xml.
 
     DATA: ls_vseoclass  TYPE vseoclass,
@@ -1117,6 +1193,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lv_state      TYPE dokhl-dokstate,
           ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey,
+          lt_sotr       TYPE ty_sotr_tt,
           lt_lines      TYPE tlinetab.
 
 
@@ -1169,6 +1246,14 @@ CLASS lcl_object_clas IMPLEMENTATION.
         READ TEXTPOOL lv_cp INTO lt_tpool LANGUAGE mv_language. "#EC CI_READ_REP
         io_xml->add( iv_name = 'TPOOL'
                      ig_data = add_tpool( lt_tpool ) ).
+
+        IF ls_vseoclass-category = seoc_category_exception.
+          lt_sotr = read_sotr( ).
+          IF lines( lt_sotr ) > 0.
+            io_xml->add( iv_name = 'SOTR'
+                         ig_data = lt_sotr ).
+          ENDIF.
+        ENDIF.
       WHEN 'INTF'.
         io_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
@@ -1212,11 +1297,85 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     IF ms_item-obj_type = 'CLAS'.
       deserialize_textpool( io_xml ).
+
+      deserialize_sotr( io_xml     = io_xml
+                        iv_package = iv_package ).
     ENDIF.
 
     deserialize_docu( io_xml ).
 
   ENDMETHOD.                    "deserialize
+
+  METHOD deserialize_sotr.
+
+    DATA: lt_sotr    TYPE ty_sotr_tt,
+          lt_objects TYPE sotr_objects,
+          ls_paket   TYPE sotr_pack,
+          lv_object  LIKE LINE OF lt_objects.
+
+    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
+
+
+    io_xml->read( EXPORTING iv_name = 'SOTR'
+                  CHANGING cg_data = lt_sotr ).
+
+    IF lines( lt_sotr ) = 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_sotr ASSIGNING <ls_sotr>.
+      CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
+        EXPORTING
+          object_vector    = <ls_sotr>-header-objid_vec
+        IMPORTING
+          objects          = lt_objects
+        EXCEPTIONS
+          object_not_found = 1
+          OTHERS           = 2.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
+      ENDIF.
+
+      READ TABLE lt_objects INDEX 1 INTO lv_object.
+      ASSERT sy-subrc = 0.
+
+      ls_paket-paket = iv_package.
+
+      CALL FUNCTION 'SOTR_CREATE_CONCEPT'
+        EXPORTING
+          paket                         = ls_paket
+          crea_lan                      = <ls_sotr>-header-crea_lan
+          alias_name                    = <ls_sotr>-header-alias_name
+          object                        = lv_object
+          entries                       = <ls_sotr>-entries
+          concept_default               = <ls_sotr>-header-concept
+        EXCEPTIONS
+          package_missing               = 1
+          crea_lan_missing              = 2
+          object_missing                = 3
+          paket_does_not_exist          = 4
+          alias_already_exist           = 5
+          object_type_not_found         = 6
+          langu_missing                 = 7
+          identical_context_not_allowed = 8
+          text_too_long                 = 9
+          error_in_update               = 10
+          no_master_langu               = 11
+          error_in_concept_id           = 12
+          alias_not_allowed             = 13
+          tadir_entry_creation_failed   = 14
+          internal_error                = 15
+          error_in_correction           = 16
+          user_cancelled                = 17
+          no_entry_found                = 18
+          OTHERS                        = 19.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD deserialize_docu.
 
