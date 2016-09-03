@@ -294,30 +294,20 @@ CLASS lcl_merge IMPLEMENTATION.
 
   METHOD fetch_git.
 
-    DEFINE _find.
-      lv_name = 'refs/heads/' && &1 ##NO_TEXT.
-      READ TABLE lt_branches INTO &2 WITH KEY name = lv_name.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'branch not found' ).
-      ENDIF.
-      APPEND &2 TO lt_upload.
-    END-OF-DEFINITION.
-
-    DATA: lv_name     TYPE string,
-          lt_branches TYPE ty_git_branch_list_tt,
+    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list,
           lt_upload   TYPE ty_git_branch_list_tt.
 
+    lo_branch_list  = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
+    gs_merge-source = lo_branch_list->find_by_name( lcl_git_branch_list=>complete_heads_branch_name( iv_source ) ).
+    gs_merge-target = lo_branch_list->find_by_name( lcl_git_branch_list=>complete_heads_branch_name( iv_target ) ).
 
-    "TODO refactor
-    lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) )->mt_branches.
+    APPEND gs_merge-source TO lt_upload.
+    APPEND gs_merge-target TO lt_upload.
 
-    _find iv_source gs_merge-source.
-    _find iv_target gs_merge-target.
-
-    lcl_git_transport=>upload_pack( EXPORTING io_repo = gs_merge-repo
-                                              iv_deepen = abap_false
+    lcl_git_transport=>upload_pack( EXPORTING io_repo     = gs_merge-repo
+                                              iv_deepen   = abap_false
                                               it_branches = lt_upload
-                                    IMPORTING et_objects = gt_objects ).
+                                    IMPORTING et_objects  = gt_objects ).
 
   ENDMETHOD.
 

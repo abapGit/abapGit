@@ -116,7 +116,7 @@ CLASS lcl_popups IMPLEMENTATION.
     CLEAR ev_cancel.
 
 *                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'refs/heads/branch_name'  ''.
+    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new_branch_name'         ''.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -137,7 +137,7 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = <ls_field>-value.
+      ev_name = lcl_git_branch_list=>complete_heads_branch_name( <ls_field>-value ).
     ENDIF.
 
   ENDMETHOD.

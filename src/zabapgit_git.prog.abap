@@ -110,7 +110,12 @@ ENDCLASS. "lcl_git_utils
 *----------------------------------------------------------------------*
 CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
   PUBLIC SECTION.
-    DATA mt_branches TYPE ty_git_branch_list_tt READ-ONLY.
+    CONSTANTS TYPE_BRANCH TYPE ty_git_branch_type VALUE 'HD'.
+    CONSTANTS TYPE_TAG    TYPE ty_git_branch_type VALUE 'TG'.
+    CONSTANTS TYPE_OTHER  TYPE ty_git_branch_type VALUE 'ZZ'.
+
+    DATA mt_branches    TYPE ty_git_branch_list_tt READ-ONLY.
+    DATA mv_head_symref TYPE string READ-ONLY.
 
     CLASS-METHODS create
       IMPORTING iv_data        TYPE string
@@ -122,11 +127,44 @@ CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
       RETURNING VALUE(rs_branch) TYPE ty_git_branch
       RAISING   lcx_exception.
 
+    METHODS get_head " For potential future use
+      RETURNING VALUE(rs_branch) TYPE ty_git_branch
+      RAISING   lcx_exception.
+
+    METHODS get_branches_only
+      RETURNING VALUE(rt_branches) TYPE ty_git_branch_list_tt
+      RAISING   lcx_exception.
+
+    METHODS get_tags_only " For potential future use
+      RETURNING VALUE(rt_branches) TYPE ty_git_branch_list_tt
+      RAISING   lcx_exception.
+
+    CLASS-METHODS is_ignored
+      IMPORTING iv_branch_name   TYPE clike
+      RETURNING VALUE(rv_ignore) TYPE abap_bool.
+
+    CLASS-METHODS get_display_name
+      IMPORTING iv_branch_name   TYPE clike
+      RETURNING VALUE(rv_display_name) TYPE string.
+
+    CLASS-METHODS get_type
+      IMPORTING iv_branch_name   TYPE clike
+      RETURNING VALUE(rv_type)   TYPE ty_git_branch_type.
+
+    CLASS-METHODS complete_heads_branch_name
+      IMPORTING iv_branch_name   TYPE clike
+      RETURNING VALUE(rv_name)   TYPE string.
+
   PRIVATE SECTION.
     CLASS-METHODS parse_branch_list
       IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE ty_git_branch_list_tt
+      EXPORTING et_list        TYPE ty_git_branch_list_tt
+                ev_head_symref TYPE string
       RAISING   lcx_exception.
+
+    CLASS-METHODS parse_head_params
+      IMPORTING iv_data        TYPE string
+      EXPORTING ev_head_symref TYPE string.
 
 ENDCLASS. "lcl_git_branch_list
 
@@ -533,7 +571,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.  "send_receive
 
-
   METHOD receive_pack.
 
     DATA: li_client   TYPE REF TO if_http_client,
@@ -712,7 +749,10 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   METHOD create.
     CREATE OBJECT ro_list.
-    ro_list->mt_branches = parse_branch_list( iv_data = iv_data ).
+    parse_branch_list(
+      EXPORTING iv_data        = iv_data
+      IMPORTING et_list        = ro_list->mt_branches
+                ev_head_symref = ro_list->mv_head_symref ).
   ENDMETHOD.  "create
 
   METHOD find_by_name.
@@ -729,20 +769,27 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   ENDMETHOD.  "find_by_name
 
+  METHOD get_head.
+
+    rs_branch = find_by_name( 'HEAD' ).
+
+  ENDMETHOD.  "get_head
 
   METHOD parse_branch_list.
 
-    DATA: lt_result TYPE TABLE OF string,
-          lv_hash   TYPE ty_sha1,
-          lv_name   TYPE string,
-          lv_foo    TYPE string ##needed,
-          lv_char   TYPE c,
-          lv_data   LIKE LINE OF lt_result.
+    DATA: lt_result      TYPE TABLE OF string,
+          lv_hash        TYPE ty_sha1,
+          lv_name        TYPE string,
+          lv_head_params TYPE string,
+          lv_char        TYPE c,
+          lv_data        LIKE LINE OF lt_result.
 
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF rt_list.
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF et_list.
 
+    CLEAR: et_list, ev_head_symref.
 
     SPLIT iv_data AT gc_newline INTO TABLE lt_result.
+
     LOOP AT lt_result INTO lv_data.
       IF sy-tabix = 1.
         CONTINUE. " current loop
@@ -750,7 +797,11 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
         lv_hash = lv_data+8.
         lv_name = lv_data+49.
         lv_char = lcl_git_utils=>get_null( ).
-        SPLIT lv_name AT lv_char INTO lv_name lv_foo.
+
+        SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
+        parse_head_params(
+          EXPORTING iv_data        = lv_head_params
+          IMPORTING ev_head_symref = ev_head_symref ).
       ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
@@ -760,24 +811,112 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      IF lv_name CP 'refs/pull/*'.
-        CONTINUE.
-      ENDIF.
+      CHECK is_ignored( lv_name ) = abap_false.
+      ASSERT lv_name IS NOT INITIAL.
 
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
-      <ls_branch>-sha1 = lv_hash.
-      <ls_branch>-name = lv_name.
+      APPEND INITIAL LINE TO et_list ASSIGNING <ls_branch>.
+      <ls_branch>-sha1         = lv_hash.
+      <ls_branch>-name         = lv_name.
+      <ls_branch>-display_name = get_display_name( lv_name ).
+      <ls_branch>-type         = get_type( lv_name ).
+      IF <ls_branch>-name = 'HEAD' OR <ls_branch>-name = ev_head_symref.
+        <ls_branch>-is_head    = abap_true.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.                    "parse_branch_list
 
+  METHOD parse_head_params.
+
+    DATA: ls_match TYPE match_result,
+          ls_submatch TYPE submatch_result.
+
+    FIND FIRST OCCURRENCE OF REGEX '\ssymref=HEAD:([^\s]+)' IN iv_data RESULTS ls_match.
+    READ TABLE ls_match-submatches INTO ls_submatch INDEX 1.
+    IF sy-subrc IS INITIAL.
+      ev_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
+    ENDIF.
+
+  ENDMETHOD.  "parse_head_params
+
+  METHOD is_ignored.
+
+    IF   iv_branch_name EQ 'refs/heads/gh-pages'. " Github pages
+      rv_ignore = abap_true.
+    ENDIF.
+
+    IF   iv_branch_name CP 'refs/pull/*'
+      OR iv_branch_name CP 'refs/merge-requests/*'
+      OR iv_branch_name CP 'refs/keep-around/*'
+      OR iv_branch_name CP 'refs/tmp/*'.
+      rv_ignore = abap_true.
+    ENDIF.
+
+  ENDMETHOD.  "is_ignored
+
+  METHOD get_display_name.
+    rv_display_name = iv_branch_name.
+
+    IF rv_display_name CP 'refs/heads/*'.
+      REPLACE FIRST OCCURRENCE OF 'refs/heads/' IN rv_display_name WITH ''.
+      RETURN.
+    ENDIF.
+
+    IF rv_display_name CP 'refs/tags/*'.
+      REPLACE FIRST OCCURRENCE OF 'refs/' IN rv_display_name WITH ''.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.  "get_display_name
+
+  METHOD get_type.
+    rv_type = TYPE_OTHER.
+
+    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = 'HEAD'.
+      rv_type = TYPE_BRANCH.
+      RETURN.
+    ENDIF.
+
+    IF iv_branch_name CP 'refs/tags/*'.
+      rv_type = TYPE_TAG.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.  "get_type
+
+  METHOD complete_heads_branch_name.
+    IF iv_branch_name CP 'refs/heads/*'.
+      rv_name = iv_branch_name.
+    ELSE.
+      rv_name = 'refs/heads/' && iv_branch_name.
+    ENDIF.
+  ENDMETHOD.  "complete_heads_branch_name
+
+  METHOD get_branches_only.
+    FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
+
+    LOOP AT mt_branches ASSIGNING <branch>.
+      IF <branch>-type = TYPE_BRANCH.
+        APPEND <branch> TO rt_branches.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.  "get_branches_only
+
+  METHOD get_tags_only.
+    FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
+
+    LOOP AT mt_branches ASSIGNING <branch>.
+      IF <branch>-type = TYPE_TAG.
+        APPEND <branch> TO rt_branches.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.  "get_tags_only
 
 ENDCLASS. "lcl_git_branch_list
 
 
-
 *----------------------------------------------------------------------*
-*       CLASS lcl_pack IMPLEMENTATION
+*       CLASS lcl_git_pack IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*

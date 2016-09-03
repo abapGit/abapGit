@@ -162,11 +162,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * the selected branch
 
     "TODO refactor
-    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->mt_branches.
-
-    DELETE gt_branches WHERE name = 'refs/heads/gh-pages' ##NO_TEXT.
-    DELETE gt_branches WHERE name CP 'refs/tags/*' ##NO_TEXT.
-    DELETE gt_branches WHERE name CP 'refs/pull/*' ##NO_TEXT.
+    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->get_branches_only( ).
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
