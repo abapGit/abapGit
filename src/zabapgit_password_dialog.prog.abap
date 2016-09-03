@@ -80,12 +80,13 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     LOOP AT SCREEN.
       IF screen-name = 'P_URL'.
-        screen-input      = '0'.
-        screen-display_3d = '0'.
+        screen-input       = '0'.
+        screen-intensified = '1'.
+        screen-display_3d  = '0'.
         MODIFY SCREEN.
       ENDIF.
       IF screen-name = 'P_PASS'.
-        screen-invisible = '1'.
+        screen-invisible   = '1'.
         MODIFY SCREEN.
       ENDIF.
     ENDLOOP.
