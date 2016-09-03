@@ -1166,7 +1166,8 @@ CLASS ltcl_html_helper DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
       indent1 FOR TESTING RAISING lcx_exception,
       indent2 FOR TESTING RAISING lcx_exception,
       indent3 FOR TESTING RAISING lcx_exception,
-      indent4 FOR TESTING RAISING lcx_exception.
+      indent4 FOR TESTING RAISING lcx_exception,
+      style1  FOR TESTING RAISING lcx_exception.
 
     METHODS:
       setup,
@@ -1238,6 +1239,26 @@ CLASS ltcl_html_helper IMPLEMENTATION.
     READ TABLE lt_strings INDEX lines( lt_strings ) INTO rv_line.
 
   ENDMETHOD.
+
+  METHOD style1.
+
+    mo_html->add( '<style type="text/css">' ).
+    mo_html->add( '.class1 { color: red }' ).
+    mo_html->add( '.class2 {' ).
+    mo_html->add( 'color: red' ).
+
+    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '    color: red' ).
+
+    mo_html->add( '}' ).
+
+    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '  }' ).
+
+    mo_html->add( '</style>' ).
+
+    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '</style>' ).
+
+  ENDMETHOD.
+
 
 ENDCLASS.
 

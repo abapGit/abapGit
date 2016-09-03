@@ -80,14 +80,14 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '<td class="repo_name">' ).
     ro_html->add( |<img src="{ lv_icon }">| ).
-    ro_html->add( |<span>{ io_repo->get_name( ) }</span>| ).
+    ro_html->add( |<span class="name">{ io_repo->get_name( ) }</span>| ).
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+      ro_html->add( |<span class="url">{ lo_repo_online->get_url( ) }</span>| ).
+    ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
-    IF iv_show_package = abap_true.
-      ro_html->add( '<img src="img/pkg">' ).
-      ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
-    ENDIF.
 
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
@@ -99,8 +99,11 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
           ro_html->add( |<span>{ iv_branch }</span>| ).
         ENDIF.
       ENDIF.
-      ro_html->add( '<img src="img/link">' ).
-      ro_html->add( |<input type="text" value="{ lo_repo_online->get_url( ) }" readonly>| ).
+    ENDIF.
+
+    IF iv_show_package = abap_true.
+      ro_html->add( '<img src="img/pkg">' ).
+      ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
     ENDIF.
 
     ro_html->add( '</td>' ).
@@ -324,10 +327,15 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '  background-color: #f2f2f2;'.
     _add '  padding: 0.5em 1em 0.5em 1em;'.
     _add '}'.
-    _add '.repo_name span {'.
+    _add '.repo_name span.name {'.
     _add '  font-weight: bold;'.
     _add '  color: #333;'.
     _add '  font-size: 14pt;'.
+    _add '}'.
+    _add '.repo_name span.url {'.
+    _add '  color: #ccc;'.
+    _add '  font-size: 12pt;'.
+    _add '  margin-left: 0.5em;'.
     _add '}'.
     _add '.repo_name img {'.
     _add '  vertical-align: baseline;'.
@@ -340,15 +348,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.repo_attr span {'.
     _add '  margin-left: 0.2em;'.
     _add '  margin-right: 0.5em;'.
-    _add '}'.
-    _add '.repo_attr input {'.
-    _add '  color: grey;'.     " Input wants it personaly
-    _add '  font-size: 12pt;'. " Input wants it personaly
-    _add '  margin-left: 0.5em;'.
-    _add '  margin-right: 0.5em;'.
-    _add '  background-color: transparent;'.
-    _add '  border-style: none;'.
-    _add '  text-overflow: ellipsis;'.
     _add '}'.
 
     " Other and outdated (?) styles
