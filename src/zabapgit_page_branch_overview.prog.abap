@@ -161,7 +161,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
 
-    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
+    "TODO refactor
+    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->mt_branches.
 
     DELETE gt_branches WHERE name = 'refs/heads/gh-pages' ##NO_TEXT.
     DELETE gt_branches WHERE name CP 'refs/tags/*' ##NO_TEXT.

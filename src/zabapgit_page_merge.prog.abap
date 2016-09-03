@@ -308,7 +308,8 @@ CLASS lcl_merge IMPLEMENTATION.
           lt_upload   TYPE ty_git_branch_list_tt.
 
 
-    lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
+    "TODO refactor
+    lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) )->mt_branches.
 
     _find iv_source gs_merge-source.
     _find iv_target gs_merge-target.

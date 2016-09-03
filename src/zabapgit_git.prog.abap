@@ -105,6 +105,31 @@ CLASS lcl_git_utils IMPLEMENTATION.
 
 ENDCLASS. "lcl_git_utils
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_git_branch_list DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
+  PUBLIC SECTION.
+    DATA mt_branches TYPE ty_git_branch_list_tt READ-ONLY.
+
+    CLASS-METHODS create
+      IMPORTING iv_data        TYPE string
+      RETURNING VALUE(ro_list) TYPE REF TO lcl_git_branch_list
+      RAISING   lcx_exception.
+
+    METHODS find_by_name
+      IMPORTING iv_branch_name   TYPE clike
+      RETURNING VALUE(rs_branch) TYPE ty_git_branch
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS parse_branch_list
+      IMPORTING iv_data        TYPE string
+      RETURNING VALUE(rt_list) TYPE ty_git_branch_list_tt
+      RAISING   lcx_exception.
+
+ENDCLASS. "lcl_git_branch_list
+
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_transport DEFINITION
@@ -133,7 +158,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS branches
       IMPORTING iv_url                TYPE string
-      RETURNING VALUE(rt_branch_list) TYPE ty_git_branch_list_tt
+      RETURNING VALUE(ro_branch_list) TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS class_constructor.
@@ -151,7 +176,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
       EXPORTING ei_client      TYPE REF TO if_http_client
-                et_branch_list TYPE ty_git_branch_list_tt
+                eo_branch_list TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS find_branch
@@ -192,20 +217,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_git_branch_helper DEFINITION
-*----------------------------------------------------------------------*
-CLASS lcl_git_branch_helper DEFINITION FINAL.
-  PUBLIC SECTION.
-
-    CLASS-METHODS parse_branch_list
-      IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE ty_git_branch_list_tt
-      RAISING   lcx_exception.
-
-ENDCLASS. "lcl_git_branch_helper
-
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_pack DEFINITION
@@ -407,9 +418,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD find_branch.
 
-    DATA: lt_branch_list TYPE ty_git_branch_list_tt,
-          ls_branch_list LIKE LINE OF lt_branch_list.
-
+    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
 
     branch_list(
       EXPORTING
@@ -417,20 +426,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service      = iv_service
       IMPORTING
         ei_client       = ei_client
-        et_branch_list  = lt_branch_list ).
+        eo_branch_list  = lo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
-      IF iv_branch_name IS INITIAL.
-        lcx_exception=>raise( 'branch empty' ).
-      ENDIF.
-
-      READ TABLE lt_branch_list INTO ls_branch_list
-        WITH KEY name = iv_branch_name.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'Branch not found' ).
-      ENDIF.
-
-      ev_branch = ls_branch_list-sha1.
+      ev_branch = lo_branch_list->find_by_name( iv_branch_name )-sha1.
     ENDIF.
 
   ENDMETHOD.                    "find_branch
@@ -446,7 +445,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-upload
       IMPORTING
         ei_client      = li_client
-        et_branch_list = rt_branch_list ).
+        eo_branch_list = ro_branch_list ).
     li_client->close( ).
 
   ENDMETHOD.                    "branches
@@ -499,9 +498,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
                              ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
-    et_branch_list = lcl_git_branch_helper=>parse_branch_list( lv_data ).
+    eo_branch_list = lcl_git_branch_list=>create( lv_data ).
 
-  ENDMETHOD.                    "ref_discovery
+  ENDMETHOD.                    "branch_list
 
   METHOD send_receive.
 
@@ -707,9 +706,29 @@ CLASS lcl_git_transport IMPLEMENTATION.
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_git_branch_helper IMPLEMENTATION
+*       CLASS lcl_git_branch_list IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcl_git_branch_helper IMPLEMENTATION.
+CLASS lcl_git_branch_list IMPLEMENTATION.
+
+  METHOD create.
+    CREATE OBJECT ro_list.
+    ro_list->mt_branches = parse_branch_list( iv_data = iv_data ).
+  ENDMETHOD.  "create
+
+  METHOD find_by_name.
+
+    IF iv_branch_name IS INITIAL.
+      lcx_exception=>raise( 'Branch name empty' ).
+    ENDIF.
+
+    READ TABLE mt_branches INTO rs_branch
+      WITH KEY name = iv_branch_name.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Branch not found' ).
+    ENDIF.
+
+  ENDMETHOD.  "find_by_name
+
 
   METHOD parse_branch_list.
 
@@ -753,7 +772,7 @@ CLASS lcl_git_branch_helper IMPLEMENTATION.
   ENDMETHOD.                    "parse_branch_list
 
 
-ENDCLASS. "lcl_git_branch_helper
+ENDCLASS. "lcl_git_branch_list
 
 
 

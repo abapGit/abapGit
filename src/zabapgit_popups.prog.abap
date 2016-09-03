@@ -220,17 +220,17 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD branch_list_popup.
 
-    DATA: lt_branches  TYPE ty_git_branch_list_tt,
+    DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
           lv_answer    TYPE c LENGTH 1,
           lt_selection TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
-                   <ls_branch> LIKE LINE OF lt_branches.
+                   <ls_branch> LIKE LINE OF lcl_git_branch_list=>mt_branches.
 
 
-    lt_branches = lcl_git_transport=>branches( iv_url ).
+    lo_branches = lcl_git_transport=>branches( iv_url ).
 
-    LOOP AT lt_branches ASSIGNING <ls_branch>.
+    LOOP AT lo_branches->mt_branches ASSIGNING <ls_branch>.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = <ls_branch>-name.
     ENDLOOP.
@@ -261,8 +261,7 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    READ TABLE lt_branches INTO rs_branch WITH KEY name = <ls_sel>-varoption.
-    ASSERT sy-subrc = 0.
+    rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
 
   ENDMETHOD.
 
