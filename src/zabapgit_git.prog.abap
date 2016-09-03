@@ -4,9 +4,6 @@
 
 CLASS ltcl_git_pack DEFINITION DEFERRED.
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_transport DEFINITION
-*----------------------------------------------------------------------*
 
 " TODO: move types to global definitions when code is stable
 TYPES: ty_git_branch_type TYPE char2.
@@ -19,6 +16,99 @@ TYPES: BEGIN OF ty_git_branch,
        END OF ty_git_branch.
 TYPES: ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY.
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_git_utils
+*----------------------------------------------------------------------*
+CLASS lcl_git_utils DEFINITION FINAL. " > Maybe better move to lcl_git_pack ??
+  PUBLIC SECTION.
+
+    CLASS-METHODS get_null
+      RETURNING VALUE(rv_c) TYPE char1.
+
+    CLASS-METHODS pkt_string
+      IMPORTING iv_string     TYPE string
+      RETURNING VALUE(rv_pkt) TYPE string
+      RAISING   lcx_exception.
+
+    CLASS-METHODS length_utf8_hex
+      IMPORTING iv_data       TYPE xstring
+      RETURNING VALUE(rv_len) TYPE i
+      RAISING   lcx_exception.
+
+ENDCLASS. "lcl_git_utils
+
+CLASS lcl_git_utils IMPLEMENTATION.
+
+  METHOD get_null.
+
+    DATA: lv_x(4) TYPE x VALUE '00000000',
+          lv_z(2) TYPE c.
+
+    FIELD-SYMBOLS <lv_y> TYPE c.
+
+
+    ASSIGN lv_x TO <lv_y> CASTING.
+    lv_z = <lv_y>.
+    rv_c = lv_z(1).
+
+  ENDMETHOD.                    "get_null
+
+  METHOD length_utf8_hex.
+
+    DATA: lv_xstring TYPE xstring,
+          lv_string  TYPE string,
+          lv_char4   TYPE c LENGTH 4,
+          lv_x       TYPE x LENGTH 2,
+          lo_obj     TYPE REF TO cl_abap_conv_in_ce,
+          lv_len     TYPE int4.
+
+* hmm, can this be done easier?
+
+    lv_xstring = iv_data(4).
+
+    lo_obj = cl_abap_conv_in_ce=>create(
+        input    = lv_xstring
+        encoding = 'UTF-8' ).
+    lv_len = xstrlen( lv_xstring ).
+
+    TRY.
+        lo_obj->read( EXPORTING n    = lv_len
+                      IMPORTING data = lv_string ).
+      CATCH cx_sy_conversion_codepage.
+        lcx_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
+    ENDTRY.
+
+    lv_char4 = lv_string.
+    TRANSLATE lv_char4 TO UPPER CASE.
+    lv_x = lv_char4.
+    rv_len = lv_x.
+
+  ENDMETHOD.                    "length_utf8_hex
+
+  METHOD pkt_string.
+
+    DATA: lv_x   TYPE x,
+          lv_len TYPE i.
+
+
+    lv_len = strlen( iv_string ).
+
+    IF lv_len >= 255.
+      lcx_exception=>raise( 'PKT, todo' ).
+    ENDIF.
+
+    lv_x = lv_len + 4.
+
+    rv_pkt = rv_pkt && '00' && lv_x && iv_string.
+
+  ENDMETHOD.                    "pkt_string
+
+ENDCLASS. "lcl_git_utils
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_transport DEFINITION
+*----------------------------------------------------------------------*
 
 CLASS lcl_git_transport DEFINITION FINAL.
   PUBLIC SECTION.
@@ -48,8 +138,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS class_constructor.
 
-    CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
 
   PRIVATE SECTION.
     CLASS-DATA: gv_agent TYPE string.
@@ -66,11 +154,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 et_branch_list TYPE ty_git_branch_list_tt
       RAISING   lcx_exception.
 
-    CLASS-METHODS pkt_string
-      IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rv_pkt) TYPE string
-      RAISING   lcx_exception.
-
     CLASS-METHODS find_branch
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
@@ -82,11 +165,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS parse
       EXPORTING ev_pack TYPE xstring
       CHANGING  cv_data TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS length_utf8_hex
-      IMPORTING iv_data       TYPE xstring
-      RETURNING VALUE(rv_len) TYPE i
       RAISING   lcx_exception.
 
     CLASS-METHODS set_headers
@@ -264,20 +342,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
         value = lv_value ).                                 "#EC NOTEXT
 
   ENDMETHOD.                    "set_headers
-
-  METHOD get_null.
-
-    DATA: lv_x(4) TYPE x VALUE '00000000',
-          lv_z(2) TYPE c.
-
-    FIELD-SYMBOLS <lv_y> TYPE c.
-
-
-    ASSIGN lv_x TO <lv_y> CASTING.
-    lv_z = <lv_y>.
-    rv_c = lv_z(1).
-
-  ENDMETHOD.                    "get_null
 
   METHOD check_http_200.
 
@@ -503,11 +567,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
               iv_new &&
               ` ` &&
               iv_branch_name &&
-              get_null( ) &&
+              lcl_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
               gc_newline.                                   "#EC NOTEXT
-    lv_cmd_pkt = pkt_string( lv_line ).
+    lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
     lv_tmp = lcl_convert=>string_to_xstring_utf8( lv_buffer ).
@@ -531,38 +595,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                    "receive_pack
 
-  METHOD length_utf8_hex.
-
-    DATA: lv_xstring TYPE xstring,
-          lv_string  TYPE string,
-          lv_char4   TYPE c LENGTH 4,
-          lv_x       TYPE x LENGTH 2,
-          lo_obj     TYPE REF TO cl_abap_conv_in_ce,
-          lv_len     TYPE int4.
-
-* hmm, can this be done easier?
-
-    lv_xstring = iv_data(4).
-
-    lo_obj = cl_abap_conv_in_ce=>create(
-        input    = lv_xstring
-        encoding = 'UTF-8' ).
-    lv_len = xstrlen( lv_xstring ).
-
-    TRY.
-        lo_obj->read( EXPORTING n    = lv_len
-                      IMPORTING data = lv_string ).
-      CATCH cx_sy_conversion_codepage.
-        lcx_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
-    ENDTRY.
-
-    lv_char4 = lv_string.
-    TRANSLATE lv_char4 TO UPPER CASE.
-    lv_x = lv_char4.
-    rv_len = lv_x.
-
-  ENDMETHOD.                    "length_utf8_hex
-
   METHOD parse.
 
     CONSTANTS: lc_band1 TYPE x VALUE '01'.
@@ -573,7 +605,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
 
     WHILE xstrlen( cv_data ) >= 4.
-      lv_len = length_utf8_hex( cv_data ).
+      lv_len = lcl_git_utils=>length_utf8_hex( cv_data ).
 
       IF lv_len > xstrlen( cv_data ).
         lcx_exception=>raise( 'parse, string length too large' ).
@@ -643,11 +675,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && gc_newline.                                    "#EC NOTEXT
       ENDIF.
-      lv_buffer = lv_buffer && pkt_string( lv_line ).
+      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
-      lv_buffer = lv_buffer && pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
+      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
@@ -671,24 +703,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
     et_objects = lcl_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.                    "upload_pack
-
-  METHOD pkt_string.
-
-    DATA: lv_x   TYPE x,
-          lv_len TYPE i.
-
-
-    lv_len = strlen( iv_string ).
-
-    IF lv_len >= 255.
-      lcx_exception=>raise( 'PKT, todo' ).
-    ENDIF.
-
-    lv_x = lv_len + 4.
-
-    rv_pkt = rv_pkt && '00' && lv_x && iv_string.
-
-  ENDMETHOD.                    "pkt
 
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
 
@@ -716,7 +730,7 @@ CLASS lcl_git_branch_helper IMPLEMENTATION.
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
         lv_hash = lv_data+8.
         lv_name = lv_data+49.
-        lv_char = lcl_git_transport=>get_null( ).
+        lv_char = lcl_git_utils=>get_null( ).
         SPLIT lv_name AT lv_char INTO lv_name lv_foo.
       ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
