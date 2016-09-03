@@ -7,22 +7,27 @@ CLASS ltcl_git_pack DEFINITION DEFERRED.
 *----------------------------------------------------------------------*
 *       CLASS lcl_transport DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_git_transport DEFINITION FINAL.
 
+" TODO: move types to global definitions when code is stable
+TYPES: ty_git_branch_type TYPE char2.
+TYPES: BEGIN OF ty_git_branch,
+         sha1         TYPE ty_sha1,
+         name         TYPE string,
+         type         TYPE ty_git_branch_type,
+         is_head      TYPE abap_bool,
+         display_name TYPE string,
+       END OF ty_git_branch.
+TYPES: ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY.
+
+
+CLASS lcl_git_transport DEFINITION FINAL.
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_branch_list,
-             sha1 TYPE ty_sha1,
-             name TYPE string,
-           END OF ty_branch_list.
-    TYPES: ty_branch_list_tt TYPE STANDARD TABLE OF ty_branch_list WITH DEFAULT KEY.
 
 * remote to local
     CLASS-METHODS upload_pack
       IMPORTING io_repo     TYPE REF TO lcl_repo_online
                 iv_deepen   TYPE abap_bool DEFAULT abap_true
-                it_branches TYPE ty_branch_list_tt OPTIONAL
+                it_branches TYPE ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects  TYPE ty_objects_tt
                 ev_branch   TYPE ty_sha1
       RAISING   lcx_exception.
@@ -38,7 +43,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS branches
       IMPORTING iv_url                TYPE string
-      RETURNING VALUE(rt_branch_list) TYPE ty_branch_list_tt
+      RETURNING VALUE(rt_branch_list) TYPE ty_git_branch_list_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS class_constructor.
@@ -58,7 +63,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
       EXPORTING ei_client      TYPE REF TO if_http_client
-                et_branch_list TYPE ty_branch_list_tt
+                et_branch_list TYPE ty_git_branch_list_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS pkt_string
@@ -115,13 +120,13 @@ ENDCLASS.                    "lcl_transport DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_git_branch_helper DEFINITION FINAL.
   PUBLIC SECTION.
+
     CLASS-METHODS parse_branch_list
       IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE lcl_git_transport=>ty_branch_list_tt
+      RETURNING VALUE(rt_list) TYPE ty_git_branch_list_tt
       RAISING   lcx_exception.
 
 ENDCLASS. "lcl_git_branch_helper
-
 
 
 *----------------------------------------------------------------------*
@@ -338,7 +343,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD find_branch.
 
-    DATA: lt_branch_list TYPE ty_branch_list_tt,
+    DATA: lt_branch_list TYPE ty_git_branch_list_tt,
           ls_branch_list LIKE LINE OF lt_branch_list.
 
 
@@ -601,7 +606,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
           lv_pack     TYPE xstring,
-          lt_branches TYPE ty_branch_list_tt,
+          lt_branches TYPE ty_git_branch_list_tt,
           lv_capa     TYPE string.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
@@ -691,6 +696,7 @@ ENDCLASS.                    "lcl_transport IMPLEMENTATION
 *       CLASS lcl_git_branch_helper IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_git_branch_helper IMPLEMENTATION.
+
   METHOD parse_branch_list.
 
     DATA: lt_result TYPE TABLE OF string,
@@ -731,6 +737,8 @@ CLASS lcl_git_branch_helper IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "parse_branch_list
+
+
 ENDCLASS. "lcl_git_branch_helper
 
 
@@ -1446,7 +1454,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
     CLASS-METHODS delete_branch
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
-                is_branch TYPE lcl_git_transport=>ty_branch_list
+                is_branch TYPE ty_git_branch
       RAISING   lcx_exception.
 
     CLASS-METHODS full_tree
@@ -1635,7 +1643,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lv_sha1     TYPE ty_sha1,
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE ty_objects_tt,
-          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
+          lt_branches TYPE ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,

@@ -54,7 +54,7 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   DATA: lv_url          TYPE string,
         lx_error        TYPE REF TO lcx_exception,
         ls_package_data TYPE scompkdtln,
-        ls_branch       TYPE lcl_git_transport=>ty_branch_list.
+        ls_branch       TYPE ty_git_branch.
 
   FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
                  <ls_fbranch> LIKE LINE OF tt_fields.

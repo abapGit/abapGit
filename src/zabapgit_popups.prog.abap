@@ -31,7 +31,7 @@ CLASS lcl_popups DEFINITION.
         RAISING   lcx_exception,
       branch_list_popup
         IMPORTING iv_url           TYPE string
-        RETURNING VALUE(rs_branch) TYPE lcl_git_transport=>ty_branch_list
+        RETURNING VALUE(rs_branch) TYPE ty_git_branch
         RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
@@ -194,7 +194,7 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_transport=>ty_branch_list.
+          ls_branch TYPE ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -220,7 +220,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD branch_list_popup.
 
-    DATA: lt_branches  TYPE lcl_git_transport=>ty_branch_list_tt,
+    DATA: lt_branches  TYPE ty_git_branch_list_tt,
           lv_answer    TYPE c LENGTH 1,
           lt_selection TYPE TABLE OF spopli.
 

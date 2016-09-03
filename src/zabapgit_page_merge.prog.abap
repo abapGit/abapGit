@@ -14,8 +14,8 @@ CLASS lcl_merge DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_merge,
              repo     TYPE REF TO lcl_repo_online,
-             source   TYPE lcl_git_transport=>ty_branch_list,
-             target   TYPE lcl_git_transport=>ty_branch_list,
+             source   TYPE ty_git_branch,
+             target   TYPE ty_git_branch,
              common   TYPE ty_ancestor,
              stree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              ttree    TYPE lcl_git_porcelain=>ty_expanded_tt,
@@ -304,8 +304,8 @@ CLASS lcl_merge IMPLEMENTATION.
     END-OF-DEFINITION.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
-          lt_upload   TYPE lcl_git_transport=>ty_branch_list_tt.
+          lt_branches TYPE ty_git_branch_list_tt,
+          lt_upload   TYPE ty_git_branch_list_tt.
 
 
     lt_branches = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
