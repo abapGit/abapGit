@@ -43,6 +43,9 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS class_constructor.
 
+    CLASS-METHODS get_null
+      RETURNING VALUE(rv_c) TYPE char1.
+
   PRIVATE SECTION.
     CLASS-DATA: gv_agent TYPE string.
 
@@ -81,11 +84,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RETURNING VALUE(rv_len) TYPE i
       RAISING   lcx_exception.
 
-    CLASS-METHODS parse_branch_list
-      IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE ty_branch_list_tt
-      RAISING   lcx_exception.
-
     CLASS-METHODS set_headers
       IMPORTING iv_url     TYPE string
                 iv_service TYPE string
@@ -95,9 +93,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS check_http_200
       IMPORTING ii_client TYPE REF TO if_http_client
       RAISING   lcx_exception.
-
-    CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
 
     CLASS-METHODS send_receive
       IMPORTING ii_client      TYPE REF TO if_http_client
@@ -114,6 +109,20 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_git_branch_helper DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_git_branch_helper DEFINITION FINAL.
+  PUBLIC SECTION.
+    CLASS-METHODS parse_branch_list
+      IMPORTING iv_data        TYPE string
+      RETURNING VALUE(rt_list) TYPE lcl_git_transport=>ty_branch_list_tt
+      RAISING   lcx_exception.
+
+ENDCLASS. "lcl_git_branch_helper
+
+
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_pack DEFINITION
@@ -327,47 +336,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.  "acquire_login_details
 
-  METHOD parse_branch_list.
-
-    DATA: lt_result TYPE TABLE OF string,
-          lv_hash   TYPE ty_sha1,
-          lv_name   TYPE string,
-          lv_foo    TYPE string ##needed,
-          lv_char   TYPE c,
-          lv_data   LIKE LINE OF lt_result.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF rt_list.
-
-
-    SPLIT iv_data AT gc_newline INTO TABLE lt_result.
-    LOOP AT lt_result INTO lv_data.
-      IF sy-tabix = 1.
-        CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
-        lv_hash = lv_data+8.
-        lv_name = lv_data+49.
-        lv_char = get_null( ).
-        SPLIT lv_name AT lv_char INTO lv_name lv_foo.
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
-        lv_hash = lv_data+4.
-        lv_name = lv_data+45.
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        lcx_exception=>raise( 'No branches, create branch manually by adding file' ).
-      ELSE.
-        CONTINUE.
-      ENDIF.
-
-      IF lv_name CP 'refs/pull/*'.
-        CONTINUE.
-      ENDIF.
-
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
-      <ls_branch>-sha1 = lv_hash.
-      <ls_branch>-name = lv_name.
-    ENDLOOP.
-
-  ENDMETHOD.                    "parse_branch_list
-
   METHOD find_branch.
 
     DATA: lt_branch_list TYPE ty_branch_list_tt,
@@ -462,7 +430,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
                              ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
-    et_branch_list = parse_branch_list( lv_data ).
+    et_branch_list = lcl_git_branch_helper=>parse_branch_list( lv_data ).
 
   ENDMETHOD.                    "ref_discovery
 
@@ -718,6 +686,54 @@ CLASS lcl_git_transport IMPLEMENTATION.
   ENDMETHOD.                    "pkt
 
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_git_branch_helper IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS lcl_git_branch_helper IMPLEMENTATION.
+  METHOD parse_branch_list.
+
+    DATA: lt_result TYPE TABLE OF string,
+          lv_hash   TYPE ty_sha1,
+          lv_name   TYPE string,
+          lv_foo    TYPE string ##needed,
+          lv_char   TYPE c,
+          lv_data   LIKE LINE OF lt_result.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF rt_list.
+
+
+    SPLIT iv_data AT gc_newline INTO TABLE lt_result.
+    LOOP AT lt_result INTO lv_data.
+      IF sy-tabix = 1.
+        CONTINUE. " current loop
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
+        lv_hash = lv_data+8.
+        lv_name = lv_data+49.
+        lv_char = lcl_git_transport=>get_null( ).
+        SPLIT lv_name AT lv_char INTO lv_name lv_foo.
+      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
+        lv_hash = lv_data+4.
+        lv_name = lv_data+45.
+      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+        lcx_exception=>raise( 'No branches, create branch manually by adding file' ).
+      ELSE.
+        CONTINUE.
+      ENDIF.
+
+      IF lv_name CP 'refs/pull/*'.
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
+      <ls_branch>-sha1 = lv_hash.
+      <ls_branch>-name = lv_name.
+    ENDLOOP.
+
+  ENDMETHOD.                    "parse_branch_list
+ENDCLASS. "lcl_git_branch_helper
+
+
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_pack IMPLEMENTATION
