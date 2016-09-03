@@ -30,11 +30,19 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
 
   PROTECTED SECTION.
     METHODS render_repo_top
-      IMPORTING io_repo         TYPE REF TO lcl_repo
-                iv_show_package TYPE abap_bool DEFAULT abap_true
-                iv_show_branch  TYPE abap_bool DEFAULT abap_true
-                iv_branch       TYPE string OPTIONAL
-      RETURNING VALUE(ro_html)  TYPE REF TO lcl_html_helper
+      IMPORTING io_repo               TYPE REF TO lcl_repo
+                iv_show_package       TYPE abap_bool DEFAULT abap_true
+                iv_show_branch        TYPE abap_bool DEFAULT abap_true
+                iv_interactive_branch TYPE abap_bool DEFAULT abap_false
+                iv_branch             TYPE string OPTIONAL
+      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html_helper
+      RAISING   lcx_exception.
+
+    METHODS render_branch_span
+      IMPORTING iv_branch             TYPE string
+                io_repo               TYPE REF TO lcl_repo_online
+                iv_interactive        TYPE abap_bool
+      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
     METHODS header
@@ -94,9 +102,13 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
       IF iv_show_branch = abap_true.
         ro_html->add( '<img src="img/branch">' ).
         IF iv_branch IS INITIAL.
-          ro_html->add( |<span>{ lo_repo_online->get_branch_name( ) }</span>| ).
+          ro_html->add( render_branch_span( iv_branch      = lo_repo_online->get_branch_name( )
+                                            io_repo        = lo_repo_online
+                                            iv_interactive = iv_interactive_branch ) ).
         ELSE.
-          ro_html->add( |<span>{ iv_branch }</span>| ).
+          ro_html->add( render_branch_span( iv_branch      = iv_branch
+                                            io_repo        = lo_repo_online
+                                            iv_interactive = iv_interactive_branch ) ).
         ENDIF.
       ENDIF.
       ro_html->add( '<img src="img/link">' ).
@@ -107,6 +119,30 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
+
+  METHOD render_branch_span.
+    DATA: lv_text  TYPE string,
+          lv_class TYPE string.
+
+    lv_text = lcl_git_branch_list=>get_display_name( iv_branch ).
+
+    CASE lcl_git_branch_list=>get_type( iv_branch ). "TODO
+      WHEN lcl_git_branch_list=>TYPE_BRANCH.
+      WHEN lcl_git_branch_list=>TYPE_TAG.
+      WHEN OTHERS.
+    ENDCASE.
+
+    CREATE OBJECT ro_html.
+    IF iv_interactive = abap_true.
+      ro_html->add( |<span class="{ lv_class }">| ).
+      ro_html->add_anchor( iv_act = |switch_branch?{ io_repo->get_key( ) }|
+                           iv_txt = lv_text ). "TODO refactor
+      ro_html->add( '</span>' ).
+    ELSE.
+      ro_html->add( |<span class="{ lv_class }">{ lv_text }</span>| ).
+    ENDIF.
+
+  ENDMETHOD.  "render_branch_span
 
   METHOD header.
 
@@ -318,6 +354,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.dropdown:hover .dropdown_content { display: block; }'.
     _add '.dropdown:hover .dropbtn  { color: #79a0d2; }'.
 
+    " REPOSITORY
     _add '/* REPOSITORY */'.
     _add 'div.repo {'.
     _add '  margin-top:       3px;'.

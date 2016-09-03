@@ -113,6 +113,7 @@ CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
     CONSTANTS TYPE_BRANCH TYPE ty_git_branch_type VALUE 'HD'.
     CONSTANTS TYPE_TAG    TYPE ty_git_branch_type VALUE 'TG'.
     CONSTANTS TYPE_OTHER  TYPE ty_git_branch_type VALUE 'ZZ'.
+    CONSTANTS HEAD_NAME   TYPE string VALUE 'HEAD'.
 
     DATA mt_branches    TYPE ty_git_branch_list_tt READ-ONLY.
     DATA mv_head_symref TYPE string READ-ONLY.
@@ -771,7 +772,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   METHOD get_head.
 
-    rs_branch = find_by_name( 'HEAD' ).
+    rs_branch = find_by_name( HEAD_NAME ).
 
   ENDMETHOD.  "get_head
 
@@ -819,7 +820,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
       <ls_branch>-name         = lv_name.
       <ls_branch>-display_name = get_display_name( lv_name ).
       <ls_branch>-type         = get_type( lv_name ).
-      IF <ls_branch>-name = 'HEAD' OR <ls_branch>-name = ev_head_symref.
+      IF <ls_branch>-name = HEAD_NAME OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head    = abap_true.
       ENDIF.
     ENDLOOP.
@@ -872,7 +873,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
   METHOD get_type.
     rv_type = TYPE_OTHER.
 
-    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = 'HEAD'.
+    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = HEAD_NAME.
       rv_type = TYPE_BRANCH.
       RETURN.
     ENDIF.

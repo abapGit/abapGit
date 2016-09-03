@@ -297,6 +297,7 @@ CLASS lcl_popups IMPLEMENTATION.
           lv_icon_br    TYPE icon-name,
           lt_fields     TYPE TABLE OF sval,
           lv_pattr      TYPE spo_fattr,
+          lv_battr      TYPE spo_fattr,
           lv_button2    TYPE svalbutton-buttontext,
           lv_icon2      TYPE icon-name.
 
@@ -305,15 +306,17 @@ CLASS lcl_popups IMPLEMENTATION.
 
     IF NOT iv_package IS INITIAL.
       lv_pattr = '05'.
+      lv_battr = '03'.
     ELSE.
+      lv_battr = '05'.
       lv_button2 = 'Create package' ##NO_TEXT.
       lv_icon2   = icon_msg.
     ENDIF.
 
 *                   TAB           FLD       LABEL            DEF        ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     ''.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     lv_pattr.
     _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' iv_package lv_pattr.
-    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  '05'.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  lv_battr.
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.
