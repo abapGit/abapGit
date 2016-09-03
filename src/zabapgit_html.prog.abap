@@ -270,8 +270,9 @@ CLASS lcl_html_helper DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS: c_indent_size TYPE i VALUE 2.
 
-    DATA mv_html   TYPE string READ-ONLY.
-    DATA mv_indent TYPE i READ-ONLY.
+    DATA mv_html         TYPE string READ-ONLY.
+    DATA mv_indent       TYPE i READ-ONLY.
+    DATA mv_within_style TYPE i READ-ONLY.
 
     METHODS add IMPORTING iv_chunk TYPE any.
     METHODS reset.
@@ -327,15 +328,23 @@ CLASS lcl_html_helper IMPLEMENTATION.
     CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
       VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source|!)'.
 
-    DATA lv_tags        TYPE i.
-    DATA lv_tags_open   TYPE i.
-    DATA lv_tags_close  TYPE i.
-    DATA lv_tags_single TYPE i.
-    DATA lv_close_offs  TYPE i.
-    DATA lv_shift_back  TYPE i.
+    DATA lv_tags            TYPE i.
+    DATA lv_tags_open       TYPE i.
+    DATA lv_tags_close      TYPE i.
+    DATA lv_tags_single     TYPE i.
+    DATA lv_close_offs      TYPE i.
+    DATA lv_shift_back      TYPE i.
+    DATA lv_style_tag_open  TYPE i.
+    DATA lv_style_tag_close TYPE i.
+    DATA lv_curly           TYPE i.
 
     FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
     IF sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0. " Found close tag @beginning
+      lv_shift_back = 1.
+    ENDIF.
+
+    FIND FIRST OCCURRENCE OF '}' IN iv_str MATCH OFFSET lv_close_offs. " Find close } @beginning
+    IF mv_within_style > 0 AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
       lv_shift_back = 1.
     ENDIF.
 
@@ -349,6 +358,17 @@ CLASS lcl_html_helper IMPLEMENTATION.
     FIND ALL OCCURRENCES OF REGEX lc_single_tags_re IN iv_str MATCH COUNT lv_tags_single.
 
     lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
+
+    FIND ALL OCCURRENCES OF '<style' IN iv_str MATCH COUNT lv_style_tag_open IGNORING CASE.
+    FIND ALL OCCURRENCES OF '</style>' IN iv_str MATCH COUNT lv_style_tag_close IGNORING CASE.
+    mv_within_style = mv_within_style + lv_style_tag_open - lv_style_tag_close.
+
+    IF mv_within_style > 0.
+      FIND ALL OCCURRENCES OF '{'  IN iv_str MATCH COUNT lv_curly.
+      lv_tags_open  = lv_tags_open + lv_curly.
+      FIND ALL OCCURRENCES OF '}'  IN iv_str MATCH COUNT lv_curly.
+      lv_tags_close = lv_tags_close + lv_curly.
+    ENDIF.
 
     " More-less logic chosen due to possible double tags in a line '<a><b>'
     IF lv_tags_open > lv_tags_close.
