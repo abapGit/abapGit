@@ -307,8 +307,12 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD acquire_login_details.
     DATA:
-          lv_user TYPE string,
-          lv_pass TYPE string.
+          lv_default_user TYPE string,
+          lv_user         TYPE string,
+          lv_pass         TYPE string.
+
+    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
+    lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
       EXPORTING
@@ -319,6 +323,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     IF lv_user IS INITIAL.
       lcx_exception=>raise( 'HTTP 401, unauthorized' ).
+    ENDIF.
+
+    IF lv_user <> lv_default_user.
+      lcl_app=>user( )->set_repo_username( iv_url = iv_url iv_username = lv_user ).
     ENDIF.
 
     ii_client->authenticate(
