@@ -221,19 +221,27 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD branch_list_popup.
 
     DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
+          lt_branches  TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_answer    TYPE c LENGTH 1,
           lt_selection TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
-                   <ls_branch> LIKE LINE OF lcl_git_branch_list=>mt_branches.
+                   <ls_branch> LIKE LINE OF lt_branches.
 
 
     lo_branches = lcl_git_transport=>branches( iv_url ).
 
-    LOOP AT lo_branches->mt_branches ASSIGNING <ls_branch>.
+    lt_branches = lo_branches->get_branches_only( ).
+    LOOP AT lt_branches ASSIGNING <ls_branch>.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = <ls_branch>-name.
     ENDLOOP.
+
+*    lt_branches = lo_branches->get_tags_only( ).
+*    LOOP AT lt_branches ASSIGNING <ls_branch>.
+*      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+*      <ls_sel>-varoption = <ls_branch>-name.
+*    ENDLOOP.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING

@@ -96,7 +96,7 @@ ENDCLASS. "lcl_git_utils
 *----------------------------------------------------------------------*
 *       CLASS lcl_git_branch_list DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
+CLASS lcl_git_branch_list DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: ty_git_branch_type TYPE char2.
     TYPES: BEGIN OF ty_git_branch,
@@ -115,12 +115,8 @@ CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
     END OF c_type.
     CONSTANTS HEAD_NAME   TYPE string VALUE 'HEAD'.
 
-    DATA mt_branches    TYPE ty_git_branch_list_tt READ-ONLY.
-    DATA mv_head_symref TYPE string READ-ONLY.
-
-    CLASS-METHODS create
+    METHODS constructor
       IMPORTING iv_data        TYPE string
-      RETURNING VALUE(ro_list) TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
     METHODS find_by_name
@@ -157,6 +153,9 @@ CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
       RETURNING VALUE(rv_name)   TYPE string.
 
   PRIVATE SECTION.
+    DATA mt_branches    TYPE ty_git_branch_list_tt.
+    DATA mv_head_symref TYPE string.
+
     CLASS-METHODS parse_branch_list
       IMPORTING iv_data        TYPE string
       EXPORTING et_list        TYPE ty_git_branch_list_tt
@@ -537,7 +536,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
                              ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
-    eo_branch_list = lcl_git_branch_list=>create( lv_data ).
+    create object eo_branch_list exporting iv_data = lv_data.
 
   ENDMETHOD.                    "branch_list
 
@@ -748,12 +747,11 @@ ENDCLASS.                    "lcl_transport IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_git_branch_list IMPLEMENTATION.
 
-  METHOD create.
-    CREATE OBJECT ro_list.
+  METHOD constructor.
     parse_branch_list(
       EXPORTING iv_data        = iv_data
-      IMPORTING et_list        = ro_list->mt_branches
-                ev_head_symref = ro_list->mv_head_symref ).
+      IMPORTING et_list        = me->mt_branches
+                ev_head_symref = me->mv_head_symref ).
   ENDMETHOD.  "create
 
   METHOD find_by_name.
@@ -772,7 +770,11 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   METHOD get_head.
 
-    rs_branch = find_by_name( HEAD_NAME ).
+    IF mv_head_symref IS NOT INITIAL.
+      rs_branch = find_by_name( mv_head_symref ).
+    ELSE.
+      rs_branch = find_by_name( HEAD_NAME ).
+    ENDIF.
 
   ENDMETHOD.  "get_head
 
