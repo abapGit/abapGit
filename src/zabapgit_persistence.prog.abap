@@ -707,22 +707,22 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS set_repo_username
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
                 iv_username TYPE string
       RAISING   lcx_exception.
 
     METHODS get_repo_username
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
     METHODS set_repo_email
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
                 iv_email TYPE string
       RAISING   lcx_exception.
 
     METHODS get_repo_email
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
@@ -737,7 +737,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_config,
-             key       TYPE lcl_persistence_repo=>ty_repo-key,
+             url       TYPE lcl_persistence_repo=>ty_repo-url,
              username  TYPE string,
              email     TYPE string,
            END OF ty_repo_config.
@@ -771,12 +771,12 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS read_repo_config
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rs_repo_config) TYPE ty_repo_config
       RAISING   lcx_exception.
 
     METHODS update_repo_config
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
                 is_repo_config TYPE ty_repo_config
       RAISING   lcx_exception.
 
@@ -1098,25 +1098,29 @@ CLASS lcl_persistence_user IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD read_repo_config.
-    DATA lt_repo_config TYPE ty_repo_config_tt.
+    DATA: lt_repo_config TYPE ty_repo_config_tt,
+          lv_key         TYPE string.
 
+    lv_key         = to_lower( iv_url ).
     lt_repo_config = read( )-repo_config.
-    READ TABLE lt_repo_config INTO rs_repo_config WITH KEY key = iv_key.
+    READ TABLE lt_repo_config INTO rs_repo_config WITH KEY url = lv_key.
 
   ENDMETHOD.  "read_repo_config
 
   METHOD update_repo_config.
-    DATA ls_user TYPE ty_user.
+    DATA: ls_user TYPE ty_user,
+          lv_key  TYPE string.
     FIELD-SYMBOLS <repo_config> TYPE ty_repo_config.
 
     ls_user = read( ).
+    lv_key  = to_lower( iv_url ).
 
-    READ TABLE ls_user-repo_config ASSIGNING <repo_config> WITH KEY key = iv_key.
+    READ TABLE ls_user-repo_config ASSIGNING <repo_config> WITH KEY url = lv_key.
     IF sy-subrc IS NOT INITIAL.
       APPEND INITIAL LINE TO ls_user-repo_config ASSIGNING <repo_config>.
     ENDIF.
     <repo_config>     = is_repo_config.
-    <repo_config>-key = iv_key.
+    <repo_config>-url = lv_key.
 
     update( ls_user ).
 
@@ -1126,15 +1130,15 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
-    ls_repo_config          = read_repo_config( iv_key ).
+    ls_repo_config          = read_repo_config( iv_url ).
     ls_repo_config-username = iv_username.
-    update_repo_config( iv_key = iv_key is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
   ENDMETHOD.  "set_repo_username
 
   METHOD get_repo_username.
 
-    rv_username = read_repo_config( iv_key )-username.
+    rv_username = read_repo_config( iv_url )-username.
 
   ENDMETHOD.  "get_repo_username
 
@@ -1142,15 +1146,15 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
-    ls_repo_config       = read_repo_config( iv_key ).
+    ls_repo_config       = read_repo_config( iv_url ).
     ls_repo_config-email = iv_email.
-    update_repo_config( iv_key = iv_key is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
   ENDMETHOD.  "set_repo_email
 
   METHOD get_repo_email.
 
-    rv_email = read_repo_config( iv_key )-email.
+    rv_email = read_repo_config( iv_url )-email.
 
   ENDMETHOD.  "get_repo_email
 

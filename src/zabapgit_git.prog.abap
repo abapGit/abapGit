@@ -311,8 +311,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_user         TYPE string,
           lv_pass         TYPE string.
 
-*    lv_default_user = lcl_app=>user( )->get_repo_username( iv_key =  ).
-*    lv_user = lv_default_user.
+    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
+    lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
       EXPORTING
@@ -326,7 +326,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-*      lcl_app=>user( )->get_repo_username( iv_key =  iv_username = lv_user ).
+      lcl_app=>user( )->set_repo_username( iv_url = iv_url iv_username = lv_user ).
     ENDIF.
 
     ii_client->authenticate(

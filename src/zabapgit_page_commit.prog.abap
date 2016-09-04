@@ -90,12 +90,12 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user  = lcl_app=>user( ).
     lv_key   = mo_repo->get_key( ).
 
-    lv_user  = lo_user->get_repo_username( lv_key ).
+    lv_user  = lo_user->get_repo_username( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.
       lv_user  = lo_user->get_username( ).
     ENDIF.
 
-    lv_email = lo_user->get_repo_email( lv_key ).
+    lv_email = lo_user->get_repo_email( mo_repo->get_url( ) ).
     IF lv_email IS INITIAL.
       lv_email = lo_user->get_email( ).
     ENDIF.
@@ -253,8 +253,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
 
     lo_user = lcl_app=>user( ).
-    lo_user->set_repo_username( iv_key = mo_repo->get_key( ) iv_username = ls_fields-username ).
-    lo_user->set_repo_email(    iv_key = mo_repo->get_key( ) iv_email = ls_fields-email ).
+    lo_user->set_repo_username( iv_url = mo_repo->get_url( ) iv_username = ls_fields-username ).
+    lo_user->set_repo_email(    iv_url = mo_repo->get_url( ) iv_email = ls_fields-email ).
 
     IF ls_fields-username IS INITIAL.
       lcx_exception=>raise( 'empty username' ).

@@ -100,6 +100,10 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       EXPORTING p_status  = sy-pfkey
       TABLES    p_exclude = lt_ucomm.
 
+    IF p_user IS NOT INITIAL.
+      SET CURSOR FIELD 'P_PASS'.
+    ENDIF.
+
   ENDMETHOD.  "on_screen_output
 
   METHOD on_screen_event.
