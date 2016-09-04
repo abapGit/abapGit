@@ -127,8 +127,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     lv_text = lcl_git_branch_list=>get_display_name( iv_branch ).
 
     CASE lcl_git_branch_list=>get_type( iv_branch ). "TODO
-      WHEN lcl_git_branch_list=>TYPE_BRANCH.
-      WHEN lcl_git_branch_list=>TYPE_TAG.
+      WHEN lcl_git_branch_list=>c_type-branch.
+      WHEN lcl_git_branch_list=>c_type-tag.
       WHEN OTHERS.
     ENDCASE.
 

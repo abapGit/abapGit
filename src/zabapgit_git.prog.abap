@@ -4,18 +4,6 @@
 
 CLASS ltcl_git_pack DEFINITION DEFERRED.
 
-
-" TODO: move types to global definitions when code is stable
-TYPES: ty_git_branch_type TYPE char2.
-TYPES: BEGIN OF ty_git_branch,
-         sha1         TYPE ty_sha1,
-         name         TYPE string,
-         type         TYPE ty_git_branch_type,
-         is_head      TYPE abap_bool,
-         display_name TYPE string,
-       END OF ty_git_branch.
-TYPES: ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY.
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_git_utils
 *----------------------------------------------------------------------*
@@ -110,9 +98,21 @@ ENDCLASS. "lcl_git_utils
 *----------------------------------------------------------------------*
 CLASS lcl_git_branch_list DEFINITION FINAL CREATE PRIVATE.
   PUBLIC SECTION.
-    CONSTANTS TYPE_BRANCH TYPE ty_git_branch_type VALUE 'HD'.
-    CONSTANTS TYPE_TAG    TYPE ty_git_branch_type VALUE 'TG'.
-    CONSTANTS TYPE_OTHER  TYPE ty_git_branch_type VALUE 'ZZ'.
+    TYPES: ty_git_branch_type TYPE char2.
+    TYPES: BEGIN OF ty_git_branch,
+             sha1         TYPE ty_sha1,
+             name         TYPE string,
+             type         TYPE ty_git_branch_type,
+             is_head      TYPE abap_bool,
+             display_name TYPE string,
+           END OF ty_git_branch.
+    TYPES: ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY.
+
+    CONSTANTS: BEGIN OF c_type,
+      branch TYPE ty_git_branch_type VALUE 'HD',
+      tag    TYPE ty_git_branch_type VALUE 'TG',
+      other  TYPE ty_git_branch_type VALUE 'ZZ',
+    END OF c_type.
     CONSTANTS HEAD_NAME   TYPE string VALUE 'HEAD'.
 
     DATA mt_branches    TYPE ty_git_branch_list_tt READ-ONLY.
@@ -181,7 +181,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS upload_pack
       IMPORTING io_repo     TYPE REF TO lcl_repo_online
                 iv_deepen   TYPE abap_bool DEFAULT abap_true
-                it_branches TYPE ty_git_branch_list_tt OPTIONAL
+                it_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects  TYPE ty_objects_tt
                 ev_branch   TYPE ty_sha1
       RAISING   lcx_exception.
@@ -675,7 +675,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
           lv_pack     TYPE xstring,
-          lt_branches TYPE ty_git_branch_list_tt,
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_capa     TYPE string.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
@@ -871,15 +871,15 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
   ENDMETHOD.  "get_display_name
 
   METHOD get_type.
-    rv_type = TYPE_OTHER.
+    rv_type = c_type-other.
 
     IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = HEAD_NAME.
-      rv_type = TYPE_BRANCH.
+      rv_type = c_type-branch.
       RETURN.
     ENDIF.
 
     IF iv_branch_name CP 'refs/tags/*'.
-      rv_type = TYPE_TAG.
+      rv_type = c_type-tag.
       RETURN.
     ENDIF.
 
@@ -897,7 +897,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
     FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <branch>.
-      IF <branch>-type = TYPE_BRANCH.
+      IF <branch>-type = c_type-branch.
         APPEND <branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
@@ -907,7 +907,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
     FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <branch>.
-      IF <branch>-type = TYPE_TAG.
+      IF <branch>-type = c_type-tag.
         APPEND <branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
@@ -1627,7 +1627,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
     CLASS-METHODS delete_branch
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
-                is_branch TYPE ty_git_branch
+                is_branch TYPE lcl_git_branch_list=>ty_git_branch
       RAISING   lcx_exception.
 
     CLASS-METHODS full_tree
@@ -1816,7 +1816,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lv_sha1     TYPE ty_sha1,
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE ty_objects_tt,
-          lt_branches TYPE ty_git_branch_list_tt,
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,

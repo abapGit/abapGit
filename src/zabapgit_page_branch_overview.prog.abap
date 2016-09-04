@@ -37,7 +37,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS: get_branches
-      RETURNING VALUE(rt_branches) TYPE ty_git_branch_list_tt.
+      RETURNING VALUE(rt_branches) TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
 
   PRIVATE SECTION.
 
@@ -57,7 +57,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING   lcx_exception.
 
     CLASS-DATA:
-      gt_branches TYPE ty_git_branch_list_tt,
+      gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
       gt_commits  TYPE TABLE OF ty_commit.
 
 ENDCLASS.
@@ -376,7 +376,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
   METHOD form_select.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE ty_git_branch_list_tt.
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
