@@ -56,6 +56,7 @@ CLASS lcl_repo_online DEFINITION DEFERRED.
 
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_repo.
+INCLUDE zabapgit_git.
 INCLUDE zabapgit_stage_logic.
 INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
@@ -103,7 +104,6 @@ INCLUDE zabapgit_object_wdyn.
 INCLUDE zabapgit_object_webi.
 INCLUDE zabapgit_object_xslt.
 
-INCLUDE zabapgit_git.
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_zip.
