@@ -55,6 +55,7 @@ INCLUDE zabapgit_sap_package.
 CLASS lcl_repo_online DEFINITION DEFERRED.
 
 INCLUDE zabapgit_stage.
+INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_git.
 INCLUDE zabapgit_stage_logic.
