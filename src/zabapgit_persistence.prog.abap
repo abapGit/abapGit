@@ -706,6 +706,26 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
+    METHODS set_repo_username
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+                iv_username TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_repo_username
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_username) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_repo_email
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+                iv_email TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_repo_email
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
 
@@ -716,10 +736,18 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
         WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_user,
+    TYPES: BEGIN OF ty_repo_config,
+             key       TYPE lcl_persistence_repo=>ty_repo-key,
              username  TYPE string,
              email     TYPE string,
-             repo_show TYPE lcl_persistence_repo=>ty_repo-key,
+           END OF ty_repo_config.
+    TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_user,
+             username    TYPE string,
+             email       TYPE string,
+             repo_show   TYPE lcl_persistence_repo=>ty_repo-key,
+             repo_config TYPE ty_repo_config_tt,
            END OF ty_user.
 
     METHODS constructor
@@ -740,6 +768,16 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS update
       IMPORTING is_user TYPE ty_user
+      RAISING   lcx_exception.
+
+    METHODS read_repo_config
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rs_repo_config) TYPE ty_repo_config
+      RAISING   lcx_exception.
+
+    METHODS update_repo_config
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+                is_repo_config TYPE ty_repo_config
       RAISING   lcx_exception.
 
 ENDCLASS.             "lcl_persistence_user DEFINITION
@@ -1058,6 +1096,63 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_email = read( )-email.
 
   ENDMETHOD.
+
+  METHOD read_repo_config.
+    DATA lt_repo_config TYPE ty_repo_config_tt.
+
+    lt_repo_config = read( )-repo_config.
+    READ TABLE lt_repo_config INTO rs_repo_config WITH KEY key = iv_key.
+
+  ENDMETHOD.  "read_repo_config
+
+  METHOD update_repo_config.
+    DATA ls_user TYPE ty_user.
+    FIELD-SYMBOLS <repo_config> TYPE ty_repo_config.
+
+    ls_user = read( ).
+
+    READ TABLE ls_user-repo_config ASSIGNING <repo_config> WITH KEY key = iv_key.
+    IF sy-subrc IS NOT INITIAL.
+      APPEND INITIAL LINE TO ls_user-repo_config ASSIGNING <repo_config>.
+    ENDIF.
+    <repo_config>     = is_repo_config.
+    <repo_config>-key = iv_key.
+
+    update( ls_user ).
+
+  ENDMETHOD.  "update_repo_config
+
+  METHOD set_repo_username.
+
+    DATA: ls_repo_config TYPE ty_repo_config.
+
+    ls_repo_config          = read_repo_config( iv_key ).
+    ls_repo_config-username = iv_username.
+    update_repo_config( iv_key = iv_key is_repo_config = ls_repo_config ).
+
+  ENDMETHOD.  "set_repo_username
+
+  METHOD get_repo_username.
+
+    rv_username = read_repo_config( iv_key )-username.
+
+  ENDMETHOD.  "get_repo_username
+
+  METHOD set_repo_email.
+
+    DATA: ls_repo_config TYPE ty_repo_config.
+
+    ls_repo_config       = read_repo_config( iv_key ).
+    ls_repo_config-email = iv_email.
+    update_repo_config( iv_key = iv_key is_repo_config = ls_repo_config ).
+
+  ENDMETHOD.  "set_repo_email
+
+  METHOD get_repo_email.
+
+    rv_email = read_repo_config( iv_key )-email.
+
+  ENDMETHOD.  "get_repo_email
 
 ENDCLASS.
 

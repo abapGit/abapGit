@@ -80,7 +80,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
-          lv_key   TYPE string,
+          lv_key   TYPE lcl_persistence_db=>ty_value,
           lv_email TYPE string.
 
 * see https://git-scm.com/book/ch5-2.html
@@ -88,9 +88,17 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * body should wrap at 72 characters
 
     lo_user  = lcl_app=>user( ).
-    lv_user  = lo_user->get_username( ).
-    lv_email = lo_user->get_email( ).
     lv_key   = mo_repo->get_key( ).
+
+    lv_user  = lo_user->get_repo_username( lv_key ).
+    IF lv_user IS INITIAL.
+      lv_user  = lo_user->get_username( ).
+    ENDIF.
+
+    lv_email = lo_user->get_repo_email( lv_key ).
+    IF lv_email IS INITIAL.
+      lv_email = lo_user->get_email( ).
+    ENDIF.
 
     CREATE OBJECT ro_html.
 
@@ -245,8 +253,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
 
     lo_user = lcl_app=>user( ).
-    lo_user->set_username( ls_fields-username ).
-    lo_user->set_email( ls_fields-email ).
+    lo_user->set_repo_username( iv_key = mo_repo->get_key( ) iv_username = ls_fields-username ).
+    lo_user->set_repo_email(    iv_key = mo_repo->get_key( ) iv_email = ls_fields-email ).
 
     IF ls_fields-username IS INITIAL.
       lcx_exception=>raise( 'empty username' ).
