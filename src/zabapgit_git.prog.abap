@@ -7,22 +7,15 @@ CLASS ltcl_git_pack DEFINITION DEFERRED.
 *----------------------------------------------------------------------*
 *       CLASS lcl_transport DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_git_transport DEFINITION FINAL.
 
+CLASS lcl_git_transport DEFINITION FINAL.
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_branch_list,
-             sha1 TYPE ty_sha1,
-             name TYPE string,
-           END OF ty_branch_list.
-    TYPES: ty_branch_list_tt TYPE STANDARD TABLE OF ty_branch_list WITH DEFAULT KEY.
 
 * remote to local
     CLASS-METHODS upload_pack
       IMPORTING io_repo     TYPE REF TO lcl_repo_online
                 iv_deepen   TYPE abap_bool DEFAULT abap_true
-                it_branches TYPE ty_branch_list_tt OPTIONAL
+                it_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects  TYPE ty_objects_tt
                 ev_branch   TYPE ty_sha1
       RAISING   lcx_exception.
@@ -38,10 +31,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
     CLASS-METHODS branches
       IMPORTING iv_url                TYPE string
-      RETURNING VALUE(rt_branch_list) TYPE ty_branch_list_tt
+      RETURNING VALUE(ro_branch_list) TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS class_constructor.
+
 
   PRIVATE SECTION.
     CLASS-DATA: gv_agent TYPE string.
@@ -55,12 +49,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
       EXPORTING ei_client      TYPE REF TO if_http_client
-                et_branch_list TYPE ty_branch_list_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS pkt_string
-      IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rv_pkt) TYPE string
+                eo_branch_list TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
     CLASS-METHODS find_branch
@@ -76,16 +65,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
       CHANGING  cv_data TYPE xstring
       RAISING   lcx_exception.
 
-    CLASS-METHODS length_utf8_hex
-      IMPORTING iv_data       TYPE xstring
-      RETURNING VALUE(rv_len) TYPE i
-      RAISING   lcx_exception.
-
-    CLASS-METHODS parse_branch_list
-      IMPORTING iv_data        TYPE string
-      RETURNING VALUE(rt_list) TYPE ty_branch_list_tt
-      RAISING   lcx_exception.
-
     CLASS-METHODS set_headers
       IMPORTING iv_url     TYPE string
                 iv_service TYPE string
@@ -95,9 +74,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS check_http_200
       IMPORTING ii_client TYPE REF TO if_http_client
       RAISING   lcx_exception.
-
-    CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
 
     CLASS-METHODS send_receive
       IMPORTING ii_client      TYPE REF TO if_http_client
@@ -251,20 +227,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                    "set_headers
 
-  METHOD get_null.
-
-    DATA: lv_x(4) TYPE x VALUE '00000000',
-          lv_z(2) TYPE c.
-
-    FIELD-SYMBOLS <lv_y> TYPE c.
-
-
-    ASSIGN lv_x TO <lv_y> CASTING.
-    lv_z = <lv_y>.
-    rv_c = lv_z(1).
-
-  ENDMETHOD.                    "get_null
-
   METHOD check_http_200.
 
     DATA: lv_code TYPE i.
@@ -335,52 +297,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.  "acquire_login_details
 
-  METHOD parse_branch_list.
-
-    DATA: lt_result TYPE TABLE OF string,
-          lv_hash   TYPE ty_sha1,
-          lv_name   TYPE string,
-          lv_foo    TYPE string ##needed,
-          lv_char   TYPE c,
-          lv_data   LIKE LINE OF lt_result.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF rt_list.
-
-
-    SPLIT iv_data AT gc_newline INTO TABLE lt_result.
-    LOOP AT lt_result INTO lv_data.
-      IF sy-tabix = 1.
-        CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
-        lv_hash = lv_data+8.
-        lv_name = lv_data+49.
-        lv_char = get_null( ).
-        SPLIT lv_name AT lv_char INTO lv_name lv_foo.
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
-        lv_hash = lv_data+4.
-        lv_name = lv_data+45.
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        lcx_exception=>raise( 'No branches, create branch manually by adding file' ).
-      ELSE.
-        CONTINUE.
-      ENDIF.
-
-      IF lv_name CP 'refs/pull/*'.
-        CONTINUE.
-      ENDIF.
-
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_branch>.
-      <ls_branch>-sha1 = lv_hash.
-      <ls_branch>-name = lv_name.
-    ENDLOOP.
-
-  ENDMETHOD.                    "parse_branch_list
-
   METHOD find_branch.
 
-    DATA: lt_branch_list TYPE ty_branch_list_tt,
-          ls_branch_list LIKE LINE OF lt_branch_list.
-
+    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
 
     branch_list(
       EXPORTING
@@ -388,20 +307,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service      = iv_service
       IMPORTING
         ei_client       = ei_client
-        et_branch_list  = lt_branch_list ).
+        eo_branch_list  = lo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
-      IF iv_branch_name IS INITIAL.
-        lcx_exception=>raise( 'branch empty' ).
-      ENDIF.
-
-      READ TABLE lt_branch_list INTO ls_branch_list
-        WITH KEY name = iv_branch_name.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'Branch not found' ).
-      ENDIF.
-
-      ev_branch = ls_branch_list-sha1.
+      ev_branch = lo_branch_list->find_by_name( iv_branch_name )-sha1.
     ENDIF.
 
   ENDMETHOD.                    "find_branch
@@ -417,7 +326,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-upload
       IMPORTING
         ei_client      = li_client
-        et_branch_list = rt_branch_list ).
+        eo_branch_list = ro_branch_list ).
     li_client->close( ).
 
   ENDMETHOD.                    "branches
@@ -470,9 +379,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
                              ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
-    et_branch_list = parse_branch_list( lv_data ).
+    create object eo_branch_list exporting iv_data = lv_data.
 
-  ENDMETHOD.                    "ref_discovery
+  ENDMETHOD.                    "branch_list
 
   METHOD send_receive.
 
@@ -504,7 +413,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "send_receive
-
 
   METHOD receive_pack.
 
@@ -538,11 +446,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
               iv_new &&
               ` ` &&
               iv_branch_name &&
-              get_null( ) &&
+              lcl_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
               gc_newline.                                   "#EC NOTEXT
-    lv_cmd_pkt = pkt_string( lv_line ).
+    lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
     lv_tmp = lcl_convert=>string_to_xstring_utf8( lv_buffer ).
@@ -566,38 +474,6 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                    "receive_pack
 
-  METHOD length_utf8_hex.
-
-    DATA: lv_xstring TYPE xstring,
-          lv_string  TYPE string,
-          lv_char4   TYPE c LENGTH 4,
-          lv_x       TYPE x LENGTH 2,
-          lo_obj     TYPE REF TO cl_abap_conv_in_ce,
-          lv_len     TYPE int4.
-
-* hmm, can this be done easier?
-
-    lv_xstring = iv_data(4).
-
-    lo_obj = cl_abap_conv_in_ce=>create(
-        input    = lv_xstring
-        encoding = 'UTF-8' ).
-    lv_len = xstrlen( lv_xstring ).
-
-    TRY.
-        lo_obj->read( EXPORTING n    = lv_len
-                      IMPORTING data = lv_string ).
-      CATCH cx_sy_conversion_codepage.
-        lcx_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
-    ENDTRY.
-
-    lv_char4 = lv_string.
-    TRANSLATE lv_char4 TO UPPER CASE.
-    lv_x = lv_char4.
-    rv_len = lv_x.
-
-  ENDMETHOD.                    "length_utf8_hex
-
   METHOD parse.
 
     CONSTANTS: lc_band1 TYPE x VALUE '01'.
@@ -608,7 +484,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
 
     WHILE xstrlen( cv_data ) >= 4.
-      lv_len = length_utf8_hex( cv_data ).
+      lv_len = lcl_git_utils=>length_utf8_hex( cv_data ).
 
       IF lv_len > xstrlen( cv_data ).
         lcx_exception=>raise( 'parse, string length too large' ).
@@ -641,7 +517,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
           lv_pack     TYPE xstring,
-          lt_branches TYPE ty_branch_list_tt,
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_capa     TYPE string.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
@@ -678,11 +554,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && gc_newline.                                    "#EC NOTEXT
       ENDIF.
-      lv_buffer = lv_buffer && pkt_string( lv_line ).
+      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
-      lv_buffer = lv_buffer && pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
+      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
@@ -707,28 +583,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   ENDMETHOD.                    "upload_pack
 
-  METHOD pkt_string.
-
-    DATA: lv_x   TYPE x,
-          lv_len TYPE i.
-
-
-    lv_len = strlen( iv_string ).
-
-    IF lv_len >= 255.
-      lcx_exception=>raise( 'PKT, todo' ).
-    ENDIF.
-
-    lv_x = lv_len + 4.
-
-    rv_pkt = rv_pkt && '00' && lv_x && iv_string.
-
-  ENDMETHOD.                    "pkt
-
 ENDCLASS.                    "lcl_transport IMPLEMENTATION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_pack IMPLEMENTATION
+*       CLASS lcl_git_pack IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
@@ -1438,7 +1296,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
 
     CLASS-METHODS delete_branch
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
-                is_branch TYPE lcl_git_transport=>ty_branch_list
+                is_branch TYPE lcl_git_branch_list=>ty_git_branch
       RAISING   lcx_exception.
 
     CLASS-METHODS full_tree
@@ -1627,7 +1485,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lv_sha1     TYPE ty_sha1,
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE ty_objects_tt,
-          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,

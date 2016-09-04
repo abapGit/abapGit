@@ -31,7 +31,7 @@ CLASS lcl_popups DEFINITION.
         RAISING   lcx_exception,
       branch_list_popup
         IMPORTING iv_url           TYPE string
-        RETURNING VALUE(rs_branch) TYPE lcl_git_transport=>ty_branch_list
+        RETURNING VALUE(rs_branch) TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
@@ -116,7 +116,7 @@ CLASS lcl_popups IMPLEMENTATION.
     CLEAR ev_cancel.
 
 *                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'refs/heads/branch_name'  ''.
+    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new_branch_name'         ''.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -137,7 +137,7 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = <ls_field>-value.
+      ev_name = lcl_git_branch_list=>complete_heads_branch_name( <ls_field>-value ).
     ENDIF.
 
   ENDMETHOD.
@@ -194,7 +194,7 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_transport=>ty_branch_list.
+          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -220,7 +220,8 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD branch_list_popup.
 
-    DATA: lt_branches  TYPE lcl_git_transport=>ty_branch_list_tt,
+    DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
+          lt_branches  TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_answer    TYPE c LENGTH 1,
           lt_selection TYPE TABLE OF spopli.
 
@@ -228,12 +229,19 @@ CLASS lcl_popups IMPLEMENTATION.
                    <ls_branch> LIKE LINE OF lt_branches.
 
 
-    lt_branches = lcl_git_transport=>branches( iv_url ).
+    lo_branches = lcl_git_transport=>branches( iv_url ).
 
+    lt_branches = lo_branches->get_branches_only( ).
     LOOP AT lt_branches ASSIGNING <ls_branch>.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = <ls_branch>-name.
     ENDLOOP.
+
+*    lt_branches = lo_branches->get_tags_only( ).
+*    LOOP AT lt_branches ASSIGNING <ls_branch>.
+*      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+*      <ls_sel>-varoption = <ls_branch>-name.
+*    ENDLOOP.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
@@ -261,8 +269,7 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    READ TABLE lt_branches INTO rs_branch WITH KEY name = <ls_sel>-varoption.
-    ASSERT sy-subrc = 0.
+    rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
 
   ENDMETHOD.
 
@@ -298,6 +305,7 @@ CLASS lcl_popups IMPLEMENTATION.
           lv_icon_br    TYPE icon-name,
           lt_fields     TYPE TABLE OF sval,
           lv_pattr      TYPE spo_fattr,
+          lv_battr      TYPE spo_fattr,
           lv_button2    TYPE svalbutton-buttontext,
           lv_icon2      TYPE icon-name.
 
@@ -306,15 +314,17 @@ CLASS lcl_popups IMPLEMENTATION.
 
     IF NOT iv_package IS INITIAL.
       lv_pattr = '05'.
+      lv_battr = '03'.
     ELSE.
+      lv_battr = '05'.
       lv_button2 = 'Create package' ##NO_TEXT.
       lv_icon2   = icon_msg.
     ENDIF.
 
 *                   TAB           FLD       LABEL            DEF        ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     ''.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     lv_pattr.
     _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' iv_package lv_pattr.
-    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  '05'.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  lv_battr.
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.
