@@ -108,10 +108,13 @@ CLASS lcl_zip IMPLEMENTATION.
           lv_filename TYPE string,
           lv_default  TYPE string,
           lv_path     TYPE string,
-          lv_fullpath TYPE string.
+          lv_fullpath TYPE string,
+          lv_package  TYPE devclass.
 
 
-    CONCATENATE iv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
+    lv_package = iv_package.
+    TRANSLATE lv_package USING '/#'.
+    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
 
     cl_gui_frontend_services=>file_save_dialog(
       EXPORTING

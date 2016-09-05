@@ -107,14 +107,14 @@ CLASS lcl_git_branch_list DEFINITION FINAL.
     TYPES: ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY.
 
     CONSTANTS: BEGIN OF c_type,
-      branch TYPE ty_git_branch_type VALUE 'HD',
-      tag    TYPE ty_git_branch_type VALUE 'TG',
-      other  TYPE ty_git_branch_type VALUE 'ZZ',
-    END OF c_type.
-    CONSTANTS HEAD_NAME   TYPE string VALUE 'HEAD'.
+                 branch TYPE ty_git_branch_type VALUE 'HD',
+                 tag    TYPE ty_git_branch_type VALUE 'TG',
+                 other  TYPE ty_git_branch_type VALUE 'ZZ',
+               END OF c_type.
+    CONSTANTS head_name   TYPE string VALUE 'HEAD'.
 
     METHODS constructor
-      IMPORTING iv_data        TYPE string
+      IMPORTING iv_data TYPE string
       RAISING   lcx_exception.
 
     METHODS find_by_name
@@ -139,16 +139,16 @@ CLASS lcl_git_branch_list DEFINITION FINAL.
       RETURNING VALUE(rv_ignore) TYPE abap_bool.
 
     CLASS-METHODS get_display_name
-      IMPORTING iv_branch_name   TYPE clike
+      IMPORTING iv_branch_name         TYPE clike
       RETURNING VALUE(rv_display_name) TYPE string.
 
     CLASS-METHODS get_type
-      IMPORTING iv_branch_name   TYPE clike
-      RETURNING VALUE(rv_type)   TYPE ty_git_branch_type.
+      IMPORTING iv_branch_name TYPE clike
+      RETURNING VALUE(rv_type) TYPE ty_git_branch_type.
 
     CLASS-METHODS complete_heads_branch_name
-      IMPORTING iv_branch_name   TYPE clike
-      RETURNING VALUE(rv_name)   TYPE string.
+      IMPORTING iv_branch_name TYPE clike
+      RETURNING VALUE(rv_name) TYPE string.
 
   PRIVATE SECTION.
     DATA mt_branches    TYPE ty_git_branch_list_tt.
@@ -197,7 +197,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
     IF mv_head_symref IS NOT INITIAL.
       rs_branch = find_by_name( mv_head_symref ).
     ELSE.
-      rs_branch = find_by_name( HEAD_NAME ).
+      rs_branch = find_by_name( head_name ).
     ENDIF.
 
   ENDMETHOD.  "get_head
@@ -246,7 +246,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
       <ls_branch>-name         = lv_name.
       <ls_branch>-display_name = get_display_name( lv_name ).
       <ls_branch>-type         = get_type( lv_name ).
-      IF <ls_branch>-name = HEAD_NAME OR <ls_branch>-name = ev_head_symref.
+      IF <ls_branch>-name = head_name OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head    = abap_true.
       ENDIF.
     ENDLOOP.
@@ -255,7 +255,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   METHOD parse_head_params.
 
-    DATA: ls_match TYPE match_result,
+    DATA: ls_match    TYPE match_result,
           ls_submatch TYPE submatch_result.
 
     FIND FIRST OCCURRENCE OF REGEX '\ssymref=HEAD:([^\s]+)' IN iv_data RESULTS ls_match.
@@ -286,12 +286,8 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
     IF rv_display_name CP 'refs/heads/*'.
       REPLACE FIRST OCCURRENCE OF 'refs/heads/' IN rv_display_name WITH ''.
-      RETURN.
-    ENDIF.
-
-    IF rv_display_name CP 'refs/tags/*'.
+    ELSEIF rv_display_name CP 'refs/tags/*'.
       REPLACE FIRST OCCURRENCE OF 'refs/' IN rv_display_name WITH ''.
-      RETURN.
     ENDIF.
 
   ENDMETHOD.  "get_display_name
@@ -299,7 +295,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
   METHOD get_type.
     rv_type = c_type-other.
 
-    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = HEAD_NAME.
+    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = head_name.
       rv_type = c_type-branch.
       RETURN.
     ENDIF.

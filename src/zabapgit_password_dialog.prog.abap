@@ -6,15 +6,15 @@ TABLES sscrfields.
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_url FOR FIELD p_url.
-PARAMETER: p_url  TYPE string LOWER CASE VISIBLE LENGTH 40.
+PARAMETERS: p_url  TYPE string LOWER CASE VISIBLE LENGTH 40.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_user FOR FIELD p_user.
-PARAMETER: p_user TYPE string LOWER CASE VISIBLE LENGTH 40.
+PARAMETERS: p_user TYPE string LOWER CASE VISIBLE LENGTH 40.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_pass FOR FIELD p_pass.
-PARAMETER: p_pass TYPE string LOWER CASE VISIBLE LENGTH 40.
+PARAMETERS: p_pass TYPE string LOWER CASE VISIBLE LENGTH 40.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN END OF SCREEN 1002.
 
@@ -24,7 +24,7 @@ SELECTION-SCREEN END OF SCREEN 1002.
 CLASS lcl_password_dialog DEFINITION.
 
   PUBLIC SECTION.
-    CONSTANTS DYNNR TYPE char4 VALUE '1002'.
+    CONSTANTS dynnr TYPE char4 VALUE '1002'.
 
     CLASS-METHODS popup
       IMPORTING
@@ -37,7 +37,7 @@ CLASS lcl_password_dialog DEFINITION.
     CLASS-METHODS on_screen_output.
     CLASS-METHODS on_screen_event
       IMPORTING
-        iv_ucomm    TYPE syucomm.
+        iv_ucomm TYPE syucomm.
 
   PRIVATE SECTION.
     CLASS-DATA mv_confirm TYPE abap_bool.
@@ -48,12 +48,12 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
   METHOD popup.
 
-    clear p_pass.
+    CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
     mv_confirm = abap_false.
 
-    CALL SELECTION-SCREEN DYNNR STARTING AT 5 5 ENDING AT 60 8.
+    CALL SELECTION-SCREEN dynnr STARTING AT 5 5 ENDING AT 60 8.
 
     IF mv_confirm = abap_true.
       cv_user = p_user.
@@ -76,7 +76,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   METHOD on_screen_output.
     DATA lt_ucomm TYPE TABLE OF sy-ucomm.
 
-    ASSERT sy-dynnr = DYNNR.
+    ASSERT sy-dynnr = dynnr.
 
     LOOP AT SCREEN.
       IF screen-name = 'P_URL'.
@@ -97,8 +97,10 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     APPEND 'SPOS' TO lt_ucomm.  "Save as Variant
 
     CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
-      EXPORTING p_status  = sy-pfkey
-      TABLES    p_exclude = lt_ucomm.
+      EXPORTING
+        p_status  = sy-pfkey
+      TABLES
+        p_exclude = lt_ucomm.
 
     IF p_user IS NOT INITIAL.
       SET CURSOR FIELD 'P_PASS'.
@@ -107,7 +109,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.  "on_screen_output
 
   METHOD on_screen_event.
-    ASSERT sy-dynnr = DYNNR.
+    ASSERT sy-dynnr = dynnr.
 
     " CRET   - F8
     " OTHERS - simulate Enter press
@@ -115,11 +117,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       WHEN 'CRET'.
         mv_confirm = abap_true.
       WHEN OTHERS. "TODO REFACTOR !!! A CLUTCH !
-      " This will work unless any new specific logic appear
-      " for other commands. The problem is that the password dialog
-      " does not have Enter event (or I don't know how to activate it ;)
-      " so Enter issues previous command from previous screen
-      " But for now this works :) Fortunately Esc produces another flow
+        " This will work unless any new specific logic appear
+        " for other commands. The problem is that the password dialog
+        " does not have Enter event (or I don't know how to activate it ;)
+        " so Enter issues previous command from previous screen
+        " But for now this works :) Fortunately Esc produces another flow
         mv_confirm = abap_true.
         LEAVE TO SCREEN 0.
     ENDCASE.
