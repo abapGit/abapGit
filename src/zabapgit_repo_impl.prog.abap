@@ -74,12 +74,23 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                        ev_branch  = mv_branch ).
 
     mo_branches = lcl_git_transport=>branches( get_url( ) ).
+    actualize_head_branch( ).
 
     find_dot_abapgit( ).
 
     mv_initialized = abap_true.
 
   ENDMETHOD.                    "refresh
+
+  METHOD actualize_head_branch.
+    DATA lv_branch_name TYPE string.
+    lv_branch_name = mo_branches->get_head( )-name.
+
+    IF lv_branch_name <> ms_data-head_branch.
+      set( iv_head_branch = lv_branch_name ).
+    ENDIF.
+
+  ENDMETHOD.                    "actualize_head_branch
 
   METHOD get_sha1_remote.
     initialize( ).
@@ -107,7 +118,14 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rv_name = ms_data-branch_name.
   ENDMETHOD.                    "get_branch_name
 
+  METHOD get_head_branch_name.
+    rv_name = ms_data-head_branch.
+  ENDMETHOD.                    "get_head_branch_name
+
   METHOD get_branches.
+    IF mo_branches IS NOT BOUND.
+      mo_branches = lcl_git_transport=>branches( get_url( ) ).
+    ENDIF.
     ro_branches = mo_branches.
   ENDMETHOD.                    "get_branches
 
@@ -225,7 +243,8 @@ CLASS lcl_repo IMPLEMENTATION.
     ASSERT iv_sha1 IS SUPPLIED
       OR it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
-      OR iv_branch_name IS SUPPLIED.
+      OR iv_branch_name IS SUPPLIED
+      OR iv_head_branch IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
@@ -255,6 +274,13 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_key         = ms_data-key
         iv_branch_name = iv_branch_name ).
       ms_data-branch_name = iv_branch_name.
+    ENDIF.
+
+    IF iv_head_branch IS SUPPLIED.
+      lo_persistence->update_head_branch(
+        iv_key         = ms_data-key
+        iv_head_branch = iv_head_branch ).
+      ms_data-head_branch = iv_head_branch.
     ENDIF.
 
   ENDMETHOD.                    "set_sha1

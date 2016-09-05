@@ -105,6 +105,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              offline         TYPE sap_bool,
              local_checksums TYPE ty_local_checksum_tt,
              master_language TYPE spras,
+             head_branch     TYPE string,
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
@@ -137,6 +138,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_branch_name
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_name TYPE ty_repo_xml-branch_name
+      RAISING   lcx_exception.
+
+    METHODS update_head_branch
+      IMPORTING iv_key         TYPE ty_repo-key
+                iv_head_branch TYPE ty_repo_xml-head_branch
       RAISING   lcx_exception.
 
     METHODS add
@@ -1392,6 +1398,34 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
+
+  METHOD update_head_branch.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    IF iv_head_branch IS INITIAL.
+      lcx_exception=>raise( 'update, head branch empty' ).
+    ENDIF.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        lcx_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-head_branch = iv_head_branch.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.  "update_head_branch
 
   METHOD update_sha1.
 

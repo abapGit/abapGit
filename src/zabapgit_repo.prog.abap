@@ -61,6 +61,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
                   it_checksums   TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
                   iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
+                  iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
@@ -80,6 +81,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rv_url) TYPE lcl_persistence_repo=>ty_repo-url,
       get_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-branch_name,
+      get_head_branch_name
+        RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
       get_branches
         RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list,
       set_url
@@ -119,6 +122,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING io_stage TYPE REF TO lcl_stage
         RAISING   lcx_exception,
       initialize
+        RAISING lcx_exception,
+      actualize_head_branch
         RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
