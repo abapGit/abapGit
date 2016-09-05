@@ -55,7 +55,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     set( iv_sha1 = mv_branch ).
 
-    COMMIT WORK.
+    COMMIT WORK AND WAIT.
 
   ENDMETHOD.                    "deserialize
 
