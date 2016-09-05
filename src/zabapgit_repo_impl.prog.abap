@@ -73,6 +73,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                        et_objects = mt_objects
                                        ev_branch  = mv_branch ).
 
+    mo_branches = lcl_git_transport=>branches( get_url( ) ).
+
     find_dot_abapgit( ).
 
     mv_initialized = abap_true.
@@ -104,6 +106,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD get_branch_name.
     rv_name = ms_data-branch_name.
   ENDMETHOD.                    "get_branch_name
+
+  METHOD get_branches.
+    ro_branches = mo_branches.
+  ENDMETHOD.                    "get_branches
 
   METHOD set_url.
 

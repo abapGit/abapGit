@@ -37,7 +37,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS: get_branches
-      RETURNING VALUE(rt_branches) TYPE lcl_git_transport=>ty_branch_list_tt.
+      RETURNING VALUE(rt_branches) TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
 
   PRIVATE SECTION.
 
@@ -57,7 +57,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING   lcx_exception.
 
     CLASS-DATA:
-      gt_branches TYPE lcl_git_transport=>ty_branch_list_tt,
+      gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
       gt_commits  TYPE TABLE OF ty_commit.
 
 ENDCLASS.
@@ -161,11 +161,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
 
-    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) ).
-
-    DELETE gt_branches WHERE name = 'refs/heads/gh-pages' ##NO_TEXT.
-    DELETE gt_branches WHERE name CP 'refs/tags/*' ##NO_TEXT.
-    DELETE gt_branches WHERE name CP 'refs/pull/*' ##NO_TEXT.
+    "TODO refactor
+    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->get_branches_only( ).
 
     lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
                                               iv_deepen = abap_false
@@ -379,7 +376,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
   METHOD form_select.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE lcl_git_transport=>ty_branch_list_tt.
+          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 

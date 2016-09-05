@@ -869,7 +869,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         lo_repo = lcl_app=>repo_srv( )->new_online(
           iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master'
+          iv_branch_name = 'refs/heads/master' "TODO replace with HEAD ?
           iv_package     = lv_target_package ) ##NO_TEXT.
 
         lo_repo->status( ). " check for errors

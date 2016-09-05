@@ -293,7 +293,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( render_repo_top( io_repo ) ).
+    ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
 
     TRY.
         extract_repo_content( EXPORTING io_repo       = io_repo
