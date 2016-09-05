@@ -1020,6 +1020,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ls_progdir_new-fixpt   = is_progdir-fixpt.
     ls_progdir_new-varcl   = is_progdir-varcl.
     ls_progdir_new-appl    = is_progdir-appl.
+    ls_progdir_new-rstat   = is_progdir-rstat.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
