@@ -100,7 +100,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.
-        ro_html->add( '<img src="img/branch">' ).
         IF iv_branch IS INITIAL.
           ro_html->add( render_branch_span( iv_branch      = lo_repo_online->get_branch_name( )
                                             io_repo        = lo_repo_online
@@ -129,21 +128,24 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     lv_text = lcl_git_branch_list=>get_display_name( iv_branch ).
 
-    CASE lcl_git_branch_list=>get_type( iv_branch ). "TODO
-      WHEN lcl_git_branch_list=>c_type-branch.
-      WHEN lcl_git_branch_list=>c_type-tag.
-      WHEN OTHERS.
-    ENDCASE.
+    IF iv_branch = io_repo->get_head_branch_name( ) OR iv_branch = lcl_git_branch_list=>head_name.
+      lv_class = 'branch branch_head'.
+    ELSEIF lcl_git_branch_list=>get_type( iv_branch ) = lcl_git_branch_list=>c_type-branch.
+      lv_class = 'branch branch_branch'.
+    ELSE.
+      lv_class = 'branch'.
+    ENDIF.
 
     CREATE OBJECT ro_html.
+    ro_html->add( |<span class="{ lv_class }">| ).
+    ro_html->add( '<img src="img/branch">' ).
     IF iv_interactive = abap_true.
-      ro_html->add( |<span class="{ lv_class }">| ).
       ro_html->add_anchor( iv_act = |switch_branch?{ io_repo->get_key( ) }|
-                           iv_txt = lv_text ). "TODO refactor
-      ro_html->add( '</span>' ).
+                           iv_txt = lv_text ).
     ELSE.
-      ro_html->add( |<span class="{ lv_class }">{ lv_text }</span>| ).
+      ro_html->add( lv_text ).
     ENDIF.
+    ro_html->add( '</span>' ).
 
   ENDMETHOD.  "render_branch_span
 
@@ -386,6 +388,23 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '  margin-left: 0.2em;'.
     _add '  margin-right: 0.5em;'.
     _add '}'.
+
+    " Branch tag design
+    _add '.repo_attr span.branch {'.
+    _add '  padding: 2px 4px;'.
+    _add '  border: 1px solid #d9d9d9;'.
+    _add '  border-radius: 4px;'.
+    _add '  background-color: #e2e2e2;'.
+    _add '}'.
+    _add '.repo_attr span.branch_head {'.
+    _add '  border-color: #d8dff3;'.
+    _add '  background-color: #eceff9;'.
+    _add '}'.
+    _add '.repo_attr span.branch_branch {'.
+    _add '  border-color: #e7d9b1;'.
+    _add '  background-color: #f8f0d8;'.
+    _add '}'.
+
 
     " Other and outdated (?) styles
     _add '/* MISC AND REFACTOR */'.
