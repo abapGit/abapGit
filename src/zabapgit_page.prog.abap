@@ -268,6 +268,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.grey             { color: lightgrey  !important; }'.
     _add '.emphasis         { font-weight: bold !important; }'.
     _add '.attention        { color: red        !important; }'.
+    _add '.crossout         { text-decoration: line-through !important; }'.
     _add '.right            { text-align:right; }'.
     _add '.paddings         { padding: 0.5em 0.5em; }'.
 
@@ -405,24 +406,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '  background-color: #f8f0d8;'.
     _add '}'.
 
-
     " Other and outdated (?) styles
     _add '/* MISC AND REFACTOR */'.
-    _add 'a.grey:link {color: grey; font-size: smaller;}'.
-    _add 'a.grey:visited {color: grey; font-size: smaller;}'.
-    _add 'a.plain:link {color: black; text-decoration: none;}'.
-    _add 'a.plain:visited {color: black; text-decoration: none;}'.
-    _add 'a.bkg:link {color: #E8E8E8;}'.
-    _add 'a.bkg:visited {color: #E8E8E8;}'.
-    _add 'h1 {display: inline;}'.
-    _add 'h2 {display: inline;}'.
-    _add 'h3 {'.
-    _add '  display: inline;'.
-    _add '  color: grey;'.
-    _add '  font-weight:normal;'.
-    _add '  font-size: smaller;'.
-    _add '}'.
-
     _add '.hidden-submit {'.
     _add '  border: 0 none;'.
     _add '  height: 0;'.

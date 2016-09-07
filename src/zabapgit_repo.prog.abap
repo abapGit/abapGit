@@ -83,6 +83,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-branch_name,
       get_head_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
+      is_write_protected
+        RETURNING VALUE(rv_yes) TYPE sap_bool,
       get_branches
         RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list,
       set_url

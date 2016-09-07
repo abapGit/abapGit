@@ -49,6 +49,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD deserialize.
 
+    IF ms_data-write_protect = abap_true.
+      lcx_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
+    ENDIF.
+
     initialize( ).
 
     super->deserialize( ).
@@ -122,6 +126,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rv_name = ms_data-head_branch.
   ENDMETHOD.                    "get_head_branch_name
 
+  METHOD is_write_protected.
+    rv_yes = ms_data-write_protect.
+  ENDMETHOD.                    "is_write_protected
+
   METHOD get_branches.
     IF mo_branches IS NOT BOUND.
       mo_branches = lcl_git_transport=>branches( get_url( ) ).
@@ -137,6 +145,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_branch_name.
+
+    IF ms_data-write_protect = abap_true.
+      lcx_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
+    ENDIF.
 
     mv_initialized = abap_false.
     set( iv_branch_name = iv_branch_name ).

@@ -207,6 +207,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
+          lv_wp_opt      LIKE gc_html_opt-crossout,
+          lv_pull_opt    LIKE gc_html_opt-crossout,
           lo_sub         TYPE REF TO lcl_html_toolbar,
           lo_branch      TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
@@ -217,6 +219,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     lv_key = io_repo->get_key( ).
 
+    IF io_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= io_repo.
+      IF lo_repo_online->is_write_protected( ) = abap_true.
+        lv_wp_opt   = gc_html_opt-crossout.
+        lv_pull_opt = gc_html_opt-crossout.
+      ELSE.
+        lv_pull_opt = gc_html_opt-emphas.
+      ENDIF.
+    ENDIF.
+
     IF io_repo->is_offline( ) = abap_true.
       lo_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |zipimport?{ lv_key }|
@@ -225,12 +237,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                        iv_act = |zipexport?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
     ELSE.
-      lo_repo_online ?= io_repo.
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
                              iv_act = |pull?{ lv_key }|
-                             iv_opt = gc_html_opt-emphas ).
+                             iv_opt = lv_pull_opt ).
           ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
             lo_toolbar->add( iv_txt = 'Stage'
                              iv_act = |stage?{ lv_key }|
@@ -248,7 +259,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_branch->add( iv_txt = 'Overview'
                       iv_act = |branch_overview?{ lv_key }| ).
       lo_branch->add( iv_txt = 'Switch'
-                      iv_act = |{ c_actions-switch_branch }?{ lv_key }| ).
+                      iv_act = |{ c_actions-switch_branch }?{ lv_key }|
+                      iv_opt = lv_wp_opt ).
       lo_branch->add( iv_txt = 'Create'
                       iv_act = |create_branch?{ lv_key }| ).
       lo_branch->add( iv_txt = 'Delete'
@@ -257,7 +269,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                        io_sub = lo_branch ) ##NO_TEXT.
 
       lo_sub->add( iv_txt = 'Reset local'
-                   iv_act = |reset?{ lv_key }| ).
+                   iv_act = |reset?{ lv_key }|
+                   iv_opt = lv_wp_opt ).
       lo_sub->add( iv_txt = 'Background mode'
                    iv_act = |background?{ lv_key }| ).
     ELSE.
