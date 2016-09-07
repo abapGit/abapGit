@@ -31,6 +31,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
+      is_write_protected
+        RETURNING VALUE(rv_yes) TYPE sap_bool,
       delete
         RAISING lcx_exception,
       get_dot_abapgit
@@ -83,8 +85,6 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-branch_name,
       get_head_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
-      is_write_protected
-        RETURNING VALUE(rv_yes) TYPE sap_bool,
       get_branches
         RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list,
       set_url

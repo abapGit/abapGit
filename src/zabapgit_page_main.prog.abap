@@ -221,12 +221,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
-      IF lo_repo_online->is_write_protected( ) = abap_true.
-        lv_wp_opt   = gc_html_opt-crossout.
-        lv_pull_opt = gc_html_opt-crossout.
-      ELSE.
-        lv_pull_opt = gc_html_opt-emphas.
-      ENDIF.
+    ENDIF.
+
+    IF io_repo->is_write_protected( ) = abap_true.
+      lv_wp_opt   = gc_html_opt-crossout.
+      lv_pull_opt = gc_html_opt-crossout.
+    ELSE.
+      lv_pull_opt = gc_html_opt-emphas.
     ENDIF.
 
     IF io_repo->is_offline( ) = abap_true.
@@ -280,7 +281,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_sub->add( iv_txt = 'Remove'
                  iv_act = |remove?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Uninstall'
-                 iv_act = |uninstall?{ lv_key }| ).
+                 iv_act = |uninstall?{ lv_key }|
+                 iv_opt = lv_wp_opt ).
 
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_sub ) ##NO_TEXT.

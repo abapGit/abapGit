@@ -126,10 +126,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rv_name = ms_data-head_branch.
   ENDMETHOD.                    "get_head_branch_name
 
-  METHOD is_write_protected.
-    rv_yes = ms_data-write_protect.
-  ENDMETHOD.                    "is_write_protected
-
   METHOD get_branches.
     IF mo_branches IS NOT BOUND.
       mo_branches = lcl_git_transport=>branches( get_url( ) ).
@@ -444,6 +440,10 @@ CLASS lcl_repo IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "get_name
+
+  METHOD is_write_protected.
+    rv_yes = ms_data-write_protect.
+  ENDMETHOD.                    "is_write_protected
 
 ENDCLASS.                    "lcl_repo IMPLEMENTATION
 
