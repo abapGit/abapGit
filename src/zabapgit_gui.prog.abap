@@ -892,9 +892,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
 
     lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
-    lv_package = lo_repo->get_package( ).
 
-    lt_tadir = lcl_tadir=>read( lv_package ).
+    IF lo_repo->is_write_protected( ) = abap_true.
+      lcx_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    lv_package = lo_repo->get_package( ).
+    lt_tadir   = lcl_tadir=>read( lv_package ).
 
     IF lines( lt_tadir ) > 0.
       lv_count = lines( lt_tadir ).
@@ -993,6 +997,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
+    IF lo_repo->is_write_protected( ) = abap_true.
+      lcx_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
+    ENDIF.
+
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
         titlebar              = 'Warning'
@@ -1056,6 +1064,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lo_repo TYPE REF TO lcl_repo_online.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    IF lo_repo->is_write_protected( ) = abap_true.
+      lcx_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
+    ENDIF.
+
     lo_repo->refresh( ).
     lo_repo->deserialize( ).
 

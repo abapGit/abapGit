@@ -105,7 +105,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              offline         TYPE sap_bool,
              local_checksums TYPE ty_local_checksum_tt,
              master_language TYPE spras,
-             head_branch     TYPE string,
+             head_branch     TYPE string,   " HEAD symref of the repo, master branch
+             write_protect   TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,

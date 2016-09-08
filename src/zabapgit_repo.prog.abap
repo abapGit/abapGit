@@ -31,6 +31,8 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
+      is_write_protected
+        RETURNING VALUE(rv_yes) TYPE sap_bool,
       delete
         RAISING lcx_exception,
       get_dot_abapgit
