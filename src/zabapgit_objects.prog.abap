@@ -441,9 +441,9 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
           is_item     TYPE ty_item
           iv_language TYPE spras.
 
-  PROTECTED SECTION.
-
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
+
+  PROTECTED SECTION.
 
     DATA: ms_item     TYPE ty_item,
           mv_language TYPE spras.
