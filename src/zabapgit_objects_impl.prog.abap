@@ -291,10 +291,14 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: li_obj TYPE REF TO lif_object.
 
 
-    li_obj = create_object( is_item     = is_item
-                            iv_language = gc_english ).
-
-    rv_user = li_obj->changed_by( ).
+    IF is_item IS INITIAL. 
+* eg. ".abapgit.xml" file 
+      rv_user = lcl_objects_super=>c_user_unknown. 
+    ELSE. 
+      li_obj = create_object( is_item     = is_item 
+                              iv_language = gc_english ). 
+      rv_user = li_obj->changed_by( ). 
+    ENDIF. 
 
     ASSERT NOT rv_user IS INITIAL.
 
