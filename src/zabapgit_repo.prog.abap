@@ -5,8 +5,6 @@
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS lcl_repo DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
@@ -86,7 +84,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       get_head_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
       get_branches
-        RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list,
+        RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list
+        RAISING   lcx_exception,
       set_url
         IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
         RAISING   lcx_exception,
@@ -132,8 +131,6 @@ ENDCLASS.                    "lcl_repo_online DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_offline DEFINITION
-*----------------------------------------------------------------------*
-*
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
 
