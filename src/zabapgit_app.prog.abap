@@ -2,6 +2,11 @@
 *&  Include           ZABAPGIT_APP
 *&---------------------------------------------------------------------*
 
+CLASS lcl_gui DEFINITION DEFERRED.
+CLASS lcl_persistence_user DEFINITION DEFERRED.
+CLASS lcl_repo_srv DEFINITION DEFERRED.
+CLASS lcl_persistence_db DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_app DEFINITION
 *----------------------------------------------------------------------*
