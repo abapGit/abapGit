@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZABAPGIT_OBJECT</NAME>
+    <NAME>ZABAPGIT_GUI_PAGES</NAME>
     <STATE>A</STATE>
     <SQLX/>
     <EDTX/>
@@ -38,8 +38,8 @@
     <item>
      <ID>R</ID>
      <KEY/>
-     <ENTRY>Include ZABAPGIT_OBJECT</ENTRY>
-     <LENGTH>23</LENGTH>
+     <ENTRY>Include ZABAPGIT_GUI_PAGES</ENTRY>
+     <LENGTH>26</LENGTH>
      <SPLIT/>
     </item>
    </TPOOL>
