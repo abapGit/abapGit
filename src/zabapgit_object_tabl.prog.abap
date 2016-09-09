@@ -142,6 +142,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
       CLEAR: <ls_dd03p>-ddlanguage,
         <ls_dd03p>-dtelmaster,
+        <ls_dd03p>-logflag,
         <ls_dd03p>-ddtext,
         <ls_dd03p>-reptext,
         <ls_dd03p>-scrtext_s,
