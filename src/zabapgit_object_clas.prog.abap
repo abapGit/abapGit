@@ -501,7 +501,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
              ls_header-chan_tstut.
 
       LOOP AT lt_entries ASSIGNING <ls_entry>.
-        CLEAR: <ls_entry>-crea_name,
+        CLEAR: <ls_entry>-version,
+               <ls_entry>-crea_name,
                <ls_entry>-crea_tstut,
                <ls_entry>-chan_name,
                <ls_entry>-chan_tstut.
