@@ -27,7 +27,9 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lv_data TYPE lcl_persistence_db=>ty_content-data_str.
+    DATA: lv_data   TYPE lcl_persistence_db=>ty_content-data_str,
+          ls_action TYPE lcl_persistence_db=>ty_content,
+          lv_action TYPE string.
 
     TRY.
         lv_data = lcl_app=>db( )->read(
@@ -36,20 +38,30 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
       CATCH lcx_not_found ##NO_HANDLER.
     ENDTRY.
 
-    lv_data = lcl_xml_pretty=>print( lv_data ).
+    ls_action-type  = ms_key-type.
+    ls_action-value = ms_key-value.
+    lv_action       = lcl_html_action_utils=>dbkey_encode( ls_action ).
 
-    lv_data = escape( val    = lv_data
-                      format = cl_abap_format=>e_html_attr ).
+    lv_data         = lcl_xml_pretty=>print( lv_data ).
+    lv_data         = escape( val    = lv_data
+                              format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( 'CONFIG DISPLAY' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
+    ro_html->add( '<table class="toolbar"><tr><td>' ).
+
     ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
                   |  <td>{ ms_key-type }</td></tr></table>| ).
     ro_html->add( |<table class="tag"><tr><td class="label">Key:</td>| &&
                   |  <td>{ ms_key-value }</td></tr></table>| ).
+
+    ro_html->add( '</td><td class="right">' ).
+    ro_html->add_anchor( iv_txt = 'Edit' iv_act = |db_edit?{ lv_action }| ).
+    ro_html->add( '</td></tr></table>' ).
+
     ro_html->add( |<pre>{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
@@ -74,6 +86,10 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     _add '  white-space: pre-wrap;'.
     _add '  background-color: #eaeaea;'.
     _add '  padding: 0.5em;'.
+    _add '  width: 50em;'.
+    _add '}'.
+
+    _add 'div.db_entry table.toolbar {'.
     _add '  width: 50em;'.
     _add '}'.
 
