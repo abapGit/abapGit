@@ -86,6 +86,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     _add '  white-space: pre-wrap;'.
     _add '  background-color: #eaeaea;'.
     _add '  padding: 0.5em;'.
+    _add '  margin: 0.5em 0em;'.
     _add '  width: 50em;'.
     _add '}'.
 
@@ -235,7 +236,7 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS styles
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS explain_content
-      IMPORTING iv_data TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_data TYPE lcl_persistence_db=>ty_content
       RETURNING VALUE(rv_text) TYPE string.
 
 
@@ -246,7 +247,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
   METHOD lif_gui_page~render.
 
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
-          lv_escaped TYPE string,
           lv_action  TYPE string,
           lv_trclass TYPE string,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
@@ -262,7 +262,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add( title( 'DATABASE PERSISTENCY' ) ).
 
     ro_html->add( '<div class="db_list">' ).
-    ro_html->add( '<table class="db_tab">' ). "width="100%"
+    ro_html->add( '<table class="db_tab">' ).
 
     " Header
     ro_html->add( '<tr>' ).
@@ -280,7 +280,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ENDIF.
 
       lv_action  = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
-      lv_escaped = explain_content( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
       lo_toolbar->add( iv_txt = 'Display' iv_act = |db_display?{ lv_action }| ).
@@ -290,7 +289,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
-      ro_html->add( |<td class="data">{ lv_escaped }</td>| ).
+      ro_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
       ro_html->add( '<td>' ).
       ro_html->add( lo_toolbar->render( iv_vertical = abap_false ) ).
       ro_html->add( '</td>' ).
@@ -309,39 +308,44 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           lv_match  TYPE submatch_result,
           lv_cnt    TYPE i.
 
-    CASE iv_data-type.
+    CASE is_data-type.
       WHEN 'REPO'.
-        rv_text = '???'. " Fallback default
-
         FIND FIRST OCCURRENCE OF REGEX '<url>(.*)</url>'
-          IN iv_data-data_str IGNORING CASE RESULTS lv_result.
+          IN is_data-data_str IGNORING CASE RESULTS lv_result.
         READ TABLE lv_result-submatches INTO lv_match INDEX 1.
         IF sy-subrc IS INITIAL.
-          rv_text = iv_data-data_str+lv_match-offset(lv_match-length).
+          rv_text = is_data-data_str+lv_match-offset(lv_match-length).
         ENDIF.
 
         FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
-          IN iv_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
+          IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
         IF lv_cnt > 0.
-          rv_text = |Online: YES, Name: <b>{ lcl_url=>name( rv_text ) }</b>|.
+          rv_text = |<b>On-line</b>, Name: <b>{ lcl_url=>name( rv_text ) }</b>|.
         ELSE.
-          rv_text = |Online:  NO, Name: <b>{ rv_text }</b>|.
+          rv_text = |Off-line, Name: <b>{ rv_text }</b>|.
         ENDIF.
 
       WHEN 'BACKGROUND'.
         FIND FIRST OCCURRENCE OF REGEX '<method>(.*)</method>'
-          IN iv_data-data_str IGNORING CASE RESULTS lv_result.
+          IN is_data-data_str IGNORING CASE RESULTS lv_result.
         READ TABLE lv_result-submatches INTO lv_match INDEX 1.
         IF sy-subrc IS NOT INITIAL.
           RETURN.
         ENDIF.
-        rv_text = |Method: { iv_data-data_str+lv_match-offset(lv_match-length) }, |
-               && |Repository: { lcl_app=>repo_srv( )->get( iv_data-value )->get_name( ) }|.
+        rv_text = |Method: { is_data-data_str+lv_match-offset(lv_match-length) }, |
+               && |Repository: { lcl_app=>repo_srv( )->get( is_data-value )->get_name( ) }|.
 
       WHEN 'USER'.
         rv_text = '-'. " No additional explanation for user
       WHEN OTHERS.
-        rv_text = '???'.
+        IF strlen( is_data-data_str ) >= 250.
+          rv_text = is_data-data_str(250).
+        ELSE.
+          rv_text = is_data-data_str.
+        ENDIF.
+        rv_text = escape( val    = rv_text
+                          format = cl_abap_format=>e_html_attr ).
+        rv_text = |<pre>{ rv_text }</pre>|.
     ENDCASE.
   ENDMETHOD.  "explain_content
 
@@ -353,6 +357,14 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     _add 'div.db_list {'.
     _add '  background-color: #f2f2f2;'.
     _add '  padding: 0.5em;'.
+    _add '}'.
+    _add 'table.db_tab pre {'.
+    _add '  display: inline-block;'.
+    _add '  overflow: hidden;'.
+    _add '  word-wrap:break-word;'.
+    _add '  white-space: pre-wrap;'.
+    _add '  margin: 0px;'.
+    _add '  width: 30em;'.
     _add '}'.
     _add 'table.db_tab tr.firstrow td { padding-top: 0.5em; }'.
     _add 'table.db_tab th {'.
