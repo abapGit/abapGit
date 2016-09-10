@@ -14,7 +14,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS back
       IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(rv_exit) TYPE xfeld
+      RETURNING value(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
@@ -45,14 +45,18 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS cache_html
       IMPORTING iv_html       TYPE string
-      RETURNING VALUE(rv_url) TYPE w3url.
+      RETURNING value(rv_url) TYPE w3url.
 
     METHODS render
       RAISING lcx_exception.
 
+    METHODS get_current_page_name
+      RETURNING value(rv_page_name) TYPE string.
+
     METHODS call_page
       IMPORTING ii_page          TYPE REF TO lif_gui_page
                 iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+                iv_replacing     TYPE abap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_gui DEFINITION
@@ -78,23 +82,25 @@ CLASS lcl_gui IMPLEMENTATION.
         IF mi_cur_page IS BOUND.
           mi_cur_page->on_event(
             EXPORTING
-              iv_action   = action
-              iv_getdata  = getdata
-              it_postdata = postdata
+              iv_action    = action
+              iv_prev_page = get_current_page_name( )
+              iv_getdata   = getdata
+              it_postdata  = postdata
             IMPORTING
-              ei_page     = li_page
-              ev_state    = lv_state ).
+              ei_page      = li_page
+              ev_state     = lv_state ).
         ENDIF.
 
         IF lv_state IS INITIAL.
           mo_router->on_event(
             EXPORTING
-              iv_action   = action
-              iv_getdata  = getdata
-              it_postdata = postdata
+              iv_action    = action
+              iv_prev_page = get_current_page_name( )
+              iv_getdata   = getdata
+              it_postdata  = postdata
             IMPORTING
-              ei_page     = li_page
-              ev_state    = lv_state ).
+              ei_page      = li_page
+              ev_state     = lv_state ).
         ENDIF.
 
         CASE lv_state.
@@ -104,6 +110,8 @@ CLASS lcl_gui IMPLEMENTATION.
             call_page( li_page ).
           WHEN gc_event_state-new_page_w_bookmark.
             call_page( ii_page = li_page iv_with_bookmark = abap_true ).
+          WHEN gc_event_state-new_page_replacing.
+            call_page( ii_page = li_page iv_replacing = abap_true ).
           WHEN gc_event_state-go_back.
             back( ).
           WHEN gc_event_state-go_back_to_bookmark.
@@ -158,7 +166,7 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_stack  TYPE ty_page_stack.
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
-    IF NOT mi_cur_page IS INITIAL.
+    IF iv_replacing = abap_false AND NOT mi_cur_page IS INITIAL.
       ls_stack-page     = mi_cur_page.
       ls_stack-bookmark = iv_with_bookmark.
       APPEND ls_stack TO mt_stack.
@@ -269,5 +277,15 @@ CLASS lcl_gui IMPLEMENTATION.
     ASSERT sy-subrc = 0. " Image data error
 
   ENDMETHOD.                  "cache_image
+
+  METHOD get_current_page_name.
+    IF mi_cur_page IS BOUND.
+      rv_page_name =
+        cl_abap_classdescr=>describe_by_object_ref( mi_cur_page
+          )->get_relative_name( ).
+      SHIFT rv_page_name LEFT DELETING LEADING 'LCL_GUI_'.
+    ENDIF." ELSE - return is empty => initial page
+
+  ENDMETHOD.  "get_current_page_name
 
 ENDCLASS.                     "lcl_gui IMPLEMENTATION

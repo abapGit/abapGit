@@ -111,6 +111,7 @@ CONSTANTS: BEGIN OF gc_event_state,
              no_more_act         VALUE 4,
              new_page_w_bookmark VALUE 5,
              go_back_to_bookmark VALUE 6,
+             new_page_replacing  VALUE 7,
            END OF gc_event_state.
 
 CONSTANTS: BEGIN OF gc_html_opt,
