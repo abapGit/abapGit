@@ -48,9 +48,10 @@ TYPES: BEGIN OF ty_web_asset,
 TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_repo_file,
-         path       TYPE string,
-         filename   TYPE string,
-         is_changed TYPE abap_bool,
+         path        TYPE string,
+         filename    TYPE string,
+         is_changed  TYPE abap_bool,
+         remote_only TYPE abap_bool,
        END OF ty_repo_file.
 TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
@@ -86,12 +87,13 @@ TYPES: BEGIN OF ty_tadir,
 TYPES: ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_result,
-         obj_type TYPE tadir-object,
-         obj_name TYPE tadir-obj_name,
-         match    TYPE sap_bool,
-         filename TYPE string,
-         package  TYPE devclass,
-         path     TYPE string,
+         obj_type    TYPE tadir-object,
+         obj_name    TYPE tadir-obj_name,
+         match       TYPE sap_bool,
+         filename    TYPE string,
+         package     TYPE devclass,
+         path        TYPE string,
+         remote_only TYPE abap_bool,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 

@@ -104,7 +104,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       IF lt_files[] IS INITIAL.
 * item does not exist locally
-        ls_result-filename = <ls_remote>-filename.
+        ls_result-filename    = <ls_remote>-filename.
+        ls_result-remote_only = abap_true.
         APPEND ls_result TO rt_results.
         CONTINUE. " current loop
       ENDIF.

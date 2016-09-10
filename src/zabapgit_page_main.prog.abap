@@ -388,9 +388,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDAT.
 
         IF <ls_result>-filename IS NOT INITIAL.
-          ls_file-path       = <ls_result>-path.
-          ls_file-filename   = <ls_result>-filename.
-          ls_file-is_changed = boolc( NOT <ls_result>-match = abap_true ).
+          ls_file-path        = <ls_result>-path.
+          ls_file-filename    = <ls_result>-filename.
+          ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
+          ls_file-remote_only = <ls_result>-remote_only.
           APPEND ls_file TO ls_repo_item-files.
         ENDIF.
 
@@ -456,10 +457,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
       ro_html->add( '<td class="cmd">' ).
       IF lines( is_item-files ) = 0.
-        ro_html->add( '<span class="grey">new</span>' ).
+        ro_html->add( '<span class="grey">Only Local</span>' ).
       ELSE.
         LOOP AT is_item-files INTO ls_file.
-          IF ls_file-is_changed = abap_true.
+          IF ls_file-remote_only = abap_true.
+            ro_html->add( '<span class="grey">Only Remote</span>' ).
+          ELSEIF ls_file-is_changed = abap_true.
             lv_difflink = lcl_html_action_utils=>file_encode(
               iv_key  = io_repo->get_key( )
               ig_file = ls_file ).
