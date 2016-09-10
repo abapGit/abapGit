@@ -219,11 +219,8 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         <li_element>->get_all_attributes( IMPORTING e_element_data = ls_attr ).
         IF <ls_element>-elem_type = ls_attr-elem_type
             AND <ls_element>-elem_key = ls_attr-elem_key.
-          <li_element>->set_all_attributes(
-            i_element_data = <ls_element>
-            i_data_sign    = ls_sign ).
-          lv_found = abap_true.
-          EXIT. " current loop
+          DELETE lt_existing INDEX lv_index.
+          CONTINUE. " current loop
         ENDIF.
       ENDLOOP.
 
@@ -232,9 +229,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    ii_interface->add_elements( lt_add ).
-
     ii_interface->remove_elements( lt_existing ).
+
+    ii_interface->add_elements( lt_add ).
 
     ii_interface->save_elements( ).
 
