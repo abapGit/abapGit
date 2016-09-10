@@ -9,11 +9,12 @@ CLASS lcl_gui_router DEFINITION FINAL.
   PUBLIC SECTION.
 
     METHODS on_event
-      IMPORTING iv_action   TYPE clike
-                iv_getdata  TYPE clike OPTIONAL
-                it_postdata TYPE cnht_post_data_tab OPTIONAL
-      EXPORTING ei_page     TYPE REF TO lif_gui_page
-                ev_state    TYPE i
+      IMPORTING iv_action    TYPE clike
+                iv_prev_page TYPE clike
+                iv_getdata   TYPE clike OPTIONAL
+                it_postdata  TYPE cnht_post_data_tab OPTIONAL
+      EXPORTING ei_page      TYPE REF TO lif_gui_page
+                ev_state     TYPE i
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -126,7 +127,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         " DB actions
       WHEN 'db_display' OR 'db_edit'.
         ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
-        ev_state = gc_event_state-new_page.
+        IF iv_prev_page = 'PAGE_DB_DISPLAY'.
+          ev_state = gc_event_state-new_page_replacing.
+        ELSE.
+          ev_state = gc_event_state-new_page.
+        ENDIF.
       WHEN 'db_delete'.
         db_delete( iv_getdata = iv_getdata ).
         ev_state = gc_event_state-re_render.
