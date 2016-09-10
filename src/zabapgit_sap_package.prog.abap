@@ -75,6 +75,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
       ELSE.
         lv_len = strlen( lv_parentcl ).
         lv_path = iv_package+lv_len.
+        IF strlen( lv_path ) = 0.
+          RETURN. " prevent dump
+        ENDIF.
         IF lv_path(1) = '_'.
           lv_path = lv_path+1.
         ENDIF.
