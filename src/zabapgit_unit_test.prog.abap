@@ -637,8 +637,11 @@ CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
 
-    METHODS repo_url FOR TESTING RAISING lcx_exception.
-    METHODS repo_error FOR TESTING.
+    METHODS:
+    repo_host FOR TESTING RAISING lcx_exception,
+    repo_name1 FOR TESTING RAISING lcx_exception,
+    repo_name2 FOR TESTING RAISING lcx_exception,
+    repo_error FOR TESTING.
 
 ENDCLASS.                    "ltcl_url DEFINITION
 
@@ -659,7 +662,7 @@ CLASS ltcl_url IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_error
 
-  METHOD repo_url.
+  METHOD repo_host.
 
     DATA: lv_host TYPE string.
 
@@ -670,6 +673,30 @@ CLASS ltcl_url IMPLEMENTATION.
         act = lv_host ).
 
   ENDMETHOD.                    "repo_url
+
+  METHOD repo_name1.
+
+    DATA: lv_name TYPE string.
+
+    lv_name = lcl_url=>name( 'https://github.com/larshp/Foobar.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'Foobar'
+        act = lv_name ).
+
+  ENDMETHOD.
+
+  METHOD repo_name2.
+
+    DATA: lv_name TYPE string.
+
+    lv_name = lcl_url=>name( 'https://git.hanatrial.ondemand.com/p12345trial/yay' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = 'yay'
+        act = lv_name ).
+
+  ENDMETHOD.
 
 ENDCLASS.                    "ltcl_url IMPLEMENTATION
 

@@ -402,8 +402,8 @@ CLASS lcl_url IMPLEMENTATION.
 
   METHOD regex.
 
-    FIND REGEX '(.*://[^/]*)(.*/)(.*).git' IN iv_repo
-                     SUBMATCHES ev_host ev_path ev_name.
+    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
+      SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Malformed URL' ).
     ENDIF.
