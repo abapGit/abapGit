@@ -47,19 +47,11 @@ CLASS lcl_objects IMPLEMENTATION.
           } { <ls_result>-obj_name
           } has been modified locally, overwrite object?|.
 
-        CALL FUNCTION 'POPUP_TO_CONFIRM'
-          EXPORTING
-            titlebar              = 'Warning'
-            text_question         = lv_question
-            display_cancel_button = abap_false
-          IMPORTING
-            answer                = lv_answer
-          EXCEPTIONS
-            text_not_found        = 1
-            OTHERS                = 2 ##NO_TEXT.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-        ENDIF.
+        lv_answer = lcl_popups=>popup_to_confirm(
+          titlebar              = 'Warning'
+          text_question         = lv_question
+          display_cancel_button = abap_false
+        ).  "#EC NOTEXT
 
         IF lv_answer = '2'.
           DELETE ct_results INDEX lv_index.
@@ -85,24 +77,16 @@ CLASS lcl_objects IMPLEMENTATION.
         'from package' ls_tadir-devclass
         INTO lv_question SEPARATED BY space.                "#EC NOTEXT
 
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          titlebar              = 'Warning'
-          text_question         = lv_question
-          text_button_1         = 'Ok'
-          icon_button_1         = 'ICON_DELETE'
-          text_button_2         = 'Cancel'
-          icon_button_2         = 'ICON_CANCEL'
-          default_button        = '2'
-          display_cancel_button = abap_false
-        IMPORTING
-          answer                = lv_answer
-        EXCEPTIONS
-          text_not_found        = 1
-          OTHERS                = 2.                        "#EC NOTEXT
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-      ENDIF.
+      lv_answer = lcl_popups=>popup_to_confirm(
+        titlebar              = 'Warning'
+        text_question         = lv_question
+        text_button_1         = 'Ok'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      ).  "#EC NOTEXT
 
       IF lv_answer = '2'.
         rv_cancel = abap_true.

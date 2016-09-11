@@ -332,16 +332,15 @@ CLASS lcl_gui_router IMPLEMENTATION.
     lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
            && |and plugins to { lc_package_plugins }|.
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Install abapGit'
-        text_question         = lv_text
-        text_button_1         = 'Continue'
-        text_button_2         = 'Cancel'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer ##no_text.
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Install abapGit'
+      text_question         = lv_text
+      text_button_1         = 'Continue'
+      text_button_2         = 'Cancel'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
+
     IF lv_answer <> '1'.
       RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ENDIF.
@@ -402,24 +401,16 @@ CLASS lcl_gui_router IMPLEMENTATION.
       lv_question = |This will DELETE all objects in package { lv_package }|
                  && | ({ lv_count } objects) from the system.|. "#EC NOTEXT
 
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          titlebar              = 'Uninstall'
-          text_question         = lv_question
-          text_button_1         = 'Delete'
-          icon_button_1         = 'ICON_DELETE'
-          text_button_2         = 'Cancel'
-          icon_button_2         = 'ICON_CANCEL'
-          default_button        = '2'
-          display_cancel_button = abap_false
-        IMPORTING
-          answer                = lv_answer
-        EXCEPTIONS
-          text_not_found        = 1
-          OTHERS                = 2.                        "#EC NOTEXT
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-      ENDIF.
+      lv_answer = lcl_popups=>popup_to_confirm(
+        titlebar              = 'Uninstall'
+        text_question         = lv_question
+        text_button_1         = 'Delete'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      ).  "#EC NOTEXT
 
       IF lv_answer = '2'.
         RETURN.
@@ -452,24 +443,16 @@ CLASS lcl_gui_router IMPLEMENTATION.
       INTO lv_question
       SEPARATED BY space.                                   "#EC NOTEXT
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Remove'
-        text_question         = lv_question
-        text_button_1         = 'Remove'
-        icon_button_1         = 'ICON_WF_UNLINK'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                          "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-    ENDIF.
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Remove'
+      text_question         = lv_question
+      text_button_1         = 'Remove'
+      icon_button_1         = 'ICON_WF_UNLINK'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
 
     IF lv_answer = '2'.
       RETURN.
@@ -493,24 +476,16 @@ CLASS lcl_gui_router IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
     ENDIF.
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Warning'
-        text_question         = 'Reset local objects?'
-        text_button_1         = 'Ok'
-        icon_button_1         = 'ICON_OKAY'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                        "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-    ENDIF.
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Warning'
+      text_question         = 'Reset local objects?'
+      text_button_1         = 'Ok'
+      icon_button_1         = 'ICON_OKAY'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
 
     IF lv_answer = '2'.
       RETURN.
@@ -595,24 +570,16 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ls_key = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
 
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Warning'
-        text_question         = 'Delete?'
-        text_button_1         = 'Ok'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer
-      EXCEPTIONS
-        text_not_found        = 1
-        OTHERS                = 2.                        "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
-    ENDIF.
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Warning'
+      text_question         = 'Delete?'
+      text_button_1         = 'Ok'
+      icon_button_1         = 'ICON_DELETE'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
 
     IF lv_answer = '2'.
       RETURN.
