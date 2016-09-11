@@ -257,7 +257,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Export &amp; Commit'
                            iv_act = |files_commit?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Add remote'
+      lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |remote_attach?{ lv_key }| ).
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Remove'

@@ -60,6 +60,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
+    METHODS repo_detach
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
     METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
@@ -177,9 +181,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
         "TODO attach & deploy
         ev_state = gc_event_state-re_render.
       WHEN 'remote_detach'.
-        "TODO
+        lv_key   = iv_getdata.
+        repo_detach( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'remote_switch'.
+      WHEN 'remote_change'.
         "TODO
         ev_state = gc_event_state-re_render.
 
@@ -268,7 +273,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_branch_overview
 
   METHOD get_page_diff.
 
@@ -311,7 +316,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_diff
 
   METHOD abapgit_installation.
 
@@ -513,7 +518,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lo_repo->deserialize( ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "reset
 
   METHOD create_branch.
 
@@ -544,7 +549,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     MESSAGE 'Switched to new branch' TYPE 'S' ##NO_TEXT.
 
-  ENDMETHOD.
+  ENDMETHOD.  "create_branch
 
   METHOD repo_pull.
 
@@ -561,7 +566,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.                    "pull
+  ENDMETHOD.  "repo_pull
 
   METHOD get_page_stage.
 
@@ -580,7 +585,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_stage_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_stage
 
   METHOD db_delete.
 
@@ -619,7 +624,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.
+  ENDMETHOD.  "db_delete
 
   METHOD db_save.
 
@@ -655,6 +660,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.
+  ENDMETHOD.  "db_save
+
+  METHOD repo_detach.
+  ENDMETHOD.  "repo_detach
+
 
 ENDCLASS.           " lcl_gui_router
