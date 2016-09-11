@@ -42,6 +42,18 @@ CLASS lcl_popups DEFINITION.
       repo_clone
         IMPORTING iv_url         TYPE string
         RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
+        RAISING   lcx_exception,
+      popup_to_confirm
+        IMPORTING
+          titlebar              TYPE clike
+          text_question         TYPE clike
+          text_button_1         TYPE clike OPTIONAL
+          icon_button_1         TYPE ICON-NAME DEFAULT space
+          text_button_2         TYPE clike OPTIONAL
+          icon_button_2         TYPE ICON-NAME DEFAULT space
+          default_button        TYPE char1 DEFAULT '1'
+          display_cancel_button TYPE char1 DEFAULT abap_true
+        RETURNING VALUE(rv_answer) TYPE char1
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -391,5 +403,28 @@ CLASS lcl_popups IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.                    "repo_clone
+
+  METHOD popup_to_confirm.
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = titlebar
+        text_question         = text_question
+        text_button_1         = text_button_1
+        icon_button_1         = icon_button_1
+        text_button_2         = text_button_2
+        icon_button_2         = icon_button_2
+        default_button        = default_button
+        display_cancel_button = display_cancel_button
+      IMPORTING
+        answer                = rv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.                        "#EC NOTEXT
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
+    ENDIF.
+
+  ENDMETHOD.  "popup_to_confirm
 
 ENDCLASS.
