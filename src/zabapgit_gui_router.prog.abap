@@ -172,6 +172,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
         ev_state = gc_event_state-re_render.
 
+        " Remote origin manipulations
+      WHEN 'remote_attach'.
+        "TODO attach & deploy
+        ev_state = gc_event_state-re_render.
+      WHEN 'remote_detach'.
+        "TODO
+        ev_state = gc_event_state-re_render.
+      WHEN 'remote_switch'.
+        "TODO
+        ev_state = gc_event_state-re_render.
+
         " explore page
       WHEN 'install'.
         lv_url = iv_getdata.
@@ -381,14 +392,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     IF lines( lt_tadir ) > 0.
       lv_count = lines( lt_tadir ).
+      SHIFT lv_count LEFT DELETING LEADING space.
 
-      CONCATENATE 'This will delete all objects in package' lv_package
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CONCATENATE lv_question '(' lv_count 'objects)'
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
+      lv_question = |This will DELETE all objects in package { lv_package }|
+                 && | ({ lv_count } objects) from the system.|. "#EC NOTEXT
 
       CALL FUNCTION 'POPUP_TO_CONFIRM'
         EXPORTING
@@ -428,7 +435,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lv_answer   TYPE c LENGTH 1,
           lo_repo     TYPE REF TO lcl_repo,
           lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
+          lv_question TYPE c LENGTH 200.
 
 
     lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
@@ -436,6 +443,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CONCATENATE 'This will remove the repository reference to the package'
       lv_package
+      '. All objects will safely remain in the system.'
       INTO lv_question
       SEPARATED BY space.                                   "#EC NOTEXT
 
