@@ -44,6 +44,9 @@ CLASS lcl_repo DEFINITION ABSTRACT.
         RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
+        RAISING   lcx_exception,
+      switch_type
+        IMPORTING iv_offline TYPE abap_bool
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
@@ -62,6 +65,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
                   iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
                   iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
+                  iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION

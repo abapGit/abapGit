@@ -630,6 +630,29 @@ CLASS lcl_gui_router IMPLEMENTATION.
   ENDMETHOD.  "db_save
 
   METHOD repo_detach.
+    DATA: lv_answer TYPE c LENGTH 1,
+          lo_repo   TYPE REF TO lcl_repo_online.
+
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Make repository OFF-line'
+      text_question         = 'This will detach the repo from remote and make it OFF-line'
+      text_button_1         = 'Make OFF-line'
+      icon_button_1         = 'ICON_WF_UNLINK'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
+
+    IF lv_answer = '2'.
+      RETURN.
+    ENDIF.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo->switch_type( iv_offline = abap_true ).
+
+    COMMIT WORK.
+
   ENDMETHOD.  "repo_detach
 
 

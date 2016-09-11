@@ -291,6 +291,13 @@ CLASS lcl_repo IMPLEMENTATION.
       ms_data-head_branch = iv_head_branch.
     ENDIF.
 
+    IF iv_offline IS SUPPLIED.
+      lo_persistence->update_offline(
+        iv_key     = ms_data-key
+        iv_offline = iv_offline ).
+      ms_data-offline = iv_offline.
+    ENDIF.
+
   ENDMETHOD.                    "set_sha1
 
   METHOD build_local_checksums.
@@ -444,6 +451,26 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD is_write_protected.
     rv_yes = ms_data-write_protect.
   ENDMETHOD.                    "is_write_protected
+
+  METHOD switch_type.
+
+    ASSERT iv_offline <> ms_data-offline.
+
+    IF iv_offline = abap_true. " Online -> OFFline
+      set(
+        iv_url         = lcl_url=>name( ms_data-url )
+        iv_branch_name = ''
+        iv_sha1        = ''
+        iv_head_branch = ''
+        iv_offline     = abap_true
+      ).
+    ELSE. " OFFline -> Online
+      set(
+        iv_offline     = abap_false
+      ).
+    ENDIF.
+
+  ENDMETHOD.  "switch_type
 
 ENDCLASS.                    "lcl_repo IMPLEMENTATION
 
