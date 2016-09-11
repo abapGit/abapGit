@@ -237,7 +237,8 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS explain_content
       IMPORTING is_data TYPE lcl_persistence_db=>ty_content
-      RETURNING VALUE(rv_text) TYPE string.
+      RETURNING VALUE(rv_text) TYPE string
+      RAISING   lcx_exception.
 
 
 ENDCLASS.
