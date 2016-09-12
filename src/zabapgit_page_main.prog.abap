@@ -21,11 +21,14 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                  show          TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
+    CONSTANTS: c_default_sortkey TYPE i VALUE 9999.
+
     TYPES: BEGIN OF ty_repo_item,
              obj_type TYPE tadir-object,
              obj_name TYPE tadir-obj_name,
              is_first TYPE abap_bool,
              files    TYPE tt_repo_files,
+             sortkey  TYPE i,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
@@ -196,6 +199,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '  padding-right: 1em;'.
     _add '}'.
     _add '.repo_tab tr.unsupported { color: lightgrey; }'.
+    _add '.repo_tab tr.modified    { background: #fbf7e9; }'.
     _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
     _add '.repo_tab td.files span  { display: block; }'.
     _add '.repo_tab td.cmd span    { display: block; }'.
@@ -351,12 +355,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
           lt_tadir       TYPE ty_tadir_tt,
-          ls_repo_item   TYPE ty_repo_item,
           ls_file        TYPE ty_repo_file,
           lt_results     TYPE ty_results_tt.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
-                   <ls_tadir>  LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_result>    LIKE LINE OF lt_results,
+                   <ls_repo_item> LIKE LINE OF et_repo_items,
+                   <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
     CLEAR et_repo_items.
@@ -364,13 +368,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_true.
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        CLEAR ls_repo_item.
+        APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
         IF sy-tabix = 1.
-          ls_repo_item-is_first = abap_true.
+          <ls_repo_item>-is_first = abap_true.
         ENDIF.
-        ls_repo_item-obj_type = <ls_tadir>-object.
-        ls_repo_item-obj_name = <ls_tadir>-obj_name.
-        APPEND ls_repo_item TO et_repo_items.
+        <ls_repo_item>-obj_type = <ls_tadir>-object.
+        <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
       ENDLOOP.
 
     ELSE.
@@ -379,12 +382,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lt_results      = lo_repo_online->status( eo_log ).
       LOOP AT lt_results ASSIGNING <ls_result>.
         AT NEW obj_name. "obj_type + obj_name
-          CLEAR ls_repo_item.
-          IF sy-tabix = 1.
-            ls_repo_item-is_first = abap_true.
-          ENDIF.
-          ls_repo_item-obj_type = <ls_result>-obj_type.
-          ls_repo_item-obj_name = <ls_result>-obj_name.
+          APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
+          <ls_repo_item>-obj_type = <ls_result>-obj_type.
+          <ls_repo_item>-obj_name = <ls_result>-obj_name.
+          <ls_repo_item>-sortkey  = c_default_sortkey. " Default sort key
         ENDAT.
 
         IF <ls_result>-filename IS NOT INITIAL.
@@ -392,14 +393,29 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_file-filename    = <ls_result>-filename.
           ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
           ls_file-remote_only = <ls_result>-remote_only.
-          APPEND ls_file TO ls_repo_item-files.
+          APPEND ls_file TO <ls_repo_item>-files.
+
+          IF ls_file-is_changed = abap_true.
+            <ls_repo_item>-sortkey = 2. " Changed files
+          ENDIF.
         ENDIF.
 
         AT END OF obj_name. "obj_type + obj_name
-          APPEND ls_repo_item TO et_repo_items.
+          IF <ls_repo_item>-obj_type IS INITIAL.
+            <ls_repo_item>-sortkey = 0. "Virtual objects
+          ELSEIF lines( <ls_repo_item>-files ) = 0.
+            <ls_repo_item>-sortkey = 1. "New object to commit
+          ENDIF.
         ENDAT.
       ENDLOOP.
+
+      SORT et_repo_items BY sortkey obj_type obj_name ASCENDING.
+      READ TABLE et_repo_items ASSIGNING <ls_repo_item> INDEX 1.
+      IF sy-subrc IS INITIAL.
+        <ls_repo_item>-is_first = abap_true.
+      ENDIF.
     ENDIF.
+
 
   ENDMETHOD.
 
@@ -418,6 +434,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
     IF is_item-obj_name IS INITIAL.
       lv_trclass = lv_trclass && ' unsupported' ##NO_TEXT.
+    ENDIF.
+    IF is_item-sortkey > 0 AND is_item-sortkey < c_default_sortkey.
+      lv_trclass = lv_trclass && ' modified' ##NO_TEXT.
     ENDIF.
     IF lv_trclass IS NOT INITIAL.
       SHIFT lv_trclass LEFT DELETING LEADING space.
