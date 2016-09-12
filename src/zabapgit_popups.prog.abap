@@ -47,9 +47,9 @@ CLASS lcl_popups DEFINITION.
         IMPORTING
           titlebar              TYPE clike
           text_question         TYPE clike
-          text_button_1         TYPE clike OPTIONAL
+          text_button_1         TYPE clike     DEFAULT 'Yes'
           icon_button_1         TYPE ICON-NAME DEFAULT space
-          text_button_2         TYPE clike OPTIONAL
+          text_button_2         TYPE clike     DEFAULT 'No'
           icon_button_2         TYPE ICON-NAME DEFAULT space
           default_button        TYPE char1 DEFAULT '1'
           display_cancel_button TYPE char1 DEFAULT abap_true
@@ -124,8 +124,7 @@ CLASS lcl_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    CLEAR ev_name.
-    CLEAR ev_cancel.
+    CLEAR: ev_name, ev_cancel.
 
 *                   TAB     FLD   LABEL   DEF                       ATTR
     _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new_branch_name'         ''.
