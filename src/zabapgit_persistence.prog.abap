@@ -820,10 +820,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_repo    TYPE ty_repo.
 
 
-    IF iv_branch_name IS INITIAL.
-      lcx_exception=>raise( 'update, branch name empty' ).
-    ENDIF.
-
     ASSERT NOT iv_key IS INITIAL.
 
     TRY.
@@ -847,10 +843,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
-
-    IF iv_head_branch IS INITIAL.
-      lcx_exception=>raise( 'update, head branch empty' ).
-    ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
 
@@ -898,10 +890,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
-
-    IF iv_branch_sha1 IS INITIAL.
-      lcx_exception=>raise( 'update, sha empty' ).
-    ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
 

@@ -64,6 +64,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
+    METHODS repo_attach
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
     METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
@@ -178,7 +182,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " Remote origin manipulations
       WHEN 'remote_attach'.
-        "TODO attach & deploy
+        lv_key   = iv_getdata.
+        repo_attach( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN 'remote_detach'.
         lv_key   = iv_getdata.
@@ -648,12 +653,30 @@ CLASS lcl_gui_router IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-    lo_repo->switch_type( iv_offline = abap_true ).
-
-    COMMIT WORK.
+*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+*    lo_repo->switch_type( iv_offline = abap_true ).
+*
+*    COMMIT WORK.
 
   ENDMETHOD.  "repo_detach
 
+  METHOD repo_attach.
+    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
+          lo_repo   TYPE REF TO lcl_repo_online.
+
+    ls_popup = lcl_popups=>repo_popup( '' ).
+    IF ls_popup-cancel = abap_true.
+      RETURN.
+    ENDIF.
+
+*    "!!!! move convertion of repo type to srv
+*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+*    lo_repo->switch_type( iv_offline = abap_false ).
+*    lo_repo->set_url( ls_popup-url ).
+*    lo_repo->set_branch_name( ls_popup-branch_name ).
+
+*    COMMIT WORK.
+
+  ENDMETHOD.  "repo_attach
 
 ENDCLASS.           " lcl_gui_router

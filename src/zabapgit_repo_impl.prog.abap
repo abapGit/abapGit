@@ -556,7 +556,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
-      iv_package     = iv_package ).
+      iv_package     = iv_package
+      iv_offline     = abap_false ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
