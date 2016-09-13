@@ -537,7 +537,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-    IF lines( mt_diff ) < 500.
+    IF lines( mt_diff ) < 200.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
       ENDLOOP.
