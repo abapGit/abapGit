@@ -270,9 +270,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    iv_opt = lv_wp_opt ).
       lo_sub->add( iv_txt = 'Background mode'
                    iv_act = |background?{ lv_key }| ).
-    ELSE.
-      lo_sub->add( iv_txt = 'Export &amp; Commit'
-                   iv_act = |files_commit?{ lv_key }| ).
     ENDIF.
     lo_sub->add( iv_txt = 'Remove'
                  iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).

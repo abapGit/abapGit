@@ -158,11 +158,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lv_key   = iv_getdata.
         lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'files_commit'. "TODO refactor name ?
-        lv_key   = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_app=>repo_srv( )->get( lv_key )
-                         iv_zip  = abap_false ).
-        ev_state = gc_event_state-no_more_act.
       WHEN 'packagezip'.
         lcl_popups=>repo_package_zip( ).
         ev_state = gc_event_state-no_more_act.
