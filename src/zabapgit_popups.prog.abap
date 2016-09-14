@@ -39,10 +39,6 @@ CLASS lcl_popups DEFINITION.
                   iv_branch       TYPE string DEFAULT 'refs/heads/master'
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception ##NO_TEXT,
-      repo_clone
-        IMPORTING iv_url         TYPE string
-        RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
-        RAISING   lcx_exception,
       popup_to_confirm
         IMPORTING
           titlebar              TYPE clike
@@ -381,27 +377,6 @@ CLASS lcl_popups IMPLEMENTATION.
     rs_popup-branch_name = <ls_field>-value.
 
   ENDMETHOD.
-
-  METHOD repo_clone.
-
-    DATA: ls_popup TYPE ty_popup.
-
-
-    ls_popup = repo_popup( iv_url ).
-    IF ls_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
-
-    ro_repo = lcl_app=>repo_srv( )->new_online(
-      iv_url         = ls_popup-url
-      iv_branch_name = ls_popup-branch_name
-      iv_package     = ls_popup-package ).
-    ro_repo->status( ). " check for errors
-    ro_repo->deserialize( ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_clone
 
   METHOD popup_to_confirm.
 

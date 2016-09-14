@@ -136,3 +136,10 @@ CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_T
 
 CONSTANTS: gc_root_dir    TYPE string VALUE '/',
            gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
+
+CONSTANTS: BEGIN OF gc_action,
+             repo_clone   TYPE string VALUE 'repo_clone',
+             repo_refresh TYPE string VALUE 'repo_refresh',
+             repo_remove  TYPE string VALUE 'repo_remove',
+             repo_purge   TYPE string VALUE 'repo_purge',
+           END OF gc_action.

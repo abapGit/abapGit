@@ -48,14 +48,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
     METHODS abapgit_installation
       RAISING lcx_exception.
 
-    METHODS repo_purge
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS repo_remove
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
@@ -89,6 +81,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
           ls_item TYPE ty_item.
 
+    IF strlen( iv_getdata ) = 10. " TODO refactor
+      lv_key = iv_getdata.
+    ENDIF.
 
     CASE iv_action.
         " General routing
@@ -139,15 +134,22 @@ CLASS lcl_gui_router IMPLEMENTATION.
         db_save( it_postdata ).
         ev_state = gc_event_state-go_back.
 
-        " Repository state actions
-      WHEN 'uninstall'.
-        lv_key   = iv_getdata.
-        repo_purge( lv_key ).
+        " Repository services actions
+      WHEN gc_action-repo_refresh.  " Repo refresh
+        lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'remove'.
-        lv_key   = iv_getdata.
-        repo_remove( lv_key ).
+      WHEN gc_action-repo_purge.    " Repo remove & purge all objects
+        lcl_services_repo=>purge( lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_remove.   " Repo remove
+        lcl_services_repo=>remove( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_clone.    " Repo clone
+        lcl_services_repo=>clone( iv_getdata ).
+        ev_state = gc_event_state-re_render.
+
+
+        " ZIP services actions
       WHEN 'zipimport'.
         lv_key   = iv_getdata.
         lcl_zip=>import( lv_key ).
@@ -167,16 +169,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'transportzip'.
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'refresh'.
-        lv_key = iv_getdata.
-        lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-        ev_state = gc_event_state-re_render.
-
-        " explore page
-      WHEN 'install'.
-        lv_url = iv_getdata.
-        lcl_popups=>repo_clone( lv_url ).
-        ev_state = gc_event_state-re_render.
 
         " Repository online actions
       WHEN 'pull'.
@@ -358,98 +350,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD. "abapgit_installation
-
-  METHOD repo_purge.
-
-    DATA: lt_tadir    TYPE ty_tadir_tt,
-          lv_count    TYPE c LENGTH 3,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
-
-    IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lv_package = lo_repo->get_package( ).
-    lt_tadir   = lcl_tadir=>read( lv_package ).
-
-    IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
-
-      CONCATENATE 'This will delete all objects in package' lv_package
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      CONCATENATE lv_question '(' lv_count 'objects)'
-        INTO lv_question
-        SEPARATED BY space.                                 "#EC NOTEXT
-
-      lv_answer = lcl_popups=>popup_to_confirm(
-        titlebar              = 'Uninstall'
-        text_question         = lv_question
-        text_button_1         = 'Delete'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      ).  "#EC NOTEXT
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-
-      lcl_objects=>delete( lt_tadir ).
-
-    ENDIF.
-
-    lcl_app=>repo_srv( )->delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_purge
-
-  METHOD repo_remove.
-
-    DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    CONCATENATE 'This will remove the repository reference to the package'
-      lv_package
-      INTO lv_question
-      SEPARATED BY space.                                   "#EC NOTEXT
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Remove'
-      text_question         = lv_question
-      text_button_1         = 'Remove'
-      icon_button_1         = 'ICON_WF_UNLINK'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_app=>repo_srv( )->delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_remove
 
   METHOD reset.
 

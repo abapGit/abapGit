@@ -32,7 +32,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     DATA: mv_show TYPE lcl_persistence_db=>ty_value.
 
     METHODS:
-      check_show
+      retrieve_active_repo
         RAISING lcx_exception,
       styles
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
@@ -86,17 +86,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_show = lcl_app=>user( )->get_repo_show( ).
-
-    check_show( ).
-
   ENDMETHOD.
 
-  METHOD check_show.
+  METHOD retrieve_active_repo.
 
     DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
           lo_repo  LIKE LINE OF lt_repos.
-
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -104,24 +99,25 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    IF mv_show IS INITIAL.
-      READ TABLE lt_repos INTO lo_repo INDEX 1.
-      IF sy-subrc = 0.
-        mv_show = lo_repo->get_key( ).
-      ENDIF.
-    ELSE.
-      TRY.
-* verify the key exists
+    mv_show = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+
+    IF mv_show IS NOT INITIAL.
+      TRY. " verify the key exists
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
-          READ TABLE lt_repos INTO lo_repo INDEX 1.
-          IF sy-subrc = 0.
-            mv_show = lo_repo->get_key( ).
-          ENDIF.
+          clear mv_show.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
+    IF mv_show IS INITIAL. " Fall back to first available repo
+      READ TABLE lt_repos INTO lo_repo INDEX 1.
+      IF sy-subrc = 0.
+        mv_show = lo_repo->get_key( ).
+        lcl_app=>user( )->set_repo_show( mv_show ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.  "retrieve_active_repo
 
   METHOD render_obj_jump_link.
 
@@ -279,16 +275,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                    iv_act = |files_commit?{ lv_key }| ).
     ENDIF.
     lo_sub->add( iv_txt = 'Remove'
-                 iv_act = |remove?{ lv_key }| ).
+                 iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
     lo_sub->add( iv_txt = 'Uninstall'
-                 iv_act = |uninstall?{ lv_key }|
+                 iv_act = |{ gc_action-repo_purge }?{ lv_key }|
                  iv_opt = lv_wp_opt ).
 
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_sub ) ##NO_TEXT.
 
     lo_toolbar->add( iv_txt = 'Refresh'
-                     iv_act = |refresh?{ lv_key }| ).
+                     iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -636,15 +632,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key   = iv_getdata.
         lcl_popups=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-install.
-        lv_url = iv_getdata.
-        lo_repo = lcl_popups=>repo_clone( lv_url ).
-        IF lo_repo IS BOUND.
-* cancel not pressed
-          mv_show = lo_repo->get_key( ).
-          lcl_app=>user( )->set_repo_show( mv_show ).
-        ENDIF.
-        ev_state = gc_event_state-re_render.
       WHEN c_actions-show.
         mv_show = iv_getdata.
         lcl_app=>user( )->set_repo_show( mv_show ).
@@ -659,6 +646,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error TYPE REF TO lcx_exception,
           lo_repo  LIKE LINE OF lt_repos.
 
+    retrieve_active_repo( ). " Get and validate key of user default repo
 
     CREATE OBJECT ro_html.
 
@@ -677,7 +665,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
-      check_show( ).
       lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
