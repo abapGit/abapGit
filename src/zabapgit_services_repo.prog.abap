@@ -6,6 +6,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS clone
       IMPORTING iv_url TYPE string
+      RETURNING VALUE(rv_success) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS refresh
@@ -14,10 +15,12 @@ CLASS lcl_services_repo DEFINITION FINAL.
 
     CLASS-METHODS remove
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_success) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS purge
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_success) TYPE abap_bool
       RAISING   lcx_exception.
 
 ENDCLASS. "lcl_services_repo
@@ -45,11 +48,14 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
 
     COMMIT WORK.
+    rv_success = abap_true.
 
   ENDMETHOD.  "clone
 
   METHOD refresh.
+
     lcl_app=>repo_srv( )->get( iv_key )->refresh( ).
+
   ENDMETHOD.  "refresh
 
   METHOD remove.
@@ -83,6 +89,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
+    rv_success = abap_true.
 
   ENDMETHOD.  "remove
 
@@ -131,6 +138,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lcl_app=>repo_srv( )->delete( lo_repo ).
 
     COMMIT WORK.
+    rv_success = abap_true.
 
   ENDMETHOD.  "purge
 

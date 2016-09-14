@@ -75,15 +75,24 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_gui_router IMPLEMENTATION.
 
+  DEFINE choose_rerender_or_noaction.
+    IF &1 = abap_true.
+      ev_state = gc_event_state-re_render.
+    ELSE.
+      ev_state = gc_event_state-no_more_act.
+    ENDIF.
+  END-OF-DEFINITION.
+
+
   METHOD on_event.
 
-    DATA: lv_url  TYPE string,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item TYPE ty_item.
+    DATA: lv_url     TYPE string,
+          lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_success TYPE abap_bool,
+          ls_item    TYPE ty_item.
 
-    IF strlen( iv_getdata ) = 10. " TODO refactor
-      lv_key = iv_getdata.
-    ENDIF.
+    lv_key = iv_getdata. " TODO refactor
+    lv_url = iv_getdata. " TODO refactor
 
     CASE iv_action.
         " General routing
@@ -139,14 +148,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_purge.    " Repo remove & purge all objects
-        lcl_services_repo=>purge( lv_key ).
-        ev_state = gc_event_state-re_render.
+        lv_success = lcl_services_repo=>purge( lv_key ).
+        choose_rerender_or_noaction lv_success.
       WHEN gc_action-repo_remove.   " Repo remove
-        lcl_services_repo=>remove( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_clone.    " Repo clone
-        lcl_services_repo=>clone( iv_getdata ).
-        ev_state = gc_event_state-re_render.
+        lv_success = lcl_services_repo=>remove( lv_key ).
+        choose_rerender_or_noaction lv_success.
+      WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
+        lv_success = lcl_services_repo=>clone( lv_url ).
+        choose_rerender_or_noaction lv_success.
 
 
         " ZIP services actions

@@ -145,7 +145,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = c_actions-install ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
     IF needs_installation( ) = abap_true.
