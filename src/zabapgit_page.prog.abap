@@ -180,7 +180,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<table width="100%"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="logo">' ).                    "#EC NOTEXT
-    ro_html->add( '<a href="sapevent:abapgithome">' ).      "#EC NOTEXT
+    ro_html->add( |<a href="sapevent:{ gc_action-abapgit_home }">| ).      "#EC NOTEXT
     ro_html->add( '<img src="img/logo">' ).                 "#EC NOTEXT
     ro_html->add( '</a>' ).                                 "#EC NOTEXT
     ro_html->add( '</td>' ).                                "#EC NOTEXT

@@ -45,9 +45,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS abapgit_installation
-      RAISING lcx_exception.
-
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
@@ -108,16 +105,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
           EXPORTING
             iv_key = lv_key.
         ev_state = gc_event_state-new_page.
-      WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
-                                           EXCEPTIONS OTHERS = 1 ).
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Opening page in external browser failed.' ).
-        ENDIF.
+      WHEN 'abapgit_home'.
+        lcl_services_abapgit=>open_abapgit_homepage( ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'abapgit_installation'.
-        abapgit_installation( ).
-        ev_state = gc_event_state-re_render.
+        lv_success = lcl_services_abapgit=>install_abapgit( ).
+        choose_rerender_or_noaction lv_success.
       WHEN 'jump'.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                             IMPORTING ev_obj_type = ls_item-obj_type
@@ -297,63 +290,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ri_page = lo_page.
 
   ENDMETHOD.
-
-  METHOD abapgit_installation.
-
-    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
-    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
-
-    DATA lv_text            TYPE c LENGTH 100.
-    DATA lv_answer          TYPE c LENGTH 1.
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_url             TYPE string.
-    DATA lv_target_package  TYPE devclass.
-
-    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
-           && |and plugins to { lc_package_plugins }|.
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Install abapGit'
-      text_question         = lv_text
-      text_button_1         = 'Continue'
-      text_button_2         = 'Cancel'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer <> '1'.
-      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    ENDIF.
-
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          lv_url            = 'https://github.com/larshp/abapGit.git'.
-          lv_target_package = lc_package_abapgit.
-        WHEN 2.
-          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
-          lv_target_package = lc_package_plugins.
-      ENDCASE.
-
-      IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
-          iv_url              = lv_url
-          iv_target_package   = lv_target_package ).
-
-        lcl_sap_package=>create_local( lv_target_package ).
-
-        lo_repo = lcl_app=>repo_srv( )->new_online(
-          iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master' "TODO replace with HEAD ?
-          iv_package     = lv_target_package ) ##NO_TEXT.
-
-        lo_repo->status( ). " check for errors
-        lo_repo->deserialize( ).
-      ENDIF.
-    ENDDO.
-
-    COMMIT WORK.
-
-  ENDMETHOD. "abapgit_installation
 
   METHOD reset.
 

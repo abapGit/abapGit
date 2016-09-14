@@ -132,8 +132,6 @@ CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
 
-CONSTANTS: gc_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
-
 CONSTANTS: gc_root_dir    TYPE string VALUE '/',
            gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
 
@@ -142,4 +140,5 @@ CONSTANTS: BEGIN OF gc_action,
              repo_refresh TYPE string VALUE 'repo_refresh',
              repo_remove  TYPE string VALUE 'repo_remove',
              repo_purge   TYPE string VALUE 'repo_purge',
+             abapgit_home TYPE string VALUE 'abapgit_home',
            END OF gc_action.

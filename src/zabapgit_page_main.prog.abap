@@ -74,9 +74,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(rv_html) TYPE string,
       render_explore
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      needs_installation
-        RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -148,7 +146,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
-    IF needs_installation( ) = abap_true.
+    IF lcl_services_abapgit=>needs_installation( ) = abap_true.
       ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
     ENDIF.
     ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
@@ -474,23 +472,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.
-
-  METHOD needs_installation.
-
-    CONSTANTS:
-      lc_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
-      lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
-
-    TRY.
-        IF lcl_app=>repo_srv( )->is_repo_installed( lc_abapgit ) = abap_false
-            OR lcl_app=>repo_srv( )->is_repo_installed( lc_plugins ) = abap_false.
-          rv_not_completely_installed = abap_true.
-        ENDIF.
-      CATCH lcx_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_not_completely_installed = abap_false.
-    ENDTRY.
-  ENDMETHOD.                    "needs_installation
 
   METHOD render_toc.
 
