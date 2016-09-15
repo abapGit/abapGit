@@ -204,19 +204,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_repo_menu.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
+          lo_tb_advanced TYPE REF TO lcl_html_toolbar,
+          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
           lv_pull_opt    LIKE gc_html_opt-crossout,
-          lo_sub         TYPE REF TO lcl_html_toolbar,
-          lo_branch      TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
+    CREATE OBJECT lo_tb_branch.
+    CREATE OBJECT lo_tb_advanced.
 
     lv_key = io_repo->get_key( ).
-
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
     ENDIF.
@@ -228,14 +229,35 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lv_pull_opt = gc_html_opt-emphas.
     ENDIF.
 
-    IF io_repo->is_offline( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |zipimport?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
-      lo_toolbar->add( iv_txt = 'Export ZIP'
-                       iv_act = |zipexport?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
-    ELSE.
+    " Build branch drop-down ========================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
+      lo_tb_branch->add( iv_txt = 'Overview'
+                         iv_act = |branch_overview?{ lv_key }| ).
+      lo_tb_branch->add( iv_txt = 'Switch'
+                         iv_act = |{ c_actions-switch_branch }?{ lv_key }|
+                         iv_opt = lv_wp_opt ).
+      lo_tb_branch->add( iv_txt = 'Create'
+                         iv_act = |create_branch?{ lv_key }| ).
+      lo_tb_branch->add( iv_txt = 'Delete'
+                         iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
+    ENDIF.
+
+    " Build advanced drop-down ========================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
+      lo_tb_advanced->add( iv_txt = 'Reset local'
+                           iv_act = |reset?{ lv_key }|
+                           iv_opt = lv_wp_opt ).
+      lo_tb_advanced->add( iv_txt = 'Background mode'
+                           iv_act = |background?{ lv_key }| ).
+    ENDIF.
+    lo_tb_advanced->add( iv_txt = 'Remove'
+                         iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
+    lo_tb_advanced->add( iv_txt = 'Uninstall'
+                         iv_act = |{ gc_action-repo_purge }?{ lv_key }|
+                         iv_opt = lv_wp_opt ).
+
+    " Build main toolbar ==============================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
@@ -247,44 +269,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                              iv_opt = gc_html_opt-emphas ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
-* authorization error or repository does not exist
-* ignore error
+          " authorization error or repository does not exist
+          " ignore error
       ENDTRY.
-    ENDIF.
-
-    CREATE OBJECT lo_sub.
-    IF io_repo->is_offline( ) = abap_false.
-      CREATE OBJECT lo_branch.
-      lo_branch->add( iv_txt = 'Overview'
-                      iv_act = |branch_overview?{ lv_key }| ).
-      lo_branch->add( iv_txt = 'Switch'
-                      iv_act = |{ c_actions-switch_branch }?{ lv_key }|
-                      iv_opt = lv_wp_opt ).
-      lo_branch->add( iv_txt = 'Create'
-                      iv_act = |create_branch?{ lv_key }| ).
-      lo_branch->add( iv_txt = 'Delete'
-                      iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Branch'
-                       io_sub = lo_branch ) ##NO_TEXT.
-
-      lo_sub->add( iv_txt = 'Reset local'
-                   iv_act = |reset?{ lv_key }|
-                   iv_opt = lv_wp_opt ).
-      lo_sub->add( iv_txt = 'Background mode'
-                   iv_act = |background?{ lv_key }| ).
+                       io_sub = lo_tb_branch ) ##NO_TEXT.
+    ELSE.
+      lo_toolbar->add( iv_txt = 'Import ZIP'
+                       iv_act = |zipimport?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
+      lo_toolbar->add( iv_txt = 'Export ZIP'
+                       iv_act = |zipexport?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
     ENDIF.
-    lo_sub->add( iv_txt = 'Remove'
-                 iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Uninstall'
-                 iv_act = |{ gc_action-repo_purge }?{ lv_key }|
-                 iv_opt = lv_wp_opt ).
 
     lo_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = lo_sub ) ##NO_TEXT.
-
+                     io_sub = lo_tb_advanced ) ##NO_TEXT.
     lo_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
+    " Render ==========================================
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
