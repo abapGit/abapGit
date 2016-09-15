@@ -15,7 +15,7 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
       RAISING lcx_exception.
 
     CLASS-METHODS install_abapgit
-      RETURNING VALUE(rv_success) TYPE abap_bool
+      RETURNING VALUE(rv_cancel) TYPE abap_bool
       RAISING lcx_exception.
 
     CLASS-METHODS needs_installation
@@ -57,6 +57,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
     ).  "#EC NOTEXT
 
     IF lv_answer <> '1'.
+      rv_cancel = abap_true.
       RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     ENDIF.
 

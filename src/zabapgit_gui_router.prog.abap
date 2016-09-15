@@ -72,11 +72,11 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_gui_router IMPLEMENTATION.
 
-  DEFINE choose_rerender_or_noaction.
-    IF &1 = abap_true.
-      ev_state = gc_event_state-re_render.
-    ELSE.
+  DEFINE no_action_if_canceled.
+    IF &2 = abap_true.
       ev_state = gc_event_state-no_more_act.
+    ELSE.
+      ev_state = gc_event_state-&1.
     ENDIF.
   END-OF-DEFINITION.
 
@@ -85,7 +85,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_url     TYPE string,
           lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_success TYPE abap_bool,
+          lv_cancel  TYPE abap_bool,
           ls_item    TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
@@ -109,8 +109,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_abapgit=>open_abapgit_homepage( ).
         ev_state = gc_event_state-no_more_act.
       WHEN 'abapgit_installation'.
-        lv_success = lcl_services_abapgit=>install_abapgit( ).
-        choose_rerender_or_noaction lv_success.
+        lv_cancel = lcl_services_abapgit=>install_abapgit( ).
+        no_action_if_canceled re_render lv_cancel.
       WHEN 'jump'.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                             IMPORTING ev_obj_type = ls_item-obj_type
@@ -141,14 +141,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_purge.    " Repo remove & purge all objects
-        lv_success = lcl_services_repo=>purge( lv_key ).
-        choose_rerender_or_noaction lv_success.
+        lv_cancel = lcl_services_repo=>purge( lv_key ).
+        no_action_if_canceled re_render lv_cancel.
       WHEN gc_action-repo_remove.   " Repo remove
-        lv_success = lcl_services_repo=>remove( lv_key ).
-        choose_rerender_or_noaction lv_success.
+        lv_cancel = lcl_services_repo=>remove( lv_key ).
+        no_action_if_canceled re_render lv_cancel.
       WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
-        lv_success = lcl_services_repo=>clone( lv_url ).
-        choose_rerender_or_noaction lv_success.
+        lv_cancel = lcl_services_repo=>clone( lv_url ).
+        no_action_if_canceled re_render lv_cancel.
 
 
         " ZIP services actions
