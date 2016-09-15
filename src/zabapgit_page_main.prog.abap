@@ -150,7 +150,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
     IF lcl_services_abapgit=>needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
+      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
     ENDIF.
     ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
 

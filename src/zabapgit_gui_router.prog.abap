@@ -96,12 +96,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
               EXPORTING
                 iv_key = lv_key.
             ev_state = gc_event_state-new_page.
-          WHEN 'abapgit_home'.
-            lcl_services_abapgit=>open_abapgit_homepage( ).
-            ev_state = gc_event_state-no_more_act.
-          WHEN 'abapgit_installation'.
-            lcl_services_abapgit=>install_abapgit( ).
-            ev_state = gc_event_state-re_render.
           WHEN 'jump'.
             lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                                 IMPORTING ev_obj_type = ls_item-obj_type
@@ -126,6 +120,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
           WHEN 'db_save'.
             db_save( it_postdata ).
             ev_state = gc_event_state-go_back.
+
+            " Abapgit services actions
+          WHEN gc_action-abapgit_home.
+            lcl_services_abapgit=>open_abapgit_homepage( ).
+            ev_state = gc_event_state-no_more_act.
+          WHEN gc_action-abapgit_install.
+            lcl_services_abapgit=>install_abapgit( ).
+            ev_state = gc_event_state-re_render.
 
             " Repository services actions
           WHEN gc_action-repo_refresh.  " Repo refresh

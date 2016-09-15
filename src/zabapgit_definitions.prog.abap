@@ -141,7 +141,7 @@ CONSTANTS: BEGIN OF gc_action,
              repo_remove     TYPE string VALUE 'repo_remove',
              repo_purge      TYPE string VALUE 'repo_purge',
              abapgit_home    TYPE string VALUE 'abapgit_home',
-
+             abapgit_install TYPE string VALUE 'abapgit_install',
              zip_import      TYPE string VALUE 'zip_import',
              zip_export      TYPE string VALUE 'zip_export',
              zip_package     TYPE string VALUE 'zip_package',
