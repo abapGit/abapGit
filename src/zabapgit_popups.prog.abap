@@ -14,8 +14,8 @@ CLASS lcl_popups DEFINITION.
            END OF ty_popup.
 
     CLASS-METHODS:
-      repo_package_zip
-        RETURNING VALUE(rs_data) TYPE lcl_persistence_repo=>ty_repo
+      popup_package_export
+        RETURNING VALUE(rv_package) TYPE devclass
         RAISING lcx_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
@@ -67,7 +67,7 @@ CLASS lcl_popups IMPLEMENTATION.
   END-OF-DEFINITION.
 
 
-  METHOD repo_package_zip.
+  METHOD popup_package_export.
 
     DATA: lv_returncode TYPE c,
           lt_fields     TYPE TABLE OF sval.
@@ -100,11 +100,9 @@ CLASS lcl_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     TRANSLATE <ls_field>-value TO UPPER CASE.
 
-    rs_data-key             = 'DUMMY'.
-    rs_data-package         = <ls_field>-value.
-    rs_data-master_language = sy-langu.
+    rv_package = <ls_field>-value.
 
-  ENDMETHOD.                    "repo_package_zip
+  ENDMETHOD.                    "popup_package_export
 
   METHOD create_branch_popup.
 
