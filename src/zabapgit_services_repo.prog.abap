@@ -6,8 +6,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS clone
       IMPORTING iv_url TYPE string
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   lcx_exception lcx_cancel.
 
     CLASS-METHODS refresh
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -15,13 +14,11 @@ CLASS lcl_services_repo DEFINITION FINAL.
 
     CLASS-METHODS remove
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   lcx_exception lcx_cancel.
 
     CLASS-METHODS purge
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   lcx_exception lcx_cancel.
 
 ENDCLASS. "lcl_services_repo
 
@@ -35,8 +32,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     ls_popup = lcl_popups=>repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
-      rv_cancel = abap_true.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
     lo_repo = lcl_app=>repo_srv( )->new_online(
@@ -83,8 +79,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     ).  "#EC NOTEXT
 
     IF lv_answer = '2'.
-      rv_cancel = abap_true.
-      RETURN.
+      RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
     lcl_app=>repo_srv( )->delete( lo_repo ).
@@ -128,8 +123,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       ).  "#EC NOTEXT
 
       IF lv_answer = '2'.
-        rv_cancel = abap_true.
-        RETURN.
+        RAISE EXCEPTION TYPE lcx_cancel.
       ENDIF.
 
       lcl_objects=>delete( lt_tadir ).

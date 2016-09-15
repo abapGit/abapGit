@@ -72,124 +72,118 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_gui_router IMPLEMENTATION.
 
-  DEFINE no_action_if_canceled.
-    IF &2 = abap_true.
-      ev_state = gc_event_state-no_more_act.
-    ELSE.
-      ev_state = gc_event_state-&1.
-    ENDIF.
-  END-OF-DEFINITION.
-
-
   METHOD on_event.
 
     DATA: lv_url     TYPE string,
           lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_cancel  TYPE abap_bool,
           ls_item    TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor
 
-    CASE iv_action.
-        " General routing
-      WHEN 'main'
-          OR 'explore'
-          OR 'db'
-          OR 'background_run'.
-        ei_page  = get_page_by_name( iv_action ).
-        ev_state = gc_event_state-new_page.
-      WHEN 'background'.
-        lv_key = iv_getdata.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_background
-          EXPORTING
-            iv_key = lv_key.
-        ev_state = gc_event_state-new_page.
-      WHEN 'abapgit_home'.
-        lcl_services_abapgit=>open_abapgit_homepage( ).
-        ev_state = gc_event_state-no_more_act.
-      WHEN 'abapgit_installation'.
-        lv_cancel = lcl_services_abapgit=>install_abapgit( ).
-        no_action_if_canceled re_render lv_cancel.
-      WHEN 'jump'.
-        lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
-                                            IMPORTING ev_obj_type = ls_item-obj_type
-                                                      ev_obj_name = ls_item-obj_name ).
-        lcl_objects=>jump( ls_item ).
-        ev_state = gc_event_state-no_more_act.
-      WHEN 'diff'.
-        ei_page  = get_page_diff( iv_getdata ).
-        ev_state = gc_event_state-new_page.
+    TRY.
+        CASE iv_action.
+            " General routing
+          WHEN 'main'
+              OR 'explore'
+              OR 'db'
+              OR 'background_run'.
+            ei_page  = get_page_by_name( iv_action ).
+            ev_state = gc_event_state-new_page.
+          WHEN 'background'.
+            lv_key = iv_getdata.
+            CREATE OBJECT ei_page TYPE lcl_gui_page_background
+              EXPORTING
+                iv_key = lv_key.
+            ev_state = gc_event_state-new_page.
+          WHEN 'abapgit_home'.
+            lcl_services_abapgit=>open_abapgit_homepage( ).
+            ev_state = gc_event_state-no_more_act.
+          WHEN 'abapgit_installation'.
+            lcl_services_abapgit=>install_abapgit( ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'jump'.
+            lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
+                                                IMPORTING ev_obj_type = ls_item-obj_type
+                                                          ev_obj_name = ls_item-obj_name ).
+            lcl_objects=>jump( ls_item ).
+            ev_state = gc_event_state-no_more_act.
+          WHEN 'diff'.
+            ei_page  = get_page_diff( iv_getdata ).
+            ev_state = gc_event_state-new_page.
 
-        " DB actions
-      WHEN 'db_display' OR 'db_edit'.
-        ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
-        IF iv_prev_page = 'PAGE_DB_DISPLAY'.
-          ev_state = gc_event_state-new_page_replacing.
-        ELSE.
-          ev_state = gc_event_state-new_page.
-        ENDIF.
-      WHEN 'db_delete'.
-        db_delete( iv_getdata = iv_getdata ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'db_save'.
-        db_save( it_postdata ).
-        ev_state = gc_event_state-go_back.
+            " DB actions
+          WHEN 'db_display' OR 'db_edit'.
+            ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+            IF iv_prev_page = 'PAGE_DB_DISPLAY'.
+              ev_state = gc_event_state-new_page_replacing.
+            ELSE.
+              ev_state = gc_event_state-new_page.
+            ENDIF.
+          WHEN 'db_delete'.
+            db_delete( iv_getdata = iv_getdata ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'db_save'.
+            db_save( it_postdata ).
+            ev_state = gc_event_state-go_back.
 
-        " Repository services actions
-      WHEN gc_action-repo_refresh.  " Repo refresh
-        lcl_services_repo=>refresh( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_purge.    " Repo remove & purge all objects
-        lv_cancel = lcl_services_repo=>purge( lv_key ).
-        no_action_if_canceled re_render lv_cancel.
-      WHEN gc_action-repo_remove.   " Repo remove
-        lv_cancel = lcl_services_repo=>remove( lv_key ).
-        no_action_if_canceled re_render lv_cancel.
-      WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
-        lv_cancel = lcl_services_repo=>clone( lv_url ).
-        no_action_if_canceled re_render lv_cancel.
+            " Repository services actions
+          WHEN gc_action-repo_refresh.  " Repo refresh
+            lcl_services_repo=>refresh( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN gc_action-repo_purge.    " Repo remove & purge all objects
+            lcl_services_repo=>purge( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN gc_action-repo_remove.   " Repo remove
+            lcl_services_repo=>remove( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
+            lcl_services_repo=>clone( lv_url ).
+            ev_state = gc_event_state-re_render.
 
 
-        " ZIP services actions
-      WHEN 'zipimport'.
-        lv_key   = iv_getdata.
-        lcl_zip=>import( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'zipexport'.
-        lv_key   = iv_getdata.
-        lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
+            " ZIP services actions
+          WHEN 'zipimport'.
+            lv_key   = iv_getdata.
+            lcl_zip=>import( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'zipexport'.
+            lv_key   = iv_getdata.
+            lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
+            ev_state = gc_event_state-no_more_act.
+          WHEN 'packagezip'.
+            lcl_popups=>repo_package_zip( ).
+            ev_state = gc_event_state-no_more_act.
+          WHEN 'transportzip'.
+            lcl_transport=>zip( ).
+            ev_state = gc_event_state-no_more_act.
+
+            " Repository online actions
+          WHEN 'pull'.
+            lv_key   = iv_getdata.
+            repo_pull( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'stage'.
+            lv_key   = iv_getdata.
+            ei_page  = get_page_stage( lv_key ).
+            ev_state = gc_event_state-new_page_w_bookmark.
+          WHEN 'reset'.
+            lv_key   = iv_getdata.
+            reset( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'create_branch'.
+            lv_key   = iv_getdata.
+            create_branch( lv_key ).
+            ev_state = gc_event_state-re_render.
+          WHEN 'branch_overview'.
+            ei_page  = get_page_branch_overview( iv_getdata ).
+            ev_state = gc_event_state-new_page.
+          WHEN OTHERS.
+            ev_state = gc_event_state-not_handled.
+        ENDCASE.
+      CATCH lcx_cancel.
         ev_state = gc_event_state-no_more_act.
-      WHEN 'packagezip'.
-        lcl_popups=>repo_package_zip( ).
-        ev_state = gc_event_state-no_more_act.
-      WHEN 'transportzip'.
-        lcl_transport=>zip( ).
-        ev_state = gc_event_state-no_more_act.
-
-        " Repository online actions
-      WHEN 'pull'.
-        lv_key   = iv_getdata.
-        repo_pull( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'stage'.
-        lv_key   = iv_getdata.
-        ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page_w_bookmark.
-      WHEN 'reset'.
-        lv_key   = iv_getdata.
-        reset( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'create_branch'.
-        lv_key   = iv_getdata.
-        create_branch( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN 'branch_overview'.
-        ei_page  = get_page_branch_overview( iv_getdata ).
-        ev_state = gc_event_state-new_page.
-      WHEN OTHERS.
-        ev_state = gc_event_state-not_handled.
-    ENDCASE.
+    ENDTRY.
   ENDMETHOD.        " on_event
 
   METHOD get_page_by_name.
