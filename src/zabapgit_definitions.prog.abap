@@ -136,9 +136,14 @@ CONSTANTS: gc_root_dir    TYPE string VALUE '/',
            gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
 
 CONSTANTS: BEGIN OF gc_action,
-             repo_clone   TYPE string VALUE 'repo_clone',
-             repo_refresh TYPE string VALUE 'repo_refresh',
-             repo_remove  TYPE string VALUE 'repo_remove',
-             repo_purge   TYPE string VALUE 'repo_purge',
-             abapgit_home TYPE string VALUE 'abapgit_home',
+             repo_clone      TYPE string VALUE 'repo_clone',
+             repo_refresh    TYPE string VALUE 'repo_refresh',
+             repo_remove     TYPE string VALUE 'repo_remove',
+             repo_purge      TYPE string VALUE 'repo_purge',
+             abapgit_home    TYPE string VALUE 'abapgit_home',
+
+             zip_import      TYPE string VALUE 'zip_import',
+             zip_export      TYPE string VALUE 'zip_export',
+             zip_package     TYPE string VALUE 'zip_package',
+             zip_transport   TYPE string VALUE 'zip_transport',
            END OF gc_action.

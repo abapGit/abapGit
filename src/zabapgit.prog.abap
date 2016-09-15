@@ -56,8 +56,8 @@ INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
 INCLUDE zabapgit_file_status.
-INCLUDE zabapgit_zip.
 INCLUDE zabapgit_popups.
+INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 
 INCLUDE zabapgit_object_serializing. " All serializing classes here

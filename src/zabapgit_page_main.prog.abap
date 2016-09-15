@@ -143,8 +143,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_betasub.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
@@ -276,10 +276,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                        io_sub = lo_tb_branch ) ##NO_TEXT.
     ELSE.
       lo_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |zipimport?{ lv_key }|
+                       iv_act = |{ gc_action-zip_import }?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
       lo_toolbar->add( iv_txt = 'Export ZIP'
-                       iv_act = |zipexport?{ lv_key }|
+                       iv_act = |{ gc_action-zip_export }?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
     ENDIF.
 

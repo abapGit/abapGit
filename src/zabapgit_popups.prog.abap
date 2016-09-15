@@ -15,6 +15,7 @@ CLASS lcl_popups DEFINITION.
 
     CLASS-METHODS:
       repo_package_zip
+        RETURNING VALUE(rs_data) TYPE lcl_persistence_repo=>ty_repo
         RAISING lcx_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
@@ -68,9 +69,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD repo_package_zip.
 
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lv_returncode TYPE c,
+    DATA: lv_returncode TYPE c,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -81,7 +80,7 @@ CLASS lcl_popups IMPLEMENTATION.
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
         no_value_check  = abap_true
-        popup_title     = 'Export'             "#EC NOTEXT
+        popup_title     = 'Export package'             "#EC NOTEXT
       IMPORTING
         returncode      = lv_returncode
       TABLES
@@ -92,6 +91,7 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
+
     IF lv_returncode = 'A'.
       RETURN.
     ENDIF.
@@ -100,15 +100,9 @@ CLASS lcl_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     TRANSLATE <ls_field>-value TO UPPER CASE.
 
-    ls_data-key             = 'DUMMY'.
-    ls_data-package         = <ls_field>-value.
-    ls_data-master_language = sy-langu.
-
-    CREATE OBJECT lo_repo
-      EXPORTING
-        is_data = ls_data.
-
-    lcl_zip=>export( lo_repo ).
+    rs_data-key             = 'DUMMY'.
+    rs_data-package         = <ls_field>-value.
+    rs_data-master_language = sy-langu.
 
   ENDMETHOD.                    "repo_package_zip
 

@@ -19,6 +19,9 @@ CLASS lcl_zip DEFINITION FINAL.
                 it_filter TYPE scts_tadir OPTIONAL
       RAISING   lcx_exception.
 
+    CLASS-METHODS export_package
+        RAISING lcx_exception lcx_cancel.
+
   PRIVATE SECTION.
 
     CLASS-METHODS file_upload
@@ -374,5 +377,24 @@ CLASS lcl_zip IMPLEMENTATION.
     lo_repo->deserialize( ).
 
   ENDMETHOD.                    "import
+
+  METHOD export_package.
+
+    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo.
+
+    ls_data = lcl_popups=>repo_package_zip( ).
+
+    IF ls_data IS INITIAL.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    CREATE OBJECT lo_repo
+      EXPORTING
+        is_data = ls_data.
+
+    lcl_zip=>export( lo_repo ).
+
+  ENDMETHOD.  "export_package
 
 ENDCLASS.                    "lcl_zip IMPLEMENTATION

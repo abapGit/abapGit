@@ -141,20 +141,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
             lcl_services_repo=>clone( lv_url ).
             ev_state = gc_event_state-re_render.
 
-
             " ZIP services actions
-          WHEN 'zipimport'.
-            lv_key   = iv_getdata.
+          WHEN gc_action-zip_import.      " Import repo from ZIP
             lcl_zip=>import( lv_key ).
             ev_state = gc_event_state-re_render.
-          WHEN 'zipexport'.
-            lv_key   = iv_getdata.
+          WHEN gc_action-zip_export.      " Export repo as ZIP
             lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
             ev_state = gc_event_state-no_more_act.
-          WHEN 'packagezip'.
-            lcl_popups=>repo_package_zip( ).
+          WHEN gc_action-zip_package.     " Export package as ZIP
+            lcl_zip=>export_package( ).
             ev_state = gc_event_state-no_more_act.
-          WHEN 'transportzip'.
+          WHEN gc_action-zip_transport.   " Export transport as ZIP
             lcl_transport=>zip( ).
             ev_state = gc_event_state-no_more_act.
 
