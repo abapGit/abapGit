@@ -16,6 +16,14 @@ CLASS lcl_services_git DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception lcx_cancel.
 
+    CLASS-METHODS switch_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
+    CLASS-METHODS delete_branch
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
 ENDCLASS. " lcl_services_git
 
 CLASS lcl_services_git IMPLEMENTATION.
@@ -98,5 +106,57 @@ CLASS lcl_services_git IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.                    "pull
+
+  METHOD switch_branch.
+
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+          ls_popup TYPE lcl_popups=>ty_popup.
+
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_popup = lcl_popups=>repo_popup(
+      iv_url     = lo_repo->get_url( )
+      iv_package = lo_repo->get_package( )
+      iv_branch  = lo_repo->get_branch_name( ) ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lo_repo->set_url( ls_popup-url ).
+    lo_repo->set_branch_name( ls_popup-branch_name ).
+
+    COMMIT WORK.
+
+    lo_repo->deserialize( ).
+
+  ENDMETHOD.  "switch_branch
+
+  METHOD delete_branch.
+
+    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
+
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_branch = lcl_popups=>branch_list_popup( lo_repo->get_url( ) ).
+    IF ls_branch IS INITIAL.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    IF ls_branch-name = 'HEAD'.
+      lcx_exception=>raise( 'Cannot delete HEAD' ).
+    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
+      lcx_exception=>raise( 'Switch branch before deleting current' ).
+    ENDIF.
+
+    lcl_git_porcelain=>delete_branch(
+      io_repo   = lo_repo
+      is_branch = ls_branch ).
+
+    MESSAGE 'Branch deleted' TYPE 'S'.
+
+  ENDMETHOD.  "delete_branch
 
 ENDCLASS. " lcl_services_git

@@ -24,12 +24,6 @@ CLASS lcl_popups DEFINITION.
       repo_new_offline
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception,
-      switch_branch
-        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-        RAISING   lcx_exception,
-      delete_branch
-        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-        RAISING   lcx_exception,
       branch_list_popup
         IMPORTING iv_url           TYPE string
         RETURNING VALUE(rs_branch) TYPE lcl_git_branch_list=>ty_git_branch
@@ -184,33 +178,6 @@ CLASS lcl_popups IMPLEMENTATION.
 
   ENDMETHOD.                    "repo_new_offline
 
-  METHOD delete_branch.
-
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    ls_branch = branch_list_popup( lo_repo->get_url( ) ).
-    IF ls_branch IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF ls_branch-name = 'HEAD'.
-      lcx_exception=>raise( 'cannot delete HEAD' ).
-    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      lcx_exception=>raise( 'switch branch before deleting current' ).
-    ENDIF.
-
-    lcl_git_porcelain=>delete_branch(
-      io_repo   = lo_repo
-      is_branch = ls_branch ).
-
-    MESSAGE 'Branch deleted' TYPE 'S'.
-
-  ENDMETHOD.
-
   METHOD branch_list_popup.
 
     DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
@@ -263,31 +230,6 @@ CLASS lcl_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
-
-  ENDMETHOD.
-
-  METHOD switch_branch.
-
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          ls_popup TYPE ty_popup.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    ls_popup = repo_popup(
-      iv_url     = lo_repo->get_url( )
-      iv_package = lo_repo->get_package( )
-      iv_branch  = lo_repo->get_branch_name( ) ).
-    IF ls_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
-
-    lo_repo->set_url( ls_popup-url ).
-    lo_repo->set_branch_name( ls_popup-branch_name ).
-
-    COMMIT WORK.
-
-    lo_repo->deserialize( ).
 
   ENDMETHOD.
 

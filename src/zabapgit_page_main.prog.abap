@@ -14,10 +14,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 newoffline    TYPE string VALUE 'newoffline' ##NO_TEXT,
-                 switch_branch TYPE string VALUE 'switch_branch' ##NO_TEXT,
-                 delete_branch TYPE string VALUE 'delete_branch' ##NO_TEXT,
-                 install       TYPE string VALUE 'install' ##NO_TEXT,
                  show          TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
@@ -234,12 +230,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_tb_branch->add( iv_txt = 'Overview'
                          iv_act = |branch_overview?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Switch'
-                         iv_act = |{ c_actions-switch_branch }?{ lv_key }|
+                         iv_act = |{ gc_action-git_branch_switch }?{ lv_key }|
                          iv_opt = lv_wp_opt ).
       lo_tb_branch->add( iv_txt = 'Create'
                          iv_act = |{ gc_action-git_branch_create }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Delete'
-                         iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
+                         iv_act = |{ gc_action-git_branch_delete }?{ lv_key }| ).
     ENDIF.
 
     " Build advanced drop-down ========================
@@ -260,8 +256,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
-            lo_toolbar->add( iv_txt = gc_action-git_pull
-                             iv_act = |pull?{ lv_key }|
+            lo_toolbar->add( iv_txt = 'Pull'
+                             iv_act = |{ gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
             lo_toolbar->add( iv_txt = 'Stage'
@@ -614,22 +610,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
           lv_url  TYPE string.
 
+    lv_key   = iv_getdata.
 
     CASE iv_action.
-      WHEN gc_action-repo_newoffline.
+      WHEN gc_action-repo_newoffline.   " New offline repo
         lcl_services_repo=>new_offline( ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-delete_branch.
-        lv_key   = iv_getdata.
-        lcl_popups=>delete_branch( lv_key ).
+      WHEN gc_action-git_branch_delete. " Delete remote branch
+        lcl_services_git=>delete_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-switch_branch.
-        lv_key   = iv_getdata.
-        lcl_popups=>switch_branch( lv_key ).
+      WHEN gc_action-git_branch_switch. " Switch branch
+        lcl_services_git=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-show.
-        mv_show = iv_getdata.
-        lcl_app=>user( )->set_repo_show( mv_show ).
+      WHEN c_actions-show.              " Change displayed repo
+        lcl_app=>user( )->set_repo_show( lv_key ).
         ev_state = gc_event_state-re_render.
     ENDCASE.
 
