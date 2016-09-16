@@ -25,8 +25,9 @@ CLASS lcl_popups DEFINITION.
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception,
       branch_list_popup
-        IMPORTING iv_url           TYPE string
-        RETURNING VALUE(rs_branch) TYPE lcl_git_branch_list=>ty_git_branch
+        IMPORTING iv_url            TYPE string
+                  iv_default_branch TYPE string OPTIONAL
+        RETURNING VALUE(rs_branch)  TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
@@ -183,6 +184,7 @@ CLASS lcl_popups IMPLEMENTATION.
     DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
           lt_branches  TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_answer    TYPE c LENGTH 1,
+          lv_default   TYPE i VALUE 1, "Default cursor position
           lt_selection TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
@@ -195,20 +197,19 @@ CLASS lcl_popups IMPLEMENTATION.
     LOOP AT lt_branches ASSIGNING <ls_branch>.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = <ls_branch>-name.
-    ENDLOOP.
 
-*    lt_branches = lo_branches->get_tags_only( ).
-*    LOOP AT lt_branches ASSIGNING <ls_branch>.
-*      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-*      <ls_sel>-varoption = <ls_branch>-name.
-*    ENDLOOP.
+      IF iv_default_branch IS NOT INITIAL AND iv_default_branch = <ls_branch>-name.
+        lv_default = sy-tabix.
+      ENDIF.
+    ENDLOOP.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
         textline1          = 'Select branch'
         titel              = 'Select branch'
-        start_col          = 5
-        start_row          = 10
+        start_col          = 30
+        start_row          = 5
+        cursorline         = lv_default
       IMPORTING
         answer             = lv_answer
       TABLES

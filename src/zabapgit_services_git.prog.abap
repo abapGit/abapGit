@@ -110,21 +110,19 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD switch_branch.
 
     DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          ls_popup TYPE lcl_popups=>ty_popup.
+          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
-    ls_popup = lcl_popups=>repo_popup(
-      iv_url     = lo_repo->get_url( )
-      iv_package = lo_repo->get_package( )
-      iv_branch  = lo_repo->get_branch_name( ) ).
-    IF ls_popup-cancel = abap_true.
+    ls_branch = lcl_popups=>branch_list_popup(
+      iv_url            = lo_repo->get_url( )
+      iv_default_branch = lo_repo->get_branch_name( ) ).
+    IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    lo_repo->set_url( ls_popup-url ).
-    lo_repo->set_branch_name( ls_popup-branch_name ).
+    lo_repo->set_branch_name( ls_branch-name ).
 
     COMMIT WORK.
 
