@@ -45,6 +45,11 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_background
+      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception.
+
     METHODS repo_pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
@@ -90,10 +95,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'background'.
-        lv_key = iv_getdata.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_background
-          EXPORTING
-            iv_key = lv_key.
+        ei_page  = get_page_background( lv_key ).
         ev_state = gc_event_state-new_page.
       WHEN 'jump'.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
@@ -108,10 +110,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         " DB actions
       WHEN 'db_display' OR 'db_edit'.
         ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DISPLAY'.
           ev_state = gc_event_state-new_page_replacing.
-        ELSE.
-          ev_state = gc_event_state-new_page.
         ENDIF.
       WHEN 'db_delete'.
         db_delete( iv_getdata = iv_getdata ).
@@ -445,5 +446,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.
+
+  METHOD get_page_background.
+
+    CREATE OBJECT ri_page TYPE lcl_gui_page_background
+      EXPORTING
+        iv_key = iv_key.
+
+  ENDMETHOD.  "get_page_background
 
 ENDCLASS.           " lcl_gui_router
