@@ -59,7 +59,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
                   |  <td>{ ms_key-value }</td></tr></table>| ).
 
     ro_html->add( '</td><td class="right">' ).
-    ro_html->add_anchor( iv_txt = 'Edit' iv_act = |db_edit?{ lv_action }| ).
+    ro_html->add_anchor( iv_txt = 'Edit' iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
     ro_html->add( '</td></tr></table>' ).
 
     ro_html->add( |<pre>{ lv_data }</pre>| ).
@@ -170,7 +170,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
                   |  <td>{ ms_key-value }</td></tr></table>| ).
 
     " Form
-    ro_html->add( '<form id="db_form" method="post" action="sapevent:db_save">' ).
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ gc_action-db_update }">| ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
@@ -283,9 +283,9 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       lv_action  = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display' iv_act = |db_display?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |db_edit?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |db_delete?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ gc_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ gc_action-db_delete }?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).

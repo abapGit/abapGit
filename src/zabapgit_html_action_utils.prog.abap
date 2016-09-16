@@ -46,6 +46,10 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_string     TYPE clike
       RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
 
+    CLASS-METHODS dbcontent_decode
+      IMPORTING it_postdata       TYPE cnht_post_data_tab
+      RETURNING VALUE(rs_content) TYPE lcl_persistence_db=>ty_content.
+
     CLASS-METHODS parse_commit_request
       IMPORTING it_postdata      TYPE cnht_post_data_tab
       RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
@@ -53,6 +57,9 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
     CLASS-METHODS repo_key_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS field_keys_to_upper
+      CHANGING ct_fields TYPE tihttpnvp.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -192,6 +199,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     lv_string = iv_string.     " type conversion
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
     IF sy-subrc = 0.
@@ -204,6 +212,26 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "dbkey_decode
+
+  METHOD dbcontent_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+    rs_content = dbkey_decode( lv_string ).
+
+    lt_fields  = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    field_keys_to_upper( CHANGING ct_fields = lt_fields ).
+
+    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'XMLDATA' ##NO_TEXT.
+    IF sy-subrc = 0 AND <ls_field>-value(1) <> '<'.
+      rs_content-data_str = <ls_field>-value+1. " hmm
+    ENDIF.
+
+  ENDMETHOD.                    "dbcontent_decode
 
   METHOD parse_commit_request.
 
@@ -256,5 +284,15 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.                    "repo_key_encode
+
+  METHOD field_keys_to_upper.
+
+    FIELD-SYMBOLS <field> LIKE LINE OF ct_fields.
+
+    LOOP AT ct_fields ASSIGNING <field>.
+      <field>-name = to_upper( <field>-name ).
+    ENDLOOP.
+
+  ENDMETHOD.  "field_keys_to_upper
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION

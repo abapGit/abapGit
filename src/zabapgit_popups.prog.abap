@@ -13,6 +13,8 @@ CLASS lcl_popups DEFINITION.
              cancel      TYPE abap_bool,
            END OF ty_popup.
 
+    CONSTANTS c_new_branch_label TYPE string VALUE 'Create NEW ...'.
+
     CLASS-METHODS:
       popup_package_export
         RETURNING VALUE(rv_package) TYPE devclass
@@ -22,17 +24,13 @@ CLASS lcl_popups DEFINITION.
                   ev_cancel TYPE abap_bool
         RAISING   lcx_exception,
       repo_new_offline
-        RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
-        RAISING   lcx_exception,
-      switch_branch
-        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-        RAISING   lcx_exception,
-      delete_branch
-        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+        RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception,
       branch_list_popup
-        IMPORTING iv_url           TYPE string
-        RETURNING VALUE(rs_branch) TYPE lcl_git_branch_list=>ty_git_branch
+        IMPORTING iv_url             TYPE string
+                  iv_default_branch  TYPE string OPTIONAL
+                  iv_show_new_option TYPE abap_bool OPTIONAL
+        RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
@@ -144,8 +142,6 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD repo_new_offline.
 
     DATA: lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -169,59 +165,29 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
+
     IF lv_returncode = 'A'.
+      rs_popup-cancel = abap_true.
       RETURN.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
+    rs_popup-url = <ls_field>-value.
 
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    ro_repo = lcl_app=>repo_srv( )->new_offline(
-      iv_url     = lv_url
-      iv_package = lv_package ).
-
-    COMMIT WORK.
+    rs_popup-package = <ls_field>-value.
+    TRANSLATE rs_popup-package TO UPPER CASE.
 
   ENDMETHOD.                    "repo_new_offline
-
-  METHOD delete_branch.
-
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    ls_branch = branch_list_popup( lo_repo->get_url( ) ).
-    IF ls_branch IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF ls_branch-name = 'HEAD'.
-      lcx_exception=>raise( 'cannot delete HEAD' ).
-    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      lcx_exception=>raise( 'switch branch before deleting current' ).
-    ENDIF.
-
-    lcl_git_porcelain=>delete_branch(
-      io_repo   = lo_repo
-      is_branch = ls_branch ).
-
-    MESSAGE 'Branch deleted' TYPE 'S'.
-
-  ENDMETHOD.
 
   METHOD branch_list_popup.
 
     DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
           lt_branches  TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lv_answer    TYPE c LENGTH 1,
+          lv_default   TYPE i VALUE 1, "Default cursor position
           lt_selection TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
@@ -234,20 +200,24 @@ CLASS lcl_popups IMPLEMENTATION.
     LOOP AT lt_branches ASSIGNING <ls_branch>.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = <ls_branch>-name.
+
+      IF iv_default_branch IS NOT INITIAL AND iv_default_branch = <ls_branch>-name.
+        lv_default = sy-tabix.
+      ENDIF.
     ENDLOOP.
 
-*    lt_branches = lo_branches->get_tags_only( ).
-*    LOOP AT lt_branches ASSIGNING <ls_branch>.
-*      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-*      <ls_sel>-varoption = <ls_branch>-name.
-*    ENDLOOP.
+    IF iv_show_new_option = abap_true.
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = c_new_branch_label.
+    ENDIF.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
         textline1          = 'Select branch'
         titel              = 'Select branch'
-        start_col          = 5
-        start_row          = 10
+        start_col          = 30
+        start_row          = 5
+        cursorline         = lv_default
       IMPORTING
         answer             = lv_answer
       TABLES
@@ -268,32 +238,12 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
-
-  ENDMETHOD.
-
-  METHOD switch_branch.
-
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          ls_popup TYPE ty_popup.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    ls_popup = repo_popup(
-      iv_url     = lo_repo->get_url( )
-      iv_package = lo_repo->get_package( )
-      iv_branch  = lo_repo->get_branch_name( ) ).
-    IF ls_popup-cancel = abap_true.
-      RETURN.
+    IF iv_show_new_option = abap_true AND <ls_sel>-varoption = c_new_branch_label.
+      rs_branch-name = c_new_branch_label.
+    ELSE.
+      rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
     ENDIF.
 
-    lo_repo->set_url( ls_popup-url ).
-    lo_repo->set_branch_name( ls_popup-branch_name ).
-
-    COMMIT WORK.
-
-    lo_repo->deserialize( ).
 
   ENDMETHOD.
 

@@ -45,8 +45,9 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS repo_pull
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+    METHODS get_page_background
+      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
     METHODS repo_detach
@@ -55,22 +56,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS repo_attach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS reset
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS create_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS db_delete
-      IMPORTING iv_getdata TYPE clike
-      RAISING   lcx_exception.
-
-    METHODS db_save
-      IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -84,6 +69,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_url     TYPE string,
           lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_db      TYPE lcl_persistence_db=>ty_content,
           ls_item    TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
@@ -98,10 +84,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN 'background'.
-        lv_key = iv_getdata.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_background
-          EXPORTING
-            iv_key = lv_key.
+        ei_page  = get_page_background( lv_key ).
         ev_state = gc_event_state-new_page.
       WHEN 'jump'.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
@@ -112,20 +95,28 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'diff'.
         ei_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
+      WHEN 'stage'.
+        lv_key   = iv_getdata.
+        ei_page  = get_page_stage( lv_key ).
+        ev_state = gc_event_state-new_page_w_bookmark.
+      WHEN 'branch_overview'.
+        ei_page  = get_page_branch_overview( iv_getdata ).
+        ev_state = gc_event_state-new_page.
 
         " DB actions
-      WHEN 'db_display' OR 'db_edit'.
+      WHEN gc_action-db_display OR gc_action-db_edit.
         ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ev_state = gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DISPLAY'.
           ev_state = gc_event_state-new_page_replacing.
-        ELSE.
-          ev_state = gc_event_state-new_page.
         ENDIF.
-      WHEN 'db_delete'.
-        db_delete( iv_getdata = iv_getdata ).
+      WHEN gc_action-db_delete.
+        ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+        lcl_services_db=>delete( ls_db ).
         ev_state = gc_event_state-re_render.
-      WHEN 'db_save'.
-        db_save( it_postdata ).
+      WHEN gc_action-db_update.
+        ls_db = lcl_html_action_utils=>dbcontent_decode( it_postdata ).
+        lcl_services_db=>update( ls_db ).
         ev_state = gc_event_state-go_back.
 
         " Abapgit services actions
@@ -177,26 +168,18 @@ CLASS lcl_gui_router IMPLEMENTATION.
         "TODO
         ev_state = gc_event_state-re_render.
 
-        " Repository online actions
-      WHEN 'pull'.
-        lv_key   = iv_getdata.
-        repo_pull( lv_key ).
+        " Git actions
+      WHEN gc_action-git_pull.
+        lcl_services_git=>pull( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'stage'.
-        lv_key   = iv_getdata.
-        ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page_w_bookmark.
-      WHEN 'reset'.
-        lv_key   = iv_getdata.
-        reset( lv_key ).
+      WHEN gc_action-git_reset.
+        lcl_services_git=>reset( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'create_branch'.
-        lv_key   = iv_getdata.
-        create_branch( lv_key ).
+      WHEN gc_action-git_branch_create.
+        lcl_services_git=>create_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'branch_overview'.
-        ei_page  = get_page_branch_overview( iv_getdata ).
-        ev_state = gc_event_state-new_page.
+
+        "Others
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
     ENDCASE.
@@ -302,85 +285,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.  "get_page_diff
 
-  METHOD reset.
-
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          lv_answer TYPE c LENGTH 1.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = 'Reset local objects?'
-      text_button_1         = 'Ok'
-      icon_button_1         = 'ICON_OKAY'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lo_repo->deserialize( ).
-
-  ENDMETHOD.  "reset
-
-  METHOD create_branch.
-
-    DATA: lv_name   TYPE string,
-          lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO lcl_repo_online.
-
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    lcl_popups=>create_branch_popup(
-      IMPORTING
-        ev_name   = lv_name
-        ev_cancel = lv_cancel ).
-    IF lv_cancel = abap_true.
-      RETURN.
-    ENDIF.
-
-    ASSERT lv_name CP 'refs/heads/+*'.
-
-    lcl_git_porcelain=>create_branch(
-      io_repo = lo_repo
-      iv_name = lv_name
-      iv_from = lo_repo->get_sha1_local( ) ).
-
-* automatically switch to new branch
-    lo_repo->set_branch_name( lv_name ).
-
-    MESSAGE 'Switched to new branch' TYPE 'S' ##NO_TEXT.
-
-  ENDMETHOD.  "create_branch
-
-  METHOD repo_pull.
-
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
-
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-
-    IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lo_repo->refresh( ).
-    lo_repo->deserialize( ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.  "repo_pull
-
   METHOD get_page_stage.
 
     DATA: lo_repo       TYPE REF TO lcl_repo_online,
@@ -400,72 +304,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.  "get_page_stage
 
-  METHOD db_delete.
+  METHOD get_page_background.
 
-    DATA: lv_answer TYPE c LENGTH 1,
-          ls_key    TYPE lcl_persistence_db=>ty_content.
+    CREATE OBJECT ri_page TYPE lcl_gui_page_background
+      EXPORTING
+        iv_key = iv_key.
 
-
-    ls_key = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = 'Delete?'
-      text_button_1         = 'Ok'
-      icon_button_1         = 'ICON_DELETE'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_app=>db( )->delete(
-      iv_type  = ls_key-type
-      iv_value = ls_key-value ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.  "db_delete
-
-  METHOD db_save.
-
-    DATA: lv_string  TYPE string,
-          ls_content TYPE lcl_persistence_db=>ty_content,
-          lt_fields  TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-type = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-value = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    IF <ls_field>-value(1) <> '<'.
-      ls_content-data_str = <ls_field>-value+1. " hmm
-    ENDIF.
-
-    lcl_app=>db( )->update(
-      iv_type  = ls_content-type
-      iv_value = ls_content-value
-      iv_data  = ls_content-data_str ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.  "db_save
+  ENDMETHOD.  "get_page_background
 
   METHOD repo_detach.
     DATA: lv_answer TYPE c LENGTH 1,
@@ -490,8 +335,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
 *    lo_repo->switch_type( iv_offline = abap_true ).
 *
 *    COMMIT WORK.
-
   ENDMETHOD.  "repo_detach
+
 
   METHOD repo_attach.
     DATA: ls_popup  TYPE lcl_popups=>ty_popup,
