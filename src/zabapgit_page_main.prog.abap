@@ -248,6 +248,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |background?{ lv_key }| ).
+      lo_tb_advanced->add( iv_txt = 'Change remote'
+                           iv_act = |remote_change?{ lv_key }| ).
+      lo_tb_advanced->add( iv_txt = 'Make off-line'
+                           iv_act = |remote_detach?{ lv_key }| ).
+    ELSE.
+      lo_tb_advanced->add( iv_txt = 'Make on-line'
+                           iv_act = |remote_attach?{ lv_key }| ).
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
@@ -257,13 +264,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     " Build main toolbar ==============================
     IF io_repo->is_offline( ) = abap_false. " Online ?
-      lo_tb_advanced->add( iv_txt = 'Change remote'
-                           iv_act = |remote_change?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Make off-line'
-                           iv_act = |remote_detach?{ lv_key }| ).
-    ELSE.
-      lo_tb_advanced->add( iv_txt = 'Make on-line'
-                           iv_act = |remote_attach?{ lv_key }| ).
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
