@@ -148,7 +148,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'New offline repo' iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
     IF lcl_services_abapgit=>needs_installation( ) = abap_true.
       ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
     ENDIF.
@@ -612,19 +612,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lo_repo TYPE REF TO lcl_repo,
           lv_url  TYPE string.
 
 
     CASE iv_action.
-      WHEN c_actions-newoffline.
-        ev_state = gc_event_state-no_more_act.
-        lo_repo  = lcl_popups=>repo_new_offline( ).
-        IF lo_repo IS BOUND.
-          mv_show = lo_repo->get_key( ).
-          lcl_app=>user( )->set_repo_show( mv_show ).
-          ev_state = gc_event_state-re_render.
-        ENDIF.
+      WHEN gc_action-repo_newoffline.
+        lcl_services_repo=>new_offline( ).
+        ev_state = gc_event_state-re_render.
       WHEN c_actions-delete_branch.
         lv_key   = iv_getdata.
         lcl_popups=>delete_branch( lv_key ).

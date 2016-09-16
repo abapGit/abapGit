@@ -20,6 +20,9 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception lcx_cancel.
 
+    CLASS-METHODS new_offline
+      RAISING   lcx_exception lcx_cancel.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -135,5 +138,25 @@ CLASS lcl_services_repo IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.  "purge
+
+  METHOD new_offline.
+
+    DATA: lo_repo  TYPE REF TO lcl_repo,
+          ls_popup TYPE lcl_popups=>ty_popup.
+
+    ls_popup  = lcl_popups=>repo_new_offline( ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lo_repo = lcl_app=>repo_srv( )->new_offline(
+      iv_url     = ls_popup-url
+      iv_package = ls_popup-package ).
+
+    lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
+
+    COMMIT WORK.
+
+  ENDMETHOD.  "new_offline
 
 ENDCLASS. "lcl_services_repo

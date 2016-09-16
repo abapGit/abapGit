@@ -22,7 +22,7 @@ CLASS lcl_popups DEFINITION.
                   ev_cancel TYPE abap_bool
         RAISING   lcx_exception,
       repo_new_offline
-        RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
+        RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception,
       switch_branch
         IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -144,8 +144,6 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD repo_new_offline.
 
     DATA: lv_returncode TYPE c,
-          lv_url        TYPE string,
-          lv_package    TYPE devclass,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -169,24 +167,20 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
+
     IF lv_returncode = 'A'.
+      rs_popup-cancel = abap_true.
       RETURN.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_url = <ls_field>-value.
+    rs_popup-url = <ls_field>-value.
 
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
-    lv_package = <ls_field>-value.
-    TRANSLATE lv_package TO UPPER CASE.
-
-    ro_repo = lcl_app=>repo_srv( )->new_offline(
-      iv_url     = lv_url
-      iv_package = lv_package ).
-
-    COMMIT WORK.
+    rs_popup-package = <ls_field>-value.
+    TRANSLATE rs_popup-package TO UPPER CASE.
 
   ENDMETHOD.                    "repo_new_offline
 
