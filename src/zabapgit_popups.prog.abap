@@ -33,9 +33,11 @@ CLASS lcl_popups DEFINITION.
         RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   lcx_exception,
       repo_popup
-        IMPORTING iv_url          TYPE string
-                  iv_package      TYPE devclass OPTIONAL
-                  iv_branch       TYPE string DEFAULT 'refs/heads/master'
+        IMPORTING iv_url            TYPE string
+                  iv_package        TYPE devclass  OPTIONAL
+                  iv_branch         TYPE string    DEFAULT 'refs/heads/master'
+                  iv_freeze_package TYPE abap_bool OPTIONAL
+                  iv_freeze_url     TYPE abap_bool OPTIONAL
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception ##NO_TEXT,
       popup_to_confirm
@@ -253,27 +255,30 @@ CLASS lcl_popups IMPLEMENTATION.
           lv_icon_ok    TYPE icon-name,
           lv_icon_br    TYPE icon-name,
           lt_fields     TYPE TABLE OF sval,
+          lv_uattr      TYPE spo_fattr,
           lv_pattr      TYPE spo_fattr,
-          lv_battr      TYPE spo_fattr,
           lv_button2    TYPE svalbutton-buttontext,
           lv_icon2      TYPE icon-name.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
+    IF iv_freeze_url = abap_true.
+      lv_uattr = '05'.
+    ENDIF.
 
-    IF NOT iv_package IS INITIAL.
+    IF iv_freeze_package = abap_true.
       lv_pattr = '05'.
-      lv_battr = '03'.
-    ELSE.
-      lv_battr = '05'.
+    ENDIF.
+
+    IF iv_package IS INITIAL. " Empty package -> can be created
       lv_button2 = 'Create package' ##NO_TEXT.
       lv_icon2   = icon_msg.
     ENDIF.
 
 *                   TAB           FLD       LABEL            DEF        ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git Clone Url'  iv_url     lv_pattr.
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target Package' iv_package lv_pattr.
-    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  lv_battr.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git clone URL'  iv_url     lv_uattr.
+    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target package' iv_package lv_pattr.
+    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  '05'.
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.

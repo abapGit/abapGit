@@ -50,14 +50,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS repo_detach
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS repo_attach
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -156,16 +148,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-no_more_act.
 
         " Remote origin manipulations
-      WHEN 'remote_attach'.
-        lv_key   = iv_getdata.
-        repo_attach( lv_key ).
+      WHEN gc_action-repo_remote_attach.
+        lcl_services_repo=>remote_attach( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'remote_detach'.
-        lv_key   = iv_getdata.
-        repo_detach( lv_key ).
+      WHEN gc_action-repo_remote_detach.
+        lcl_services_repo=>remote_detach( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'remote_change'.
-        "TODO
+      WHEN gc_action-repo_remote_change.
+        lcl_services_repo=>remote_change( lv_key ).
         ev_state = gc_event_state-re_render.
 
         " Git actions
@@ -311,50 +301,5 @@ CLASS lcl_gui_router IMPLEMENTATION.
         iv_key = iv_key.
 
   ENDMETHOD.  "get_page_background
-
-  METHOD repo_detach.
-    DATA: lv_answer TYPE c LENGTH 1,
-          lo_repo   TYPE REF TO lcl_repo_online.
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Make repository OFF-line'
-      text_question         = 'This will detach the repo from remote and make it OFF-line'
-      text_button_1         = 'Make OFF-line'
-      icon_button_1         = 'ICON_WF_UNLINK'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-*    lo_repo->switch_type( iv_offline = abap_true ).
-*
-*    COMMIT WORK.
-  ENDMETHOD.  "repo_detach
-
-
-  METHOD repo_attach.
-    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
-          lo_repo   TYPE REF TO lcl_repo_online.
-
-    ls_popup = lcl_popups=>repo_popup( '' ).
-    IF ls_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
-
-*    "!!!! move convertion of repo type to srv
-*    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
-*    lo_repo->switch_type( iv_offline = abap_false ).
-*    lo_repo->set_url( ls_popup-url ).
-*    lo_repo->set_branch_name( ls_popup-branch_name ).
-
-*    COMMIT WORK.
-
-  ENDMETHOD.  "repo_attach
 
 ENDCLASS.           " lcl_gui_router
