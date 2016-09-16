@@ -149,5 +149,8 @@ CONSTANTS: BEGIN OF gc_action,
              git_pull          TYPE string VALUE 'git_pull',
              git_reset         TYPE string VALUE 'git_reset',
              git_branch_create TYPE string VALUE 'git_branch_create',
-
+             db_delete         TYPE string VALUE 'db_delete',
+             db_update         TYPE string VALUE 'db_update',
+             db_display        TYPE string VALUE 'db_display',
+             db_edit           TYPE string VALUE 'db_edit',
            END OF gc_action.

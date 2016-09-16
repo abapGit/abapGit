@@ -50,14 +50,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
-    METHODS db_delete
-      IMPORTING iv_getdata TYPE clike
-      RAISING   lcx_exception.
-
-    METHODS db_save
-      IMPORTING it_postdata TYPE cnht_post_data_tab
-      RAISING   lcx_exception.
-
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -69,6 +61,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_url     TYPE string,
           lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_db      TYPE lcl_persistence_db=>ty_content,
           ls_item    TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
@@ -94,19 +87,28 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN 'diff'.
         ei_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
+      WHEN 'stage'.
+        lv_key   = iv_getdata.
+        ei_page  = get_page_stage( lv_key ).
+        ev_state = gc_event_state-new_page_w_bookmark.
+      WHEN 'branch_overview'.
+        ei_page  = get_page_branch_overview( iv_getdata ).
+        ev_state = gc_event_state-new_page.
 
         " DB actions
-      WHEN 'db_display' OR 'db_edit'.
+      WHEN gc_action-db_display OR gc_action-db_edit.
         ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
         ev_state = gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DISPLAY'.
           ev_state = gc_event_state-new_page_replacing.
         ENDIF.
-      WHEN 'db_delete'.
-        db_delete( iv_getdata = iv_getdata ).
+      WHEN gc_action-db_delete.
+        ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+        lcl_services_db=>delete( ls_db ).
         ev_state = gc_event_state-re_render.
-      WHEN 'db_save'.
-        db_save( it_postdata ).
+      WHEN gc_action-db_update.
+        ls_db = lcl_html_action_utils=>dbcontent_decode( it_postdata ).
+        lcl_services_db=>update( ls_db ).
         ev_state = gc_event_state-go_back.
 
         " Abapgit services actions
@@ -149,19 +151,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-git_pull.
         lcl_services_git=>pull( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'stage'.
-        lv_key   = iv_getdata.
-        ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page_w_bookmark.
       WHEN gc_action-git_reset.
         lcl_services_git=>reset( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN gc_action-git_branch_create.
         lcl_services_git=>create_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'branch_overview'.
-        ei_page  = get_page_branch_overview( iv_getdata ).
-        ev_state = gc_event_state-new_page.
+
+        "Others
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
     ENDCASE.
@@ -283,73 +280,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         io_repo = lo_repo.
 
     ri_page = lo_stage_page.
-
-  ENDMETHOD.
-
-  METHOD db_delete.
-
-    DATA: lv_answer TYPE c LENGTH 1,
-          ls_key    TYPE lcl_persistence_db=>ty_content.
-
-
-    ls_key = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = 'Delete?'
-      text_button_1         = 'Ok'
-      icon_button_1         = 'ICON_DELETE'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_app=>db( )->delete(
-      iv_type  = ls_key-type
-      iv_value = ls_key-value ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.
-
-  METHOD db_save.
-
-    DATA: lv_string  TYPE string,
-          ls_content TYPE lcl_persistence_db=>ty_content,
-          lt_fields  TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'type' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-type = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'value' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    ls_content-value = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'xmldata' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    IF <ls_field>-value(1) <> '<'.
-      ls_content-data_str = <ls_field>-value+1. " hmm
-    ENDIF.
-
-    lcl_app=>db( )->update(
-      iv_type  = ls_content-type
-      iv_value = ls_content-value
-      iv_data  = ls_content-data_str ).
-
-    COMMIT WORK.
 
   ENDMETHOD.
 
