@@ -15,7 +15,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 it_postdata  TYPE cnht_post_data_tab OPTIONAL
       EXPORTING ei_page      TYPE REF TO lif_gui_page
                 ev_state     TYPE i
-      RAISING   lcx_exception.
+      RAISING   lcx_exception lcx_cancel.
 
   PRIVATE SECTION.
 
@@ -43,17 +43,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
       IMPORTING iv_name        TYPE clike
                 iv_getdata     TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
-
-    METHODS abapgit_installation
-      RAISING lcx_exception.
-
-    METHODS repo_purge
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
-
-    METHODS repo_remove
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     METHODS repo_pull
@@ -93,10 +82,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: lv_url  TYPE string,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_item TYPE ty_item.
+    DATA: lv_url     TYPE string,
+          lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_item    TYPE ty_item.
 
+    lv_key = iv_getdata. " TODO refactor
+    lv_url = iv_getdata. " TODO refactor
 
     CASE iv_action.
         " General routing
@@ -112,16 +103,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
           EXPORTING
             iv_key = lv_key.
         ev_state = gc_event_state-new_page.
-      WHEN 'abapgithome'.
-        cl_gui_frontend_services=>execute( EXPORTING document = gc_abapgit_homepage
-                                           EXCEPTIONS OTHERS = 1 ).
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Opening page in external browser failed.' ).
-        ENDIF.
-        ev_state = gc_event_state-no_more_act.
-      WHEN 'abapgit_installation'.
-        abapgit_installation( ).
-        ev_state = gc_event_state-re_render.
       WHEN 'jump'.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                             IMPORTING ev_obj_type = ls_item-obj_type
@@ -147,38 +128,41 @@ CLASS lcl_gui_router IMPLEMENTATION.
         db_save( it_postdata ).
         ev_state = gc_event_state-go_back.
 
-        " Repository state actions
-      WHEN 'uninstall'.
-        lv_key   = iv_getdata.
-        repo_purge( lv_key ).
+        " Abapgit services actions
+      WHEN gc_action-abapgit_home.
+        lcl_services_abapgit=>open_abapgit_homepage( ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN gc_action-abapgit_install.
+        lcl_services_abapgit=>install_abapgit( ).
         ev_state = gc_event_state-re_render.
-      WHEN 'remove'.
-        lv_key   = iv_getdata.
-        repo_remove( lv_key ).
+
+        " Repository services actions
+      WHEN gc_action-repo_refresh.  " Repo refresh
+        lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'zipimport'.
-        lv_key   = iv_getdata.
+      WHEN gc_action-repo_purge.    " Repo remove & purge all objects
+        lcl_services_repo=>purge( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_remove.   " Repo remove
+        lcl_services_repo=>remove( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
+        lcl_services_repo=>clone( lv_url ).
+        ev_state = gc_event_state-re_render.
+
+        " ZIP services actions
+      WHEN gc_action-zip_import.      " Import repo from ZIP
         lcl_zip=>import( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN 'zipexport'.
-        lv_key   = iv_getdata.
+      WHEN gc_action-zip_export.      " Export repo as ZIP
         lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'files_commit'. "TODO refactor name ?
-        lv_key   = iv_getdata.
-        lcl_zip=>export( io_repo = lcl_app=>repo_srv( )->get( lv_key )
-                         iv_zip  = abap_false ).
+      WHEN gc_action-zip_package.     " Export package as ZIP
+        lcl_zip=>export_package( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'packagezip'.
-        lcl_popups=>repo_package_zip( ).
-        ev_state = gc_event_state-no_more_act.
-      WHEN 'transportzip'.
+      WHEN gc_action-zip_transport.   " Export transport as ZIP
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'refresh'.
-        lv_key = iv_getdata.
-        lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-        ev_state = gc_event_state-re_render.
 
         " Remote origin manipulations
       WHEN 'remote_attach'.
@@ -191,12 +175,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN 'remote_change'.
         "TODO
-        ev_state = gc_event_state-re_render.
-
-        " explore page
-      WHEN 'install'.
-        lv_url = iv_getdata.
-        lcl_popups=>repo_clone( lv_url ).
         ev_state = gc_event_state-re_render.
 
         " Repository online actions
@@ -222,6 +200,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN OTHERS.
         ev_state = gc_event_state-not_handled.
     ENDCASE.
+
   ENDMETHOD.        " on_event
 
   METHOD get_page_by_name.
@@ -322,152 +301,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ri_page = lo_page.
 
   ENDMETHOD.  "get_page_diff
-
-  METHOD abapgit_installation.
-
-    CONSTANTS lc_package_abapgit TYPE devclass VALUE '$ABAPGIT'.
-    CONSTANTS lc_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
-
-    DATA lv_text            TYPE c LENGTH 100.
-    DATA lv_answer          TYPE c LENGTH 1.
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_url             TYPE string.
-    DATA lv_target_package  TYPE devclass.
-
-    lv_text = |Installing current version ABAPGit to package { lc_package_abapgit } |
-           && |and plugins to { lc_package_plugins }|.
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Install abapGit'
-      text_question         = lv_text
-      text_button_1         = 'Continue'
-      text_button_2         = 'Cancel'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer <> '1'.
-      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    ENDIF.
-
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          lv_url            = 'https://github.com/larshp/abapGit.git'.
-          lv_target_package = lc_package_abapgit.
-        WHEN 2.
-          lv_url            = 'https://github.com/larshp/abapGit-plugins.git' ##no_text.
-          lv_target_package = lc_package_plugins.
-      ENDCASE.
-
-      IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
-          iv_url              = lv_url
-          iv_target_package   = lv_target_package ).
-
-        lcl_sap_package=>create_local( lv_target_package ).
-
-        lo_repo = lcl_app=>repo_srv( )->new_online(
-          iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master' "TODO replace with HEAD ?
-          iv_package     = lv_target_package ) ##NO_TEXT.
-
-        lo_repo->status( ). " check for errors
-        lo_repo->deserialize( ).
-      ENDIF.
-    ENDDO.
-
-    COMMIT WORK.
-
-  ENDMETHOD. "abapgit_installation
-
-  METHOD repo_purge.
-
-    DATA: lt_tadir    TYPE ty_tadir_tt,
-          lv_count    TYPE c LENGTH 3,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
-
-
-    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
-
-    IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    lv_package = lo_repo->get_package( ).
-    lt_tadir   = lcl_tadir=>read( lv_package ).
-
-    IF lines( lt_tadir ) > 0.
-      lv_count = lines( lt_tadir ).
-      SHIFT lv_count LEFT DELETING LEADING space.
-
-      lv_question = |This will DELETE all objects in package { lv_package }|
-                 && | ({ lv_count } objects) from the system.|. "#EC NOTEXT
-
-      lv_answer = lcl_popups=>popup_to_confirm(
-        titlebar              = 'Uninstall'
-        text_question         = lv_question
-        text_button_1         = 'Delete'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      ).  "#EC NOTEXT
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-
-      lcl_objects=>delete( lt_tadir ).
-
-    ENDIF.
-
-    lcl_app=>repo_srv( )->delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_purge
-
-  METHOD repo_remove.
-
-    DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 200.
-
-
-    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
-    lv_package = lo_repo->get_package( ).
-
-    CONCATENATE 'This will remove the repository reference to the package'
-      lv_package
-      '. All objects will safely remain in the system.'
-      INTO lv_question
-      SEPARATED BY space.                                   "#EC NOTEXT
-
-    lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Remove'
-      text_question         = lv_question
-      text_button_1         = 'Remove'
-      icon_button_1         = 'ICON_WF_UNLINK'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
-
-    IF lv_answer = '2'.
-      RETURN.
-    ENDIF.
-
-    lcl_app=>repo_srv( )->delete( lo_repo ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_remove
 
   METHOD reset.
 

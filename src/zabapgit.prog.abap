@@ -56,8 +56,8 @@ INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
 INCLUDE zabapgit_file_status.
-INCLUDE zabapgit_zip.
 INCLUDE zabapgit_popups.
+INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 
 INCLUDE zabapgit_object_serializing. " All serializing classes here
@@ -66,6 +66,7 @@ INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
 
+INCLUDE zabapgit_services. " All services here
 INCLUDE zabapgit_gui_pages. " All GUI pages here
 INCLUDE zabapgit_gui_router.
 INCLUDE zabapgit_gui.

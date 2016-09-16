@@ -21,18 +21,21 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                  show          TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
+    CONSTANTS: c_default_sortkey TYPE i VALUE 9999.
+
     TYPES: BEGIN OF ty_repo_item,
              obj_type TYPE tadir-object,
              obj_name TYPE tadir-obj_name,
              is_first TYPE abap_bool,
              files    TYPE tt_repo_files,
+             sortkey  TYPE i,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
     DATA: mv_show TYPE lcl_persistence_db=>ty_value.
 
     METHODS:
-      check_show
+      retrieve_active_repo
         RAISING lcx_exception,
       styles
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
@@ -74,9 +77,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(rv_html) TYPE string,
       render_explore
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      needs_installation
-        RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -86,17 +87,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_show = lcl_app=>user( )->get_repo_show( ).
-
-    check_show( ).
-
   ENDMETHOD.
 
-  METHOD check_show.
+  METHOD retrieve_active_repo.
 
     DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
           lo_repo  LIKE LINE OF lt_repos.
-
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -104,24 +100,25 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    IF mv_show IS INITIAL.
-      READ TABLE lt_repos INTO lo_repo INDEX 1.
-      IF sy-subrc = 0.
-        mv_show = lo_repo->get_key( ).
-      ENDIF.
-    ELSE.
-      TRY.
-* verify the key exists
+    mv_show = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+
+    IF mv_show IS NOT INITIAL.
+      TRY. " verify the key exists
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
-          READ TABLE lt_repos INTO lo_repo INDEX 1.
-          IF sy-subrc = 0.
-            mv_show = lo_repo->get_key( ).
-          ENDIF.
+          clear mv_show.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
+    IF mv_show IS INITIAL. " Fall back to first available repo
+      READ TABLE lt_repos INTO lo_repo INDEX 1.
+      IF sy-subrc = 0.
+        mv_show = lo_repo->get_key( ).
+        lcl_app=>user( )->set_repo_show( mv_show ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.  "retrieve_active_repo
 
   METHOD render_obj_jump_link.
 
@@ -146,14 +143,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_betasub.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = c_actions-install ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
-    IF needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
+    IF lcl_services_abapgit=>needs_installation( ) = abap_true.
+      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
     ENDIF.
     ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
 
@@ -196,6 +193,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '  padding-right: 1em;'.
     _add '}'.
     _add '.repo_tab tr.unsupported { color: lightgrey; }'.
+    _add '.repo_tab tr.modified    { background: #fbf7e9; }'.
     _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
     _add '.repo_tab td.files span  { display: block; }'.
     _add '.repo_tab td.cmd span    { display: block; }'.
@@ -206,11 +204,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_repo_menu.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
+          lo_tb_advanced TYPE REF TO lcl_html_toolbar,
+          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
           lv_pull_opt    LIKE gc_html_opt-crossout,
-          lo_tb_advanced TYPE REF TO lcl_html_toolbar,
-          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
     CREATE OBJECT ro_html.
@@ -250,24 +248,22 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |background?{ lv_key }| ).
+    ENDIF.
+    lo_tb_advanced->add( iv_txt = 'Remove'
+                         iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
+    lo_tb_advanced->add( iv_txt = 'Uninstall'
+                         iv_act = |{ gc_action-repo_purge }?{ lv_key }|
+                         iv_opt = lv_wp_opt ).
+
+    " Build main toolbar ==============================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Change remote'
                            iv_act = |remote_change?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
                            iv_act = |remote_detach?{ lv_key }| ).
     ELSE.
-      lo_tb_advanced->add( iv_txt = 'Export &amp; Commit'
-                           iv_act = |files_commit?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |remote_attach?{ lv_key }| ).
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Remove'
-                         iv_act = |remove?{ lv_key }| ).
-    lo_tb_advanced->add( iv_txt = 'Uninstall'
-                         iv_act = |uninstall?{ lv_key }|
-                         iv_opt = lv_wp_opt ).
-
-    " Build main toolbar ==============================
-    IF io_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
@@ -279,25 +275,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                              iv_opt = gc_html_opt-emphas ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
-* authorization error or repository does not exist
-* ignore error
+          " authorization error or repository does not exist
+          " ignore error
       ENDTRY.
       lo_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
     ELSE.
       lo_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |zipimport?{ lv_key }|
+                       iv_act = |{ gc_action-zip_import }?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
       lo_toolbar->add( iv_txt = 'Export ZIP'
-                       iv_act = |zipexport?{ lv_key }|
+                       iv_act = |{ gc_action-zip_export }?{ lv_key }|
                        iv_opt = gc_html_opt-emphas ).
     ENDIF.
 
     lo_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
     lo_toolbar->add( iv_txt = 'Refresh'
-                     iv_act = |refresh?{ lv_key }| ).
+                     iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
+    " Render ==========================================
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
@@ -359,12 +356,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
           lt_tadir       TYPE ty_tadir_tt,
-          ls_repo_item   TYPE ty_repo_item,
           ls_file        TYPE ty_repo_file,
           lt_results     TYPE ty_results_tt.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
-                   <ls_tadir>  LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_result>    LIKE LINE OF lt_results,
+                   <ls_repo_item> LIKE LINE OF et_repo_items,
+                   <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
     CLEAR et_repo_items.
@@ -372,13 +369,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_true.
       lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        CLEAR ls_repo_item.
+        APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
         IF sy-tabix = 1.
-          ls_repo_item-is_first = abap_true.
+          <ls_repo_item>-is_first = abap_true.
         ENDIF.
-        ls_repo_item-obj_type = <ls_tadir>-object.
-        ls_repo_item-obj_name = <ls_tadir>-obj_name.
-        APPEND ls_repo_item TO et_repo_items.
+        <ls_repo_item>-obj_type = <ls_tadir>-object.
+        <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
       ENDLOOP.
 
     ELSE.
@@ -387,12 +383,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lt_results      = lo_repo_online->status( eo_log ).
       LOOP AT lt_results ASSIGNING <ls_result>.
         AT NEW obj_name. "obj_type + obj_name
-          CLEAR ls_repo_item.
-          IF sy-tabix = 1.
-            ls_repo_item-is_first = abap_true.
-          ENDIF.
-          ls_repo_item-obj_type = <ls_result>-obj_type.
-          ls_repo_item-obj_name = <ls_result>-obj_name.
+          APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
+          <ls_repo_item>-obj_type = <ls_result>-obj_type.
+          <ls_repo_item>-obj_name = <ls_result>-obj_name.
+          <ls_repo_item>-sortkey  = c_default_sortkey. " Default sort key
         ENDAT.
 
         IF <ls_result>-filename IS NOT INITIAL.
@@ -400,14 +394,29 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_file-filename    = <ls_result>-filename.
           ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
           ls_file-remote_only = <ls_result>-remote_only.
-          APPEND ls_file TO ls_repo_item-files.
+          APPEND ls_file TO <ls_repo_item>-files.
+
+          IF ls_file-is_changed = abap_true.
+            <ls_repo_item>-sortkey = 2. " Changed files
+          ENDIF.
         ENDIF.
 
         AT END OF obj_name. "obj_type + obj_name
-          APPEND ls_repo_item TO et_repo_items.
+          IF <ls_repo_item>-obj_type IS INITIAL.
+            <ls_repo_item>-sortkey = 0. "Virtual objects
+          ELSEIF lines( <ls_repo_item>-files ) = 0.
+            <ls_repo_item>-sortkey = 1. "New object to commit
+          ENDIF.
         ENDAT.
       ENDLOOP.
+
+      SORT et_repo_items BY sortkey obj_type obj_name ASCENDING.
+      READ TABLE et_repo_items ASSIGNING <ls_repo_item> INDEX 1.
+      IF sy-subrc IS INITIAL.
+        <ls_repo_item>-is_first = abap_true.
+      ENDIF.
     ENDIF.
+
 
   ENDMETHOD.
 
@@ -426,6 +435,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
     IF is_item-obj_name IS INITIAL.
       lv_trclass = lv_trclass && ' unsupported' ##NO_TEXT.
+    ENDIF.
+    IF is_item-sortkey > 0 AND is_item-sortkey < c_default_sortkey.
+      lv_trclass = lv_trclass && ' modified' ##NO_TEXT.
     ENDIF.
     IF lv_trclass IS NOT INITIAL.
       SHIFT lv_trclass LEFT DELETING LEADING space.
@@ -489,23 +501,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.
-
-  METHOD needs_installation.
-
-    CONSTANTS:
-      lc_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
-      lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
-
-    TRY.
-        IF lcl_app=>repo_srv( )->is_repo_installed( lc_abapgit ) = abap_false
-            OR lcl_app=>repo_srv( )->is_repo_installed( lc_plugins ) = abap_false.
-          rv_not_completely_installed = abap_true.
-        ENDIF.
-      CATCH lcx_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_not_completely_installed = abap_false.
-    ENDTRY.
-  ENDMETHOD.                    "needs_installation
 
   METHOD render_toc.
 
@@ -644,15 +639,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lv_key   = iv_getdata.
         lcl_popups=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-install.
-        lv_url = iv_getdata.
-        lo_repo = lcl_popups=>repo_clone( lv_url ).
-        IF lo_repo IS BOUND.
-* cancel not pressed
-          mv_show = lo_repo->get_key( ).
-          lcl_app=>user( )->set_repo_show( mv_show ).
-        ENDIF.
-        ev_state = gc_event_state-re_render.
       WHEN c_actions-show.
         mv_show = iv_getdata.
         lcl_app=>user( )->set_repo_show( mv_show ).
@@ -667,6 +653,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error TYPE REF TO lcx_exception,
           lo_repo  LIKE LINE OF lt_repos.
 
+    retrieve_active_repo( ). " Get and validate key of user default repo
 
     CREATE OBJECT ro_html.
 
@@ -685,7 +672,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
-      check_show( ).
       lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.

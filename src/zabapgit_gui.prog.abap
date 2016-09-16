@@ -125,6 +125,8 @@ CLASS lcl_gui IMPLEMENTATION.
       CATCH lcx_exception INTO lx_exception.
         ROLLBACK WORK.
         MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
+      CATCH lcx_cancel ##NO_HANDLER.
+        " Do nothing = gc_event_state-no_more_act
     ENDTRY.
 
   ENDMETHOD.                    "on_event

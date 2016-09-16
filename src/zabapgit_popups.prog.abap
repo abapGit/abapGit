@@ -14,7 +14,8 @@ CLASS lcl_popups DEFINITION.
            END OF ty_popup.
 
     CLASS-METHODS:
-      repo_package_zip
+      popup_package_export
+        RETURNING VALUE(rv_package) TYPE devclass
         RAISING lcx_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
@@ -39,17 +40,13 @@ CLASS lcl_popups DEFINITION.
                   iv_branch       TYPE string DEFAULT 'refs/heads/master'
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception ##NO_TEXT,
-      repo_clone
-        IMPORTING iv_url         TYPE string
-        RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
-        RAISING   lcx_exception,
       popup_to_confirm
         IMPORTING
           titlebar              TYPE clike
           text_question         TYPE clike
-          text_button_1         TYPE clike OPTIONAL
+          text_button_1         TYPE clike     DEFAULT 'Yes'
           icon_button_1         TYPE ICON-NAME DEFAULT space
-          text_button_2         TYPE clike OPTIONAL
+          text_button_2         TYPE clike     DEFAULT 'No'
           icon_button_2         TYPE ICON-NAME DEFAULT space
           default_button        TYPE char1 DEFAULT '1'
           display_cancel_button TYPE char1 DEFAULT abap_true
@@ -70,11 +67,9 @@ CLASS lcl_popups IMPLEMENTATION.
   END-OF-DEFINITION.
 
 
-  METHOD repo_package_zip.
+  METHOD popup_package_export.
 
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lv_returncode TYPE c,
+    DATA: lv_returncode TYPE c,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
@@ -85,7 +80,7 @@ CLASS lcl_popups IMPLEMENTATION.
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
         no_value_check  = abap_true
-        popup_title     = 'Export'             "#EC NOTEXT
+        popup_title     = 'Export package'             "#EC NOTEXT
       IMPORTING
         returncode      = lv_returncode
       TABLES
@@ -96,6 +91,7 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
+
     IF lv_returncode = 'A'.
       RETURN.
     ENDIF.
@@ -104,17 +100,9 @@ CLASS lcl_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     TRANSLATE <ls_field>-value TO UPPER CASE.
 
-    ls_data-key             = 'DUMMY'.
-    ls_data-package         = <ls_field>-value.
-    ls_data-master_language = sy-langu.
+    rv_package = <ls_field>-value.
 
-    CREATE OBJECT lo_repo
-      EXPORTING
-        is_data = ls_data.
-
-    lcl_zip=>export( lo_repo ).
-
-  ENDMETHOD.                    "repo_package_zip
+  ENDMETHOD.                    "popup_package_export
 
   METHOD create_branch_popup.
 
@@ -124,8 +112,7 @@ CLASS lcl_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    CLEAR ev_name.
-    CLEAR ev_cancel.
+    CLEAR: ev_name, ev_cancel.
 
 *                   TAB     FLD   LABEL   DEF                       ATTR
     _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new_branch_name'         ''.
@@ -382,27 +369,6 @@ CLASS lcl_popups IMPLEMENTATION.
     rs_popup-branch_name = <ls_field>-value.
 
   ENDMETHOD.
-
-  METHOD repo_clone.
-
-    DATA: ls_popup TYPE ty_popup.
-
-
-    ls_popup = repo_popup( iv_url ).
-    IF ls_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
-
-    ro_repo = lcl_app=>repo_srv( )->new_online(
-      iv_url         = ls_popup-url
-      iv_branch_name = ls_popup-branch_name
-      iv_package     = ls_popup-package ).
-    ro_repo->status( ). " check for errors
-    ro_repo->deserialize( ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "repo_clone
 
   METHOD popup_to_confirm.
 
