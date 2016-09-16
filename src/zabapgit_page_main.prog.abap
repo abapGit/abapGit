@@ -237,7 +237,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                          iv_act = |{ c_actions-switch_branch }?{ lv_key }|
                          iv_opt = lv_wp_opt ).
       lo_tb_branch->add( iv_txt = 'Create'
-                         iv_act = |create_branch?{ lv_key }| ).
+                         iv_act = |{ gc_action-git_branch_create }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Delete'
                          iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
     ENDIF.
@@ -245,7 +245,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     " Build advanced drop-down ========================
     IF io_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Reset local'
-                           iv_act = |reset?{ lv_key }|
+                           iv_act = |{ gc_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |background?{ lv_key }| ).
@@ -260,7 +260,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
-            lo_toolbar->add( iv_txt = 'Pull'
+            lo_toolbar->add( iv_txt = gc_action-git_pull
                              iv_act = |pull?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
