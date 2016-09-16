@@ -13,6 +13,8 @@ CLASS lcl_popups DEFINITION.
              cancel      TYPE abap_bool,
            END OF ty_popup.
 
+    CONSTANTS c_new_branch_label TYPE string VALUE 'Create NEW ...'.
+
     CLASS-METHODS:
       popup_package_export
         RETURNING VALUE(rv_package) TYPE devclass
@@ -25,9 +27,10 @@ CLASS lcl_popups DEFINITION.
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception,
       branch_list_popup
-        IMPORTING iv_url            TYPE string
-                  iv_default_branch TYPE string OPTIONAL
-        RETURNING VALUE(rs_branch)  TYPE lcl_git_branch_list=>ty_git_branch
+        IMPORTING iv_url             TYPE string
+                  iv_default_branch  TYPE string OPTIONAL
+                  iv_show_new_option TYPE abap_bool OPTIONAL
+        RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   lcx_exception,
       repo_popup
         IMPORTING iv_url          TYPE string
@@ -203,6 +206,11 @@ CLASS lcl_popups IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    IF iv_show_new_option = abap_true.
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
+      <ls_sel>-varoption = c_new_branch_label.
+    ENDIF.
+
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
         textline1          = 'Select branch'
@@ -230,7 +238,12 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
+    IF iv_show_new_option = abap_true AND <ls_sel>-varoption = c_new_branch_label.
+      rs_branch-name = c_new_branch_label.
+    ELSE.
+      rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
+    ENDIF.
+
 
   ENDMETHOD.
 

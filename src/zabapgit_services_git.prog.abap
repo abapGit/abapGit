@@ -116,10 +116,16 @@ CLASS lcl_services_git IMPLEMENTATION.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     ls_branch = lcl_popups=>branch_list_popup(
-      iv_url            = lo_repo->get_url( )
-      iv_default_branch = lo_repo->get_branch_name( ) ).
+      iv_url             = lo_repo->get_url( )
+      iv_default_branch  = lo_repo->get_branch_name( )
+      iv_show_new_option = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    IF ls_branch-name = lcl_popups=>c_new_branch_label.
+      create_branch( iv_key ).
+      RETURN.
     ENDIF.
 
     lo_repo->set_branch_name( ls_branch-name ).
