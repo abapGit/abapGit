@@ -78,10 +78,11 @@ CLASS lcl_object_msag IMPLEMENTATION.
   METHOD lif_object~deserialize.
 * fm RPY_MESSAGE_ID_INSERT almost works, but not in older versions
 
-    DATA: ls_t100a TYPE t100a,
-          ls_t100t TYPE t100t,
-          ls_t100u TYPE t100u,
-          lt_t100  TYPE TABLE OF t100.
+    DATA: ls_t100a  TYPE t100a,
+          ls_t100t  TYPE t100t,
+          ls_t100u  TYPE t100u,
+          lt_t100   TYPE TABLE OF t100,
+          lt_before TYPE TABLE OF t100u.
 
     FIELD-SYMBOLS: <ls_t100> LIKE LINE OF lt_t100.
 
@@ -106,7 +107,11 @@ CLASS lcl_object_msag IMPLEMENTATION.
       lcx_exception=>raise( 'Error from RS_CORR_INSERT' ).
     ENDIF.
 
+    SELECT * FROM t100u INTO TABLE lt_before WHERE arbgb = ls_t100a-arbgb.
+
     LOOP AT lt_t100 ASSIGNING <ls_t100>.
+      DELETE lt_before WHERE msgnr = <ls_t100>-msgnr.
+
       MODIFY t100 FROM <ls_t100>.                         "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
 
@@ -132,6 +137,11 @@ CLASS lcl_object_msag IMPLEMENTATION.
     ls_t100t-stext = ls_t100a-stext.
     MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
+
+    LOOP AT lt_before INTO ls_t100u.
+      DELETE FROM t100 WHERE arbgb = ls_t100u-arbgb AND msgnr = ls_t100u-msgnr.
+      DELETE FROM t100u WHERE arbgb = ls_t100u-arbgb AND msgnr = ls_t100u-msgnr.
+    ENDLOOP.
 
   ENDMETHOD.                    "deserialize
 
