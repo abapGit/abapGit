@@ -707,15 +707,12 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         iv_branch_name = ''
         iv_sha1        = ''
         iv_head_branch = ''
-        iv_offline     = abap_true
-      ).
+        iv_offline     = abap_true ).
       CREATE OBJECT <repo> TYPE lcl_repo_offline
         EXPORTING
           is_data = lo_repo->ms_data.
     ELSE. " OFFline -> On-line
-      lo_repo->set(
-        iv_offline     = abap_false
-      ).
+      lo_repo->set( iv_offline     = abap_false ).
       CREATE OBJECT <repo> TYPE lcl_repo_online
         EXPORTING
           is_data = lo_repo->ms_data.
