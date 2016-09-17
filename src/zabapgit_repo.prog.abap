@@ -5,7 +5,7 @@
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_repo DEFINITION ABSTRACT.
+CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
 
   PUBLIC SECTION.
     METHODS:
@@ -62,6 +62,7 @@ CLASS lcl_repo DEFINITION ABSTRACT.
                   iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
                   iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
+                  iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
@@ -91,6 +92,10 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   lcx_exception,
       set_branch_name
         IMPORTING iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
+        RAISING   lcx_exception,
+      set_new_remote
+        IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+                  iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
         RAISING   lcx_exception,
       get_sha1_local
         RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
@@ -184,6 +189,11 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING iv_url              TYPE string
                 iv_target_package   TYPE devclass OPTIONAL
       RETURNING VALUE(rv_installed) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS switch_repo_type
+      IMPORTING iv_key     TYPE lcl_persistence_db=>ty_value
+                iv_offline TYPE abap_bool
       RAISING   lcx_exception.
 
   PRIVATE SECTION.

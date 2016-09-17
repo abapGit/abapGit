@@ -23,6 +23,18 @@ CLASS lcl_services_repo DEFINITION FINAL.
     CLASS-METHODS new_offline
       RAISING   lcx_exception lcx_cancel.
 
+    CLASS-METHODS remote_attach
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
+    CLASS-METHODS remote_detach
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
+    CLASS-METHODS remote_change
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -158,5 +170,79 @@ CLASS lcl_services_repo IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.  "new_offline
+
+  METHOD remote_detach.
+
+    DATA: lv_answer TYPE c LENGTH 1.
+
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Make repository OFF-line'
+      text_question         = 'This will detach the repo from remote and make it OFF-line'
+      text_button_1         = 'Make OFF-line'
+      icon_button_1         = 'ICON_WF_UNLINK'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false
+    ).  "#EC NOTEXT
+
+    IF lv_answer = '2'.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lcl_app=>repo_srv( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_true ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.  "remote_detach
+
+
+  METHOD remote_attach.
+
+    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
+          lo_repo   TYPE REF TO lcl_repo_online.
+
+    ls_popup = lcl_popups=>repo_popup(
+      iv_title          = 'Attach repo to remote ...'
+      iv_url            = ''
+      iv_package        = lcl_app=>repo_srv( )->get( iv_key )->get_package( )
+      iv_freeze_package = abap_true ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lcl_app=>repo_srv( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_false ).
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo->set_url( ls_popup-url ).
+    lo_repo->set_branch_name( ls_popup-branch_name ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.  "remote_attach
+
+  METHOD remote_change.
+
+    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
+          lo_repo   TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_popup = lcl_popups=>repo_popup(
+      iv_title          = 'Change repo remote ...'
+      iv_url            = lo_repo->get_url( )
+      iv_package        = lo_repo->get_package( )
+      iv_freeze_package = abap_true ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo->set_new_remote( iv_url         = ls_popup-url
+                             iv_branch_name = ls_popup-branch_name ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.  "remote_change
 
 ENDCLASS. "lcl_services_repo

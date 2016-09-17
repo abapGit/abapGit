@@ -207,7 +207,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_pull_opt    LIKE gc_html_opt-crossout,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
-
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
     CREATE OBJECT lo_tb_branch.
@@ -245,6 +244,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |background?{ lv_key }| ).
+      lo_tb_advanced->add( iv_txt = 'Change remote'
+                           iv_act = |{ gc_action-repo_remote_change }?{ lv_key }| ).
+      lo_tb_advanced->add( iv_txt = 'Make off-line'
+                           iv_act = |{ gc_action-repo_remote_detach }?{ lv_key }| ).
+    ELSE.
+      lo_tb_advanced->add( iv_txt = 'Make on-line'
+                           iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).

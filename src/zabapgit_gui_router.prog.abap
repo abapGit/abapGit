@@ -147,6 +147,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
 
+        " Remote origin manipulations
+      WHEN gc_action-repo_remote_attach.
+        lcl_services_repo=>remote_attach( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_remote_detach.
+        lcl_services_repo=>remote_detach( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_remote_change.
+        lcl_services_repo=>remote_change( lv_key ).
+        ev_state = gc_event_state-re_render.
+
         " Git actions
       WHEN gc_action-git_pull.
         lcl_services_git=>pull( lv_key ).
@@ -219,7 +230,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_branch_overview
 
   METHOD get_page_diff.
 
@@ -262,7 +273,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_diff
 
   METHOD get_page_stage.
 
@@ -281,7 +292,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     ri_page = lo_stage_page.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_page_stage
 
   METHOD get_page_background.
 

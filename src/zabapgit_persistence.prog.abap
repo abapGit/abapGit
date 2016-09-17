@@ -146,6 +146,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
                 iv_head_branch TYPE ty_repo_xml-head_branch
       RAISING   lcx_exception.
 
+    METHODS update_offline
+      IMPORTING iv_key         TYPE ty_repo-key
+                iv_offline     TYPE ty_repo_xml-offline
+      RAISING   lcx_exception.
+
     METHODS add
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
@@ -815,10 +820,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_repo    TYPE ty_repo.
 
 
-    IF iv_branch_name IS INITIAL.
-      lcx_exception=>raise( 'update, branch name empty' ).
-    ENDIF.
-
     ASSERT NOT iv_key IS INITIAL.
 
     TRY.
@@ -843,10 +844,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_repo    TYPE ty_repo.
 
 
-    IF iv_head_branch IS INITIAL.
-      lcx_exception=>raise( 'update, head branch empty' ).
-    ENDIF.
-
     ASSERT NOT iv_key IS INITIAL.
 
     TRY.
@@ -864,16 +861,35 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.  "update_head_branch
 
+  METHOD update_offline.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        lcx_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-offline = iv_offline.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.  "update_offline
+
   METHOD update_sha1.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
-
-    IF iv_branch_sha1 IS INITIAL.
-      lcx_exception=>raise( 'update, sha empty' ).
-    ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
 

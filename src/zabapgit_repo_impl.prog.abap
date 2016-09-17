@@ -135,6 +135,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD set_url.
 
+    IF ms_data-write_protect = abap_true.
+      lcx_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
+    ENDIF.
+
     mv_initialized = abap_false.
     set( iv_url = iv_url ).
 
@@ -150,6 +154,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
     set( iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
+
+  METHOD set_new_remote.
+
+    IF ms_data-write_protect = abap_true.
+      lcx_exception=>raise( 'Cannot change remote. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    mv_initialized = abap_false.
+    set( iv_url         = iv_url
+         iv_branch_name = iv_branch_name
+         iv_head_branch = ''
+         iv_sha1        = '' ).
+
+  ENDMETHOD.  "set_new_remote
 
   METHOD get_sha1_local.
     rv_sha1 = ms_data-sha1.
@@ -252,7 +270,8 @@ CLASS lcl_repo IMPLEMENTATION.
       OR it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
-      OR iv_head_branch IS SUPPLIED.
+      OR iv_head_branch IS SUPPLIED
+      OR iv_offline IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
@@ -289,6 +308,13 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_key         = ms_data-key
         iv_head_branch = iv_head_branch ).
       ms_data-head_branch = iv_head_branch.
+    ENDIF.
+
+    IF iv_offline IS SUPPLIED.
+      lo_persistence->update_offline(
+        iv_key     = ms_data-key
+        iv_offline = iv_offline ).
+      ms_data-offline = iv_offline.
     ENDIF.
 
   ENDMETHOD.                    "set_sha1
@@ -529,7 +555,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     lv_key = mo_persistence->add(
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
-      iv_package     = iv_package ).
+      iv_package     = iv_package
+      iv_offline     = abap_false ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
@@ -662,5 +689,38 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD. "is_repo_installed
+
+  METHOD switch_repo_type.
+
+    DATA lo_repo TYPE REF TO lcl_repo.
+
+    FIELD-SYMBOLS <repo> LIKE LINE OF mt_list.
+
+    lo_repo = get( iv_key ).
+    READ TABLE mt_list ASSIGNING <repo> FROM lo_repo.
+    ASSERT sy-subrc IS INITIAL.
+    ASSERT iv_offline <> lo_repo->ms_data-offline.
+
+    IF iv_offline = abap_true. " On-line -> OFFline
+      lo_repo->set(
+        iv_url         = lcl_url=>name( lo_repo->ms_data-url )
+        iv_branch_name = ''
+        iv_sha1        = ''
+        iv_head_branch = ''
+        iv_offline     = abap_true
+      ).
+      CREATE OBJECT <repo> TYPE lcl_repo_offline
+        EXPORTING
+          is_data = lo_repo->ms_data.
+    ELSE. " OFFline -> On-line
+      lo_repo->set(
+        iv_offline     = abap_false
+      ).
+      CREATE OBJECT <repo> TYPE lcl_repo_online
+        EXPORTING
+          is_data = lo_repo->ms_data.
+    ENDIF.
+
+  ENDMETHOD.  "switch_repo_type
 
 ENDCLASS.                    "lcl_repo_srv IMPLEMENTATION
