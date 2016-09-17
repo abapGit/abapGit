@@ -36,9 +36,10 @@ TYPES: BEGIN OF ty_file_item,
 TYPES: ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_metadata,
-         class      TYPE string,
-         version    TYPE string,
-         late_deser TYPE string,
+         class        TYPE string,
+         version      TYPE string,
+         late_deser   TYPE string,
+         delete_tadir TYPE abap_bool,
        END OF ty_metadata.
 
 TYPES: BEGIN OF ty_web_asset,
