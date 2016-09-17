@@ -160,6 +160,7 @@ CONSTANTS: BEGIN OF gc_action,
              db_update          TYPE string VALUE 'db_update',
              db_display         TYPE string VALUE 'db_display',
              db_edit            TYPE string VALUE 'db_edit',
+             bg_update          TYPE string VALUE 'bg_update',
 
              go_main            TYPE string VALUE 'go_main',
              go_explore         TYPE string VALUE 'go_explore',
