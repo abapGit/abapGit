@@ -286,7 +286,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lo_toolbar->add( iv_txt = 'Run background logic'
-                     iv_act = 'background_run' ) ##NO_TEXT.
+                     iv_act = gc_action-go_background_run ) ##NO_TEXT.
 
     ro_html->add( header( ) ).
     ro_html->add( title( iv_title = 'BACKGROUND' io_menu = lo_toolbar ) ).

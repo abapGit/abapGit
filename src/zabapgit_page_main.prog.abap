@@ -125,7 +125,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                                                     iv_obj_name = iv_obj_name ).
 
     CREATE OBJECT lo_html.
-    lo_html->add_anchor( iv_txt = |{ iv_obj_name }| iv_act = |jump?{ lv_encode }| ).
+    lo_html->add_anchor( iv_txt = |{ iv_obj_name }| iv_act = |{ gc_action-jump }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
   ENDMETHOD.
@@ -138,12 +138,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_menu.
     CREATE OBJECT lo_betasub.
 
-    lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Database util'    iv_act = gc_action-go_db ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'          iv_act = gc_action-go_explore ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'New offline repo' iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
     IF lcl_services_abapgit=>needs_installation( ) = abap_true.
       ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
@@ -227,7 +227,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     " Build branch drop-down ========================
     IF io_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_branch->add( iv_txt = 'Overview'
-                         iv_act = |branch_overview?{ lv_key }| ).
+                         iv_act = |{ gc_action-go_branch_overview }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Switch'
                          iv_act = |{ gc_action-git_branch_switch }?{ lv_key }|
                          iv_opt = lv_wp_opt ).
@@ -243,7 +243,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                            iv_act = |{ gc_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
-                           iv_act = |background?{ lv_key }| ).
+                           iv_act = |{ gc_action-go_background }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Change remote'
                            iv_act = |{ gc_action-repo_remote_change }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
@@ -267,7 +267,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                              iv_opt = lv_pull_opt ).
           ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
             lo_toolbar->add( iv_txt = 'Stage'
-                             iv_act = |stage?{ lv_key }|
+                             iv_act = |{ gc_action-go_stage }?{ lv_key }|
                              iv_opt = gc_html_opt-emphas ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
@@ -484,7 +484,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
               ig_file = ls_file ).
             ro_html->add_anchor(
               iv_txt = 'diff'
-              iv_act = |diff?{ lv_difflink }| ).
+              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
           ELSE.
             ro_html->add( |<span>&nbsp;</span>| ).
           ENDIF.
@@ -603,7 +603,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
 
     lo_toolbar->add( iv_txt = 'Explore new projects'
-                     iv_act = 'explore' ) ##NO_TEXT.
+                     iv_act = gc_action-go_explore ) ##NO_TEXT.
 
     ro_html->add( '<div class="dummydiv">' ).
     ro_html->add( lo_toolbar->render( ) ).
