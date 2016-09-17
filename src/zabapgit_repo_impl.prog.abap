@@ -192,6 +192,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     refresh( ).
     set( it_checksums = build_local_checksums( ) ).
 
+    IF lcl_stage_logic=>count( me ) = 0.
+      set( iv_sha1 = lv_branch ).
+    ENDIF.
+
   ENDMETHOD.                    "push
 
   METHOD handle_stage_ignore.
@@ -394,6 +398,8 @@ CLASS lcl_repo IMPLEMENTATION.
     <ls_return>-file-path     = gc_root_dir.
     <ls_return>-file-filename = gc_dot_abapgit.
     <ls_return>-file-data     = mo_dot_abapgit->serialize( ).
+    <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = gc_type-blob
+                                                iv_data = <ls_return>-file-data ).
 
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -411,6 +417,7 @@ CLASS lcl_repo IMPLEMENTATION.
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
+        <ls_file>-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.

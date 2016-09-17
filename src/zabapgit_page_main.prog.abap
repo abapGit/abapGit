@@ -265,7 +265,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
             lo_toolbar->add( iv_txt = 'Pull'
                              iv_act = |{ gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
-          ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
+          ENDIF.
+          IF lcl_stage_logic=>count( lo_repo_online ) > 0.
             lo_toolbar->add( iv_txt = 'Stage'
                              iv_act = |stage?{ lv_key }|
                              iv_opt = gc_html_opt-emphas ).

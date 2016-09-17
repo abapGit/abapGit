@@ -12,6 +12,7 @@ TYPES: BEGIN OF ty_file,
          path     TYPE string,
          filename TYPE string,
          data     TYPE xstring,
+         sha1     TYPE ty_sha1,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
