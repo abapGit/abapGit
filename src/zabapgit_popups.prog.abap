@@ -38,6 +38,7 @@ CLASS lcl_popups DEFINITION.
                   iv_branch         TYPE string    DEFAULT 'refs/heads/master'
                   iv_freeze_package TYPE abap_bool OPTIONAL
                   iv_freeze_url     TYPE abap_bool OPTIONAL
+                  iv_title          TYPE clike     DEFAULT 'Clone repository ...'
         RETURNING VALUE(rs_popup) TYPE ty_popup
         RAISING   lcx_exception ##NO_TEXT,
       popup_to_confirm
@@ -285,7 +286,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
     CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
-        popup_title       = 'Repository'
+        popup_title       = iv_title
         programname       = sy-repid
         formname          = 'BRANCH_POPUP'
         ok_pushbuttontext = 'OK'

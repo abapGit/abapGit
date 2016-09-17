@@ -203,6 +203,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
           lo_repo   TYPE REF TO lcl_repo_online.
 
     ls_popup = lcl_popups=>repo_popup(
+      iv_title          = 'Attach repo to remote ...'
       iv_url            = ''
       iv_package        = lcl_app=>repo_srv( )->get( iv_key )->get_package( )
       iv_freeze_package = abap_true ).
@@ -228,6 +229,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     ls_popup = lcl_popups=>repo_popup(
+      iv_title          = 'Change repo remote ...'
       iv_url            = lo_repo->get_url( )
       iv_package        = lo_repo->get_package( )
       iv_freeze_package = abap_true ).
