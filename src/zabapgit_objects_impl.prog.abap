@@ -51,7 +51,7 @@ CLASS lcl_objects IMPLEMENTATION.
           titlebar              = 'Warning'
           text_question         = lv_question
           display_cancel_button = abap_false
-        ).  "#EC NOTEXT
+        ).                                                  "#EC NOTEXT
 
         IF lv_answer = '2'.
           DELETE ct_results INDEX lv_index.
@@ -86,7 +86,7 @@ CLASS lcl_objects IMPLEMENTATION.
         icon_button_2         = 'ICON_CANCEL'
         default_button        = '2'
         display_cancel_button = abap_false
-      ).  "#EC NOTEXT
+      ).                                                    "#EC NOTEXT
 
       IF lv_answer = '2'.
         rv_cancel = abap_true.
@@ -485,7 +485,18 @@ CLASS lcl_objects IMPLEMENTATION.
     IF is_supported( is_item ) = abap_true.
       li_obj = create_object( is_item     = is_item
                               iv_language = gc_english ).
+
       li_obj->delete( ).
+
+      IF li_obj->get_metadata( )-delete_tadir = abap_true.
+        CALL FUNCTION 'TR_TADIR_INTERFACE'
+          EXPORTING
+            wi_delete_tadir_entry = abap_true
+            wi_tadir_pgmid        = 'R3TR'
+            wi_tadir_object       = is_item-obj_type
+            wi_tadir_obj_name     = is_item-obj_name
+            wi_test_modus         = abap_false.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.                    "delete

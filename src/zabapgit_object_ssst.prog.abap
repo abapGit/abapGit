@@ -39,6 +39,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.

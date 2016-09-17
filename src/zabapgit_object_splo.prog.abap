@@ -34,6 +34,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~serialize.
@@ -104,14 +105,6 @@ CLASS lcl_object_splo IMPLEMENTATION.
     DELETE FROM tsp1t WHERE papart = ms_item-obj_name. "#EC CI_NOFIRST "#EC CI_SUBRC
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
-
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_delete_tadir_entry = abap_true
-        wi_tadir_pgmid        = 'R3TR'
-        wi_tadir_object       = ms_item-obj_type
-        wi_tadir_obj_name     = ms_item-obj_name
-        wi_test_modus         = abap_false.
 
   ENDMETHOD.                    "lif_object~delete
 
