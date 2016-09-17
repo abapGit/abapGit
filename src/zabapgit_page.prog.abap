@@ -14,7 +14,7 @@ INTERFACE lif_gui_page.
               it_postdata  TYPE cnht_post_data_tab OPTIONAL
     EXPORTING ei_page      TYPE REF TO lif_gui_page
               ev_state     TYPE i
-    RAISING   lcx_exception.
+    RAISING   lcx_exception lcx_cancel.
 
   METHODS render
     RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
@@ -141,7 +141,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( |<span class="{ lv_class }">| ).
     ro_html->add( '<img src="img/branch">' ).
     IF iv_interactive = abap_true.
-      ro_html->add_anchor( iv_act = |switch_branch?{ io_repo->get_key( ) }|
+      ro_html->add_anchor( iv_act = |{ gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
                            iv_txt = lv_text ).
     ELSE.
       ro_html->add( lv_text ).
@@ -180,7 +180,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<table width="100%"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="logo">' ).                    "#EC NOTEXT
-    ro_html->add( '<a href="sapevent:abapgithome">' ).      "#EC NOTEXT
+    ro_html->add( |<a href="sapevent:{ gc_action-abapgit_home }">| ).      "#EC NOTEXT
     ro_html->add( '<img src="img/logo">' ).                 "#EC NOTEXT
     ro_html->add( '</a>' ).                                 "#EC NOTEXT
     ro_html->add( '</td>' ).                                "#EC NOTEXT

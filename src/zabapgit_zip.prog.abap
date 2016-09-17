@@ -16,9 +16,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS export
       IMPORTING io_repo   TYPE REF TO lcl_repo
-                iv_zip    TYPE abap_bool DEFAULT abap_true
                 it_filter TYPE scts_tadir OPTIONAL
       RAISING   lcx_exception.
+
+    CLASS-METHODS export_package
+        RAISING lcx_exception lcx_cancel.
 
   PRIVATE SECTION.
 
@@ -39,10 +41,6 @@ CLASS lcl_zip DEFINITION FINAL.
     CLASS-METHODS file_download
       IMPORTING iv_package TYPE devclass
                 iv_xstr    TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS files_commit
-      IMPORTING it_files TYPE ty_files_item_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_files
@@ -364,12 +362,8 @@ CLASS lcl_zip IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    IF iv_zip = abap_true.
-      file_download( iv_package = io_repo->get_package( )
-                     iv_xstr    = encode_files( lt_zip ) ).
-    ELSE.
-      files_commit( lt_zip ).
-    ENDIF.
+    file_download( iv_package = io_repo->get_package( )
+                   iv_xstr    = encode_files( lt_zip ) ).
 
   ENDMETHOD.                    "export_key
 
@@ -384,125 +378,25 @@ CLASS lcl_zip IMPLEMENTATION.
 
   ENDMETHOD.                    "import
 
-  METHOD files_commit.
+  METHOD export_package.
 
-    DATA: lv_folder   TYPE string,
-          lv_filename TYPE string,
-          lv_par      TYPE string,
-          lv_message  TYPE string,
-          lt_rawdata  TYPE solix_tab.
+    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
+    ls_data-package = lcl_popups=>popup_package_export( ).
+    IF ls_data-package IS INITIAL.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
 
+    ls_data-key             = 'DUMMY'.
+    ls_data-master_language = sy-langu.
 
-    cl_gui_frontend_services=>directory_browse(
+    CREATE OBJECT lo_repo
       EXPORTING
-        window_title         = 'Select folder'
-      CHANGING
-        selected_folder      = lv_folder
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        OTHERS               = 4 ).                         "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from directory_browser' ).
-    ENDIF.
+        is_data = ls_data.
 
-    IF lv_folder IS INITIAL.
-      RETURN.
-    ENDIF.
+    lcl_zip=>export( lo_repo ).
 
-    lv_message = get_message( ).
-
-    LOOP AT it_files ASSIGNING <ls_file>.
-      lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-file-data ).
-
-      CONCATENATE lv_folder <ls_file>-file-path <ls_file>-file-filename INTO lv_filename.
-
-      cl_gui_frontend_services=>gui_download(
-        EXPORTING
-          bin_filesize            = xstrlen( <ls_file>-file-data )
-          filename                = lv_filename
-          filetype                = 'BIN'
-        CHANGING
-          data_tab                = lt_rawdata
-        EXCEPTIONS
-          file_write_error        = 1
-          no_batch                = 2
-          gui_refuse_filetransfer = 3
-          invalid_type            = 4
-          no_authority            = 5
-          unknown_error           = 6
-          header_not_allowed      = 7
-          separator_not_allowed   = 8
-          filesize_not_allowed    = 9
-          header_too_long         = 10
-          dp_error_create         = 11
-          dp_error_send           = 12
-          dp_error_write          = 13
-          unknown_dp_error        = 14
-          access_denied           = 15
-          dp_out_of_memory        = 16
-          disk_full               = 17
-          dp_timeout              = 18
-          file_not_found          = 19
-          dataprovider_exception  = 20
-          control_flush_error     = 21
-          not_supported_by_gui    = 22
-          error_no_gui            = 23
-          OTHERS                  = 24 ).
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from gui_download' ).
-      ENDIF.
-
-    ENDLOOP.
-
-* assumption: git command is in PATH
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        application            = 'git'
-        default_directory      = lv_folder
-        synchronous            = 'X'
-        parameter              = 'add *'
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).                      "#EC NOTEXT
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from execute' ).
-    ENDIF.
-
-* make sure to set git user.email and user.name manually
-    lv_par = 'commit -m "' && lv_message && '"'.            "#EC NOTEXT
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        application            = 'git'
-        default_directory      = lv_folder
-        synchronous            = 'X'
-        parameter              = lv_par
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from execute' ).
-    ENDIF.
-
-  ENDMETHOD.                    "files_commit
+  ENDMETHOD.  "export_package
 
 ENDCLASS.                    "lcl_zip IMPLEMENTATION

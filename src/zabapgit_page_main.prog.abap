@@ -14,10 +14,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 newoffline    TYPE string VALUE 'newoffline' ##NO_TEXT,
-                 switch_branch TYPE string VALUE 'switch_branch' ##NO_TEXT,
-                 delete_branch TYPE string VALUE 'delete_branch' ##NO_TEXT,
-                 install       TYPE string VALUE 'install' ##NO_TEXT,
                  show          TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
@@ -35,7 +31,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     DATA: mv_show TYPE lcl_persistence_db=>ty_value.
 
     METHODS:
-      check_show
+      retrieve_active_repo
         RAISING lcx_exception,
       styles
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
@@ -77,9 +73,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(rv_html) TYPE string,
       render_explore
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      needs_installation
-        RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -89,17 +83,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_show = lcl_app=>user( )->get_repo_show( ).
-
-    check_show( ).
-
   ENDMETHOD.
 
-  METHOD check_show.
+  METHOD retrieve_active_repo.
 
     DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
           lo_repo  LIKE LINE OF lt_repos.
-
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -107,24 +96,25 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    IF mv_show IS INITIAL.
-      READ TABLE lt_repos INTO lo_repo INDEX 1.
-      IF sy-subrc = 0.
-        mv_show = lo_repo->get_key( ).
-      ENDIF.
-    ELSE.
-      TRY.
-* verify the key exists
+    mv_show = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+
+    IF mv_show IS NOT INITIAL.
+      TRY. " verify the key exists
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
-          READ TABLE lt_repos INTO lo_repo INDEX 1.
-          IF sy-subrc = 0.
-            mv_show = lo_repo->get_key( ).
-          ENDIF.
+          clear mv_show.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.
+    IF mv_show IS INITIAL. " Fall back to first available repo
+      READ TABLE lt_repos INTO lo_repo INDEX 1.
+      IF sy-subrc = 0.
+        mv_show = lo_repo->get_key( ).
+        lcl_app=>user( )->set_repo_show( mv_show ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.  "retrieve_active_repo
 
   METHOD render_obj_jump_link.
 
@@ -149,14 +139,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_betasub.
 
     lo_betasub->add( iv_txt = 'Database util'    iv_act = 'db' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = 'packagezip' ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = 'transportzip' ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = c_actions-install ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = 'explore' ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = c_actions-newoffline ) ##NO_TEXT.
-    IF needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = 'abapgit_installation' ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'New offline repo' iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
+    IF lcl_services_abapgit=>needs_installation( ) = abap_true.
+      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
     ENDIF.
     ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
 
@@ -210,19 +200,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_repo_menu.
 
     DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
+          lo_tb_advanced TYPE REF TO lcl_html_toolbar,
+          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
           lv_pull_opt    LIKE gc_html_opt-crossout,
-          lo_sub         TYPE REF TO lcl_html_toolbar,
-          lo_branch      TYPE REF TO lcl_html_toolbar,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
+    CREATE OBJECT lo_tb_branch.
+    CREATE OBJECT lo_tb_advanced.
 
     lv_key = io_repo->get_key( ).
-
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
     ENDIF.
@@ -234,18 +225,39 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lv_pull_opt = gc_html_opt-emphas.
     ENDIF.
 
-    IF io_repo->is_offline( ) = abap_true.
-      lo_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |zipimport?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
-      lo_toolbar->add( iv_txt = 'Export ZIP'
-                       iv_act = |zipexport?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
-    ELSE.
+    " Build branch drop-down ========================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
+      lo_tb_branch->add( iv_txt = 'Overview'
+                         iv_act = |branch_overview?{ lv_key }| ).
+      lo_tb_branch->add( iv_txt = 'Switch'
+                         iv_act = |{ gc_action-git_branch_switch }?{ lv_key }|
+                         iv_opt = lv_wp_opt ).
+      lo_tb_branch->add( iv_txt = 'Create'
+                         iv_act = |{ gc_action-git_branch_create }?{ lv_key }| ).
+      lo_tb_branch->add( iv_txt = 'Delete'
+                         iv_act = |{ gc_action-git_branch_delete }?{ lv_key }| ).
+    ENDIF.
+
+    " Build advanced drop-down ========================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
+      lo_tb_advanced->add( iv_txt = 'Reset local'
+                           iv_act = |{ gc_action-git_reset }?{ lv_key }|
+                           iv_opt = lv_wp_opt ).
+      lo_tb_advanced->add( iv_txt = 'Background mode'
+                           iv_act = |background?{ lv_key }| ).
+    ENDIF.
+    lo_tb_advanced->add( iv_txt = 'Remove'
+                         iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
+    lo_tb_advanced->add( iv_txt = 'Uninstall'
+                         iv_act = |{ gc_action-repo_purge }?{ lv_key }|
+                         iv_opt = lv_wp_opt ).
+
+    " Build main toolbar ==============================
+    IF io_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
-                             iv_act = |pull?{ lv_key }|
+                             iv_act = |{ gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ELSEIF lcl_stage_logic=>count( lo_repo_online ) > 0.
             lo_toolbar->add( iv_txt = 'Stage'
@@ -253,47 +265,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                              iv_opt = gc_html_opt-emphas ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
-* authorization error or repository does not exist
-* ignore error
+          " authorization error or repository does not exist
+          " ignore error
       ENDTRY.
-    ENDIF.
-
-    CREATE OBJECT lo_sub.
-    IF io_repo->is_offline( ) = abap_false.
-      CREATE OBJECT lo_branch.
-      lo_branch->add( iv_txt = 'Overview'
-                      iv_act = |branch_overview?{ lv_key }| ).
-      lo_branch->add( iv_txt = 'Switch'
-                      iv_act = |{ c_actions-switch_branch }?{ lv_key }|
-                      iv_opt = lv_wp_opt ).
-      lo_branch->add( iv_txt = 'Create'
-                      iv_act = |create_branch?{ lv_key }| ).
-      lo_branch->add( iv_txt = 'Delete'
-                      iv_act = |{ c_actions-delete_branch }?{ lv_key }| ).
       lo_toolbar->add( iv_txt = 'Branch'
-                       io_sub = lo_branch ) ##NO_TEXT.
-
-      lo_sub->add( iv_txt = 'Reset local'
-                   iv_act = |reset?{ lv_key }|
-                   iv_opt = lv_wp_opt ).
-      lo_sub->add( iv_txt = 'Background mode'
-                   iv_act = |background?{ lv_key }| ).
+                       io_sub = lo_tb_branch ) ##NO_TEXT.
     ELSE.
-      lo_sub->add( iv_txt = 'Export &amp; Commit'
-                   iv_act = |files_commit?{ lv_key }| ).
+      lo_toolbar->add( iv_txt = 'Import ZIP'
+                       iv_act = |{ gc_action-zip_import }?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
+      lo_toolbar->add( iv_txt = 'Export ZIP'
+                       iv_act = |{ gc_action-zip_export }?{ lv_key }|
+                       iv_opt = gc_html_opt-emphas ).
     ENDIF.
-    lo_sub->add( iv_txt = 'Remove'
-                 iv_act = |remove?{ lv_key }| ).
-    lo_sub->add( iv_txt = 'Uninstall'
-                 iv_act = |uninstall?{ lv_key }|
-                 iv_opt = lv_wp_opt ).
 
     lo_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = lo_sub ) ##NO_TEXT.
-
+                     io_sub = lo_tb_advanced ) ##NO_TEXT.
     lo_toolbar->add( iv_txt = 'Refresh'
-                     iv_act = |refresh?{ lv_key }| ).
+                     iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
+    " Render ==========================================
     ro_html->add( '<div class="paddings right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
@@ -501,23 +492,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD needs_installation.
-
-    CONSTANTS:
-      lc_abapgit TYPE string VALUE 'https://github.com/larshp/abapGit.git',
-      lc_plugins TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
-
-    TRY.
-        IF lcl_app=>repo_srv( )->is_repo_installed( lc_abapgit ) = abap_false
-            OR lcl_app=>repo_srv( )->is_repo_installed( lc_plugins ) = abap_false.
-          rv_not_completely_installed = abap_true.
-        ENDIF.
-      CATCH lcx_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_not_completely_installed = abap_false.
-    ENDTRY.
-  ENDMETHOD.                    "needs_installation
-
   METHOD render_toc.
 
     DATA: lo_pback      TYPE REF TO lcl_persistence_background,
@@ -634,39 +608,22 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lo_repo TYPE REF TO lcl_repo,
           lv_url  TYPE string.
 
+    lv_key   = iv_getdata.
 
     CASE iv_action.
-      WHEN c_actions-newoffline.
-        ev_state = gc_event_state-no_more_act.
-        lo_repo  = lcl_popups=>repo_new_offline( ).
-        IF lo_repo IS BOUND.
-          mv_show = lo_repo->get_key( ).
-          lcl_app=>user( )->set_repo_show( mv_show ).
-          ev_state = gc_event_state-re_render.
-        ENDIF.
-      WHEN c_actions-delete_branch.
-        lv_key   = iv_getdata.
-        lcl_popups=>delete_branch( lv_key ).
+      WHEN gc_action-repo_newoffline.   " New offline repo
+        lcl_services_repo=>new_offline( ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-switch_branch.
-        lv_key   = iv_getdata.
-        lcl_popups=>switch_branch( lv_key ).
+      WHEN gc_action-git_branch_delete. " Delete remote branch
+        lcl_services_git=>delete_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-install.
-        lv_url = iv_getdata.
-        lo_repo = lcl_popups=>repo_clone( lv_url ).
-        IF lo_repo IS BOUND.
-* cancel not pressed
-          mv_show = lo_repo->get_key( ).
-          lcl_app=>user( )->set_repo_show( mv_show ).
-        ENDIF.
+      WHEN gc_action-git_branch_switch. " Switch branch
+        lcl_services_git=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN c_actions-show.
-        mv_show = iv_getdata.
-        lcl_app=>user( )->set_repo_show( mv_show ).
+      WHEN c_actions-show.              " Change displayed repo
+        lcl_app=>user( )->set_repo_show( lv_key ).
         ev_state = gc_event_state-re_render.
     ENDCASE.
 
@@ -678,6 +635,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lx_error TYPE REF TO lcx_exception,
           lo_repo  LIKE LINE OF lt_repos.
 
+    retrieve_active_repo( ). " Get and validate key of user default repo
 
     CREATE OBJECT ro_html.
 
@@ -696,7 +654,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
-      check_show( ).
       lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
