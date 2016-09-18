@@ -69,64 +69,66 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CASE iv_action.
         " General routing
-      WHEN 'main'
-          OR 'explore'
-          OR 'db'
-          OR 'background_run'.
+      WHEN   gc_action-go_main                        " Go Main page
+          OR gc_action-go_explore                     " Go Explore page
+          OR gc_action-go_db                          " Go DB util page
+          OR gc_action-go_background_run.             " Go background run page
         ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
-      WHEN 'background'.
+      WHEN gc_action-go_background.                   " Go Background page
         ei_page  = get_page_background( lv_key ).
         ev_state = gc_event_state-new_page.
-      WHEN 'jump'.
+      WHEN gc_action-go_diff.                         " Go Diff page
+        ei_page  = get_page_diff( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN gc_action-go_stage.                        " Go Staging page
+        lv_key   = iv_getdata.
+        ei_page  = get_page_stage( lv_key ).
+        ev_state = gc_event_state-new_page_w_bookmark.
+      WHEN gc_action-go_branch_overview.              " Go repo branch overview
+        ei_page  = get_page_branch_overview( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+
+        " SAP GUI actions
+      WHEN gc_action-jump.
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                             IMPORTING ev_obj_type = ls_item-obj_type
                                                       ev_obj_name = ls_item-obj_name ).
         lcl_objects=>jump( ls_item ).
         ev_state = gc_event_state-no_more_act.
-      WHEN 'diff'.
-        ei_page  = get_page_diff( iv_getdata ).
-        ev_state = gc_event_state-new_page.
-      WHEN 'stage'.
-        lv_key   = iv_getdata.
-        ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page_w_bookmark.
-      WHEN 'branch_overview'.
-        ei_page  = get_page_branch_overview( iv_getdata ).
-        ev_state = gc_event_state-new_page.
 
         " DB actions
-      WHEN gc_action-db_display OR gc_action-db_edit.
+      WHEN gc_action-db_display OR gc_action-db_edit. " DB Display/Edit
         ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
         ev_state = gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DISPLAY'.
           ev_state = gc_event_state-new_page_replacing.
         ENDIF.
-      WHEN gc_action-db_delete.
+      WHEN gc_action-db_delete.                       " DB Delete
         ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
         lcl_services_db=>delete( ls_db ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-db_update.
+      WHEN gc_action-db_update.                       " DB Update
         ls_db = lcl_html_action_utils=>dbcontent_decode( it_postdata ).
         lcl_services_db=>update( ls_db ).
         ev_state = gc_event_state-go_back.
 
         " Abapgit services actions
-      WHEN gc_action-abapgit_home.
+      WHEN gc_action-abapgit_home.                    " Go abapGit homepage
         lcl_services_abapgit=>open_abapgit_homepage( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN gc_action-abapgit_install.
+      WHEN gc_action-abapgit_install.                 " Install abapGit
         lcl_services_abapgit=>install_abapgit( ).
         ev_state = gc_event_state-re_render.
 
         " Repository services actions
-      WHEN gc_action-repo_refresh.  " Repo refresh
+      WHEN gc_action-repo_refresh.                    " Repo refresh
         lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_purge.    " Repo remove & purge all objects
+      WHEN gc_action-repo_purge.                      " Repo remove & purge all objects
         lcl_services_repo=>purge( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_remove.   " Repo remove
+      WHEN gc_action-repo_remove.                     " Repo remove
         lcl_services_repo=>remove( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
@@ -134,38 +136,38 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
 
         " ZIP services actions
-      WHEN gc_action-zip_import.      " Import repo from ZIP
+      WHEN gc_action-zip_import.                      " Import repo from ZIP
         lcl_zip=>import( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-zip_export.      " Export repo as ZIP
+      WHEN gc_action-zip_export.                      " Export repo as ZIP
         lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
         ev_state = gc_event_state-no_more_act.
-      WHEN gc_action-zip_package.     " Export package as ZIP
+      WHEN gc_action-zip_package.                     " Export package as ZIP
         lcl_zip=>export_package( ).
         ev_state = gc_event_state-no_more_act.
-      WHEN gc_action-zip_transport.   " Export transport as ZIP
+      WHEN gc_action-zip_transport.                   " Export transport as ZIP
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
 
         " Remote origin manipulations
-      WHEN gc_action-repo_remote_attach.
+      WHEN gc_action-repo_remote_attach.            " Remote attach
         lcl_services_repo=>remote_attach( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_remote_detach.
+      WHEN gc_action-repo_remote_detach.            " Remote detach
         lcl_services_repo=>remote_detach( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-repo_remote_change.
+      WHEN gc_action-repo_remote_change.            " Remote change
         lcl_services_repo=>remote_change( lv_key ).
         ev_state = gc_event_state-re_render.
 
         " Git actions
-      WHEN gc_action-git_pull.
+      WHEN gc_action-git_pull.                      " GIT Pull
         lcl_services_git=>pull( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_reset.
+      WHEN gc_action-git_reset.                     " GIT Reset
         lcl_services_git=>reset( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_create.
+      WHEN gc_action-git_branch_create.             " GIT Create new branch
         lcl_services_git=>create_branch( lv_key ).
         ev_state = gc_event_state-re_render.
 
@@ -179,15 +181,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_by_name.
 
     DATA: lv_page_class TYPE string,
+          lv_page_name  TYPE string,
           lv_message    TYPE string.
 
-    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
+    lv_page_name  = iv_name.
+    SHIFT lv_page_name LEFT DELETING LEADING 'go_'.
+    lv_page_class = |LCL_GUI_PAGE_{ to_upper( lv_page_name ) }|.
 
     TRY.
         CREATE OBJECT ri_page TYPE (lv_page_class).
       CATCH cx_sy_create_object_error.
-        lv_message = |Cannot create page class { lv_page_class }|.
-        lcx_exception=>raise( lv_message ).
+        lcx_exception=>raise( |Cannot create page class { lv_page_class }| ).
     ENDTRY.
 
   ENDMETHOD.        " get_page_by_name

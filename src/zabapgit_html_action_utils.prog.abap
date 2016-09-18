@@ -58,6 +58,10 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_string) TYPE string.
 
+    CLASS-METHODS decode_bg_update
+      IMPORTING iv_getdata       TYPE clike
+      RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background.
+
     CLASS-METHODS field_keys_to_upper
       CHANGING ct_fields TYPE tihttpnvp.
 
@@ -294,5 +298,32 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.  "field_keys_to_upper
+
+  METHOD decode_bg_update.
+
+    DEFINE _field.  " TODO refactor and use globally in html actions
+      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1 ##NO_TEXT.
+      IF sy-subrc = 0.
+        rs_fields-&2 = <ls_field>-value.
+      ENDIF.
+    END-OF-DEFINITION.
+
+    DATA: lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_getdata }| ).
+    field_keys_to_upper( CHANGING ct_fields = lt_fields ).
+
+    _field 'METHOD'   method.
+    _field 'USERNAME' username.
+    _field 'PASSWORD' password.
+    _field 'AMETHOD'  amethod.
+    _field 'ANAME'    aname.
+    _field 'AMAIL'    amail.
+
+    ASSERT NOT rs_fields IS INITIAL.
+
+  ENDMETHOD.  "decode_bg_update
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION

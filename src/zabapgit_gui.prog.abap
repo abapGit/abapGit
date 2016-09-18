@@ -191,7 +191,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = 'main' ) ##NO_TEXT.
+    on_event( action = |{ gc_action-go_main }| ). " doesn't accept strings directly
 
   ENDMETHOD.                "go_home
 
