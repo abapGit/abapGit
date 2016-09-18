@@ -1763,6 +1763,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
         ls_file-path     = iv_path.
         ls_file-filename = <ls_node>-name.
         ls_file-data     = <ls_blob>-data.
+        ls_file-sha1     = <ls_blob>-sha1.
         APPEND ls_file TO ct_files.
       ENDIF.
     ENDLOOP.
