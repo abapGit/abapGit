@@ -124,7 +124,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           iv_act = 'stage_add?' && lv_param ) ##NO_TEXT.
       ENDIF.
       lo_toolbar->add( iv_txt = 'diff'
-        iv_act = 'diff?' && lv_param ) ##NO_TEXT.
+        iv_act = |{ gc_action-go_diff }?{ lv_param }| ) ##NO_TEXT.
 
       IF lv_method IS INITIAL.
         lv_status = '<span class="grey">?</span>'.

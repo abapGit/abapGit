@@ -85,14 +85,8 @@ CLASS lcl_gui_page_background DEFINITION FINAL
       mv_key TYPE lcl_persistence_repo=>ty_repo-key.
 
     METHODS:
-      parse_fields
-        IMPORTING iv_getdata       TYPE clike
-        RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background,
       render_data
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      save
-        IMPORTING iv_getdata TYPE clike
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -104,65 +98,17 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     mv_key = iv_key.
   ENDMETHOD.
 
-  METHOD parse_fields.
-
-    DEFINE _field.
-      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1 ##NO_TEXT.
-      IF sy-subrc = 0.
-        rs_fields-&2 = <ls_field>-value.
-      ENDIF.
-    END-OF-DEFINITION.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lv_string = iv_getdata.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
-
-    _field 'method' method.
-    _field 'username' username.
-    _field 'password' password.
-    _field 'amethod' amethod.
-    _field 'aname' aname.
-    _field 'amail' amail.
-
-    ASSERT NOT rs_fields IS INITIAL.
-
-  ENDMETHOD.
-
   METHOD lif_gui_page~on_event.
 
+    DATA ls_bg_task     TYPE lcl_persistence_background=>ty_background.
+
     CASE iv_action.
-      WHEN 'save'.
-        save( iv_getdata ).
+      WHEN gc_action-bg_update.
+        ls_bg_task     = lcl_html_action_utils=>decode_bg_update( iv_getdata ).
+        ls_bg_task-key = mv_key.
+        lcl_services_background=>update_task( ls_bg_task ).
         ev_state = gc_event_state-re_render.
     ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD save.
-
-    DATA: ls_fields      TYPE lcl_persistence_background=>ty_background,
-          lo_persistence TYPE REF TO lcl_persistence_background.
-
-
-    ls_fields = parse_fields( iv_getdata ).
-    ls_fields-key = mv_key.
-
-    CREATE OBJECT lo_persistence.
-
-    IF ls_fields-method = lcl_persistence_background=>c_method-nothing.
-      lo_persistence->delete( ls_fields-key ).
-    ELSE.
-      lo_persistence->modify( ls_fields ).
-    ENDIF.
-
-    MESSAGE 'Saved' TYPE 'S' ##NO_TEXT.
-
-    COMMIT WORK.
 
   ENDMETHOD.
 
@@ -221,7 +167,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ro_html->add( '<br>' ).
 
     ro_html->add( '<u>Method</u><br>' )  ##NO_TEXT.
-    ro_html->add( '<form method="get" action="sapevent:save">' ).
+    ro_html->add( |<form method="get" action="sapevent:{ gc_action-bg_update }">| ).
     ro_html->add( '<input type="radio" name="method" value="nothing"' &&
       lv_nothing && '>Do nothing<br>' )  ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="push"' &&
@@ -286,7 +232,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lo_toolbar->add( iv_txt = 'Run background logic'
-                     iv_act = 'background_run' ) ##NO_TEXT.
+                     iv_act = gc_action-go_background_run ) ##NO_TEXT.
 
     ro_html->add( header( ) ).
     ro_html->add( title( iv_title = 'BACKGROUND' io_menu = lo_toolbar ) ).
