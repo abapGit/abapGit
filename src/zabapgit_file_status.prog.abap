@@ -104,8 +104,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       IF lt_files[] IS INITIAL.
 * item does not exist locally
-        ls_result-filename    = <ls_remote>-filename.
-        ls_result-remote_only = abap_true.
+        ls_result-filename = <ls_remote>-filename.
+        ls_result-new      = gc_new-remote.
         APPEND ls_result TO rt_results.
         CONTINUE. " current loop
       ENDIF.
@@ -162,6 +162,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         ls_result-match    = abap_true.
         ls_result-obj_type = <ls_tadir>-object.
         ls_result-obj_name = <ls_tadir>-obj_name.
+        ls_result-new      = gc_new-local.
         APPEND ls_result TO rt_results.
       ENDIF.
 
@@ -171,6 +172,7 @@ CLASS lcl_file_status IMPLEMENTATION.
           AND path IS INITIAL.
 * new file added locally to existing object
         <ls_result>-path = io_repo->get_dot_abapgit( )->get_starting_folder( ) && <ls_tadir>-path.
+        <ls_result>-new  = gc_new-local.
       ENDLOOP.
     ENDLOOP.
 

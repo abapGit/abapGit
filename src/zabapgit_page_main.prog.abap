@@ -14,7 +14,8 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show          TYPE string VALUE 'show' ##NO_TEXT,
+                 show              TYPE string VALUE 'show' ##NO_TEXT,
+                 toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
                END OF c_actions.
 
     CONSTANTS: c_default_sortkey TYPE i VALUE 9999.
@@ -25,10 +26,12 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
              is_first TYPE abap_bool,
              files    TYPE tt_repo_files,
              sortkey  TYPE i,
+             changes  TYPE i,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
-    DATA: mv_show TYPE lcl_persistence_db=>ty_value.
+    DATA: mv_show       TYPE lcl_persistence_db=>ty_value,
+          mv_hide_files TYPE abap_bool.
 
     METHODS:
       retrieve_active_repo
@@ -157,6 +160,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     _add '/* REPOSITORY TABLE*/'.
+    _add 'div.repo_container {'.
+    _add '  position: relative;'.
+    _add '}'.
     _add '.repo_tab {'.
     _add '  border: 1px solid #DDD;'.
     _add '  border-radius: 3px;'.
@@ -301,12 +307,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_repo.
 
     DATA: lt_repo_items TYPE tt_repo_items,
+          lo_tab_menu   TYPE REF TO lcl_html_toolbar,
           lx_error      TYPE REF TO lcx_exception,
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-
+    CREATE OBJECT lo_tab_menu.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
@@ -317,15 +324,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                               IMPORTING et_repo_items = lt_repo_items
                                         eo_log        = lo_log ).
 
-* extract_repo_content must be called before rendering the menu
-* so that lo_log is filled with errors from the serialization
+        " extract_repo_content must be called before rendering the menu
+        " so that lo_log is filled with errors from the serialization
         ro_html->add( render_repo_menu( io_repo ) ).
 
-        IF io_repo->is_offline( ) = abap_false.
+        IF io_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
-* shows eg. list of unsupported objects
-          ro_html->add( lo_log->to_html( ) ).
+          ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
+        ENDIF.
+
+        ro_html->add( '<div class="repo_container">' ).
+        IF io_repo->is_offline( ) = abap_false.
+          IF mv_hide_files = abap_true.
+            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
+          ELSE.
+            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
+          ENDIF.
+          ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
         ENDIF.
 
         ro_html->add( '<table width="100%" class="repo_tab">' ).
@@ -339,6 +355,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ENDLOOP.
         ENDIF.
         ro_html->add( '</table>' ).
+        ro_html->add( '</div>' ).
 
       CATCH lcx_exception INTO lx_error.
         ro_html->add( render_repo_menu( io_repo ) ).
@@ -384,17 +401,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           <ls_repo_item>-obj_type = <ls_result>-obj_type.
           <ls_repo_item>-obj_name = <ls_result>-obj_name.
           <ls_repo_item>-sortkey  = c_default_sortkey. " Default sort key
+          <ls_repo_item>-changes  = 0.
         ENDAT.
 
         IF <ls_result>-filename IS NOT INITIAL.
           ls_file-path        = <ls_result>-path.
           ls_file-filename    = <ls_result>-filename.
           ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
-          ls_file-remote_only = <ls_result>-remote_only.
+          ls_file-new         = <ls_result>-new.
           APPEND ls_file TO <ls_repo_item>-files.
 
-          IF ls_file-is_changed = abap_true.
+          IF ls_file-is_changed = abap_true OR ls_file-new IS NOT INITIAL.
             <ls_repo_item>-sortkey = 2. " Changed files
+            <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
           ENDIF.
         ENDIF.
 
@@ -444,7 +463,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( |<tr{ lv_trclass }>| ).
 
     IF is_item-obj_name IS INITIAL.
-      ro_html->add( '<td colspan="3"></td>' ).
+      ro_html->add( '<td colspan="2"></td>'
+                 && '<td class="object"><i class="grey">non-code and meta files</i></td>' ).
     ELSE.
       CASE is_item-obj_type. "TODO ??
         WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
@@ -467,29 +487,42 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false. " Files for online repos only
 
       ro_html->add( '<td class="files">' ).
-      LOOP AT is_item-files INTO ls_file.
-        ro_html->add( |<span>{ ls_file-path && ls_file-filename }</span>| ).
-      ENDLOOP.
+      IF mv_hide_files = abap_false OR is_item-obj_type IS INITIAL.
+        LOOP AT is_item-files INTO ls_file.
+          ro_html->add( |<span>{ ls_file-path && ls_file-filename }</span>| ).
+        ENDLOOP.
+      ENDIF.
       ro_html->add( '</td>' ).
 
       ro_html->add( '<td class="cmd">' ).
       IF lines( is_item-files ) = 0.
-        ro_html->add( '<span class="grey">Only Local</span>' ).
-      ELSE.
-        LOOP AT is_item-files INTO ls_file.
-          IF ls_file-remote_only = abap_true.
-            ro_html->add( '<span class="grey">Only Remote</span>' ).
-          ELSEIF ls_file-is_changed = abap_true.
-            lv_difflink = lcl_html_action_utils=>file_encode(
-              iv_key  = io_repo->get_key( )
-              ig_file = ls_file ).
-            ro_html->add_anchor(
-              iv_txt = 'diff'
-              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-          ELSE.
-            ro_html->add( |<span>&nbsp;</span>| ).
-          ENDIF.
-        ENDLOOP.
+        ro_html->add( '<span class="grey">new @local</span>' ).
+      ELSEIF is_item-changes > 0.
+        IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
+          lv_difflink = lcl_html_action_utils=>obj_encode(
+            iv_key    = io_repo->get_key( )
+            ig_object = is_item ).
+          ro_html->add_anchor(
+            iv_txt = |diff ({ is_item-changes })|
+            iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+        ELSE.
+          LOOP AT is_item-files INTO ls_file.
+            IF ls_file-new = gc_new-remote.
+              ro_html->add( '<span class="grey">new @remote</span>' ).
+            ELSEIF ls_file-new = gc_new-local.
+              ro_html->add( '<span class="grey">new @local</span>' ).
+            ELSEIF ls_file-is_changed = abap_true.
+              lv_difflink = lcl_html_action_utils=>file_encode(
+                iv_key  = io_repo->get_key( )
+                ig_file = ls_file ).
+              ro_html->add_anchor(
+                iv_txt = 'diff'
+                iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+            ELSE.
+              ro_html->add( |<span>&nbsp;</span>| ).
+            ENDIF.
+          ENDLOOP.
+        ENDIF.
       ENDIF.
       ro_html->add( '</td>' ).
 
@@ -632,6 +665,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN c_actions-toggle_hide_files. " Toggle file diplay
+        lcl_app=>user( )->toggle_hide_files( ).
+        ev_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -643,6 +679,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lo_repo  LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
+    mv_hide_files = lcl_app=>user( )->get_hide_files( ).
 
     CREATE OBJECT ro_html.
 

@@ -5,37 +5,132 @@
 CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
+
+    TYPES: begin of ty_file_diff,
+             filename TYPE string,
+             o_diff   TYPE REF TO lcl_diff,
+           end of ty_file_diff,
+           tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
+
     METHODS: constructor
       IMPORTING
-        is_local  TYPE ty_file
-        is_remote TYPE ty_file.
+        iv_key    TYPE lcl_persistence_repo=>ty_repo-key
+        is_file   TYPE ty_file OPTIONAL
+        is_object TYPE ty_item OPTIONAL
+      RAISING lcx_exception.
 
     METHODS lif_gui_page~render   REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mv_filename TYPE string,
-          mo_diff     TYPE REF TO lcl_diff.
+    DATA: mt_diff_files TYPE tt_file_diff.
 
     METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-    METHODS render_head  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-    METHODS render_diff  RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-    METHODS render_lines RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_diff
+      IMPORTING is_diff        TYPE ty_file_diff
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_head
+      IMPORTING is_diff        TYPE ty_file_diff
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_lines
+      IMPORTING is_diff        TYPE ty_file_diff
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS append_diff
+      IMPORTING it_remote   TYPE ty_files_tt
+                it_local    TYPE ty_files_item_tt
+                iv_path     TYPE string
+                iv_filename TYPE string
+      RAISING lcx_exception.
 
 ENDCLASS. "lcl_gui_page_diff
 
 CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
+
+    DATA: lt_remote    TYPE ty_files_tt,
+          lt_local     TYPE ty_files_item_tt,
+          lt_results   TYPE ty_results_tt,
+          lo_repo      TYPE REF TO lcl_repo_online.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
+
     super->constructor( ).
 
-    mv_filename = is_local-filename.
+    ASSERT is_file IS SUPPLIED OR is_object IS SUPPLIED.
+    ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    CREATE OBJECT mo_diff
-      EXPORTING
-        iv_local  = is_local-data
-        iv_remote = is_remote-data.
+    lo_repo  ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lt_remote = lo_repo->get_files_remote( ).
+    lt_local  = lo_repo->get_files_local( ).
+
+    IF is_file IS NOT INITIAL.
+
+      append_diff( it_remote   = lt_remote
+                   it_local    = lt_local
+                   iv_path     = is_file-path
+                   iv_filename = is_file-filename ).
+
+    ELSE. " is_object is supplied
+
+      lt_results = lo_repo->status( ).
+
+      LOOP AT lt_results ASSIGNING <ls_result>
+        WHERE obj_type = is_object-obj_type
+        AND obj_name = is_object-obj_name
+        AND match IS INITIAL.
+
+        append_diff( it_remote   = lt_remote
+                     it_local    = lt_local
+                     iv_path     = <ls_result>-path
+                     iv_filename = <ls_result>-filename ).
+
+      ENDLOOP.
+
+    ENDIF.
+
+    IF lines( mt_diff_files ) = 0.
+      lcx_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
+    ENDIF.
 
   ENDMETHOD.
+
+  METHOD append_diff.
+
+    DATA:
+          ls_r_dummy   LIKE LINE OF it_remote ##NEEDED,
+          ls_l_dummy   LIKE LINE OF it_local  ##NEEDED,
+          ls_diff_file LIKE LINE OF mt_diff_files.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
+                   <ls_local>  LIKE LINE OF it_local.
+
+    READ TABLE it_remote ASSIGNING <ls_remote>
+      WITH KEY filename = iv_filename
+               path     = iv_path.
+    IF sy-subrc <> 0.
+      ASSIGN ls_r_dummy TO <ls_remote>.
+    ENDIF.
+
+    READ TABLE it_local ASSIGNING <ls_local>
+      WITH KEY file-filename = iv_filename
+               file-path     = iv_path.
+    IF sy-subrc <> 0.
+      ASSIGN ls_l_dummy TO <ls_local>.
+    ENDIF.
+
+    IF <ls_local> IS INITIAL AND <ls_remote> IS INITIAL.
+      lcx_exception=>raise( |DIFF: file not found { iv_filename }| ).
+    ENDIF.
+
+    CREATE OBJECT ls_diff_file-o_diff
+      EXPORTING
+        iv_local  = <ls_local>-file-data
+        iv_remote = <ls_remote>-data.
+
+    ls_diff_file-filename = iv_filename.
+    APPEND ls_diff_file TO mt_diff_files.
+
+  ENDMETHOD.  "append_diff
 
   METHOD styles.
     DATA lo_html TYPE REF TO lcl_html_helper.
@@ -47,7 +142,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  padding: 0.7em    ' ).                 "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'div.diff_head {' ).                      "#EC NOTEXT
-    lo_html->add( '  border-bottom: 1px solid #DDD;' ).     "#EC NOTEXT
     lo_html->add( '  padding-bottom: 0.7em;' ).             "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'span.diff_name {' ).                     "#EC NOTEXT
@@ -78,6 +172,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'div.diff_content {' ).                   "#EC NOTEXT
     lo_html->add( '  background: #fff;' ).                  "#EC NOTEXT
+    lo_html->add( '  border-top: 1px solid #DDD;' ).     "#EC NOTEXT
+    lo_html->add( '  border-bottom: 1px solid #DDD;' ).     "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
 
     " Table part
@@ -86,16 +182,18 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  font-family: Consolas, Courier, monospace;' ). "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab th {' ).                  "#EC NOTEXT
-    lo_html->add( '  color: grey;' ).                       "#EC NOTEXT
+    lo_html->add( '  color: #EEE;' ).                       "#EC NOTEXT
+    lo_html->add( '  background-color: #BBB;' ).            "#EC NOTEXT
     lo_html->add( '  text-align: left;' ).                  "#EC NOTEXT
-    lo_html->add( '  font-weight: normal;' ).               "#EC NOTEXT
-    lo_html->add( '  padding: 0.5em;' ).                    "#EC NOTEXT
+    lo_html->add( '  font-weight: bold;' ).               "#EC NOTEXT
+    lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
+    lo_html->add( '  font-size: 9pt;' ).                   "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td {' ).                  "#EC NOTEXT
     lo_html->add( '  color: #444;' ).                       "#EC NOTEXT
     lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
     lo_html->add( '  padding-right: 0.5em;' ).              "#EC NOTEXT
-    lo_html->add( '  font-size: 12pt;' ).                   "#EC NOTEXT
+    lo_html->add( '  font-size: 10pt;' ).                   "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td.num, th.num {' ).      "#EC NOTEXT
     lo_html->add( '  text-align: right;' ).                 "#EC NOTEXT
@@ -127,14 +225,14 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT lo_html.
 
-    ls_stats = mo_diff->stats( ).
+    ls_stats = is_diff-o_diff->stats( ).
 
     lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
     lo_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
     lo_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
     lo_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
     lo_html->add( '<span class="diff_name">' ).             "#EC NOTEXT
-    lo_html->add( |{ mv_filename }| ).
+    lo_html->add( |{ is_diff-filename }| ).
     lo_html->add( '</span>' ).                              "#EC NOTEXT
     lo_html->add( '</div>' ).                               "#EC NOTEXT
 
@@ -146,18 +244,18 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
-    ro_html->add( render_head( ) ).
+    ro_html->add( render_head( is_diff ) ).
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
     ro_html->add( '<table width="100%" class="diff_tab">' ). "#EC NOTEXT
     ro_html->add(   '<tr>' ).                               "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add(   '<th>@LOCAL</th>' ).                    "#EC NOTEXT
+    ro_html->add(   '<th>LOCAL</th>' ).                    "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add(   '<th>@REMOTE</th>' ).                   "#EC NOTEXT
+    ro_html->add(   '<th>REMOTE</th>' ).                   "#EC NOTEXT
     ro_html->add(   '</tr>' ).                              "#EC NOTEXT
-    ro_html->add( render_lines( ) ).
+    ro_html->add( render_lines( is_diff ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
@@ -179,7 +277,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
 
     CREATE OBJECT ro_html.
-    lt_diffs = mo_diff->get( ).
+    lt_diffs = is_diff-o_diff->get( ).
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
@@ -189,7 +287,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
         IF <ls_diff>-beacon > 0.
-          READ TABLE mo_diff->mt_beacons INTO lv_beacon INDEX <ls_diff>-beacon.
+          READ TABLE is_diff-o_diff->mt_beacons INTO lv_beacon INDEX <ls_diff>-beacon.
         ELSE.
           lv_beacon = '---'.
         ENDIF.
@@ -228,11 +326,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
+    DATA ls_diff_file LIKE LINE OF mt_diff_files.
+
     CREATE OBJECT ro_html.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( 'DIFF' ) ).
-    ro_html->add( render_diff( ) ).
+
+    LOOP AT mt_diff_files INTO ls_diff_file.
+      ro_html->add( render_diff( ls_diff_file ) ).
+    ENDLOOP.
+
     ro_html->add( footer( ) ).
 
   ENDMETHOD.

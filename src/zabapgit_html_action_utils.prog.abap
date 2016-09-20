@@ -8,13 +8,18 @@
 CLASS lcl_html_action_utils DEFINITION FINAL.
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_commit_fields, "TODO refactor ! Move to normal place
-             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-             body     TYPE string,
-           END OF ty_commit_fields.
+    CLASS-METHODS field_keys_to_upper
+      CHANGING ct_fields TYPE tihttpnvp.
+
+    CLASS-METHODS add_field
+      IMPORTING name TYPE string
+                iv   TYPE any
+      CHANGING  ct   TYPE tihttpnvp.
+
+    CLASS-METHODS get_field
+      IMPORTING name TYPE string
+                it   TYPE tihttpnvp
+      CHANGING  cv   TYPE any.
 
     CLASS-METHODS jump_encode
       IMPORTING iv_obj_type      TYPE tadir-object
@@ -29,13 +34,19 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                ig_file          TYPE any "ty_repo_file
+                ig_file          TYPE any "assuming ty_file
       RETURNING VALUE(rv_string) TYPE string.
 
-    CLASS-METHODS file_decode
+    CLASS-METHODS obj_encode
+      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+                ig_object        TYPE any "assuming ty_item
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS file_obj_decode
       IMPORTING iv_string TYPE clike
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
-                eg_file   TYPE any "ty_repo_file
+                eg_file   TYPE any "assuming ty_file
+                eg_object TYPE any "assuming ty_item
       RAISING   lcx_exception.
 
     CLASS-METHODS dbkey_encode
@@ -52,7 +63,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS parse_commit_request
       IMPORTING it_postdata      TYPE cnht_post_data_tab
-      RETURNING VALUE(rs_fields) TYPE ty_commit_fields.
+      EXPORTING es_fields        TYPE any.
 
     CLASS-METHODS repo_key_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
@@ -62,8 +73,6 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_getdata       TYPE clike
       RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background.
 
-    CLASS-METHODS field_keys_to_upper
-      CHANGING ct_fields TYPE tihttpnvp.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -72,19 +81,70 @@ ENDCLASS.       "lcl_html_action_utils DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_action_utils IMPLEMENTATION.
 
+  METHOD field_keys_to_upper.
+
+    FIELD-SYMBOLS <field> LIKE LINE OF ct_fields.
+
+    LOOP AT ct_fields ASSIGNING <field>.
+      <field>-name = to_upper( <field>-name ).
+    ENDLOOP.
+
+  ENDMETHOD.  "field_keys_to_upper
+
+  METHOD add_field.
+
+    DATA ls_field LIKE LINE OF ct.
+
+    FIELD-SYMBOLS <src>     TYPE any.
+
+    ls_field-name  = name.
+
+    CASE cl_abap_typedescr=>describe_by_data( iv )->kind.
+      WHEN cl_abap_typedescr=>kind_elem.
+        ls_field-value = iv.
+      WHEN cl_abap_typedescr=>kind_struct.
+        ASSIGN COMPONENT name OF STRUCTURE iv TO <src>.
+        ASSERT <src> IS ASSIGNED.
+        ls_field-value = <src>.
+      WHEN OTHERS.
+        ASSERT 2 = 1.
+    ENDCASE.
+
+    APPEND ls_field TO ct.
+
+  ENDMETHOD.  "add_field
+
+  METHOD get_field.
+
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF it.
+    FIELD-SYMBOLS <dest>     TYPE any.
+
+
+    READ TABLE it ASSIGNING <ls_field> WITH KEY name = name.
+    IF sy-subrc IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    CASE cl_abap_typedescr=>describe_by_data( cv )->kind.
+      WHEN cl_abap_typedescr=>kind_elem.
+        cv = <ls_field>-value.
+      WHEN cl_abap_typedescr=>kind_struct.
+        ASSIGN COMPONENT name OF STRUCTURE cv TO <dest>.
+        ASSERT <dest> IS ASSIGNED.
+        <dest> = <ls_field>-value.
+      WHEN OTHERS.
+        ASSERT 2 = 1.
+    ENDCASE.
+
+  ENDMETHOD.  "get_field
+
   METHOD jump_encode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
+    DATA: lt_fields TYPE tihttpnvp.
 
 
-    ls_field-name = 'TYPE'.
-    ls_field-value = iv_obj_type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'NAME'.
-    ls_field-value = iv_obj_name.
-    APPEND ls_field TO lt_fields.
+    add_field( EXPORTING name = 'TYPE' iv = iv_obj_type CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'NAME' iv = iv_obj_name CHANGING ct = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -92,103 +152,71 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD jump_decode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+    DATA: lt_fields TYPE tihttpnvp.
 
 
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      ev_obj_type = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_type.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'NAME'.
-    IF sy-subrc = 0.
-      ev_obj_name = <ls_field>-value.
-    ELSE.
-      CLEAR ev_obj_name.
-    ENDIF.
+    get_field( EXPORTING name = 'TYPE' it = lt_fields CHANGING cv = ev_obj_type ).
+    get_field( EXPORTING name = 'NAME' it = lt_fields CHANGING cv = ev_obj_name ).
 
   ENDMETHOD.                    "jump_decode
 
   METHOD file_encode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
+    DATA: lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS <lv_field> TYPE string.
 
-    ls_field-name = 'KEY'.
-    ls_field-value = iv_key.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'PATH'.
-    ASSIGN COMPONENT ls_field-name OF STRUCTURE ig_file TO <lv_field>.
-    ASSERT <lv_field> IS ASSIGNED.
-    ls_field-value = <lv_field>.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'FILENAME'.
-    ASSIGN COMPONENT ls_field-name OF STRUCTURE ig_file TO <lv_field>.
-    ASSERT <lv_field> IS ASSIGNED.
-    ls_field-value = <lv_field>.
-    APPEND ls_field TO lt_fields.
+    add_field( EXPORTING name = 'KEY'      iv = iv_key CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'PATH'     iv = ig_file CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'FILENAME' iv = ig_file CHANGING ct = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.                    "file_encode
 
-  METHOD file_decode.
+  METHOD obj_encode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
+    DATA: lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields,
-                   <lv_field> TYPE string.
 
-    CLEAR: ev_key, eg_file.
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    add_field( EXPORTING name = 'KEY'      iv = iv_key CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'OBJ_TYPE' iv = ig_object CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'OBJ_NAME' iv = ig_object CHANGING ct = lt_fields ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'KEY'.
-    IF sy-subrc = 0.
-      ev_key = <ls_field>-value.
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "obj_encode
+
+  METHOD file_obj_decode.
+
+    DATA: lt_fields TYPE tihttpnvp.
+
+    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED.
+
+    CLEAR: ev_key, eg_file, eg_object.
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+
+    get_field( EXPORTING name = 'KEY'      it = lt_fields CHANGING cv = ev_key ).
+
+    IF eg_file IS SUPPLIED.
+      get_field( EXPORTING name = 'PATH'     it = lt_fields CHANGING cv = eg_file ).
+      get_field( EXPORTING name = 'FILENAME' it = lt_fields CHANGING cv = eg_file ).
     ENDIF.
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'PATH'.
-    IF sy-subrc = 0.
-      ASSIGN COMPONENT 'PATH' OF STRUCTURE eg_file TO <lv_field>.
-      ASSERT <lv_field> IS ASSIGNED.
-      <lv_field> = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'FILENAME'.
-    IF sy-subrc = 0.
-      ASSIGN COMPONENT 'FILENAME' OF STRUCTURE eg_file TO <lv_field>.
-      ASSERT <lv_field> IS ASSIGNED.
-      <lv_field> = <ls_field>-value.
+    IF eg_object IS SUPPLIED.
+      get_field( EXPORTING name = 'OBJ_TYPE' it = lt_fields CHANGING cv = eg_object ).
+      get_field( EXPORTING name = 'OBJ_NAME' it = lt_fields CHANGING cv = eg_object ).
     ENDIF.
 
   ENDMETHOD.                    "file_decode
 
   METHOD dbkey_encode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          ls_field  LIKE LINE OF lt_fields.
+    DATA: lt_fields TYPE tihttpnvp.
 
-    ls_field-name = 'TYPE'.
-    ls_field-value = is_key-type.
-    APPEND ls_field TO lt_fields.
-
-    ls_field-name = 'VALUE'.
-    ls_field-value = is_key-value.
-    APPEND ls_field TO lt_fields.
+    add_field( EXPORTING name = 'TYPE'  iv = is_key-type CHANGING ct = lt_fields ).
+    add_field( EXPORTING name = 'VALUE' iv = is_key-value CHANGING ct = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -196,24 +224,13 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD dbkey_decode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
+    DATA: lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    lv_string = iv_string.     " type conversion
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
     field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'TYPE'.
-    IF sy-subrc = 0.
-      rs_key-type = <ls_field>-value.
-    ENDIF.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'VALUE'.
-    IF sy-subrc = 0.
-      rs_key-value = <ls_field>-value.
-    ENDIF.
+    get_field( EXPORTING name = 'TYPE'  it = lt_fields CHANGING cv = rs_key-type ).
+    get_field( EXPORTING name = 'VALUE' it = lt_fields CHANGING cv = rs_key-value ).
 
   ENDMETHOD.                    "dbkey_decode
 
@@ -230,9 +247,11 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     lt_fields  = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
     field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'XMLDATA' ##NO_TEXT.
-    IF sy-subrc = 0 AND <ls_field>-value(1) <> '<'.
-      rs_content-data_str = <ls_field>-value+1. " hmm
+    get_field( EXPORTING name = 'XMLDATA' it = lt_fields CHANGING cv = rs_content-data_str ).
+    IF rs_content-data_str(1) <> '<' AND rs_content-data_str+1(1) = '<'. " Hmmm ???
+      rs_content-data_str = rs_content-data_str+1.
+    ELSE.
+      CLEAR rs_content-data_str.
     ENDIF.
 
   ENDMETHOD.                    "dbcontent_decode
@@ -244,35 +263,26 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+    FIELD-SYMBOLS <body> TYPE string.
 
+    CLEAR es_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-
     REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
-
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'key' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-repo_key = <ls_field>-value.
+    get_field( EXPORTING name = 'REPO_KEY' it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'USERNAME' it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'EMAIL'    it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'COMMENT'  it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'BODY'     it = lt_fields CHANGING cv = es_fields ).
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'username' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-username = <ls_field>-value.
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <body>.
+    ASSERT <body> IS ASSIGNED.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH gc_newline.
 
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'email' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-email = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'comment' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-comment = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'body' ##NO_TEXT.
-    ASSERT sy-subrc = 0.
-    rs_fields-body = <ls_field>-value.
-    REPLACE ALL OCCURRENCES OF lc_replace IN rs_fields-body WITH gc_newline.
+    ASSERT es_fields IS NOT INITIAL.
 
   ENDMETHOD.                    "parse_commit_request
 
@@ -281,46 +291,26 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp,
           ls_field  LIKE LINE OF lt_fields.
 
-    ls_field-name = 'KEY'.
-    ls_field-value = iv_key.
-    APPEND ls_field TO lt_fields.
+    add_field( EXPORTING name = 'KEY'      iv = iv_key CHANGING ct = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.                    "repo_key_encode
 
-  METHOD field_keys_to_upper.
-
-    FIELD-SYMBOLS <field> LIKE LINE OF ct_fields.
-
-    LOOP AT ct_fields ASSIGNING <field>.
-      <field>-name = to_upper( <field>-name ).
-    ENDLOOP.
-
-  ENDMETHOD.  "field_keys_to_upper
-
   METHOD decode_bg_update.
-
-    DEFINE _field.  " TODO refactor and use globally in html actions
-      READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = &1 ##NO_TEXT.
-      IF sy-subrc = 0.
-        rs_fields-&2 = <ls_field>-value.
-      ENDIF.
-    END-OF-DEFINITION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_getdata }| ).
     field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
-    _field 'METHOD'   method.
-    _field 'USERNAME' username.
-    _field 'PASSWORD' password.
-    _field 'AMETHOD'  amethod.
-    _field 'ANAME'    aname.
-    _field 'AMAIL'    amail.
+    get_field( EXPORTING name = 'METHOD'   it = lt_fields CHANGING cv = rs_fields ).
+    get_field( EXPORTING name = 'USERNAME' it = lt_fields CHANGING cv = rs_fields ).
+    get_field( EXPORTING name = 'PASSWORD' it = lt_fields CHANGING cv = rs_fields ).
+    get_field( EXPORTING name = 'AMETHOD'  it = lt_fields CHANGING cv = rs_fields ).
+    get_field( EXPORTING name = 'ANAME'    it = lt_fields CHANGING cv = rs_fields ).
+    get_field( EXPORTING name = 'AMAIL'    it = lt_fields CHANGING cv = rs_fields ).
 
     ASSERT NOT rs_fields IS INITIAL.
 

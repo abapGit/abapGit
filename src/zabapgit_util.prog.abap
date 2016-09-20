@@ -458,8 +458,8 @@ CLASS lcl_diff DEFINITION FINAL.
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
-    DATA mt_diff    TYPE ty_diffs_tt.
-    DATA ms_stats   TYPE ty_count.
+    DATA mt_diff     TYPE ty_diffs_tt.
+    DATA ms_stats    TYPE ty_count.
 
     CLASS-METHODS:
       unpack
@@ -537,7 +537,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-    IF lines( mt_diff ) < 200.
+    IF lines( mt_diff ) < 100.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
       ENDLOOP.
@@ -546,7 +546,7 @@ CLASS lcl_diff IMPLEMENTATION.
           WHERE NOT result IS INITIAL AND short = abap_false.
         lv_index = sy-tabix.
 
-        DO 20 TIMES. " Backward
+        DO 10 TIMES. " Backward
           READ TABLE mt_diff INDEX ( lv_index - sy-index ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0 OR <ls_diff>-short = abap_true. " tab bound or prev marker
             EXIT.
@@ -554,7 +554,7 @@ CLASS lcl_diff IMPLEMENTATION.
           <ls_diff>-short = abap_true.
         ENDDO.
 
-        DO 20 TIMES. " Forward
+        DO 10 TIMES. " Forward
           READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0. " tab bound reached
             EXIT.

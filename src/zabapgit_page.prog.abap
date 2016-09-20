@@ -341,12 +341,25 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '    position: relative;'.
     _add '    display: inline;'.
     _add '}'.
+    _add '.dropdown_angle {'.
+    _add '    position: absolute !important;'.
+    _add '    right: -2px;'.
+    _add '}'.
+    _add '.dropbtn_angle {'.
+    _add '    width: 0;'.
+    _add '    height: 0;'.
+    _add '    border-left: 5px solid transparent;'.
+    _add '    border-right: 5px solid transparent;'.
+    _add '    border-bottom: 5px solid #4078c0;'.
+    _add '    transform: rotate(45deg);'.
+    _add '    -ms-transform: rotate(45deg);'.
+    _add '}'.
     _add '.dropdown_content {'.
     _add '    display: none;'.
     _add '    z-index: 1;'.
     _add '    position: absolute;'.
     _add '    right: 0;'.
-    _add '    top: 1.1em; /*IE7 woraround*/'.
+*    _add '    top: 1.1em; /*IE7 woraround*/'.
     _add '    background-color: #f9f9f9;'.
     _add '    white-space: nowrap;'.
 *    _add '    min-width: 10em;'.

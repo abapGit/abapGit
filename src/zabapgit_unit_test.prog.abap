@@ -1559,3 +1559,62 @@ CLASS ltcl_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_html_action_utils DEFINITION
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
+  INHERITING FROM CL_AUNIT_ASSERT.
+
+  PUBLIC SECTION.
+
+    METHODS add_field FOR TESTING.
+    METHODS get_field FOR TESTING.
+
+ENDCLASS. "ltcl_html_action_utils
+
+CLASS ltcl_html_action_utils IMPLEMENTATION.
+
+  METHOD add_field.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lt_answer TYPE tihttpnvp,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_field-name  = 'NAME'.
+    ls_field-value = 'TEST'.
+    APPEND ls_field TO lt_answer.
+
+    ls_field-name  = 'VALUE'.
+    ls_field-value = 'TEST'.
+    APPEND ls_field TO lt_answer.
+
+    lcl_html_action_utils=>add_field( EXPORTING name = 'NAME' iv = 'TEST'
+                                      CHANGING  ct = lt_fields ).
+    lcl_html_action_utils=>add_field( EXPORTING name = 'VALUE' iv = ls_field
+                                      CHANGING  ct = lt_fields ).
+
+    assert_equals( act = lt_fields exp = lt_answer ).
+
+  ENDMETHOD.  "add_field
+
+  METHOD get_field.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          ls_answer LIKE LINE OF lt_fields,
+          ls_field  LIKE LINE OF lt_fields.
+
+    ls_answer-name  = 'NAME'.
+    ls_answer-value = 'TEST'.
+    APPEND ls_answer TO lt_fields.
+
+    lcl_html_action_utils=>get_field( EXPORTING name = 'NAME' it = lt_fields
+                                      CHANGING  cv   = ls_field-value ).
+    lcl_html_action_utils=>get_field( EXPORTING name = 'NAME' it = lt_fields
+                                      CHANGING  cv   = ls_field ).
+
+    ls_answer-name  = 'TEST'.
+    ls_answer-value = 'TEST'.
+    assert_equals( act = ls_field exp = ls_answer ). " Both field are filled!
+
+  ENDMETHOD.  "get_field
+
+ENDCLASS. "ltcl_html_action_utils

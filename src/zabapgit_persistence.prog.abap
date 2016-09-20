@@ -377,6 +377,13 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
+    METHODS toggle_hide_files
+      RAISING   lcx_exception.
+
+    METHODS get_hide_files
+      RETURNING VALUE(rv_hide) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
 
@@ -399,6 +406,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
              email       TYPE string,
              repo_show   TYPE lcl_persistence_repo=>ty_repo-key,
              repo_config TYPE ty_repo_config_tt,
+             hide_files  TYPE abap_bool,
            END OF ty_user.
 
     METHODS constructor
@@ -605,6 +613,22 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_email = read_repo_config( iv_url )-email.
 
   ENDMETHOD.  "get_repo_email
+
+  METHOD toggle_hide_files.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-hide_files = boolc( ls_user-hide_files = abap_false ).
+    update( ls_user ).
+
+  ENDMETHOD. "toggle_hide_files
+
+  METHOD get_hide_files.
+
+    rv_hide = read( )-hide_files.
+
+  ENDMETHOD. "get_hide_files
 
 ENDCLASS.
 

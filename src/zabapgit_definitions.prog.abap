@@ -53,7 +53,7 @@ TYPES: BEGIN OF ty_repo_file,
          path        TYPE string,
          filename    TYPE string,
          is_changed  TYPE abap_bool,
-         remote_only TYPE abap_bool,
+         new         TYPE char1,
        END OF ty_repo_file.
 TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
@@ -95,11 +95,16 @@ TYPES: BEGIN OF ty_result,
          filename    TYPE string,
          package     TYPE devclass,
          path        TYPE string,
-         remote_only TYPE abap_bool,
+         new         TYPE char1,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
 TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
+
+CONSTANTS: BEGIN OF gc_new,
+             local  TYPE char1 VALUE 'L',
+             remote TYPE char1 VALUE 'R',
+           END OF gc_new.
 
 CONSTANTS: BEGIN OF gc_chmod,
              file       TYPE ty_chmod VALUE '100644',
