@@ -56,8 +56,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
 
     IF iv_action <> 'stage_all'.
-      lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
-                                          IMPORTING eg_file   = ls_file ).
+      lcl_html_action_utils=>file_obj_decode( EXPORTING iv_string = iv_getdata
+                                              IMPORTING eg_file   = ls_file ).
     ENDIF.
 
     CASE iv_action.

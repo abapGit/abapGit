@@ -5,6 +5,15 @@
 CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_commit_fields,
+             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
+             username TYPE string,
+             email    TYPE string,
+             comment  TYPE string,
+             body     TYPE string,
+           END OF ty_commit_fields.
+
     METHODS:
       constructor
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
@@ -104,7 +113,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     ro_html->add( '<div class="form_div">' ).
     ro_html->add( '<form id="commit_form" method="post" action="sapevent:commit_post">' ).
-    ro_html->add( |<input name="key" type="hidden" value="{ lv_key }">| ).
+    ro_html->add( |<input name="repo_key" type="hidden" value="{ lv_key }">| ).
     ro_html->add( '<table>' ).
 
     ro_html->add( '<tr>' ).
@@ -245,12 +254,13 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD commit_push.
 
-    DATA: ls_fields  TYPE lcl_html_action_utils=>ty_commit_fields,
+    DATA: ls_fields  TYPE ty_commit_fields,
           ls_comment TYPE ty_comment,
           lo_user    TYPE REF TO lcl_persistence_user.
 
 
-    ls_fields = lcl_html_action_utils=>parse_commit_request( it_postdata ).
+    lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
+                                                 IMPORTING es_fields   = ls_fields ).
 
     lo_user = lcl_app=>user( ).
     lo_user->set_repo_username( iv_url = mo_repo->get_url( ) iv_username = ls_fields-username ).

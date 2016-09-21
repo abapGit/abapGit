@@ -238,42 +238,22 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_diff.
 
-    DATA: lt_remote TYPE ty_files_tt,
-          lt_local  TYPE ty_files_item_tt,
+    DATA: ls_file   TYPE ty_file,
+          ls_object TYPE ty_item,
           lo_page   TYPE REF TO lcl_gui_page_diff,
-          lo_repo   TYPE REF TO lcl_repo_online,
-          ls_file   TYPE ty_repo_file,
           lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
-                   <ls_local>  LIKE LINE OF lt_local.
 
-    lcl_html_action_utils=>file_decode( EXPORTING iv_string = iv_getdata
-                                        IMPORTING ev_key    = lv_key
-                                                  eg_file   = ls_file ).
-
-    lo_repo  ?= lcl_app=>repo_srv( )->get( lv_key ).
-    lt_remote = lo_repo->get_files_remote( ).
-    lt_local  = lo_repo->get_files_local( ).
-
-    READ TABLE lt_remote ASSIGNING <ls_remote>
-      WITH KEY filename = ls_file-filename
-               path     = ls_file-path.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'file not found remotely' ).
-    ENDIF.
-
-    READ TABLE lt_local ASSIGNING <ls_local>
-      WITH KEY file-filename = ls_file-filename
-               file-path     = ls_file-path.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'file not found locally' ).
-    ENDIF.
+    lcl_html_action_utils=>file_obj_decode( EXPORTING iv_string = iv_getdata
+                                            IMPORTING ev_key    = lv_key
+                                                      eg_file   = ls_file
+                                                      eg_object = ls_object ).
 
     CREATE OBJECT lo_page
       EXPORTING
-        is_local  = <ls_local>-file
-        is_remote = <ls_remote>.
+        iv_key    = lv_key
+        is_file   = ls_file
+        is_object = ls_object.
 
     ri_page = lo_page.
 

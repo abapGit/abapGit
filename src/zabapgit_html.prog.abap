@@ -194,6 +194,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_no_separator           TYPE abap_bool OPTIONAL
           iv_vertical               TYPE abap_bool OPTIONAL
           iv_sort                   TYPE abap_bool OPTIONAL
+          iv_as_angle               TYPE abap_bool OPTIONAL
         RETURNING
           VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
@@ -237,32 +238,40 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lv_class TYPE string,
-          lv_last  TYPE abap_bool.
+    DATA: lv_class   TYPE string,
+          lv_is_drop TYPE abap_bool,
+          lv_last    TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
 
     CREATE OBJECT ro_html.
+    lv_is_drop = boolc( iv_as_droplist_with_label IS NOT INITIAL OR iv_as_angle IS NOT INITIAL ).
 
-    IF iv_as_droplist_with_label IS INITIAL.
+    IF lv_is_drop = abap_false. " Normal menu
       IF iv_vertical = abap_true.
         lv_class = 'menu_vertical' ##NO_TEXT.
       ELSE.
         lv_class = 'menu' ##NO_TEXT.
       ENDIF.
+    ELSEIF iv_as_angle IS NOT INITIAL.
+      lv_class = 'dropdown dropdown_angle' ##NO_TEXT.
     ELSE.
       lv_class = 'dropdown' ##NO_TEXT.
     ENDIF.
 
     ro_html->add( |<div class="{ lv_class }">| ).
 
-    IF iv_as_droplist_with_label IS NOT INITIAL.
-      lv_class = 'dropbtn'.
-      IF iv_no_separator = abap_true.
-        lv_class = lv_class && ' menu_end' ##NO_TEXT.
+    IF lv_is_drop = abap_true. " Dropdown
+      IF iv_as_angle = abap_true.
+        ro_html->add( '<div class="dropbtn_angle"></div>' ).
+      ELSE.
+        lv_class = 'dropbtn'.
+        IF iv_no_separator = abap_true.
+          lv_class = lv_class && ' menu_end' ##NO_TEXT.
+        ENDIF.
+        ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ENDIF.
-      ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ro_html->add( '<div class="dropdown_content">' ).
     ENDIF.
 
@@ -293,7 +302,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF iv_as_droplist_with_label IS NOT INITIAL.
+    IF lv_is_drop = abap_true. " Dropdown
       ro_html->add( '</div>' ).
     ENDIF.
 
