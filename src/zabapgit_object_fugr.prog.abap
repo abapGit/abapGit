@@ -71,14 +71,6 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-*    METHODS deserialize_dynpros
-*      IMPORTING it_dynpros TYPE ty_dynpro_tt
-*      RAISING   lcx_exception.
-*
-*    METHODS deserialize_cua
-*      IMPORTING is_cua TYPE ty_cua
-*      RAISING   lcx_exception.
-
 ENDCLASS.                    "lcl_object_fugr DEFINITION
 
 *----------------------------------------------------------------------*
@@ -159,6 +151,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           interface_global        = <ls_func>-global_flag
           remote_call             = <ls_func>-remote_call
           short_text              = <ls_func>-short_text
+          update_task             = <ls_func>-update_task
 *         NAMESPACE               = ' ' todo
           remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
@@ -313,8 +306,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     lt_functab = functions( ).
     lt_includes = includes( ).
-
-* todo, dynpros
 
     io_xml->add( iv_name = 'AREAT'
                  ig_data = lv_areat ).
