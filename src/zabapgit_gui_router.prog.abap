@@ -50,6 +50,10 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
+    METHODS get_page_playground
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RAISING   lcx_exception lcx_cancel.
+
 ENDCLASS.
 
 *----------------------------------------------------------------------*
@@ -87,6 +91,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-new_page_w_bookmark.
       WHEN gc_action-go_branch_overview.              " Go repo branch overview
         ei_page  = get_page_branch_overview( iv_getdata ).
+        ev_state = gc_event_state-new_page.
+      WHEN gc_action-go_playground.                   " Create playground page
+        ei_page  = get_page_playground( ).
         ev_state = gc_event_state-new_page.
 
         " SAP GUI actions
@@ -285,5 +292,23 @@ CLASS lcl_gui_router IMPLEMENTATION.
         iv_key = iv_key.
 
   ENDMETHOD.  "get_page_background
+
+  METHOD get_page_playground.
+    DATA: lv_class_name TYPE string,
+          lv_cancel     TYPE abap_bool.
+
+    lcl_popups=>run_page_class_popup( IMPORTING ev_name   = lv_class_name
+                                                ev_cancel = lv_cancel ).
+    IF lv_cancel = abap_true.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    TRY.
+        CREATE OBJECT ri_page TYPE (lv_class_name).
+      CATCH cx_sy_create_object_error.
+        lcx_exception=>raise( |Cannot create page class { lv_class_name }| ).
+    ENDTRY.
+
+  ENDMETHOD.  "get_page_playground
 
 ENDCLASS.           " lcl_gui_router
