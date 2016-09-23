@@ -145,6 +145,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'          iv_act = gc_action-go_explore ) ##NO_TEXT.
@@ -675,9 +676,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error TYPE REF TO lcx_exception,
-          lo_repo  LIKE LINE OF lt_repos.
+    DATA: lt_repos   TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error   TYPE REF TO lcx_exception,
+          lo_repo    LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
     mv_hide_files = lcl_app=>user( )->get_hide_files( ).

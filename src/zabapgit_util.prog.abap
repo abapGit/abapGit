@@ -360,6 +360,11 @@ CLASS lcl_url DEFINITION FINAL.
       RETURNING VALUE(rv_path_name) TYPE string
       RAISING   lcx_exception.
 
+    CLASS-METHODS split_file_location
+      IMPORTING iv_fullpath TYPE string
+      EXPORTING ev_path     TYPE string
+                ev_filename TYPE string.
+
   PRIVATE SECTION.
     CLASS-METHODS regex
       IMPORTING iv_repo TYPE string
@@ -376,6 +381,27 @@ ENDCLASS.                    "lcl_repo DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_url IMPLEMENTATION.
+
+  METHOD split_file_location.
+
+    DATA: lv_cnt TYPE i,
+          lv_off TYPE i,
+          lv_len TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
+      MATCH COUNT lv_cnt
+      MATCH OFFSET lv_off
+      MATCH LENGTH lv_len.
+
+    IF lv_cnt > 0.
+      ev_path     = iv_fullpath+0(lv_len).
+      ev_filename = iv_fullpath+lv_len.
+    ELSE.
+      CLEAR ev_path.
+      ev_filename = iv_fullpath.
+    ENDIF.
+
+  ENDMETHOD.  "split_file_location
 
   METHOD host.
     regex( EXPORTING iv_repo = iv_repo

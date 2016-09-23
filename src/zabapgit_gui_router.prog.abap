@@ -76,7 +76,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN   gc_action-go_main                        " Go Main page
           OR gc_action-go_explore                     " Go Explore page
           OR gc_action-go_db                          " Go DB util page
-          OR gc_action-go_background_run.             " Go background run page
+          OR gc_action-go_background_run              " Go background run page
+          OR gc_action-go_debuginfo.                  " Go debug info page
         ei_page  = get_page_by_name( iv_action ).
         ev_state = gc_event_state-new_page.
       WHEN gc_action-go_background.                   " Go Background page

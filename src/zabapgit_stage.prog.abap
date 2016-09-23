@@ -12,6 +12,7 @@ CLASS lcl_stage DEFINITION FINAL.
                  add    TYPE ty_method VALUE 'A',
                  rm     TYPE ty_method VALUE 'R',
                  ignore TYPE ty_method VALUE 'I',
+                 skip   TYPE ty_method VALUE '?',
                END OF c_method.
 
     TYPES: BEGIN OF ty_stage,
@@ -44,6 +45,8 @@ CLASS lcl_stage DEFINITION FINAL.
       reset
         IMPORTING iv_path     TYPE ty_file-path
                   iv_filename TYPE ty_file-filename
+        RAISING   lcx_exception,
+      reset_all
         RAISING   lcx_exception,
       rm
         IMPORTING iv_path     TYPE ty_file-path
@@ -169,6 +172,10 @@ CLASS lcl_stage IMPLEMENTATION.
                     AND   file-filename = iv_filename.
     ASSERT sy-subrc = 0.
   ENDMETHOD.        "reset
+
+  METHOD reset_all.
+    CLEAR mt_stage.
+  ENDMETHOD.  "reset_all
 
   METHOD rm.
     append( iv_path     = iv_path
