@@ -16,6 +16,7 @@ CLASS lcl_html_helper DEFINITION FINAL.
     DATA mv_html         TYPE string READ-ONLY.
     DATA mv_indent       TYPE i READ-ONLY.
     DATA mv_within_style TYPE i READ-ONLY.
+    DATA mv_within_js    TYPE i READ-ONLY.
 
     METHODS add IMPORTING iv_chunk TYPE any.
     METHODS reset.
@@ -24,7 +25,9 @@ CLASS lcl_html_helper DEFINITION FINAL.
                                  iv_act   TYPE string
                                  iv_opt   TYPE clike  OPTIONAL
                                  iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
-                                 iv_class TYPE string OPTIONAL.
+                                 iv_class TYPE string OPTIONAL
+                                 iv_id    TYPE string OPTIONAL
+                                 iv_style TYPE string OPTIONAL.
 
   PRIVATE SECTION.
     METHODS _add_str IMPORTING iv_str  TYPE csequence.
@@ -79,6 +82,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
     DATA lv_shift_back      TYPE i.
     DATA lv_style_tag_open  TYPE i.
     DATA lv_style_tag_close TYPE i.
+    DATA lv_js_tag_open     TYPE i.
+    DATA lv_js_tag_close    TYPE i.
     DATA lv_curly           TYPE i.
 
     FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
@@ -87,7 +92,8 @@ CLASS lcl_html_helper IMPLEMENTATION.
     ENDIF.
 
     FIND FIRST OCCURRENCE OF '}' IN iv_str MATCH OFFSET lv_close_offs. " Find close } @beginning
-    IF mv_within_style > 0 AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
+    IF ( mv_within_style > 0 OR mv_within_js > 0 )
+      AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
       lv_shift_back = 1.
     ENDIF.
 
@@ -102,11 +108,15 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
 
-    FIND ALL OCCURRENCES OF '<style' IN iv_str MATCH COUNT lv_style_tag_open IGNORING CASE.
+    FIND ALL OCCURRENCES OF '<style'   IN iv_str MATCH COUNT lv_style_tag_open IGNORING CASE.
     FIND ALL OCCURRENCES OF '</style>' IN iv_str MATCH COUNT lv_style_tag_close IGNORING CASE.
     mv_within_style = mv_within_style + lv_style_tag_open - lv_style_tag_close.
 
-    IF mv_within_style > 0.
+    FIND ALL OCCURRENCES OF '<script'   IN iv_str MATCH COUNT lv_js_tag_open IGNORING CASE.
+    FIND ALL OCCURRENCES OF '</script>' IN iv_str MATCH COUNT lv_js_tag_close IGNORING CASE.
+    mv_within_js = mv_within_js + lv_js_tag_open - lv_js_tag_close.
+
+    IF mv_within_style > 0 OR mv_within_js > 0.
       FIND ALL OCCURRENCES OF '{'  IN iv_str MATCH COUNT lv_curly.
       lv_tags_open  = lv_tags_open + lv_curly.
       FIND ALL OCCURRENCES OF '}'  IN iv_str MATCH COUNT lv_curly.
@@ -137,7 +147,9 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
   METHOD add_anchor.
     DATA: lv_class TYPE string,
-          lv_href  TYPE string.
+          lv_href  TYPE string,
+          lv_id    TYPE string,
+          lv_style TYPE string.
 
     lv_class = iv_class.
 
@@ -166,7 +178,15 @@ CLASS lcl_html_helper IMPLEMENTATION.
       ENDCASE.
     ENDIF.
 
-    _add_str( |<a{ lv_class }{ lv_href }>{ iv_txt }</a>| ).
+    IF iv_id IS NOT INITIAL.
+      lv_id = | id="{ iv_id }"|.
+    ENDIF.
+
+    IF iv_style IS NOT INITIAL.
+      lv_style = | style="{ iv_style }"|.
+    ENDIF.
+
+    _add_str( |<a{ lv_id }{ lv_class }{ lv_href }{ lv_style }>{ iv_txt }</a>| ).
 
   ENDMETHOD.                    "add_action
 

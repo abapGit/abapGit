@@ -15,3 +15,4 @@ INCLUDE zabapgit_page_diff.
 INCLUDE zabapgit_page_explore.
 INCLUDE zabapgit_page_main.
 INCLUDE zabapgit_page_stage.
+INCLUDE zabapgit_page_debug.
