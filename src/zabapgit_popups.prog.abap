@@ -13,7 +13,7 @@ CLASS lcl_popups DEFINITION.
              cancel      TYPE abap_bool,
            END OF ty_popup.
 
-    CONSTANTS c_new_branch_label TYPE string VALUE 'Create NEW ...'.
+    CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
 
     CLASS-METHODS:
       popup_package_export
