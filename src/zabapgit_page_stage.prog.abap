@@ -62,16 +62,17 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
-    mo_stage->reset_all( ).
 
     CASE iv_action.
       WHEN c_action-stage_all.
+        mo_stage->reset_all( ).
         LOOP AT ms_files-local ASSIGNING <ls_file>.
           mo_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename
                          iv_data     = <ls_file>-file-data ).
         ENDLOOP.
       WHEN c_action-stage_commit.
+        mo_stage->reset_all( ).
         process_stage_list( it_postdata ).
       WHEN OTHERS.
         RETURN.

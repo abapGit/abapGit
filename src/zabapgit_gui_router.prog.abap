@@ -87,7 +87,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_diff( iv_getdata ).
         ev_state = gc_event_state-new_page.
       WHEN gc_action-go_stage.                        " Go Staging page
-        lv_key   = iv_getdata.
         ei_page  = get_page_stage( lv_key ).
         ev_state = gc_event_state-new_page_w_bookmark.
       WHEN gc_action-go_branch_overview.              " Go repo branch overview
