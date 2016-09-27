@@ -86,7 +86,72 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     super->constructor( ).
 
-  ENDMETHOD.
+  ENDMETHOD.  " constructor
+
+  METHOD lif_gui_page~on_event.
+
+    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_url  TYPE string.
+
+    lv_key   = iv_getdata.
+
+    CASE iv_action.
+      WHEN gc_action-repo_newoffline.   " New offline repo
+        lcl_services_repo=>new_offline( ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-git_branch_delete. " Delete remote branch
+        lcl_services_git=>delete_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-git_branch_switch. " Switch branch
+        lcl_services_git=>switch_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-show.              " Change displayed repo
+        lcl_app=>user( )->set_repo_show( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN c_actions-toggle_hide_files. " Toggle file diplay
+        lcl_app=>user( )->toggle_hide_files( ).
+        ev_state = gc_event_state-re_render.
+    ENDCASE.
+
+  ENDMETHOD.  "on_event
+
+**********************************************************************
+* RENDERING
+**********************************************************************
+
+  METHOD lif_gui_page~render.
+
+    DATA: lt_repos   TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error   TYPE REF TO lcx_exception,
+          lo_repo    LIKE LINE OF lt_repos.
+
+    retrieve_active_repo( ). " Get and validate key of user default repo
+    mv_hide_files = lcl_app=>user( )->get_hide_files( ).
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( iv_title = 'HOME'
+                         io_menu  = build_main_menu( ) ) ).
+
+    TRY.
+        lt_repos = lcl_app=>repo_srv( )->list( ).
+      CATCH lcx_exception INTO lx_error.
+        ro_html->add( render_error( lx_error ) ).
+    ENDTRY.
+
+    ro_html->add( render_toc( lt_repos ) ).
+
+    IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
+      ro_html->add( render_explore( ) ).
+    ELSE.
+      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+      ro_html->add( render_repo( lo_repo ) ).
+    ENDIF.
+
+    ro_html->add( footer( ) ).
+
+  ENDMETHOD.  "render
 
   METHOD retrieve_active_repo.
 
@@ -131,7 +196,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_html->add_anchor( iv_txt = |{ iv_obj_name }| iv_act = |{ gc_action-jump }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_obj_jump_link
 
   METHOD build_main_menu.
 
@@ -157,53 +222,184 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.                    "build main_menu
 
-  METHOD styles.
+  METHOD render_toc.
+
+    DATA: lo_pback      TYPE REF TO lcl_persistence_background,
+          lt_repo_bkg   TYPE lcl_persistence_background=>tt_background,
+          lo_repo       LIKE LINE OF it_list,
+          lv_opt        TYPE c LENGTH 1,
+          lo_online     TYPE REF TO lcl_html_toolbar,
+          lo_background TYPE REF TO lcl_html_toolbar,
+          lo_offline    TYPE REF TO lcl_html_toolbar.
+
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_online.
+    CREATE OBJECT lo_offline.
+    CREATE OBJECT lo_background.
+    CREATE OBJECT lo_pback.
+    lt_repo_bkg = lo_pback->list( ).
+
+    IF lines( it_list ) = 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_list INTO lo_repo.
+      IF mv_show = lo_repo->get_key( ).
+        lv_opt = gc_html_opt-emphas.
+      ELSE.
+        CLEAR lv_opt.
+      ENDIF.
+
+      IF lo_repo->is_offline( ) = abap_true.
+        lo_offline->add( iv_txt = lo_repo->get_name( )
+                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                         iv_opt = lv_opt ).
+      ELSE.
+        READ TABLE lt_repo_bkg WITH KEY key = lo_repo->get_key( )
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
+          lo_background->add( iv_txt = lo_repo->get_name( )
+                              iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                              iv_opt = lv_opt ).
+        ELSE.
+          lo_online->add( iv_txt = lo_repo->get_name( )
+                          iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                          iv_opt = lv_opt ).
+        ENDIF.
+      ENDIF.
+
+    ENDLOOP.
+
+    ro_html->add( '<div id="toc"><div class="toc_grid">' ) ##NO_TEXT.
+
+    IF lo_online->count( ) > 0.
+      ro_html->add( render_toc_line( io_toolbar   = lo_online
+                                     iv_image_url = 'img/repo_online' ) ).
+    ENDIF.
+
+    IF lo_offline->count( ) > 0.
+      ro_html->add( render_toc_line( io_toolbar   = lo_offline
+                                     iv_image_url = 'img/repo_offline' ) ).
+    ENDIF.
+
+    IF lo_background->count( ) > 0.
+      ro_html->add( render_toc_line( io_toolbar   = lo_background
+                                     iv_image_url = 'img/sync' ) ).
+    ENDIF.
+
+    ro_html->add( '</div></div>' ).
+
+  ENDMETHOD.  "render_toc
+
+  METHOD render_toc_line.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="toc_row"><table><tr>' ).
+
+    ro_html->add( '<td>' ).
+    ro_html->add( |<img src="{ iv_image_url }">| ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '<td>' ).
+    ro_html->add( io_toolbar->render( iv_sort = abap_true ) ).
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '</tr></table></div>' ).
+
+  ENDMETHOD.  "render_toc_line
+
+  METHOD render_error.
 
     CREATE OBJECT ro_html.
 
-    _add '/* REPOSITORY TABLE*/'.
-    _add 'div.repo_container {'.
-    _add '  position: relative;'.
-    _add '}'.
-    _add '.repo_tab {'.
-    _add '  border: 1px solid #DDD;'.
-    _add '  border-radius: 3px;'.
-    _add '  background: #fff;'.
-    _add '  margin-top: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td {'.
-    _add '  border-top: 1px solid #eee;'.
-    _add '  vertical-align: middle;'.
-    _add '  color: #333;'.
-    _add '  padding-top: 2px;'.
-    _add '  padding-bottom: 2px;'.
-    _add '}'.
-    _add '.repo_tab td.icon {'.
-    _add '  width: 32px;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add '.repo_tab td.type {'.
-    _add '  width: 3em;'.
-    _add '}'.
-    _add '.repo_tab td.object {'.
-    _add '  padding-left: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td.files {'.
-    _add '  padding-left: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td.cmd {'.
-    _add '  text-align: right;'.
-    _add '  padding-left: 0.5em;'.
-    _add '  padding-right: 1em;'.
-    _add '}'.
-    _add '.repo_tab tr.unsupported { color: lightgrey; }'.
-    _add '.repo_tab tr.modified    { background: #fbf7e9; }'.
-    _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
-    _add '.repo_tab td.files span  { display: block; }'.
-    _add '.repo_tab td.cmd span    { display: block; }'.
-    _add '.repo_tab td.cmd a       { display: block; }'.
+    ro_html->add( '<div class="dummydiv attention">' ).
+    ro_html->add( |Error: { ix_error->mv_text }| ).
+    ro_html->add( '</div>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_error
+
+  METHOD render_explore.
+
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+
+    lo_toolbar->add( iv_txt = 'Explore new projects'
+                     iv_act = gc_action-go_explore ) ##NO_TEXT.
+
+    ro_html->add( '<div class="dummydiv">' ).
+    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.  "render_explore
+
+**********************************************************************
+* SELECTED REPO RENDERING
+**********************************************************************
+
+  METHOD render_repo.
+
+    DATA: lt_repo_items TYPE tt_repo_items,
+          lo_tab_menu   TYPE REF TO lcl_html_toolbar,
+          lx_error      TYPE REF TO lcx_exception,
+          lo_log        TYPE REF TO lcl_log.
+
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+
+    CREATE OBJECT lo_tab_menu.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
+    ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
+
+    TRY.
+        extract_repo_content( EXPORTING io_repo       = io_repo
+                              IMPORTING et_repo_items = lt_repo_items
+                                        eo_log        = lo_log ).
+
+        " extract_repo_content must be called before rendering the menu
+        " so that lo_log is filled with errors from the serialization
+        ro_html->add( render_repo_menu( io_repo ) ).
+
+        IF io_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
+          ro_html->add( '<div class="log">' ).
+          ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
+          ro_html->add( '</div>' ).
+        ENDIF.
+
+        ro_html->add( '<div class="repo_container">' ).
+        IF io_repo->is_offline( ) = abap_false.
+          IF mv_hide_files = abap_true.
+            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
+          ELSE.
+            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
+          ENDIF.
+          ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
+        ENDIF.
+
+        ro_html->add( '<table width="100%" class="repo_tab">' ).
+        IF lines( lt_repo_items ) = 0.
+          ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
+                       && '<center>Empty package</center>'
+                       && '</td></tr>' ) ##NO_TEXT.
+        ELSE.
+          LOOP AT lt_repo_items ASSIGNING <ls_item>.
+            ro_html->add( render_repo_item( io_repo = io_repo is_item = <ls_item> ) ).
+          ENDLOOP.
+        ENDIF.
+        ro_html->add( '</table>' ).
+        ro_html->add( '</div>' ).
+
+      CATCH lcx_exception INTO lx_error.
+        ro_html->add( render_repo_menu( io_repo ) ).
+        ro_html->add( render_error( lx_error ) ).
+    ENDTRY.
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.  "render_repo
 
   METHOD render_repo_menu.
 
@@ -304,69 +500,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.
-
-  METHOD render_repo.
-
-    DATA: lt_repo_items TYPE tt_repo_items,
-          lo_tab_menu   TYPE REF TO lcl_html_toolbar,
-          lx_error      TYPE REF TO lcx_exception,
-          lo_log        TYPE REF TO lcl_log.
-
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
-
-    CREATE OBJECT lo_tab_menu.
-    CREATE OBJECT ro_html.
-
-    ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
-
-    TRY.
-        extract_repo_content( EXPORTING io_repo       = io_repo
-                              IMPORTING et_repo_items = lt_repo_items
-                                        eo_log        = lo_log ).
-
-        " extract_repo_content must be called before rendering the menu
-        " so that lo_log is filled with errors from the serialization
-        ro_html->add( render_repo_menu( io_repo ) ).
-
-        IF io_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
-          ro_html->add( '<div class="log">' ).
-          ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
-          ro_html->add( '</div>' ).
-        ENDIF.
-
-        ro_html->add( '<div class="repo_container">' ).
-        IF io_repo->is_offline( ) = abap_false.
-          IF mv_hide_files = abap_true.
-            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
-          ELSE.
-            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
-          ENDIF.
-          ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
-        ENDIF.
-
-        ro_html->add( '<table width="100%" class="repo_tab">' ).
-        IF lines( lt_repo_items ) = 0.
-          ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
-                       && '<center>Empty package</center>'
-                       && '</td></tr>' ) ##NO_TEXT.
-        ELSE.
-          LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            ro_html->add( render_repo_item( io_repo = io_repo is_item = <ls_item> ) ).
-          ENDLOOP.
-        ENDIF.
-        ro_html->add( '</table>' ).
-        ro_html->add( '</div>' ).
-
-      CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_repo_menu( io_repo ) ).
-        ro_html->add( render_error( lx_error ) ).
-    ENDTRY.
-
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "render_repo_menu
 
   METHOD extract_repo_content.
 
@@ -436,7 +570,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
 
 
-  ENDMETHOD.
+  ENDMETHOD.  "extract_repo_content
 
   METHOD render_repo_item.
     DATA:
@@ -532,181 +666,59 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_repo_item
 
-  METHOD render_toc.
+**********************************************************************
+* ASSETS, STYLES, SCRIPTS
+**********************************************************************
 
-    DATA: lo_pback      TYPE REF TO lcl_persistence_background,
-          lt_repo_bkg   TYPE lcl_persistence_background=>tt_background,
-          lo_repo       LIKE LINE OF it_list,
-          lv_opt        TYPE c LENGTH 1,
-          lo_online     TYPE REF TO lcl_html_toolbar,
-          lo_background TYPE REF TO lcl_html_toolbar,
-          lo_offline    TYPE REF TO lcl_html_toolbar.
-
-
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_online.
-    CREATE OBJECT lo_offline.
-    CREATE OBJECT lo_background.
-    CREATE OBJECT lo_pback.
-    lt_repo_bkg = lo_pback->list( ).
-
-    IF lines( it_list ) = 0.
-      RETURN.
-    ENDIF.
-
-    LOOP AT it_list INTO lo_repo.
-      IF mv_show = lo_repo->get_key( ).
-        lv_opt = gc_html_opt-emphas.
-      ELSE.
-        CLEAR lv_opt.
-      ENDIF.
-
-      IF lo_repo->is_offline( ) = abap_true.
-        lo_offline->add( iv_txt = lo_repo->get_name( )
-                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                         iv_opt = lv_opt ).
-      ELSE.
-        READ TABLE lt_repo_bkg WITH KEY key = lo_repo->get_key( )
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc = 0.
-          lo_background->add( iv_txt = lo_repo->get_name( )
-                              iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                              iv_opt = lv_opt ).
-        ELSE.
-          lo_online->add( iv_txt = lo_repo->get_name( )
-                          iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                          iv_opt = lv_opt ).
-        ENDIF.
-      ENDIF.
-
-    ENDLOOP.
-
-    ro_html->add( '<div id="toc"><div class="toc_grid">' ) ##NO_TEXT.
-
-    IF lo_online->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_online
-                                     iv_image_url = 'img/repo_online' ) ).
-    ENDIF.
-
-    IF lo_offline->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_offline
-                                     iv_image_url = 'img/repo_offline' ) ).
-    ENDIF.
-
-    IF lo_background->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_background
-                                     iv_image_url = 'img/sync' ) ).
-    ENDIF.
-
-    ro_html->add( '</div></div>' ).
-
-  ENDMETHOD.  "render_toc
-
-  METHOD render_toc_line.
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div class="toc_row"><table><tr>' ).
-
-    ro_html->add( '<td>' ).
-    ro_html->add( |<img src="{ iv_image_url }">| ).
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td>' ).
-    ro_html->add( io_toolbar->render( iv_sort = abap_true ) ).
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '</tr></table></div>' ).
-
-  ENDMETHOD.  "render_toc_line
-
-  METHOD render_error.
+  METHOD styles.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="dummydiv attention">' ).
-    ro_html->add( |Error: { ix_error->mv_text }| ).
-    ro_html->add( '</div>' ).
+    _add '/* REPOSITORY TABLE*/'.
+    _add 'div.repo_container {'.
+    _add '  position: relative;'.
+    _add '}'.
+    _add '.repo_tab {'.
+    _add '  border: 1px solid #DDD;'.
+    _add '  border-radius: 3px;'.
+    _add '  background: #fff;'.
+    _add '  margin-top: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td {'.
+    _add '  border-top: 1px solid #eee;'.
+    _add '  vertical-align: middle;'.
+    _add '  color: #333;'.
+    _add '  padding-top: 2px;'.
+    _add '  padding-bottom: 2px;'.
+    _add '}'.
+    _add '.repo_tab td.icon {'.
+    _add '  width: 32px;'.
+    _add '  text-align: center;'.
+    _add '}'.
+    _add '.repo_tab td.type {'.
+    _add '  width: 3em;'.
+    _add '}'.
+    _add '.repo_tab td.object {'.
+    _add '  padding-left: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td.files {'.
+    _add '  padding-left: 0.5em;'.
+    _add '}'.
+    _add '.repo_tab td.cmd {'.
+    _add '  text-align: right;'.
+    _add '  padding-left: 0.5em;'.
+    _add '  padding-right: 1em;'.
+    _add '}'.
+    _add '.repo_tab tr.unsupported { color: lightgrey; }'.
+    _add '.repo_tab tr.modified    { background: #fbf7e9; }'.
+    _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
+    _add '.repo_tab td.files span  { display: block; }'.
+    _add '.repo_tab td.cmd span    { display: block; }'.
+    _add '.repo_tab td.cmd a       { display: block; }'.
 
-  ENDMETHOD.
-
-  METHOD render_explore.
-
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_toolbar.
-
-    lo_toolbar->add( iv_txt = 'Explore new projects'
-                     iv_act = gc_action-go_explore ) ##NO_TEXT.
-
-    ro_html->add( '<div class="dummydiv">' ).
-    ro_html->add( lo_toolbar->render( ) ).
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~on_event.
-
-    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_url  TYPE string.
-
-    lv_key   = iv_getdata.
-
-    CASE iv_action.
-      WHEN gc_action-repo_newoffline.   " New offline repo
-        lcl_services_repo=>new_offline( ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_delete. " Delete remote branch
-        lcl_services_git=>delete_branch( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_switch. " Switch branch
-        lcl_services_git=>switch_branch( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN c_actions-show.              " Change displayed repo
-        lcl_app=>user( )->set_repo_show( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN c_actions-toggle_hide_files. " Toggle file diplay
-        lcl_app=>user( )->toggle_hide_files( ).
-        ev_state = gc_event_state-re_render.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~render.
-
-    DATA: lt_repos   TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error   TYPE REF TO lcx_exception,
-          lo_repo    LIKE LINE OF lt_repos.
-
-    retrieve_active_repo( ). " Get and validate key of user default repo
-    mv_hide_files = lcl_app=>user( )->get_hide_files( ).
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( iv_title = 'HOME'
-                         io_menu  = build_main_menu( ) ) ).
-
-    TRY.
-        lt_repos = lcl_app=>repo_srv( )->list( ).
-      CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_error( lx_error ) ).
-    ENDTRY.
-
-    ro_html->add( render_toc( lt_repos ) ).
-
-    IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
-      ro_html->add( render_explore( ) ).
-    ELSE.
-      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
-      ro_html->add( render_repo( lo_repo ) ).
-    ENDIF.
-
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "styles
 
   METHOD lif_gui_page~get_assets.
 * http://fa2png.io/r/octicons/
@@ -838,6 +850,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
-  ENDMETHOD.
+  ENDMETHOD.  "get_assets
 
 ENDCLASS.
