@@ -96,15 +96,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lv_key   = iv_getdata.
 
     CASE iv_action.
-      WHEN gc_action-repo_newoffline.   " New offline repo
-        lcl_services_repo=>new_offline( ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_delete. " Delete remote branch
-        lcl_services_git=>delete_branch( lv_key ).
-        ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_switch. " Switch branch
-        lcl_services_git=>switch_branch( lv_key ).
-        ev_state = gc_event_state-re_render.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
         ev_state = gc_event_state-re_render.

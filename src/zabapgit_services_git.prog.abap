@@ -4,6 +4,15 @@
 
 CLASS lcl_services_git DEFINITION FINAL.
   PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_commit_fields,
+             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
+             username TYPE string,
+             email    TYPE string,
+             comment  TYPE string,
+             body     TYPE string,
+           END OF ty_commit_fields.
+
     CLASS-METHODS pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception lcx_cancel.
@@ -22,6 +31,12 @@ CLASS lcl_services_git DEFINITION FINAL.
 
     CLASS-METHODS delete_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
+    CLASS-METHODS commit
+      IMPORTING io_repo     TYPE REF TO lcl_repo_online
+                is_commit   TYPE ty_commit_fields
+                io_stage    TYPE REF TO lcl_stage
       RAISING   lcx_exception lcx_cancel.
 
 ENDCLASS. " lcl_services_git
@@ -162,5 +177,40 @@ CLASS lcl_services_git IMPLEMENTATION.
     MESSAGE 'Branch deleted' TYPE 'S'.
 
   ENDMETHOD.  "delete_branch
+
+  METHOD commit.
+
+    DATA: ls_comment TYPE ty_comment,
+          lo_user    TYPE REF TO lcl_persistence_user.
+
+    lo_user = lcl_app=>user( ).
+    lo_user->set_repo_username( iv_url      = io_repo->get_url( )
+                                iv_username = is_commit-username ).
+    lo_user->set_repo_email(    iv_url      = io_repo->get_url( )
+                                iv_email    = is_commit-email ).
+
+    IF is_commit-username IS INITIAL.
+      lcx_exception=>raise( 'Commit: empty username' ).
+    ELSEIF is_commit-email IS INITIAL.
+      lcx_exception=>raise( 'Commit: empty email' ).
+    ELSEIF is_commit-comment IS INITIAL.
+      lcx_exception=>raise( 'Commit: empty comment' ).
+    ENDIF.
+
+    ls_comment-username = is_commit-username.
+    ls_comment-email    = is_commit-email.
+    ls_comment-comment  = is_commit-comment.
+
+    IF NOT is_commit-body IS INITIAL.
+      CONCATENATE ls_comment-comment is_commit-body
+        INTO ls_comment-comment SEPARATED BY gc_newline.
+    ENDIF.
+
+    io_repo->push( is_comment = ls_comment
+                   io_stage   = io_stage ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.  "commit
 
 ENDCLASS. " lcl_services_git

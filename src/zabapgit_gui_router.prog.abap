@@ -129,6 +129,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
 
         " Repository services actions
+      WHEN gc_action-repo_newoffline.                 " New offline repo
+        lcl_services_repo=>new_offline( ).
+        ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_refresh.                    " Repo refresh
         lcl_services_repo=>refresh( lv_key ).
         ev_state = gc_event_state-re_render.
@@ -176,6 +179,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN gc_action-git_branch_create.             " GIT Create new branch
         lcl_services_git=>create_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-git_branch_delete.             " Delete remote branch
+        lcl_services_git=>delete_branch( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-git_branch_switch.             " Switch branch
+        lcl_services_git=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
 
         "Others

@@ -28,7 +28,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
            END OF ty_page_stack.
 
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
-          mt_stack       TYPE TABLE OF ty_page_stack,
+          mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
           mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
@@ -59,6 +59,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
                 iv_replacing     TYPE abap_bool DEFAULT abap_false
       RAISING   lcx_exception.
 
+    METHODS handle_action
+      IMPORTING action      TYPE c
+                frame       TYPE c OPTIONAL
+                getdata     TYPE c OPTIONAL
+                postdata    TYPE cnht_post_data_tab OPTIONAL
+                query_table TYPE cnht_query_table OPTIONAL.
+
 ENDCLASS.                    "lcl_gui DEFINITION
 
 *----------------------------------------------------------------------*
@@ -72,7 +79,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.            "constructor
 
-  METHOD on_event.
+  METHOD handle_action.
 
     DATA: lx_exception TYPE REF TO lcx_exception,
           li_page      TYPE REF TO lif_gui_page,
@@ -128,6 +135,17 @@ CLASS lcl_gui IMPLEMENTATION.
       CATCH lcx_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.
+
+  ENDMETHOD.  "handle_action
+
+  METHOD on_event.
+
+    handle_action(
+      action      = action
+      frame       = frame
+      getdata     = getdata
+      postdata    = postdata
+      query_table = query_table ).
 
   ENDMETHOD.                    "on_event
 
