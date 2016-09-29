@@ -470,6 +470,7 @@ CLASS lcl_repo IMPLEMENTATION.
       rv_name = ms_data-url.
     ELSE.
       rv_name = lcl_url=>name( ms_data-url ).
+      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
 
   ENDMETHOD.                    "get_name
