@@ -549,7 +549,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress agent=' && gv_agent ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack agent=' && gv_agent ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
       ELSE.
