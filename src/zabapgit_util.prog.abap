@@ -415,14 +415,10 @@ CLASS lcl_url IMPLEMENTATION.
 
   METHOD path_name.
 
-    DATA: lv_path TYPE string,
-          lv_name TYPE string.
+    DATA: lv_host TYPE string.
 
-    regex( EXPORTING iv_repo = iv_repo
-           IMPORTING ev_path = lv_path
-                     ev_name = lv_name ).
-
-    CONCATENATE lv_path lv_name INTO rv_path_name.
+    FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
+      SUBMATCHES lv_host rv_path_name.
 
   ENDMETHOD.                    "path_name
 

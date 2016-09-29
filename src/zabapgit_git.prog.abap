@@ -76,11 +76,11 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS send_receive
-      IMPORTING ii_client      TYPE REF TO if_http_client
+      IMPORTING ii_client TYPE REF TO if_http_client
       RAISING   lcx_exception.
 
     CLASS-METHODS check_auth_requested
-      IMPORTING ii_client TYPE REF TO if_http_client
+      IMPORTING ii_client                TYPE REF TO if_http_client
       RETURNING VALUE(rv_auth_requested) TYPE abap_bool
       RAISING   lcx_exception.
 
@@ -206,7 +206,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         value = 'POST' ).
 
     lv_value = lcl_url=>path_name( iv_url ) &&
-      '.git/git-' &&
+      '/git-' &&
       iv_service &&
       '-pack'.
     ii_client->request->set_header_field(
@@ -229,7 +229,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD check_http_200.
 
-    DATA: lv_code TYPE i.
+    DATA: lv_code TYPE i,
+          lv_text TYPE string.
 
 
     ii_client->response->get_status(
@@ -249,7 +250,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
       WHEN 415.
         lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
       WHEN OTHERS.
-        lcx_exception=>raise( 'HTTP error code' ).
+        lv_text = ii_client->response->get_cdata( ).
+        lcx_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
     ENDCASE.
 
   ENDMETHOD.                                                "http_200
@@ -269,9 +271,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD acquire_login_details.
     DATA:
-          lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string.
+      lv_default_user TYPE string,
+      lv_user         TYPE string,
+      lv_pass         TYPE string.
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
     lv_user         = lv_default_user.
@@ -353,7 +355,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         name  = 'user-agent'
         value = gv_agent ).                                 "#EC NOTEXT
     lv_uri = lcl_url=>path_name( iv_url ) &&
-             '.git/info/refs?service=git-' &&
+             '/info/refs?service=git-' &&
              iv_service &&
              '-pack'.
     ei_client->request->set_header_field(
@@ -379,7 +381,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
                              ii_client = ei_client ).
 
     lv_data = ei_client->response->get_cdata( ).
-    create object eo_branch_list exporting iv_data = lv_data.
+    CREATE OBJECT eo_branch_list EXPORTING iv_data = lv_data.
 
   ENDMETHOD.                    "branch_list
 
@@ -397,10 +399,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
-        " make sure:
-        " a) SSL is setup properly in STRUST
-        " b) no firewalls
-        " check trace file in transaction SMICM
+          " make sure:
+          " a) SSL is setup properly in STRUST
+          " b) no firewalls
+          " check trace file in transaction SMICM
           lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
         WHEN 2.
           lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
