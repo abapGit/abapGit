@@ -20,10 +20,9 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS export_package
-        RAISING lcx_exception lcx_cancel.
+      RAISING lcx_exception lcx_cancel.
 
   PRIVATE SECTION.
-
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
@@ -33,9 +32,14 @@ CLASS lcl_zip DEFINITION FINAL.
       RETURNING VALUE(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
 
+    CLASS-METHODS normalize_path
+      CHANGING ct_files TYPE ty_files_tt
+      RAISING  lcx_exception.
+
     CLASS-METHODS filename
-      IMPORTING iv_str             TYPE string
-      RETURNING VALUE(rv_filename) TYPE string
+      IMPORTING iv_str      TYPE string
+      EXPORTING ev_path     TYPE string
+                ev_filename TYPE string
       RAISING   lcx_exception.
 
     CLASS-METHODS file_download
@@ -198,19 +202,20 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD filename.
 
-    DATA: lv_path TYPE string.                              "#EC NEEDED
-
-
     IF iv_str CA '/'.
       FIND REGEX '(.*/)(.*)' IN iv_str
-        SUBMATCHES lv_path rv_filename.
+        SUBMATCHES ev_path ev_filename.
       IF sy-subrc <> 0.
         lcx_exception=>raise( 'Malformed path' ).
       ENDIF.
+      IF ev_path <> '/'.
+        CONCATENATE '/' ev_path INTO ev_path.
+      ENDIF.
     ELSE.
-      rv_filename = iv_str.
+      ev_path = '/'.
+      ev_filename = iv_str.
     ENDIF.
-    TRANSLATE rv_filename TO LOWER CASE.
+    TRANSLATE ev_filename TO LOWER CASE.
 
   ENDMETHOD.                    "filename
 
@@ -287,6 +292,50 @@ CLASS lcl_zip IMPLEMENTATION.
 
   ENDMETHOD.                    "file_upload
 
+  METHOD normalize_path.
+* removes first folder from path if needed
+
+    DATA: lt_split  TYPE TABLE OF string,
+          lv_needed TYPE abap_bool,
+          lv_length TYPE i,
+          lv_split  LIKE LINE OF lt_split.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
+
+
+    READ TABLE ct_files INDEX 1 ASSIGNING <ls_file>.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SPLIT <ls_file>-path AT '/' INTO TABLE lt_split.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+    READ TABLE lt_split INDEX 2 INTO lv_split.
+    IF sy-subrc <> 0 OR strlen( lv_split ) = 0.
+      RETURN.
+    ENDIF.
+
+    CONCATENATE '/' lv_split '/*' INTO lv_split.
+
+    lv_needed = abap_true.
+    LOOP AT ct_files ASSIGNING <ls_file>.
+      IF NOT <ls_file>-path CP lv_split.
+        lv_needed = abap_false.
+        EXIT. " current loop
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_needed = abap_true.
+      lv_length = strlen( lv_split ) - 2.
+      LOOP AT ct_files ASSIGNING <ls_file>.
+        <ls_file>-path = <ls_file>-path+lv_length.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD unzip_file.
 
     DATA: lo_zip    TYPE REF TO cl_abap_zip,
@@ -324,11 +373,18 @@ CLASS lcl_zip IMPLEMENTATION.
       ENDIF.
 
       APPEND INITIAL LINE TO rt_files ASSIGNING <ls_file>.
-      <ls_file>-path     = '/'.
-      <ls_file>-filename = filename( <ls_splice>-name ).
-      <ls_file>-data     = lv_xstr.
 
+      filename(
+        EXPORTING
+          iv_str      = <ls_splice>-name
+        IMPORTING
+          ev_path     = <ls_file>-path
+          ev_filename = <ls_file>-filename ).
+
+      <ls_file>-data     = lv_xstr.
     ENDLOOP.
+
+    normalize_path( CHANGING ct_files = rt_files ).
 
   ENDMETHOD.                    "decode_files
 
@@ -380,8 +436,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export_package.
 
-    DATA: lo_repo       TYPE REF TO lcl_repo_offline,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo.
+    DATA: lo_repo TYPE REF TO lcl_repo_offline,
+          ls_data TYPE lcl_persistence_repo=>ty_repo.
 
     ls_data-package = lcl_popups=>popup_package_export( ).
     IF ls_data-package IS INITIAL.
