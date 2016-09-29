@@ -6,13 +6,10 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_commit_fields,
-             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-             body     TYPE string,
-           END OF ty_commit_fields.
+    CONSTANTS: BEGIN OF c_action,
+                 commit_post   TYPE string VALUE 'commit_post',
+                 commit_cancel TYPE string VALUE 'commit_cancel',
+               END OF c_action.
 
     METHODS:
       constructor
@@ -38,10 +35,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       styles
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       scripts
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
-      commit_push
-        IMPORTING it_postdata TYPE cnht_post_data_tab
-        RAISING   lcx_exception.
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -53,6 +47,50 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     mo_repo   = io_repo.
     mo_stage  = io_stage.
   ENDMETHOD.
+
+  METHOD lif_gui_page~on_event.
+
+    DATA: ls_commit TYPE lcl_services_git=>ty_commit_fields.
+
+    CASE iv_action.
+      WHEN c_action-commit_post.
+
+        lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
+                                                     IMPORTING es_fields   = ls_commit ).
+
+        lcl_services_git=>commit( is_commit   = ls_commit
+                                  io_repo     = mo_repo
+                                  io_stage    = mo_stage ).
+
+        ev_state = gc_event_state-go_back_to_bookmark.
+
+      WHEN c_action-commit_cancel.
+        ev_state = gc_event_state-go_back.
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD lif_gui_page~render.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( title( 'COMMIT' ) ).
+
+    ro_html->add( '<div class="repo">' ).
+    ro_html->add( render_repo_top(
+      io_repo         = mo_repo
+      iv_show_package = abap_false
+      iv_branch       = mo_stage->get_branch_name( ) ) ).
+
+    ro_html->add( render_menu( ) ).
+    ro_html->add( render_form( ) ).
+    ro_html->add( render_stage( ) ).
+    ro_html->add( '</div>' ).
+
+    ro_html->add( footer( io_include_script = scripts( ) ) ).
+
+  ENDMETHOD.  "lif_gui_page~render
 
   METHOD render_stage.
 
@@ -177,40 +215,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.      "render_menu
 
-  METHOD lif_gui_page~on_event.
-
-    CASE iv_action.
-      WHEN 'commit_post'.
-        commit_push( it_postdata ).
-        ev_state = gc_event_state-go_back_to_bookmark.
-      WHEN 'commit_cancel'.
-        ev_state = gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD lif_gui_page~render.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( header( io_include_style = styles( ) ) ).
-    ro_html->add( title( 'COMMIT' ) ).
-
-    ro_html->add( '<div class="repo">' ).
-    ro_html->add( render_repo_top(
-      io_repo         = mo_repo
-      iv_show_package = abap_false
-      iv_branch       = mo_stage->get_branch_name( ) ) ).
-
-    ro_html->add( render_menu( ) ).
-    ro_html->add( render_form( ) ).
-    ro_html->add( render_stage( ) ).
-    ro_html->add( '</div>' ).
-
-    ro_html->add( footer( io_include_script = scripts( ) ) ).
-
-  ENDMETHOD.  "lif_gui_page~render
-
   METHOD styles.
 
     CREATE OBJECT ro_html.
@@ -251,44 +255,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     _add '}'.
 
   ENDMETHOD.    "styles
-
-  METHOD commit_push.
-
-    DATA: ls_fields  TYPE ty_commit_fields,
-          ls_comment TYPE ty_comment,
-          lo_user    TYPE REF TO lcl_persistence_user.
-
-
-    lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
-                                                 IMPORTING es_fields   = ls_fields ).
-
-    lo_user = lcl_app=>user( ).
-    lo_user->set_repo_username( iv_url = mo_repo->get_url( ) iv_username = ls_fields-username ).
-    lo_user->set_repo_email(    iv_url = mo_repo->get_url( ) iv_email = ls_fields-email ).
-
-    IF ls_fields-username IS INITIAL.
-      lcx_exception=>raise( 'empty username' ).
-    ELSEIF ls_fields-email IS INITIAL.
-      lcx_exception=>raise( 'empty email' ).
-    ELSEIF ls_fields-comment IS INITIAL.
-      lcx_exception=>raise( 'empty comment' ).
-    ENDIF.
-
-    ls_comment-username = ls_fields-username.
-    ls_comment-email    = ls_fields-email.
-    ls_comment-comment  = ls_fields-comment.
-
-    IF NOT ls_fields-body IS INITIAL.
-      CONCATENATE ls_comment-comment gc_newline ls_fields-body
-        INTO ls_comment-comment.
-    ENDIF.
-
-    mo_repo->push( is_comment = ls_comment
-                   io_stage   = mo_stage ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.      "commit_push
 
   METHOD scripts.
 

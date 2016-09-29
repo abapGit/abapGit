@@ -151,17 +151,22 @@ CONSTANTS: BEGIN OF gc_action,
              repo_remote_attach TYPE string VALUE 'repo_remote_attach',
              repo_remote_detach TYPE string VALUE 'repo_remote_detach',
              repo_remote_change TYPE string VALUE 'repo_remote_change',
+
              abapgit_home       TYPE string VALUE 'abapgit_home',
              abapgit_install    TYPE string VALUE 'abapgit_install',
+
              zip_import         TYPE string VALUE 'zip_import',
              zip_export         TYPE string VALUE 'zip_export',
              zip_package        TYPE string VALUE 'zip_package',
              zip_transport      TYPE string VALUE 'zip_transport',
+
              git_pull           TYPE string VALUE 'git_pull',
              git_reset          TYPE string VALUE 'git_reset',
              git_branch_create  TYPE string VALUE 'git_branch_create',
              git_branch_switch  TYPE string VALUE 'git_branch_switch',
              git_branch_delete  TYPE string VALUE 'git_branch_delete',
+             git_commit         TYPE string VALUE 'git_commit',
+
              db_delete          TYPE string VALUE 'db_delete',
              db_update          TYPE string VALUE 'db_update',
              db_display         TYPE string VALUE 'db_display',
