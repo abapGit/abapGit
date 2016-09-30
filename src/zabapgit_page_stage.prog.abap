@@ -303,9 +303,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     " Re-format table line
     _add 'function formatTR(tr, cmd, context) {'.
-    _add '  const cmdReset  = "<a>reset</a>"; '.
-    _add '  const cmdLocal  = "<a>add</a>"; '.
-    _add '  const cmdRemote = "<a>ignore</a><a>remove</a>";'.
+    _add '  var cmdReset  = "<a>reset</a>"; '.
+    _add '  var cmdLocal  = "<a>add</a>"; '.
+    _add '  var cmdRemote = "<a>ignore</a><a>remove</a>";'.
     _add '  tr.cells[0].innerText   = cmd;'.
     _add '  tr.cells[0].style.color = (cmd == "?")?"#CCC":"";'.
     _add '  tr.cells[2].innerHTML   = (cmd != "?")?cmdReset'.
