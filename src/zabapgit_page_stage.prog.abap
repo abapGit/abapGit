@@ -289,13 +289,13 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     _add '  if (stageTab.addEventListener) {'.
     _add '    stageTab.addEventListener("click", onEvent);'.
     _add '  } else {'.
-    _add '    stageTab.attachEvent("onclick", onEvent);'. " <IE9 clutch
+    _add '    stageTab.attachEvent("onclick", onEvent);'. " <IE9 crutch
     _add '  }'.
     _add '}'.
 
     " Event handler, change status
     _add 'function onEvent(event) {'.
-    _add '  if (!event.target) {'. " <IE9 clutch
+    _add '  if (!event.target) {'. " <IE9 crutch
     _add '    if (event.srcElement) event.target = event.srcElement;'.
     _add '    else return;'.
     _add '  }'.
