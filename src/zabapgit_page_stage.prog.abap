@@ -279,12 +279,26 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    " Hook global click listener on table, global action counter
-    _add 'document.getElementById("stage_tab").addEventListener("click", onEvent);'.
+    " Globals & initialization
     _add 'var gChoiceCount = 0;'.
+    _add 'setHook();'.
+
+    " Hook global click listener on table, global action counter
+    _add 'function setHook() {'.
+    _add '  var stageTab = document.getElementById("stage_tab");'.
+    _add '  if (stageTab.addEventListener) {'.
+    _add '    stageTab.addEventListener("click", onEvent);'.
+    _add '  } else {'.
+    _add '    stageTab.attachEvent("onclick", onEvent);'. " <IE9 clutch
+    _add '  }'.
+    _add '}'.
 
     " Event handler, change status
     _add 'function onEvent(event) {'.
+    _add '  if (!event.target) {'. " <IE9 clutch
+    _add '    if (event.srcElement) event.target = event.srcElement;'.
+    _add '    else return;'.
+    _add '  }'.
     _add '  if (event.target.tagName != "A") return;'.
     _add '  var td = event.target.parentNode;'.
     _add '  if (!td || td.tagName != "TD" || td.className != "cmd") return;'.
