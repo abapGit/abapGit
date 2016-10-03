@@ -42,8 +42,11 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     initialize( ).
 
-    rt_results = lcl_file_status=>status( io_repo = me
-                                          io_log  = io_log ).
+    IF lines( mt_status ) = 0.
+      mt_status = lcl_file_status=>status( io_repo = me
+                                           io_log  = io_log ).
+    ENDIF.
+    rt_results = mt_status.
 
   ENDMETHOD.                    "status
 
@@ -66,6 +69,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD refresh.
 
     super->refresh( ).
+    CLEAR mt_status.
 
     lcl_progress=>show( iv_key     = 'Fetch'
                         iv_current = 1

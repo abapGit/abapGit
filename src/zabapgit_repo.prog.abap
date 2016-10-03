@@ -121,7 +121,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       mt_objects     TYPE ty_objects_tt,
       mv_branch      TYPE ty_sha1,
       mv_initialized TYPE abap_bool,
-      mo_branches    TYPE REF TO lcl_git_branch_list.
+      mo_branches    TYPE REF TO lcl_git_branch_list,
+      mt_status      TYPE ty_results_tt.
 
     METHODS:
       handle_stage_ignore
