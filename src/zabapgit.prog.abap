@@ -42,7 +42,7 @@ INCLUDE zabapgit_html.
 INCLUDE zabapgit_util.
 INCLUDE zabapgit_xml.
 
-INCLUDE zabapgit_app. " Some deferred definitions here
+INCLUDE zabapgit_app.              " Some deferred definitions here
 INCLUDE zabapgit_persistence_old.
 INCLUDE zabapgit_persistence.
 INCLUDE zabapgit_dot_abapgit.
@@ -60,14 +60,14 @@ INCLUDE zabapgit_popups.
 INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 
-INCLUDE zabapgit_object_serializing. " All serializing classes here
+INCLUDE zabapgit_object_serializing.  " All serializing classes here
 
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
 
-INCLUDE zabapgit_services. " All services here
-INCLUDE zabapgit_gui_pages. " All GUI pages here
+INCLUDE zabapgit_services.            " All services here
+INCLUDE zabapgit_gui_pages.           " All GUI pages here
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 INCLUDE zabapgit_gui_router.
 INCLUDE zabapgit_gui.

@@ -29,6 +29,10 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_gui_page ABSTRACT METHODS render.
 
+    CLASS-METHODS render_error
+        IMPORTING ix_error       TYPE REF TO lcx_exception
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
   PROTECTED SECTION.
     METHODS render_repo_top
       IMPORTING io_repo               TYPE REF TO lcl_repo
@@ -250,6 +254,16 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</html>').                               "#EC NOTEXT
 
   ENDMETHOD.                    "render html footer & logo
+
+  METHOD render_error.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div class="dummydiv attention">' ).
+    ro_html->add( |Error: { ix_error->mv_text }| ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.  "render_error
 
   METHOD redirect.
 
