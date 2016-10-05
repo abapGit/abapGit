@@ -2,55 +2,242 @@
 *&  Include           ZABAPGIT_VIEW_REPO
 *&---------------------------------------------------------------------*
 
+CLASS lcl_repo_content_browser DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CONSTANTS: BEGIN OF c_sortkey,
+                 default    TYPE i VALUE 9999,
+                 parent_dir TYPE i VALUE 0,
+                 dir        TYPE i VALUE 1,
+                 wo_obj     TYPE i VALUE 2,
+                 new        TYPE i VALUE 3,
+                 changed    TYPE i VALUE 4,
+               END OF c_sortkey.
+
+    TYPES: BEGIN OF ty_repo_item,
+             obj_type TYPE tadir-object,
+             obj_name TYPE tadir-obj_name,
+             sortkey  TYPE i,
+             path     TYPE string,
+             is_dir   TYPE abap_bool,
+             changes  TYPE i,
+             files    TYPE tt_repo_files,
+           END OF ty_repo_item.
+    TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
+
+    METHODS constructor
+      IMPORTING io_repo TYPE REF TO lcl_repo.
+
+    METHODS list
+      IMPORTING iv_path       TYPE string
+      EXPORTING et_repo_items TYPE tt_repo_items
+                eo_log        TYPE REF TO lcl_log
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    DATA mo_repo TYPE REF TO lcl_repo.
+    DATA mo_log  TYPE REF TO lcl_log.
+
+    METHODS get_local
+      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
+      RAISING   lcx_exception.
+
+    METHODS get_remote
+      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
+      RAISING   lcx_exception.
+
+    METHODS build_folders
+      IMPORTING iv_cur_dir    TYPE string
+      CHANGING  ct_repo_items TYPE tt_repo_items
+      RAISING   lcx_exception.
+
+ENDCLASS. "lcl_repo_content_browser
+
+CLASS lcl_repo_content_browser IMPLEMENTATION.
+
+  METHOD constructor.
+    mo_repo = io_repo.
+  ENDMETHOD.  "constructor
+
+  METHOD list.
+
+    CLEAR et_repo_items.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      et_repo_items = get_local( ).
+    ELSE.
+      CREATE OBJECT mo_log.
+      et_repo_items = get_remote( ).
+      eo_log        = mo_log.
+    ENDIF.
+
+    build_folders(
+      EXPORTING iv_cur_dir    = iv_path
+      CHANGING  ct_repo_items = et_repo_items ).
+
+    SORT et_repo_items BY sortkey obj_type obj_name ASCENDING.
+
+  ENDMETHOD.  "list
+
+  METHOD build_folders.
+
+    DATA: lv_index   TYPE i,
+          lt_folders LIKE ct_repo_items,
+          ls_folder  LIKE LINE OF ct_repo_items.
+
+    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
+
+    LOOP AT ct_repo_items ASSIGNING <item>.
+      lv_index = sy-tabix.
+      CHECK <item>-path <> iv_cur_dir. " files in target dir - just leave them be
+
+      IF lcl_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
+        ls_folder-changes = <item>-changes.
+        ls_folder-path    = <item>-path.
+        APPEND ls_folder TO lt_folders.
+      ENDIF.
+
+      DELETE ct_repo_items INDEX lv_index.
+    ENDLOOP.
+
+    SORT lt_folders BY path.
+
+    LOOP AT lt_folders ASSIGNING <item>.
+      AT NEW path.
+        CLEAR ls_folder.
+        ls_folder-path    = <item>-path.
+        ls_folder-sortkey = c_sortkey-dir. " Directory
+        ls_folder-is_dir  = abap_true.
+      ENDAT.
+
+      ls_folder-changes = ls_folder-changes + <item>-changes.
+
+      AT END OF path.
+        APPEND ls_folder TO ct_repo_items.
+      ENDAT.
+    ENDLOOP.
+
+  ENDMETHOD. "build_folders
+
+  METHOD get_local.
+
+    DATA: lt_tadir       TYPE ty_tadir_tt.
+
+    FIELD-SYMBOLS: <ls_repo_item> LIKE LINE OF rt_repo_items,
+                   <ls_tadir>     LIKE LINE OF lt_tadir.
+
+    lt_tadir = lcl_tadir=>read( mo_repo->get_package( ) ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
+      <ls_repo_item>-obj_type = <ls_tadir>-object.
+      <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
+      <ls_repo_item>-path     = '/' && <ls_tadir>-path. " Add root anchor
+      <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+    ENDLOOP.
+
+  ENDMETHOD.  "get_local
+
+  METHOD get_remote.
+
+    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+          ls_file        TYPE ty_repo_file,
+          lt_results     TYPE ty_results_tt.
+
+    FIELD-SYMBOLS: <ls_result>    LIKE LINE OF lt_results,
+                   <ls_repo_item> LIKE LINE OF rt_repo_items.
+
+    lo_repo_online ?= mo_repo.
+    lt_results      = lo_repo_online->status( mo_log ).
+
+    LOOP AT lt_results ASSIGNING <ls_result>.
+      AT NEW obj_name. "obj_type + obj_name
+        APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
+        <ls_repo_item>-obj_type = <ls_result>-obj_type.
+        <ls_repo_item>-obj_name = <ls_result>-obj_name.
+        <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
+        <ls_repo_item>-changes  = 0.
+        <ls_repo_item>-path     = <ls_result>-path.
+      ENDAT.
+
+      IF <ls_result>-filename IS NOT INITIAL.
+        ls_file-path        = <ls_result>-path.
+        ls_file-filename    = <ls_result>-filename.
+        ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
+        ls_file-new         = <ls_result>-new.
+        APPEND ls_file TO <ls_repo_item>-files.
+
+        IF ls_file-is_changed = abap_true OR ls_file-new IS NOT INITIAL.
+          <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
+          <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
+        ENDIF.
+      ENDIF.
+
+      AT END OF obj_name. "obj_type + obj_name
+        IF <ls_repo_item>-obj_type IS INITIAL.
+          <ls_repo_item>-sortkey = c_sortkey-wo_obj. "Virtual objects
+        ELSEIF lines( <ls_repo_item>-files ) = 0.
+          <ls_repo_item>-sortkey = c_sortkey-new. "New object to commit
+        ENDIF.
+      ENDAT.
+    ENDLOOP.
+
+  ENDMETHOD. "get_remote
+
+ENDCLASS. "lcl_repo_content_browser
+
+**********************************************************************
+**********************************************************************
+
 CLASS lcl_gui_view_repo_content DEFINITION FINAL.
   PUBLIC SECTION.
 
     CONSTANTS: BEGIN OF c_actions,
+                 change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
                  toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
                END OF c_actions.
 
     METHODS constructor
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
+
     METHODS render
+      IMPORTING iv_path        TYPE string
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
 
-    CONSTANTS: c_default_sortkey TYPE i VALUE 9999.
-
-    TYPES: BEGIN OF ty_repo_item,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             is_first TYPE abap_bool,
-             files    TYPE tt_repo_files,
-             sortkey  TYPE i,
-             changes  TYPE i,
-           END OF ty_repo_item.
-    TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
-
     DATA: mo_repo       TYPE REF TO lcl_repo,
+          mv_cur_dir    TYPE string,
           mv_hide_files TYPE abap_bool.
 
     METHODS:
       render_repo_menu
-        IMPORTING io_repo        TYPE REF TO lcl_repo
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      extract_repo_content
-        IMPORTING io_repo       TYPE REF TO lcl_repo
-        EXPORTING et_repo_items TYPE tt_repo_items
-                  eo_log        TYPE REF TO lcl_log
         RAISING   lcx_exception,
       render_repo_item
-        IMPORTING io_repo        TYPE REF TO lcl_repo
-                  is_item        TYPE ty_repo_item
+        IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
+      get_item_class
+        IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
+        RETURNING VALUE(rv_html) TYPE string,
+      get_item_icon
+        IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
+        RETURNING VALUE(rv_html) TYPE string,
+      render_empty_package
+        RETURNING VALUE(rv_html) TYPE string,
+      render_parent_dir_line
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+
+    METHODS:
       render_obj_jump_link
         IMPORTING iv_obj_type    TYPE tadir-object
                   iv_obj_name    TYPE tadir-obj_name
+        RETURNING VALUE(rv_html) TYPE string,
+      render_dir_jump_link
+        IMPORTING iv_path        TYPE string
         RETURNING VALUE(rv_html) TYPE string.
 
 ENDCLASS. "lcl_gui_view_repo_content
@@ -66,8 +253,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lt_repo_items TYPE tt_repo_items,
+    DATA: lt_repo_items TYPE lcl_repo_content_browser=>tt_repo_items,
           lo_tab_menu   TYPE REF TO lcl_html_toolbar,
+          lo_browser    TYPE REF TO lcl_repo_content_browser,
           lx_error      TYPE REF TO lcx_exception,
           lo_log        TYPE REF TO lcl_log.
 
@@ -75,15 +263,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CREATE OBJECT lo_tab_menu.
     CREATE OBJECT ro_html.
+    mv_cur_dir = iv_path.
 
     TRY.
-        extract_repo_content( EXPORTING io_repo       = mo_repo
-                              IMPORTING et_repo_items = lt_repo_items
-                                        eo_log        = lo_log ).
+        ro_html->add( render_repo_menu( ) ).
 
-        " extract_repo_content must be called before rendering the menu
-        " so that lo_log is filled with errors from the serialization
-        ro_html->add( render_repo_menu( mo_repo ) ).
+        CREATE OBJECT lo_browser EXPORTING io_repo = mo_repo.
+        lo_browser->list( EXPORTING iv_path       = iv_path
+                          IMPORTING et_repo_items = lt_repo_items
+                                    eo_log        = lo_log ).
 
         IF mo_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
@@ -92,6 +280,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ENDIF.
 
         ro_html->add( '<div class="repo_container">' ).
+
+        " Table menu
         IF mo_repo->is_offline( ) = abap_false.
           IF mv_hide_files = abap_true.
             lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
@@ -101,21 +291,26 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
         ENDIF.
 
+        " Repo content table
         ro_html->add( '<table width="100%" class="repo_tab">' ).
+
+        IF lcl_path=>is_root( iv_path ) = abap_false.
+          ro_html->add( render_parent_dir_line( ) ).
+        ENDIF.
+
         IF lines( lt_repo_items ) = 0.
-          ro_html->add( '<tr class="unsupported firstrow"><td class="paddings">'
-                       && '<center>Empty package</center>'
-                       && '</td></tr>' ) ##NO_TEXT.
+          ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            ro_html->add( render_repo_item( io_repo = mo_repo is_item = <ls_item> ) ).
+            ro_html->add( render_repo_item( <ls_item> ) ).
           ENDLOOP.
         ENDIF.
+
         ro_html->add( '</table>' ).
         ro_html->add( '</div>' ).
 
       CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_repo_menu( mo_repo ) ).
+        ro_html->add( render_repo_menu( ) ).
         ro_html->add( lcl_gui_page_super=>render_error( lx_error ) ).
     ENDTRY.
 
@@ -136,12 +331,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
 
-    lv_key = io_repo->get_key( ).
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
+    lv_key = mo_repo->get_key( ).
+    IF mo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= mo_repo.
     ENDIF.
 
-    IF io_repo->is_write_protected( ) = abap_true.
+    IF mo_repo->is_write_protected( ) = abap_true.
       lv_wp_opt   = gc_html_opt-crossout.
       lv_pull_opt = gc_html_opt-crossout.
     ELSE.
@@ -149,7 +344,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ENDIF.
 
     " Build branch drop-down ========================
-    IF io_repo->is_offline( ) = abap_false. " Online ?
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_branch->add( iv_txt = 'Overview'
                          iv_act = |{ gc_action-go_branch_overview }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Switch'
@@ -162,7 +357,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ENDIF.
 
     " Build advanced drop-down ========================
-    IF io_repo->is_offline( ) = abap_false. " Online ?
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Reset local'
                            iv_act = |{ gc_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
@@ -183,7 +378,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                          iv_opt = lv_wp_opt ).
 
     " Build main toolbar ==============================
-    IF io_repo->is_offline( ) = abap_false. " Online ?
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
             lo_toolbar->add( iv_txt = 'Pull'
@@ -216,131 +411,91 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                      iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
     " Render ==========================================
-    ro_html->add( '<div class="paddings right">' ).
+*    ro_html->add( '<div class="paddings right">' ).
+*    ro_html->add( lo_toolbar->render( ) ).
+*    ro_html->add( '</div>' ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( '<table width="100%"><tr>' ).
+    ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+    ro_html->add( '<td class="right">' ).
     ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '<tr></table>' ).
     ro_html->add( '</div>' ).
+
 
   ENDMETHOD.  "render_repo_menu
 
-  METHOD extract_repo_content.
+  METHOD get_item_class.
 
-    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          lt_tadir       TYPE ty_tadir_tt,
-          ls_file        TYPE ty_repo_file,
-          lt_results     TYPE ty_results_tt.
+    DATA lt_class TYPE TABLE OF string.
 
-    FIELD-SYMBOLS: <ls_result>    LIKE LINE OF lt_results,
-                   <ls_repo_item> LIKE LINE OF et_repo_items,
-                   <ls_tadir>     LIKE LINE OF lt_tadir.
-
-
-    CLEAR et_repo_items.
-
-    IF io_repo->is_offline( ) = abap_true.
-      lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
-      LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
-        IF sy-tabix = 1.
-          <ls_repo_item>-is_first = abap_true.
-        ENDIF.
-        <ls_repo_item>-obj_type = <ls_tadir>-object.
-        <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
-      ENDLOOP.
-
-    ELSE.
-      CREATE OBJECT eo_log.
-      lo_repo_online ?= io_repo.
-      lt_results      = lo_repo_online->status( eo_log ).
-      LOOP AT lt_results ASSIGNING <ls_result>.
-        AT NEW obj_name. "obj_type + obj_name
-          APPEND INITIAL LINE TO et_repo_items ASSIGNING <ls_repo_item>.
-          <ls_repo_item>-obj_type = <ls_result>-obj_type.
-          <ls_repo_item>-obj_name = <ls_result>-obj_name.
-          <ls_repo_item>-sortkey  = c_default_sortkey. " Default sort key
-          <ls_repo_item>-changes  = 0.
-        ENDAT.
-
-        IF <ls_result>-filename IS NOT INITIAL.
-          ls_file-path        = <ls_result>-path.
-          ls_file-filename    = <ls_result>-filename.
-          ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
-          ls_file-new         = <ls_result>-new.
-          APPEND ls_file TO <ls_repo_item>-files.
-
-          IF ls_file-is_changed = abap_true OR ls_file-new IS NOT INITIAL.
-            <ls_repo_item>-sortkey = 2. " Changed files
-            <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
-          ENDIF.
-        ENDIF.
-
-        AT END OF obj_name. "obj_type + obj_name
-          IF <ls_repo_item>-obj_type IS INITIAL.
-            <ls_repo_item>-sortkey = 0. "Virtual objects
-          ELSEIF lines( <ls_repo_item>-files ) = 0.
-            <ls_repo_item>-sortkey = 1. "New object to commit
-          ENDIF.
-        ENDAT.
-      ENDLOOP.
-
-      SORT et_repo_items BY sortkey obj_type obj_name ASCENDING.
-      READ TABLE et_repo_items ASSIGNING <ls_repo_item> INDEX 1.
-      IF sy-subrc IS INITIAL.
-        <ls_repo_item>-is_first = abap_true.
-      ENDIF.
+    IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
+      APPEND 'unsupported' TO lt_class.
     ENDIF.
 
+    IF is_item-is_dir = abap_true.
+      APPEND 'folder' TO lt_class.
+    ENDIF.
 
-  ENDMETHOD.  "extract_repo_content
+    IF is_item-changes > 0.
+      APPEND 'modified' TO lt_class.
+    ENDIF.
+
+    IF lines( lt_class ) > 0.
+      rv_html = | class="{ concat_lines_of( table = lt_class sep = ` ` ) }"|.
+    ENDIF.
+
+  ENDMETHOD. "get_item_class
+
+  METHOD get_item_icon.
+
+    CASE is_item-obj_type.
+      WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
+        rv_html = |<img src="img/code">|.
+      WHEN 'W3MI' OR 'W3HT'.
+        rv_html = |<img src="img/bin">|.
+      WHEN ''.
+        rv_html = space. " no icon
+      WHEN OTHERS.
+        rv_html = |<img src="img/obj">|.
+    ENDCASE.
+
+    IF is_item-is_dir = abap_true.
+      rv_html = |<img src="img/dir">|.
+    ENDIF.
+
+  ENDMETHOD. "get_item_icon
+
 
   METHOD render_repo_item.
     DATA:
       lv_link     TYPE string,
-      lv_icon     TYPE string,
       lv_difflink TYPE string,
-      ls_file     LIKE LINE OF is_item-files,
-      lv_trclass  TYPE string.
+      ls_file     LIKE LINE OF is_item-files.
 
     CREATE OBJECT ro_html.
 
-    IF is_item-is_first = abap_true. " TR class
-      lv_trclass = 'firstrow' ##NO_TEXT.
-    ENDIF.
-    IF is_item-obj_name IS INITIAL.
-      lv_trclass = lv_trclass && ' unsupported' ##NO_TEXT.
-    ENDIF.
-    IF is_item-sortkey > 0 AND is_item-sortkey < c_default_sortkey.
-      lv_trclass = lv_trclass && ' modified' ##NO_TEXT.
-    ENDIF.
-    IF lv_trclass IS NOT INITIAL.
-      SHIFT lv_trclass LEFT DELETING LEADING space.
-      lv_trclass = | class="{ lv_trclass }"|.
-    ENDIF.
 
-    ro_html->add( |<tr{ lv_trclass }>| ).
+    ro_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
-    IF is_item-obj_name IS INITIAL.
+    IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
       ro_html->add( '<td colspan="2"></td>'
                  && '<td class="object"><i class="grey">non-code and meta files</i></td>' ).
+    ELSEIF is_item-is_dir = abap_true.
+      lv_link = render_dir_jump_link( iv_path = is_item-path ).
+      ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
+      ro_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
     ELSE.
-      CASE is_item-obj_type. "TODO ??
-        WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
-          lv_icon = |<img src="img/code">|.
-        WHEN 'W3MI' OR 'W3HT'.
-          lv_icon = |<img src="img/bin">|.
-        WHEN ''.
-          lv_icon = space. " no icon
-        WHEN OTHERS.
-          lv_icon = |<img src="img/obj">|.
-      ENDCASE.
-
       lv_link = render_obj_jump_link( iv_obj_name = is_item-obj_name
                                       iv_obj_type = is_item-obj_type ).
-      ro_html->add( |<td class="icon">{ lv_icon }</td>| ).
+      ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
       ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
       ro_html->add( |<td class="object">{ lv_link }</td>| ).
     ENDIF.
 
-    IF io_repo->is_offline( ) = abap_false. " Files for online repos only
+    IF mo_repo->is_offline( ) = abap_false. " Files for online repos only
 
       ro_html->add( '<td class="files">' ).
       IF mv_hide_files = abap_false OR is_item-obj_type IS INITIAL.
@@ -356,7 +511,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       ELSEIF is_item-changes > 0.
         IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
           lv_difflink = lcl_html_action_utils=>obj_encode(
-            iv_key    = io_repo->get_key( )
+            iv_key    = mo_repo->get_key( )
             ig_object = is_item ).
           ro_html->add_anchor(
             iv_txt = |diff ({ is_item-changes })|
@@ -369,7 +524,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
               ro_html->add( '<span class="grey">new @local</span>' ).
             ELSEIF ls_file-is_changed = abap_true.
               lv_difflink = lcl_html_action_utils=>file_encode(
-                iv_key  = io_repo->get_key( )
+                iv_key  = mo_repo->get_key( )
                 ig_file = ls_file ).
               ro_html->add_anchor(
                 iv_txt = 'diff'
@@ -387,6 +542,41 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.  "render_repo_item
+
+  METHOD render_empty_package.
+
+    rv_html = '<tr class="unsupported"><td class="paddings">'
+               && '<center>Empty package</center>'
+               && '</td></tr>' ##NO_TEXT.
+
+  ENDMETHOD. "render_empty_package
+
+  METHOD render_parent_dir_line.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<tr class="folder">' ).
+    ro_html->add( |<td class="icon"><img src="img/dir"></td>| ).
+    ro_html->add( |<td class="object" colspan="2">{ render_dir_jump_link( '..' ) }</td>| ).
+    ro_html->add( '</tr>' ).
+
+  ENDMETHOD. "render_parent_dir_line
+
+  METHOD render_dir_jump_link.
+
+    DATA: lv_path   TYPE string,
+          lv_encode TYPE string,
+          lo_html   TYPE REF TO lcl_html_helper.
+
+    lv_path = iv_path.
+    REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
+    lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
+
+    CREATE OBJECT lo_html.
+    lo_html->add_anchor( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    rv_html = lo_html->mv_html.
+
+  ENDMETHOD.  "render_dir_jump_link
 
   METHOD render_obj_jump_link.
 

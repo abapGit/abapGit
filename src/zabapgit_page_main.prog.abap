@@ -19,7 +19,8 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                  show              TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
-    DATA: mv_show       TYPE lcl_persistence_db=>ty_value.
+    DATA: mv_show       TYPE lcl_persistence_db=>ty_value,
+          mv_cur_dir    TYPE string.
 
     METHODS:
       styles
@@ -48,19 +49,19 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 ENDCLASS.
 
 
-
 CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD constructor.
 
     super->constructor( ).
+    mv_cur_dir = '/'. " Root
 
   ENDMETHOD.  " constructor
 
   METHOD lif_gui_page~on_event.
 
     DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_url  TYPE string.
+          lv_path TYPE string.
 
     lv_key   = iv_getdata.
 
@@ -71,6 +72,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN lcl_gui_view_repo_content=>c_actions-toggle_hide_files. " Toggle file diplay
         lcl_app=>user( )->toggle_hide_files( ).
         ev_state = gc_event_state-re_render.
+      WHEN lcl_gui_view_repo_content=>c_actions-change_dir. " Toggle file diplay
+        lv_path = lcl_html_action_utils=>dir_decode( iv_getdata ).
+        mv_cur_dir = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        ev_state = gc_event_state-re_render.
+
     ENDCASE.
 
   ENDMETHOD.  "on_event
@@ -280,7 +286,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
 
     CREATE OBJECT lo_repo_content EXPORTING io_repo = io_repo.
-    ro_html->add( lo_repo_content->render( ) ).
+    ro_html->add( lo_repo_content->render( iv_path = mv_cur_dir ) ).
 
     ro_html->add( '</div>' ).
 
@@ -329,12 +335,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '  padding-left: 0.5em;'.
     _add '  padding-right: 1em;'.
     _add '}'.
-    _add '.repo_tab tr.unsupported { color: lightgrey; }'.
-    _add '.repo_tab tr.modified    { background: #fbf7e9; }'.
-    _add '.repo_tab tr.firstrow td { border-top: 0px; }'.
-    _add '.repo_tab td.files span  { display: block; }'.
-    _add '.repo_tab td.cmd span    { display: block; }'.
-    _add '.repo_tab td.cmd a       { display: block; }'.
+    _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
+    _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
+    _add '.repo_tab tr:first-child td { border-top: 0px; }'.
+    _add '.repo_tab td.files span     { display: block; }'.
+    _add '.repo_tab td.cmd span       { display: block; }'.
+    _add '.repo_tab td.cmd a          { display: block; }'.
 
   ENDMETHOD.  "styles
 
@@ -466,6 +472,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
       && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
       && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/dir' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAASFBMVEUAAABmksxmksxm'
+      && 'ksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxm'
+      && 'ksxmksxmksxmksxMwQo8AAAAF3RSTlMABhIYIy1fZmhpe3+IiYuMkZvD7e/x93sipD4A'
+      && 'AAA+SURBVBhXY2BABzwiokAgzAYXEGdiBAIWIYQAPzcQCApzgwEXM4M4KuBDFxAYKAEx'
+      && 'VAFeBlYOTiTAzoThewD5hBAcnWM4gwAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
   ENDMETHOD.  "get_assets

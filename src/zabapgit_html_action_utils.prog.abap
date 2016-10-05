@@ -32,6 +32,15 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
                 ev_obj_name TYPE tadir-obj_name
       RAISING   lcx_exception.
 
+    CLASS-METHODS dir_encode
+      IMPORTING iv_path          TYPE string
+      RETURNING VALUE(rv_string) TYPE string.
+
+    CLASS-METHODS dir_decode
+      IMPORTING iv_string      TYPE clike
+      RETURNING VALUE(rv_path) TYPE string
+      RAISING   lcx_exception.
+
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
                 ig_file          TYPE any "assuming ty_file
@@ -161,6 +170,22 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     get_field( EXPORTING name = 'NAME' it = lt_fields CHANGING cv = ev_obj_name ).
 
   ENDMETHOD.                    "jump_decode
+
+  METHOD dir_encode.
+
+    DATA: lt_fields TYPE tihttpnvp.
+    add_field( EXPORTING name = 'PATH' iv = iv_path CHANGING ct = lt_fields ).
+    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
+
+  ENDMETHOD.                    "dir_encode
+
+  METHOD dir_decode.
+
+    DATA: lt_fields TYPE tihttpnvp.
+    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+    get_field( EXPORTING name = 'PATH' it = lt_fields CHANGING cv = rv_path ).
+
+  ENDMETHOD.                    "dir_decode
 
   METHOD file_encode.
 

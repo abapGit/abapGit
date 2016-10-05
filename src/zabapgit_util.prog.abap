@@ -337,6 +337,105 @@ CLASS lcl_hash IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_hash IMPLEMENTATION
 
+CLASS lcl_path DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS split_file_location
+      IMPORTING iv_fullpath TYPE string
+      EXPORTING ev_path     TYPE string
+                ev_filename TYPE string.
+
+    CLASS-METHODS is_root
+      IMPORTING iv_path TYPE string
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
+
+    CLASS-METHODS is_subdir
+      IMPORTING iv_path   TYPE string
+                iv_parent TYPE string
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
+
+    CLASS-METHODS change_dir
+      IMPORTING iv_cur_dir TYPE string
+                iv_cd      TYPE string
+      RETURNING VALUE(rv_path) TYPE string.
+
+ENDCLASS. "lcl_path
+
+CLASS lcl_path IMPLEMENTATION.
+
+  METHOD split_file_location.
+
+    DATA: lv_cnt TYPE i,
+          lv_off TYPE i,
+          lv_len TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
+      MATCH COUNT lv_cnt
+      MATCH OFFSET lv_off
+      MATCH LENGTH lv_len.
+
+    IF lv_cnt > 0.
+      ev_path     = iv_fullpath+0(lv_len).
+      ev_filename = iv_fullpath+lv_len.
+    ELSE.
+      CLEAR ev_path.
+      ev_filename = iv_fullpath.
+    ENDIF.
+
+  ENDMETHOD.  "split_file_location
+
+  METHOD is_root.
+    rv_yes = boolc( iv_path = '/' ).
+  ENDMETHOD. "is_root
+
+  METHOD is_subdir.
+
+    DATA lv_len TYPE i.
+
+    lv_len = strlen( iv_parent ).
+    rv_yes = boolc( strlen( iv_path ) > lv_len AND iv_path+0(lv_len) = iv_parent ).
+
+  ENDMETHOD. "is_subdir
+
+  METHOD change_dir.
+
+    DATA lv_last TYPE i.
+    DATA lv_temp TYPE string.
+    DATA lv_len  TYPE i.
+
+    lv_last = strlen( iv_cd ) - 1.
+
+    IF iv_cd = '' OR iv_cd = '.'. " No change
+      rv_path = iv_cur_dir.
+    ELSEIF iv_cd+0(1) = '/'.      " Absolute path
+      rv_path = iv_cd.
+    ELSEIF iv_cd = '..'.          " CD back
+      IF iv_cur_dir = '/' OR iv_cur_dir = ''. " Back from root = root
+        rv_path = iv_cur_dir.
+      ELSE.
+        lv_temp = reverse( iv_cur_dir ).
+        IF lv_temp+0(1) = '/'.
+          SHIFT lv_temp BY 1 PLACES LEFT.
+        ENDIF.
+        SHIFT lv_temp UP TO '/' LEFT.
+        rv_path = reverse( lv_temp ).
+      ENDIF.
+    ELSE.
+      IF iv_cd+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
+        rv_path = iv_cur_dir && iv_cd.
+      ELSE.
+        rv_path = iv_cur_dir && '/' && iv_cd.
+      ENDIF.
+    ENDIF.
+
+    " TODO: improve logic and cases
+    " TODO: Unit test
+
+  ENDMETHOD. "change_dir
+
+ENDCLASS. "lcl_path
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_url DEFINITION
 *----------------------------------------------------------------------*
@@ -360,11 +459,6 @@ CLASS lcl_url DEFINITION FINAL.
       RETURNING VALUE(rv_path_name) TYPE string
       RAISING   lcx_exception.
 
-    CLASS-METHODS split_file_location
-      IMPORTING iv_fullpath TYPE string
-      EXPORTING ev_path     TYPE string
-                ev_filename TYPE string.
-
   PRIVATE SECTION.
     CLASS-METHODS regex
       IMPORTING iv_repo TYPE string
@@ -381,27 +475,6 @@ ENDCLASS.                    "lcl_repo DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_url IMPLEMENTATION.
-
-  METHOD split_file_location.
-
-    DATA: lv_cnt TYPE i,
-          lv_off TYPE i,
-          lv_len TYPE i.
-
-    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
-      MATCH COUNT lv_cnt
-      MATCH OFFSET lv_off
-      MATCH LENGTH lv_len.
-
-    IF lv_cnt > 0.
-      ev_path     = iv_fullpath+0(lv_len).
-      ev_filename = iv_fullpath+lv_len.
-    ELSE.
-      CLEAR ev_path.
-      ev_filename = iv_fullpath.
-    ENDIF.
-
-  ENDMETHOD.  "split_file_location
 
   METHOD host.
     regex( EXPORTING iv_repo = iv_repo
