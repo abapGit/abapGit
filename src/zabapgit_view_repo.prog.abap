@@ -94,9 +94,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '<div class="repo_container">' ).
         IF mo_repo->is_offline( ) = abap_false.
           IF mv_hide_files = abap_true.
-*            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
+            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
           ELSE.
-*            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
+            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
           ENDIF.
           ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
         ENDIF.
