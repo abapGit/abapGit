@@ -22,6 +22,43 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp,
+          lt_indexes TYPE STANDARD TABLE OF dd09l.
+
+    FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
+
+    SELECT SINGLE as4date as4time FROM dd02l " Table
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    object_check_timestamp lv_date lv_time.
+
+    SELECT as4date as4time FROM dd12l " Table tech settings
+      INTO CORRESPONDING FIELDS OF TABLE lt_indexes
+      WHERE sqltab = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_indexes ASSIGNING <ls_index>.
+      object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+    ENDLOOP.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd02l INTO rv_user

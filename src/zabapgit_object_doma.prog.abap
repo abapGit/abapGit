@@ -22,6 +22,22 @@ ENDCLASS.                    "lcl_object_doma DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_doma IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd01l
+      INTO (lv_date, lv_time)
+      WHERE domname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd01l INTO rv_user

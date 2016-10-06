@@ -37,15 +37,12 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD compare_files.
 
     READ TABLE it_repo WITH KEY
-      path = is_gen-path
+      path     = is_gen-path
       filename = is_gen-filename
-      data = is_gen-data
+      sha1     = is_gen-sha1
       TRANSPORTING NO FIELDS.
-    IF sy-subrc <> 0.
-      rv_match = abap_false.
-    ELSE.
-      rv_match = abap_true.
-    ENDIF.
+
+    rv_match = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "compare_files
 
@@ -70,7 +67,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     lt_remote = io_repo->get_files_remote( ).
-    lt_local = io_repo->get_files_local( io_log ).
+    lt_local  = io_repo->get_files_local( io_log ).
 
     LOOP AT lt_remote ASSIGNING <ls_remote>.
       lcl_progress=>show( iv_key     = 'Status'
@@ -112,8 +109,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       LOOP AT lt_files ASSIGNING <ls_gen>.
         ls_result-filename = <ls_gen>-filename.
-        ls_result-match = compare_files( it_repo = lt_remote
-                                         is_gen  = <ls_gen> ).
+        ls_result-match    = compare_files( it_repo = lt_remote
+                                            is_gen  = <ls_gen> ).
         APPEND ls_result TO rt_results.
       ENDLOOP.
     ENDLOOP.
@@ -124,7 +121,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         IF io_repo->get_dot_abapgit( )->is_ignored(
-            iv_path = <ls_remote>-path
+            iv_path     = <ls_remote>-path
             iv_filename = <ls_remote>-filename ) = abap_true.
           CONTINUE.
         ENDIF.
@@ -149,7 +146,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       READ TABLE rt_results
         WITH KEY obj_type = <ls_tadir>-object
-        obj_name = <ls_tadir>-obj_name
+                 obj_name = <ls_tadir>-obj_name
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         ls_item-obj_type = <ls_tadir>-object.
@@ -168,8 +165,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       LOOP AT rt_results ASSIGNING <ls_result>
           WHERE obj_type = <ls_tadir>-object
-          AND obj_name = <ls_tadir>-obj_name
-          AND path IS INITIAL.
+          AND   obj_name = <ls_tadir>-obj_name
+          AND   path IS INITIAL.
 * new file added locally to existing object
         <ls_result>-path = io_repo->get_dot_abapgit( )->get_starting_folder( ) && <ls_tadir>-path.
         <ls_result>-new  = gc_new-local.

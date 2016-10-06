@@ -84,6 +84,38 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 * function group SIFP
 * function group SUNI
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lt_functab      TYPE ty_rs38l_incl_tt,
+          lt_includes     TYPE rso_t_objnm.
+
+    FIELD-SYMBOLS: <ls_func>      LIKE LINE OF lt_functab,
+                   <include_name> LIKE LINE OF lt_includes.
+
+    lt_includes = includes( ). " Main prog also included here
+
+    LOOP AT lt_includes ASSIGNING <include_name>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <include_name>
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    lt_functab = functions( ).
+
+    LOOP AT lt_functab ASSIGNING <ls_func>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <ls_func>-include
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.

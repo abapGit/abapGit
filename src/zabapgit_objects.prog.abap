@@ -2,6 +2,26 @@
 *&  Include           ZABAPGIT_OBJECTS
 *&---------------------------------------------------------------------*
 
+* Macros
+
+DEFINE object_check_timestamp.
+  IF sy-subrc = 0 AND &1 IS NOT INITIAL AND &2 IS NOT INITIAL.
+    cl_abap_tstmp=>systemtstmp_syst2utc(
+      EXPORTING syst_date = &1
+                syst_time = &2
+      IMPORTING utc_tstmp = lv_ts ).
+    IF lv_ts < iv_timestamp.
+      rv_changed = abap_false. " Unchanged
+    ELSE.
+      rv_changed = abap_true.
+      RETURN.
+    ENDIF.
+  ELSE. " Not found? => changed
+    rv_changed = abap_true.
+    RETURN.
+  ENDIF.
+END-OF-DEFINITION.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_activation DEFINITION
 *----------------------------------------------------------------------*
@@ -230,7 +250,11 @@ INTERFACE lif_object.
     jump
       RAISING lcx_exception,
     get_metadata
-      RETURNING VALUE(rs_metadata) TYPE ty_metadata.
+      RETURNING VALUE(rs_metadata) TYPE ty_metadata,
+    has_changed_since
+      IMPORTING iv_timestamp      TYPE timestamp
+      RETURNING VALUE(rv_changed) TYPE abap_bool
+      RAISING lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -435,6 +459,7 @@ ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
+
     METHODS:
       constructor
         IMPORTING
@@ -496,6 +521,10 @@ ENDCLASS.                    "lcl_objects_bridge DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_objects_bridge IMPLEMENTATION.
+
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~get_metadata.
 
@@ -706,6 +735,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
   PROTECTED SECTION.
+
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
@@ -758,6 +788,12 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING iv_program_name TYPE programm
                 is_cua          TYPE ty_cua
       RAISING   lcx_exception.
+
+    METHODS check_prog_changed_since
+      IMPORTING iv_program        TYPE programm
+                iv_timestamp      TYPE timestamp
+                iv_skip_gui       TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(rv_changed) TYPE abap_bool.
 
     CLASS-METHODS:
       add_tpool
@@ -1309,6 +1345,55 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_cua
 
+  METHOD check_prog_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp,
+          lt_screens TYPE STANDARD TABLE OF d020s,
+          lt_eudb    TYPE STANDARD TABLE OF eudb.
+
+    FIELD-SYMBOLS: <ls_screen> LIKE LINE OF lt_screens,
+                   <ls_eudb>   LIKE LINE OF lt_eudb.
+
+    SELECT SINGLE udat utime FROM reposrc " Program
+      INTO (lv_date, lv_time)
+      WHERE progname = iv_program
+      AND   r3state = 'A'.
+
+    object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE udat utime FROM repotext " Program text pool
+      INTO (lv_date, lv_time)
+      WHERE progname = iv_program
+      AND   r3state = 'A'.
+
+    object_check_timestamp lv_date lv_time.
+
+    IF iv_skip_gui = abap_true.
+      RETURN.
+    ENDIF.
+
+    SELECT dgen tgen FROM d020s           " Screens
+      INTO CORRESPONDING FIELDS OF TABLE lt_screens
+      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_screens ASSIGNING <ls_screen>.
+      object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
+    ENDLOOP.
+
+    SELECT vdatum vzeit FROM eudb         " GUI
+      INTO CORRESPONDING FIELDS OF TABLE lt_eudb
+      WHERE relid = 'CU'
+      AND   name  = iv_program
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_eudb ASSIGNING <ls_eudb>.
+      object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.
+    ENDLOOP.
+
+  ENDMETHOD.  "check_prog_changed_since
+
 ENDCLASS.                    "lcl_objects_program IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -1433,6 +1518,12 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS changed_by
       IMPORTING is_item        TYPE ty_item
       RETURNING VALUE(rv_user) TYPE xubname
+      RAISING   lcx_exception.
+
+    CLASS-METHODS has_changed_since
+      IMPORTING is_item           TYPE ty_item
+                iv_timestamp      TYPE timestamp
+      RETURNING VALUE(rv_changed) TYPE abap_bool
       RAISING   lcx_exception.
 
     CLASS-METHODS is_supported

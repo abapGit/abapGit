@@ -42,6 +42,10 @@ ENDCLASS.                    "lcl_object_smim DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_smim IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     DATA: lv_loio TYPE sdok_docid.

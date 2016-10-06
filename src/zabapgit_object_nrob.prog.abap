@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_nrob DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_nrob IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     DATA: lv_objectid TYPE cdhdr-objectid,

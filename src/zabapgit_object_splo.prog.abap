@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_splo DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_splo IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE chgname1 FROM tsp1d INTO rv_user

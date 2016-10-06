@@ -28,6 +28,14 @@ ENDCLASS.                    "lcl_object_prog DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_prog IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    rv_changed = check_prog_changed_since(
+      iv_program   = ms_item-obj_name
+      iv_timestamp = iv_timestamp ).
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     SELECT SINGLE unam FROM reposrc INTO rv_user
       WHERE progname = ms_item-obj_name

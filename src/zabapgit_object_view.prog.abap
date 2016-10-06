@@ -22,6 +22,30 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_view IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd25l " View
+      INTO (lv_date, lv_time)
+      WHERE viewname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd25l INTO rv_user

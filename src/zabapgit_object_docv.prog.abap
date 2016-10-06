@@ -31,6 +31,10 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_docv IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = read( )-head-tdluser.
   ENDMETHOD.                    "lif_object~changed_by
