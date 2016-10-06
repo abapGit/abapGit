@@ -34,7 +34,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
     SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
       INTO (lv_date, lv_time)
@@ -42,7 +42,7 @@ CLASS lcl_object_view IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
   ENDMETHOD.  "lif_object~has_changed_since
 

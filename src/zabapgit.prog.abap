@@ -36,6 +36,7 @@ SELECTION-SCREEN END OF SCREEN 1001.
 INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
 INCLUDE zabapgit_definitions.
+INCLUDE zabapgit_macros.
 INCLUDE zabapgit_exceptions.
 INCLUDE zabapgit_zlib.
 INCLUDE zabapgit_html.

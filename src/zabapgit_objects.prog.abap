@@ -2,26 +2,6 @@
 *&  Include           ZABAPGIT_OBJECTS
 *&---------------------------------------------------------------------*
 
-* Macros
-
-DEFINE object_check_timestamp.
-  IF sy-subrc = 0 AND &1 IS NOT INITIAL AND &2 IS NOT INITIAL.
-    cl_abap_tstmp=>systemtstmp_syst2utc(
-      EXPORTING syst_date = &1
-                syst_time = &2
-      IMPORTING utc_tstmp = lv_ts ).
-    IF lv_ts < iv_timestamp.
-      rv_changed = abap_false. " Unchanged
-    ELSE.
-      rv_changed = abap_true.
-      RETURN.
-    ENDIF.
-  ELSE. " Not found? => changed
-    rv_changed = abap_true.
-    RETURN.
-  ENDIF.
-END-OF-DEFINITION.
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_activation DEFINITION
 *----------------------------------------------------------------------*
@@ -1361,14 +1341,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
       WHERE progname = iv_program
       AND   r3state = 'A'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
     SELECT SINGLE udat utime FROM repotext " Program text pool
       INTO (lv_date, lv_time)
       WHERE progname = iv_program
       AND   r3state = 'A'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
     IF iv_skip_gui = abap_true.
       RETURN.
@@ -1379,7 +1359,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
-      object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
+      _object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
     ENDLOOP.
 
     SELECT vdatum vzeit FROM eudb         " GUI
@@ -1389,7 +1369,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
-      object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.
+      _object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.
     ENDLOOP.
 
   ENDMETHOD.  "check_prog_changed_since

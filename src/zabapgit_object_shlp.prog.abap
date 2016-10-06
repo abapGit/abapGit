@@ -33,7 +33,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
       WHERE shlpname = ms_item-obj_name
       AND as4local = 'A'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
   ENDMETHOD.  "lif_object~has_changed_since
 

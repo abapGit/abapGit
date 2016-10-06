@@ -37,7 +37,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
     SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
       INTO (lv_date, lv_time)
@@ -45,7 +45,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    object_check_timestamp lv_date lv_time.
+    _object_check_timestamp lv_date lv_time.
 
     SELECT as4date as4time FROM dd12l " Table tech settings
       INTO CORRESPONDING FIELDS OF TABLE lt_indexes
@@ -54,7 +54,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_indexes ASSIGNING <ls_index>.
-      object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+      _object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
     ENDLOOP.
 
   ENDMETHOD.  "lif_object~has_changed_since
