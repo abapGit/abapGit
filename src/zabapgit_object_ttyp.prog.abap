@@ -22,6 +22,21 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ttyp IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd40l
+      INTO (lv_date, lv_time)
+      WHERE typename = ms_item-obj_name
+      AND as4local = 'A'.
+
+    _object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd40l INTO rv_user

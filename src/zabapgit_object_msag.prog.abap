@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_msag IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE lastuser FROM t100a INTO rv_user
