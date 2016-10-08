@@ -127,6 +127,18 @@ CLASS lcl_object_dtel IMPLEMENTATION.
            ls_dd04v-as4date,
            ls_dd04v-as4time.
 
+    IF ls_dd04v-refkind = 'D'.
+* clear values inherited from domain
+      CLEAR: ls_dd04v-datatype,
+             ls_dd04v-leng,
+             ls_dd04v-decimals,
+             ls_dd04v-outputlen,
+             ls_dd04v-lowercase,
+             ls_dd04v-signflag,
+             ls_dd04v-convexit,
+             ls_dd04v-entitytab.
+    ENDIF.
+
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
     io_xml->add( iv_name = 'TPARA'

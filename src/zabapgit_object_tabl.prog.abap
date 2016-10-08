@@ -201,6 +201,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           <ls_dd03p>-leng,
           <ls_dd03p>-outputlen,
           <ls_dd03p>-deffdname,
+          <ls_dd03p>-convexit,
           <ls_dd03p>-entitytab,
           <ls_dd03p>-dommaster,
           <ls_dd03p>-domname3l.
