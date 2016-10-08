@@ -68,6 +68,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-late_deser = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
