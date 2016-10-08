@@ -192,7 +192,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           permission_failure = 4
           OTHERS             = 5 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from mime api->get' ).
+        lcx_exception=>raise( 'error from mime api->get:' && sy-msgv1 ).
       ENDIF.
 
       lv_filename = get_filename( lv_url ).

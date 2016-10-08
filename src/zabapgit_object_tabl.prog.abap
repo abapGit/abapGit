@@ -176,6 +176,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
              <ls_dd12v>-as4time.
     ENDLOOP.
 
+    DELETE lt_dd03p WHERE depth <> '00'.
+
     LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
       CLEAR: <ls_dd03p>-ddlanguage,
         <ls_dd03p>-dtelmaster,
