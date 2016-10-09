@@ -418,11 +418,13 @@ CLASS lcl_repo IMPLEMENTATION.
 
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass = <ls_tadir>-devclass.
 
       IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
         READ TABLE lt_cache TRANSPORTING NO FIELDS
-          WITH KEY item = ls_item.
-        IF sy-subrc = 0                 " There is something in cache and the object is unchanged
+          WITH KEY item = ls_item. " type+name+package key
+        " There is something in cache and the object is unchanged
+        IF sy-subrc = 0
           AND abap_false = lcl_objects=>has_changed_since( is_item      = ls_item
                                                            iv_timestamp = mv_last_serialization ).
           LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.

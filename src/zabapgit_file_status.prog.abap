@@ -95,7 +95,8 @@ CLASS lcl_file_status IMPLEMENTATION.
       ls_item-obj_name = lv_pre.
 
       CLEAR lt_files.
-      LOOP AT lt_local ASSIGNING <ls_local> WHERE item = ls_item.
+      LOOP AT lt_local ASSIGNING <ls_local>
+        WHERE item-obj_type = ls_item-obj_type AND item-obj_name = ls_item-obj_name.
         APPEND <ls_local>-file TO lt_files.
       ENDLOOP.
 
