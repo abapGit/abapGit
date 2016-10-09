@@ -355,7 +355,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ro_html->add( render_repo_menu( io_repo ) ).
 
         IF io_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
-          ro_html->add( '<div class="log">' ).
+          ro_html->add( '<div class="log attention">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
         ENDIF.
