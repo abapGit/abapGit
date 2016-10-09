@@ -62,6 +62,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     set( iv_sha1 = mv_branch ).
 
+    CLEAR mt_status. " Reset status
+
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.                    "deserialize
