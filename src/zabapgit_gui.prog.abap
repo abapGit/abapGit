@@ -126,7 +126,7 @@ CLASS lcl_gui IMPLEMENTATION.
           WHEN gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
-            lcx_exception=>raise( 'Unknown action' ).
+            lcx_exception=>raise( |Unknown action: { action }| ).
         ENDCASE.
 
       CATCH lcx_exception INTO lx_exception.
