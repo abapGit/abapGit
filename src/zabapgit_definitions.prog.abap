@@ -28,6 +28,7 @@ TYPES: BEGIN OF ty_comment,
 TYPES: BEGIN OF ty_item,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
+         devclass TYPE devclass,
        END OF ty_item.
 
 TYPES: BEGIN OF ty_file_item,
