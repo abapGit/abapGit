@@ -90,14 +90,18 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_url  TYPE string.
+    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_url TYPE string.
 
     lv_key   = iv_getdata.
 
     CASE iv_action.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
+        TRY.
+            lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+          CATCH lcx_exception.
+        ENDTRY.
         ev_state = gc_event_state-re_render.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         lcl_app=>user( )->toggle_hide_files( ).
@@ -112,9 +116,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lt_repos   TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error   TYPE REF TO lcx_exception,
-          lo_repo    LIKE LINE OF lt_repos.
+    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error TYPE REF TO lcx_exception,
+          lo_repo  LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
     mv_hide_files = lcl_app=>user( )->get_hide_files( ).
@@ -161,7 +165,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       TRY. " verify the key exists
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
-          clear mv_show.
+          CLEAR mv_show.
       ENDTRY.
     ENDIF.
 
@@ -354,7 +358,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         " so that lo_log is filled with errors from the serialization
         ro_html->add( render_repo_menu( io_repo ) ).
 
-        IF io_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
+        IF io_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).

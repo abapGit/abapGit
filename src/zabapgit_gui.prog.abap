@@ -14,7 +14,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS back
       IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
-      RETURNING value(rv_exit) TYPE xfeld
+      RETURNING VALUE(rv_exit) TYPE xfeld
       RAISING   lcx_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
@@ -45,13 +45,13 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS cache_html
       IMPORTING iv_html       TYPE string
-      RETURNING value(rv_url) TYPE w3url.
+      RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
       RAISING lcx_exception.
 
     METHODS get_current_page_name
-      RETURNING value(rv_page_name) TYPE string.
+      RETURNING VALUE(rv_page_name) TYPE string.
 
     METHODS call_page
       IMPORTING ii_page          TYPE REF TO lif_gui_page
