@@ -134,6 +134,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
                    <ls_dd05m> LIKE LINE OF lt_dd05m,
+                   <ls_dd36m> LIKE LINE OF lt_dd36m,
                    <ls_dd03p> LIKE LINE OF lt_dd03p.
 
 
@@ -233,6 +234,16 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         DELETE lt_dd05m INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+* remove inherited search helps
+    DELETE lt_dd35v WHERE shlpinher = abap_true.
+    LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+      lv_index = sy-tabix.
+      READ TABLE lt_dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE lt_dd36m INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
