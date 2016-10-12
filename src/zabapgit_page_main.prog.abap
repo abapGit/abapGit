@@ -91,9 +91,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lt_repos   TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error   TYPE REF TO lcx_exception,
-          lo_repo    LIKE LINE OF lt_repos.
+    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error TYPE REF TO lcx_exception,
+          lo_repo  LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
 
@@ -139,7 +139,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       TRY. " verify the key exists
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
-          clear mv_show.
+          CLEAR mv_show.
       ENDTRY.
     ENDIF.
 
