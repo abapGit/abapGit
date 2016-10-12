@@ -102,6 +102,10 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '<td class="repo_attr right">' ).
 
+    IF io_repo->is_write_protected( ) = abap_true.
+      ro_html->add( '<img src="img/lock">' ).
+    ENDIF.
+
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.

@@ -478,6 +478,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
+    ls_image-url     = 'img/lock' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAOVBMVEUAAACIiIiIiIiI'
+      && 'iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjNaTNB'
+      && 'AAAAEnRSTlMABgdBVXt8iYuRsNXZ3uDi6Pmu6tfUAAAASUlEQVQYV63KSxJAQBAE0TQ0'
+      && 'Znym1f0PayE0QdjJ5asCgGTu1hClqjppvaRXB60swBeA2QNUAIq+ICvKx367nqAn/P8Y'
+      && 't2jg3Q5rgASaF3KNRwAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
     ls_image-url     = 'img/dir' ##NO_TEXT.
     ls_image-content =
          'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAASFBMVEUAAABmksxmksxm'
