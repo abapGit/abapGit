@@ -160,6 +160,7 @@ CONSTANTS: BEGIN OF gc_action,
              zip_export         TYPE string VALUE 'zip_export',
              zip_package        TYPE string VALUE 'zip_package',
              zip_transport      TYPE string VALUE 'zip_transport',
+             zip_object         TYPE string VALUE 'zip_object',
 
              git_pull           TYPE string VALUE 'git_pull',
              git_reset          TYPE string VALUE 'git_reset',

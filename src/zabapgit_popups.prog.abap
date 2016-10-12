@@ -18,7 +18,10 @@ CLASS lcl_popups DEFINITION.
     CLASS-METHODS:
       popup_package_export
         RETURNING VALUE(rv_package) TYPE devclass
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
+      popup_object
+        RETURNING VALUE(rs_tadir) TYPE tadir
+        RAISING   lcx_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
@@ -43,19 +46,19 @@ CLASS lcl_popups DEFINITION.
                   iv_freeze_package TYPE abap_bool OPTIONAL
                   iv_freeze_url     TYPE abap_bool OPTIONAL
                   iv_title          TYPE clike     DEFAULT 'Clone repository ...'
-        RETURNING VALUE(rs_popup) TYPE ty_popup
+        RETURNING VALUE(rs_popup)   TYPE ty_popup
         RAISING   lcx_exception ##NO_TEXT,
       popup_to_confirm
         IMPORTING
-          titlebar              TYPE clike
-          text_question         TYPE clike
-          text_button_1         TYPE clike     DEFAULT 'Yes'
-          icon_button_1         TYPE ICON-NAME DEFAULT space
-          text_button_2         TYPE clike     DEFAULT 'No'
-          icon_button_2         TYPE ICON-NAME DEFAULT space
-          default_button        TYPE char1 DEFAULT '1'
-          display_cancel_button TYPE char1 DEFAULT abap_true
-        RETURNING VALUE(rv_answer) TYPE char1
+                  titlebar              TYPE clike
+                  text_question         TYPE clike
+                  text_button_1         TYPE clike     DEFAULT 'Yes'
+                  icon_button_1         TYPE icon-name DEFAULT space
+                  text_button_2         TYPE clike     DEFAULT 'No'
+                  icon_button_2         TYPE icon-name DEFAULT space
+                  default_button        TYPE char1 DEFAULT '1'
+                  display_cancel_button TYPE char1 DEFAULT abap_true
+        RETURNING VALUE(rv_answer)      TYPE char1
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -71,6 +74,51 @@ CLASS lcl_popups IMPLEMENTATION.
     <ls_field>-field_attr = &5.                             "#EC NOTEXT
   END-OF-DEFINITION.
 
+
+  METHOD popup_object.
+
+    DATA: lv_returncode TYPE c,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    "               TAB           FLD       LABEL     DEF                 ATTR
+    _add_dialog_fld 'TADIR'      'OBJECT'   'Type'    ''                  ''.
+    _add_dialog_fld 'TADIR'      'OBJ_NAME' 'Name'    ''                  ''.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Object'             "#EC NOTEXT
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_returncode = 'A'.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+    rs_tadir-object = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+    rs_tadir-obj_name = <ls_field>-value.
+
+    rs_tadir = lcl_tadir=>read_single( iv_object   = rs_tadir-object
+                                       iv_obj_name = rs_tadir-obj_name ).
+
+  ENDMETHOD.
 
   METHOD popup_package_export.
 
