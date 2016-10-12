@@ -239,10 +239,16 @@ CLASS lcl_persistence_background DEFINITION FINAL.
       IMPORTING iv_key TYPE ty_background-key
       RAISING   lcx_exception.
 
+    METHODS exists
+      IMPORTING iv_key TYPE ty_background-key
+      RETURNING VALUE(rv_yes) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
 
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
+    DATA: mo_db   TYPE REF TO lcl_persistence_db,
+          mt_jobs TYPE tt_background.
 
     METHODS from_xml
       IMPORTING iv_string     TYPE string
@@ -269,6 +275,11 @@ CLASS lcl_persistence_background IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
                    <ls_output> LIKE LINE OF rt_list.
 
+    IF lines( mt_jobs ) > 0.
+      rt_list = mt_jobs.
+      RETURN.
+    ENDIF.
+
 
     lt_list = mo_db->list_by_type( c_type ).
 
@@ -280,7 +291,17 @@ CLASS lcl_persistence_background IMPLEMENTATION.
       <ls_output>-key = <ls_list>-value.
     ENDLOOP.
 
+    mt_jobs = rt_list.
+
   ENDMETHOD.
+
+  METHOD exists.
+
+    list( ). " Ensure mt_jobs is populated
+    READ TABLE mt_jobs WITH KEY key = iv_key TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.  "exists
 
   METHOD modify.
 
@@ -290,6 +311,9 @@ CLASS lcl_persistence_background IMPLEMENTATION.
       iv_type  = c_type
       iv_value = is_data-key
       iv_data  = to_xml( is_data ) ).
+
+    DELETE mt_jobs WHERE key = is_data-key.
+    APPEND is_data TO mt_jobs.
 
   ENDMETHOD.
 
@@ -304,6 +328,8 @@ CLASS lcl_persistence_background IMPLEMENTATION.
 
     mo_db->delete( iv_type  = c_type
                    iv_value = iv_key ).
+
+    DELETE mt_jobs WHERE key = iv_key.
 
   ENDMETHOD.
 
