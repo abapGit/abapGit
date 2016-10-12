@@ -180,20 +180,17 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_toc.
 
     DATA: lo_pback      TYPE REF TO lcl_persistence_background,
-          lt_repo_bkg   TYPE lcl_persistence_background=>tt_background,
           lo_repo       LIKE LINE OF it_list,
           lv_opt        TYPE c LENGTH 1,
           lo_online     TYPE REF TO lcl_html_toolbar,
-          lo_background TYPE REF TO lcl_html_toolbar,
-          lo_offline    TYPE REF TO lcl_html_toolbar.
+          lo_offline    TYPE REF TO lcl_html_toolbar,
+          lv_repo_title TYPE string.
 
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_online.
     CREATE OBJECT lo_offline.
-    CREATE OBJECT lo_background.
     CREATE OBJECT lo_pback.
-    lt_repo_bkg = lo_pback->list( ).
 
     IF lines( it_list ) = 0.
       RETURN.
@@ -211,17 +208,16 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                          iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
                          iv_opt = lv_opt ).
       ELSE.
-        READ TABLE lt_repo_bkg WITH KEY key = lo_repo->get_key( )
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc = 0.
-          lo_background->add( iv_txt = lo_repo->get_name( )
-                              iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                              iv_opt = lv_opt ).
-        ELSE.
-          lo_online->add( iv_txt = lo_repo->get_name( )
-                          iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                          iv_opt = lv_opt ).
+
+        lv_repo_title = lo_repo->get_name( ).
+        IF lo_pback->exists( lo_repo->get_key( ) ) = abap_true.
+          lv_repo_title = lv_repo_title && '<sup>bg</sup>'. " Background marker
         ENDIF.
+
+        lo_online->add( iv_txt = lv_repo_title
+                        iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
+                        iv_opt = lv_opt ).
+
       ENDIF.
 
     ENDLOOP.
@@ -236,11 +232,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lo_offline->count( ) > 0.
       ro_html->add( render_toc_line( io_toolbar   = lo_offline
                                      iv_image_url = 'img/repo_offline' ) ).
-    ENDIF.
-
-    IF lo_background->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_background
-                                     iv_image_url = 'img/sync' ) ).
     ENDIF.
 
     ro_html->add( '</div></div>' ).

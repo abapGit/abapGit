@@ -77,10 +77,12 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
   METHOD render_repo_top.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+          lo_pback       TYPE REF TO lcl_persistence_background,
           lv_icon        TYPE string.
 
 
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_pback.
 
     IF io_repo->is_offline( ) = abap_true.
       lv_icon = 'img/repo_offline' ##NO_TEXT.
@@ -101,6 +103,10 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
+
+    IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
+      ro_html->add( '<span class="bg_marker">BG</span>' ).
+    ENDIF.
 
     IF io_repo->is_write_protected( ) = abap_true.
       ro_html->add( '<img src="img/lock">' ).
@@ -451,6 +457,14 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.repo_attr span {'.
     _add '  margin-left: 0.2em;'.
     _add '  margin-right: 0.5em;'.
+    _add '}'.
+    _add '.repo_attr span.bg_marker {'.
+    _add '  border: 1px solid #d2d2d2;'.
+    _add '  border-radius: 3px;'.
+    _add '  background: #d8d8d8;'.
+    _add '  color: #fff;'.
+    _add '  font-size: 8pt;'.
+    _add '  padding: 4px 2px 3px 2px;'.
     _add '}'.
 
     " Branch tag design
