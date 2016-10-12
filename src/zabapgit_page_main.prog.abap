@@ -68,6 +68,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
+        TRY.
+            lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+          CATCH lcx_exception.
+        ENDTRY.
         ev_state = gc_event_state-re_render.
       WHEN lcl_gui_view_repo_content=>c_actions-toggle_hide_files. " Toggle file diplay
         lcl_app=>user( )->toggle_hide_files( ).
