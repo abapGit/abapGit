@@ -19,8 +19,8 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                  show              TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
-    DATA: mv_show       TYPE lcl_persistence_db=>ty_value,
-          mv_cur_dir    TYPE string.
+    DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
+          mo_repo_content TYPE REF TO lcl_gui_view_repo_content.
 
     METHODS:
       styles
@@ -52,16 +52,27 @@ ENDCLASS.
 CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD constructor.
-
     super->constructor( ).
-    mv_cur_dir = '/'. " Root
-
   ENDMETHOD.  " constructor
 
   METHOD lif_gui_page~on_event.
 
     DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lv_path TYPE string.
+          lo_repo TYPE REF TO lcl_repo.
+
+    mo_repo_content->lif_gui_page~on_event(
+      EXPORTING
+        iv_action    = iv_action
+        iv_prev_page = iv_prev_page
+        iv_getdata   = iv_getdata
+        it_postdata  = it_postdata
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    IF ev_state <> gc_event_state-not_handled.
+      RETURN.
+    ENDIF.
 
     lv_key   = iv_getdata.
 
@@ -69,18 +80,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
         TRY.
-            lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+            lo_repo = lcl_app=>repo_srv( )->get( lv_key ).
+            lo_repo->refresh( ).
           CATCH lcx_exception.
         ENDTRY.
-        ev_state = gc_event_state-re_render.
-      WHEN lcl_gui_view_repo_content=>c_actions-toggle_hide_files. " Toggle file diplay
-        lcl_app=>user( )->toggle_hide_files( ).
-        ev_state = gc_event_state-re_render.
-      WHEN lcl_gui_view_repo_content=>c_actions-change_dir. " Toggle file diplay
-        lv_path = lcl_html_action_utils=>dir_decode( iv_getdata ).
-        mv_cur_dir = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
-        ev_state = gc_event_state-re_render.
 
+        CREATE OBJECT mo_repo_content EXPORTING io_repo = lo_repo. " Reinit content state
+        ev_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.  "on_event
@@ -273,16 +279,15 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo.
 
-    DATA: lo_repo_content TYPE REF TO lcl_gui_view_repo_content.
-
     CREATE OBJECT ro_html.
+
+    IF mo_repo_content IS NOT BOUND.
+      CREATE OBJECT mo_repo_content EXPORTING io_repo = io_repo.
+    ENDIF.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
-
-    CREATE OBJECT lo_repo_content EXPORTING io_repo = io_repo.
-    ro_html->add( lo_repo_content->render( iv_path = mv_cur_dir ) ).
-
+    ro_html->add( mo_repo_content->lif_gui_page~render( ) ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_repo
@@ -336,6 +341,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '.repo_tab td.files span     { display: block; }'.
     _add '.repo_tab td.cmd span       { display: block; }'.
     _add '.repo_tab td.cmd a          { display: block; }'.
+    _add 'td.current_dir              { color: #ccc; }'.
 
   ENDMETHOD.  "styles
 

@@ -404,6 +404,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS toggle_hide_files
+      RETURNING VALUE(rv_hide) TYPE abap_bool
       RAISING   lcx_exception.
 
     METHODS get_hide_files
@@ -647,6 +648,8 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     ls_user = read( ).
     ls_user-hide_files = boolc( ls_user-hide_files = abap_false ).
     update( ls_user ).
+
+    rv_hide = ls_user-hide_files.
 
   ENDMETHOD. "toggle_hide_files
 

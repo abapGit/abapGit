@@ -30,10 +30,14 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
       IMPORTING io_repo TYPE REF TO lcl_repo.
 
     METHODS list
-      IMPORTING iv_path       TYPE string
-      EXPORTING et_repo_items TYPE tt_repo_items
-                eo_log        TYPE REF TO lcl_log
+      IMPORTING iv_path         TYPE string
+                iv_by_folders   TYPE abap_bool
+                iv_changes_only TYPE abap_bool
+      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
       RAISING   lcx_exception.
+
+    METHODS get_log
+      RETURNING VALUE(ro_log) TYPE REF TO lcl_log.
 
   PRIVATE SECTION.
     DATA mo_repo TYPE REF TO lcl_repo.
@@ -52,6 +56,9 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
       CHANGING  ct_repo_items TYPE tt_repo_items
       RAISING   lcx_exception.
 
+    METHODS filter_changes
+      CHANGING  ct_repo_items TYPE tt_repo_items.
+
 ENDCLASS. "lcl_repo_content_browser
 
 CLASS lcl_repo_content_browser IMPLEMENTATION.
@@ -60,23 +67,31 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
     mo_repo = io_repo.
   ENDMETHOD.  "constructor
 
+  METHOD get_log.
+    ro_log = mo_log.
+  ENDMETHOD. "get_log
+
   METHOD list.
 
-    CLEAR et_repo_items.
+    CREATE OBJECT mo_log.
 
     IF mo_repo->is_offline( ) = abap_true.
-      et_repo_items = get_local( ).
+      rt_repo_items = get_local( ).
     ELSE.
-      CREATE OBJECT mo_log.
-      et_repo_items = get_remote( ).
-      eo_log        = mo_log.
+      rt_repo_items = get_remote( ).
     ENDIF.
 
-    build_folders(
-      EXPORTING iv_cur_dir    = iv_path
-      CHANGING  ct_repo_items = et_repo_items ).
+    IF iv_by_folders = abap_true.
+      build_folders(
+        EXPORTING iv_cur_dir    = iv_path
+        CHANGING  ct_repo_items = rt_repo_items ).
+    ENDIF.
 
-    SORT et_repo_items BY sortkey obj_type obj_name ASCENDING.
+    IF iv_changes_only = abap_true.
+      filter_changes( CHANGING ct_repo_items = rt_repo_items ).
+    ENDIF.
+
+    SORT rt_repo_items BY sortkey obj_type obj_name ASCENDING.
 
   ENDMETHOD.  "list
 
@@ -119,6 +134,17 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD. "build_folders
+
+  METHOD filter_changes.
+
+    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
+
+    LOOP AT ct_repo_items ASSIGNING <item>.
+      CHECK <item>-changes = 0.
+      DELETE ct_repo_items INDEX sy-tabix.
+    ENDLOOP.
+
+  ENDMETHOD. "filter_changes
 
   METHOD get_local.
 
@@ -189,31 +215,36 @@ ENDCLASS. "lcl_repo_content_browser
 **********************************************************************
 **********************************************************************
 
-CLASS lcl_gui_view_repo_content DEFINITION FINAL.
+CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PUBLIC SECTION.
 
     CONSTANTS: BEGIN OF c_actions,
                  change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
                  toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
+                 toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
+                 toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
                END OF c_actions.
+
+    METHODS: lif_gui_page~render     REDEFINITION,
+             lif_gui_page~on_event   REDEFINITION.
 
     METHODS constructor
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   lcx_exception.
 
-    METHODS render
-      IMPORTING iv_path        TYPE string
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-      RAISING   lcx_exception.
-
   PRIVATE SECTION.
 
-    DATA: mo_repo       TYPE REF TO lcl_repo,
-          mv_cur_dir    TYPE string,
-          mv_hide_files TYPE abap_bool.
+    DATA: mo_repo         TYPE REF TO lcl_repo,
+          mv_cur_dir      TYPE string,
+          mv_hide_files   TYPE abap_bool,
+          mv_show_folders TYPE abap_bool,
+          mv_changes_only TYPE abap_bool.
 
     METHODS:
       render_repo_menu
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception,
+      render_tab_menu
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
       render_repo_item
@@ -229,14 +260,15 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL.
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir_line
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RAISING   lcx_exception.
 
     METHODS:
-      render_obj_jump_link
+      build_obj_jump_link
         IMPORTING iv_obj_type    TYPE tadir-object
                   iv_obj_name    TYPE tadir-obj_name
         RETURNING VALUE(rv_html) TYPE string,
-      render_dir_jump_link
+      build_dir_jump_link
         IMPORTING iv_path        TYPE string
         RETURNING VALUE(rv_html) TYPE string.
 
@@ -246,33 +278,57 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
   METHOD constructor.
 
-    mo_repo ?= io_repo.
+    super->constructor( ).
+
+    mo_repo      ?= io_repo.
+    mv_cur_dir    = '/'. " Root
     mv_hide_files = lcl_app=>user( )->get_hide_files( ).
 
   ENDMETHOD. "constructor
 
-  METHOD render.
+  METHOD lif_gui_page~on_event.
+
+    DATA: lv_path TYPE string.
+
+    CASE iv_action.
+      WHEN c_actions-toggle_hide_files. " Toggle file diplay
+        mv_hide_files = lcl_app=>user( )->toggle_hide_files( ).
+        ev_state      = gc_event_state-re_render.
+      WHEN c_actions-change_dir.        " Change dir
+        lv_path    = lcl_html_action_utils=>dir_decode( iv_getdata ).
+        mv_cur_dir = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        ev_state   = gc_event_state-re_render.
+      WHEN c_actions-toggle_folders.    " Toggle folder view
+        mv_show_folders = boolc( mv_show_folders <> abap_true ).
+        mv_cur_dir      = '/'. " Root
+        ev_state        = gc_event_state-re_render.
+      WHEN c_actions-toggle_changes.    " Toggle changes only view
+        mv_changes_only = boolc( mv_changes_only <> abap_true ).
+        ev_state        = gc_event_state-re_render.
+    ENDCASE.
+
+  ENDMETHOD. "lif_gui_page~on_event
+
+  METHOD lif_gui_page~render.
 
     DATA: lt_repo_items TYPE lcl_repo_content_browser=>tt_repo_items,
-          lo_tab_menu   TYPE REF TO lcl_html_toolbar,
           lo_browser    TYPE REF TO lcl_repo_content_browser,
           lx_error      TYPE REF TO lcx_exception,
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
-    CREATE OBJECT lo_tab_menu.
     CREATE OBJECT ro_html.
-    mv_cur_dir = iv_path.
 
     TRY.
         ro_html->add( render_repo_menu( ) ).
 
-        CREATE OBJECT lo_browser EXPORTING io_repo = mo_repo.
-        lo_browser->list( EXPORTING iv_path       = iv_path
-                          IMPORTING et_repo_items = lt_repo_items
-                                    eo_log        = lo_log ).
+        CREATE OBJECT lo_browser EXPORTING io_repo   = mo_repo.
+        lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
+                                          iv_by_folders   = mv_show_folders
+                                          iv_changes_only = mv_changes_only ).
 
+        lo_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
           ro_html->add( '<div class="log attention">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
@@ -280,21 +336,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ENDIF.
 
         ro_html->add( '<div class="repo_container">' ).
-
-        " Table menu
-        IF mo_repo->is_offline( ) = abap_false.
-          IF mv_hide_files = abap_true.
-            lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
-          ELSE.
-            lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
-          ENDIF.
-          ro_html->add( lo_tab_menu->render( iv_as_angle = abap_true ) ).
-        ENDIF.
+        ro_html->add( render_tab_menu( ) ).
 
         " Repo content table
         ro_html->add( '<table width="100%" class="repo_tab">' ).
 
-        IF lcl_path=>is_root( iv_path ) = abap_false.
+        IF lcl_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir_line( ) ).
         ENDIF.
 
@@ -314,7 +361,42 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( lcl_gui_page_super=>render_error( lx_error ) ).
     ENDTRY.
 
-  ENDMETHOD.  "render
+  ENDMETHOD.  "lif_gui_page~render
+
+  METHOD render_tab_menu.
+
+    DATA lo_tab_menu TYPE REF TO lcl_html_toolbar.
+
+    CREATE OBJECT lo_tab_menu.
+
+    IF mo_repo->is_offline( ) = abap_false.
+
+      " Show/Hide files
+      IF mv_hide_files = abap_true.
+        lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
+      ELSE.
+        lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
+      ENDIF.
+
+      " Show changes only
+      IF mv_changes_only = abap_true.
+        lo_tab_menu->add( iv_txt = 'All objects' iv_act = c_actions-toggle_changes ).
+      ELSE.
+        lo_tab_menu->add( iv_txt = 'Changed only' iv_act = c_actions-toggle_changes ).
+      ENDIF.
+
+    ENDIF.
+
+    " Show/Hide folders
+    IF mv_show_folders = abap_true.
+      lo_tab_menu->add( iv_txt = 'Plain list' iv_act = c_actions-toggle_folders ).
+    ELSE.
+      lo_tab_menu->add( iv_txt = 'With folders' iv_act = c_actions-toggle_folders ).
+    ENDIF.
+
+    ro_html = lo_tab_menu->render( iv_as_angle = abap_true ).
+
+  ENDMETHOD. "render_tab_menu
 
   METHOD render_repo_menu.
 
@@ -411,10 +493,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                      iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
 
     " Render ==========================================
-*    ro_html->add( '<div class="paddings right">' ).
-*    ro_html->add( lo_toolbar->render( ) ).
-*    ro_html->add( '</div>' ).
-
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( '<table width="100%"><tr>' ).
     ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
@@ -431,16 +509,14 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     DATA lt_class TYPE TABLE OF string.
 
-    IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
-      APPEND 'unsupported' TO lt_class.
-    ENDIF.
+    "TODO REFACTOR !!! Depends on if folder woth changes should be highlited
 
     IF is_item-is_dir = abap_true.
       APPEND 'folder' TO lt_class.
-    ENDIF.
-
-    IF is_item-changes > 0.
+    ElSEIF is_item-changes > 0.
       APPEND 'modified' TO lt_class.
+    ELSEIF is_item-obj_name IS INITIAL.
+      APPEND 'unsupported' TO lt_class.
     ENDIF.
 
     IF lines( lt_class ) > 0.
@@ -484,19 +560,20 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       ro_html->add( '<td colspan="2"></td>'
                  && '<td class="object"><i class="grey">non-code and meta files</i></td>' ).
     ELSEIF is_item-is_dir = abap_true.
-      lv_link = render_dir_jump_link( iv_path = is_item-path ).
+      lv_link = build_dir_jump_link( iv_path = is_item-path ).
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
       ro_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
     ELSE.
-      lv_link = render_obj_jump_link( iv_obj_name = is_item-obj_name
+      lv_link = build_obj_jump_link( iv_obj_name = is_item-obj_name
                                       iv_obj_type = is_item-obj_type ).
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
       ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
       ro_html->add( |<td class="object">{ lv_link }</td>| ).
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false. " Files for online repos only
+    IF mo_repo->is_offline( ) = abap_false.
 
+      " Files
       ro_html->add( '<td class="files">' ).
       IF mv_hide_files = abap_false OR is_item-obj_type IS INITIAL.
         LOOP AT is_item-files INTO ls_file.
@@ -505,8 +582,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       ENDIF.
       ro_html->add( '</td>' ).
 
+      " TODO Refactor
+      " Command
       ro_html->add( '<td class="cmd">' ).
-      IF lines( is_item-files ) = 0.
+      IF is_item-is_dir = abap_true.
+        ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
+      ELSEIF lines( is_item-files ) = 0.
         ro_html->add( '<span class="grey">new @local</span>' ).
       ELSEIF is_item-changes > 0.
         IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
@@ -514,7 +595,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
             iv_key    = mo_repo->get_key( )
             ig_object = is_item ).
           ro_html->add_anchor(
-            iv_txt = |diff ({ is_item-changes })|
+            iv_txt = |{ is_item-changes } diffs|
             iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
         ELSE.
           LOOP AT is_item-files INTO ls_file.
@@ -534,6 +615,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
             ENDIF.
           ENDLOOP.
         ENDIF.
+
       ENDIF.
       ro_html->add( '</td>' ).
 
@@ -546,8 +628,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD render_empty_package.
 
     rv_html = '<tr class="unsupported"><td class="paddings">'
-               && '<center>Empty package</center>'
-               && '</td></tr>' ##NO_TEXT.
+           && '  <center>Empty package</center>'
+           && '</td></tr>' ##NO_TEXT.
 
   ENDMETHOD. "render_empty_package
 
@@ -557,12 +639,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     ro_html->add( '<tr class="folder">' ).
     ro_html->add( |<td class="icon"><img src="img/dir"></td>| ).
-    ro_html->add( |<td class="object" colspan="2">{ render_dir_jump_link( '..' ) }</td>| ).
+    ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
+    IF mo_repo->is_offline( ) = abap_false.
+      ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
+    ENDIF.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD. "render_parent_dir_line
 
-  METHOD render_dir_jump_link.
+  METHOD build_dir_jump_link.
 
     DATA: lv_path   TYPE string,
           lv_encode TYPE string,
@@ -576,9 +661,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     lo_html->add_anchor( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
-  ENDMETHOD.  "render_dir_jump_link
+  ENDMETHOD.  "build_dir_jump_link
 
-  METHOD render_obj_jump_link.
+  METHOD build_obj_jump_link.
 
     DATA: lv_encode TYPE string,
           lo_html   TYPE REF TO lcl_html_helper.
@@ -590,6 +675,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     lo_html->add_anchor( iv_txt = |{ iv_obj_name }| iv_act = |{ gc_action-jump }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
-  ENDMETHOD.  "render_obj_jump_link
+  ENDMETHOD.  "build_obj_jump_link
 
 ENDCLASS. "lcl_gui_view_repo_content
