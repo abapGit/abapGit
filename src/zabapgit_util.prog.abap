@@ -391,10 +391,14 @@ CLASS lcl_path IMPLEMENTATION.
 
   METHOD is_subdir.
 
-    DATA lv_len TYPE i.
+    DATA lv_len  TYPE i.
+    DATA lv_last TYPE i.
 
-    lv_len = strlen( iv_parent ).
-    rv_yes = boolc( strlen( iv_path ) > lv_len AND iv_path+0(lv_len) = iv_parent ).
+    lv_len  = strlen( iv_parent ).
+    lv_last = lv_len - 1.
+    rv_yes  = boolc( strlen( iv_path ) > lv_len
+                 AND iv_path+0(lv_len) = iv_parent
+                 AND ( iv_parent+lv_last(1) = '/' OR iv_path+lv_Len(1) = '/' ) ).
 
   ENDMETHOD. "is_subdir
 
@@ -404,7 +408,7 @@ CLASS lcl_path IMPLEMENTATION.
     DATA lv_temp TYPE string.
     DATA lv_len  TYPE i.
 
-    lv_last = strlen( iv_cd ) - 1.
+    lv_last = strlen( iv_cur_dir ) - 1.
 
     IF iv_cd = '' OR iv_cd = '.'. " No change
       rv_path = iv_cur_dir.
@@ -422,7 +426,7 @@ CLASS lcl_path IMPLEMENTATION.
         rv_path = reverse( lv_temp ).
       ENDIF.
     ELSE.
-      IF iv_cd+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
+      IF iv_cur_dir+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
         rv_path = iv_cur_dir && iv_cd.
       ELSE.
         rv_path = iv_cur_dir && '/' && iv_cd.
@@ -430,7 +434,6 @@ CLASS lcl_path IMPLEMENTATION.
     ENDIF.
 
     " TODO: improve logic and cases
-    " TODO: Unit test
 
   ENDMETHOD. "change_dir
 
