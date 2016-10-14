@@ -16,7 +16,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show              TYPE string VALUE 'show' ##NO_TEXT,
+                 show TYPE string VALUE 'show' ##NO_TEXT,
                END OF c_actions.
 
     DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
@@ -57,23 +57,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
 
-    mo_repo_content->lif_gui_page~on_event(
-      EXPORTING
-        iv_action    = iv_action
-        iv_prev_page = iv_prev_page
-        iv_getdata   = iv_getdata
-        it_postdata  = it_postdata
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
 
-    IF ev_state <> gc_event_state-not_handled.
-      RETURN.
+    IF NOT mo_repo_content IS INITIAL.
+      mo_repo_content->lif_gui_page~on_event(
+        EXPORTING
+          iv_action    = iv_action
+          iv_prev_page = iv_prev_page
+          iv_getdata   = iv_getdata
+          it_postdata  = it_postdata
+        IMPORTING
+          ei_page      = ei_page
+          ev_state     = ev_state ).
+
+      IF ev_state <> gc_event_state-not_handled.
+        RETURN.
+      ENDIF.
     ENDIF.
 
-    lv_key   = iv_getdata.
+    lv_key = iv_getdata.
 
     CASE iv_action.
       WHEN c_actions-show.              " Change displayed repo
