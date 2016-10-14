@@ -221,6 +221,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     CLEAR: ev_key, eg_file, eg_object.
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+    field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
     get_field( EXPORTING name = 'KEY'      it = lt_fields CHANGING cv = ev_key ).
 
