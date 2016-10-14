@@ -104,7 +104,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
 *      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
-        lcx_exception=>raise( 'Unsupported ENHO type' ).
+        lcx_exception=>raise( |Unsupported ENHO type { lv_tool }| ).
     ENDCASE.
 
   ENDMETHOD.                    "serialize
@@ -134,7 +134,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
 *      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
-        lcx_exception=>raise( 'Unsupported ENHO type' ).
+        lcx_exception=>raise( |Unsupported ENHO type { lv_tool }| ).
     ENDCASE.
 
     lcl_objects_activation=>add_item( ms_item ).
