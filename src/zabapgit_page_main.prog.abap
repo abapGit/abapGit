@@ -86,7 +86,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           CATCH lcx_exception.
         ENDTRY.
 
-        CREATE OBJECT mo_repo_content EXPORTING iv_key = lv_key. " Reinit content state
         ev_state = gc_event_state-re_render.
     ENDCASE.
 
@@ -131,8 +130,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD retrieve_active_repo.
 
-    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo  LIKE LINE OF lt_repos.
+    DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
+          lo_repo     LIKE LINE OF lt_repos,
+          lv_show_old LIKE mv_show.
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
@@ -140,7 +140,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    mv_show = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+    lv_show_old = mv_show.
+    mv_show     = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
@@ -156,6 +157,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         mv_show = lo_repo->get_key( ).
         lcl_app=>user( )->set_repo_show( mv_show ).
       ENDIF.
+    ENDIF.
+
+    IF lv_show_old <> mv_show.
+      CREATE OBJECT mo_repo_content EXPORTING iv_key = mv_show. " Reinit content state
     ENDIF.
 
   ENDMETHOD.  "retrieve_active_repo
@@ -282,10 +287,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_repo.
 
     CREATE OBJECT ro_html.
-
-    IF mo_repo_content IS NOT BOUND.
-      CREATE OBJECT mo_repo_content EXPORTING iv_key = io_repo->get_key( ).
-    ENDIF.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
