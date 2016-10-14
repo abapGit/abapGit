@@ -1618,3 +1618,132 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
   ENDMETHOD.  "get_field
 
 ENDCLASS. "ltcl_html_action_utils
+
+CLASS ltcl_path DEFINITION
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
+  INHERITING FROM CL_AUNIT_ASSERT.
+
+  PUBLIC SECTION.
+    METHODS is_root FOR TESTING.
+    METHODS split_file_location FOR TESTING.
+    METHODS is_subdir FOR TESTING.
+    METHODS change_dir FOR TESTING.
+
+ENDCLASS.   "ltcl_path
+
+CLASS ltcl_path IMPLEMENTATION.
+
+
+  METHOD is_root.
+
+    assert_equals( exp = abap_true  act = lcl_path=>is_root( '/' ) ).
+    assert_equals( exp = abap_false act = lcl_path=>is_root( '' ) ).
+    assert_equals( exp = abap_false act = lcl_path=>is_root( 'somedir' ) ).
+    assert_equals( exp = abap_false act = lcl_path=>is_root( '/somedir' ) ).
+
+  ENDMETHOD.
+
+  METHOD split_file_location.
+
+    DATA: lv_path TYPE string,
+          lv_name TYPE string.
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = ''
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '' ).
+    assert_equals( act = lv_name exp = '' ).
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = 'somefile'
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '' ).
+    assert_equals( act = lv_name exp = 'somefile' ).
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = '/'
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '/' ).
+    assert_equals( act = lv_name exp = '' ).
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = '/somefile'
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '/' ).
+    assert_equals( act = lv_name exp = 'somefile' ).
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = '/somedir/'
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '/somedir/' ).
+    assert_equals( act = lv_name exp = '' ).
+
+    lcl_path=>split_file_location( EXPORTING iv_fullpath = '/somedir/somefile'
+                                   IMPORTING ev_path     = lv_path ev_filename = lv_name ).
+    assert_equals( act = lv_path exp = '/somedir/' ).
+    assert_equals( act = lv_name exp = 'somefile' ).
+
+
+  ENDMETHOD.
+
+  METHOD is_subdir.
+
+    DATA lv_yes TYPE abap_bool.
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/dir/subdir'
+                                  iv_parent = '/dir' ).
+    assert_equals( act = lv_yes exp = abap_true ).
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/dir/subdir'
+                                  iv_parent = '/dir/' ).
+    assert_equals( act = lv_yes exp = abap_true ).
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/another'
+                                  iv_parent = '/dir' ).
+    assert_equals( act = lv_yes exp = abap_false ).
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/dir'
+                                  iv_parent = '/dir' ).
+    assert_equals( act = lv_yes exp = abap_false ).
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/dir'
+                                  iv_parent = '/' ).
+    assert_equals( act = lv_yes exp = abap_true ).
+
+    lv_yes = lcl_path=>is_subdir( iv_path   = '/dir2'
+                                  iv_parent = '/dir' ).
+    assert_equals( act = lv_yes exp = abap_false ).
+
+  ENDMETHOD.
+
+  METHOD change_dir.
+
+    DATA lv_path TYPE string.
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = ''
+                                    iv_cd      = '' ).
+    assert_equals( act = lv_path exp = '' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir'
+                                    iv_cd      = '' ).
+    assert_equals( act = lv_path exp = '/dir' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir'
+                                    iv_cd      = '.' ).
+    assert_equals( act = lv_path exp = '/dir' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir'
+                                    iv_cd      = '..' ).
+    assert_equals( act = lv_path exp = '/' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir/sub'
+                                    iv_cd      = '..' ).
+    assert_equals( act = lv_path exp = '/dir/' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir/'
+                                    iv_cd      = 'sub' ).
+    assert_equals( act = lv_path exp = '/dir/sub' ).
+
+    lv_path = lcl_path=>change_dir( iv_cur_dir = '/dir'
+                                    iv_cd      = 'sub' ).
+    assert_equals( act = lv_path exp = '/dir/sub' ).
+
+
+  ENDMETHOD.
+
+ENDCLASS.   "ltcl_path
