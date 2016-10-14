@@ -56,7 +56,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     super->constructor( ).
 
-    ASSERT is_file IS SUPPLIED OR is_object IS SUPPLIED.
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
     lo_repo  ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -70,14 +69,29 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
                    iv_path     = is_file-path
                    iv_filename = is_file-filename ).
 
-    ELSE. " is_object is supplied
+    ELSEIF is_object IS NOT INITIAL.
 
       lt_results = lo_repo->status( ).
 
       LOOP AT lt_results ASSIGNING <ls_result>
         WHERE obj_type = is_object-obj_type
-        AND obj_name = is_object-obj_name
-        AND match IS INITIAL.
+        AND   obj_name = is_object-obj_name
+        AND   match IS INITIAL.
+
+        append_diff( it_remote   = lt_remote
+                     it_local    = lt_local
+                     iv_path     = <ls_result>-path
+                     iv_filename = <ls_result>-filename ).
+
+      ENDLOOP.
+
+    ELSE. " For the whole repo
+
+      lt_results = lo_repo->status( ).
+
+      LOOP AT lt_results ASSIGNING <ls_result>
+        WHERE obj_type IS NOT INITIAL
+        AND   match IS INITIAL.
 
         append_diff( it_remote   = lt_remote
                      it_local    = lt_local
