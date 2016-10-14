@@ -288,10 +288,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    IF mo_repo_content IS NOT BOUND.
-      CREATE OBJECT mo_repo_content EXPORTING iv_key = io_repo->get_key( ).
-    ENDIF.
-
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
     ro_html->add( mo_repo_content->lif_gui_page~render( ) ).
