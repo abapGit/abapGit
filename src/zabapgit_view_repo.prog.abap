@@ -137,12 +137,18 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
   METHOD filter_changes.
 
+    DATA lt_repo_temp LIKE ct_repo_items.
+
     FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
 
     LOOP AT ct_repo_items ASSIGNING <item>.
-      CHECK <item>-changes = 0.
-      DELETE ct_repo_items INDEX sy-tabix.
+      CHECK <item>-changes > 0.
+      APPEND <item> TO lt_repo_temp.
     ENDLOOP.
+
+    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
+      ct_repo_items = lt_repo_temp.
+    ENDIF.
 
   ENDMETHOD. "filter_changes
 
