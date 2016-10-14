@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_tobj DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tobj IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.

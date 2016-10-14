@@ -62,13 +62,15 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     set( iv_sha1 = mv_branch ).
 
+    CLEAR mt_status. " Reset status
+
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.                    "deserialize
 
   METHOD refresh.
 
-    super->refresh( ).
+    super->refresh( iv_drop_cache ).
     CLEAR mt_status.
 
     lcl_progress=>show( iv_key     = 'Fetch'
@@ -369,7 +371,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lcl_objects=>deserialize( me ).
 
-    CLEAR mt_local.
+    CLEAR: mt_local, mv_last_serialization.
 
     set( it_checksums = build_local_checksums( ) ).
 
@@ -385,12 +387,17 @@ CLASS lcl_repo IMPLEMENTATION.
           ls_item  TYPE ty_item,
           lt_files TYPE ty_files_tt.
 
+    DATA: lt_cache TYPE SORTED TABLE OF ty_file_item
+          WITH NON-UNIQUE KEY item.
+
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
                    <ls_return> LIKE LINE OF rt_files,
+                   <ls_cache>  LIKE LINE OF lt_cache,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
 
 
-    IF lines( mt_local ) > 0.
+    " Serialization happened before and no refresh request
+    IF mv_last_serialization IS NOT INITIAL AND mv_do_local_refresh = abap_false.
       rt_files = mt_local.
       RETURN.
     ENDIF.
@@ -405,15 +412,33 @@ CLASS lcl_repo IMPLEMENTATION.
     <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = gc_type-blob
                                                 iv_data = <ls_return>-file-data ).
 
+    lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass = <ls_tadir>-devclass.
+
+      IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
+        READ TABLE lt_cache TRANSPORTING NO FIELDS
+          WITH KEY item = ls_item. " type+name+package key
+        " There is something in cache and the object is unchanged
+        IF sy-subrc = 0
+          AND abap_false = lcl_objects=>has_changed_since( is_item      = ls_item
+                                                           iv_timestamp = mv_last_serialization ).
+          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.
+            APPEND <ls_cache> TO rt_files.
+          ENDLOOP.
+
+          CONTINUE.
+        ENDIF.
+      ENDIF.
+
       lcl_progress=>show( iv_key     = 'Serialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_tadir )
                           iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
-
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
 
       lt_files = lcl_objects=>serialize(
         is_item     = ls_item
@@ -429,7 +454,9 @@ CLASS lcl_repo IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    mt_local = rt_files.
+    GET TIME STAMP FIELD mv_last_serialization.
+    mt_local            = rt_files.
+    mv_do_local_refresh = abap_false. " Fulfill refresh
 
   ENDMETHOD.
 
@@ -453,8 +480,18 @@ CLASS lcl_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD refresh.
-    CLEAR mt_local.
+
+    mv_do_local_refresh = abap_true.
+
+    IF iv_drop_cache = abap_true.
+      CLEAR: mv_last_serialization, mt_local.
+    ENDIF.
+
   ENDMETHOD.                    "refresh
+
+  METHOD refresh_local. " For testing purposes, maybe removed later
+    mv_do_local_refresh = abap_true.
+  ENDMETHOD.  "refresh_local
 
   METHOD get_package.
     rv_package = ms_data-package.

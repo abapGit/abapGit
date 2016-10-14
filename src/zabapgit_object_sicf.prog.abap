@@ -62,6 +62,10 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     DATA: ls_icfservice TYPE icfservice.

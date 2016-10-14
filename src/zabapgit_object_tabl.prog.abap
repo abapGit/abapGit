@@ -22,6 +22,43 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp,
+          lt_indexes TYPE STANDARD TABLE OF dd09l.
+
+    FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
+
+    SELECT SINGLE as4date as4time FROM dd02l " Table
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    _object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    _object_check_timestamp lv_date lv_time.
+
+    SELECT as4date as4time FROM dd12l " Table tech settings
+      INTO CORRESPONDING FIELDS OF TABLE lt_indexes
+      WHERE sqltab = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_indexes ASSIGNING <ls_index>.
+      _object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+    ENDLOOP.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd02l INTO rv_user
@@ -92,9 +129,12 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           lt_dd12v TYPE dd12vtab,
           lt_dd17v TYPE dd17vtab,
           lt_dd35v TYPE TABLE OF dd35v,
+          lv_index LIKE sy-index,
           lt_dd36m TYPE dd36mttyp.
 
     FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
+                   <ls_dd05m> LIKE LINE OF lt_dd05m,
+                   <ls_dd36m> LIKE LINE OF lt_dd36m,
                    <ls_dd03p> LIKE LINE OF lt_dd03p.
 
 
@@ -139,6 +179,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
              <ls_dd12v>-as4time.
     ENDLOOP.
 
+* remove nested structures
+    DELETE lt_dd03p WHERE depth <> '00'.
+* remove fields from .INCLUDEs
+    DELETE lt_dd03p WHERE adminfield <> '0'.
+
     LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
       CLEAR: <ls_dd03p>-ddlanguage,
         <ls_dd03p>-dtelmaster,
@@ -163,6 +208,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           <ls_dd03p>-datatype,
           <ls_dd03p>-leng,
           <ls_dd03p>-outputlen,
+          <ls_dd03p>-deffdname,
+          <ls_dd03p>-convexit,
           <ls_dd03p>-entitytab,
           <ls_dd03p>-dommaster,
           <ls_dd03p>-domname3l.
@@ -177,6 +224,26 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 * XML output assumes correct field content
       IF <ls_dd03p>-routputlen = '      '.
         CLEAR <ls_dd03p>-routputlen.
+      ENDIF.
+    ENDLOOP.
+
+* remove foreign keys inherited from .INCLUDEs
+    DELETE lt_dd08v WHERE noinherit = 'N'.
+    LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
+      lv_index = sy-tabix.
+      READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE lt_dd05m INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+* remove inherited search helps
+    DELETE lt_dd35v WHERE shlpinher = abap_true.
+    LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+      lv_index = sy-tabix.
+      READ TABLE lt_dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE lt_dd36m INDEX lv_index.
       ENDIF.
     ENDLOOP.
 

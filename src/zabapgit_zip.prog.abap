@@ -22,6 +22,9 @@ CLASS lcl_zip DEFINITION FINAL.
     CLASS-METHODS export_package
       RAISING lcx_exception lcx_cancel.
 
+    CLASS-METHODS export_object
+      RAISING lcx_exception lcx_cancel.
+
   PRIVATE SECTION.
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
@@ -452,6 +455,34 @@ CLASS lcl_zip IMPLEMENTATION.
         is_data = ls_data.
 
     lcl_zip=>export( lo_repo ).
+
+  ENDMETHOD.  "export_package
+
+  METHOD export_object.
+
+    DATA: lo_repo  TYPE REF TO lcl_repo_offline,
+          ls_data  TYPE lcl_persistence_repo=>ty_repo,
+          lt_tadir TYPE scts_tadir,
+          ls_tadir TYPE tadir.
+
+
+    ls_tadir = lcl_popups=>popup_object( ).
+    IF ls_tadir IS INITIAL.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    ls_data-key             = 'TZIP'.
+    ls_data-package         = ls_tadir-devclass.
+    ls_data-master_language = sy-langu.
+
+    CREATE OBJECT lo_repo
+      EXPORTING
+        is_data = ls_data.
+
+    APPEND ls_tadir TO lt_tadir.
+
+    lcl_zip=>export( io_repo   = lo_repo
+                     it_filter = lt_tadir ).
 
   ENDMETHOD.  "export_package
 

@@ -170,6 +170,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Database util'    iv_act = gc_action-go_db ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Object to zip'    iv_act = gc_action-zip_object ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
 

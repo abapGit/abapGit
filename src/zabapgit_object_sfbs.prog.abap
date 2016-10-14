@@ -27,6 +27,10 @@ ENDCLASS.                    "lcl_object_SFBS DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sfbs IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     rv_user = get( )->get_header_data( )-changedby.

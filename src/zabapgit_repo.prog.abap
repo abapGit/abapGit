@@ -38,7 +38,9 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       deserialize
         RAISING lcx_exception,
       refresh
+        IMPORTING iv_drop_cache TYPE abap_bool DEFAULT abap_false
         RAISING lcx_exception,
+      refresh_local, " For testing purposes, maybe removed later
       build_local_checksums
         RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt
         RAISING   lcx_exception,
@@ -48,10 +50,12 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
 
   PROTECTED SECTION.
 
-    DATA: mt_local       TYPE ty_files_item_tt,
-          mt_remote      TYPE ty_files_tt,
-          mo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
-          ms_data        TYPE lcl_persistence_repo=>ty_repo.
+    DATA: mt_local              TYPE ty_files_item_tt,
+          mt_remote             TYPE ty_files_tt,
+          mo_dot_abapgit        TYPE REF TO lcl_dot_abapgit,
+          mv_do_local_refresh   TYPE abap_bool,
+          mv_last_serialization TYPE timestamp,
+          ms_data               TYPE lcl_persistence_repo=>ty_repo.
 
     METHODS:
       find_dot_abapgit

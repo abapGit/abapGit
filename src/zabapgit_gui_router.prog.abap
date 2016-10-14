@@ -158,6 +158,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-zip_transport.                   " Export transport as ZIP
         lcl_transport=>zip( ).
         ev_state = gc_event_state-no_more_act.
+      WHEN gc_action-zip_object.                      " Export object as ZIP
+        lcl_zip=>export_object( ).
+        ev_state = gc_event_state-no_more_act.
 
         " Remote origin manipulations
       WHEN gc_action-repo_remote_attach.            " Remote attach

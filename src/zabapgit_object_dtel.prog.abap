@@ -22,6 +22,22 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_dtel IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd04l
+      INTO (lv_date, lv_time)
+      WHERE rollname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+
+    _object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd04l INTO rv_user
@@ -110,6 +126,18 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     CLEAR: ls_dd04v-as4user,
            ls_dd04v-as4date,
            ls_dd04v-as4time.
+
+    IF ls_dd04v-refkind = 'D'.
+* clear values inherited from domain
+      CLEAR: ls_dd04v-datatype,
+             ls_dd04v-leng,
+             ls_dd04v-decimals,
+             ls_dd04v-outputlen,
+             ls_dd04v-lowercase,
+             ls_dd04v-signflag,
+             ls_dd04v-convexit,
+             ls_dd04v-entitytab.
+    ENDIF.
 
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).

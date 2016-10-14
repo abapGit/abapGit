@@ -172,6 +172,19 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "create_object
 
+  METHOD has_changed_since.
+    rv_changed = abap_true. " Assume changed
+
+    IF is_supported( is_item ) = abap_false.
+      RETURN. " Will requre serialize which will log the error
+    ENDIF.
+
+    rv_changed = create_object(
+      is_item     = is_item
+      iv_language = gc_english )->has_changed_since( iv_timestamp ).
+
+  ENDMETHOD.  "has_changed_since
+
   METHOD is_supported.
 
     TRY.

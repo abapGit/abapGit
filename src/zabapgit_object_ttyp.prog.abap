@@ -22,6 +22,21 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ttyp IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd40l
+      INTO (lv_date, lv_time)
+      WHERE typename = ms_item-obj_name
+      AND as4local = 'A'.
+
+    _object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd40l INTO rv_user
@@ -112,6 +127,10 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
     CLEAR: ls_dd40v-as4user,
            ls_dd40v-as4date,
            ls_dd40v-as4time.
+
+    IF NOT ls_dd40v-rowkind IS INITIAL.
+      CLEAR ls_dd40v-typelen.
+    ENDIF.
 
     io_xml->add( iv_name = 'DD40V'
                  ig_data = ls_dd40v ).

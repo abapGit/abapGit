@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssfo IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE lastuser FROM stxfadm INTO rv_user

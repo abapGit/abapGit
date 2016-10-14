@@ -27,6 +27,10 @@ ENDCLASS.                    "lcl_object_acid DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_acid IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata

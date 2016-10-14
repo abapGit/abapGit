@@ -20,7 +20,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           ms_files TYPE ty_stage_files,
-          mo_stage TYPE REF TO lcl_stage.
+          mo_stage TYPE REF TO lcl_stage,
+          mv_ts    TYPE timestamp.
 
     METHODS:
       render_list
@@ -55,6 +56,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       EXPORTING
         iv_branch_name = io_repo->get_branch_name( )
         iv_branch_sha1 = io_repo->get_sha1_remote( ).
+
+    GET TIME STAMP FIELD mv_ts.
 
   ENDMETHOD.
 
@@ -228,7 +231,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add_anchor( iv_act   = 'commit();'
+    ro_html->add_anchor( iv_act   = |commit('{ c_action-stage_commit }');|
                          iv_typ   = gc_action_type-onclick
                          iv_id    = 'act_commit'
                          iv_style = 'display: none'
@@ -279,12 +282,51 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    " Hook global click listener on table, global action counter
-    _add 'document.getElementById("stage_tab").addEventListener("click", onEvent);'.
+    " Globals & initialization
+    ro_html->add( |var gPageID = "stage{ mv_ts }";| ).
     _add 'var gChoiceCount = 0;'.
+    _add 'setHook();'.
+
+    " Hook global click listener on table, global action counter
+    _add 'function setHook() {'.
+    _add '  var stageTab = document.getElementById("stage_tab");'.
+    _add '  if (stageTab.addEventListener) {'.
+    _add '    stageTab.addEventListener("click", onEvent);'.
+    _add '  } else {'.
+    _add '    stageTab.attachEvent("onclick", onEvent);'. " <IE9 crutch
+    _add '  }'.
+    _add '  window.onbeforeunload = onPageUnload;'.
+    _add '  window.onload         = onPageLoad;'.
+    _add '}'.
+
+    " Store table state on leaving the page
+    _add 'function onPageUnload() {'.
+    _add '  var data = collectData();'.
+    _add '  window.sessionStorage.setItem(gPageID, JSON.stringify(data));'.
+    _add '}'.
+
+    " Re-store table state on entering the page
+    _add 'function onPageLoad() {'.
+    _add '  var data = JSON.parse(window.sessionStorage.getItem(gPageID));'.
+    _add '  var stage = document.getElementById("stage_tab");'.
+    _add '  for (var i = stage.rows.length - 1; i >= 0; i--) {'.
+    _add '    var tr = stage.rows[i];'.
+    _add '    if (tr.parentNode.tagName == "THEAD") continue;'.
+    _add '    var context = tr.parentNode.className;'.
+    _add '    var cmd     = data[tr.cells[1].innerText];'.
+    _add '    if (!cmd) continue;'.
+    _add '    formatTR(tr, cmd, context);'.
+    _add '    if (countChoiceImpact(cmd) > 0) gChoiceCount++;'.
+    _add '  }'.
+    _add '  updateMenu();'.
+    _add '}'.
 
     " Event handler, change status
     _add 'function onEvent(event) {'.
+    _add '  if (!event.target) {'. " <IE9 crutch
+    _add '    if (event.srcElement) event.target = event.srcElement;'.
+    _add '    else return;'.
+    _add '  }'.
     _add '  if (event.target.tagName != "A") return;'.
     _add '  var td = event.target.parentNode;'.
     _add '  if (!td || td.tagName != "TD" || td.className != "cmd") return;'.
@@ -292,13 +334,21 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     _add '  var tr      = td.parentNode;'.
     _add '  var context = tr.parentNode.className;'.
     _add '  switch (cmd) {'.
-    _add '    case "add":    cmd = "A"; gChoiceCount++; break;'.
-    _add '    case "remove": cmd = "R"; gChoiceCount++; break;'.
-    _add '    case "ignore": cmd = "I"; gChoiceCount++; break;'.
-    _add '    case "reset":  cmd = "?"; gChoiceCount--; break;'.
+    _add '    case "add":    cmd = "A"; break;'.
+    _add '    case "remove": cmd = "R"; break;'.
+    _add '    case "ignore": cmd = "I"; break;'.
+    _add '    case "reset":  cmd = "?"; break;'.
     _add '  }'.
     _add '  formatTR(tr, cmd, context);'.
+    _add '  gChoiceCount += countChoiceImpact(cmd);'.
     _add '  updateMenu();'.
+    _add '}'.
+
+    " Update action counter -> affects menu update after
+    _add 'function countChoiceImpact(cmd) {'.
+    _add '  if      ("ARI".indexOf(cmd) > -1) return 1;'.
+    _add '  else if ("?".indexOf(cmd) > -1)   return -1;'.
+    _add '  else alert("Unknown command");'.
     _add '}'.
 
     " Re-format table line
@@ -324,9 +374,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     _add '}'.
 
     " Commit change to the server
-    _add 'function commit() {'.
+    _add 'function commit(action) {'.
     _add '  var data = collectData();'.
-    ro_html->add( |  submitForm(data, "{ c_action-stage_commit }");| ).
+    _add '  submitForm(data, action);'.
     _add '}'.
 
     " Extract data from the table
