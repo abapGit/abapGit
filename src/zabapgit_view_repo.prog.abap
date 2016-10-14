@@ -235,7 +235,7 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
              lif_gui_page~on_event   REDEFINITION.
 
     METHODS constructor
-      IMPORTING io_repo TYPE REF TO lcl_repo
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -286,7 +286,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo        ?= io_repo.
+    mo_repo         = lcl_app=>repo_srv( )->get( iv_key ).
     mv_cur_dir      = '/'. " Root
     mv_hide_files   = lcl_app=>user( )->get_hide_files( ).
     mv_changes_only = lcl_app=>user( )->get_changes_only( ).
@@ -324,6 +324,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+
+    " Reinit, for the case of type change
+    mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
 
     CREATE OBJECT ro_html.
 

@@ -57,8 +57,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          lo_repo TYPE REF TO lcl_repo.
+    DATA: lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
     mo_repo_content->lif_gui_page~on_event(
       EXPORTING
@@ -80,12 +79,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-show.              " Change displayed repo
         lcl_app=>user( )->set_repo_show( lv_key ).
         TRY.
-            lo_repo = lcl_app=>repo_srv( )->get( lv_key ).
-            lo_repo->refresh( ).
+            lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
           CATCH lcx_exception.
         ENDTRY.
 
-        CREATE OBJECT mo_repo_content EXPORTING io_repo = lo_repo. " Reinit content state
+        CREATE OBJECT mo_repo_content EXPORTING iv_key = lv_key. " Reinit content state
         ev_state = gc_event_state-re_render.
     ENDCASE.
 
@@ -283,7 +281,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF mo_repo_content IS NOT BOUND.
-      CREATE OBJECT mo_repo_content EXPORTING io_repo = io_repo.
+      CREATE OBJECT mo_repo_content EXPORTING iv_key = io_repo->get_key( ).
     ENDIF.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
