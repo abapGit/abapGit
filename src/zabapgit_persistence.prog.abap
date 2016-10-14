@@ -411,6 +411,14 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_hide) TYPE abap_bool
       RAISING   lcx_exception.
 
+    METHODS toggle_changes_only
+      RETURNING VALUE(rv_changes_only) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_changes_only
+      RETURNING VALUE(rv_changes_only) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
 
@@ -429,11 +437,12 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_user,
-             username    TYPE string,
-             email       TYPE string,
-             repo_show   TYPE lcl_persistence_repo=>ty_repo-key,
-             repo_config TYPE ty_repo_config_tt,
-             hide_files  TYPE abap_bool,
+             username     TYPE string,
+             email        TYPE string,
+             repo_show    TYPE lcl_persistence_repo=>ty_repo-key,
+             repo_config  TYPE ty_repo_config_tt,
+             hide_files   TYPE abap_bool,
+             changes_only TYPE abap_bool,
            END OF ty_user.
 
     METHODS constructor
@@ -658,6 +667,25 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_hide = read( )-hide_files.
 
   ENDMETHOD. "get_hide_files
+
+  METHOD toggle_changes_only.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-changes_only = boolc( ls_user-changes_only = abap_false ).
+    update( ls_user ).
+
+    rv_changes_only = ls_user-changes_only.
+
+  ENDMETHOD. "toggle_changes_only
+
+  METHOD get_changes_only.
+
+    rv_changes_only = read( )-changes_only.
+
+  ENDMETHOD. "get_changes_only
+
 
 ENDCLASS.
 

@@ -280,9 +280,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo      ?= io_repo.
-    mv_cur_dir    = '/'. " Root
-    mv_hide_files = lcl_app=>user( )->get_hide_files( ).
+    mo_repo        ?= io_repo.
+    mv_cur_dir      = '/'. " Root
+    mv_hide_files   = lcl_app=>user( )->get_hide_files( ).
+    mv_changes_only = lcl_app=>user( )->get_changes_only( ).
 
   ENDMETHOD. "constructor
 
@@ -292,18 +293,18 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
-        mv_hide_files = lcl_app=>user( )->toggle_hide_files( ).
-        ev_state      = gc_event_state-re_render.
+        mv_hide_files   = lcl_app=>user( )->toggle_hide_files( ).
+        ev_state        = gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
-        lv_path    = lcl_html_action_utils=>dir_decode( iv_getdata ).
-        mv_cur_dir = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
-        ev_state   = gc_event_state-re_render.
+        lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
+        mv_cur_dir      = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
         mv_cur_dir      = '/'. " Root
         ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
-        mv_changes_only = boolc( mv_changes_only <> abap_true ).
+        mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
         ev_state        = gc_event_state-re_render.
     ENDCASE.
 
