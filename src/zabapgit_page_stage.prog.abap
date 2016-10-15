@@ -27,8 +27,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       render_list
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_file
-        IMPORTING is_file     TYPE ty_file
-                  iv_context  TYPE string
+        IMPORTING is_file        TYPE ty_file
+                  iv_context     TYPE string
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_menu
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
@@ -38,7 +38,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
     METHODS process_stage_list
-      IMPORTING it_postdata  TYPE cnht_post_data_tab
+      IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -94,7 +94,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp,
-          ls_file TYPE ty_file.
+          ls_file   TYPE ty_file.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
                    <ls_item> LIKE LINE OF lt_fields.
@@ -151,8 +151,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       AT FIRST.
         ro_html->add('<thead><tr>').
         ro_html->add('<th></th><th colspan="2">LOCAL</th><th>' ).
-        ro_html->add_anchor( iv_txt = |{ lines( ms_files-local ) } diffs|
-                             iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+        IF lines( ms_files-local ) > 1.
+          ro_html->add_anchor( iv_txt = |{ lines( ms_files-local ) } diffs|
+                               iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+        ENDIF.
         ro_html->add('</th></tr></thead>').
         ro_html->add('<tbody class="local">').
       ENDAT.
