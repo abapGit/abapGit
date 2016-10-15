@@ -30,9 +30,9 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
       IMPORTING io_repo TYPE REF TO lcl_repo.
 
     METHODS list
-      IMPORTING iv_path         TYPE string
-                iv_by_folders   TYPE abap_bool
-                iv_changes_only TYPE abap_bool
+      IMPORTING iv_path              TYPE string
+                iv_by_folders        TYPE abap_bool
+                iv_changes_only      TYPE abap_bool
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
       RAISING   lcx_exception.
 
@@ -57,7 +57,7 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS filter_changes
-      CHANGING  ct_repo_items TYPE tt_repo_items.
+      CHANGING ct_repo_items TYPE tt_repo_items.
 
 ENDCLASS. "lcl_repo_content_browser
 
@@ -232,7 +232,7 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
                END OF c_actions.
 
     METHODS: lif_gui_page~render     REDEFINITION,
-             lif_gui_page~on_event   REDEFINITION.
+      lif_gui_page~on_event   REDEFINITION.
 
     METHODS constructor
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -333,13 +333,13 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     TRY.
         ro_html->add( render_repo_menu( ) ).
 
-        CREATE OBJECT lo_browser EXPORTING io_repo   = mo_repo.
+        CREATE OBJECT lo_browser EXPORTING io_repo = mo_repo.
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
         lo_log = lo_browser->get_log( ).
-        IF mo_repo->is_offline( ) = abap_false and lo_log->count( ) > 0.
+        IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
           ro_html->add( '<div class="log attention">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
@@ -523,7 +523,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     IF is_item-is_dir = abap_true.
       APPEND 'folder' TO lt_class.
-    ElSEIF is_item-changes > 0.
+    ELSEIF is_item-changes > 0.
       APPEND 'modified' TO lt_class.
     ELSEIF is_item-obj_name IS INITIAL.
       APPEND 'unsupported' TO lt_class.
@@ -604,9 +604,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lv_difflink = lcl_html_action_utils=>obj_encode(
             iv_key    = mo_repo->get_key( )
             ig_object = is_item ).
-          ro_html->add_anchor(
-            iv_txt = |{ is_item-changes } diffs|
-            iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+          IF is_item-changes = 1.
+            ro_html->add_anchor(
+              iv_txt = |{ is_item-changes } diff|
+              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+          ELSE.
+            ro_html->add_anchor(
+              iv_txt = |{ is_item-changes } diffs|
+              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+          ENDIF.
         ELSE.
           LOOP AT is_item-files INTO ls_file.
             IF ls_file-new = gc_new-remote.
