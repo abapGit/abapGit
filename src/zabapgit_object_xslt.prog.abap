@@ -125,6 +125,8 @@ CLASS lcl_object_xslt IMPLEMENTATION.
       lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
     ENDIF.
 
+    lo_xslt->activate( ).
+
     lo_xslt->save( ).
 
     lo_xslt->set_changeable( abap_false ).

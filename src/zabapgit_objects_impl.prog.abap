@@ -567,6 +567,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
+* XSLT has to be handled before CLAS/PROG
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'XSLT'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
 * PROG before internet services, as the services might use the screens
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PROG'.
       APPEND <ls_result> TO rt_results.
@@ -578,7 +583,9 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT it_results ASSIGNING <ls_result>
-        WHERE obj_type <> 'IASP' AND obj_type <> 'PROG'.
+        WHERE obj_type <> 'IASP'
+        AND obj_type <> 'PROG'
+        AND obj_type <> 'XSLT'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
