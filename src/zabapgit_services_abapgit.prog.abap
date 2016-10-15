@@ -52,8 +52,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       text_button_1         = 'Continue'
       text_button_2         = 'Cancel'
       default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer <> '1'.
       RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

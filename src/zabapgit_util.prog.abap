@@ -347,17 +347,17 @@ CLASS lcl_path DEFINITION FINAL.
                 ev_filename TYPE string.
 
     CLASS-METHODS is_root
-      IMPORTING iv_path TYPE string
+      IMPORTING iv_path       TYPE string
       RETURNING VALUE(rv_yes) TYPE abap_bool.
 
     CLASS-METHODS is_subdir
-      IMPORTING iv_path   TYPE string
-                iv_parent TYPE string
+      IMPORTING iv_path       TYPE string
+                iv_parent     TYPE string
       RETURNING VALUE(rv_yes) TYPE abap_bool.
 
     CLASS-METHODS change_dir
-      IMPORTING iv_cur_dir TYPE string
-                iv_cd      TYPE string
+      IMPORTING iv_cur_dir     TYPE string
+                iv_cd          TYPE string
       RETURNING VALUE(rv_path) TYPE string.
 
 ENDCLASS. "lcl_path
@@ -398,7 +398,7 @@ CLASS lcl_path IMPLEMENTATION.
     lv_last = lv_len - 1.
     rv_yes  = boolc( strlen( iv_path ) > lv_len
                  AND iv_path+0(lv_len) = iv_parent
-                 AND ( iv_parent+lv_last(1) = '/' OR iv_path+lv_Len(1) = '/' ) ).
+                 AND ( iv_parent+lv_last(1) = '/' OR iv_path+lv_len(1) = '/' ) ).
 
   ENDMETHOD. "is_subdir
 
@@ -406,7 +406,6 @@ CLASS lcl_path IMPLEMENTATION.
 
     DATA lv_last TYPE i.
     DATA lv_temp TYPE string.
-    DATA lv_len  TYPE i.
 
     lv_last = strlen( iv_cur_dir ) - 1.
 
@@ -425,12 +424,10 @@ CLASS lcl_path IMPLEMENTATION.
         SHIFT lv_temp UP TO '/' LEFT.
         rv_path = reverse( lv_temp ).
       ENDIF.
+    ELSEIF iv_cur_dir+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
+      rv_path = iv_cur_dir && iv_cd.
     ELSE.
-      IF iv_cur_dir+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
-        rv_path = iv_cur_dir && iv_cd.
-      ELSE.
-        rv_path = iv_cur_dir && '/' && iv_cd.
-      ENDIF.
+      rv_path = iv_cur_dir && '/' && iv_cd.
     ENDIF.
 
     " TODO: improve logic and cases

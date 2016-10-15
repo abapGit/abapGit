@@ -21,7 +21,7 @@ SELECTION-SCREEN END OF SCREEN 1002.
 *-----------------------------------------------------------------------
 * LCL_PASSWORD_DIALOG
 *-----------------------------------------------------------------------
-CLASS lcl_password_dialog DEFINITION.
+CLASS lcl_password_dialog DEFINITION FINAL.
 
   PUBLIC SECTION.
     CONSTANTS dynnr TYPE char4 VALUE '1002'.

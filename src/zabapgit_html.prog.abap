@@ -153,13 +153,13 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt ca gc_html_opt-emphas.
+    IF iv_opt CA gc_html_opt-emphas.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt ca gc_html_opt-cancel.
+    IF iv_opt CA gc_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
-    IF iv_opt ca gc_html_opt-crossout.
+    IF iv_opt CA gc_html_opt-crossout.
       lv_class = lv_class && ' crossout grey' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.

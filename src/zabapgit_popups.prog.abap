@@ -3,7 +3,7 @@
 *&---------------------------------------------------------------------*
 
 "! various popups, static methods, no class/object state
-CLASS lcl_popups DEFINITION.
+CLASS lcl_popups DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_popup,

@@ -50,8 +50,7 @@ CLASS lcl_objects IMPLEMENTATION.
         lv_answer = lcl_popups=>popup_to_confirm(
           titlebar              = 'Warning'
           text_question         = lv_question
-          display_cancel_button = abap_false
-        ).                                                  "#EC NOTEXT
+          display_cancel_button = abap_false ).             "#EC NOTEXT
 
         IF lv_answer = '2'.
           DELETE ct_results INDEX lv_index.
@@ -85,8 +84,7 @@ CLASS lcl_objects IMPLEMENTATION.
         text_button_2         = 'Cancel'
         icon_button_2         = 'ICON_CANCEL'
         default_button        = '2'
-        display_cancel_button = abap_false
-      ).                                                    "#EC NOTEXT
+        display_cancel_button = abap_false ).               "#EC NOTEXT
 
       IF lv_answer = '2'.
         rv_cancel = abap_true.

@@ -73,7 +73,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CASE iv_action.
         " General routing
-      WHEN   gc_action-go_main                        " Go Main page
+      WHEN gc_action-go_main                        " Go Main page
           OR gc_action-go_explore                     " Go Explore page
           OR gc_action-go_db                          " Go DB util page
           OR gc_action-go_background_run              " Go background run page
@@ -200,8 +200,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_by_name.
 
     DATA: lv_page_class TYPE string,
-          lv_page_name  TYPE string,
-          lv_message    TYPE string.
+          lv_page_name  TYPE string.
 
     lv_page_name  = iv_name.
     SHIFT lv_page_name LEFT DELETING LEADING 'go_'.
