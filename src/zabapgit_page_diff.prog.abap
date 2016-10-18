@@ -6,18 +6,17 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.
 
-    TYPES: begin of ty_file_diff,
+    TYPES: BEGIN OF ty_file_diff,
              filename TYPE string,
              o_diff   TYPE REF TO lcl_diff,
-           end of ty_file_diff,
+           END OF ty_file_diff,
            tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
 
     METHODS: constructor
-      IMPORTING
-        iv_key    TYPE lcl_persistence_repo=>ty_repo-key
-        is_file   TYPE ty_file OPTIONAL
-        is_object TYPE ty_item OPTIONAL
-      RAISING lcx_exception.
+      IMPORTING iv_key    TYPE lcl_persistence_repo=>ty_repo-key
+                is_file   TYPE ty_file OPTIONAL
+                is_object TYPE ty_item OPTIONAL
+      RAISING   lcx_exception.
 
     METHODS lif_gui_page~render   REDEFINITION.
 
@@ -39,7 +38,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 it_local    TYPE ty_files_item_tt
                 iv_path     TYPE string
                 iv_filename TYPE string
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
 ENDCLASS. "lcl_gui_page_diff
 
@@ -47,10 +46,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lt_remote    TYPE ty_files_tt,
-          lt_local     TYPE ty_files_item_tt,
-          lt_results   TYPE ty_results_tt,
-          lo_repo      TYPE REF TO lcl_repo_online.
+    DATA: lt_remote  TYPE ty_files_tt,
+          lt_local   TYPE ty_files_item_tt,
+          lt_results TYPE ty_results_tt,
+          lo_repo    TYPE REF TO lcl_repo_online.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
@@ -111,9 +110,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   METHOD append_diff.
 
     DATA:
-          ls_r_dummy   LIKE LINE OF it_remote ##NEEDED,
-          ls_l_dummy   LIKE LINE OF it_local  ##NEEDED,
-          ls_diff_file LIKE LINE OF mt_diff_files.
+      ls_r_dummy   LIKE LINE OF it_remote ##NEEDED,
+      ls_l_dummy   LIKE LINE OF it_local  ##NEEDED,
+      ls_diff_file LIKE LINE OF mt_diff_files.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_local>  LIKE LINE OF it_local.
@@ -186,7 +185,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'div.diff_content {' ).                   "#EC NOTEXT
     lo_html->add( '  background: #fff;' ).                  "#EC NOTEXT
-    lo_html->add( '  border-top: 1px solid #DDD;' ).     "#EC NOTEXT
+    lo_html->add( '  border-top: 1px solid #DDD;' ).        "#EC NOTEXT
     lo_html->add( '  border-bottom: 1px solid #DDD;' ).     "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
 
@@ -199,9 +198,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( '  color: #EEE;' ).                       "#EC NOTEXT
     lo_html->add( '  background-color: #BBB;' ).            "#EC NOTEXT
     lo_html->add( '  text-align: left;' ).                  "#EC NOTEXT
-    lo_html->add( '  font-weight: bold;' ).               "#EC NOTEXT
+    lo_html->add( '  font-weight: bold;' ).                 "#EC NOTEXT
     lo_html->add( '  padding-left: 0.5em;' ).               "#EC NOTEXT
-    lo_html->add( '  font-size: 9pt;' ).                   "#EC NOTEXT
+    lo_html->add( '  font-size: 9pt;' ).                    "#EC NOTEXT
     lo_html->add( '}' ).                                    "#EC NOTEXT
     lo_html->add( 'table.diff_tab td {' ).                  "#EC NOTEXT
     lo_html->add( '  color: #444;' ).                       "#EC NOTEXT
@@ -265,9 +264,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add( '<table width="100%" class="diff_tab">' ). "#EC NOTEXT
     ro_html->add(   '<tr>' ).                               "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add(   '<th>LOCAL</th>' ).                    "#EC NOTEXT
+    ro_html->add(   '<th>LOCAL</th>' ).                     "#EC NOTEXT
     ro_html->add(   '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add(   '<th>REMOTE</th>' ).                   "#EC NOTEXT
+    ro_html->add(   '<th>REMOTE</th>' ).                    "#EC NOTEXT
     ro_html->add(   '</tr>' ).                              "#EC NOTEXT
     ro_html->add( render_lines( is_diff ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT

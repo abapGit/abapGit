@@ -122,8 +122,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
           lv_push    TYPE string,
           lv_pull    TYPE string,
           lv_afixed  TYPE string,
-          lv_aauto   TYPE string,
-          lt_list    TYPE lcl_repo_srv=>ty_repo_tt.
+          lv_aauto   TYPE string.
 
 
     CREATE OBJECT ro_html.

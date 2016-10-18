@@ -323,8 +323,7 @@ CLASS lcl_xml_input IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lv_text  TYPE string,
-          lx_error TYPE REF TO cx_transformation_error,
+    DATA: lx_error TYPE REF TO cx_transformation_error,
           lt_rtab  TYPE abap_trans_resbind_tab.
 
     FIELD-SYMBOLS: <ls_rtab> LIKE LINE OF lt_rtab.

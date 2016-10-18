@@ -424,11 +424,6 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     DATA: mv_user TYPE xubname.
 
-    TYPES:
-      ty_repo_hidden_tt
-        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
-        WITH DEFAULT KEY.
-
     TYPES: BEGIN OF ty_repo_config,
              url       TYPE lcl_persistence_repo=>ty_repo-url,
              username  TYPE string,

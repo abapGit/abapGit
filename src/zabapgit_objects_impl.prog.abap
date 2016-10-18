@@ -50,8 +50,7 @@ CLASS lcl_objects IMPLEMENTATION.
         lv_answer = lcl_popups=>popup_to_confirm(
           titlebar              = 'Warning'
           text_question         = lv_question
-          display_cancel_button = abap_false
-        ).                                                  "#EC NOTEXT
+          display_cancel_button = abap_false ).             "#EC NOTEXT
 
         IF lv_answer = '2'.
           DELETE ct_results INDEX lv_index.
@@ -85,8 +84,7 @@ CLASS lcl_objects IMPLEMENTATION.
         text_button_2         = 'Cancel'
         icon_button_2         = 'ICON_CANCEL'
         default_button        = '2'
-        display_cancel_button = abap_false
-      ).                                                    "#EC NOTEXT
+        display_cancel_button = abap_false ).               "#EC NOTEXT
 
       IF lv_answer = '2'.
         rv_cancel = abap_true.
@@ -567,6 +565,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
+* XSLT has to be handled before CLAS/PROG
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'XSLT'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
 * PROG before internet services, as the services might use the screens
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PROG'.
       APPEND <ls_result> TO rt_results.
@@ -578,7 +581,9 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT it_results ASSIGNING <ls_result>
-        WHERE obj_type <> 'IASP' AND obj_type <> 'PROG'.
+        WHERE obj_type <> 'IASP'
+        AND obj_type <> 'PROG'
+        AND obj_type <> 'XSLT'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
