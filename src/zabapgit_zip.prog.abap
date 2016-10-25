@@ -27,12 +27,12 @@ CLASS lcl_zip DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS file_upload
-      RETURNING VALUE(rv_xstr) TYPE xstring
+      RETURNING value(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS unzip_file
       IMPORTING iv_xstr         TYPE xstring
-      RETURNING VALUE(rt_files) TYPE ty_files_tt
+      RETURNING value(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS normalize_path
@@ -52,11 +52,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS encode_files
       IMPORTING it_files       TYPE ty_files_item_tt
-      RETURNING VALUE(rv_xstr) TYPE xstring
+      RETURNING value(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS get_message
-      RETURNING VALUE(rv_message) TYPE string
+      RETURNING value(rv_message) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_zip DEFINITION
@@ -337,7 +337,7 @@ CLASS lcl_zip IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "normalize_path
 
   METHOD unzip_file.
 
@@ -460,10 +460,17 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export_object.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo_offline,
-          ls_data  TYPE lcl_persistence_repo=>ty_repo,
-          lt_tadir TYPE scts_tadir,
-          ls_tadir TYPE tadir.
+    DATA: ls_tadir    TYPE tadir,
+          ls_item     TYPE ty_item,
+          lv_folder   TYPE string,
+          lv_fullpath TYPE string,
+          lt_rawdata  TYPE solix_tab,
+          lv_sep      TYPE c LENGTH 1,
+          lt_files    TYPE ty_files_tt.
+
+    STATICS: lv_prev TYPE string.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
 
     ls_tadir = lcl_popups=>popup_object( ).
@@ -471,18 +478,74 @@ CLASS lcl_zip IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    ls_data-key             = 'TZIP'.
-    ls_data-package         = ls_tadir-devclass.
-    ls_data-master_language = sy-langu.
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
 
-    CREATE OBJECT lo_repo
+    lt_files = lcl_objects=>serialize(
+      is_item     = ls_item
+      iv_language = sy-langu ).
+
+    IF lines( lt_files ) = 0.
+      MESSAGE 'Empty' TYPE 'S'.
+      RETURN.
+    ENDIF.
+
+    cl_gui_frontend_services=>directory_browse(
       EXPORTING
-        is_data = ls_data.
+        initial_folder  = lv_prev
+      CHANGING
+        selected_folder = lv_folder ).
+    IF lv_folder IS INITIAL.
+      RETURN.
+    ENDIF.
 
-    APPEND ls_tadir TO lt_tadir.
+    lv_prev = lv_folder.
 
-    lcl_zip=>export( io_repo   = lo_repo
-                     it_filter = lt_tadir ).
+    cl_gui_frontend_services=>get_file_separator(
+      CHANGING
+        file_separator = lv_sep ).
+
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.
+
+      lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).
+
+      cl_gui_frontend_services=>gui_download(
+        EXPORTING
+          bin_filesize              = xstrlen( <ls_file>-data )
+          filename                  = lv_fullpath
+          filetype                  = 'BIN'
+        CHANGING
+          data_tab                  = lt_rawdata
+        EXCEPTIONS
+          file_write_error          = 1
+          no_batch                  = 2
+          gui_refuse_filetransfer   = 3
+          invalid_type              = 4
+          no_authority              = 5
+          unknown_error             = 6
+          header_not_allowed        = 7
+          separator_not_allowed     = 8
+          filesize_not_allowed      = 9
+          header_too_long           = 10
+          dp_error_create           = 11
+          dp_error_send             = 12
+          dp_error_write            = 13
+          unknown_dp_error          = 14
+          access_denied             = 15
+          dp_out_of_memory          = 16
+          disk_full                 = 17
+          dp_timeout                = 18
+          file_not_found            = 19
+          dataprovider_exception    = 20
+          control_flush_error       = 21
+          not_supported_by_gui      = 22
+          error_no_gui              = 23
+          OTHERS                    = 24 ).
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from gui_download' ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.  "export_package
 
