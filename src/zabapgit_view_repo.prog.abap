@@ -506,7 +506,11 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     " Render ==========================================
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( '<table width="100%"><tr>' ).
-    ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+
+    IF mv_show_folders = abap_true.
+      ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+    ENDIF.
+
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</td>' ).
