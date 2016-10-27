@@ -104,9 +104,9 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF ct.
 
-    FIELD-SYMBOLS <src>     TYPE any.
+    FIELD-SYMBOLS <src> TYPE any.
 
-    ls_field-name  = name.
+    ls_field-name = name.
 
     CASE cl_abap_typedescr=>describe_by_data( iv )->kind.
       WHEN cl_abap_typedescr=>kind_elem.
@@ -116,7 +116,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
         ASSERT <src> IS ASSIGNED.
         ls_field-value = <src>.
       WHEN OTHERS.
-        ASSERT 2 = 1.
+        ASSERT 0 = 1.
     ENDCASE.
 
     APPEND ls_field TO ct.
@@ -125,8 +125,8 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD get_field.
 
-    FIELD-SYMBOLS <ls_field> LIKE LINE OF it.
-    FIELD-SYMBOLS <dest>     TYPE any.
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF it,
+                   <dest>     TYPE any.
 
 
     READ TABLE it ASSIGNING <ls_field> WITH KEY name = name.
@@ -142,7 +142,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
         ASSERT <dest> IS ASSIGNED.
         <dest> = <ls_field>-value.
       WHEN OTHERS.
-        ASSERT 2 = 1.
+        ASSERT 0 = 1.
     ENDCASE.
 
   ENDMETHOD.  "get_field
