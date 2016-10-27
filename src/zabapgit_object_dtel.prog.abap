@@ -17,7 +17,7 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     TYPES: BEGIN OF ty_dd04_texts,
              ddlanguage TYPE dd04t-ddlanguage,
-             ddtext	    TYPE dd04t-ddtext,
+             ddtext     TYPE dd04t-ddtext,
              reptext    TYPE dd04t-reptext,
              scrtext_s  TYPE dd04t-scrtext_s,
              scrtext_m  TYPE dd04t-scrtext_m,

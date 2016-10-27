@@ -224,9 +224,9 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD is_language_installed.
 
     IF mv_langs_installed IS INITIAL.
-     CALL FUNCTION 'RSAQ_READ_INSTALLED_LANGUAGES'
-       IMPORTING
-         inst_languages = mv_langs_installed.
+      CALL FUNCTION 'RSAQ_READ_INSTALLED_LANGUAGES'
+        IMPORTING
+          inst_languages = mv_langs_installed.
     ENDIF.
 
     rv_yes = boolc( mv_langs_installed CA iv_language ).
