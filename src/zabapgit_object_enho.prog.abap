@@ -82,7 +82,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     lv_enh_id = ms_item-obj_name.
     TRY.
-        li_enh_tool = cl_enh_factory=>get_enhancement( lv_enh_id ).
+        li_enh_tool = cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
       CATCH cx_enh_root.
         lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
