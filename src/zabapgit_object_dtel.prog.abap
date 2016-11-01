@@ -275,9 +275,6 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     SORT: lt_i18n_langs, lt_dd04_texts BY ddlanguage. " Optimization
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
 
-      " Skip languages that are not installed
-      CHECK lcl_objects=>is_language_installed( <lang> ) = abap_true.
-
       " Data element description
       ls_dd04v_tmp = is_dd04v.
       READ TABLE lt_dd04_texts ASSIGNING <dd04_text> WITH KEY ddlanguage = <lang>.

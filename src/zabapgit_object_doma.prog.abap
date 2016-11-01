@@ -304,9 +304,6 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
 
-      " Skip languages that are not installed
-      CHECK lcl_objects=>is_language_installed( <lang> ) = abap_true.
-
       " Domain description
       ls_dd01v_tmp = is_dd01v.
       READ TABLE lt_dd01_texts ASSIGNING <dd01_text> WITH KEY ddlanguage = <lang>.
