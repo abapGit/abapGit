@@ -341,9 +341,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
     _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
     _add '.repo_tab tr:first-child td { border-top: 0px; }'.
-    _add '.repo_tab td.files span     { display: block; }'.
-    _add '.repo_tab td.cmd span       { display: block; }'.
-    _add '.repo_tab td.cmd a          { display: block; }'.
     _add 'td.current_dir              { color: #ccc; }'.
 
   ENDMETHOD.  "styles
