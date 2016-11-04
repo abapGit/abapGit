@@ -174,29 +174,29 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
           ls_file        TYPE ty_repo_file,
-          lt_results     TYPE ty_results_tt.
+          lt_status      TYPE ty_results_tt.
 
-    FIELD-SYMBOLS: <ls_result>    LIKE LINE OF lt_results,
+    FIELD-SYMBOLS: <status>      LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
     lo_repo_online ?= mo_repo.
-    lt_results      = lo_repo_online->status( mo_log ).
+    lt_status       = lo_repo_online->status( mo_log ).
 
-    LOOP AT lt_results ASSIGNING <ls_result>.
+    LOOP AT lt_status ASSIGNING <status>.
       AT NEW obj_name. "obj_type + obj_name
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
-        <ls_repo_item>-obj_type = <ls_result>-obj_type.
-        <ls_repo_item>-obj_name = <ls_result>-obj_name.
+        <ls_repo_item>-obj_type = <status>-obj_type.
+        <ls_repo_item>-obj_name = <status>-obj_name.
         <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
         <ls_repo_item>-changes  = 0.
-        <ls_repo_item>-path     = <ls_result>-path.
+        <ls_repo_item>-path     = <status>-path.
       ENDAT.
 
-      IF <ls_result>-filename IS NOT INITIAL.
-        ls_file-path        = <ls_result>-path.
-        ls_file-filename    = <ls_result>-filename.
-        ls_file-is_changed  = boolc( NOT <ls_result>-match = abap_true ).
-        ls_file-new         = <ls_result>-new.
+      IF <status>-filename IS NOT INITIAL.
+        ls_file-path        = <status>-path.
+        ls_file-filename    = <status>-filename.
+        ls_file-is_changed  = boolc( <status>-match = abap_false OR <status>-new <> space ).
+        ls_file-new         = <status>-new.
         APPEND ls_file TO <ls_repo_item>-files.
 
         IF ls_file-is_changed = abap_true OR ls_file-new IS NOT INITIAL.
@@ -268,6 +268,9 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
         RETURNING VALUE(rv_html) TYPE string,
       get_item_icon
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
+        RETURNING VALUE(rv_html) TYPE string,
+      render_state
+        IMPORTING iv_state TYPE char2
         RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
@@ -529,8 +532,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     DATA lt_class TYPE TABLE OF string.
 
-    "TODO REFACTOR !!! Depends on if folder woth changes should be highlited
-
     IF is_item-is_dir = abap_true.
       APPEND 'folder' TO lt_class.
     ELSEIF is_item-changes > 0.
@@ -564,6 +565,31 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
   ENDMETHOD. "get_item_icon
 
+  METHOD render_state.
+
+    rv_html = '<span class="state-block">'.
+
+    CASE iv_state(1). " Local
+      WHEN 'C'. "Changed
+        rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
+      WHEN 'U'. "Unchanged
+        rv_html = rv_html && '<span class="unchanged">&#x25A0;</span>'.
+      WHEN '_'. "None
+        rv_html = rv_html && '<span class="none">&#x25A0;</span>'.
+    ENDCASE.
+
+    CASE iv_state+1(1). " Remote
+      WHEN 'C'. "Changed
+        rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
+      WHEN 'U'. "Unchanged
+        rv_html = rv_html && '<span class="unchanged">&#x25A0;</span>'.
+      WHEN '_'. "None
+        rv_html = rv_html && '<span class="none">&#x25A0;</span>'.
+    ENDCASE.
+
+    rv_html = rv_html && '</span>'.
+
+  ENDMETHOD. "render_state
 
   METHOD render_item.
     DATA: lv_link TYPE string,
@@ -576,7 +602,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
       ro_html->add( '<td colspan="2"></td>'
-                 && '<td class="object"><i class="grey">non-code and meta files</i></td>' ).
+                 && '<td class="object">'
+                 && '<i class="grey">non-code and meta files</i>'
+                 && '</td>' ).
     ELSE.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
 
@@ -631,11 +659,24 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    IF is_item-is_dir = abap_true.
+    IF is_item-is_dir = abap_true. " Directory
+
       ro_html->add( |<div class="grey">{ is_item-changes } changes</div>| ).
-    ELSEIF lines( is_item-files ) = 0.
-      ro_html->add( '<div class="grey">new @local</div>' ).
+
+    ELSEIF lines( is_item-files ) = 0. " New local object
+
+      lv_difflink = lcl_html_action_utils=>obj_encode(
+        iv_key    = mo_repo->get_key( )
+        ig_object = is_item ).
+      ro_html->add( '<div>' ).
+      ro_html->add_anchor(
+        iv_txt = |diff|
+        iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+      ro_html->add( render_state( 'C_' ) ).
+      ro_html->add( '</div>' ).
+
     ELSEIF is_item-changes > 0.
+
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
         lv_difflink = lcl_html_action_utils=>obj_encode(
           iv_key    = mo_repo->get_key( )
@@ -653,22 +694,44 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</div>' ).
       ELSE.
         LOOP AT is_item-files INTO ls_file.
-          IF ls_file-new = gc_new-remote.
-            ro_html->add( '<div class="grey">new @remote</div>' ).
-          ELSEIF ls_file-new = gc_new-local.
-            ro_html->add( '<div class="grey">new @local</div>' ).
-          ELSEIF ls_file-is_changed = abap_true.
+
+          IF ls_file-is_changed = abap_true.
             lv_difflink = lcl_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
             ro_html->add( '<div>' ).
             ro_html->add_anchor(
-              iv_txt = 'diff'
+              iv_txt = |diff|
               iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+
+            CASE ls_file-new.
+              WHEN gc_new-remote.
+                ro_html->add( render_state( '_C' ) ).
+              WHEN gc_new-local.
+                ro_html->add( render_state( 'C_' ) ).
+              WHEN OTHERS.
+                ro_html->add( render_state( 'CC' ) ).
+            ENDCASE.
+
             ro_html->add( '</div>' ).
           ELSE.
             ro_html->add( |<div>&nbsp;</div>| ).
           ENDIF.
+
+
+*          IF ls_file-new = gc_new-remote.
+*            ro_html->add( '<div class="grey">new @remote</div>' ).
+*          ELSEIF ls_file-new = gc_new-local.
+*            ro_html->add( '<div class="grey">new @local</div>' ).
+*          ELSEIF ls_file-is_changed = abap_true.
+*            ro_html->add( '<div>' ).
+*            ro_html->add_anchor(
+*              iv_txt = 'diff'
+*              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+*            ro_html->add( '</div>' ).
+*          ELSE.
+*            ro_html->add( |<div>&nbsp;</div>| ).
+*          ENDIF.
         ENDLOOP.
       ENDIF.
 

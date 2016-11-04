@@ -338,6 +338,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '  padding-left: 0.5em;'.
     _add '  padding-right: 1em;'.
     _add '}'.
+    _add '.repo_tab td.cmd span.changed    { color: #ff9933; }'.
+    _add '.repo_tab td.cmd span.none       { color: #dddddd; }'.
+    _add '.repo_tab td.cmd span.unchanged  { color: #cedeee; }'.
+    _add '.repo_tab td.cmd span.state-block { margin-left: 10px; }'.
     _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
     _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
     _add '.repo_tab tr:first-child td { border-top: 0px; }'.

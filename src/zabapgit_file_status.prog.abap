@@ -157,7 +157,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         ENDIF.
 
         CLEAR ls_result.
-        ls_result-match    = abap_true.
+        ls_result-match    = abap_false.
         ls_result-obj_type = <ls_tadir>-object.
         ls_result-obj_name = <ls_tadir>-obj_name.
         ls_result-new      = gc_new-local.
