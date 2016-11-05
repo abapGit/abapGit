@@ -73,9 +73,19 @@ CLASS lcl_file_status IMPLEMENTATION.
       it_tadir           = lt_tadir
       iv_starting_folder = lo_dot_abapgit->get_starting_folder( ) ).
 
-    " Remove ignored files
+    " Remove ignored files, fix .abapgit
     LOOP AT rt_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
+
+      " Crutch for .abapgit -> it is always match as generated dynamically
+      " However this is probably the place to compare it when local editing
+      " of it will be implemented
+      IF <ls_result>-path = gc_root_dir AND <ls_result>-filename = gc_dot_abapgit.
+        <ls_result>-match = abap_true.
+        <ls_result>-new   = space.
+        CONTINUE.
+      ENDIF.
+
       IF lo_dot_abapgit->is_ignored(
           iv_path     = <ls_result>-path
           iv_filename = <ls_result>-filename ) = abap_true.
