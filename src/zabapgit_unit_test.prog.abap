@@ -1783,17 +1783,31 @@ CLASS ltcl_file_status IMPLEMENTATION.
     <tadir>-devclass = '$ZZZZ$'.
   END-OF-DEFINITION.
 
+  DEFINE _append_result.
+    APPEND INITIAL LINE TO lt_results_exp ASSIGNING <result>.
+    <result>-obj_type = &1.
+    <result>-obj_name = &2.
+    <result>-match    = &3.
+    <result>-new      = &4.
+    <result>-filename = &5.
+    <result>-package  = '$ZZZZ$'.
+    <result>-path     = '/'.
+  END-OF-DEFINITION.
+
   METHOD calculate_status.
 
     DATA: lt_local       TYPE ty_files_item_tt,
           lt_remote      TYPE ty_files_tt,
           lt_tadir       TYPE ty_tadir_tt,
-          lt_results     TYPE ty_results_tt.
+          lt_results     TYPE ty_results_tt,
+          lt_results_exp TYPE ty_results_tt.
 
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
+                   <result> LIKE LINE OF lt_results,
                    <tadir>  LIKE LINE OF lt_tadir.
 
+    "             TYPE   NAME      FILE                            SHA1
     _append_local 'DOMA' 'ZDOMA1'  'zdoma1.doma.xml'               'D1'.
     _append_local 'DOMA' 'ZDOMA2'  'zdoma2.doma.xml'               'D2_CHANGED'.
     _append_local 'DOMA' 'ZDOMA3'  'zdoma3.doma.xml'               'D3'.
@@ -1801,6 +1815,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.testclasses.abap' 'C1_F3'.
     _append_local 'DOMA' 'ZDOMA5'  'zdoma5.doma.xml'               'D5'.
 
+    "              FILE                SHA1
     _append_remote 'zdoma1.doma.xml'   'D1'.
     _append_remote 'zdoma2.doma.xml'   'D2'.
     _append_remote 'zdoma3.doma.xml'   'D3_CHANGED'.
@@ -1808,11 +1823,22 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'zclass1.clas.abap' 'C1_F2'.
     _append_remote 'zdoma4.doma.xml'   'D4'.
 
+    "             TYPE   NAME
     _append_tadir 'DOMA' 'ZGITHUB_DOMA1'.
     _append_tadir 'DOMA' 'ZGITHUB_DOMA2'.
     _append_tadir 'DOMA' 'ZGITHUB_DOMA3'.
     _append_tadir 'CLAS' 'ZGITHUB_TEST_CLASS1'.
     _append_tadir 'DOMA' 'ZGITHUB_DOMA5'.
+
+    "              TYPE   NAME      MATCH NEW   FILE
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ''    'zgithub_doma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ''    ''    'zgithub_doma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ''    ''    'zgithub_doma3.doma.xml'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ''    'zgithub_test_class1.clas.xml'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'R'   'zgithub_test_class1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'L'   'zgithub_test_class1.clas.testclasses.abap'.
+    _append_result 'DOMA' 'ZDOMA4'  ''    'R'   'zgithub_doma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ''    'L'   'zgithub_doma5.doma.xml'.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local
@@ -1820,6 +1846,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
       it_tadir           = lt_tadir
       iv_starting_folder = '/' ).
 
+    assert_equals( act = lt_results exp = lt_results_exp ).
 
   ENDMETHOD.  "calculate_status
 
