@@ -1747,3 +1747,80 @@ CLASS ltcl_path IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.   "ltcl_path
+
+CLASS ltcl_file_status DEFINITION
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
+  INHERITING FROM CL_AUNIT_ASSERT.
+
+  PUBLIC SECTION.
+    METHODS calculate_status FOR TESTING.
+
+ENDCLASS.   "ltcl_file_status
+
+CLASS ltcl_file_status IMPLEMENTATION.
+
+  DEFINE _append_local.
+    APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
+    <local>-item-obj_type = &1.
+    <local>-item-obj_name = &2.
+    <local>-item-devclass = '$ZZZZ$'.
+    <local>-file-path     = '/'.
+    <local>-file-filename = &3.
+    <local>-file-sha1     = &4.
+  END-OF-DEFINITION.
+
+  DEFINE _append_remote.
+    APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
+    <remote>-path     = '/'.
+    <remote>-filename = &1.
+    <remote>-sha1     = &2.
+  END-OF-DEFINITION.
+
+  DEFINE _append_tadir.
+    APPEND INITIAL LINE TO lt_tadir ASSIGNING <tadir>.
+    <tadir>-object   = &1.
+    <tadir>-obj_name = &2.
+    <tadir>-devclass = '$ZZZZ$'.
+  END-OF-DEFINITION.
+
+  METHOD calculate_status.
+
+    DATA: lt_local       TYPE ty_files_item_tt,
+          lt_remote      TYPE ty_files_tt,
+          lt_tadir       TYPE ty_tadir_tt,
+          lt_results     TYPE ty_results_tt.
+
+    FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
+                   <remote> LIKE LINE OF lt_remote,
+                   <tadir>  LIKE LINE OF lt_tadir.
+
+    _append_local 'DOMA' 'ZDOMA1'  'zdoma1.doma.xml'               'D1'.
+    _append_local 'DOMA' 'ZDOMA2'  'zdoma2.doma.xml'               'D2_CHANGED'.
+    _append_local 'DOMA' 'ZDOMA3'  'zdoma3.doma.xml'               'D3'.
+    _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.xml'              'C1_F1'.
+    _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.testclasses.abap' 'C1_F3'.
+    _append_local 'DOMA' 'ZDOMA5'  'zdoma5.doma.xml'               'D5'.
+
+    _append_remote 'zdoma1.doma.xml'   'D1'.
+    _append_remote 'zdoma2.doma.xml'   'D2'.
+    _append_remote 'zdoma3.doma.xml'   'D3_CHANGED'.
+    _append_remote 'zclass1.clas.xml'  'C1_F1'.
+    _append_remote 'zclass1.clas.abap' 'C1_F2'.
+    _append_remote 'zdoma4.doma.xml'   'D4'.
+
+    _append_tadir 'DOMA' 'ZGITHUB_DOMA1'.
+    _append_tadir 'DOMA' 'ZGITHUB_DOMA2'.
+    _append_tadir 'DOMA' 'ZGITHUB_DOMA3'.
+    _append_tadir 'CLAS' 'ZGITHUB_TEST_CLASS1'.
+    _append_tadir 'DOMA' 'ZGITHUB_DOMA5'.
+
+    lt_results = lcl_file_status=>calculate_status(
+      it_local           = lt_local
+      it_remote          = lt_remote
+      it_tadir           = lt_tadir
+      iv_starting_folder = '/' ).
+
+
+  ENDMETHOD.  "calculate_status
+
+ENDCLASS.   "ltcl_file_status

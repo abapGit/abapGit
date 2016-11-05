@@ -5,9 +5,10 @@
 *----------------------------------------------------------------------*
 *       CLASS lcl_file_status DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_file_status DEFINITION FINAL.
+CLASS ltcl_file_status DEFINITION DEFERRED.
+
+CLASS lcl_file_status DEFINITION FINAL
+  FRIENDS ltcl_file_status.
 
   PUBLIC SECTION.
 
@@ -35,8 +36,6 @@ ENDCLASS.                    "lcl_file_status DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_file_status IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
 *----------------------------------------------------------------------*
 CLASS lcl_file_status IMPLEMENTATION.
 
