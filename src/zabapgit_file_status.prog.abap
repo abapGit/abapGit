@@ -22,8 +22,14 @@ CLASS lcl_file_status DEFINITION FINAL.
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE ty_files_tt
                 is_gen          TYPE ty_file
-      RETURNING VALUE(rv_match) TYPE sap_bool
-      RAISING   lcx_exception.
+      RETURNING VALUE(rv_match) TYPE sap_bool.
+
+    CLASS-METHODS calculate_status
+      IMPORTING it_local           TYPE ty_files_item_tt
+                it_remote          TYPE ty_files_tt
+                it_tadir           TYPE ty_tadir_tt
+                iv_starting_folder TYPE string
+      RETURNING VALUE(rt_results)  TYPE ty_results_tt.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 
@@ -48,31 +54,64 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD status.
 
+    DATA: lt_local       TYPE ty_files_item_tt,
+          lt_remote      TYPE ty_files_tt,
+          lt_tadir       TYPE ty_tadir_tt,
+          lv_index       LIKE sy-tabix,
+          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit.
+
+    FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
+
+    lt_remote      = io_repo->get_files_remote( ).
+    lt_local       = io_repo->get_files_local( io_log ).
+    lo_dot_abapgit = io_repo->get_dot_abapgit( ).
+    lt_tadir       = lcl_tadir=>read( io_repo->get_package( ) ).
+
+    rt_results = calculate_status(
+      it_local           = lt_local
+      it_remote          = lt_remote
+      it_tadir           = lt_tadir
+      iv_starting_folder = lo_dot_abapgit->get_starting_folder( ) ).
+
+    " Remove ignored files
+    LOOP AT rt_results ASSIGNING <ls_result>.
+      lv_index = sy-tabix.
+      IF lo_dot_abapgit->is_ignored(
+          iv_path     = <ls_result>-path
+          iv_filename = <ls_result>-filename ) = abap_true.
+        DELETE rt_results INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+    lcl_sap_package=>check(
+      io_log     = io_log
+      it_results = rt_results
+      iv_start   = lo_dot_abapgit->get_starting_folder( )
+      iv_top     = io_repo->get_package( ) ).
+
+  ENDMETHOD.  "status
+
+  METHOD calculate_status.
+
     DATA: lv_pre    TYPE tadir-obj_name,
           lt_files  TYPE ty_files_tt,
           ls_result LIKE LINE OF rt_results,
           lv_type   TYPE string,
           ls_item   TYPE ty_item,
-          lt_tadir  TYPE ty_tadir_tt,
-          lt_local  TYPE ty_files_item_tt,
           ls_tadir  TYPE tadir,
-          lt_remote TYPE ty_files_tt,
           lv_ext    TYPE string.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote,
-                   <ls_tadir>  LIKE LINE OF lt_tadir,
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
+                   <ls_tadir>  LIKE LINE OF it_tadir,
                    <ls_result> LIKE LINE OF rt_results,
-                   <ls_local>  LIKE LINE OF lt_local,
+                   <ls_local>  LIKE LINE OF it_local,
                    <ls_gen>    LIKE LINE OF lt_files.
 
 
-    lt_remote = io_repo->get_files_remote( ).
-    lt_local  = io_repo->get_files_local( io_log ).
-
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
+    LOOP AT it_remote ASSIGNING <ls_remote>.
       lcl_progress=>show( iv_key     = 'Status'
                           iv_current = sy-tabix
-                          iv_total   = lines( lt_remote )
+                          iv_total   = lines( it_remote )
                           iv_text    = <ls_remote>-filename ) ##NO_TEXT.
 
       SPLIT <ls_remote>-filename AT '.' INTO lv_pre lv_type lv_ext.
@@ -95,7 +134,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       ls_item-obj_name = lv_pre.
 
       CLEAR lt_files.
-      LOOP AT lt_local ASSIGNING <ls_local>
+      LOOP AT it_local ASSIGNING <ls_local>
         WHERE item-obj_type = ls_item-obj_type AND item-obj_name = ls_item-obj_name.
         APPEND <ls_local>-file TO lt_files.
       ENDLOOP.
@@ -110,32 +149,27 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       LOOP AT lt_files ASSIGNING <ls_gen>.
         ls_result-filename = <ls_gen>-filename.
-        ls_result-match    = compare_files( it_repo = lt_remote
+        ls_result-match    = compare_files( it_repo = it_remote
                                             is_gen  = <ls_gen> ).
         APPEND ls_result TO rt_results.
       ENDLOOP.
     ENDLOOP.
 
 * find files only existing remotely, including non abapGit related
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
+    LOOP AT it_remote ASSIGNING <ls_remote>.
       READ TABLE rt_results WITH KEY filename = <ls_remote>-filename
         TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        IF io_repo->get_dot_abapgit( )->is_ignored(
-            iv_path     = <ls_remote>-path
-            iv_filename = <ls_remote>-filename ) = abap_true.
-          CONTINUE.
-        ENDIF.
-
         CLEAR ls_result.
-        ls_result-match    = abap_true.
+        ls_result-match    = abap_false.
+        ls_result-new      = gc_new-remote.
         ls_result-filename = <ls_remote>-filename.
         APPEND ls_result TO rt_results.
       ENDIF.
     ENDLOOP.
 
 * add path information for files
-    LOOP AT lt_remote ASSIGNING <ls_remote>.
+    LOOP AT it_remote ASSIGNING <ls_remote>.
       READ TABLE rt_results ASSIGNING <ls_result> WITH KEY filename = <ls_remote>-filename.
       IF sy-subrc = 0.
         <ls_result>-path = <ls_remote>-path.
@@ -143,8 +177,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     ENDLOOP.
 
 * find objects only existing locally
-    lt_tadir = lcl_tadir=>read( io_repo->get_package( ) ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
       READ TABLE rt_results
         WITH KEY obj_type = <ls_tadir>-object
                  obj_name = <ls_tadir>-obj_name
@@ -169,7 +202,7 @@ CLASS lcl_file_status IMPLEMENTATION.
           AND   obj_name = <ls_tadir>-obj_name
           AND   path IS INITIAL.
 * new file added locally to existing object
-        <ls_result>-path = io_repo->get_dot_abapgit( )->get_starting_folder( ) && <ls_tadir>-path.
+        <ls_result>-path = iv_starting_folder && <ls_tadir>-path.
         <ls_result>-new  = gc_new-local.
       ENDLOOP.
     ENDLOOP.
@@ -188,12 +221,6 @@ CLASS lcl_file_status IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
 
-    lcl_sap_package=>check(
-      io_log     = io_log
-      it_results = rt_results
-      iv_start   = io_repo->get_dot_abapgit( )->get_starting_folder( )
-      iv_top     = io_repo->get_package( ) ).
-
-  ENDMETHOD.                    "status
+  ENDMETHOD.                    "calculate_status
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION
