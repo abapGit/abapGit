@@ -1822,23 +1822,25 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'zclass1.clas.xml'  'C1_F1'.
     _append_remote 'zclass1.clas.abap' 'C1_F2'.
     _append_remote 'zdoma4.doma.xml'   'D4'.
+    _append_remote 'textfile.txt'      'T1'.
 
     "             TYPE   NAME
-    _append_tadir 'DOMA' 'ZGITHUB_DOMA1'.
-    _append_tadir 'DOMA' 'ZGITHUB_DOMA2'.
-    _append_tadir 'DOMA' 'ZGITHUB_DOMA3'.
-    _append_tadir 'CLAS' 'ZGITHUB_TEST_CLASS1'.
-    _append_tadir 'DOMA' 'ZGITHUB_DOMA5'.
+    _append_tadir 'DOMA' 'ZDOMA1'.
+    _append_tadir 'DOMA' 'ZDOMA2'.
+    _append_tadir 'DOMA' 'ZDOMA3'.
+    _append_tadir 'CLAS' 'ZCLASS1'.
+    _append_tadir 'DOMA' 'ZDOMA5'.
 
     "              TYPE   NAME      MATCH NEW   FILE
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ''    'zgithub_doma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ''    ''    'zgithub_doma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ''    ''    'zgithub_doma3.doma.xml'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ''    'zgithub_test_class1.clas.xml'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'R'   'zgithub_test_class1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'L'   'zgithub_test_class1.clas.testclasses.abap'.
-    _append_result 'DOMA' 'ZDOMA4'  ''    'R'   'zgithub_doma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ''    'L'   'zgithub_doma5.doma.xml'.
+    _append_result ''     ''        ''    'R'   'textfile.txt'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'R'   'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'L'   'zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ''    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ''    'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ''    ''    'zdoma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ''    ''    'zdoma3.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA4'  ''    'R'   'zdoma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ''    'L'   'zdoma5.doma.xml'.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local
