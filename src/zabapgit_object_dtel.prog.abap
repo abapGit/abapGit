@@ -137,7 +137,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
-    IF sy-subrc <> 0 or ls_dd04v IS INITIAL.
+    IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
       lcx_exception=>raise( 'Error from DDIF_DTEL_GET' ).
     ENDIF.
 
@@ -151,6 +151,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
              ls_dd04v-leng,
              ls_dd04v-decimals,
              ls_dd04v-outputlen,
+             ls_dd04v-valexi,
              ls_dd04v-lowercase,
              ls_dd04v-signflag,
              ls_dd04v-convexit,
@@ -218,7 +219,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages
-    SELECT DISTINCT ddlanguage as langu INTO TABLE lt_i18n_langs
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
       AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
