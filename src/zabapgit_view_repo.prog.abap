@@ -195,11 +195,12 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       IF <status>-filename IS NOT INITIAL.
         ls_file-path        = <status>-path.
         ls_file-filename    = <status>-filename.
-        ls_file-is_changed  = boolc( <status>-match = abap_false OR <status>-new <> space ).
-        ls_file-new         = <status>-new.
+        ls_file-is_changed  = boolc( <status>-match = abap_false ). " TODO refactor
+        ls_file-rstate      = <status>-rstate.
+        ls_file-lstate      = <status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
 
-        IF ls_file-is_changed = abap_true OR ls_file-new IS NOT INITIAL.
+        IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
         ENDIF.
@@ -270,7 +271,8 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       render_state
-        IMPORTING iv_state TYPE char2
+        IMPORTING iv_l           TYPE char1
+                  iv_r           TYPE char1
         RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
@@ -574,7 +576,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     rv_html = '<span class="state-block">'.
 
-    CASE iv_state(1). " Local
+    CASE iv_l. " Local
       WHEN 'C'. "Changed
         rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
       WHEN 'U'. "Unchanged
@@ -583,7 +585,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         rv_html = rv_html && '<span class="none">&#x25A0;</span>'.
     ENDCASE.
 
-    CASE iv_state+1(1). " Remote
+    CASE iv_r. " Remote
       WHEN 'C'. "Changed
         rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
       WHEN 'U'. "Unchanged
@@ -677,7 +679,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       ro_html->add_anchor(
         iv_txt = |diff|
         iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-      ro_html->add( render_state( 'C_' ) ).
+      ro_html->add( render_state( iv_l = 'C' iv_r = '_' ) ).
       ro_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
@@ -709,34 +711,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
               iv_txt = |diff|
               iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
 
-            CASE ls_file-new.
-              WHEN gc_new-remote.
-                ro_html->add( render_state( '_C' ) ).
-              WHEN gc_new-local.
-                ro_html->add( render_state( 'C_' ) ).
-              WHEN OTHERS.
-                ro_html->add( render_state( 'CC' ) ).
-            ENDCASE.
-
+            ro_html->add( render_state( iv_l = ls_file-lstate iv_r = ls_file-rstate ) ).
             ro_html->add( '</div>' ).
           ELSE.
             ro_html->add( |<div>&nbsp;</div>| ).
           ENDIF.
 
-
-*          IF ls_file-new = gc_new-remote.
-*            ro_html->add( '<div class="grey">new @remote</div>' ).
-*          ELSEIF ls_file-new = gc_new-local.
-*            ro_html->add( '<div class="grey">new @local</div>' ).
-*          ELSEIF ls_file-is_changed = abap_true.
-*            ro_html->add( '<div>' ).
-*            ro_html->add_anchor(
-*              iv_txt = 'diff'
-*              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-*            ro_html->add( '</div>' ).
-*          ELSE.
-*            ro_html->add( |<div>&nbsp;</div>| ).
-*          ENDIF.
         ENDLOOP.
       ENDIF.
 

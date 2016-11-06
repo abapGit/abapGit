@@ -22,13 +22,20 @@ CLASS lcl_file_status DEFINITION FINAL
 
     CLASS-METHODS compare_files
       IMPORTING it_repo         TYPE ty_files_tt
-                is_gen          TYPE ty_file
+                is_file         TYPE ty_file
       RETURNING VALUE(rv_match) TYPE sap_bool.
 
-    CLASS-METHODS calculate_status
+    CLASS-METHODS calculate_status_old
       IMPORTING it_local           TYPE ty_files_item_tt
                 it_remote          TYPE ty_files_tt
                 it_tadir           TYPE ty_tadir_tt
+                iv_starting_folder TYPE string
+      RETURNING VALUE(rt_results)  TYPE ty_results_tt.
+
+    CLASS-METHODS calculate_status_new
+      IMPORTING it_local           TYPE ty_files_item_tt
+                it_remote          TYPE ty_files_tt
+                it_cur_state       TYPE ty_file_signatures_tt
                 iv_starting_folder TYPE string
       RETURNING VALUE(rt_results)  TYPE ty_results_tt.
 
@@ -42,9 +49,9 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD compare_files.
 
     READ TABLE it_repo WITH KEY
-      path     = is_gen-path
-      filename = is_gen-filename
-      sha1     = is_gen-sha1
+      path     = is_file-path
+      filename = is_file-filename
+      sha1     = is_file-sha1
       TRANSPORTING NO FIELDS.
 
     rv_match = boolc( sy-subrc = 0 ).
@@ -66,7 +73,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     lo_dot_abapgit = io_repo->get_dot_abapgit( ).
     lt_tadir       = lcl_tadir=>read( io_repo->get_package( ) ).
 
-    rt_results = calculate_status(
+    rt_results = calculate_status_old(
       it_local           = lt_local
       it_remote          = lt_remote
       it_tadir           = lt_tadir
@@ -81,7 +88,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       " of it will be implemented
       IF <ls_result>-path = gc_root_dir AND <ls_result>-filename = gc_dot_abapgit.
         <ls_result>-match = abap_true.
-        <ls_result>-new   = space.
+        CLEAR: <ls_result>-lstate, <ls_result>-rstate.
         CONTINUE.
       ENDIF.
 
@@ -100,7 +107,10 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   ENDMETHOD.  "status
 
-  METHOD calculate_status.
+  METHOD calculate_status_new.
+  ENDMETHOD.  "calculate_status_new.
+
+  METHOD calculate_status_old.
 
     DATA: lv_pre    TYPE tadir-obj_name,
           lt_files  TYPE ty_files_tt,
@@ -114,15 +124,12 @@ CLASS lcl_file_status IMPLEMENTATION.
                    <ls_tadir>  LIKE LINE OF it_tadir,
                    <ls_result> LIKE LINE OF rt_results,
                    <ls_local>  LIKE LINE OF it_local,
-                   <ls_gen>    LIKE LINE OF lt_files.
+                   <ls_file>   LIKE LINE OF lt_files.
 
 
     LOOP AT it_remote ASSIGNING <ls_remote>.
-      lcl_progress=>show( iv_key     = 'Status'
-                          iv_current = sy-tabix
-                          iv_total   = lines( it_remote )
-                          iv_text    = <ls_remote>-filename ) ##NO_TEXT.
 
+      " Guess object type and name
       SPLIT <ls_remote>-filename AT '.' INTO lv_pre lv_type lv_ext.
       TRANSLATE lv_pre TO UPPER CASE.
       TRANSLATE lv_type TO UPPER CASE.
@@ -131,7 +138,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         CONTINUE. " current loop
       ENDIF.
 
-* handle namespaces
+      " handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN lv_pre WITH '/'.
 
       CLEAR ls_result.
@@ -142,24 +149,25 @@ CLASS lcl_file_status IMPLEMENTATION.
       ls_item-obj_type = lv_type.
       ls_item-obj_name = lv_pre.
 
+      " Add corresponding local files
       CLEAR lt_files.
       LOOP AT it_local ASSIGNING <ls_local>
         WHERE item-obj_type = ls_item-obj_type AND item-obj_name = ls_item-obj_name.
         APPEND <ls_local>-file TO lt_files.
       ENDLOOP.
 
+      " item does not exist locally
       IF lt_files[] IS INITIAL.
-* item does not exist locally
         ls_result-filename = <ls_remote>-filename.
-        ls_result-new      = gc_new-remote.
+        ls_result-rstate   = gc_state-added.
         APPEND ls_result TO rt_results.
         CONTINUE. " current loop
       ENDIF.
 
-      LOOP AT lt_files ASSIGNING <ls_gen>.
-        ls_result-filename = <ls_gen>-filename.
+      LOOP AT lt_files ASSIGNING <ls_file>.
+        ls_result-filename = <ls_file>-filename.
         ls_result-match    = compare_files( it_repo = it_remote
-                                            is_gen  = <ls_gen> ).
+                                            is_file = <ls_file> ).
         APPEND ls_result TO rt_results.
       ENDLOOP.
     ENDLOOP.
@@ -171,7 +179,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       IF sy-subrc <> 0.
         CLEAR ls_result.
         ls_result-match    = abap_false.
-        ls_result-new      = gc_new-remote.
+        ls_result-rstate   = gc_state-added.
         ls_result-filename = <ls_remote>-filename.
         APPEND ls_result TO rt_results.
       ENDIF.
@@ -202,7 +210,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         ls_result-match    = abap_false.
         ls_result-obj_type = <ls_tadir>-object.
         ls_result-obj_name = <ls_tadir>-obj_name.
-        ls_result-new      = gc_new-local.
+        ls_result-lstate   = gc_state-added.
         APPEND ls_result TO rt_results.
       ENDIF.
 
@@ -211,8 +219,8 @@ CLASS lcl_file_status IMPLEMENTATION.
           AND   obj_name = <ls_tadir>-obj_name
           AND   path IS INITIAL.
 * new file added locally to existing object
-        <ls_result>-path = iv_starting_folder && <ls_tadir>-path.
-        <ls_result>-new  = gc_new-local.
+        <ls_result>-path   = iv_starting_folder && <ls_tadir>-path.
+        <ls_result>-lstate = gc_state-added.
       ENDLOOP.
     ENDLOOP.
 
@@ -237,6 +245,6 @@ CLASS lcl_file_status IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_results
       COMPARING obj_type obj_name filename.
 
-  ENDMETHOD.                    "calculate_status
+  ENDMETHOD.                    "calculate_status_old
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION

@@ -1776,6 +1776,13 @@ CLASS ltcl_file_status IMPLEMENTATION.
     <remote>-sha1     = &2.
   END-OF-DEFINITION.
 
+  DEFINE _append_state.
+    APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
+    <remote>-path     = '/'.
+    <remote>-filename = &1.
+    <remote>-sha1     = &2.
+  END-OF-DEFINITION.
+
   DEFINE _append_tadir.
     APPEND INITIAL LINE TO lt_tadir ASSIGNING <tadir>.
     <tadir>-object   = &1.
@@ -1788,9 +1795,10 @@ CLASS ltcl_file_status IMPLEMENTATION.
     <result>-obj_type = &1.
     <result>-obj_name = &2.
     <result>-match    = &3.
-    <result>-new      = &4.
-    <result>-package  = &5.
-    <result>-filename = &6.
+    <result>-lstate   = &4.
+    <result>-rstate   = &5.
+    <result>-package  = &6.
+    <result>-filename = &7.
     <result>-path     = '/'.
   END-OF-DEFINITION.
 
@@ -1798,6 +1806,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
 
     DATA: lt_local       TYPE ty_files_item_tt,
           lt_remote      TYPE ty_files_tt,
+          lt_state       TYPE ty_file_signatures_tt,
           lt_tadir       TYPE ty_tadir_tt,
           lt_results     TYPE ty_results_tt,
           lt_results_exp TYPE ty_results_tt.
@@ -1805,44 +1814,58 @@ CLASS ltcl_file_status IMPLEMENTATION.
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
                    <result> LIKE LINE OF lt_results,
+                   <state>  LIKE LINE OF lt_state,
                    <tadir>  LIKE LINE OF lt_tadir.
 
-    "             TYPE   NAME      FILE                            SHA1
+    "STATE        FILE                            SHA1
+    _append_state 'zdoma1.doma.xml'               'D1'.
+    _append_state 'zdoma2.doma.xml'               'D2'.
+    _append_state 'zdoma3.doma.xml'               'D3'.
+    _append_state 'zclass1.clas.xml'              'C1_F1'.
+    _append_state 'zclass1.clas.testclasses.abap' 'C1_F3'.
+    _append_state 'zdoma5.doma.xml'               'D5'.
+    _append_state 'zdoma6.doma.xml'               'D6'.
+
+    "LOCAL        TYPE   NAME      FILE                            SHA1
     _append_local 'DOMA' 'ZDOMA1'  'zdoma1.doma.xml'               'D1'.
-    _append_local 'DOMA' 'ZDOMA2'  'zdoma2.doma.xml'               'D2_CHANGED'.
+    _append_local 'DOMA' 'ZDOMA2'  'zdoma2.doma.xml'               'D2_CHANGED_L'.
     _append_local 'DOMA' 'ZDOMA3'  'zdoma3.doma.xml'               'D3'.
     _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.xml'              'C1_F1'.
     _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.testclasses.abap' 'C1_F3'.
     _append_local 'DOMA' 'ZDOMA5'  'zdoma5.doma.xml'               'D5'.
+    _append_local 'DOMA' 'ZDOMA6'  'zdoma6.doma.xml'               'D6_CHANGED_L'.
 
-    "              FILE                SHA1
+    "REMOTE        FILE                SHA1
     _append_remote 'zdoma1.doma.xml'   'D1'.
     _append_remote 'zdoma2.doma.xml'   'D2'.
-    _append_remote 'zdoma3.doma.xml'   'D3_CHANGED'.
+    _append_remote 'zdoma3.doma.xml'   'D3_CHANGED_R'.
     _append_remote 'zclass1.clas.xml'  'C1_F1'.
     _append_remote 'zclass1.clas.abap' 'C1_F2'.
     _append_remote 'zdoma4.doma.xml'   'D4'.
+    _append_remote 'zdoma6.doma.xml'   'D6_CHANGED_R'.
     _append_remote 'textfile.txt'      'T1'.
 
-    "             TYPE   NAME
+    "TADIR        TYPE   NAME
     _append_tadir 'DOMA' 'ZDOMA1'.
     _append_tadir 'DOMA' 'ZDOMA2'.
     _append_tadir 'DOMA' 'ZDOMA3'.
     _append_tadir 'CLAS' 'ZCLASS1'.
     _append_tadir 'DOMA' 'ZDOMA5'.
+    _append_tadir 'DOMA' 'ZDOMA6'.
 
-    "              TYPE   NAME      MATCH NEW  PKG   FILE
-    _append_result ''     ''        ''    'R'  ''    'textfile.txt'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'R'  '$Z$' 'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'L'  '$Z$' 'zclass1.clas.testclasses.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ''   '$Z$' 'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ''   '$Z$' 'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ''    ''   '$Z$' 'zdoma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ''    ''   '$Z$' 'zdoma3.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA4'  ''    'R'  '$Z$' 'zdoma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ''    'L'  '$Z$' 'zdoma5.doma.xml'.
+    "EXP RESULT    TYPE   NAME      MATCH LST  RST  PKG   FILE
+    _append_result ''     ''        ''    ''   'A'  ''    'textfile.txt'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'R'  'L'  '$Z$' 'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'L'  'R'  '$Z$' 'zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ''   ''   '$Z$' 'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ''   ''   '$Z$' 'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ''    'M'  ''   '$Z$' 'zdoma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ''    ''   'M'  '$Z$' 'zdoma3.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA4'  ''    ''   'A'  '$Z$' 'zdoma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ''    'A'  ''   '$Z$' 'zdoma5.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA6'  ''    'M'  'M'  '$Z$' 'zdoma6.doma.xml'.
 
-    lt_results = lcl_file_status=>calculate_status(
+    lt_results = lcl_file_status=>calculate_status_old(
       it_local           = lt_local
       it_remote          = lt_remote
       it_tadir           = lt_tadir
