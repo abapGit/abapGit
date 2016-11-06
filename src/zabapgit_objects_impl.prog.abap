@@ -22,7 +22,7 @@ CLASS lcl_objects IMPLEMENTATION.
                    <ls_result>  LIKE LINE OF ct_results.
 
 
-    lt_before = io_repo->get_local_checksums( ).
+    lt_before  = io_repo->get_local_checksums( ).
     lt_current = io_repo->build_local_checksums( ).
 
     LOOP AT ct_results ASSIGNING <ls_result>.

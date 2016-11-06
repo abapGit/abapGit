@@ -332,26 +332,30 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD build_local_checksums.
 
     DATA: lv_xstring TYPE xstring,
-          lt_local   TYPE ty_files_item_tt.
+          lt_local   TYPE SORTED TABLE OF ty_file_item WITH NON-UNIQUE KEY item.
 
     FIELD-SYMBOLS: <ls_item>     LIKE LINE OF lt_local,
                    <ls_checksum> LIKE LINE OF rt_checksums,
+                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
                    <ls_local>    LIKE LINE OF lt_local.
 
-
     lt_local = get_files_local( ).
+    DELETE lt_local WHERE item IS INITIAL.
 
-    LOOP AT lt_local ASSIGNING <ls_item> WHERE NOT item IS INITIAL.
+    LOOP AT lt_local ASSIGNING <ls_item>.
 
       CLEAR lv_xstring.
+      APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
 
       LOOP AT lt_local ASSIGNING <ls_local> WHERE item = <ls_item>-item.
         CONCATENATE lv_xstring <ls_local>-file-data INTO lv_xstring IN BYTE MODE.
+        APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
+        MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
       ENDLOOP.
 
-      APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
-      <ls_checksum>-item = <ls_item>-item.
       ASSERT NOT lv_xstring IS INITIAL.
+
+      <ls_checksum>-item = <ls_item>-item.
       <ls_checksum>-sha1 = lcl_hash=>sha1_raw( lv_xstring ).
 
       DELETE lt_local WHERE item = <ls_item>-item.
@@ -359,6 +363,10 @@ CLASS lcl_repo IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD refresh_local_checksums.
+    set( it_checksums = build_local_checksums( ) ).
+  ENDMETHOD.  "refresh_local_checksums
 
   METHOD deserialize.
 
