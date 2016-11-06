@@ -1763,7 +1763,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
     <local>-item-obj_type = &1.
     <local>-item-obj_name = &2.
-    <local>-item-devclass = '$ZZZZ$'.
+    <local>-item-devclass = '$Z$'.
     <local>-file-path     = '/'.
     <local>-file-filename = &3.
     <local>-file-sha1     = &4.
@@ -1780,7 +1780,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_tadir ASSIGNING <tadir>.
     <tadir>-object   = &1.
     <tadir>-obj_name = &2.
-    <tadir>-devclass = '$ZZZZ$'.
+    <tadir>-devclass = '$Z$'.
   END-OF-DEFINITION.
 
   DEFINE _append_result.
@@ -1789,8 +1789,8 @@ CLASS ltcl_file_status IMPLEMENTATION.
     <result>-obj_name = &2.
     <result>-match    = &3.
     <result>-new      = &4.
-    <result>-filename = &5.
-    <result>-package  = '$ZZZZ$'.
+    <result>-package  = &5.
+    <result>-filename = &6.
     <result>-path     = '/'.
   END-OF-DEFINITION.
 
@@ -1831,16 +1831,16 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_tadir 'CLAS' 'ZCLASS1'.
     _append_tadir 'DOMA' 'ZDOMA5'.
 
-    "              TYPE   NAME      MATCH NEW   FILE
-    _append_result ''     ''        ''    'R'   'textfile.txt'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'R'   'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ''    'L'   'zclass1.clas.testclasses.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ''    'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ''    'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ''    ''    'zdoma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ''    ''    'zdoma3.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA4'  ''    'R'   'zdoma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ''    'L'   'zdoma5.doma.xml'.
+    "              TYPE   NAME      MATCH NEW  PKG   FILE
+    _append_result ''     ''        ''    'R'  ''    'textfile.txt'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'R'  '$Z$' 'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ''    'L'  '$Z$' 'zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ''   '$Z$' 'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ''   '$Z$' 'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ''    ''   '$Z$' 'zdoma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ''    ''   '$Z$' 'zdoma3.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA4'  ''    'R'  '$Z$' 'zdoma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ''    'L'  '$Z$' 'zdoma5.doma.xml'.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local

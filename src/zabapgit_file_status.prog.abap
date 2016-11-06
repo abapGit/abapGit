@@ -218,9 +218,16 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 * add package information
     LOOP AT rt_results ASSIGNING <ls_result> WHERE NOT obj_type IS INITIAL.
-      ls_tadir = lcl_tadir=>read_single( iv_object   = <ls_result>-obj_type
-                                         iv_obj_name = <ls_result>-obj_name ).
-      <ls_result>-package = ls_tadir-devclass.
+      CLEAR ls_tadir.
+      READ TABLE it_tadir ASSIGNING <ls_tadir>
+        WITH KEY object = <ls_result>-obj_type obj_name = <ls_result>-obj_name.
+      IF sy-subrc > 0. " Not found -> Another package ?
+        ls_tadir = lcl_tadir=>read_single( iv_object   = <ls_result>-obj_type
+                                           iv_obj_name = <ls_result>-obj_name ).
+        <ls_result>-package = ls_tadir-devclass.
+      ELSE.
+        <ls_result>-package = <ls_tadir>-devclass.
+      ENDIF.
     ENDLOOP.
 
     SORT rt_results BY
