@@ -44,6 +44,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       build_local_checksums
         RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt
         RAISING   lcx_exception,
+      refresh_local_checksums
+        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.

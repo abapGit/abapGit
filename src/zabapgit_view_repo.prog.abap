@@ -312,6 +312,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
         ev_state        = gc_event_state-re_render.
+      WHEN 'update_checksums'.
+        mo_repo->refresh_local_checksums( ).
+        ev_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event
@@ -460,6 +463,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                            iv_act = |{ gc_action-repo_remote_change }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
                            iv_act = |{ gc_action-repo_remote_detach }?{ lv_key }| ).
+      lo_tb_advanced->add( iv_txt = 'Update local checksums'
+                           iv_act = |update_checksums| ).
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
