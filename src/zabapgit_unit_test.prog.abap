@@ -1783,13 +1783,6 @@ CLASS ltcl_file_status IMPLEMENTATION.
     <state>-sha1     = &2.
   END-OF-DEFINITION.
 
-  DEFINE _append_tadir.
-    APPEND INITIAL LINE TO lt_tadir ASSIGNING <tadir>.
-    <tadir>-object   = &1.
-    <tadir>-obj_name = &2.
-    <tadir>-devclass = '$Z$'.
-  END-OF-DEFINITION.
-
   DEFINE _append_result.
     APPEND INITIAL LINE TO lt_results_exp ASSIGNING <result>.
     <result>-obj_type = &1.
@@ -1859,16 +1852,6 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'xfeld.doma.xml'    'XFELD'.         " Object from different package
     _append_remote 'num01.doma.xml'    'NUM01_CHANGED'. " Changed object from different package
 
-    "TADIR        TYPE   NAME
-    _append_tadir 'DOMA' 'ZDOMA1'.
-    _append_tadir 'DOMA' 'ZDOMA2'.
-    _append_tadir 'DOMA' 'ZDOMA3'.
-    _append_tadir 'CLAS' 'ZCLASS1'.
-    _append_tadir 'DOMA' 'ZDOMA4'.
-    _append_tadir 'DOMA' 'ZDOMA6'.
-    _append_tadir 'DOMA' 'ZDOMA7'.
-    _append_tadir 'DOMA' 'ZDOMA8'.
-
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    FILE
     _append_result ''     ''        ' '   ' '   'A'  ''     'textfile.txt'.
     _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  'zclass1.clas.abap'.
@@ -1887,13 +1870,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  'zdoma7.doma.xml'.
     _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  'zdoma8.doma.xml'.
 
-*    lt_results = lcl_file_status=>calculate_status_old(
-*      it_local           = lt_local
-*      it_remote          = lt_remote
-*      it_tadir           = lt_tadir
-*      iv_starting_folder = '/' ).
-
-    lt_results = lcl_file_status=>calculate_status_new(
+    lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local
       it_remote          = lt_remote
       it_cur_state       = lt_state ).
