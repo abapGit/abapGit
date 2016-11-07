@@ -19,7 +19,12 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object       TYPE tadir-object
                   iv_obj_name     TYPE tadir-obj_name
-        RETURNING VALUE(rs_tadir) TYPE tadir.
+        RETURNING VALUE(rs_tadir) TYPE tadir,
+      get_object_package
+        IMPORTING iv_pgmid           TYPE tadir-pgmid DEFAULT 'R3TR'
+                  iv_object          TYPE tadir-object
+                  iv_obj_name        TYPE tadir-obj_name
+        RETURNING VALUE(rv_devclass) TYPE tadir-devclass.
 
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -59,6 +64,14 @@ CLASS lcl_tadir IMPLEMENTATION.
       AND obj_name LIKE lv_obj_name.      "#EC CI_SUBRC "#EC CI_GENBUFF
 
   ENDMETHOD.                    "read_single
+
+  METHOD get_object_package.
+
+    rv_devclass = read_single( iv_pgmid    = iv_pgmid
+                               iv_object   = iv_object
+                               iv_obj_name = iv_obj_name )-devclass.
+
+  ENDMETHOD.  "get_object_package.
 
   METHOD check_exists.
 

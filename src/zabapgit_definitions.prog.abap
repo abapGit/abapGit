@@ -14,12 +14,14 @@ TYPES: BEGIN OF ty_file_signature,
          sha1     TYPE ty_sha1,
        END OF ty_file_signature.
 
+TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
+TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename..
+
 TYPES: BEGIN OF ty_file.
        INCLUDE TYPE ty_file_signature.
 TYPES:   data     TYPE xstring,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
-TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
@@ -34,7 +36,9 @@ TYPES: BEGIN OF ty_item,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
          devclass TYPE devclass,
-       END OF ty_item.
+       END OF ty_item,
+       ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY,
+       ty_items_ts TYPE SORTED TABLE OF ty_item WITH UNIQUE KEY obj_type obj_name.
 
 TYPES: BEGIN OF ty_file_item,
          file TYPE ty_file,
@@ -102,8 +106,8 @@ TYPES: BEGIN OF ty_result,
          filename    TYPE string,
          package     TYPE devclass,
          match       TYPE sap_bool,
-         rstate      TYPE char1,
          lstate      TYPE char1,
+         rstate      TYPE char1,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 

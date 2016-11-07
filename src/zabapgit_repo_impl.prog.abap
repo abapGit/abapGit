@@ -389,6 +389,16 @@ CLASS lcl_repo IMPLEMENTATION.
     rt_checksums = ms_data-local_checksums.
   ENDMETHOD.
 
+  METHOD get_local_checksums_per_file.
+
+    FIELD-SYMBOLS <object> LIKE LINE OF ms_data-local_checksums.
+
+    LOOP AT ms_data-local_checksums ASSIGNING <object>.
+      APPEND LINES OF <object>-files TO rt_checksums.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD get_files_local.
 
     DATA: lt_tadir TYPE ty_tadir_tt,

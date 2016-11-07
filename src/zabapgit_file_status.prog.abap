@@ -36,8 +36,26 @@ CLASS lcl_file_status DEFINITION FINAL
       IMPORTING it_local           TYPE ty_files_item_tt
                 it_remote          TYPE ty_files_tt
                 it_cur_state       TYPE ty_file_signatures_tt
-                iv_starting_folder TYPE string
       RETURNING VALUE(rt_results)  TYPE ty_results_tt.
+
+    CLASS-METHODS:
+      build_existing
+        IMPORTING is_local         TYPE ty_file_item
+                  is_remote        TYPE ty_file
+                  it_state         TYPE ty_file_signatures_ts
+        RETURNING VALUE(rs_result) TYPE ty_result,
+      build_new_local
+        IMPORTING is_local         TYPE ty_file_item
+        RETURNING VALUE(rs_result) TYPE ty_result,
+      build_new_remote
+        IMPORTING is_remote        TYPE ty_file
+                  it_items         TYPE ty_items_ts
+                  it_state         TYPE ty_file_signatures_ts
+        RETURNING VALUE(rs_result) TYPE ty_result,
+      identify_object
+        IMPORTING iv_filename      TYPE string
+        EXPORTING es_item          TYPE ty_item
+                  ev_is_xml        TYPE abap_bool.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 
@@ -60,32 +78,31 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lt_local       TYPE ty_files_item_tt,
-          lt_remote      TYPE ty_files_tt,
-          lt_tadir       TYPE ty_tadir_tt,
-          lv_index       LIKE sy-tabix,
+    DATA: lv_index       LIKE sy-tabix,
           lo_dot_abapgit TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
-    lt_remote      = io_repo->get_files_remote( ).
-    lt_local       = io_repo->get_files_local( io_log ).
     lo_dot_abapgit = io_repo->get_dot_abapgit( ).
-    lt_tadir       = lcl_tadir=>read( io_repo->get_package( ) ).
 
-    rt_results = calculate_status_old(
-      it_local           = lt_local
-      it_remote          = lt_remote
-      it_tadir           = lt_tadir
-      iv_starting_folder = lo_dot_abapgit->get_starting_folder( ) ).
+*    rt_results = calculate_status_old(
+*      it_local           = io_repo->get_files_local( io_log )
+*      it_remote          = io_repo->get_files_remote( )
+*      it_tadir           = lcl_tadir=>read( io_repo->get_package( ) )
+*      iv_starting_folder = lo_dot_abapgit->get_starting_folder( ) ).
+
+    rt_results = calculate_status_new(
+      it_local           = io_repo->get_files_local( io_log )
+      it_remote          = io_repo->get_files_remote( )
+      it_cur_state       = io_repo->get_local_checksums_per_file( ) ).
 
     " Remove ignored files, fix .abapgit
     LOOP AT rt_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
 
       " Crutch for .abapgit -> it is always match as generated dynamically
-      " However this is probably the place to compare it when local editing
-      " of it will be implemented
+      " However this is probably the place to compare it when .abapgit editing
+      " tool will be implemented
       IF <ls_result>-path = gc_root_dir AND <ls_result>-filename = gc_dot_abapgit.
         <ls_result>-match = abap_true.
         CLEAR: <ls_result>-lstate, <ls_result>-rstate.
@@ -108,7 +125,198 @@ CLASS lcl_file_status IMPLEMENTATION.
   ENDMETHOD.  "status
 
   METHOD calculate_status_new.
+
+    DATA: lt_remote    LIKE it_remote,
+          lt_items     TYPE ty_items_tt,
+          ls_item      LIKE LINE OF lt_items,
+          lv_is_xml    TYPE abap_bool,
+          lt_items_idx TYPE ty_items_ts,
+          lt_state_idx TYPE ty_file_signatures_ts. " Sorted by path+filename
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
+                   <ls_result> LIKE LINE OF rt_results,
+                   <ls_local>  LIKE LINE OF it_local.
+
+    lt_state_idx = it_cur_state. " Force sort it
+    lt_remote    = it_remote.
+    SORT lt_remote BY path filename.
+
+    " Process local files and new local files
+    LOOP AT it_local ASSIGNING <ls_local>.
+      APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
+      APPEND <ls_local>-item TO lt_items. " Collect for item index
+
+      READ TABLE lt_remote ASSIGNING <ls_remote>
+        WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
+        BINARY SEARCH.
+      IF sy-subrc = 0.  " Exist L and R
+        <ls_result> = build_existing(
+          is_local  = <ls_local>
+          is_remote = <ls_remote>
+          it_state  = lt_state_idx ).
+        ASSERT <ls_remote>-sha1 IS NOT INITIAL.
+        CLEAR <ls_remote>-sha1. " Mark as processed
+      ELSE.             " Only L exists
+        <ls_result> = build_new_local( is_local = <ls_local> ).
+      ENDIF.
+    ENDLOOP.
+
+    " Complete item index for unmarked remote files
+    LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
+      identify_object( EXPORTING iv_filename = <ls_remote>-filename
+                       IMPORTING es_item     = ls_item
+                                 ev_is_xml   = lv_is_xml ).
+
+      CHECK lv_is_xml = abap_true. " Skip all but obj definitions
+
+      ls_item-devclass = lcl_tadir=>get_object_package(
+                           iv_object   = ls_item-obj_type
+                           iv_obj_name = ls_item-obj_name ).
+      APPEND ls_item TO lt_items.
+    ENDLOOP.
+
+    SORT lt_items. " Default key - type, name, pkg
+    DELETE ADJACENT DUPLICATES FROM lt_items.
+    lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
+
+    " Process new remote files (marked above with empty SHA1)
+    LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
+      APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
+      <ls_result> = build_new_remote( is_remote = <ls_remote>
+                                      it_items  = lt_items_idx
+                                      it_state  = lt_state_idx ).
+    ENDLOOP.
+
+    SORT rt_results BY
+      obj_type ASCENDING
+      obj_name ASCENDING
+      filename ASCENDING.
+
   ENDMETHOD.  "calculate_status_new.
+
+  METHOD identify_object.
+
+    DATA: lv_name   TYPE tadir-obj_name,
+          lv_type   TYPE string,
+          lv_ext    TYPE string.
+
+    " Guess object type and name
+    SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.
+
+    " Handle namespaces
+    REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
+
+    CLEAR es_item.
+    es_item-obj_type = lv_type.
+    es_item-obj_name = lv_name.
+    ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
+
+  ENDMETHOD.  "identify_object.
+
+  METHOD build_existing.
+
+    DATA: ls_file_sig LIKE LINE OF it_state.
+
+    " Item
+    rs_result-obj_type = is_local-item-obj_type.
+    rs_result-obj_name = is_local-item-obj_name.
+    rs_result-package  = is_local-item-devclass.
+
+    " File
+    rs_result-path     = is_local-file-path.
+    rs_result-filename = is_local-file-filename.
+
+    " Match against current state
+    READ TABLE it_state INTO ls_file_sig
+      WITH KEY path = is_local-file-path filename = is_local-file-filename
+      BINARY SEARCH.
+
+    IF sy-subrc = 0.
+      IF ls_file_sig-sha1 <> is_local-file-sha1.
+        rs_result-lstate = gc_state-modified.
+      ENDIF.
+      IF ls_file_sig-sha1 <> is_remote-sha1.
+        rs_result-rstate = gc_state-modified.
+      ENDIF.
+      rs_result-match = boolc( rs_result-lstate IS INITIAL AND rs_result-rstate IS INITIAL ).
+    ELSE.
+      " This is a strange situation. As both local and remote exist
+      " the state should also be present. Maybe this is a first run of the code.
+      " In this case just compare hashes directly and mark both changed
+      " the user will presumably decide what to do after checking the actual diff
+      rs_result-match = boolc( is_local-file-sha1 = is_remote-sha1 ).
+      IF rs_result-match = abap_false.
+        rs_result-lstate = gc_state-modified.
+        rs_result-rstate = gc_state-modified.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.  "build_existing
+
+  METHOD build_new_local.
+
+    " Item
+    rs_result-obj_type = is_local-item-obj_type.
+    rs_result-obj_name = is_local-item-obj_name.
+    rs_result-package  = is_local-item-devclass.
+
+    " File
+    rs_result-path     = is_local-file-path.
+    rs_result-filename = is_local-file-filename.
+
+    " Match
+    rs_result-match    = abap_false.
+    rs_result-lstate   = gc_state-added.
+
+  ENDMETHOD.  "build_new_local
+
+  METHOD build_new_remote.
+
+    DATA: ls_item     LIKE LINE OF it_items,
+          ls_file_sig LIKE LINE OF it_state.
+
+    " Common and default part
+    rs_result-path     = is_remote-path.
+    rs_result-filename = is_remote-filename.
+    rs_result-match    = abap_false.
+    rs_result-rstate   = gc_state-added.
+
+    identify_object( EXPORTING iv_filename = is_remote-filename
+                     IMPORTING es_item     = ls_item ).
+
+    " Check if in item index + get package
+    READ TABLE it_items INTO ls_item
+      WITH KEY obj_type = ls_item-obj_type obj_name = ls_item-obj_name
+      BINARY SEARCH.
+
+    IF sy-subrc = 0.
+
+      " Completely new (xml, abap) and new file in an existing object
+      rs_result-obj_type = ls_item-obj_type.
+      rs_result-obj_name = ls_item-obj_name.
+      rs_result-package  = ls_item-devclass.
+
+      READ TABLE it_state INTO ls_file_sig
+        WITH KEY path = is_remote-path filename = is_remote-filename
+        BINARY SEARCH.
+
+      " Existing file but from another package
+      " was not added during local file proc as was not in tadir for repo package
+      IF sy-subrc = 0.
+        IF ls_file_sig-sha1 = is_remote-sha1.
+          rs_result-match  = abap_true.
+          CLEAR rs_result-rstate.
+        ELSE.
+          rs_result-rstate = gc_state-modified.
+        ENDIF.
+      ENDIF.
+
+    ELSE. " Completely unknown file, probably non-abapgit
+      " No action, just follow defaults
+      ASSERT 1 = 1.
+    ENDIF.
+
+  ENDMETHOD.  "build_new_remote
 
   METHOD calculate_status_old.
 
