@@ -10,9 +10,8 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
                  default    TYPE i VALUE 9999,
                  parent_dir TYPE i VALUE 0,
                  dir        TYPE i VALUE 1,
-                 wo_obj     TYPE i VALUE 2,
-                 new        TYPE i VALUE 3,
-                 changed    TYPE i VALUE 4,
+                 orphan     TYPE i VALUE 2,
+                 changed    TYPE i VALUE 3,
                END OF c_sortkey.
 
     TYPES: BEGIN OF ty_repo_item,
@@ -22,6 +21,8 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
              path     TYPE string,
              is_dir   TYPE abap_bool,
              changes  TYPE i,
+             lstate   TYPE char1,
+             rstate   TYPE char1,
              files    TYPE tt_repo_files,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
@@ -95,11 +96,23 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
   ENDMETHOD.  "list
 
+  DEFINE _reduce_state.
+    " &1 - prev, &2 - cur
+    IF &1 = &2 OR &2 IS INITIAL.
+      ASSERT 1 = 1. " No change
+    ELSEIF &1 IS INITIAL.
+      &1 = &2.
+    ELSE.
+      &1 = gc_state-mixed.
+    ENDIF.
+  END-OF-DEFINITION.
+
   METHOD build_folders.
 
-    DATA: lv_index   TYPE i,
-          lt_folders LIKE ct_repo_items,
-          ls_folder  LIKE LINE OF ct_repo_items.
+    DATA: lv_index    TYPE i,
+          lt_subitems LIKE ct_repo_items,
+          ls_subitem  LIKE LINE OF ct_repo_items,
+          ls_folder   LIKE LINE OF ct_repo_items.
 
     FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
 
@@ -108,17 +121,19 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       CHECK <item>-path <> iv_cur_dir. " files in target dir - just leave them be
 
       IF lcl_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
-        ls_folder-changes = <item>-changes.
-        ls_folder-path    = <item>-path.
-        APPEND ls_folder TO lt_folders.
+        ls_subitem-changes = <item>-changes.
+        ls_subitem-path    = <item>-path.
+        ls_subitem-lstate  = <item>-lstate.
+        ls_subitem-rstate  = <item>-rstate.
+        APPEND ls_subitem TO lt_subitems.
       ENDIF.
 
       DELETE ct_repo_items INDEX lv_index.
     ENDLOOP.
 
-    SORT lt_folders BY path.
+    SORT lt_subitems BY path ASCENDING.
 
-    LOOP AT lt_folders ASSIGNING <item>.
+    LOOP AT lt_subitems ASSIGNING <item>.
       AT NEW path.
         CLEAR ls_folder.
         ls_folder-path    = <item>-path.
@@ -127,6 +142,8 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       ENDAT.
 
       ls_folder-changes = ls_folder-changes + <item>-changes.
+      _reduce_state ls_folder-lstate <item>-lstate.
+      _reduce_state ls_folder-rstate <item>-rstate.
 
       AT END OF path.
         APPEND ls_folder TO ct_repo_items.
@@ -176,7 +193,7 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
           ls_file        TYPE ty_repo_file,
           lt_status      TYPE ty_results_tt.
 
-    FIELD-SYMBOLS: <status>      LIKE LINE OF lt_status,
+    FIELD-SYMBOLS: <status>       LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
     lo_repo_online ?= mo_repo.
@@ -203,14 +220,14 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
+          _reduce_state <ls_repo_item>-lstate ls_file-lstate.
+          _reduce_state <ls_repo_item>-rstate ls_file-rstate.
         ENDIF.
       ENDIF.
 
       AT END OF obj_name. "obj_type + obj_name
         IF <ls_repo_item>-obj_type IS INITIAL.
-          <ls_repo_item>-sortkey = c_sortkey-wo_obj. "Virtual objects
-        ELSEIF lines( <ls_repo_item>-files ) = 0.
-          <ls_repo_item>-sortkey = c_sortkey-new. "New object to commit
+          <ls_repo_item>-sortkey = c_sortkey-orphan. "Virtual objects
         ENDIF.
       ENDAT.
     ENDLOOP.
@@ -271,8 +288,8 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       render_state
-        IMPORTING iv_l           TYPE char1
-                  iv_r           TYPE char1
+        IMPORTING iv1            TYPE char1
+                  iv2            TYPE char1
         RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
@@ -317,7 +334,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
-        mv_cur_dir      = '/'. " Root
+        mv_cur_dir      = '/'. 	" Root
         ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
@@ -572,32 +589,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
   ENDMETHOD. "get_item_icon
 
-  METHOD render_state.
-
-    rv_html = '<span class="state-block">'.
-
-    CASE iv_l. " Local
-      WHEN 'C'. "Changed
-        rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
-      WHEN 'U'. "Unchanged
-        rv_html = rv_html && '<span class="unchanged">&#x25A0;</span>'.
-      WHEN '_'. "None
-        rv_html = rv_html && '<span class="none">&#x25A0;</span>'.
-    ENDCASE.
-
-    CASE iv_r. " Remote
-      WHEN 'C'. "Changed
-        rv_html = rv_html && '<span class="changed">&#x25A0;</span>'.
-      WHEN 'U'. "Unchanged
-        rv_html = rv_html && '<span class="unchanged">&#x25A0;</span>'.
-      WHEN '_'. "None
-        rv_html = rv_html && '<span class="none">&#x25A0;</span>'.
-    ENDCASE.
-
-    rv_html = rv_html && '</span>'.
-
-  ENDMETHOD. "render_state
-
   METHOD render_item.
     DATA: lv_link TYPE string,
           ls_file LIKE LINE OF is_item-files.
@@ -662,60 +653,48 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD render_item_command.
 
     DATA: lv_difflink TYPE string,
+          lv_text     TYPE string,
           ls_file     LIKE LINE OF is_item-files.
 
     CREATE OBJECT ro_html.
 
     IF is_item-is_dir = abap_true. " Directory
 
-      ro_html->add( |<div class="grey">{ is_item-changes } changes</div>| ).
-
-    ELSEIF lines( is_item-files ) = 0. " New local object
-
-      lv_difflink = lcl_html_action_utils=>obj_encode(
-        iv_key    = mo_repo->get_key( )
-        ig_object = is_item ).
       ro_html->add( '<div>' ).
-      ro_html->add_anchor(
-        iv_txt = |diff|
-        iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-      ro_html->add( render_state( iv_l = 'C' iv_r = '_' ) ).
+      ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
+      ro_html->add( render_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
       ro_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
 
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
+
         lv_difflink = lcl_html_action_utils=>obj_encode(
           iv_key    = mo_repo->get_key( )
           ig_object = is_item ).
+
         ro_html->add( '<div>' ).
-        IF is_item-changes = 1.
-          ro_html->add_anchor(
-            iv_txt = |{ is_item-changes } diff|
-            iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-        ELSE.
-          ro_html->add_anchor(
-            iv_txt = |{ is_item-changes } diffs|
-            iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-        ENDIF.
+        ro_html->add_anchor( iv_txt = |view diff ({ is_item-changes })|
+                             iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+        ro_html->add( render_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
         ro_html->add( '</div>' ).
+
       ELSE.
         LOOP AT is_item-files INTO ls_file.
 
+          ro_html->add( '<div>' ).
           IF ls_file-is_changed = abap_true.
             lv_difflink = lcl_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
-            ro_html->add( '<div>' ).
             ro_html->add_anchor(
-              iv_txt = |diff|
+              iv_txt = 'view diff'
               iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-
-            ro_html->add( render_state( iv_l = ls_file-lstate iv_r = ls_file-rstate ) ).
-            ro_html->add( '</div>' ).
+            ro_html->add( render_state( iv1 = ls_file-lstate iv2 = ls_file-rstate ) ).
           ELSE.
-            ro_html->add( |<div>&nbsp;</div>| ).
+            ro_html->add( '&nbsp;' ).
           ENDIF.
+          ro_html->add( '</div>' ).
 
         ENDLOOP.
       ENDIF.
@@ -723,6 +702,40 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "render_item_command
+
+  METHOD render_state.
+
+    FIELD-SYMBOLS <state> TYPE char1.
+
+    rv_html = '<span class="state-block">'.
+
+    DO 2 TIMES.
+      CASE sy-index.
+        WHEN 1.
+          ASSIGN iv1 TO <state>.
+        WHEN 2.
+          ASSIGN iv2 TO <state>.
+      ENDCASE.
+
+      CASE <state>.
+        WHEN gc_state-unchanged.  "None or unchanged
+          IF iv1 = gc_state-added OR iv2 = gc_state-added.
+            rv_html = rv_html && |<span class="none" title="Not exists">&#x00d7;</span>|.
+          ELSE.
+            rv_html = rv_html && |<span class="none" title="No changes">&nbsp;</span>|.
+          ENDIF.
+        WHEN gc_state-modified.   "Changed
+          rv_html = rv_html && '<span class="changed" title="Modified">M</span>'.
+        WHEN gc_state-added.      "Added new
+          rv_html = rv_html && '<span class="added" title="Added new">A</span>'.
+        WHEN gc_state-mixed.      "Added and changed (multifile)
+          rv_html = rv_html && '<span class="mixed" title="Added and modified">~</span>'.
+      ENDCASE.
+    ENDDO.
+
+    rv_html = rv_html && '</span>'.
+
+  ENDMETHOD. "render_state
 
   METHOD render_empty_package.
 

@@ -114,7 +114,9 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Process local files and new local files
     LOOP AT it_local ASSIGNING <ls_local>.
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
-      APPEND <ls_local>-item TO lt_items. " Collect for item index
+      IF <ls_local>-item IS NOT INITIAL.
+        APPEND <ls_local>-item TO lt_items. " Collect for item index
+      ENDIF.
 
       READ TABLE lt_remote ASSIGNING <ls_remote>
         WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename

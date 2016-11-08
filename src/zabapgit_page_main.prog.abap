@@ -336,16 +336,48 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '.repo_tab td.cmd {'.
     _add '  text-align: right;'.
     _add '  padding-left: 0.5em;'.
-    _add '  padding-right: 1em;'.
+    _add '  padding-right: 0.7em;'.
     _add '}'.
-    _add '.repo_tab td.cmd span.changed    { color: #ff9933; }'.
-    _add '.repo_tab td.cmd span.none       { color: #dddddd; }'.
-    _add '.repo_tab td.cmd span.unchanged  { color: #cedeee; }'.
-    _add '.repo_tab td.cmd span.state-block { margin-left: 10px; }'.
     _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
     _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
     _add '.repo_tab tr:first-child td { border-top: 0px; }'.
-    _add 'td.current_dir              { color: #ccc; }'.
+    _add '.repo_tab td.current_dir    { color: #ccc; }'.
+
+    " States
+    _add '.repo_tab td.cmd span.state-block {'.
+    _add '  margin-left: 1em;'.
+    _add '  font-family: Consolas, Lucida Console, Courier, monospace;'.
+    _add '  font-size: x-small;'.
+    _add '  vertical-align: 13%;'.
+    _add '  display: inline-block;'.
+    _add '  text-align: center;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span {'.
+    _add '  display: inline-block;'.
+    _add '  padding: 0px 2px;'.
+    _add '  border: 1px solid #000;'.
+    _add '}'.
+
+    _add '.repo_tab td.cmd span.state-block span.added {'.
+    _add '  background-color: #69ad74; '.
+    _add '  border-color: #579e64;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.changed {'.
+    _add '  background-color: #e0c150;'.
+    _add '  border-color: #d4af25;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.mixed {'.
+    _add '  background-color: #c0729a;'.
+    _add '  border-color: #b8618e;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.none {'.
+    _add '  background-color: #e8e8e8;'.
+    _add '  border-color: #dbdbdb;'.
+    _add '  color: #c8c8c8;'.
+    _add '}'.
 
   ENDMETHOD.  "styles
 

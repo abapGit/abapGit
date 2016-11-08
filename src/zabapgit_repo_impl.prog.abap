@@ -365,6 +365,27 @@ CLASS lcl_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD refresh_local_checksums.
+
+    DATA lv_answer TYPE c.
+
+    IF lines( get_local_checksums_per_file( ) ) > 0.
+      lv_answer = lcl_popups=>popup_to_confirm(
+        titlebar              = 'Warning'
+        text_question         = 'File checksums are not empty.'
+                             && ' Are you sure to overwrite ?'
+                             && ' This may lead to loss of local change state'
+        text_button_1         = 'OK'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false ).               "#EC NOTEXT
+
+      IF lv_answer = '2'.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
     set( it_checksums = build_local_checksums( ) ).
   ENDMETHOD.  "refresh_local_checksums
 

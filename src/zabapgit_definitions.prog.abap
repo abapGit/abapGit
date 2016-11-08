@@ -118,6 +118,7 @@ CONSTANTS: BEGIN OF gc_state, " https://git-scm.com/docs/git-status
              added     TYPE char1 VALUE 'A',
              modified  TYPE char1 VALUE 'M',
              deleted   TYPE char1 VALUE 'D', "For future use
+             mixed     TYPE char1 VALUE '*',
            END OF gc_state.
 
 CONSTANTS: BEGIN OF gc_chmod,
