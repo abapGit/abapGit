@@ -74,10 +74,6 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING it_postdata      TYPE cnht_post_data_tab
       EXPORTING es_fields        TYPE any.
 
-*    CLASS-METHODS repo_key_encode
-*      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-*      RETURNING VALUE(rv_string) TYPE string.
-
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
       RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background.
@@ -310,16 +306,6 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ASSERT es_fields IS NOT INITIAL.
 
   ENDMETHOD.                    "parse_commit_request
-
-*  METHOD repo_key_encode.
-*
-*    DATA: lt_fields TYPE tihttpnvp.
-*
-*    add_field( EXPORTING name = 'KEY'      iv = iv_key CHANGING ct = lt_fields ).
-*
-*    rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-*
-*  ENDMETHOD.                    "repo_key_encode
 
   METHOD decode_bg_update.
 
