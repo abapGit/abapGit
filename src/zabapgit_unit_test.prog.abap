@@ -1822,6 +1822,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_state 'zdoma6.doma.xml'               'D6'.
     " doma7 is not in state - emulate brocken cache
     " doma8 is not in state - emulate brocken cache
+    _append_state 'zdoma9.doma.xml'               'D9'.
     _append_state 'xfeld.doma.xml'                'XFELD'. " from different package
     _append_state 'num01.doma.xml'                'NUM01'. " another from different package
 
@@ -1835,6 +1836,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_local 'DOMA' 'ZDOMA6'  'zdoma6.doma.xml'               'D6_CHANGED_L'.
     _append_local 'DOMA' 'ZDOMA7'  'zdoma7.doma.xml'               'D7'.
     _append_local 'DOMA' 'ZDOMA8'  'zdoma8.doma.xml'               'D8'.
+    " dome9 was deleted from local system. Can be found by existing state
 
     "REMOTE        FILE                SHA1
     _append_remote 'textfile.txt'      'T1'.
@@ -1849,6 +1851,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'zdoma6.doma.xml'   'D6_CHANGED_R'.
     _append_remote 'zdoma7.doma.xml'   'D7'.
     _append_remote 'zdoma8.doma.xml'   'D8_CHANGED_R'.  " This one is changed
+    _append_remote 'zdoma9.doma.xml'   'D9'.            " This one is deleted locally
     _append_remote 'xfeld.doma.xml'    'XFELD'.         " Object from different package
     _append_remote 'num01.doma.xml'    'NUM01_CHANGED'. " Changed object from different package
 
@@ -1869,6 +1872,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  'zdoma6.doma.xml'.
     _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  'zdoma7.doma.xml'.
     _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  'zdoma8.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     'zdoma9.doma.xml'.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local

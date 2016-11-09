@@ -281,6 +281,12 @@ CLASS lcl_file_status IMPLEMENTATION.
         ELSE.
           rs_result-rstate = gc_state-modified.
         ENDIF.
+
+        " Item is in state and in cache but with no package - it was deleted
+        IF ls_item-devclass IS INITIAL.
+          rs_result-match  = abap_false.
+          rs_result-lstate = gc_state-deleted.
+        ENDIF.
       ENDIF.
 
     ELSE. " Completely unknown file, probably non-abapgit

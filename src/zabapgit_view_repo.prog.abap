@@ -720,7 +720,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       CASE <state>.
         WHEN gc_state-unchanged.  "None or unchanged
           IF iv1 = gc_state-added OR iv2 = gc_state-added.
-            rv_html = rv_html && |<span class="none" title="Not exists">&#x00d7;</span>|.
+            rv_html = rv_html && |<span class="none" title="Not exists">X</span>|.
           ELSE.
             rv_html = rv_html && |<span class="none" title="No changes">&nbsp;</span>|.
           ENDIF.
@@ -728,8 +728,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           rv_html = rv_html && '<span class="changed" title="Modified">M</span>'.
         WHEN gc_state-added.      "Added new
           rv_html = rv_html && '<span class="added" title="Added new">A</span>'.
-        WHEN gc_state-mixed.      "Added and changed (multifile)
-          rv_html = rv_html && '<span class="mixed" title="Added and modified">~</span>'.
+        WHEN gc_state-mixed.      "Multiple changes (multifile)
+          rv_html = rv_html && '<span class="mixed" title="Multiple changes">&#x25A0;</span>'.
+        WHEN gc_state-deleted.    "Deleted
+          rv_html = rv_html && '<span class="deleted" title="Deleted">X</span>'.
       ENDCASE.
     ENDDO.
 

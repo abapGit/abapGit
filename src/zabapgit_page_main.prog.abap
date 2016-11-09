@@ -369,6 +369,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '  color: white;'.
     _add '}'.
     _add '.repo_tab td.cmd span.state-block span.mixed {'.
+    _add '  background-color: #e0c150;'.
+    _add '  border-color: #579e64;'.
+    _add '  color: #69ad74;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.deleted {'.
     _add '  background-color: #c0729a;'.
     _add '  border-color: #b8618e;'.
     _add '  color: white;'.

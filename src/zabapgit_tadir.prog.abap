@@ -67,9 +67,17 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD get_object_package.
 
-    rv_devclass = read_single( iv_pgmid    = iv_pgmid
-                               iv_object   = iv_object
-                               iv_obj_name = iv_obj_name )-devclass.
+    DATA ls_tadir TYPE tadir.
+
+    ls_tadir = read_single( iv_pgmid    = iv_pgmid
+                            iv_object   = iv_object
+                            iv_obj_name = iv_obj_name ).
+
+    IF ls_tadir-delflag = 'X'.
+      RETURN. "Mark for deletion -> return nothing
+    ENDIF.
+
+    rv_devclass = ls_tadir-devclass.
 
   ENDMETHOD.  "get_object_package.
 
