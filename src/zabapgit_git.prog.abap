@@ -1434,7 +1434,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       iv_data = lv_commit ).
 
     lcl_git_transport=>receive_pack(
-      iv_url = io_repo->get_url( )
+      iv_url         = io_repo->get_url( )
       iv_old         = io_stage->get_branch_sha1( )
       iv_new         = rv_branch
       iv_branch_name = io_stage->get_branch_name( )
@@ -1536,7 +1536,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
         WHEN lcl_stage=>c_method-rm.
           DELETE lt_expanded
             WHERE name = <ls_stage>-file-filename
-            AND path = <ls_stage>-file-path.
+            AND   path = <ls_stage>-file-path.
           ASSERT sy-subrc = 0.
         WHEN OTHERS.
           lcx_exception=>raise( 'stage method not supported, todo' ).
