@@ -1474,18 +1474,8 @@ ENDCLASS.
 
 CLASS ltcl_persistence_settings IMPLEMENTATION.
   METHOD setup.
-    TRY.
-        lcl_app=>db( )->delete(
-          iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_URL'
-        ).
-        lcl_app=>db( )->delete(
-          iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_PORT'
-        ).
-      CATCH cx_root.
-    ENDTRY.
     CREATE OBJECT mo_persistence_settings.
+    "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
   ENDMETHOD.
 
   METHOD modify_settings_proxy_url.
@@ -1570,6 +1560,11 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
           iv_value      = 'PROXY_URL'
           iv_data       = 'A_URL'
         ).
+        lcl_app=>db( )->modify(
+          iv_type       = 'SETTINGS'
+          iv_value      = 'PROXY_PORT'
+          iv_data       = ''
+        ).
 
         mo_settings = mo_persistence_settings->read( ).
 
@@ -1589,6 +1584,11 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
            iv_value      = 'PROXY_PORT'
            iv_data       = '1000'
          ).
+        lcl_app=>db( )->modify(
+          iv_type       = 'SETTINGS'
+          iv_value      = 'PROXY_URL'
+          iv_data       = ''
+        ).
         mo_settings = mo_persistence_settings->read( ).
 
         cl_abap_unit_assert=>assert_equals(
