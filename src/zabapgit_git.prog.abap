@@ -337,13 +337,17 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     DATA: lv_data                  TYPE string,
           lv_uri                   TYPE string,
-          lv_expect_potentual_auth TYPE abap_bool.
+          lv_expect_potentual_auth TYPE abap_bool,
+          lo_settings              TYPE REF TO lcl_settings.
 
+    lo_settings = lcl_app=>settings( )->read( ).
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = lcl_url=>host( iv_url )
-        ssl_id = 'ANONYM'
+        url           = lcl_url=>host( iv_url )
+        ssl_id        = 'ANONYM'
+        proxy_host    = lo_settings->get_proxy_url( )
+        proxy_service = lo_settings->get_proxy_port( )
       IMPORTING
         client = ei_client ).
 

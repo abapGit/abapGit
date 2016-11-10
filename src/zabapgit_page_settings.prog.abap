@@ -79,8 +79,6 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
-
-    BREAK copat.
     CASE iv_action.
       WHEN c_action-save_settings.
         DATA:
