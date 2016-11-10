@@ -79,11 +79,10 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
+   DATA:
+     lt_post_fields TYPE tihttpnvp.
     CASE iv_action.
       WHEN c_action-save_settings.
-        DATA:
-           lt_post_fields          TYPE tihttpnvp.
-
         lt_post_fields = parse_post( it_postdata ).
 
         build_settings( lt_post_fields ).

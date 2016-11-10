@@ -1418,14 +1418,12 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_URL'
-      iv_data       = io_settings->get_proxy_url( )
-    ).
+      iv_data       = io_settings->get_proxy_url( ) ).
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_PORT'
-      iv_data       = io_settings->get_proxy_port( )
-    ).
+      iv_data       = io_settings->get_proxy_port( ) ).
   ENDMETHOD.
 
 
@@ -1436,8 +1434,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_URL'
-          )
-        ).
+          ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_url( '' ).
     ENDTRY.
@@ -1446,8 +1443,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_PORT'
-          )
-        ).
+          ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.
@@ -1468,8 +1464,8 @@ CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
       read_not_found_url         FOR TESTING,
       read_not_found_port        FOR TESTING.
     DATA:
-       mo_persistence_settings TYPE REF TO lcl_persistence_settings,
-       mo_settings TYPE REF TO lcl_settings.
+      mo_persistence_settings TYPE REF TO lcl_persistence_settings,
+      mo_settings             TYPE REF TO lcl_settings.
 ENDCLASS.
 
 CLASS ltcl_persistence_settings IMPLEMENTATION.
@@ -1479,46 +1475,40 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD modify_settings_proxy_url.
+    DATA lv_proxy_url TYPE string.
     TRY.
         CREATE OBJECT mo_settings.
         mo_settings->set_proxy_url( 'http://proxy' ).
 
         mo_persistence_settings->modify( mo_settings ).
 
-        DATA lv_proxy_url TYPE string.
-
         lv_proxy_url = lcl_app=>db( )->read(
           iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_URL'
-        ).
+          iv_value = 'PROXY_URL' ).
 
         cl_abap_unit_assert=>assert_equals(
           act = lv_proxy_url
-          exp = 'http://proxy'
-        ).
+          exp = 'http://proxy' ).
       CATCH cx_root.
         cl_abap_unit_assert=>fail( 'Unexpected exception' ).
     ENDTRY.
   ENDMETHOD.
 
   METHOD modify_settings_proxy_port.
+    DATA lv_proxy_port TYPE string.
     TRY.
         CREATE OBJECT mo_settings.
         mo_settings->set_proxy_port( '8080' ).
 
         mo_persistence_settings->modify( mo_settings ).
 
-        DATA lv_proxy_port TYPE string.
-
         lv_proxy_port = lcl_app=>db( )->read(
           iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_PORT'
-        ).
+          iv_value = 'PROXY_PORT' ).
 
         cl_abap_unit_assert=>assert_equals(
           act = lv_proxy_port
-          exp = '8080'
-        ).
+          exp = '8080' ).
       CATCH cx_root.
         cl_abap_unit_assert=>fail( 'Unexpected exception' ).
     ENDTRY.
@@ -1529,25 +1519,21 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
         lcl_app=>db( )->modify(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_URL'
-          iv_data       = 'A_URL'
-        ).
+          iv_data       = 'A_URL' ).
 
         lcl_app=>db( )->modify(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_PORT'
-          iv_data       = '1000'
-        ).
+          iv_data       = '1000' ).
 
         mo_settings = mo_persistence_settings->read( ).
 
         cl_abap_unit_assert=>assert_equals(
           act = mo_settings->get_proxy_url( )
-          exp = 'A_URL'
-        ).
+          exp = 'A_URL' ).
         cl_abap_unit_assert=>assert_equals(
           act = mo_settings->get_proxy_port( )
-          exp = '1000'
-        ).
+          exp = '1000' ).
       CATCH cx_root.
         cl_abap_unit_assert=>fail( 'Unexpected exception' ).
     ENDTRY.
@@ -1558,20 +1544,17 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
         lcl_app=>db( )->modify(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_URL'
-          iv_data       = 'A_URL'
-        ).
+          iv_data       = 'A_URL' ).
         lcl_app=>db( )->modify(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_PORT'
-          iv_data       = ''
-        ).
+          iv_data       = '' ).
 
         mo_settings = mo_persistence_settings->read( ).
 
         cl_abap_unit_assert=>assert_equals(
           act = mo_settings->get_proxy_port( )
-          exp = ''
-        ).
+          exp = '' ).
       CATCH cx_root.
         cl_abap_unit_assert=>fail( 'Unexpected exception' ).
     ENDTRY.
@@ -1582,19 +1565,16 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
         lcl_app=>db( )->modify(
            iv_type       = 'SETTINGS'
            iv_value      = 'PROXY_PORT'
-           iv_data       = '1000'
-         ).
+           iv_data       = '1000' ).
         lcl_app=>db( )->modify(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_URL'
-          iv_data       = ''
-        ).
+          iv_data       = '' ).
         mo_settings = mo_persistence_settings->read( ).
 
         cl_abap_unit_assert=>assert_equals(
           act = mo_settings->get_proxy_url( )
-          exp = ''
-        ).
+          exp = '' ).
       CATCH cx_root.
         cl_abap_unit_assert=>fail( 'Unexpected exception' ).
     ENDTRY.
