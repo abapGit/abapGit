@@ -159,8 +159,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_show_old <> mv_show.
-      CREATE OBJECT mo_repo_content EXPORTING iv_key = mv_show. " Reinit content state
+    IF lv_show_old <> mv_show AND NOT mv_show IS INITIAL.
+      CREATE OBJECT mo_repo_content
+        EXPORTING
+          iv_key = mv_show. " Reinit content state
     ENDIF.
 
   ENDMETHOD.  "retrieve_active_repo
