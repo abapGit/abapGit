@@ -186,5 +186,6 @@ CONSTANTS: BEGIN OF gc_action,
              go_branch_overview TYPE string VALUE 'go_branch_overview',
              go_playground      TYPE string VALUE 'go_playground',
              go_debuginfo       TYPE string VALUE 'go_debuginfo',
+             go_settings        type string value 'go_settings',
              jump               TYPE string VALUE 'jump',
            END OF gc_action.
