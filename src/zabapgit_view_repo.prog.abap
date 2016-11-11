@@ -731,7 +731,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         WHEN gc_state-mixed.      "Multiple changes (multifile)
           rv_html = rv_html && '<span class="mixed" title="Multiple changes">&#x25A0;</span>'.
         WHEN gc_state-deleted.    "Deleted
-          rv_html = rv_html && '<span class="deleted" title="Deleted">X</span>'.
+          rv_html = rv_html && '<span class="deleted" title="Deleted">D</span>'.
       ENDCASE.
     ENDDO.
 
