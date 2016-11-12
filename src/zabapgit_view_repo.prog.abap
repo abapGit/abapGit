@@ -334,7 +334,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
-        mv_cur_dir      = '/'. 	" Root
+        mv_cur_dir      = '/'. " Root
         ev_state        = gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
