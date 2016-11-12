@@ -15,7 +15,7 @@ TYPES: BEGIN OF ty_file_signature,
        END OF ty_file_signature.
 
 TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
-TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename..
+TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename.
 
 TYPES: BEGIN OF ty_file.
        INCLUDE TYPE ty_file_signature.
