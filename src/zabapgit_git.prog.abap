@@ -1521,6 +1521,11 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
+
+      " Save file ref to updated files table
+      APPEND INITIAL LINE TO et_updated_files ASSIGNING <ls_updated>.
+      MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
+
       CASE <ls_stage>-method.
         WHEN lcl_stage=>c_method-add.
 
@@ -1542,9 +1547,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
 
-          " Save file ref to updated files table
-          APPEND INITIAL LINE TO et_updated_files ASSIGNING <ls_updated>.
-          MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
+          <ls_updated>-sha1 = lv_sha1.   "New sha1
 
         WHEN lcl_stage=>c_method-rm.
           DELETE lt_expanded
@@ -1552,10 +1555,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             AND   path = <ls_stage>-file-path.
           ASSERT sy-subrc = 0.
 
-          " Save file ref to updated files table
-          APPEND INITIAL LINE TO et_updated_files ASSIGNING <ls_updated>.
-          MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
-          CLEAR <ls_updated>-sha1. " Mark as deleted
+          CLEAR <ls_updated>-sha1.       " Mark as deleted
 
         WHEN OTHERS.
           lcx_exception=>raise( 'stage method not supported, todo' ).
