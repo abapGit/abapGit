@@ -1,0 +1,20 @@
+abapGit changelog
+=================
+
+Legend
+------
+* : fixed
+! : changed
++ : added
+- : removed
+
+2016-11-12
+------------------
++ brand new style for file diff display - local and remote statuses are independent and based on local/remote hash and saved state
++ diffs can now be displayed for new local files
+* stage header diff (all changes) now display all diff including new local files
+! local state in DB is now calculated per file. This will require rebuilding of local checksums - the dislog will popup at the begining. The logic is: if local and remote file differs then: if remote branch is ahead then assume changes are remote, else (branches are equal) assume changes are local. This will lead to incorrect state for files changed on both sides (which should be a rare case though). If this is critical - it is better to sync repo with a previous version of abapGit first.
+
+before 2016-11-12
+------------------
+long history of abapGit development ;)
