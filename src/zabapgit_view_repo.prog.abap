@@ -289,10 +289,6 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
       get_item_icon
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
-      render_state
-        IMPORTING iv1            TYPE char1
-                  iv2            TYPE char1
-        RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
@@ -673,7 +669,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
       ro_html->add( '<div>' ).
       ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
-      ro_html->add( render_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
+      ro_html->add( render_item_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
       ro_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
@@ -687,7 +683,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '<div>' ).
         ro_html->add_anchor( iv_txt = |view diff ({ is_item-changes })|
                              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-        ro_html->add( render_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
+        ro_html->add( render_item_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
         ro_html->add( '</div>' ).
 
       ELSE.
@@ -701,7 +697,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
             ro_html->add_anchor(
               iv_txt = 'view diff'
               iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-            ro_html->add( render_state( iv1 = ls_file-lstate iv2 = ls_file-rstate ) ).
+            ro_html->add( render_item_state( iv1 = ls_file-lstate iv2 = ls_file-rstate ) ).
           ELSE.
             ro_html->add( '&nbsp;' ).
           ENDIF.
@@ -713,42 +709,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "render_item_command
-
-  METHOD render_state.
-
-    FIELD-SYMBOLS <state> TYPE char1.
-
-    rv_html = '<span class="state-block">'.
-
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          ASSIGN iv1 TO <state>.
-        WHEN 2.
-          ASSIGN iv2 TO <state>.
-      ENDCASE.
-
-      CASE <state>.
-        WHEN gc_state-unchanged.  "None or unchanged
-          IF iv1 = gc_state-added OR iv2 = gc_state-added.
-            rv_html = rv_html && |<span class="none" title="Not exists">X</span>|.
-          ELSE.
-            rv_html = rv_html && |<span class="none" title="No changes">&nbsp;</span>|.
-          ENDIF.
-        WHEN gc_state-modified.   "Changed
-          rv_html = rv_html && '<span class="changed" title="Modified">M</span>'.
-        WHEN gc_state-added.      "Added new
-          rv_html = rv_html && '<span class="added" title="Added new">A</span>'.
-        WHEN gc_state-mixed.      "Multiple changes (multifile)
-          rv_html = rv_html && '<span class="mixed" title="Multiple changes">&#x25A0;</span>'.
-        WHEN gc_state-deleted.    "Deleted
-          rv_html = rv_html && '<span class="deleted" title="Deleted">D</span>'.
-      ENDCASE.
-    ENDDO.
-
-    rv_html = rv_html && '</span>'.
-
-  ENDMETHOD. "render_state
 
   METHOD render_empty_package.
 
