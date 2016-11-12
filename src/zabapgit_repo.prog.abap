@@ -117,6 +117,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_results) TYPE ty_results_tt
         RAISING   lcx_exception,
+      reset_status,
       rebuild_local_checksums
         RAISING   lcx_exception,
       push

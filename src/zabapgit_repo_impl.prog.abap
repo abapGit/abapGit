@@ -62,16 +62,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     set( iv_sha1 = mv_branch ).
 
-    CLEAR mt_status. " Reset status
+    reset_status( ).
 
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD reset_status.
+    CLEAR mt_status.
+  ENDMETHOD.  " reset_status.
+
   METHOD refresh.
 
     super->refresh( iv_drop_cache ).
-    CLEAR mt_status.
+    reset_status( ).
 
     lcl_progress=>show( iv_key     = 'Fetch'
                         iv_current = 1
@@ -243,6 +247,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     DATA: lt_remote       TYPE ty_files_tt,
           lt_local        TYPE ty_files_item_tt,
+          ls_last_item    TYPE ty_item,
           lv_branch_equal TYPE abap_bool,
           lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
 
@@ -260,10 +265,11 @@ CLASS lcl_repo_online IMPLEMENTATION.
     SORT lt_remote BY path filename.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
-      AT NEW item.
+      IF ls_last_item <> <ls_local>-item. " New item reached ?
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
         <ls_checksum>-item = <ls_local>-item.
-      ENDAT.
+        ls_last_item       = <ls_local>-item.
+      ENDIF.
 
       READ TABLE lt_remote ASSIGNING <ls_remote>
         WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
@@ -282,6 +288,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
     ENDLOOP.
 
     set( it_checksums = lt_checksums ).
+    reset_status( ).
+
   ENDMETHOD.  " rebuild_local_checksums.
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
