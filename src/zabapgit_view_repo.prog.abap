@@ -62,6 +62,17 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
 
 ENDCLASS. "lcl_repo_content_browser
 
+DEFINE _reduce_state.
+  " &1 - prev, &2 - cur
+  IF &1 = &2 OR &2 IS INITIAL.
+    ASSERT 1 = 1. " No change
+  ELSEIF &1 IS INITIAL.
+    &1 = &2.
+  ELSE.
+    &1 = gc_state-mixed.
+  ENDIF.
+END-OF-DEFINITION.
+
 CLASS lcl_repo_content_browser IMPLEMENTATION.
 
   METHOD constructor.
@@ -95,17 +106,6 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
     SORT rt_repo_items BY sortkey obj_type obj_name ASCENDING.
 
   ENDMETHOD.  "list
-
-  DEFINE _reduce_state.
-    " &1 - prev, &2 - cur
-    IF &1 = &2 OR &2 IS INITIAL.
-      ASSERT 1 = 1. " No change
-    ELSEIF &1 IS INITIAL.
-      &1 = &2.
-    ELSE.
-      &1 = gc_state-mixed.
-    ENDIF.
-  END-OF-DEFINITION.
 
   METHOD build_folders.
 
@@ -266,6 +266,8 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
 
     METHODS:
       render_head_menu
+        IMPORTING iv_lstate      TYPE char1
+                  iv_rstate      TYPE char1
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
       render_grid_menu
@@ -348,6 +350,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     DATA: lt_repo_items TYPE lcl_repo_content_browser=>tt_repo_items,
           lo_browser    TYPE REF TO lcl_repo_content_browser,
           lx_error      TYPE REF TO lcx_exception,
+          lv_lstate     TYPE char1,
+          lv_rstate     TYPE char1,
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -364,7 +368,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
-        ro_html->add( render_head_menu( ) ).
+        LOOP AT lt_repo_items ASSIGNING <ls_item>.
+          _reduce_state lv_lstate <ls_item>-lstate.
+          _reduce_state lv_rstate <ls_item>-rstate.
+        ENDLOOP.
+
+        ro_html->add( render_head_menu( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
 
         lo_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
@@ -395,7 +404,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</div>' ).
 
       CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_head_menu( ) ).
+        ro_html->add( render_head_menu( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
         ro_html->add( lcl_gui_page_super=>render_error( lx_error ) ).
     ENDTRY.
 
@@ -502,14 +511,19 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     " Build main toolbar ==============================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       TRY.
-          IF lo_repo_online->get_sha1_remote( ) <> lo_repo_online->get_sha1_local( ).
+          IF iv_rstate IS NOT INITIAL. " Something new at remote
             lo_toolbar->add( iv_txt = 'Pull'
                              iv_act = |{ gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ENDIF.
-          IF lcl_stage_logic=>count( lo_repo_online ) > 0.
+          IF iv_lstate IS NOT INITIAL. " Something new at local
             lo_toolbar->add( iv_txt = 'Stage'
                              iv_act = |{ gc_action-go_stage }?{ lv_key }|
+                             iv_opt = gc_html_opt-emphas ).
+          ENDIF.
+          IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
+            lo_toolbar->add( iv_txt = 'Show diff'
+                             iv_act = |{ gc_action-go_diff }?key={ lv_key }|
                              iv_opt = gc_html_opt-emphas ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
