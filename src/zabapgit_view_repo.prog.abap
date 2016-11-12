@@ -339,9 +339,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
         ev_state        = gc_event_state-re_render.
-      WHEN 'update_checksums'.
-        mo_repo->refresh_local_checksums( ).
-        ev_state = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event

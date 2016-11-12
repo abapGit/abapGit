@@ -46,8 +46,6 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       update_local_checksums
         IMPORTING it_files            TYPE ty_file_signatures_tt
         RAISING   lcx_exception,
-      refresh_local_checksums
-        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.

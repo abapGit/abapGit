@@ -22,7 +22,6 @@ TYPES: BEGIN OF ty_file.
 TYPES:   data     TYPE xstring,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
-TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
