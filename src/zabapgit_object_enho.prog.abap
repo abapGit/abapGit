@@ -14,6 +14,13 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_spaces,
+             full_name TYPE string.
+    TYPES: spaces TYPE STANDARD TABLE OF i WITH DEFAULT KEY,
+           END OF ty_spaces.
+
+    TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
+
     METHODS deserialize_badi
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
@@ -32,6 +39,15 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING io_xml      TYPE REF TO lcl_xml_output
                 iv_tool     TYPE enhtooltype
                 ii_enh_tool TYPE REF TO if_enh_tool
+      RAISING   lcx_exception.
+
+    METHODS hook_impl_serialize
+      EXPORTING et_spaces TYPE ty_spaces_tt
+      CHANGING  ct_impl   TYPE enh_hook_impl_it
+      RAISING   lcx_exception.
+    METHODS hook_impl_deserialize
+      IMPORTING it_spaces TYPE ty_spaces_tt
+      CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_enho DEFINITION
@@ -53,6 +69,53 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
+  ENDMETHOD.
+
+  METHOD hook_impl_serialize.
+* handle normalization of XML values
+* i.e. remove leading spaces
+
+    FIELD-SYMBOLS: <ls_impl>  LIKE LINE OF ct_impl,
+                   <ls_space> LIKE LINE OF et_spaces,
+                   <lv_space> TYPE i,
+                   <lv_line>  TYPE string.
+
+
+    LOOP AT ct_impl ASSIGNING <ls_impl>.
+      APPEND INITIAL LINE TO et_spaces ASSIGNING <ls_space>.
+      <ls_space>-full_name = <ls_impl>-full_name.
+      LOOP AT <ls_impl>-source ASSIGNING <lv_line>.
+        APPEND INITIAL LINE TO <ls_space>-spaces ASSIGNING <lv_space>.
+        WHILE strlen( <lv_line> ) >= 1 AND <lv_line>(1) = ` `.
+          <lv_line> = <lv_line>+1.
+          <lv_space> = <lv_space> + 1.
+        ENDWHILE.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD hook_impl_deserialize.
+
+    FIELD-SYMBOLS: <ls_impl>   LIKE LINE OF ct_impl,
+                   <lv_line>   TYPE string,
+                   <lv_space>  TYPE i,
+                   <ls_spaces> LIKE LINE OF it_spaces.
+
+
+    LOOP AT ct_impl ASSIGNING <ls_impl>.
+      READ TABLE it_spaces ASSIGNING <ls_spaces> WITH KEY full_name = <ls_impl>-full_name.
+      IF sy-subrc = 0.
+        LOOP AT <ls_impl>-source ASSIGNING <lv_line>.
+          READ TABLE <ls_spaces>-spaces ASSIGNING <lv_space> INDEX sy-tabix.
+          IF sy-subrc = 0 AND <lv_space> > 0.
+            DO <lv_space> TIMES.
+              CONCATENATE space <lv_line> INTO <lv_line> RESPECTING BLANKS.
+            ENDDO.
+          ENDIF.
+        ENDLOOP.
+      ENDIF.
+    ENDLOOP.
+
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -82,7 +145,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     lv_enh_id = ms_item-obj_name.
     TRY.
-        li_enh_tool = cl_enh_factory=>get_enhancement( lv_enh_id ).
+        li_enh_tool = cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
       CATCH cx_enh_root.
         lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
@@ -196,6 +261,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
           lv_enhname         TYPE enhname,
           lv_package         TYPE devclass,
           ls_original_object TYPE enh_hook_admin,
+          lt_spaces          TYPE ty_spaces_tt,
           lt_enhancements    TYPE enh_hook_impl_it.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
@@ -207,6 +273,11 @@ CLASS lcl_object_enho IMPLEMENTATION.
                   CHANGING cg_data = ls_original_object ).
     io_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
                   CHANGING cg_data = lt_enhancements ).
+    io_xml->read( EXPORTING iv_name = 'SPACES'
+                  CHANGING cg_data = lt_spaces ).
+
+    hook_impl_deserialize( EXPORTING it_spaces = lt_spaces
+                           CHANGING ct_impl = lt_enhancements ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
@@ -279,6 +350,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
     DATA: lv_shorttext       TYPE string,
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
           ls_original_object TYPE enh_hook_admin,
+          lt_spaces          TYPE ty_spaces_tt,
           lt_enhancements    TYPE enh_hook_impl_it.
 
 
@@ -296,6 +368,10 @@ CLASS lcl_object_enho IMPLEMENTATION.
     ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
 
+    hook_impl_serialize(
+      IMPORTING et_spaces = lt_spaces
+      CHANGING ct_impl = lt_enhancements ).
+
     io_xml->add( iv_name = 'TOOL'
                  ig_data = iv_tool ).
     io_xml->add( ig_data = lv_shorttext
@@ -304,6 +380,8 @@ CLASS lcl_object_enho IMPLEMENTATION.
                  iv_name = 'ORIGINAL_OBJECT' ).
     io_xml->add( iv_name = 'ENHANCEMENTS'
                  ig_data = lt_enhancements ).
+    io_xml->add( iv_name = 'SPACES'
+                 ig_data = lt_spaces ).
 
   ENDMETHOD.                    "serialize_hook
 

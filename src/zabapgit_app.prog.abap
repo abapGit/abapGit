@@ -6,6 +6,7 @@ CLASS lcl_gui DEFINITION DEFERRED.
 CLASS lcl_persistence_user DEFINITION DEFERRED.
 CLASS lcl_repo_srv DEFINITION DEFERRED.
 CLASS lcl_persistence_db DEFINITION DEFERRED.
+CLASS lcl_persistence_settings DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_app DEFINITION
@@ -31,10 +32,14 @@ CLASS lcl_app DEFINITION FINAL.
     CLASS-METHODS db
       RETURNING VALUE(ro_db) TYPE REF TO lcl_persistence_db.
 
+    CLASS-METHODS settings
+      RETURNING VALUE(ro_settings) TYPE REF TO lcl_persistence_settings.
+
   PRIVATE SECTION.
     CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
                 go_current_user TYPE REF TO lcl_persistence_user,
                 go_db           TYPE REF TO lcl_persistence_db,
-                go_repo_srv     TYPE REF TO lcl_repo_srv.
+                go_repo_srv     TYPE REF TO lcl_repo_srv,
+                go_settings     TYPE REF TO lcl_persistence_settings.
 
 ENDCLASS.   "lcl_app

@@ -430,6 +430,10 @@ CLASS lcl_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
   ENDMETHOD.  " update_local_checksums
 
+  METHOD refresh_local_checksums.
+    set( it_checksums = build_local_checksums( ) ).
+  ENDMETHOD.  "refresh_local_checksums
+
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE ty_file_signatures_tt.
