@@ -190,13 +190,21 @@ CLASS lcl_objects_files DEFINITION FINAL.
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
       set_files
-        IMPORTING it_files TYPE ty_files_tt.
+        IMPORTING it_files TYPE ty_files_tt,
+      get_accessed_files
+        RETURNING VALUE(rt_files) TYPE ty_file_signatures_tt.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ty_item,
-          mt_files TYPE ty_files_tt.
+    DATA: ms_item           TYPE ty_item,
+          mt_accessed_files TYPE ty_file_signatures_tt,
+          mt_files          TYPE ty_files_tt.
 
     METHODS:
+      read_file
+        IMPORTING iv_filename TYPE string
+                  iv_error    TYPE abap_bool DEFAULT abap_true
+        EXPORTING ev_data     TYPE xstring
+        RAISING   lcx_exception,
       filename
         IMPORTING iv_extra           TYPE clike OPTIONAL
                   iv_ext             TYPE string
@@ -263,47 +271,46 @@ CLASS lcl_objects_files IMPLEMENTATION.
     mt_files = it_files.
   ENDMETHOD.                    "set_files
 
+  METHOD get_accessed_files.
+    rt_files = mt_accessed_files.
+  ENDMETHOD.  " get_accessed_files.
+
   METHOD read_string.
 
-    DATA: lv_filename TYPE string.
-
-    FIELD-SYMBOLS: <ls_html> LIKE LINE OF mt_files.
-
+    DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring.
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = iv_ext ).            "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_html> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'html not found' ).
-    ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = lv_data ).
 
-    rv_string = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
+    rv_string = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
   ENDMETHOD.                    "read_string
 
   METHOD read_abap.
 
     DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring,
           lv_abap     TYPE string.
 
     FIELD-SYMBOLS: <ls_abap> LIKE LINE OF mt_files.
 
 
-    CLEAR rt_abap.
-
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'abap' ).            "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      IF iv_error = abap_true.
-        lcx_exception=>raise( 'abap not found' ).
-      ELSE.
-        RETURN.
-      ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+                         iv_error    = iv_error
+               IMPORTING ev_data     = lv_data ).
+
+    IF lv_data IS INITIAL. " Post-handling of iv_error = false
+      RETURN.
     ENDIF.
-    lv_abap = lcl_convert=>xstring_to_string_utf8( <ls_abap>-data ).
+
+    lv_abap = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
     SPLIT lv_abap AT gc_newline INTO TABLE rt_abap.
 
@@ -367,20 +374,16 @@ CLASS lcl_objects_files IMPLEMENTATION.
   METHOD read_xml.
 
     DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring,
           lv_xml      TYPE string.
-
-    FIELD-SYMBOLS: <ls_xml> LIKE LINE OF mt_files.
-
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'xml' ).             "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'xml not found' ).
-    ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = lv_data ).
 
-    lv_xml = lcl_convert=>xstring_to_string_utf8( <ls_xml>-data ).
+    lv_xml = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
     CREATE OBJECT ro_xml
       EXPORTING
@@ -428,6 +431,34 @@ CLASS lcl_objects_files IMPLEMENTATION.
       iv_normalize = iv_normalize ).
 
   ENDMETHOD.                    "add_xml_from_plugin
+
+  METHOD read_file.
+
+    FIELD-SYMBOLS: <ls_file>     LIKE LINE OF mt_files,
+                   <ls_accessed> LIKE LINE OF mt_accessed_files.
+
+    CLEAR ev_data.
+    READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
+
+    IF sy-subrc <> 0.
+      IF iv_error = abap_true.
+        lcx_exception=>raise( |File not found: { iv_filename }| ).
+      ELSE.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    " Update access table
+    READ TABLE mt_accessed_files TRANSPORTING NO FIELDS
+      WITH KEY path = <ls_file>-path filename = <ls_file>-filename.
+    IF sy-subrc > 0. " Not found ? -> Add
+      APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
+      MOVE-CORRESPONDING <ls_file> TO <ls_accessed>.
+    ENDIF.
+
+    ev_data = <ls_file>-data.
+
+  ENDMETHOD.  " read_file.
 
 ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 
@@ -1476,6 +1507,12 @@ CLASS lcl_objects DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_late,
+             obj     TYPE REF TO lif_object,
+             xml     TYPE REF TO lcl_xml_input,
+             package TYPE devclass,
+           END OF ty_late.
+
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
                 iv_language     TYPE spras
@@ -1484,7 +1521,8 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
-      IMPORTING io_repo TYPE REF TO lcl_repo
+      IMPORTING io_repo                  TYPE REF TO lcl_repo
+      RETURNING VALUE(rt_accessed_files) TYPE ty_file_signatures_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS delete

@@ -92,7 +92,6 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_local_checksum,
              item  TYPE ty_item,
-             sha1  TYPE ty_sha1,
              files TYPE ty_file_signatures_tt,
            END OF ty_local_checksum.
 

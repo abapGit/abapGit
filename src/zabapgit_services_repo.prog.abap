@@ -35,6 +35,10 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception lcx_cancel.
 
+    CLASS-METHODS refresh_local_checksums
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception lcx_cancel.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -244,5 +248,38 @@ CLASS lcl_services_repo IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.  "remote_change
+
+  METHOD refresh_local_checksums.
+
+    DATA: lv_answer   TYPE c,
+          lv_question TYPE string,
+          lo_repo     TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    lv_question =  'This will rebuild and overwrite local repo checksums.'
+                && ' The logic: if local and remote file differs then:'
+                && ' if remote branch is ahead then assume changes are remote,'
+                && ' else (branches are equal) assume changes are local.'
+                && ' This will lead to incorrect state for files changed on both sides.'
+                && ' Please make sure you don''t have ones like that.'.
+
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Warning'
+      text_question         = lv_question
+      text_button_1         = 'OK'
+      icon_button_1         = 'ICON_DELETE'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false ).               "#EC NOTEXT
+
+    IF lv_answer = '2'.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lo_repo->rebuild_local_checksums( ).
+
+  ENDMETHOD.  "refresh_local_checksums
 
 ENDCLASS. "lcl_services_repo

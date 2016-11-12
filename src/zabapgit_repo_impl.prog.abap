@@ -181,14 +181,17 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD push.
 
-    DATA: lv_branch TYPE ty_sha1.
+    DATA: lv_branch        TYPE ty_sha1,
+          lt_updated_files TYPE ty_file_signatures_tt.
 
 
     handle_stage_ignore( io_stage ).
 
-    lv_branch = lcl_git_porcelain=>push( is_comment = is_comment
-                                         io_repo    = me
-                                         io_stage   = io_stage ).
+    lcl_git_porcelain=>push( EXPORTING is_comment       = is_comment
+                                       io_repo          = me
+                                       io_stage         = io_stage
+                             IMPORTING ev_branch        = lv_branch
+                                       et_updated_files = lt_updated_files ).
 
     IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
 * pushing to the branch currently represented by this repository object
@@ -196,7 +199,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
     ENDIF.
 
     refresh( ).
-    set( it_checksums = build_local_checksums( ) ).
+    update_local_checksums( lt_updated_files ).
 
     IF lcl_stage_logic=>count( me ) = 0.
       set( iv_sha1 = lv_branch ).
@@ -235,6 +238,51 @@ CLASS lcl_repo_online IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD rebuild_local_checksums.
+
+    DATA: lt_remote       TYPE ty_files_tt,
+          lt_local        TYPE ty_files_item_tt,
+          lv_branch_equal TYPE abap_bool,
+          lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+
+    FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
+                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+                   <ls_remote>   LIKE LINE OF lt_remote,
+                   <ls_local>    LIKE LINE OF lt_local.
+
+    lt_local        = get_files_local( ).
+    lt_remote       = get_files_remote( ).
+    lv_branch_equal = boolc( get_sha1_remote( ) = get_sha1_local( ) ).
+
+    DELETE lt_local WHERE item IS INITIAL.
+    SORT lt_local BY item.
+    SORT lt_remote BY path filename.
+
+    LOOP AT lt_local ASSIGNING <ls_local>.
+      AT NEW item.
+        APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
+        <ls_checksum>-item = <ls_local>-item.
+      ENDAT.
+
+      READ TABLE lt_remote ASSIGNING <ls_remote>
+        WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
+        BINARY SEARCH.
+      CHECK sy-subrc = 0.  " Ignore new ones
+
+      APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
+      MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
+
+      " If hashes are equal -> local sha1 is OK
+      " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
+      "      Else (branches equal) -> assume changes were local, state - remote sha1
+      IF <ls_local>-file-sha1 <> <ls_remote>-sha1 AND lv_branch_equal = abap_true.
+        <ls_file_sig>-sha1 = <ls_remote>-sha1.
+      ENDIF.
+    ENDLOOP.
+
+    set( it_checksums = lt_checksums ).
+  ENDMETHOD.  " rebuild_local_checksums.
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
@@ -329,67 +377,54 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.                    "set_sha1
 
-  METHOD build_local_checksums.
+  METHOD update_local_checksums.
 
-    DATA: lv_xstring TYPE xstring,
-          lt_local   TYPE SORTED TABLE OF ty_file_item WITH NON-UNIQUE KEY item.
+    DATA: lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+          lt_files_idx TYPE ty_file_signatures_ts,
+          lv_chks_row  TYPE i,
+          lv_file_row  TYPE i.
 
-    FIELD-SYMBOLS: <ls_item>     LIKE LINE OF lt_local,
-                   <ls_checksum> LIKE LINE OF rt_checksums,
-                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-                   <ls_local>    LIKE LINE OF lt_local.
+    FIELD-SYMBOLS: <ls_checksum>  LIKE LINE OF lt_checksums,
+                   <ls_file>      LIKE LINE OF <ls_checksum>-files,
+                   <ls_new_state> LIKE LINE OF it_files.
 
-    lt_local = get_files_local( ).
-    DELETE lt_local WHERE item IS INITIAL.
+    lt_files_idx = it_files. " Force sort for binary search
+    lt_checksums = get_local_checksums( ).
 
-    LOOP AT lt_local ASSIGNING <ls_item>.
+    " ASSUMTION: SHA1 in param is actual and correct.
+    " Push fills it from local files before pushing, deserialize from remote
+    " If this is not true that there is an error somewhere but not here
 
-      CLEAR lv_xstring.
-      APPEND INITIAL LINE TO rt_checksums ASSIGNING <ls_checksum>.
+    " Loop through current chacksum state
+    LOOP AT lt_checksums ASSIGNING <ls_checksum>.
+      lv_chks_row = sy-tabix.
 
-      LOOP AT lt_local ASSIGNING <ls_local> WHERE item = <ls_item>-item.
-        CONCATENATE lv_xstring <ls_local>-file-data INTO lv_xstring IN BYTE MODE.
-        APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
-        MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
+      LOOP AT <ls_checksum>-files ASSIGNING <ls_file>.
+        lv_file_row = sy-tabix.
+
+        READ TABLE lt_files_idx ASSIGNING <ls_new_state>
+          WITH KEY path = <ls_file>-path filename = <ls_file>-filename
+          BINARY SEARCH.
+        CHECK sy-subrc = 0. " Missing in param table, skip
+
+        IF <ls_new_state>-sha1 IS INITIAL. " Empty input sha1 is a deletion marker
+          DELETE <ls_checksum>-files INDEX lv_file_row.
+        ELSE.
+          <ls_file> = <ls_new_state>. " Replace with new state
+        ENDIF.
       ENDLOOP.
 
-      ASSERT NOT lv_xstring IS INITIAL.
-
-      <ls_checksum>-item = <ls_item>-item.
-      <ls_checksum>-sha1 = lcl_hash=>sha1_raw( lv_xstring ).
-
-      DELETE lt_local WHERE item = <ls_item>-item.
-
+      IF lines( <ls_checksum>-files ) = 0. " Remove empty objects
+        DELETE lt_checksums INDEX lv_chks_row.
+      ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
-
-  METHOD refresh_local_checksums.
-
-    DATA lv_answer TYPE c.
-
-    IF lines( get_local_checksums_per_file( ) ) > 0.
-      lv_answer = lcl_popups=>popup_to_confirm(
-        titlebar              = 'Warning'
-        text_question         = 'File checksums are not empty.'
-                             && ' Are you sure to overwrite ?'
-                             && ' This may lead to loss of local change state'
-        text_button_1         = 'OK'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false ).               "#EC NOTEXT
-
-      IF lv_answer = '2'.
-        RETURN.
-      ENDIF.
-    ENDIF.
-
-    set( it_checksums = build_local_checksums( ) ).
-  ENDMETHOD.  "refresh_local_checksums
+    set( it_checksums = lt_checksums ).
+  ENDMETHOD.  " update_local_checksums
 
   METHOD deserialize.
+
+    DATA: lt_updated_files TYPE ty_file_signatures_tt.
 
     IF mo_dot_abapgit IS INITIAL.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
@@ -398,11 +433,11 @@ CLASS lcl_repo IMPLEMENTATION.
       lcx_exception=>raise( 'Current login language does not match master language' ).
     ENDIF.
 
-    lcl_objects=>deserialize( me ).
+    lt_updated_files = lcl_objects=>deserialize( me ).
 
     CLEAR: mt_local, mv_last_serialization.
 
-    set( it_checksums = build_local_checksums( ) ).
+    update_local_checksums( lt_updated_files ).
 
   ENDMETHOD.
 

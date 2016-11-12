@@ -582,12 +582,6 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    TYPES: BEGIN OF ty_late,
-             obj     TYPE REF TO lif_object,
-             xml     TYPE REF TO lcl_xml_input,
-             package TYPE devclass,
-           END OF ty_late.
-
     DATA: ls_item    TYPE ty_item,
           lv_cancel  TYPE abap_bool,
           li_obj     TYPE REF TO lif_object,
@@ -618,7 +612,7 @@ CLASS lcl_objects IMPLEMENTATION.
     warning_overwrite( EXPORTING io_repo = io_repo
                        CHANGING ct_results = lt_results ).
 
-    LOOP AT lt_results ASSIGNING <ls_result>.
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL.
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_results )
@@ -666,6 +660,8 @@ CLASS lcl_objects IMPLEMENTATION.
       li_obj->deserialize( iv_package = lv_package
                            io_xml     = lo_xml ).
 
+      " Remember accessed files
+      APPEND LINES OF lo_files->get_accessed_files( ) TO rt_accessed_files.
     ENDLOOP.
 
     lcl_objects_activation=>activate( ).
@@ -676,6 +672,9 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     update_package_tree( io_repo->get_package( ) ).
+
+    SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
   ENDMETHOD.                    "deserialize
 

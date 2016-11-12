@@ -59,12 +59,13 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
-    lo_dot_abapgit = io_repo->get_dot_abapgit( ).
 
     rt_results = calculate_status(
       it_local           = io_repo->get_files_local( io_log )
       it_remote          = io_repo->get_files_remote( )
       it_cur_state       = io_repo->get_local_checksums_per_file( ) ).
+
+    lo_dot_abapgit = io_repo->get_dot_abapgit( ).
 
     " Remove ignored files, fix .abapgit
     LOOP AT rt_results ASSIGNING <ls_result>.
