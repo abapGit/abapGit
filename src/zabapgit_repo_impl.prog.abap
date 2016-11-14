@@ -256,8 +256,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
                    <ls_remote>   LIKE LINE OF lt_remote,
                    <ls_local>    LIKE LINE OF lt_local.
 
-    lt_local        = get_files_local( ).
     lt_remote       = get_files_remote( ).
+    lt_local        = get_files_local( ).
     lv_branch_equal = boolc( get_sha1_remote( ) = get_sha1_local( ) ).
 
     DELETE lt_local WHERE item IS INITIAL.
