@@ -2,6 +2,165 @@
 *&  Include           ZABAPGIT_HTTP
 *&---------------------------------------------------------------------*
 
+CLASS lcl_http_digest DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      run
+        IMPORTING
+          ii_client TYPE REF TO if_http_client
+          iv_username TYPE string
+          iv_password TYPE string.
+
+  PRIVATE SECTION.
+    CLASS-DATA: gv_nc TYPE n LENGTH 8.
+
+    CLASS-METHODS:
+      parse
+        IMPORTING
+          iv_value  TYPE string
+        EXPORTING
+          ev_scheme TYPE string
+          ev_realm  TYPE string
+          ev_qop    TYPE string
+          ev_nonce  TYPE string,
+      md5
+        IMPORTING
+          iv_data        TYPE string
+        RETURNING
+          VALUE(rv_hash) TYPE string,
+      hash
+        IMPORTING
+          iv_qop             TYPE string
+          iv_realm           TYPE string
+          iv_nonce           TYPE string
+          iv_username        TYPE clike
+          iv_uri             TYPE string
+          iv_method          TYPE string
+          iv_cnonse          TYPE string
+          iv_password        TYPE clike
+        RETURNING
+          VALUE(rv_response) TYPE string.
+
+ENDCLASS.
+
+CLASS lcl_http_digest IMPLEMENTATION.
+
+  METHOD hash.
+
+    DATA(lv_ha1) = md5( |{ iv_username }:{ iv_realm }:{ iv_password }| ).
+    DATA(lv_ha2) = md5( |{ iv_method }:{ iv_uri }| ).
+
+    rv_response = md5( |{ lv_ha1 }:{ iv_nonce }:{ gv_nc }:{ iv_cnonse }:{ iv_qop }:{ lv_ha2 }| ).
+
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lv_value    TYPE string,
+          lv_scheme   TYPE string,
+          lv_realm    TYPE string,
+          lv_response TYPE string,
+          lv_method   TYPE string,
+          lv_uri      TYPE string,
+          lv_auth     TYPE string,
+          lv_cnonce   TYPE string,
+          lv_qop      TYPE string,
+          lv_nonce    TYPE string.
+
+
+    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
+
+    parse(
+      EXPORTING
+        iv_value  = lv_value
+      IMPORTING
+        ev_scheme = lv_scheme
+        ev_realm  = lv_realm
+        ev_qop    = lv_qop
+        ev_nonce  = lv_nonce ).
+
+    ASSERT NOT lv_nonce IS INITIAL.
+
+    lv_method = 'GET'.
+    lv_uri = ii_client->request->get_header_field( '~request_uri' ).
+
+    CALL FUNCTION 'GENERAL_GET_RANDOM_STRING'
+      EXPORTING
+        number_chars  = 24
+      IMPORTING
+        random_string = lv_cnonce.
+
+    lv_response = hash(
+      iv_qop      = lv_qop
+      iv_realm    = lv_realm
+      iv_nonce    = lv_nonce
+      iv_username = p_user
+      iv_uri      = lv_uri
+      iv_method   = lv_method
+      iv_cnonse   = lv_cnonce
+      iv_password = p_pass ).
+
+* client response
+    lv_auth = |Digest username="{ p_user
+      }", realm="{ lv_realm
+      }", nonce="{ lv_nonce
+      }", uri="{ lv_uri
+      }", qop={ lv_qop
+      }, nc={ gv_nc
+      }, cnonce="{ lv_cnonce
+      }", response="{ lv_response }"|.
+
+    ii_client->request->set_header_field(
+      name  = 'Authorization'
+      value = lv_auth ).
+
+  ENDMETHOD.
+
+  METHOD parse.
+
+    CLEAR: ev_scheme,
+           ev_realm,
+           ev_qop,
+           ev_nonce.
+
+    FIND REGEX '^(\w+)' IN iv_value SUBMATCHES ev_scheme.
+    FIND REGEX 'realm="([\w ]+)"' IN iv_value SUBMATCHES ev_realm.
+    FIND REGEX 'qop="(\w+)"' IN iv_value SUBMATCHES ev_qop.
+    FIND REGEX 'nonce="([\w=/+\$]+)"' IN iv_value SUBMATCHES ev_nonce.
+
+  ENDMETHOD.
+
+  METHOD md5.
+
+    DATA: lv_xstr TYPE xstring,
+          lv_hash TYPE xstring.
+
+
+    lv_xstr = lcl_convert=>string_to_xstring_utf8( iv_data ).
+
+    CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
+      EXPORTING
+        alg            = 'MD5'
+        data           = lv_xstr
+      IMPORTING
+        hashxstring    = lv_hash
+      EXCEPTIONS
+        unknown_alg    = 1
+        param_error    = 2
+        internal_error = 3
+        OTHERS         = 4.
+    IF sy-subrc <> 0.
+      BREAK-POINT.
+    ENDIF.
+
+    rv_hash = lv_hash.
+    TRANSLATE rv_hash TO LOWER CASE.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_http DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -85,13 +244,11 @@ CLASS lcl_http IMPLEMENTATION.
     " Disable internal auth dialog (due to its unclarity)
     ri_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    lv_expect_potentual_auth = boolc(
-      lcl_login_manager=>load( iv_uri    = iv_url
-                               ii_client = ri_client ) IS INITIAL ).
+    lcl_login_manager=>load( iv_uri    = iv_url
+                             ii_client = ri_client ).
 
     send_receive( ri_client ).
-    IF lv_expect_potentual_auth = abap_true
-        AND check_auth_requested( ri_client ) = abap_true.
+    IF check_auth_requested( ri_client ) = abap_true.
       acquire_login_details( ii_client = ri_client
                              iv_url    = iv_url ).
       send_receive( ri_client ).
@@ -174,12 +331,14 @@ CLASS lcl_http IMPLEMENTATION.
   ENDMETHOD.  "check_auth_requested
 
   METHOD acquire_login_details.
-    DATA:
-      lv_default_user TYPE string,
-      lv_user         TYPE string,
-      lv_pass         TYPE string.
 
-    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
+    DATA: lv_default_user TYPE string,
+          lv_scheme       TYPE string,
+          lv_user         TYPE string,
+          lv_pass         TYPE string.
+
+
+    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
@@ -194,12 +353,27 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_username( iv_url = iv_url iv_username = lv_user ).
+      lcl_app=>user( )->set_repo_username( iv_url      = iv_url
+                                           iv_username = lv_user ).
     ENDIF.
 
-    ii_client->authenticate(
-      username = lv_user
-      password = lv_pass ).
+    lv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
+    FIND REGEX '^(\w+)' IN lv_scheme SUBMATCHES lv_scheme.
+
+    CASE lv_scheme.
+      WHEN 'Digest'.
+* https://en.wikipedia.org/wiki/Digest_access_authentication
+* eg used by https://www.gerritcodereview.com/
+        lcl_http_digest=>run(
+          ii_client   = ii_client
+          iv_username = lv_user
+          iv_password = lv_pass ).
+      WHEN OTHERS.
+* https://en.wikipedia.org/wiki/Basic_access_authentication
+        ii_client->authenticate(
+          username = lv_user
+          password = lv_pass ).
+    ENDCASE.
 
   ENDMETHOD.  "acquire_login_details
 
