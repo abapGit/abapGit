@@ -2,22 +2,336 @@
 *&  Include           ZABAPGIT_HTTP
 *&---------------------------------------------------------------------*
 
+CLASS lcl_http_digest DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING
+          ii_client TYPE REF TO if_http_client
+          iv_username TYPE string
+          iv_password TYPE string,
+      run
+        IMPORTING
+          ii_client TYPE REF TO if_http_client.
+
+  PRIVATE SECTION.
+    DATA: mv_ha1      TYPE string,
+          mv_username TYPE string,
+          mv_realm    TYPE string,
+          mv_qop      TYPE string,
+          mv_nonce    TYPE string.
+
+    CLASS-DATA: gv_nc TYPE n LENGTH 8.
+
+    CLASS-METHODS:
+      md5
+        IMPORTING
+          iv_data        TYPE string
+        RETURNING
+          VALUE(rv_hash) TYPE string.
+
+    METHODS:
+      hash
+        IMPORTING
+          iv_qop             TYPE string
+          iv_nonce           TYPE string
+          iv_uri             TYPE string
+          iv_method          TYPE string
+          iv_cnonse          TYPE string
+       RETURNING
+          VALUE(rv_response) TYPE string,
+      parse
+        IMPORTING
+          ii_client TYPE REF TO if_http_client.
+
+ENDCLASS.
+
+CLASS lcl_http_client DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    METHODS:
+      constructor
+        IMPORTING ii_client TYPE REF TO if_http_client,
+      close,
+      set_digest
+        IMPORTING io_digest TYPE REF TO lcl_http_digest,
+      send_receive_close
+        IMPORTING
+          iv_data TYPE xstring
+        RETURNING
+          VALUE(rv_data) TYPE xstring
+        RAISING lcx_exception,
+      get_cdata
+        RETURNING VALUE(rv_value) TYPE string,
+      check_http_200
+        RAISING   lcx_exception,
+      send_receive
+        RAISING   lcx_exception,
+      set_headers
+        IMPORTING iv_url     TYPE string
+                  iv_service TYPE string
+        RAISING   lcx_exception.
+
+  PROTECTED SECTION.
+    DATA: mi_client TYPE REF TO if_http_client,
+          mo_digest TYPE REF TO lcl_http_digest.
+
+ENDCLASS.
+
+CLASS lcl_http_client IMPLEMENTATION.
+
+  METHOD constructor.
+    mi_client = ii_client.
+  ENDMETHOD.
+
+  METHOD set_digest.
+    mo_digest = io_digest.
+  ENDMETHOD.
+
+  METHOD send_receive_close.
+
+* do not use set_cdata as it modifies the Content-Type header field
+    mi_client->request->set_data( iv_data ).
+    send_receive( ).
+    check_http_200( ).
+    rv_data = mi_client->response->get_data( ).
+    mi_client->close( ).
+
+  ENDMETHOD.
+
+  METHOD get_cdata.
+    rv_value = mi_client->response->get_cdata( ).
+  ENDMETHOD.
+
+  METHOD close.
+    mi_client->close( ).
+  ENDMETHOD.
+
+  METHOD set_headers.
+
+    DATA: lv_value TYPE string.
+
+
+    mi_client->request->set_header_field(
+        name  = '~request_method'
+        value = 'POST' ).
+
+    lv_value = lcl_url=>path_name( iv_url ) &&
+      '/git-' &&
+      iv_service &&
+      '-pack'.
+    mi_client->request->set_header_field(
+        name  = '~request_uri'
+        value = lv_value ).
+
+    lv_value = 'application/x-git-'
+                  && iv_service && '-pack-request'.         "#EC NOTEXT
+    mi_client->request->set_header_field(
+        name  = 'Content-Type'
+        value = lv_value ).                                 "#EC NOTEXT
+
+    lv_value = 'application/x-git-'
+                  && iv_service && '-pack-result'.          "#EC NOTEXT
+    mi_client->request->set_header_field(
+        name  = 'Accept'
+        value = lv_value ).                                 "#EC NOTEXT
+
+    IF mo_digest IS BOUND.
+      mo_digest->run( mi_client ).
+    ENDIF.
+
+  ENDMETHOD.                    "set_headers
+
+  METHOD send_receive.
+
+    DATA lv_text TYPE string.
+
+    mi_client->send( ).
+    mi_client->receive(
+      EXCEPTIONS
+        http_communication_failure = 1
+        http_invalid_state         = 2
+        http_processing_failed     = 3
+        OTHERS                     = 4 ).
+    IF sy-subrc <> 0.
+      CASE sy-subrc.
+        WHEN 1.
+          " make sure:
+          " a) SSL is setup properly in STRUST
+          " b) no firewalls
+          " check trace file in transaction SMICM
+          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
+        WHEN 2.
+          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
+        WHEN 3.
+          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
+        WHEN OTHERS.
+          lv_text = 'Another error occured'.                "#EC NOTEXT
+      ENDCASE.
+      lcx_exception=>raise( lv_text ).
+    ENDIF.
+
+  ENDMETHOD.  "send_receive
+
+  METHOD check_http_200.
+
+    DATA: lv_code TYPE i,
+          lv_text TYPE string.
+
+
+    mi_client->response->get_status(
+      IMPORTING
+        code   = lv_code ).
+    CASE lv_code.
+      WHEN 200.
+        RETURN.
+      WHEN 302.
+        lcx_exception=>raise( 'HTTP redirect, check URL' ).
+      WHEN 401.
+        lcx_exception=>raise( 'HTTP 401, unauthorized' ).
+      WHEN 403.
+        lcx_exception=>raise( 'HTTP 403, forbidden' ).
+      WHEN 404.
+        lcx_exception=>raise( 'HTTP 404, not found' ).
+      WHEN 415.
+        lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
+      WHEN OTHERS.
+        lv_text = mi_client->response->get_cdata( ).
+        lcx_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
+    ENDCASE.
+
+  ENDMETHOD.                                                "http_200
+
+ENDCLASS.
+
+CLASS lcl_http_digest IMPLEMENTATION.
+
+  METHOD constructor.
+
+    parse( ii_client ).
+
+    mv_ha1 = md5( |{ iv_username }:{ mv_realm }:{ iv_password }| ).
+
+    mv_username = iv_username.
+
+  ENDMETHOD.
+
+  METHOD hash.
+
+    DATA: lv_ha2 TYPE string.
+
+
+    lv_ha2 = md5( |{ iv_method }:{ iv_uri }| ).
+
+    ASSERT NOT iv_cnonse IS INITIAL.
+
+    rv_response = md5( |{ mv_ha1 }:{ iv_nonce }:{ gv_nc }:{ iv_cnonse }:{ iv_qop }:{ lv_ha2 }| ).
+
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lv_value    TYPE string,
+          lv_response TYPE string,
+          lv_method   TYPE string,
+          lv_cnonce   TYPE string,
+          lv_uri      TYPE string,
+          lv_auth     TYPE string.
+
+
+    ASSERT NOT mv_nonce IS INITIAL.
+
+    lv_method = ii_client->request->get_header_field( '~request_method' ).
+    lv_uri = ii_client->request->get_header_field( '~request_uri' ).
+
+    CALL FUNCTION 'GENERAL_GET_RANDOM_STRING'
+      EXPORTING
+        number_chars  = 24
+      IMPORTING
+        random_string = lv_cnonce.
+
+    lv_response = hash(
+      iv_qop    = mv_qop
+      iv_nonce  = mv_nonce
+      iv_uri    = lv_uri
+      iv_method = lv_method
+      iv_cnonse = lv_cnonce ).
+
+* client response
+    lv_auth = |Digest username="{ mv_username
+      }", realm="{ mv_realm
+      }", nonce="{ mv_nonce
+      }", uri="{ lv_uri
+      }", qop={ mv_qop
+      }, nc={ gv_nc
+      }, cnonce="{ lv_cnonce
+      }", response="{ lv_response }"|.
+
+    ii_client->request->set_header_field(
+      name  = 'Authorization'
+      value = lv_auth ).
+
+  ENDMETHOD.
+
+  METHOD parse.
+
+    DATA: lv_value TYPE string.
+
+
+    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
+
+    FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm.
+    FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop.
+    FIND REGEX 'nonce="([\w=/+\$]+)"' IN lv_value SUBMATCHES mv_nonce.
+
+  ENDMETHOD.
+
+  METHOD md5.
+
+    DATA: lv_xstr TYPE xstring,
+          lv_hash TYPE xstring.
+
+
+    lv_xstr = lcl_convert=>string_to_xstring_utf8( iv_data ).
+
+    CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
+      EXPORTING
+        alg            = 'MD5'
+        data           = lv_xstr
+      IMPORTING
+        hashxstring    = lv_hash
+      EXCEPTIONS
+        unknown_alg    = 1
+        param_error    = 2
+        internal_error = 3
+        OTHERS         = 4.
+    IF sy-subrc <> 0.
+      BREAK-POINT.
+    ENDIF.
+
+    rv_hash = lv_hash.
+    TRANSLATE rv_hash TO LOWER CASE.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_http DEFINITION FINAL.
 
   PUBLIC SECTION.
+    CONSTANTS: BEGIN OF gc_scheme,
+                 digest TYPE string VALUE 'Digest',
+               END OF gc_scheme.
+
     CLASS-METHODS:
-      check_http_200
-        IMPORTING ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception,
-      send_receive
-        IMPORTING ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception,
       get_agent
         RETURNING VALUE(rv_agent) TYPE string,
       create_by_url
         IMPORTING iv_url           TYPE string
                   iv_service       TYPE string
-        RETURNING VALUE(ri_client) TYPE REF TO if_http_client
+        RETURNING VALUE(ro_client) TYPE REF TO lcl_http_client
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -31,7 +345,9 @@ CLASS lcl_http DEFINITION FINAL.
         RETURNING VALUE(rv_bool) TYPE abap_bool,
       acquire_login_details
         IMPORTING ii_client TYPE REF TO if_http_client
+                  io_client TYPE REF TO lcl_http_client
                   iv_url    TYPE string
+        RETURNING VALUE(rv_scheme) TYPE string
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -47,9 +363,10 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri                   TYPE string,
-          lv_expect_potentual_auth TYPE abap_bool,
-          lo_settings              TYPE REF TO lcl_settings.
+    DATA: lv_uri      TYPE string,
+          lv_scheme   TYPE string,
+          li_client   TYPE REF TO if_http_client,
+          lo_settings TYPE REF TO lcl_settings.
 
 
     lo_settings = lcl_app=>settings( )->read( ).
@@ -61,45 +378,50 @@ CLASS lcl_http IMPLEMENTATION.
         proxy_host    = lo_settings->get_proxy_url( )
         proxy_service = lo_settings->get_proxy_port( )
       IMPORTING
-        client        = ri_client ).
+        client        = li_client ).
+
+    CREATE OBJECT ro_client
+      EXPORTING
+        ii_client = li_client.
 
     IF is_local_system( iv_url ) = abap_true.
-      ri_client->send_sap_logon_ticket( ).
+      li_client->send_sap_logon_ticket( ).
     ENDIF.
 
-    ri_client->request->set_cdata( '' ).
-    ri_client->request->set_header_field(
+    li_client->request->set_cdata( '' ).
+    li_client->request->set_header_field(
         name  = '~request_method'
         value = 'GET' ).
-    ri_client->request->set_header_field(
+    li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).                             "#EC NOTEXT
     lv_uri = lcl_url=>path_name( iv_url ) &&
              '/info/refs?service=git-' &&
              iv_service &&
              '-pack'.
-    ri_client->request->set_header_field(
+    li_client->request->set_header_field(
         name  = '~request_uri'
         value = lv_uri ).
 
     " Disable internal auth dialog (due to its unclarity)
-    ri_client->propertytype_logon_popup = if_http_client=>co_disabled.
+    li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    lv_expect_potentual_auth = boolc(
-      lcl_login_manager=>load( iv_uri    = iv_url
-                               ii_client = ri_client ) IS INITIAL ).
+    lcl_login_manager=>load( iv_uri    = iv_url
+                             ii_client = li_client ).
 
-    send_receive( ri_client ).
-    IF lv_expect_potentual_auth = abap_true
-        AND check_auth_requested( ri_client ) = abap_true.
-      acquire_login_details( ii_client = ri_client
-                             iv_url    = iv_url ).
-      send_receive( ri_client ).
+    ro_client->send_receive( ).
+    IF check_auth_requested( li_client ) = abap_true.
+      lv_scheme = acquire_login_details( ii_client = li_client
+                                         io_client = ro_client
+                                         iv_url    = iv_url ).
+      ro_client->send_receive( ).
     ENDIF.
-    check_http_200( ri_client ).
+    ro_client->check_http_200( ).
 
-    lcl_login_manager=>save( iv_uri    = iv_url
-                             ii_client = ri_client ).
+    IF lv_scheme <> gc_scheme-digest.
+      lcl_login_manager=>save( iv_uri    = iv_url
+                               ii_client = li_client ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -129,37 +451,6 @@ CLASS lcl_http IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD send_receive.
-
-    DATA lv_text TYPE string.
-
-    ii_client->send( ).
-    ii_client->receive(
-      EXCEPTIONS
-        http_communication_failure = 1
-        http_invalid_state         = 2
-        http_processing_failed     = 3
-        OTHERS                     = 4 ).
-    IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-          " make sure:
-          " a) SSL is setup properly in STRUST
-          " b) no firewalls
-          " check trace file in transaction SMICM
-          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-        WHEN 2.
-          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-        WHEN 3.
-          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-        WHEN OTHERS.
-          lv_text = 'Another error occured'.                "#EC NOTEXT
-      ENDCASE.
-      lcx_exception=>raise( lv_text ).
-    ENDIF.
-
-  ENDMETHOD.  "send_receive
-
   METHOD check_auth_requested.
 
     DATA: lv_code TYPE i.
@@ -174,12 +465,14 @@ CLASS lcl_http IMPLEMENTATION.
   ENDMETHOD.  "check_auth_requested
 
   METHOD acquire_login_details.
-    DATA:
-      lv_default_user TYPE string,
-      lv_user         TYPE string,
-      lv_pass         TYPE string.
 
-    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
+    DATA: lv_default_user TYPE string,
+          lv_user         TYPE string,
+          lv_pass         TYPE string,
+          lo_digest       TYPE REF TO lcl_http_digest.
+
+
+    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
@@ -194,42 +487,31 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_username( iv_url = iv_url iv_username = lv_user ).
+      lcl_app=>user( )->set_repo_username( iv_url      = iv_url
+                                           iv_username = lv_user ).
     ENDIF.
 
-    ii_client->authenticate(
-      username = lv_user
-      password = lv_pass ).
+    rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
+    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
 
-  ENDMETHOD.  "acquire_login_details
-
-  METHOD check_http_200.
-
-    DATA: lv_code TYPE i,
-          lv_text TYPE string.
-
-
-    ii_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-    CASE lv_code.
-      WHEN 200.
-        RETURN.
-      WHEN 302.
-        lcx_exception=>raise( 'HTTP redirect, check URL' ).
-      WHEN 401.
-        lcx_exception=>raise( 'HTTP 401, unauthorized' ).
-      WHEN 403.
-        lcx_exception=>raise( 'HTTP 403, forbidden' ).
-      WHEN 404.
-        lcx_exception=>raise( 'HTTP 404, not found' ).
-      WHEN 415.
-        lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
+    CASE rv_scheme.
+      WHEN gc_scheme-digest.
+* https://en.wikipedia.org/wiki/Digest_access_authentication
+* e.g. used by https://www.gerritcodereview.com/
+        CREATE OBJECT lo_digest
+          EXPORTING
+            ii_client   = ii_client
+            iv_username = lv_user
+            iv_password = lv_pass.
+        lo_digest->run( ii_client ).
+        io_client->set_digest( lo_digest ).
       WHEN OTHERS.
-        lv_text = ii_client->response->get_cdata( ).
-        lcx_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
+* https://en.wikipedia.org/wiki/Basic_access_authentication
+        ii_client->authenticate(
+          username = lv_user
+          password = lv_pass ).
     ENDCASE.
 
-  ENDMETHOD.                                                "http_200
+  ENDMETHOD.  "acquire_login_details
 
 ENDCLASS.

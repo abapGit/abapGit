@@ -34,9 +34,6 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RETURNING VALUE(ro_branch_list) TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
-*    CLASS-METHODS class_constructor.
-
-
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_service,
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
@@ -46,7 +43,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
-      EXPORTING ei_client      TYPE REF TO if_http_client
+      EXPORTING eo_client      TYPE REF TO lcl_http_client
                 eo_branch_list TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
@@ -54,19 +51,13 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
                 iv_branch_name TYPE string
-      EXPORTING ei_client      TYPE REF TO if_http_client
+      EXPORTING eo_client      TYPE REF TO lcl_http_client
                 ev_branch      TYPE ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
       EXPORTING ev_pack TYPE xstring
       CHANGING  cv_data TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS set_headers
-      IMPORTING iv_url     TYPE string
-                iv_service TYPE string
-                ii_client  TYPE REF TO if_http_client
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
@@ -169,37 +160,6 @@ ENDCLASS.                    "lcl_pack DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_git_transport IMPLEMENTATION.
 
-  METHOD set_headers.
-
-    DATA: lv_value TYPE string.
-
-
-    ii_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'POST' ).
-
-    lv_value = lcl_url=>path_name( iv_url ) &&
-      '/git-' &&
-      iv_service &&
-      '-pack'.
-    ii_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_value ).
-
-    lv_value = 'application/x-git-'
-                  && iv_service && '-pack-request'.         "#EC NOTEXT
-    ii_client->request->set_header_field(
-        name  = 'Content-Type'
-        value = lv_value ).                                 "#EC NOTEXT
-
-    lv_value = 'application/x-git-'
-                  && iv_service && '-pack-result'.          "#EC NOTEXT
-    ii_client->request->set_header_field(
-        name  = 'Accept'
-        value = lv_value ).                                 "#EC NOTEXT
-
-  ENDMETHOD.                    "set_headers
-
   METHOD find_branch.
 
     DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
@@ -209,7 +169,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_url          = iv_url
         iv_service      = iv_service
       IMPORTING
-        ei_client       = ei_client
+        eo_client       = eo_client
         eo_branch_list  = lo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
@@ -220,7 +180,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD branches.
 
-    DATA: li_client TYPE REF TO if_http_client.
+    DATA: lo_client TYPE REF TO lcl_http_client.
 
 
     lcl_git_transport=>branch_list(
@@ -228,10 +188,10 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_url         = iv_url
         iv_service     = c_service-upload
       IMPORTING
-        ei_client      = li_client
+        eo_client      = lo_client
         eo_branch_list = ro_branch_list ).
 
-    li_client->close( ).
+    lo_client->close( ).
 
   ENDMETHOD.                    "branches
 
@@ -240,11 +200,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
     DATA: lv_data TYPE string.
 
 
-    ei_client = lcl_http=>create_by_url(
+    eo_client = lcl_http=>create_by_url(
       iv_url     = iv_url
       iv_service = iv_service ).
 
-    lv_data = ei_client->response->get_cdata( ).
+    lv_data = eo_client->get_cdata( ).
 
     CREATE OBJECT eo_branch_list
       EXPORTING
@@ -254,7 +214,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: li_client   TYPE REF TO if_http_client,
+    DATA: lo_client   TYPE REF TO lcl_http_client,
           lv_cmd_pkt  TYPE string,
           lv_line     TYPE string,
           lv_tmp      TYPE xstring,
@@ -270,12 +230,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-receive
         iv_branch_name = iv_branch_name
       IMPORTING
-        ei_client      = li_client ).
+        eo_client      = lo_client ).
 
-    set_headers(
+    lo_client->set_headers(
       iv_url     = iv_url
-      iv_service = c_service-receive
-      ii_client  = li_client ).
+      iv_service = c_service-receive ).
 
     lv_cap_list = 'report-status agent=' && lcl_http=>get_agent( ) ##NO_TEXT.
 
@@ -295,13 +254,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     CONCATENATE lv_tmp iv_pack INTO lv_xstring IN BYTE MODE.
 
-    li_client->request->set_data( lv_xstring ).
-
-    lcl_http=>send_receive( li_client ).
-    lcl_http=>check_http_200( li_client ).
-
-    lv_xstring = li_client->response->get_data( ).
-    li_client->close( ).
+    lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
@@ -350,7 +303,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: li_client   TYPE REF TO if_http_client,
+    DATA: lo_client   TYPE REF TO lcl_http_client,
           lv_buffer   TYPE string,
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
@@ -369,7 +322,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-upload
         iv_branch_name = io_repo->get_branch_name( )
       IMPORTING
-        ei_client      = li_client
+        eo_client      = lo_client
         ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.
@@ -379,9 +332,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lt_branches = it_branches.
     ENDIF.
 
-    set_headers( iv_url     = io_repo->get_url( )
-                 iv_service = c_service-upload
-                 ii_client  = li_client ).
+    lo_client->set_headers( iv_url     = io_repo->get_url( )
+                            iv_service = c_service-upload ).
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
@@ -403,12 +355,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
              && '0000'
              && '0009done' && gc_newline.
 
-* do not use set_cdata as it modifies the Content-Type header field
-    li_client->request->set_data( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
-    lcl_http=>send_receive( li_client ).
-    lcl_http=>check_http_200( li_client ).
-    lv_xstring = li_client->response->get_data( ).
-    li_client->close( ).
+    lv_xstring = lo_client->send_receive_close( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
     parse( IMPORTING ev_pack = lv_pack
            CHANGING cv_data = lv_xstring ).
