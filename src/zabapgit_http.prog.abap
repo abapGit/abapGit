@@ -15,8 +15,8 @@ CLASS lcl_http DEFINITION FINAL.
       get_agent
         RETURNING VALUE(rv_agent) TYPE string,
       create_by_url
-        IMPORTING iv_url TYPE string
-                  iv_service     TYPE string
+        IMPORTING iv_url           TYPE string
+                  iv_service       TYPE string
         RETURNING VALUE(ri_client) TYPE REF TO if_http_client
         RAISING   lcx_exception.
 
@@ -26,6 +26,9 @@ CLASS lcl_http DEFINITION FINAL.
         IMPORTING ii_client                TYPE REF TO if_http_client
         RETURNING VALUE(rv_auth_requested) TYPE abap_bool
         RAISING   lcx_exception,
+      is_local_system
+        IMPORTING iv_url         TYPE string
+        RETURNING VALUE(rv_bool) TYPE abap_bool,
       acquire_login_details
         IMPORTING ii_client TYPE REF TO if_http_client
                   iv_url    TYPE string
@@ -60,6 +63,10 @@ CLASS lcl_http IMPLEMENTATION.
       IMPORTING
         client        = ri_client ).
 
+    IF is_local_system( iv_url ) = abap_true.
+      ri_client->send_sap_logon_ticket( ).
+    ENDIF.
+
     ri_client->request->set_cdata( '' ).
     ri_client->request->set_header_field(
         name  = '~request_method'
@@ -84,7 +91,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     send_receive( ri_client ).
     IF lv_expect_potentual_auth = abap_true
-       AND check_auth_requested( ri_client ) = abap_true.
+        AND check_auth_requested( ri_client ) = abap_true.
       acquire_login_details( ii_client = ri_client
                              iv_url    = iv_url ).
       send_receive( ri_client ).
@@ -93,6 +100,32 @@ CLASS lcl_http IMPLEMENTATION.
 
     lcl_login_manager=>save( iv_uri    = iv_url
                              ii_client = ri_client ).
+
+  ENDMETHOD.
+
+  METHOD is_local_system.
+
+    DATA: lv_host TYPE string,
+          lt_list TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY.
+
+
+    CALL FUNCTION 'ICM_GET_INFO2'
+      TABLES
+        servlist           = lt_list
+      EXCEPTIONS
+        icm_error          = 1
+        icm_timeout        = 2
+        icm_not_authorized = 3
+        OTHERS             = 4.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    FIND REGEX 'https?://([^/^:]*)' IN iv_url
+      SUBMATCHES lv_host.
+
+    READ TABLE lt_list WITH KEY hostname = lv_host TRANSPORTING NO FIELDS.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
