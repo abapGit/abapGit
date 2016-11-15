@@ -41,8 +41,8 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
       RETURNING VALUE(ro_log) TYPE REF TO lcl_log.
 
   PRIVATE SECTION.
-    DATA mo_repo TYPE REF TO lcl_repo.
-    DATA mo_log  TYPE REF TO lcl_log.
+    DATA: mo_repo TYPE REF TO lcl_repo,
+          mo_log  TYPE REF TO lcl_log.
 
     METHODS get_local
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
@@ -85,6 +85,7 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
   METHOD list.
 
+* todo, create mo_log in constuctor instead?
     CREATE OBJECT mo_log.
 
     IF mo_repo->is_offline( ) = abap_true.
@@ -103,7 +104,10 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
 
-    SORT rt_repo_items BY sortkey obj_type obj_name ASCENDING.
+    SORT rt_repo_items BY
+      sortkey ASCENDING
+      obj_type ASCENDING
+      obj_name ASCENDING.
 
   ENDMETHOD.  "list
 
@@ -170,11 +174,13 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
   ENDMETHOD. "filter_changes
 
   METHOD get_local.
+* todo, should this method be part of lcl_repo instead?
 
-    DATA: lt_tadir       TYPE ty_tadir_tt.
+    DATA: lt_tadir TYPE ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_repo_item> LIKE LINE OF rt_repo_items,
                    <ls_tadir>     LIKE LINE OF lt_tadir.
+
 
     lt_tadir = lcl_tadir=>read( mo_repo->get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -188,6 +194,8 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
   ENDMETHOD.  "get_local
 
   METHOD get_remote.
+* todo, name "get_remote" is misleading? it does a lot more than just fetching
+* remote objects
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
           ls_file        TYPE ty_repo_file,
@@ -195,6 +203,7 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
     FIELD-SYMBOLS: <status>       LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
+
 
     lo_repo_online ?= mo_repo.
     lt_status       = lo_repo_online->status( mo_log ).
@@ -352,6 +361,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+
     " Reinit, for the case of type change
     mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
 
@@ -359,7 +369,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     TRY.
 
-        CREATE OBJECT lo_browser EXPORTING io_repo = mo_repo.
+        CREATE OBJECT lo_browser
+          EXPORTING
+            io_repo = mo_repo.
+
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
@@ -369,7 +382,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           _reduce_state lv_rstate <ls_item>-rstate.
         ENDLOOP.
 
-        ro_html->add( render_head_menu( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ro_html->add( render_head_menu( iv_lstate = lv_lstate
+                                        iv_rstate = lv_rstate ) ).
 
         lo_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.

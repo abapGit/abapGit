@@ -61,24 +61,15 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     rt_results = calculate_status(
-      it_local           = io_repo->get_files_local( io_log )
-      it_remote          = io_repo->get_files_remote( )
-      it_cur_state       = io_repo->get_local_checksums_per_file( ) ).
+      it_local     = io_repo->get_files_local( io_log )
+      it_remote    = io_repo->get_files_remote( )
+      it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
     lo_dot_abapgit = io_repo->get_dot_abapgit( ).
 
     " Remove ignored files, fix .abapgit
     LOOP AT rt_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
-
-      " Crutch for .abapgit -> it is always match as generated dynamically
-      " However this is probably the place to compare it when .abapgit editing
-      " tool will be implemented
-      IF <ls_result>-path = gc_root_dir AND <ls_result>-filename = gc_dot_abapgit.
-        <ls_result>-match = abap_true.
-        CLEAR: <ls_result>-lstate, <ls_result>-rstate.
-        CONTINUE.
-      ENDIF.
 
       IF lo_dot_abapgit->is_ignored(
           iv_path     = <ls_result>-path
@@ -107,6 +98,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
                    <ls_local>  LIKE LINE OF it_local.
+
 
     lt_state_idx = it_cur_state. " Force sort it
     lt_remote    = it_remote.
