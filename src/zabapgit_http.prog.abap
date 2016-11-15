@@ -2,13 +2,61 @@
 *&  Include           ZABAPGIT_HTTP
 *&---------------------------------------------------------------------*
 
-CLASS lcl_http_client DEFINITION FINAL.
+CLASS lcl_http_digest DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS:
       constructor
+        IMPORTING
+          ii_client TYPE REF TO if_http_client
+          iv_username TYPE string
+          iv_password TYPE string,
+      run
+        IMPORTING
+          ii_client TYPE REF TO if_http_client.
+
+  PRIVATE SECTION.
+    DATA: mv_ha1      TYPE string,
+          mv_username TYPE string,
+          mv_realm    TYPE string,
+          mv_qop      TYPE string,
+          mv_nonce    TYPE string.
+
+    CLASS-DATA: gv_nc TYPE n LENGTH 8.
+
+    CLASS-METHODS:
+      md5
+        IMPORTING
+          iv_data        TYPE string
+        RETURNING
+          VALUE(rv_hash) TYPE string.
+
+    METHODS:
+      hash
+        IMPORTING
+          iv_qop             TYPE string
+          iv_nonce           TYPE string
+          iv_uri             TYPE string
+          iv_method          TYPE string
+          iv_cnonse          TYPE string
+       RETURNING
+          VALUE(rv_response) TYPE string,
+      parse
+        IMPORTING
+          ii_client TYPE REF TO if_http_client.
+
+ENDCLASS.
+
+CLASS lcl_http_client DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    METHODS:
+      constructor
         IMPORTING ii_client TYPE REF TO if_http_client,
       close,
+      set_digest
+        IMPORTING io_digest TYPE REF TO lcl_http_digest,
       send_receive_close
         IMPORTING
           iv_data TYPE xstring
@@ -27,7 +75,8 @@ CLASS lcl_http_client DEFINITION FINAL.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    DATA: mi_client TYPE REF TO if_http_client.
+    DATA: mi_client TYPE REF TO if_http_client,
+          mo_digest TYPE REF TO lcl_http_digest.
 
 ENDCLASS.
 
@@ -35,6 +84,10 @@ CLASS lcl_http_client IMPLEMENTATION.
 
   METHOD constructor.
     mi_client = ii_client.
+  ENDMETHOD.
+
+  METHOD set_digest.
+    mo_digest = io_digest.
   ENDMETHOD.
 
   METHOD send_receive_close.
@@ -84,6 +137,10 @@ CLASS lcl_http_client IMPLEMENTATION.
     mi_client->request->set_header_field(
         name  = 'Accept'
         value = lv_value ).                                 "#EC NOTEXT
+
+    IF mo_digest IS BOUND.
+      mo_digest->run( mi_client ).
+    ENDIF.
 
   ENDMETHOD.                    "set_headers
 
@@ -149,87 +206,44 @@ CLASS lcl_http_client IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_http_digest DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS:
-      run
-        IMPORTING
-          ii_client TYPE REF TO if_http_client
-          iv_username TYPE string
-          iv_password TYPE string.
-
-  PRIVATE SECTION.
-    CLASS-DATA: gv_nc TYPE n LENGTH 8.
-
-    CLASS-METHODS:
-      parse
-        IMPORTING
-          iv_value  TYPE string
-        EXPORTING
-          ev_scheme TYPE string
-          ev_realm  TYPE string
-          ev_qop    TYPE string
-          ev_nonce  TYPE string,
-      md5
-        IMPORTING
-          iv_data        TYPE string
-        RETURNING
-          VALUE(rv_hash) TYPE string,
-      hash
-        IMPORTING
-          iv_qop             TYPE string
-          iv_realm           TYPE string
-          iv_nonce           TYPE string
-          iv_username        TYPE clike
-          iv_uri             TYPE string
-          iv_method          TYPE string
-          iv_cnonse          TYPE string
-          iv_password        TYPE clike
-        RETURNING
-          VALUE(rv_response) TYPE string.
-
-ENDCLASS.
-
 CLASS lcl_http_digest IMPLEMENTATION.
+
+  METHOD constructor.
+
+    parse( ii_client ).
+
+    mv_ha1 = md5( |{ iv_username }:{ mv_realm }:{ iv_password }| ).
+
+    mv_username = iv_username.
+
+  ENDMETHOD.
 
   METHOD hash.
 
-    DATA(lv_ha1) = md5( |{ iv_username }:{ iv_realm }:{ iv_password }| ).
-    DATA(lv_ha2) = md5( |{ iv_method }:{ iv_uri }| ).
+    DATA: lv_ha2 TYPE string.
 
-    rv_response = md5( |{ lv_ha1 }:{ iv_nonce }:{ gv_nc }:{ iv_cnonse }:{ iv_qop }:{ lv_ha2 }| ).
+
+    lv_ha2 = md5( |{ iv_method }:{ iv_uri }| ).
+
+    ASSERT NOT iv_cnonse IS INITIAL.
+
+    rv_response = md5( |{ mv_ha1 }:{ iv_nonce }:{ gv_nc }:{ iv_cnonse }:{ iv_qop }:{ lv_ha2 }| ).
 
   ENDMETHOD.
 
   METHOD run.
 
     DATA: lv_value    TYPE string,
-          lv_scheme   TYPE string,
-          lv_realm    TYPE string,
           lv_response TYPE string,
           lv_method   TYPE string,
-          lv_uri      TYPE string,
-          lv_auth     TYPE string,
           lv_cnonce   TYPE string,
-          lv_qop      TYPE string,
-          lv_nonce    TYPE string.
+          lv_uri      TYPE string,
+          lv_auth     TYPE string.
 
 
-    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
+    ASSERT NOT mv_nonce IS INITIAL.
 
-    parse(
-      EXPORTING
-        iv_value  = lv_value
-      IMPORTING
-        ev_scheme = lv_scheme
-        ev_realm  = lv_realm
-        ev_qop    = lv_qop
-        ev_nonce  = lv_nonce ).
-
-    ASSERT NOT lv_nonce IS INITIAL.
-
-    lv_method = 'GET'.
+    lv_method = ii_client->request->get_header_field( '~request_method' ).
     lv_uri = ii_client->request->get_header_field( '~request_uri' ).
 
     CALL FUNCTION 'GENERAL_GET_RANDOM_STRING'
@@ -239,21 +253,18 @@ CLASS lcl_http_digest IMPLEMENTATION.
         random_string = lv_cnonce.
 
     lv_response = hash(
-      iv_qop      = lv_qop
-      iv_realm    = lv_realm
-      iv_nonce    = lv_nonce
-      iv_username = iv_username
-      iv_uri      = lv_uri
-      iv_method   = lv_method
-      iv_cnonse   = lv_cnonce
-      iv_password = iv_password ).
+      iv_qop    = mv_qop
+      iv_nonce  = mv_nonce
+      iv_uri    = lv_uri
+      iv_method = lv_method
+      iv_cnonse = lv_cnonce ).
 
 * client response
-    lv_auth = |Digest username="{ iv_username
-      }", realm="{ lv_realm
-      }", nonce="{ lv_nonce
+    lv_auth = |Digest username="{ mv_username
+      }", realm="{ mv_realm
+      }", nonce="{ mv_nonce
       }", uri="{ lv_uri
-      }", qop={ lv_qop
+      }", qop={ mv_qop
       }, nc={ gv_nc
       }, cnonce="{ lv_cnonce
       }", response="{ lv_response }"|.
@@ -266,15 +277,14 @@ CLASS lcl_http_digest IMPLEMENTATION.
 
   METHOD parse.
 
-    CLEAR: ev_scheme,
-           ev_realm,
-           ev_qop,
-           ev_nonce.
+    DATA: lv_value TYPE string.
 
-    FIND REGEX '^(\w+)' IN iv_value SUBMATCHES ev_scheme.
-    FIND REGEX 'realm="([\w ]+)"' IN iv_value SUBMATCHES ev_realm.
-    FIND REGEX 'qop="(\w+)"' IN iv_value SUBMATCHES ev_qop.
-    FIND REGEX 'nonce="([\w=/+\$]+)"' IN iv_value SUBMATCHES ev_nonce.
+
+    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
+
+    FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm.
+    FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop.
+    FIND REGEX 'nonce="([\w=/+\$]+)"' IN lv_value SUBMATCHES mv_nonce.
 
   ENDMETHOD.
 
@@ -311,6 +321,10 @@ ENDCLASS.
 CLASS lcl_http DEFINITION FINAL.
 
   PUBLIC SECTION.
+    CONSTANTS: BEGIN OF gc_scheme,
+                 digest TYPE string VALUE 'Digest',
+               END OF gc_scheme.
+
     CLASS-METHODS:
       get_agent
         RETURNING VALUE(rv_agent) TYPE string,
@@ -331,7 +345,9 @@ CLASS lcl_http DEFINITION FINAL.
         RETURNING VALUE(rv_bool) TYPE abap_bool,
       acquire_login_details
         IMPORTING ii_client TYPE REF TO if_http_client
+                  io_client TYPE REF TO lcl_http_client
                   iv_url    TYPE string
+        RETURNING VALUE(rv_scheme) TYPE string
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -347,10 +363,10 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri                   TYPE string,
-          lv_expect_potentual_auth TYPE abap_bool,
-          li_client                TYPE REF TO if_http_client,
-          lo_settings              TYPE REF TO lcl_settings.
+    DATA: lv_uri      TYPE string,
+          lv_scheme   TYPE string,
+          li_client   TYPE REF TO if_http_client,
+          lo_settings TYPE REF TO lcl_settings.
 
 
     lo_settings = lcl_app=>settings( )->read( ).
@@ -395,14 +411,17 @@ CLASS lcl_http IMPLEMENTATION.
 
     ro_client->send_receive( ).
     IF check_auth_requested( li_client ) = abap_true.
-      acquire_login_details( ii_client = li_client
-                             iv_url    = iv_url ).
+      lv_scheme = acquire_login_details( ii_client = li_client
+                                         io_client = ro_client
+                                         iv_url    = iv_url ).
       ro_client->send_receive( ).
     ENDIF.
     ro_client->check_http_200( ).
 
-    lcl_login_manager=>save( iv_uri    = iv_url
-                             ii_client = li_client ).
+    IF lv_scheme <> gc_scheme-digest.
+      lcl_login_manager=>save( iv_uri    = iv_url
+                               ii_client = li_client ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -448,9 +467,9 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD acquire_login_details.
 
     DATA: lv_default_user TYPE string,
-          lv_scheme       TYPE string,
           lv_user         TYPE string,
-          lv_pass         TYPE string.
+          lv_pass         TYPE string,
+          lo_digest       TYPE REF TO lcl_http_digest.
 
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
@@ -472,17 +491,20 @@ CLASS lcl_http IMPLEMENTATION.
                                            iv_username = lv_user ).
     ENDIF.
 
-    lv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
-    FIND REGEX '^(\w+)' IN lv_scheme SUBMATCHES lv_scheme.
+    rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
+    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
 
-    CASE lv_scheme.
-      WHEN 'Digest'.
+    CASE rv_scheme.
+      WHEN gc_scheme-digest.
 * https://en.wikipedia.org/wiki/Digest_access_authentication
-* eg used by https://www.gerritcodereview.com/
-        lcl_http_digest=>run(
-          ii_client   = ii_client
-          iv_username = lv_user
-          iv_password = lv_pass ).
+* e.g. used by https://www.gerritcodereview.com/
+        CREATE OBJECT lo_digest
+          EXPORTING
+            ii_client   = ii_client
+            iv_username = lv_user
+            iv_password = lv_pass.
+        lo_digest->run( ii_client ).
+        io_client->set_digest( lo_digest ).
       WHEN OTHERS.
 * https://en.wikipedia.org/wiki/Basic_access_authentication
         ii_client->authenticate(
