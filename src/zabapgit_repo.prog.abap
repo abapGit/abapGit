@@ -22,6 +22,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   lcx_exception,
       get_local_checksums
         RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+      get_local_checksums_per_file
+        RETURNING VALUE(rt_checksums) TYPE ty_file_signatures_tt,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE ty_files_tt
         RAISING   lcx_exception,
@@ -41,8 +43,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         IMPORTING iv_drop_cache TYPE abap_bool DEFAULT abap_false
         RAISING lcx_exception,
       refresh_local, " For testing purposes, maybe removed later
-      build_local_checksums
-        RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt
+      update_local_checksums
+        IMPORTING it_files            TYPE ty_file_signatures_tt
         RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
@@ -114,6 +116,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       status
         IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_results) TYPE ty_results_tt
+        RAISING   lcx_exception,
+      reset_status,
+      rebuild_local_checksums
         RAISING   lcx_exception,
       push
         IMPORTING is_comment TYPE ty_comment

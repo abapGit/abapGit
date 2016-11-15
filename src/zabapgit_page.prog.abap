@@ -43,6 +43,11 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html_helper
       RAISING   lcx_exception.
 
+    METHODS render_item_state
+        IMPORTING iv1            TYPE char1
+                  iv2            TYPE char1
+        RETURNING VALUE(rv_html) TYPE string.
+
     METHODS render_branch_span
       IMPORTING iv_branch             TYPE string
                 io_repo               TYPE REF TO lcl_repo_online
@@ -136,6 +141,42 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
+
+  METHOD render_item_state.
+
+    FIELD-SYMBOLS <state> TYPE char1.
+
+    rv_html = '<span class="state-block">'.
+
+    DO 2 TIMES.
+      CASE sy-index.
+        WHEN 1.
+          ASSIGN iv1 TO <state>.
+        WHEN 2.
+          ASSIGN iv2 TO <state>.
+      ENDCASE.
+
+      CASE <state>.
+        WHEN gc_state-unchanged.  "None or unchanged
+          IF iv1 = gc_state-added OR iv2 = gc_state-added.
+            rv_html = rv_html && |<span class="none" title="Not exists">X</span>|.
+          ELSE.
+            rv_html = rv_html && |<span class="none" title="No changes">&nbsp;</span>|.
+          ENDIF.
+        WHEN gc_state-modified.   "Changed
+          rv_html = rv_html && '<span class="changed" title="Modified">M</span>'.
+        WHEN gc_state-added.      "Added new
+          rv_html = rv_html && '<span class="added" title="Added new">A</span>'.
+        WHEN gc_state-mixed.      "Multiple changes (multifile)
+          rv_html = rv_html && '<span class="mixed" title="Multiple changes">&#x25A0;</span>'.
+        WHEN gc_state-deleted.    "Deleted
+          rv_html = rv_html && '<span class="deleted" title="Deleted">D</span>'.
+      ENDCASE.
+    ENDDO.
+
+    rv_html = rv_html && '</span>'.
+
+  ENDMETHOD. "render_item_state
 
   METHOD render_branch_span.
     DATA: lv_text  TYPE string,

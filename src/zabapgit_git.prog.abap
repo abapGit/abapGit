@@ -1291,7 +1291,8 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
                 is_comment       TYPE ty_comment
                 io_stage         TYPE REF TO lcl_stage
-      RETURNING VALUE(rv_branch) TYPE ty_sha1
+      EXPORTING ev_branch        TYPE ty_sha1
+                et_updated_files TYPE ty_file_signatures_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS create_branch
@@ -1438,7 +1439,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       iv_data = lv_commit ).
 
     lcl_git_transport=>receive_pack(
-      iv_url = io_repo->get_url( )
+      iv_url         = io_repo->get_url( )
       iv_old         = io_stage->get_branch_sha1( )
       iv_new         = rv_branch
       iv_branch_name = io_stage->get_branch_name( )
@@ -1494,10 +1495,13 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
-    FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,
-                   <ls_branch> LIKE LINE OF lt_branches,
-                   <ls_exp>    LIKE LINE OF lt_expanded.
+    FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,
+                   <ls_updated> LIKE LINE OF et_updated_files,
+                   <ls_branch>  LIKE LINE OF lt_branches,
+                   <ls_exp>     LIKE LINE OF lt_expanded.
 
+
+    CLEAR et_updated_files.
 
     IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
 * objects cached in io_repo can be used, if pushing to the branch configured in repo
@@ -1517,6 +1521,11 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
+
+      " Save file ref to updated files table
+      APPEND INITIAL LINE TO et_updated_files ASSIGNING <ls_updated>.
+      MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
+
       CASE <ls_stage>-method.
         WHEN lcl_stage=>c_method-add.
 
@@ -1537,11 +1546,17 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
+
+          <ls_updated>-sha1 = lv_sha1.   "New sha1
+
         WHEN lcl_stage=>c_method-rm.
           DELETE lt_expanded
             WHERE name = <ls_stage>-file-filename
-            AND path = <ls_stage>-file-path.
+            AND   path = <ls_stage>-file-path.
           ASSERT sy-subrc = 0.
+
+          CLEAR <ls_updated>-sha1.       " Mark as deleted
+
         WHEN OTHERS.
           lcx_exception=>raise( 'stage method not supported, todo' ).
       ENDCASE.
@@ -1549,7 +1564,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lt_trees = build_trees( lt_expanded ).
 
-    rv_branch = receive_pack( is_comment = is_comment
+    ev_branch = receive_pack( is_comment = is_comment
                               io_repo    = io_repo
                               it_trees   = lt_trees
                               it_blobs   = lt_blobs

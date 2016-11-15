@@ -8,11 +8,18 @@ TYPES: ty_type    TYPE c LENGTH 6,
        ty_bitbyte TYPE c LENGTH 8,
        ty_sha1    TYPE c LENGTH 40.
 
-TYPES: BEGIN OF ty_file,
+TYPES: BEGIN OF ty_file_signature,
          path     TYPE string,
          filename TYPE string,
-         data     TYPE xstring,
          sha1     TYPE ty_sha1,
+       END OF ty_file_signature.
+
+TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
+TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename.
+
+TYPES: BEGIN OF ty_file.
+       INCLUDE TYPE ty_file_signature.
+TYPES:   data     TYPE xstring,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
@@ -29,7 +36,9 @@ TYPES: BEGIN OF ty_item,
          obj_type TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
          devclass TYPE devclass,
-       END OF ty_item.
+       END OF ty_item,
+       ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY,
+       ty_items_ts TYPE SORTED TABLE OF ty_item WITH UNIQUE KEY obj_type obj_name.
 
 TYPES: BEGIN OF ty_file_item,
          file TYPE ty_file,
@@ -54,7 +63,8 @@ TYPES: BEGIN OF ty_repo_file,
          path        TYPE string,
          filename    TYPE string,
          is_changed  TYPE abap_bool,
-         new         TYPE char1,
+         rstate      TYPE char1,
+         lstate      TYPE char1,
        END OF ty_repo_file.
 TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
@@ -92,20 +102,24 @@ TYPES: ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY.
 TYPES: BEGIN OF ty_result,
          obj_type    TYPE tadir-object,
          obj_name    TYPE tadir-obj_name,
-         match       TYPE sap_bool,
+         path        TYPE string,
          filename    TYPE string,
          package     TYPE devclass,
-         path        TYPE string,
-         new         TYPE char1,
+         match       TYPE sap_bool,
+         lstate      TYPE char1,
+         rstate      TYPE char1,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
 TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
-CONSTANTS: BEGIN OF gc_new,
-             local  TYPE char1 VALUE 'L',
-             remote TYPE char1 VALUE 'R',
-           END OF gc_new.
+CONSTANTS: BEGIN OF gc_state, " https://git-scm.com/docs/git-status
+             unchanged TYPE char1 VALUE '',
+             added     TYPE char1 VALUE 'A',
+             modified  TYPE char1 VALUE 'M',
+             deleted   TYPE char1 VALUE 'D', "For future use
+             mixed     TYPE char1 VALUE '*',
+           END OF gc_state.
 
 CONSTANTS: BEGIN OF gc_chmod,
              file       TYPE ty_chmod VALUE '100644',
@@ -144,14 +158,15 @@ CONSTANTS: gc_root_dir    TYPE string VALUE '/',
            gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
 
 CONSTANTS: BEGIN OF gc_action,
-             repo_clone         TYPE string VALUE 'repo_clone',
-             repo_refresh       TYPE string VALUE 'repo_refresh',
-             repo_remove        TYPE string VALUE 'repo_remove',
-             repo_purge         TYPE string VALUE 'repo_purge',
-             repo_newoffline    TYPE string VALUE 'repo_newoffline',
-             repo_remote_attach TYPE string VALUE 'repo_remote_attach',
-             repo_remote_detach TYPE string VALUE 'repo_remote_detach',
-             repo_remote_change TYPE string VALUE 'repo_remote_change',
+             repo_clone             TYPE string VALUE 'repo_clone',
+             repo_refresh           TYPE string VALUE 'repo_refresh',
+             repo_remove            TYPE string VALUE 'repo_remove',
+             repo_purge             TYPE string VALUE 'repo_purge',
+             repo_newoffline        TYPE string VALUE 'repo_newoffline',
+             repo_remote_attach     TYPE string VALUE 'repo_remote_attach',
+             repo_remote_detach     TYPE string VALUE 'repo_remote_detach',
+             repo_remote_change     TYPE string VALUE 'repo_remote_change',
+             repo_refresh_checksums TYPE string VALUE 'repo_refresh_checksums',
 
              abapgit_home       TYPE string VALUE 'abapgit_home',
              abapgit_install    TYPE string VALUE 'abapgit_install',

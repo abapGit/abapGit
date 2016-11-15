@@ -75,6 +75,7 @@ INCLUDE zabapgit_gui.
 
 INCLUDE zabapgit_app_impl.
 INCLUDE zabapgit_unit_test.
+INCLUDE zabapgit_migrations.          " Data migration routines
 INCLUDE zabapgit_forms.
 
 **********************************************************************

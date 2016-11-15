@@ -339,15 +339,53 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     _add '.repo_tab td.cmd {'.
     _add '  text-align: right;'.
     _add '  padding-left: 0.5em;'.
-    _add '  padding-right: 1em;'.
+    _add '  padding-right: 0.7em;'.
     _add '}'.
     _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
     _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
     _add '.repo_tab tr:first-child td { border-top: 0px; }'.
-    _add '.repo_tab td.files span     { display: block; }'.
-    _add '.repo_tab td.cmd span       { display: block; }'.
-    _add '.repo_tab td.cmd a          { display: block; }'.
-    _add 'td.current_dir              { color: #ccc; }'.
+    _add '.repo_tab td.current_dir    { color: #ccc; }'.
+
+    " States
+    _add '.repo_tab td.cmd span.state-block {'.
+    _add '  margin-left: 1em;'.
+    _add '  font-family: Consolas, Lucida Console, Courier, monospace;'.
+    _add '  font-size: x-small;'.
+    _add '  vertical-align: 13%;'.
+    _add '  display: inline-block;'.
+    _add '  text-align: center;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span {'.
+    _add '  display: inline-block;'.
+    _add '  padding: 0px 2px;'.
+    _add '  border: 1px solid #000;'.
+    _add '}'.
+
+    _add '.repo_tab td.cmd span.state-block span.added {'.
+    _add '  background-color: #69ad74; '.
+    _add '  border-color: #579e64;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.changed {'.
+    _add '  background-color: #e0c150;'.
+    _add '  border-color: #d4af25;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.mixed {'.
+    _add '  background-color: #e0c150;'.
+    _add '  border-color: #579e64;'.
+    _add '  color: #69ad74;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.deleted {'.
+    _add '  background-color: #c76861;'.
+    _add '  border-color: #b8605a;'.
+    _add '  color: white;'.
+    _add '}'.
+    _add '.repo_tab td.cmd span.state-block span.none {'.
+    _add '  background-color: #e8e8e8;'.
+    _add '  border-color: #dbdbdb;'.
+    _add '  color: #c8c8c8;'.
+    _add '}'.
 
   ENDMETHOD.  "styles
 

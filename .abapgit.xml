@@ -10,6 +10,7 @@
     <item>/LICENSE</item>
     <item>/README.md</item>
     <item>/package.json</item>
+    <item>/changelog.txt</item>
    </IGNORE>
   </DATA>
  </asx:values>

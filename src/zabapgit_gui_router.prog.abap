@@ -145,6 +145,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
         lcl_services_repo=>clone( lv_url ).
         ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_refresh_checksums.          " Rebuil local checksums
+        lcl_services_repo=>refresh_local_checksums( lv_key ).
+        ev_state = gc_event_state-re_render.
 
         " ZIP services actions
       WHEN gc_action-zip_import.                      " Import repo from ZIP
