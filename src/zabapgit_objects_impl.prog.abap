@@ -18,7 +18,9 @@ CLASS lcl_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
 
-    LOOP AT ct_results ASSIGNING <ls_result>.
+    LOOP AT ct_results ASSIGNING <ls_result>
+        WHERE NOT obj_type IS INITIAL.
+
       lv_index = sy-tabix.
 
       IF <ls_result>-lstate IS NOT INITIAL

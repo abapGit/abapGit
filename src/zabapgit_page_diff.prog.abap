@@ -74,9 +74,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       READ TABLE lt_status ASSIGNING <ls_status>
         WITH KEY path = is_file-path filename = is_file-filename.
 
-      append_diff( it_remote   = lt_remote
-                   it_local    = lt_local
-                   is_status   = <ls_status> ).
+      append_diff( it_remote = lt_remote
+                   it_local  = lt_local
+                   is_status = <ls_status> ).
 
     ELSEIF is_object IS NOT INITIAL.
 
@@ -85,21 +85,20 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         AND   obj_name = is_object-obj_name
         AND   match IS INITIAL.
 
-        append_diff( it_remote   = lt_remote
-                     it_local    = lt_local
-                     is_status   = <ls_status> ).
+        append_diff( it_remote = lt_remote
+                     it_local  = lt_local
+                     is_status = <ls_status> ).
 
       ENDLOOP.
 
     ELSE. " For the whole repo
 
       LOOP AT lt_status ASSIGNING <ls_status>
-        WHERE obj_type IS NOT INITIAL
-        AND   match IS INITIAL.
+        WHERE match IS INITIAL.
 
-        append_diff( it_remote   = lt_remote
-                     it_local    = lt_local
-                     is_status   = <ls_status> ).
+        append_diff( it_remote = lt_remote
+                     it_local  = lt_local
+                     is_status = <ls_status> ).
 
       ENDLOOP.
 
