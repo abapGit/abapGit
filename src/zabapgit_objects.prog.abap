@@ -25,6 +25,10 @@ CLASS lcl_objects_activation DEFINITION FINAL.
     CLASS-METHODS clear.
 
   PRIVATE SECTION.
+    CLASS-METHODS fix_class_methods
+      IMPORTING iv_obj_name TYPE trobj_name
+      CHANGING  ct_objects  TYPE dwinactiv_tab.
+
     CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
                 gt_programs TYPE TABLE OF dwinactiv.
 
@@ -87,6 +91,40 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   ENDMETHOD.                    "activate
 
+  METHOD fix_class_methods.
+* function module RS_WORKING_OBJECTS_ACTIVATE assumes that
+* METH lines contains spaces between class and method name
+* however, classes named with 30 characters
+* eg. ZCL_CLAS_TESTTESTTESTTESTTESTT
+* this will not be true, so find all the method includes instead
+
+    DATA: lt_methods TYPE seop_methods_w_include,
+          lv_class   TYPE seoclsname.
+
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods,
+                   <ls_object> LIKE LINE OF ct_objects.
+
+
+    lv_class = iv_obj_name.
+
+    cl_oo_classname_service=>get_all_method_includes(
+      EXPORTING
+        clsname            = lv_class
+      RECEIVING
+        result             = lt_methods
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2 ).
+    ASSERT sy-subrc = 0.
+    DELETE ct_objects WHERE object = 'METH'.
+    LOOP AT lt_methods ASSIGNING <ls_method>.
+      APPEND INITIAL LINE TO ct_objects ASSIGNING <ls_object>.
+      <ls_object>-object = 'METH'.
+      <ls_object>-obj_name = <ls_method>-incname.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD add.
 
 * function group SEWORKINGAREA
@@ -115,6 +153,11 @@ CLASS lcl_objects_activation IMPLEMENTATION.
             OTHERS           = 2.
         IF sy-subrc <> 0.
           lcx_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
+        ENDIF.
+
+        IF iv_type = 'CLAS'.
+          fix_class_methods( EXPORTING iv_obj_name = lv_obj_name
+                             CHANGING ct_objects = lt_objects ).
         ENDIF.
 
         APPEND LINES OF lt_objects TO gt_programs.
@@ -242,7 +285,7 @@ INTERFACE lif_object.
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -750,7 +793,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -1556,12 +1599,12 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
     CLASS-METHODS is_language_installed
-      IMPORTING iv_language    TYPE langu
-      RETURNING VALUE(rv_yes)  TYPE abap_bool.
+      IMPORTING iv_language   TYPE langu
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
   PRIVATE SECTION.
 
-    CLASS-DATA: mv_langs_installed type scplangs.
+    CLASS-DATA: mv_langs_installed TYPE scplangs.
 
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt
