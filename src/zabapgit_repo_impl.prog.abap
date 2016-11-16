@@ -528,6 +528,11 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
+      lcl_progress=>show( iv_key     = 'Serialize'
+                          iv_current = sy-tabix
+                          iv_total   = lines( lt_tadir )
+                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
@@ -546,11 +551,6 @@ CLASS lcl_repo IMPLEMENTATION.
           CONTINUE.
         ENDIF.
       ENDIF.
-
-      lcl_progress=>show( iv_key     = 'Serialize'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_tadir )
-                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
 
       lt_files = lcl_objects=>serialize(
         is_item     = ls_item
