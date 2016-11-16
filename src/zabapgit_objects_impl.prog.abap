@@ -21,7 +21,8 @@ CLASS lcl_objects IMPLEMENTATION.
     LOOP AT ct_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
 
-      IF <ls_result>-lstate IS NOT INITIAL. " Modified ?
+      IF <ls_result>-lstate IS NOT INITIAL
+          AND <ls_result>-lstate <> gc_state-deleted.
         lv_question = |It looks like object {
           <ls_result>-obj_type } { <ls_result>-obj_name
           } has been modified locally, overwrite object?|.
@@ -602,8 +603,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_results = lcl_file_status=>status( io_repo ).
     DELETE lt_results WHERE
-      match = abap_true     " Full match
-      OR rstate IS INITIAL. " no remote changes, only local
+      match = abap_true.     " Full match
+*      OR rstate IS INITIAL. " no remote changes, only local
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
 

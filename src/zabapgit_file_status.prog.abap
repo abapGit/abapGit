@@ -114,7 +114,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       READ TABLE lt_remote ASSIGNING <ls_remote>
         WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
         BINARY SEARCH.
-      IF sy-subrc = 0.  " Exist L and R
+      IF sy-subrc = 0.  " Exist local and remote
         <ls_result> = build_existing(
           is_local  = <ls_local>
           is_remote = <ls_remote>
@@ -269,7 +269,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       " was not added during local file proc as was not in tadir for repo package
       IF sy-subrc = 0.
         IF ls_file_sig-sha1 = is_remote-sha1.
-          rs_result-match  = abap_true.
+          rs_result-match = abap_true.
           CLEAR rs_result-rstate.
         ELSE.
           rs_result-rstate = gc_state-modified.
