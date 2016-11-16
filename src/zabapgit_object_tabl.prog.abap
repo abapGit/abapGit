@@ -379,50 +379,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
 
-CLASS ltc_table_character_test DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION SHORT.
-  PRIVATE SECTION.
-    METHODS:
-      serialize_table FOR TESTING RAISING lcx_exception.
-ENDCLASS.
-
-CLASS ltc_table_character_test IMPLEMENTATION.
-  METHOD serialize_table.
-    "break copat.
-    DATA: lo_table TYPE REF TO lcl_object_tabl,
-          ls_item  TYPE ty_item.
-
-    ls_item-obj_name = 'ZEC_TEST_TABLE'.
-    ls_item-obj_type = 'TABL'.
-
-    CREATE OBJECT lo_table
-      EXPORTING
-        is_item     = ls_item
-        iv_language = 'E'.
-
-    DATA: lo_output TYPE REF TO lcl_xml_output,
-          lo_input  TYPE REF TO lcl_xml_input,
-
-          lt_dd03p  TYPE TABLE OF dd03p,
-          ls_dd03p  LIKE LINE OF lt_dd03p.
-    CREATE OBJECT lo_output.
-*      CATCH lcx_exception.  "
-    lo_table->lif_object~serialize( lo_output ).
-
-    DATA(a_xml) = lo_output->render( )..
-
-    CREATE OBJECT lo_input
-      EXPORTING
-        iv_xml = a_xml.
-
-    lo_input->read( EXPORTING iv_name  = 'DD03P_TABLE'
-                     CHANGING cg_data = lt_dd03p ).
-  ENDMETHOD.
-ENDCLASS.
-
 CLASS lcl_object_tabl_validation DEFINITION.
   PUBLIC SECTION.
-
-
     METHODS validate
       IMPORTING
         io_previous_version TYPE REF TO lcl_xml_input
@@ -431,10 +389,8 @@ CLASS lcl_object_tabl_validation DEFINITION.
         VALUE(rv_message)   TYPE string
       RAISING
         lcx_exception.
-
 ENDCLASS.
 CLASS lcl_object_tabl_validation IMPLEMENTATION.
-
 
   METHOD validate.
     DATA: lt_previous_table_fields TYPE TABLE OF dd03p,
@@ -446,7 +402,7 @@ CLASS lcl_object_tabl_validation IMPLEMENTATION.
         iv_name       = 'DD03P_TABLE'
       CHANGING
         cg_data       = lt_previous_table_fields
-    ).
+                                 ).
     io_current_version->read(
       EXPORTING
         iv_name       = 'DD03P_TABLE'
@@ -459,8 +415,10 @@ CLASS lcl_object_tabl_validation IMPLEMENTATION.
         INTO ls_current_table_field.
       IF sy-subrc = 0.
         IF ls_current_table_field-rollname <> ls_previous_table_field-rollname.
-          rv_message = 'Field types in a database table were changed. This may lead to inconsistencies.'.
+          rv_message = 'Fields in a database table were changed. This may lead to inconsistencies.'.
         ENDIF.
+      ELSE.
+        rv_message = 'Fields in a database table were changed. This may lead to inconsistencies.'.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -473,6 +431,8 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
       setup,
       type_changed FOR TESTING RAISING lcx_exception,
       no_type_changes FOR TESTING RAISING lcx_exception,
+      field_not_found FOR TESTING RAISING lcx_exception,
+      no_fields_no_message for testing RAISING lcx_exception,
       create_xmls
         RAISING
           lcx_exception.
@@ -483,7 +443,7 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
           mo_current_version_input_xml  TYPE REF TO lcl_xml_input,
           mt_previous_table_fields      TYPE TABLE OF dd03p,
           mt_current_table_fields       TYPE TABLE OF dd03p,
-          mv_validation_message              TYPE string.
+          mv_validation_message         TYPE string.
 
 ENDCLASS.
 
@@ -512,7 +472,7 @@ CLASS lct_table_validation IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mv_validation_message
-      exp = 'Field types in a database table were changed. This may lead to inconsistencies.' ).
+      exp = 'Fields in a database table were changed. This may lead to inconsistencies.' ).
   ENDMETHOD.
 
   METHOD no_type_changes.
@@ -536,6 +496,44 @@ CLASS lct_table_validation IMPLEMENTATION.
       act = mv_validation_message
       exp = '' ).
   ENDMETHOD.
+
+  METHOD field_not_found.
+    DATA:
+      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
+      ls_current_table_field  LIKE LINE OF mt_current_table_fields.
+
+    ls_previous_table_field-fieldname = 'FIELD1'.
+    ls_previous_table_field-rollname  = 'INT4'.
+    APPEND ls_previous_table_field TO mt_previous_table_fields.
+
+    ls_current_table_field-fieldname = 'ANOTHER_FIELD'.
+    ls_current_table_field-rollname  = 'CHAR30'.
+    APPEND ls_current_table_field TO mt_current_table_fields.
+
+    create_xmls( ).
+
+    mv_validation_message = mo_table_validator->validate(
+      io_previous_version = mo_previous_version_input_xml
+      io_current_version  = mo_current_version_input_xml ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_validation_message
+      exp = 'Fields in a database table were changed. This may lead to inconsistencies.' ).
+  ENDMETHOD.
+
+  method no_fields_no_message.
+    DATA:
+      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
+      ls_current_table_field  LIKE LINE OF mt_current_table_fields.
+
+    create_xmls( ).
+
+    mv_validation_message = mo_table_validator->validate(
+      io_previous_version = mo_previous_version_input_xml
+      io_current_version  = mo_current_version_input_xml ).
+
+    cl_abap_unit_assert=>assert_initial( mv_validation_message ).
+  endmethod.
 
 
   METHOD create_xmls.
