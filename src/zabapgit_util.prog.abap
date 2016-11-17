@@ -1017,6 +1017,7 @@ CLASS lcl_log DEFINITION FINAL.
         RETURNING VALUE(rv_count) TYPE i,
       to_html
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      clear,
       show.
 
   PRIVATE SECTION.
@@ -1080,5 +1081,9 @@ CLASS lcl_log IMPLEMENTATION.
   METHOD count.
     rv_count = lines( mt_log ).
   ENDMETHOD.
+
+  METHOD clear.
+    CLEAR mt_log.
+  ENDMETHOD.  " clear.
 
 ENDCLASS.
