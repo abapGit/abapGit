@@ -1806,8 +1806,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
                    <result> LIKE LINE OF lt_results,
-                   <state>  LIKE LINE OF lt_state,
-                   <tadir>  LIKE LINE OF lt_tadir.
+                   <state>  LIKE LINE OF lt_state.
 
     "STATE        FILE                            SHA1
     _append_state 'zclass1.clas.xml'              'C1_F1'.

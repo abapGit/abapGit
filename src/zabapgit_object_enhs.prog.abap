@@ -171,7 +171,6 @@ CLASS lcl_object_enhs IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: lv_spot_name    TYPE enhspotname,
-          lv_message      TYPE string,
           lx_root         TYPE REF TO cx_root,
           li_spot_ref     TYPE REF TO if_enh_spot_tool,
           lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def.

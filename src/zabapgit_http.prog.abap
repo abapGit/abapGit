@@ -233,8 +233,7 @@ CLASS lcl_http_digest IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lv_value    TYPE string,
-          lv_response TYPE string,
+    DATA: lv_response TYPE string,
           lv_method   TYPE string,
           lv_cnonce   TYPE string,
           lv_uri      TYPE string,

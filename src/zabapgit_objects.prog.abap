@@ -339,8 +339,6 @@ CLASS lcl_objects_files IMPLEMENTATION.
           lv_data     TYPE xstring,
           lv_abap     TYPE string.
 
-    FIELD-SYMBOLS: <ls_abap> LIKE LINE OF mt_files.
-
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'abap' ).            "#EC NOTEXT
@@ -1122,6 +1120,13 @@ CLASS lcl_objects_program IMPLEMENTATION.
         OTHERS       = 2.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'PROG, error inserting' ).
+    ENDIF.
+
+    IF is_progdir-varcl = space AND ls_progdir_new = abap_true.
+* function module UPDATE_PROGDIR does not update VARCL
+      UPDATE progdir SET varcl = is_progdir-varcl
+        WHERE name = ls_progdir_new-name
+        AND state = ls_progdir_new-state.
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'

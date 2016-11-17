@@ -611,8 +611,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   ENDMETHOD. "get_item_icon
 
   METHOD render_item.
-    DATA: lv_link TYPE string,
-          ls_file LIKE LINE OF is_item-files.
+
+    DATA: lv_link TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -674,7 +674,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD render_item_command.
 
     DATA: lv_difflink TYPE string,
-          lv_text     TYPE string,
           ls_file     LIKE LINE OF is_item-files.
 
     CREATE OBJECT ro_html.

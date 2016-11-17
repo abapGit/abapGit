@@ -52,9 +52,9 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
 
-    DATA: lv_date    TYPE dats,
-          lv_time    TYPE tims,
-          lv_ts      TYPE timestamp.
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
 
     SELECT SINGLE as4date as4time FROM dd01l
       INTO (lv_date, lv_time)
@@ -212,13 +212,13 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name         TYPE ddobjname,
-          lv_index        TYPE i,
-          ls_dd01v        TYPE dd01v,
-          lt_dd07v        TYPE TABLE OF dd07v,
-          lt_i18n_langs   TYPE TABLE OF langu,
-          lt_dd01_texts   TYPE tt_dd01_texts,
-          lt_dd07_texts   TYPE tt_dd07_texts.
+    DATA: lv_name       TYPE ddobjname,
+          lv_index      TYPE i,
+          ls_dd01v      TYPE dd01v,
+          lt_dd07v      TYPE TABLE OF dd07v,
+          lt_i18n_langs TYPE TABLE OF langu,
+          lt_dd01_texts TYPE tt_dd01_texts,
+          lt_dd07_texts TYPE tt_dd07_texts.
 
     FIELD-SYMBOLS: <lang>      LIKE LINE OF lt_i18n_langs,
                    <dd07v>     LIKE LINE OF lt_dd07v,
@@ -228,7 +228,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     " Collect additional languages
-    SELECT DISTINCT ddlanguage as langu INTO TABLE lt_i18n_langs
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
       AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
@@ -277,12 +277,12 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA: lv_name         TYPE ddobjname,
-          ls_dd01v_tmp    TYPE dd01v,
-          lt_dd07v_tmp    TYPE TABLE OF dd07v,
-          lt_i18n_langs   TYPE TABLE OF langu,
-          lt_dd01_texts   TYPE tt_dd01_texts,
-          lt_dd07_texts   TYPE tt_dd07_texts.
+    DATA: lv_name       TYPE ddobjname,
+          ls_dd01v_tmp  TYPE dd01v,
+          lt_dd07v_tmp  TYPE TABLE OF dd07v,
+          lt_i18n_langs TYPE TABLE OF langu,
+          lt_dd01_texts TYPE tt_dd01_texts,
+          lt_dd07_texts TYPE tt_dd07_texts.
 
     FIELD-SYMBOLS: <lang>      LIKE LINE OF lt_i18n_langs,
                    <dd07v>     LIKE LINE OF it_dd07v,
@@ -300,7 +300,8 @@ CLASS lcl_object_doma IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD07_TEXTS'
                   CHANGING  cg_data = lt_dd07_texts ).
 
-    SORT: lt_i18n_langs, lt_dd07_texts BY ddlanguage. " Optimization
+    SORT lt_i18n_langs.
+    SORT lt_dd07_texts BY ddlanguage. " Optimization
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
 
