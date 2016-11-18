@@ -1596,6 +1596,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS is_supported
       IMPORTING is_item        TYPE ty_item
+                iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
     CLASS-METHODS exists
@@ -1618,10 +1619,11 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS create_object
-      IMPORTING is_item       TYPE ty_item
-                iv_language   TYPE spras
-                is_metadata   TYPE ty_metadata OPTIONAL
-      RETURNING VALUE(ri_obj) TYPE REF TO lif_object
+      IMPORTING is_item        TYPE ty_item
+                iv_language    TYPE spras
+                is_metadata    TYPE ty_metadata OPTIONAL
+                iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
       RAISING   lcx_exception.
 
     CLASS-METHODS

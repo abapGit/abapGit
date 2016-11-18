@@ -277,11 +277,8 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     _add 'function debugOutput(text, dstID) {'.             "#EC NOTEXT
     _add '  var stdout = document.getElementById(dstID || "stdout");'. "#EC NOTEXT
-    _add '  if (stdout.innerHTML == "") {'.                 "#EC NOTEXT
-    _add '    stdout.innerHTML = text;'.                    "#EC NOTEXT
-    _add '  } else {'.                                      "#EC NOTEXT
-    _add '    stdout.innerHTML = stdout.innerHTML + "<br>" + text;'. "#EC NOTEXT
-    _add '  }'.                                             "#EC NOTEXT
+    _add '  var wrapped = "<p>" + text + "</p>";'.                     "#EC NOTEXT
+    _add '  stdout.innerHTML = stdout.innerHTML + wrapped;'.           "#EC NOTEXT
     _add '}'.                                               "#EC NOTEXT
 
     _add 'function submitForm(params, action) {'.           "#EC NOTEXT

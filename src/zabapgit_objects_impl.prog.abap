@@ -137,17 +137,18 @@ CLASS lcl_objects IMPLEMENTATION.
             is_item = is_item
             iv_language = iv_language.
       CATCH cx_sy_create_object_error.
-        TRY.
-* 2nd step, try looking for plugins
-            CREATE OBJECT ri_obj TYPE lcl_objects_bridge
-              EXPORTING
-                is_item = is_item.
-          CATCH cx_sy_create_object_error.
-            CONCATENATE 'Object type' is_item-obj_type 'not supported, serialize'
-              INTO lv_message
-              SEPARATED BY space.                           "#EC NOTEXT
-            lcx_exception=>raise( lv_message ).
-        ENDTRY.
+        lv_message = |Object type { is_item-obj_type } not supported, serialize|. "#EC NOTEXT
+        IF iv_native_only = abap_false.
+          TRY. " 2nd step, try looking for plugins
+              CREATE OBJECT ri_obj TYPE lcl_objects_bridge
+                EXPORTING
+                  is_item = is_item.
+            CATCH cx_sy_create_object_error.
+              lcx_exception=>raise( lv_message ).
+          ENDTRY.
+        ELSE. " No native support? -> fail
+          lcx_exception=>raise( lv_message ).
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.                    "create_object
@@ -168,8 +169,9 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD is_supported.
 
     TRY.
-        create_object( is_item = is_item
-                       iv_language = gc_english ).
+        create_object( is_item        = is_item
+                       iv_language    = gc_english
+                       iv_native_only = iv_native_only ).
         rv_bool = abap_true.
       CATCH lcx_exception.
         rv_bool = abap_false.
