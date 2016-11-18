@@ -342,7 +342,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   ENDMETHOD.  "deserialize_texts
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

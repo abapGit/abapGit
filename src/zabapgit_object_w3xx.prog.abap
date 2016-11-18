@@ -340,7 +340,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

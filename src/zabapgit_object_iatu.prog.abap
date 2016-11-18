@@ -205,7 +205,7 @@ CLASS lcl_object_iatu IMPLEMENTATION.
     lcx_exception=>raise( 'todo, IATU, jump' ).
   ENDMETHOD.                    "lif_object~jump
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

@@ -203,7 +203,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

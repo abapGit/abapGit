@@ -155,7 +155,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

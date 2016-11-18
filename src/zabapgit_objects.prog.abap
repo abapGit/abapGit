@@ -212,6 +212,30 @@ CLASS lcl_objects_files DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_objects_files DEFINITION
 
+INTERFACE lif_object_comparison_result.
+  METHODS:
+    show_confirmation_dialog,
+    is_result_complete_halt
+      RETURNING VALUE(rv_response) TYPE abap_bool.
+
+ENDINTERFACE.
+
+"Null Object Pattern
+CLASS lcl_null_comparison_result DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object_comparison_result.
+ENDCLASS.
+CLASS lcl_null_comparison_result IMPLEMENTATION.
+
+  METHOD lif_object_comparison_result~is_result_complete_halt.
+    rv_response = abap_false.
+  ENDMETHOD.
+
+  METHOD lif_object_comparison_result~show_confirmation_dialog.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
 *----------------------------------------------------------------------*
 *       INTERFACE lif_object DEFINITION
 *----------------------------------------------------------------------*
@@ -220,10 +244,10 @@ ENDCLASS.                    "lcl_objects_files DEFINITION
 INTERFACE lif_object.
 
   METHODS:
-    validate
+    compare_to_previous_version
       IMPORTING io_previous_version_xml TYPE REF TO lcl_xml_input
-      RETURNING VALUE(rv_string) type string
-      raising lcx_exception,
+      RETURNING VALUE(ro_comparison_result)        TYPE REF TO lif_object_comparison_result
+      RAISING   lcx_exception,
     serialize
       IMPORTING io_xml TYPE REF TO lcl_xml_output
       RAISING   lcx_exception,
@@ -246,7 +270,7 @@ INTERFACE lif_object.
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -690,7 +714,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 
@@ -1564,8 +1588,8 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
     CLASS-METHODS is_language_installed
-      IMPORTING iv_language    TYPE langu
-      RETURNING VALUE(rv_yes)  TYPE abap_bool.
+      IMPORTING iv_language   TYPE langu
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
     CLASS-METHODS read_object
       IMPORTING is_item       TYPE ty_item
@@ -1576,7 +1600,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CLASS-DATA: mv_langs_installed type scplangs.
+    CLASS-DATA: mv_langs_installed TYPE scplangs.
 
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt

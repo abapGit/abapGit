@@ -47,7 +47,6 @@ ENDCLASS.
 CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
-    BREAK copat.
     super->constructor( ).
     mo_repo = io_repo.
 
@@ -63,10 +62,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
-    DATA:
-      lo_object TYPE REF TO lif_object.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
+
     CLEAR: mt_staged_files.
+
     CASE iv_action.
       WHEN c_action-stage_all.
         mo_stage->reset_all( ).
@@ -85,11 +84,12 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     DATA lt_remote_files TYPE ty_files_tt.
     DATA ls_remote_file  LIKE LINE OF lt_remote_files.
-
-    lt_remote_files = mo_repo->get_files_remote( ).
+break copat.
+    DATA:
+    lo_object TYPE REF TO lif_object.
 
     DATA ls_staged_file LIKE LINE OF mt_staged_files.
-
+    lt_remote_files = mo_repo->get_files_remote( ).
     LOOP AT mt_staged_files INTO ls_staged_file WHERE file-filename NS '.abap'.
       lcl_objects=>read_object(
         EXPORTING
@@ -107,7 +107,12 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         CREATE OBJECT lo_previous_remote_version
           EXPORTING
             iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
-        lo_object->validate( lo_previous_remote_version ).
+        DATA(comparison_result) = lo_object->compare_to_previous_version( lo_previous_remote_version ).
+        comparison_result->show_confirmation_dialog( ).
+
+        IF comparison_result->is_result_complete_halt( ).
+          RAISE EXCEPTION TYPE lcx_cancel.
+        ENDIF.
       ENDIF.
     ENDLOOP.
 

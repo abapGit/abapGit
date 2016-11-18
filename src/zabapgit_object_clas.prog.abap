@@ -987,7 +987,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

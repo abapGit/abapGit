@@ -317,7 +317,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     lcx_exception=>raise( 'todo, SMIM, jump' ).
   ENDMETHOD.    "jump
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 

@@ -191,7 +191,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "jump
 
-  METHOD lif_object~validate.
+  METHOD lif_object~compare_to_previous_version.
 
   ENDMETHOD.
 
