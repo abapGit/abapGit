@@ -220,6 +220,10 @@ ENDCLASS.                    "lcl_objects_files DEFINITION
 INTERFACE lif_object.
 
   METHODS:
+    validate
+      IMPORTING io_previous_version_xml TYPE REF TO lcl_xml_input
+      RETURNING VALUE(rv_string) type string
+      raising lcx_exception,
     serialize
       IMPORTING io_xml TYPE REF TO lcl_xml_output
       RAISING   lcx_exception,
@@ -685,6 +689,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDLOOP. "at plugins
 
   ENDMETHOD.                    "class_constructor
+
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
 
@@ -1559,6 +1567,13 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING iv_language    TYPE langu
       RETURNING VALUE(rv_yes)  TYPE abap_bool.
 
+    CLASS-METHODS read_object
+      IMPORTING is_item       TYPE ty_item
+                iv_language   TYPE spras
+                is_metadata   TYPE ty_metadata OPTIONAL
+      RETURNING VALUE(ri_obj) TYPE REF TO lif_object
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     CLASS-DATA: mv_langs_installed type scplangs.
@@ -1566,6 +1581,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt
       RAISING   lcx_exception.
+
 
     CLASS-METHODS create_object
       IMPORTING is_item       TYPE ty_item

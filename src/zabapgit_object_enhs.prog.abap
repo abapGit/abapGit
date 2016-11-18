@@ -212,4 +212,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS. "lcl_object_enhs

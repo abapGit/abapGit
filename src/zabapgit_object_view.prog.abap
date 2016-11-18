@@ -217,4 +217,8 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_view IMPLEMENTATION

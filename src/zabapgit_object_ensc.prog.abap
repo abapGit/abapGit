@@ -191,4 +191,8 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS. "lcl_object_ensc

@@ -7,6 +7,19 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+
+CLASS lcl_object_tabl_validation DEFINITION.
+  PUBLIC SECTION.
+    METHODS validate
+      IMPORTING
+        io_previous_version TYPE REF TO lcl_xml_input
+        io_current_version  TYPE REF TO lcl_xml_input
+      RETURNING
+        VALUE(rv_message)   TYPE string
+      RAISING
+        lcx_exception.
+ENDCLASS.
+
 CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
@@ -377,19 +390,30 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD lif_object~validate.
+    DATA: lo_table_validation       TYPE REF TO lcl_object_tabl_validation,
+          lo_current_version_output TYPE REF TO lcl_xml_output,
+          lo_current_version_input  TYPE REF TO lcl_xml_input.
+
+
+    CREATE OBJECT lo_current_version_output.
+    me->lif_object~serialize( lo_current_version_output ).
+
+    CREATE OBJECT lo_current_version_input
+      EXPORTING
+        iv_xml = lo_current_version_output->render( ).
+
+    CREATE OBJECT lo_table_validation.
+
+    rv_string = lo_table_validation->validate(
+      io_previous_version = io_previous_version_xml
+      io_current_version  = lo_current_version_input
+    ).
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
 
-CLASS lcl_object_tabl_validation DEFINITION.
-  PUBLIC SECTION.
-    METHODS validate
-      IMPORTING
-        io_previous_version TYPE REF TO lcl_xml_input
-        io_current_version  TYPE REF TO lcl_xml_input
-      RETURNING
-        VALUE(rv_message)   TYPE string
-      RAISING
-        lcx_exception.
-ENDCLASS.
+
 CLASS lcl_object_tabl_validation IMPLEMENTATION.
 
   METHOD validate.
@@ -432,7 +456,7 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
       type_changed FOR TESTING RAISING lcx_exception,
       no_type_changes FOR TESTING RAISING lcx_exception,
       field_not_found FOR TESTING RAISING lcx_exception,
-      no_fields_no_message for testing RAISING lcx_exception,
+      no_fields_no_message FOR TESTING RAISING lcx_exception,
       create_xmls
         RAISING
           lcx_exception.
@@ -521,7 +545,7 @@ CLASS lct_table_validation IMPLEMENTATION.
       exp = 'Fields in a database table were changed. This may lead to inconsistencies.' ).
   ENDMETHOD.
 
-  method no_fields_no_message.
+  METHOD no_fields_no_message.
     DATA:
       ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
       ls_current_table_field  LIKE LINE OF mt_current_table_fields.
@@ -533,7 +557,7 @@ CLASS lct_table_validation IMPLEMENTATION.
       io_current_version  = mo_current_version_input_xml ).
 
     cl_abap_unit_assert=>assert_initial( mv_validation_message ).
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD create_xmls.
@@ -555,5 +579,7 @@ CLASS lct_table_validation IMPLEMENTATION.
       EXPORTING
         iv_xml = mo_current_version_out_xml->render( ).
   ENDMETHOD.
+
+
 
 ENDCLASS.

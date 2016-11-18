@@ -416,4 +416,8 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION

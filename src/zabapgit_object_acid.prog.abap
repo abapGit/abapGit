@@ -146,4 +146,8 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_acid IMPLEMENTATION

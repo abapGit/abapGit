@@ -183,4 +183,8 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     lcx_exception=>raise( 'todo, TOBJ jump' ).
   ENDMETHOD.                    "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_tobj IMPLEMENTATION

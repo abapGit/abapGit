@@ -301,4 +301,8 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_dtel IMPLEMENTATION

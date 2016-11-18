@@ -413,4 +413,8 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_tran IMPLEMENTATION

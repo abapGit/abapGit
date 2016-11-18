@@ -18,10 +18,11 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       lif_gui_page~on_event REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          ms_files TYPE ty_stage_files,
-          mo_stage TYPE REF TO lcl_stage,
-          mv_ts    TYPE timestamp.
+    DATA: mo_repo         TYPE REF TO lcl_repo_online,
+          ms_files        TYPE ty_stage_files,
+          mt_staged_files TYPE ty_files_item_tt,
+          mo_stage        TYPE REF TO lcl_stage,
+          mv_ts           TYPE timestamp.
 
     METHODS:
       render_list
@@ -46,7 +47,7 @@ ENDCLASS.
 CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
-
+    BREAK copat.
     super->constructor( ).
     mo_repo = io_repo.
 
@@ -62,10 +63,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
-
+    DATA:
+      lo_object TYPE REF TO lif_object.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
-
-
+    CLEAR: mt_staged_files.
     CASE iv_action.
       WHEN c_action-stage_all.
         mo_stage->reset_all( ).
@@ -74,12 +75,41 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                          iv_filename = <ls_file>-file-filename
                          iv_data     = <ls_file>-file-data ).
         ENDLOOP.
+        mt_staged_files = ms_files-local.
       WHEN c_action-stage_commit.
         mo_stage->reset_all( ).
         process_stage_list( it_postdata ).
       WHEN OTHERS.
         RETURN.
     ENDCASE.
+
+    DATA lt_remote_files TYPE ty_files_tt.
+    DATA ls_remote_file  LIKE LINE OF lt_remote_files.
+
+    lt_remote_files = mo_repo->get_files_remote( ).
+
+    DATA ls_staged_file LIKE LINE OF mt_staged_files.
+
+    LOOP AT mt_staged_files INTO ls_staged_file WHERE file-filename NS '.abap'.
+      lcl_objects=>read_object(
+        EXPORTING
+          is_item       = ls_staged_file-item
+          iv_language   = mo_repo->get_master_language( )
+        RECEIVING
+          ri_obj        = lo_object ).
+
+      DATA lo_previous_remote_version TYPE REF TO lcl_xml_input.
+      READ TABLE lt_remote_files
+        WITH KEY filename = ls_staged_file-file-filename
+        INTO ls_remote_file.
+      "if file does not exist in remote, we don't need to validate
+      IF sy-subrc = 0.
+        CREATE OBJECT lo_previous_remote_version
+          EXPORTING
+            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+        lo_object->validate( lo_previous_remote_version ).
+      ENDIF.
+    ENDLOOP.
 
     CREATE OBJECT ei_page TYPE lcl_gui_page_commit
       EXPORTING
@@ -121,6 +151,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           mo_stage->add(    iv_path     = <ls_file>-file-path
                             iv_filename = <ls_file>-file-filename
                             iv_data     = <ls_file>-file-data ).
+          APPEND <ls_file> TO mt_staged_files.
         WHEN lcl_stage=>c_method-ignore.
           mo_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).

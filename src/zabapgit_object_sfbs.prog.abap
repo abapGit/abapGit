@@ -207,4 +207,8 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_SFBS IMPLEMENTATION

@@ -418,4 +418,8 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     lcx_exception=>raise( 'todo, SICF, jump' ).
   ENDMETHOD.                    "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_sicf IMPLEMENTATION

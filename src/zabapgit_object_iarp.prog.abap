@@ -188,4 +188,8 @@ CLASS lcl_object_iarp IMPLEMENTATION.
     lcx_exception=>raise( 'todo, IARP, jump' ).
   ENDMETHOD.                    "lif_object~jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_iarp IMPLEMENTATION

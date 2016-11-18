@@ -647,4 +647,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION

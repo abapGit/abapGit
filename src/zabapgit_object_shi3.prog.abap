@@ -330,4 +330,8 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_shi3 IMPLEMENTATION

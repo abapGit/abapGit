@@ -181,4 +181,8 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
+  METHOD lif_object~validate.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
