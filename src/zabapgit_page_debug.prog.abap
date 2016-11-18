@@ -14,6 +14,8 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page_super
   PRIVATE SECTION.
     METHODS render_debug_info
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_supported_object_types
+        RETURNING VALUE(rv_html) TYPE string.
 
 ENDCLASS.                       "lcl_gui_page_debuginfo
 
@@ -25,7 +27,12 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     ro_html->add( header( io_include_style = styles( ) ) ).
     ro_html->add( title( 'DEBUG INFO' ) ).
+
+    ro_html->add( '<div id="debug_info" class="debug_container">' ).
     ro_html->add( render_debug_info( ) ).
+    ro_html->add( render_supported_object_types( ) ).
+    ro_html->add( '</div>' ).
+
     ro_html->add( footer( io_include_script = scripts( ) ) ).
 
   ENDMETHOD.
@@ -47,13 +54,40 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="debug_info" class="debug_container">' ).
-    ro_html->add( |abapGit version: { gc_abap_version }<br>| ).
-    ro_html->add( |XML version:     { gc_xml_version }<br>| ).
-    ro_html->add( |GUI version:     { lv_gui_version }| ).
-    ro_html->add( '</div>' ).
+    ro_html->add( |<p>abapGit version: { gc_abap_version }</p>| ).
+    ro_html->add( |<p>XML version:     { gc_xml_version }</p>| ).
+    ro_html->add( |<p>GUI version:     { lv_gui_version }</p>| ).
 
   ENDMETHOD. "render_debug_info
+
+  METHOD render_supported_object_types.
+
+    DATA: lt_objects TYPE STANDARD TABLE OF ko100,
+          lv_list    TYPE string,
+          ls_item    TYPE ty_item.
+
+    FIELD-SYMBOLS <object> LIKE LINE OF lt_objects.
+
+    CALL FUNCTION 'TR_OBJECT_TABLE'
+      TABLES
+        wt_object_text = lt_objects
+      EXCEPTIONS
+        OTHERS         = 1.
+
+    LOOP AT lt_objects ASSIGNING <object> WHERE pgmid = 'R3TR'.
+      ls_item-obj_type = <object>-object.
+      IF lcl_objects=>is_supported( is_item = ls_item iv_native_only = abap_true ) = abap_true.
+        IF lv_list IS INITIAL.
+          lv_list = ls_item-obj_type.
+        ELSE.
+          lv_list = lv_list && `, ` && ls_item-obj_type.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+
+    rv_html = |</p>Supported objects: { lv_list }</p>|.
+
+  ENDMETHOD.  " render_supported_object_types
 
   METHOD styles.
 
@@ -65,6 +99,9 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
     _add '  font-size: 10pt;'.
     _add '  color: #444;'.
     _add '  font-family: Consolas, Courier, monospace;'.
+    _add '}'.
+    _add 'div.debug_container p {'.
+    _add '  margin: 0px;'.
     _add '}'.
 
   ENDMETHOD.

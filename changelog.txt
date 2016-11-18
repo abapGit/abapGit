@@ -8,6 +8,10 @@ Legend
 + : added
 - : removed
 
+2016-11-??
+------------------
++ supported object list @debugpage
+
 2016-11-12
 ------------------
 + brand new style for file diff display - local and remote statuses are independent and based on local/remote hash and saved state
