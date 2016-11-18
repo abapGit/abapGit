@@ -1012,11 +1012,16 @@ CLASS lcl_log DEFINITION FINAL.
           iv_msgv1 TYPE csequence
           iv_msgv2 TYPE csequence OPTIONAL
           iv_msgv3 TYPE csequence OPTIONAL
-          iv_msgv4 TYPE csequence OPTIONAL,
+          iv_msgv4 TYPE csequence OPTIONAL
+          iv_rc    TYPE balsort   OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
       to_html
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      clear,
+      has_rc "For unit tests mainly
+        IMPORTING iv_rc         TYPE balsort
+        RETURNING VALUE(rv_yes) TYPE abap_bool,
       show.
 
   PRIVATE SECTION.
@@ -1056,13 +1061,14 @@ CLASS lcl_log IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msgty = 'W'.
-    <ls_log>-msgid = '00'.
-    <ls_log>-msgno = '001'.
-    <ls_log>-msgv1 = iv_msgv1.
-    <ls_log>-msgv2 = iv_msgv2.
-    <ls_log>-msgv3 = iv_msgv3.
-    <ls_log>-msgv4 = iv_msgv4.
+    <ls_log>-msgty  = 'W'.
+    <ls_log>-msgid  = '00'.
+    <ls_log>-msgno  = '001'.
+    <ls_log>-msgv1  = iv_msgv1.
+    <ls_log>-msgv2  = iv_msgv2.
+    <ls_log>-msgv3  = iv_msgv3.
+    <ls_log>-msgv4  = iv_msgv4.
+    <ls_log>-alsort = iv_rc. " Error code for unit test, not sure about better field
 
   ENDMETHOD.
 
@@ -1080,5 +1086,14 @@ CLASS lcl_log IMPLEMENTATION.
   METHOD count.
     rv_count = lines( mt_log ).
   ENDMETHOD.
+
+  METHOD clear.
+    CLEAR mt_log.
+  ENDMETHOD.  " clear.
+
+  METHOD has_rc.
+    READ TABLE mt_log WITH KEY alsort = iv_rc TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+  ENDMETHOD. "has_rc
 
 ENDCLASS.

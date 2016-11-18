@@ -1427,7 +1427,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
       WHERE progname = iv_program
       AND   r3state = 'A'.
 
-    _object_check_timestamp lv_date lv_time.
+    IF sy-subrc = 0. " Text not found ? Assuming no changes, see #404
+      _object_check_timestamp lv_date lv_time.
+    ENDIF.
 
     IF iv_skip_gui = abap_true.
       RETURN.

@@ -2,8 +2,6 @@
 *&  Include           ZABAPGIT_PAGE_MAIN
 *&---------------------------------------------------------------------*
 
-INCLUDE zabapgit_view_repo.
-
 CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PUBLIC SECTION.

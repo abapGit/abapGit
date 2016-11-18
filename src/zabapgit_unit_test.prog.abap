@@ -2,6 +2,42 @@
 *&  Include           ZABAPGIT_UNIT_TEST
 *&---------------------------------------------------------------------*
 
+DEFINE _append_local.
+  APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
+  <local>-item-obj_type = &1.
+  <local>-item-obj_name = &2.
+  <local>-item-devclass = '$Z$'.
+  <local>-file-path     = '/'.
+  <local>-file-filename = &3.
+  <local>-file-sha1     = &4.
+END-OF-DEFINITION.
+
+DEFINE _append_remote.
+  APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
+  <remote>-path     = '/'.
+  <remote>-filename = &1.
+  <remote>-sha1     = &2.
+END-OF-DEFINITION.
+
+DEFINE _append_state.
+  APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
+  <state>-path     = '/'.
+  <state>-filename = &1.
+  <state>-sha1     = &2.
+END-OF-DEFINITION.
+
+DEFINE _append_result.
+  APPEND INITIAL LINE TO lt_results ASSIGNING <result>.
+  <result>-obj_type = &1.
+  <result>-obj_name = &2.
+  <result>-match    = &3.
+  <result>-lstate   = &4.
+  <result>-rstate   = &5.
+  <result>-package  = &6.
+  <result>-path     = &7.
+  <result>-filename = &8.
+END-OF-DEFINITION.
+
 * todo, should the tests be in the same include as the classes
 * they are testing?
 
@@ -1758,42 +1794,6 @@ ENDCLASS.   "ltcl_file_status
 
 CLASS ltcl_file_status IMPLEMENTATION.
 
-  DEFINE _append_local.
-    APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
-    <local>-item-obj_type = &1.
-    <local>-item-obj_name = &2.
-    <local>-item-devclass = '$Z$'.
-    <local>-file-path     = '/'.
-    <local>-file-filename = &3.
-    <local>-file-sha1     = &4.
-  END-OF-DEFINITION.
-
-  DEFINE _append_remote.
-    APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
-    <remote>-path     = '/'.
-    <remote>-filename = &1.
-    <remote>-sha1     = &2.
-  END-OF-DEFINITION.
-
-  DEFINE _append_state.
-    APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
-    <state>-path     = '/'.
-    <state>-filename = &1.
-    <state>-sha1     = &2.
-  END-OF-DEFINITION.
-
-  DEFINE _append_result.
-    APPEND INITIAL LINE TO lt_results_exp ASSIGNING <result>.
-    <result>-obj_type = &1.
-    <result>-obj_name = &2.
-    <result>-match    = &3.
-    <result>-lstate   = &4.
-    <result>-rstate   = &5.
-    <result>-package  = &6.
-    <result>-filename = &7.
-    <result>-path     = '/'.
-  END-OF-DEFINITION.
-
   METHOD calculate_status.
 
     DATA: lt_local       TYPE ty_files_item_tt,
@@ -1853,24 +1853,25 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'xfeld.doma.xml'    'XFELD'.         " Object from different package
     _append_remote 'num01.doma.xml'    'NUM01_CHANGED'. " Changed object from different package
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    FILE
-    _append_result ''     ''        ' '   ' '   'A'  ''     'textfile.txt'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   'A'   ' '  '$Z$'  'zclass1.clas.testclasses.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  'zclass1.clas.xml'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     'zclass2.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     'zclass2.clas.xml'.
-    _append_result 'DOMA' 'NUM01'   ' '   ' '   'M'  'SUTI' 'num01.doma.xml'.
-    _append_result 'DOMA' 'XFELD'   'X'   ' '   ' '  'SUTI' 'xfeld.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  'zdoma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ' '   ' '   'M'  '$Z$'  'zdoma3.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA4'  ' '   'A'   ' '  '$Z$'  'zdoma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ' '   ' '   'A'  ''     'zdoma5.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  'zdoma6.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  'zdoma7.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  'zdoma8.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     'zdoma9.doma.xml'.
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
+    _append_result ''     ''        ' '   ' '   'A'  ''     '/'  'textfile.txt'.
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ' '   'A'   ' '  '$Z$'  '/'  'zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
+    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.xml'.
+    _append_result 'DOMA' 'NUM01'   ' '   ' '   'M'  'SUTI' '/'  'num01.doma.xml'.
+    _append_result 'DOMA' 'XFELD'   'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ' '   ' '   'M'  '$Z$'  '/'  'zdoma3.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA4'  ' '   'A'   ' '  '$Z$'  '/'  'zdoma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ' '   ' '   'A'  ''     '/'  'zdoma5.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma6.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma7.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma8.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     '/'  'zdoma9.doma.xml'.
+    lt_results_exp = lt_results.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local
@@ -1882,3 +1883,118 @@ CLASS ltcl_file_status IMPLEMENTATION.
   ENDMETHOD.  "calculate_status
 
 ENDCLASS.   "ltcl_file_status
+
+CLASS ltcl_sap_package DEFINITION
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
+  INHERITING FROM CL_AUNIT_ASSERT.
+
+  PUBLIC SECTION.
+    METHODS check FOR TESTING.
+
+ENDCLASS.   "ltcl_sap_package
+
+CLASS ltcl_sap_package IMPLEMENTATION.
+
+  METHOD check.
+
+    DATA: lt_results    TYPE ty_results_tt,
+          lo_log        TYPE REF TO lcl_log.
+
+    FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.
+
+*** 0 Positive
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 0 ).
+
+*** 1 Negative, different path for same object
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/sub' 'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    " This one is not pure - incorrect path also triggers path vs package check
+    assert_equals( act = lo_log->count( ) exp = 2 ).
+    assert_equals( act = lo_log->has_rc( '1' ) exp = abap_true ).
+
+*** 2 Negative, incorrect path vs package
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' 'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '2' ) exp = abap_true ).
+
+*** 3 Negative, similar filenames
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '3' ) exp = abap_true ).
+
+*** 4 Negative, empty filenames
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '4' ) exp = abap_true ).
+
+  ENDMETHOD.  " check.
+
+ENDCLASS. "ltcl_sap_package
