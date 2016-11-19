@@ -11,6 +11,7 @@ Legend
 2016-11-??
 ------------------
 + supported object list @debugpage
+* Fixed bug in diff page: change counters values
 
 2016-11-12
 ------------------
