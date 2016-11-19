@@ -140,8 +140,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ls_diff_file-o_diff
       EXPORTING
-        iv_local  = <ls_local>-file-data
-        iv_remote = <ls_remote>-data.
+        iv_new = <ls_local>-file-data
+        iv_old = <ls_remote>-data.
 
     ls_diff_file-filename = is_status-filename.
     ls_diff_file-lstate   = is_status-lstate.
@@ -353,13 +353,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
         ro_html->add( '<thead class="nav_line"><tr>').
         ro_html->add( '<th class="num"></th>' ).
-        ro_html->add( |<th colspan="3">@@ { <ls_diff>-local_line } @@ { lv_beacon }</th>| ).
+        ro_html->add( |<th colspan="3">@@ { <ls_diff>-new_line } @@ { lv_beacon }</th>| ).
         ro_html->add( '</tr></thead>' ).
         lv_insert_nav = abap_false.
       ENDIF.
 
-      lv_local  = escape( val = <ls_diff>-local  format = cl_abap_format=>e_html_attr ).
-      lv_remote = escape( val = <ls_diff>-remote format = cl_abap_format=>e_html_attr ).
+      lv_local  = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
+      lv_remote = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
 
       get_line_hl( EXPORTING iv_lstate = is_diff-lstate
                              iv_rstate = is_diff-rstate
@@ -368,9 +368,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
                              ev_rattr  = lv_rattr ).
 
       ro_html->add( '<tr>' ).                               "#EC NOTEXT
-      ro_html->add( |<td class="num">{ <ls_diff>-local_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-new_line }</td>| ). "#EC NOTEXT
       ro_html->add( |<td{ lv_lattr }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
-      ro_html->add( |<td class="num">{ <ls_diff>-remote_line }</td>| ). "#EC NOTEXT
+      ro_html->add( |<td class="num">{ <ls_diff>-old_line }</td>| ). "#EC NOTEXT
       ro_html->add( |<td{ lv_rattr }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
       ro_html->add( '</tr>' ).                              "#EC NOTEXT
 

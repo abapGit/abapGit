@@ -204,8 +204,8 @@ ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
 CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    DATA: mt_local    TYPE TABLE OF string,
-          mt_remote   TYPE TABLE OF string,
+    DATA: mt_new      TYPE TABLE OF string,
+          mt_old      TYPE TABLE OF string,
           mt_expected TYPE lcl_diff=>ty_diffs_tt,
           ms_expected LIKE LINE OF mt_expected.
 
@@ -229,56 +229,56 @@ ENDCLASS.                    "ltcl_diff DEFINITION
 *----------------------------------------------------------------------*
 CLASS ltcl_diff IMPLEMENTATION.
 
-  DEFINE _local.
-    APPEND &1 TO mt_local.
+  DEFINE _new.
+    APPEND &1 TO mt_new.
   END-OF-DEFINITION.
 
-  DEFINE _remote.
-    APPEND &1 TO mt_remote.
+  DEFINE _old.
+    APPEND &1 TO mt_old.
   END-OF-DEFINITION.
 
   DEFINE _expected.
     CLEAR ms_expected.
-    ms_expected-local = &1.
-    ms_expected-result = &2.
-    ms_expected-remote = &3.
+    ms_expected-new_line = &1.
+    ms_expected-new      = &2.
+    ms_expected-result   = &3.
+    ms_expected-old_line = &4.
+    ms_expected-old      = &5.
     APPEND ms_expected TO mt_expected.
   END-OF-DEFINITION.
 
   METHOD setup.
-    CLEAR mt_local.
-    CLEAR mt_remote.
+    CLEAR mt_new.
+    CLEAR mt_old.
     CLEAR mt_expected.
   ENDMETHOD.                    "setup
 
   METHOD test.
 
-    DATA: lv_local   TYPE string,
-          lv_xlocal  TYPE xstring,
-          lv_remote  TYPE string,
-          lv_xremote TYPE xstring,
+    DATA: lv_new     TYPE string,
+          lv_xnew    TYPE xstring,
+          lv_old     TYPE string,
+          lv_xold    TYPE xstring,
           lo_diff    TYPE REF TO lcl_diff,
           lt_diff    TYPE lcl_diff=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
 
-    CONCATENATE LINES OF mt_local  INTO lv_local SEPARATED BY gc_newline.
-    CONCATENATE LINES OF mt_remote INTO lv_remote SEPARATED BY gc_newline.
+    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY gc_newline.
+    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY gc_newline.
 
-    lv_xlocal  = lcl_convert=>string_to_xstring_utf8( lv_local ).
-    lv_xremote = lcl_convert=>string_to_xstring_utf8( lv_remote ).
+    lv_xnew = lcl_convert=>string_to_xstring_utf8( lv_new ).
+    lv_xold = lcl_convert=>string_to_xstring_utf8( lv_old ).
 
     CREATE OBJECT lo_diff
       EXPORTING
-        iv_local  = lv_xlocal
-        iv_remote = lv_xremote.
+        iv_new = lv_xnew
+        iv_old = lv_xold.
 
     lt_diff = lo_diff->get( ).
 
     LOOP AT lt_diff ASSIGNING <ls_diff>.
-      CLEAR <ls_diff>-local_line.
-      CLEAR <ls_diff>-remote_line.
       CLEAR <ls_diff>-short.
     ENDLOOP.
 
@@ -291,8 +291,10 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff01.
 
 * insert
-    _local '1'.
-    _expected '1' lcl_diff=>c_diff-insert ''.
+    _new 'A'.
+
+    "         " NEW  " STATUS                 " OLD
+    _expected 1 'A'  lcl_diff=>c_diff-insert  '' ''.
     test( ).
 
   ENDMETHOD.                    "diff01
@@ -300,9 +302,11 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff02.
 
 * identical
-    _local '1'.
-    _remote '1'.
-    _expected '1' '' '1'.
+    _new 'A'.
+    _old 'A'.
+
+    "         " NEW  " STATUS  " OLD
+    _expected 1 'A'  ''        1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff02
@@ -310,8 +314,10 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff03.
 
 * delete
-    _remote '1'.
-    _expected '' lcl_diff=>c_diff-delete '1'.
+    _old 'A'.
+
+    "         " NEW  " STATUS                 " OLD
+    _expected '' ''  lcl_diff=>c_diff-delete  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff03
@@ -319,9 +325,11 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff04.
 
 * update
-    _local '1+'.
-    _remote '1'.
-    _expected '1+' lcl_diff=>c_diff-update '1'.
+    _new 'A+'.
+    _old 'A'.
+
+    "         " NEW   " STATUS                 " OLD
+    _expected 1 'A+'  lcl_diff=>c_diff-update  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff04
@@ -329,34 +337,37 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff05.
 
 * identical
-    _local '1'.
-    _local '2'.
-    _remote '1'.
-    _remote '2'.
-    _expected '1' '' '1'.
-    _expected '2' '' '2'.
+    _new 'A'.
+    _new 'B'.
+    _old 'A'.
+    _old 'B'.
+
+    "         " NEW  " STATUS  " OLD
+    _expected 1 'A'  ''        1 'A'.
+    _expected 2 'B'  ''        2 'B'.
     test( ).
 
   ENDMETHOD.                    "diff05
 
   METHOD diff06.
 
-    _local '1'.
-    _local '2'.
-    _local 'inserted'.
-    _local '3'.
-    _local '4 update'.
+    _new 'A'.
+    _new 'B'.
+    _new 'inserted'.
+    _new 'C'.
+    _new 'D update'.
 
-    _remote '1'.
-    _remote '2'.
-    _remote '3'.
-    _remote '4'.
+    _old 'A'.
+    _old 'B'.
+    _old 'C'.
+    _old 'D'.
 
-    _expected '1' '' '1'.
-    _expected '2' '' '2'.
-    _expected 'inserted' lcl_diff=>c_diff-insert ''.
-    _expected '3' '' '3'.
-    _expected '4 update' lcl_diff=>c_diff-update '4'.
+    "         " NEW         " STATUS                 " OLD
+    _expected 1 'A'         ''                        1 'A'.
+    _expected 2 'B'         ''                        2 'B'.
+    _expected 3 'inserted'  lcl_diff=>c_diff-insert   '' ''.
+    _expected 4 'C'         ''                        3 'C'.
+    _expected 5 'D update'  lcl_diff=>c_diff-update   4 'D'.
 
     test( ).
 
