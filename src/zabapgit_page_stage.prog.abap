@@ -436,7 +436,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         lo_comparison_result = lo_object->compare_to_previous_version( lo_previous_remote_version ).
         lo_comparison_result->show_confirmation_dialog( ).
 
-        IF lo_comparison_result->is_result_complete_halt( ).
+        IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
           RAISE EXCEPTION TYPE lcx_cancel.
         ENDIF.
       ENDIF.

@@ -420,8 +420,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     lv_validation_text = lo_table_validation->validate(
       io_previous_version = io_previous_version_xml
-      io_current_version  = lo_current_version_input
-    ).
+      io_current_version  = lo_current_version_input ).
     IF lv_validation_text IS NOT INITIAL.
       CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
         EXPORTING
@@ -445,14 +444,12 @@ CLASS lcl_object_tabl_validation IMPLEMENTATION.
       EXPORTING
         iv_name       = 'DD03P_TABLE'
       CHANGING
-        cg_data       = lt_previous_table_fields
-                                 ).
+        cg_data       = lt_previous_table_fields ).
     io_current_version->read(
       EXPORTING
         iv_name       = 'DD03P_TABLE'
       CHANGING
-        cg_data       = lt_current_table_fields
-    ).
+        cg_data       = lt_current_table_fields ).
 
     LOOP AT lt_previous_table_fields INTO ls_previous_table_field.
       READ TABLE lt_current_table_fields WITH KEY fieldname = ls_previous_table_field-fieldname
