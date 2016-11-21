@@ -1675,6 +1675,7 @@ CLASS ltcl_path DEFINITION
     METHODS split_file_location FOR TESTING.
     METHODS is_subdir FOR TESTING.
     METHODS change_dir FOR TESTING.
+    METHODS get_filename_from_syspath FOR TESTING.
 
 ENDCLASS.   "ltcl_path
 
@@ -1792,6 +1793,31 @@ CLASS ltcl_path IMPLEMENTATION.
 
 
   ENDMETHOD.
+
+  METHOD get_filename_from_syspath.
+
+    DATA lv_filename TYPE string.
+
+    lv_filename = lcl_path=>get_filename_from_syspath( 'file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+    lv_filename = lcl_path=>get_filename_from_syspath( 'c:\dir\file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+    lv_filename = lcl_path=>get_filename_from_syspath( 'c:\file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+    lv_filename = lcl_path=>get_filename_from_syspath( '/dir/file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+    lv_filename = lcl_path=>get_filename_from_syspath( '/file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+    lv_filename = lcl_path=>get_filename_from_syspath( '\\server$\file.txt' ).
+    assert_equals( act = lv_filename exp = 'file.txt' ).
+
+  ENDMETHOD.  " get_filename_from_syspath.
+
 ENDCLASS.   "ltcl_path
 
 CLASS ltcl_file_status DEFINITION
