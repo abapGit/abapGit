@@ -683,4 +683,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD read_object.
+    ri_obj = create_object(
+      is_item       = is_item
+      iv_language   = iv_language
+      is_metadata   = is_metadata ).
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_objects IMPLEMENTATION

@@ -255,6 +255,30 @@ CLASS lcl_objects_files DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_objects_files DEFINITION
 
+INTERFACE lif_object_comparison_result.
+  METHODS:
+    show_confirmation_dialog,
+    is_result_complete_halt
+      RETURNING VALUE(rv_response) TYPE abap_bool.
+
+ENDINTERFACE.
+
+"Null Object Pattern
+CLASS lcl_null_comparison_result DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object_comparison_result.
+ENDCLASS.
+CLASS lcl_null_comparison_result IMPLEMENTATION.
+
+  METHOD lif_object_comparison_result~is_result_complete_halt.
+    rv_response = abap_false.
+  ENDMETHOD.
+
+  METHOD lif_object_comparison_result~show_confirmation_dialog.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
 *----------------------------------------------------------------------*
 *       INTERFACE lif_object DEFINITION
 *----------------------------------------------------------------------*
@@ -263,6 +287,10 @@ ENDCLASS.                    "lcl_objects_files DEFINITION
 INTERFACE lif_object.
 
   METHODS:
+    compare_to_previous_version
+      IMPORTING io_previous_version_xml TYPE REF TO lcl_xml_input
+      RETURNING VALUE(ro_comparison_result)        TYPE REF TO lif_object_comparison_result
+      RAISING   lcx_exception,
     serialize
       IMPORTING io_xml TYPE REF TO lcl_xml_output
       RAISING   lcx_exception,
@@ -511,7 +539,6 @@ ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
-
     METHODS:
       constructor
         IMPORTING
@@ -726,6 +753,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDLOOP. "at plugins
 
   ENDMETHOD.                    "class_constructor
+
+  METHOD lif_object~compare_to_previous_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
 
@@ -1610,6 +1641,13 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING iv_language   TYPE langu
       RETURNING VALUE(rv_yes) TYPE abap_bool.
 
+    CLASS-METHODS read_object
+      IMPORTING is_item       TYPE ty_item
+                iv_language   TYPE spras
+                is_metadata   TYPE ty_metadata OPTIONAL
+      RETURNING VALUE(ri_obj) TYPE REF TO lif_object
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
 
     CLASS-DATA: mv_langs_installed TYPE scplangs.
@@ -1617,6 +1655,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt
       RAISING   lcx_exception.
+
 
     CLASS-METHODS create_object
       IMPORTING is_item        TYPE ty_item
