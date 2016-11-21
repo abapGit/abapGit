@@ -246,6 +246,9 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     ENDLOOP.
 
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd04_texts BY ddlanguage ASCENDING.
+
     IF lines( lt_i18n_langs ) > 0.
       io_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
