@@ -1640,7 +1640,6 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS is_language_installed
       IMPORTING iv_language   TYPE langu
       RETURNING VALUE(rv_yes) TYPE abap_bool.
-<<<<<<< HEAD
 
     CLASS-METHODS read_object
       IMPORTING is_item       TYPE ty_item
@@ -1648,8 +1647,6 @@ CLASS lcl_objects DEFINITION FINAL.
                 is_metadata   TYPE ty_metadata OPTIONAL
       RETURNING VALUE(ri_obj) TYPE REF TO lif_object
       RAISING   lcx_exception.
-=======
->>>>>>> refs/remotes/larshp/master
 
   PRIVATE SECTION.
 
