@@ -2,6 +2,42 @@
 *&  Include           ZABAPGIT_UNIT_TEST
 *&---------------------------------------------------------------------*
 
+DEFINE _append_local.
+  APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
+  <local>-item-obj_type = &1.
+  <local>-item-obj_name = &2.
+  <local>-item-devclass = '$Z$'.
+  <local>-file-path     = '/'.
+  <local>-file-filename = &3.
+  <local>-file-sha1     = &4.
+END-OF-DEFINITION.
+
+DEFINE _append_remote.
+  APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
+  <remote>-path     = '/'.
+  <remote>-filename = &1.
+  <remote>-sha1     = &2.
+END-OF-DEFINITION.
+
+DEFINE _append_state.
+  APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
+  <state>-path     = '/'.
+  <state>-filename = &1.
+  <state>-sha1     = &2.
+END-OF-DEFINITION.
+
+DEFINE _append_result.
+  APPEND INITIAL LINE TO lt_results ASSIGNING <result>.
+  <result>-obj_type = &1.
+  <result>-obj_name = &2.
+  <result>-match    = &3.
+  <result>-lstate   = &4.
+  <result>-rstate   = &5.
+  <result>-package  = &6.
+  <result>-path     = &7.
+  <result>-filename = &8.
+END-OF-DEFINITION.
+
 * todo, should the tests be in the same include as the classes
 * they are testing?
 
@@ -168,8 +204,8 @@ ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
 CLASS ltcl_diff DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    DATA: mt_local    TYPE TABLE OF string,
-          mt_remote   TYPE TABLE OF string,
+    DATA: mt_new      TYPE TABLE OF string,
+          mt_old      TYPE TABLE OF string,
           mt_expected TYPE lcl_diff=>ty_diffs_tt,
           ms_expected LIKE LINE OF mt_expected.
 
@@ -193,56 +229,56 @@ ENDCLASS.                    "ltcl_diff DEFINITION
 *----------------------------------------------------------------------*
 CLASS ltcl_diff IMPLEMENTATION.
 
-  DEFINE _local.
-    APPEND &1 TO mt_local.
+  DEFINE _new.
+    APPEND &1 TO mt_new.
   END-OF-DEFINITION.
 
-  DEFINE _remote.
-    APPEND &1 TO mt_remote.
+  DEFINE _old.
+    APPEND &1 TO mt_old.
   END-OF-DEFINITION.
 
   DEFINE _expected.
     CLEAR ms_expected.
-    ms_expected-local = &1.
-    ms_expected-result = &2.
-    ms_expected-remote = &3.
+    ms_expected-new_line = &1.
+    ms_expected-new      = &2.
+    ms_expected-result   = &3.
+    ms_expected-old_line = &4.
+    ms_expected-old      = &5.
     APPEND ms_expected TO mt_expected.
   END-OF-DEFINITION.
 
   METHOD setup.
-    CLEAR mt_local.
-    CLEAR mt_remote.
+    CLEAR mt_new.
+    CLEAR mt_old.
     CLEAR mt_expected.
   ENDMETHOD.                    "setup
 
   METHOD test.
 
-    DATA: lv_local   TYPE string,
-          lv_xlocal  TYPE xstring,
-          lv_remote  TYPE string,
-          lv_xremote TYPE xstring,
+    DATA: lv_new     TYPE string,
+          lv_xnew    TYPE xstring,
+          lv_old     TYPE string,
+          lv_xold    TYPE xstring,
           lo_diff    TYPE REF TO lcl_diff,
           lt_diff    TYPE lcl_diff=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
 
-    CONCATENATE LINES OF mt_local  INTO lv_local SEPARATED BY gc_newline.
-    CONCATENATE LINES OF mt_remote INTO lv_remote SEPARATED BY gc_newline.
+    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY gc_newline.
+    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY gc_newline.
 
-    lv_xlocal  = lcl_convert=>string_to_xstring_utf8( lv_local ).
-    lv_xremote = lcl_convert=>string_to_xstring_utf8( lv_remote ).
+    lv_xnew = lcl_convert=>string_to_xstring_utf8( lv_new ).
+    lv_xold = lcl_convert=>string_to_xstring_utf8( lv_old ).
 
     CREATE OBJECT lo_diff
       EXPORTING
-        iv_local  = lv_xlocal
-        iv_remote = lv_xremote.
+        iv_new = lv_xnew
+        iv_old = lv_xold.
 
     lt_diff = lo_diff->get( ).
 
     LOOP AT lt_diff ASSIGNING <ls_diff>.
-      CLEAR <ls_diff>-local_line.
-      CLEAR <ls_diff>-remote_line.
       CLEAR <ls_diff>-short.
     ENDLOOP.
 
@@ -255,8 +291,10 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff01.
 
 * insert
-    _local '1'.
-    _expected '1' lcl_diff=>c_diff-insert ''.
+    _new 'A'.
+
+    "         " NEW  " STATUS                 " OLD
+    _expected 1 'A'  lcl_diff=>c_diff-insert  '' ''.
     test( ).
 
   ENDMETHOD.                    "diff01
@@ -264,9 +302,11 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff02.
 
 * identical
-    _local '1'.
-    _remote '1'.
-    _expected '1' '' '1'.
+    _new 'A'.
+    _old 'A'.
+
+    "         " NEW  " STATUS  " OLD
+    _expected 1 'A'  ''        1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff02
@@ -274,8 +314,10 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff03.
 
 * delete
-    _remote '1'.
-    _expected '' lcl_diff=>c_diff-delete '1'.
+    _old 'A'.
+
+    "         " NEW  " STATUS                 " OLD
+    _expected '' ''  lcl_diff=>c_diff-delete  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff03
@@ -283,9 +325,11 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff04.
 
 * update
-    _local '1+'.
-    _remote '1'.
-    _expected '1+' lcl_diff=>c_diff-update '1'.
+    _new 'A+'.
+    _old 'A'.
+
+    "         " NEW   " STATUS                 " OLD
+    _expected 1 'A+'  lcl_diff=>c_diff-update  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff04
@@ -293,34 +337,37 @@ CLASS ltcl_diff IMPLEMENTATION.
   METHOD diff05.
 
 * identical
-    _local '1'.
-    _local '2'.
-    _remote '1'.
-    _remote '2'.
-    _expected '1' '' '1'.
-    _expected '2' '' '2'.
+    _new 'A'.
+    _new 'B'.
+    _old 'A'.
+    _old 'B'.
+
+    "         " NEW  " STATUS  " OLD
+    _expected 1 'A'  ''        1 'A'.
+    _expected 2 'B'  ''        2 'B'.
     test( ).
 
   ENDMETHOD.                    "diff05
 
   METHOD diff06.
 
-    _local '1'.
-    _local '2'.
-    _local 'inserted'.
-    _local '3'.
-    _local '4 update'.
+    _new 'A'.
+    _new 'B'.
+    _new 'inserted'.
+    _new 'C'.
+    _new 'D update'.
 
-    _remote '1'.
-    _remote '2'.
-    _remote '3'.
-    _remote '4'.
+    _old 'A'.
+    _old 'B'.
+    _old 'C'.
+    _old 'D'.
 
-    _expected '1' '' '1'.
-    _expected '2' '' '2'.
-    _expected 'inserted' lcl_diff=>c_diff-insert ''.
-    _expected '3' '' '3'.
-    _expected '4 update' lcl_diff=>c_diff-update '4'.
+    "         " NEW         " STATUS                 " OLD
+    _expected 1 'A'         ''                        1 'A'.
+    _expected 2 'B'         ''                        2 'B'.
+    _expected 3 'inserted'  lcl_diff=>c_diff-insert   '' ''.
+    _expected 4 'C'         ''                        3 'C'.
+    _expected 5 'D update'  lcl_diff=>c_diff-update   4 'D'.
 
     test( ).
 
@@ -1758,42 +1805,6 @@ ENDCLASS.   "ltcl_file_status
 
 CLASS ltcl_file_status IMPLEMENTATION.
 
-  DEFINE _append_local.
-    APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
-    <local>-item-obj_type = &1.
-    <local>-item-obj_name = &2.
-    <local>-item-devclass = '$Z$'.
-    <local>-file-path     = '/'.
-    <local>-file-filename = &3.
-    <local>-file-sha1     = &4.
-  END-OF-DEFINITION.
-
-  DEFINE _append_remote.
-    APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
-    <remote>-path     = '/'.
-    <remote>-filename = &1.
-    <remote>-sha1     = &2.
-  END-OF-DEFINITION.
-
-  DEFINE _append_state.
-    APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
-    <state>-path     = '/'.
-    <state>-filename = &1.
-    <state>-sha1     = &2.
-  END-OF-DEFINITION.
-
-  DEFINE _append_result.
-    APPEND INITIAL LINE TO lt_results_exp ASSIGNING <result>.
-    <result>-obj_type = &1.
-    <result>-obj_name = &2.
-    <result>-match    = &3.
-    <result>-lstate   = &4.
-    <result>-rstate   = &5.
-    <result>-package  = &6.
-    <result>-filename = &7.
-    <result>-path     = '/'.
-  END-OF-DEFINITION.
-
   METHOD calculate_status.
 
     DATA: lt_local       TYPE ty_files_item_tt,
@@ -1806,8 +1817,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
                    <result> LIKE LINE OF lt_results,
-                   <state>  LIKE LINE OF lt_state,
-                   <tadir>  LIKE LINE OF lt_tadir.
+                   <state>  LIKE LINE OF lt_state.
 
     "STATE        FILE                            SHA1
     _append_state 'zclass1.clas.xml'              'C1_F1'.
@@ -1854,24 +1864,25 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_remote 'xfeld.doma.xml'    'XFELD'.         " Object from different package
     _append_remote 'num01.doma.xml'    'NUM01_CHANGED'. " Changed object from different package
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    FILE
-    _append_result ''     ''        ' '   ' '   'A'  ''     'textfile.txt'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   'A'   ' '  '$Z$'  'zclass1.clas.testclasses.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  'zclass1.clas.xml'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     'zclass2.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     'zclass2.clas.xml'.
-    _append_result 'DOMA' 'NUM01'   ' '   ' '   'M'  'SUTI' 'num01.doma.xml'.
-    _append_result 'DOMA' 'XFELD'   'X'   ' '   ' '  'SUTI' 'xfeld.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  'zdoma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ' '   ' '   'M'  '$Z$'  'zdoma3.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA4'  ' '   'A'   ' '  '$Z$'  'zdoma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ' '   ' '   'A'  ''     'zdoma5.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  'zdoma6.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  'zdoma7.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  'zdoma8.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     'zdoma9.doma.xml'.
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
+    _append_result ''     ''        ' '   ' '   'A'  ''     '/'  'textfile.txt'.
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' ' '   'A'   ' '  '$Z$'  '/'  'zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
+    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.xml'.
+    _append_result 'DOMA' 'NUM01'   ' '   ' '   'M'  'SUTI' '/'  'num01.doma.xml'.
+    _append_result 'DOMA' 'XFELD'   'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA3'  ' '   ' '   'M'  '$Z$'  '/'  'zdoma3.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA4'  ' '   'A'   ' '  '$Z$'  '/'  'zdoma4.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA5'  ' '   ' '   'A'  ''     '/'  'zdoma5.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma6.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma7.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma8.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     '/'  'zdoma9.doma.xml'.
+    lt_results_exp = lt_results.
 
     lt_results = lcl_file_status=>calculate_status(
       it_local           = lt_local
@@ -1883,3 +1894,118 @@ CLASS ltcl_file_status IMPLEMENTATION.
   ENDMETHOD.  "calculate_status
 
 ENDCLASS.   "ltcl_file_status
+
+CLASS ltcl_sap_package DEFINITION
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
+  INHERITING FROM CL_AUNIT_ASSERT.
+
+  PUBLIC SECTION.
+    METHODS check FOR TESTING.
+
+ENDCLASS.   "ltcl_sap_package
+
+CLASS ltcl_sap_package IMPLEMENTATION.
+
+  METHOD check.
+
+    DATA: lt_results    TYPE ty_results_tt,
+          lo_log        TYPE REF TO lcl_log.
+
+    FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.
+
+*** 0 Positive
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 0 ).
+
+*** 1 Negative, different path for same object
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/sub' 'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    " This one is not pure - incorrect path also triggers path vs package check
+    assert_equals( act = lo_log->count( ) exp = 2 ).
+    assert_equals( act = lo_log->has_rc( '1' ) exp = abap_true ).
+
+*** 2 Negative, incorrect path vs package
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' 'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '2' ) exp = abap_true ).
+
+*** 3 Negative, similar filenames
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '3' ) exp = abap_true ).
+
+*** 4 Negative, empty filenames
+
+    CLEAR lt_results.
+    CREATE OBJECT lo_log.
+
+    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
+    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
+    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
+    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
+
+    lcl_sap_package=>check( io_log     = lo_log
+                            it_results = lt_results
+                            iv_start   = '/'
+                            iv_top     = '$Z$' ).
+
+    assert_equals( act = lo_log->count( ) exp = 1 ).
+    assert_equals( act = lo_log->has_rc( '4' ) exp = abap_true ).
+
+  ENDMETHOD.  " check.
+
+ENDCLASS. "ltcl_sap_package

@@ -207,12 +207,12 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA: lv_name        TYPE ddobjname,
-          lv_index       TYPE i,
-          ls_dd04v       TYPE dd04v,
-          ls_tpara       TYPE tpara,
-          lt_dd04_texts  TYPE tt_dd04_texts,
-          lt_i18n_langs  TYPE TABLE OF langu.
+    DATA: lv_name       TYPE ddobjname,
+          lv_index      TYPE i,
+          ls_dd04v      TYPE dd04v,
+          ls_tpara      TYPE tpara,
+          lt_dd04_texts TYPE tt_dd04_texts,
+          lt_i18n_langs TYPE TABLE OF langu.
     FIELD-SYMBOLS: <lang>      LIKE LINE OF lt_i18n_langs,
                    <dd04_text> TYPE ty_dd04_texts.
 
@@ -246,6 +246,9 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     ENDLOOP.
 
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd04_texts BY ddlanguage ASCENDING.
+
     IF lines( lt_i18n_langs ) > 0.
       io_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
@@ -258,10 +261,10 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA: lv_name         TYPE ddobjname,
-          ls_dd04v_tmp    TYPE dd04v,
-          lt_i18n_langs   TYPE TABLE OF langu,
-          lt_dd04_texts   TYPE tt_dd04_texts.
+    DATA: lv_name       TYPE ddobjname,
+          ls_dd04v_tmp  TYPE dd04v,
+          lt_i18n_langs TYPE TABLE OF langu,
+          lt_dd04_texts TYPE tt_dd04_texts.
     FIELD-SYMBOLS: <lang>      LIKE LINE OF lt_i18n_langs,
                    <dd04_text> TYPE ty_dd04_texts.
 
@@ -273,7 +276,9 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04_TEXTS'
                   CHANGING  cg_data = lt_dd04_texts ).
 
-    SORT: lt_i18n_langs, lt_dd04_texts BY ddlanguage. " Optimization
+    SORT lt_i18n_langs.
+    SORT lt_dd04_texts BY ddlanguage. " Optimization
+
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
 
       " Data element description

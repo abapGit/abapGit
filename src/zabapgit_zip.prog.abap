@@ -384,7 +384,11 @@ CLASS lcl_zip IMPLEMENTATION.
           ev_path     = <ls_file>-path
           ev_filename = <ls_file>-filename ).
 
-      <ls_file>-data     = lv_xstr.
+      <ls_file>-data = lv_xstr.
+
+      <ls_file>-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob
+                                       iv_data = <ls_file>-data ).
+
     ENDLOOP.
 
     normalize_path( CHANGING ct_files = rt_files ).

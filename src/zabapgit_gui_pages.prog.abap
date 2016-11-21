@@ -4,8 +4,17 @@
 
 * All UI pages
 
-INCLUDE zabapgit_html_action_utils.
+* Super class
 INCLUDE zabapgit_page.
+
+* Utils and helpers
+INCLUDE zabapgit_html_action_utils.
+INCLUDE zabapgit_repo_browser_util.
+
+* Components and templates
+INCLUDE zabapgit_view_repo.
+
+* Pages
 INCLUDE zabapgit_page_commit.
 INCLUDE zabapgit_page_merge.
 INCLUDE zabapgit_page_background.
