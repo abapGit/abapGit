@@ -20,21 +20,21 @@ CLASS lcl_object_tabl_validation DEFINITION.
         lcx_exception.
 ENDCLASS.
 
-CLASS lcl_tabl_validation_dialog definition.
-PUBLIC SECTION.
-  methods:
-    constructor
-      importing
-        iv_message type string.
-  interfaces: lif_object_comparison_result.
-PRIVATE SECTION.
-  DATA mv_message TYPE string.
-  DATA mv_halt TYPE string.
+CLASS lcl_tabl_validation_dialog DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING
+          iv_message TYPE string.
+    INTERFACES: lif_object_comparison_result.
+  PRIVATE SECTION.
+    DATA mv_message TYPE string.
+    DATA mv_halt TYPE string.
 
-endclass.
+ENDCLASS.
 
 CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
-  public section.
+  PUBLIC SECTION.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
@@ -406,7 +406,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     DATA: lo_table_validation       TYPE REF TO lcl_object_tabl_validation,
           lo_current_version_output TYPE REF TO lcl_xml_output,
           lo_current_version_input  TYPE REF TO lcl_xml_input,
-          lv_validation_text        type string.
+          lv_validation_text        TYPE string.
 
 
     CREATE OBJECT lo_current_version_output.
@@ -423,9 +423,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       io_current_version  = lo_current_version_input
     ).
     IF lv_validation_text IS NOT INITIAL.
-      ro_comparison_result = NEW lcl_tabl_validation_dialog( lv_validation_text ).
+      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
+        EXPORTING
+          iv_message = lv_validation_text.
     ELSE.
-      ro_comparison_result = NEW lcl_null_comparison_result( ).
+      CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
     ENDIF.
   ENDMETHOD.
 
@@ -470,41 +472,40 @@ ENDCLASS.
 CLASS lcl_tabl_validation_dialog IMPLEMENTATION.
   METHOD constructor.
     mv_message = iv_message.
-  endmethod.
+  ENDMETHOD.
   METHOD lif_object_comparison_result~is_result_complete_halt.
     rv_response = mv_halt.
   ENDMETHOD.
 
   METHOD lif_object_comparison_result~show_confirmation_dialog.
-    DATA lv_answer type string.
+    DATA lv_answer TYPE string.
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
         titlebar              = 'Warning'
-*        diagnose_object       = SPACE    " Diagnosis text (maintain via SE61)
+*       diagnose_object       = SPACE    " Diagnosis text (maintain via SE61)
         text_question         = mv_message
         text_button_1         = 'Cancel'
         icon_button_1         = 'ICON_CANCEL'
         text_button_2         = 'Commit'
         icon_button_2         = 'ICON_OKAY'
-*        default_button        = '1'    " Cursor position
+*       default_button        = '1'    " Cursor position
         display_cancel_button = abap_false
-*        userdefined_f1_help   = SPACE    " User-Defined F1 Help
-*        start_column          =     " Column in which the POPUP begins
-*        start_row             =     " Line in which the POPUP begins
+*       userdefined_f1_help   = SPACE    " User-Defined F1 Help
+*       start_column          =     " Column in which the POPUP begins
+*       start_row             =     " Line in which the POPUP begins
         popup_type            = 'ICON_MESSAGE_WARNING'
-*        iv_quickinfo_button_1 = SPACE    " Quick Info on First Pushbutton
+*       iv_quickinfo_button_1 = SPACE    " Quick Info on First Pushbutton
         iv_quickinfo_button_2 = 'Commit regardless'
       IMPORTING
         answer                = lv_answer
 *      TABLES
-*        parameter             =     " Text transfer table for parameter in text
+*       parameter             =     " Text transfer table for parameter in text
       EXCEPTIONS
         text_not_found        = 1
-        others                = 2
-      .
+        OTHERS                = 2.
     IF sy-subrc <> 0.
-     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                 WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ELSE.
       IF lv_answer = 1.
         mv_halt = abap_true.
@@ -512,16 +513,16 @@ CLASS lcl_tabl_validation_dialog IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-endclass.
+ENDCLASS.
 
 
 CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PRIVATE SECTION.
     METHODS:
       setup,
-      type_changed FOR TESTING RAISING lcx_exception,
-      no_type_changes FOR TESTING RAISING lcx_exception,
-      field_not_found FOR TESTING RAISING lcx_exception,
+      type_changed         FOR TESTING RAISING lcx_exception,
+      no_type_changes      FOR TESTING RAISING lcx_exception,
+      field_not_found      FOR TESTING RAISING lcx_exception,
       no_fields_no_message FOR TESTING RAISING lcx_exception,
       create_xmls
         RAISING

@@ -42,6 +42,11 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
 
+    METHODS validate_objects
+      RAISING
+        lcx_cancel
+        lcx_exception.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_stage IMPLEMENTATION.
@@ -82,39 +87,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         RETURN.
     ENDCASE.
 
-    DATA lt_remote_files TYPE ty_files_tt.
-    DATA ls_remote_file  LIKE LINE OF lt_remote_files.
-break copat.
-    DATA:
-    lo_object TYPE REF TO lif_object.
-
-    DATA ls_staged_file LIKE LINE OF mt_staged_files.
-    lt_remote_files = mo_repo->get_files_remote( ).
-    LOOP AT mt_staged_files INTO ls_staged_file WHERE file-filename NS '.abap'.
-      lcl_objects=>read_object(
-        EXPORTING
-          is_item       = ls_staged_file-item
-          iv_language   = mo_repo->get_master_language( )
-        RECEIVING
-          ri_obj        = lo_object ).
-
-      DATA lo_previous_remote_version TYPE REF TO lcl_xml_input.
-      READ TABLE lt_remote_files
-        WITH KEY filename = ls_staged_file-file-filename
-        INTO ls_remote_file.
-      "if file does not exist in remote, we don't need to validate
-      IF sy-subrc = 0.
-        CREATE OBJECT lo_previous_remote_version
-          EXPORTING
-            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
-        DATA(comparison_result) = lo_object->compare_to_previous_version( lo_previous_remote_version ).
-        comparison_result->show_confirmation_dialog( ).
-
-        IF comparison_result->is_result_complete_halt( ).
-          RAISE EXCEPTION TYPE lcx_cancel.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
+    validate_objects( ).
 
     CREATE OBJECT ei_page TYPE lcl_gui_page_commit
       EXPORTING
@@ -432,5 +405,42 @@ break copat.
     _add '}'.
 
   ENDMETHOD.  "scripts
+
+
+  METHOD validate_objects.
+
+    DATA: lt_remote_files            TYPE ty_files_tt,
+          ls_remote_file             LIKE LINE OF lt_remote_files,
+          lo_object                  TYPE REF TO lif_object,
+          ls_staged_file             LIKE LINE OF mt_staged_files,
+          lo_previous_remote_version TYPE REF TO lcl_xml_input,
+          lo_comparison_result       TYPE REF TO lif_object_comparison_result.
+
+    lt_remote_files = mo_repo->get_files_remote( ).
+    LOOP AT mt_staged_files INTO ls_staged_file WHERE file-filename NS '.abap'.
+      lcl_objects=>read_object(
+        EXPORTING
+          is_item     = ls_staged_file-item
+          iv_language = mo_repo->get_master_language( )
+        RECEIVING
+          ri_obj      = lo_object ).
+
+      READ TABLE lt_remote_files
+        WITH KEY filename = ls_staged_file-file-filename
+        INTO ls_remote_file.
+      "if file does not exist in remote, we don't need to validate
+      IF sy-subrc = 0.
+        CREATE OBJECT lo_previous_remote_version
+          EXPORTING
+            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+        lo_comparison_result = lo_object->compare_to_previous_version( lo_previous_remote_version ).
+        lo_comparison_result->show_confirmation_dialog( ).
+
+        IF lo_comparison_result->is_result_complete_halt( ).
+          RAISE EXCEPTION TYPE lcx_cancel.
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
 
 ENDCLASS.

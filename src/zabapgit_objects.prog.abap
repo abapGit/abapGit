@@ -498,7 +498,6 @@ ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
-
     METHODS:
       constructor
         IMPORTING
