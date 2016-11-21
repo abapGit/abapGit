@@ -755,7 +755,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
   ENDMETHOD.                    "class_constructor
 
   METHOD lif_object~compare_to_previous_version.
-
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION

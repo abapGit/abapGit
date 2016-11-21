@@ -156,7 +156,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~compare_to_previous_version.
-
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_msag IMPLEMENTATION
