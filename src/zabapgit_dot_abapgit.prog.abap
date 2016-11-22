@@ -35,9 +35,12 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
 *      set_starting_folder
 *        IMPORTING iv_path TYPE string,
       get_master_language
-        RETURNING VALUE(rv_language) TYPE spras.
+        RETURNING VALUE(rv_language) TYPE spras,
 *      set_master_language
 *        IMPORTING iv_language TYPE spras.
+      get_signature
+        RETURNING VALUE(rs_signature) TYPE ty_file_signature
+        RAISING   lcx_exception.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_dot_abapgit,
@@ -206,5 +209,14 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 *  METHOD set_master_language.
 *    ms_data-master_language = iv_language.
 *  ENDMETHOD.
+
+  METHOD get_signature.
+
+    rs_signature-path     = gc_root_dir.
+    rs_signature-filename = gc_dot_abapgit.
+    rs_signature-sha1     = lcl_hash=>sha1( iv_type = gc_type-blob
+                                            iv_data = serialize( ) ).
+
+  ENDMETHOD. "get_signature
 
 ENDCLASS.
