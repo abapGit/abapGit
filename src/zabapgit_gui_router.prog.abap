@@ -148,6 +148,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-repo_refresh_checksums.          " Rebuil local checksums
         lcl_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_toggle_fav.                 " Toggle repo as favorite
+        lcl_services_repo=>toggle_favorite( lv_key ).
+        ev_state = gc_event_state-re_render.
 
         " ZIP services actions
       WHEN gc_action-zip_import.                      " Import repo from ZIP

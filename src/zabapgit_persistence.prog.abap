@@ -114,6 +114,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
         INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
+    TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
 
     METHODS constructor.
 
@@ -359,6 +360,8 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
+    TYPES: tt_favorites TYPE lcl_persistence_repo=>tt_repo_keys.
+
     METHODS set_username
       IMPORTING iv_username TYPE string
       RAISING   lcx_exception.
@@ -419,6 +422,19 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_changes_only) TYPE abap_bool
       RAISING   lcx_exception.
 
+    METHODS get_favorites
+      RETURNING VALUE(rt_favorites) TYPE tt_favorites
+      RAISING   lcx_exception.
+
+    METHODS toggle_favorite
+      IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS is_favorite_repo
+      IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_yes) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
 
@@ -438,6 +454,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
              repo_config  TYPE ty_repo_config_tt,
              hide_files   TYPE abap_bool,
              changes_only TYPE abap_bool,
+             favorites    TYPE tt_favorites,
            END OF ty_user.
 
     METHODS constructor
@@ -681,8 +698,50 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD. "get_changes_only
 
+  METHOD get_favorites.
+
+    rt_favorites = read( )-favorites.
+
+  ENDMETHOD.  "get_favorites
+
+  METHOD toggle_favorite.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    READ TABLE ls_user-favorites TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_key.
+
+    IF sy-subrc = 0.
+      DELETE ls_user-favorites INDEX sy-tabix.
+    ELSE.
+      APPEND iv_repo_key TO ls_user-favorites.
+    ENDIF.
+
+    update( ls_user ).
+
+  ENDMETHOD.  " toggle_favorite.
+
+  METHOD is_favorite_repo.
+
+    DATA: lt_favorites TYPE tt_favorites.
+
+    lt_favorites = get_favorites( ).
+
+    READ TABLE lt_favorites TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_key.
+
+    rv_yes = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.  " is_favorite_repo.
 
 ENDCLASS.
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_persistence_db
+*----------------------------------------------------------------------*
 
 CLASS lcl_persistence_db IMPLEMENTATION.
 
@@ -799,6 +858,11 @@ CLASS lcl_persistence_db IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_persistence_repo
+*----------------------------------------------------------------------*
 
 CLASS lcl_persistence_repo IMPLEMENTATION.
 
