@@ -8,9 +8,11 @@ Legend
 + : added
 - : removed
 
-2016-11-??
+2016-11-22
 ------------------
 + supported object list @debugpage
++ New favorites bar. All repos are displayed in dropdown burger-button. A repo can be "starred" to appear in favbar.
+! W3xx serialization change (v2.0.0). Now data file is stored as a separate file instead of base64 field in XML.
 * Fixed bug in diff page: change counters values
 
 2016-11-12

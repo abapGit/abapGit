@@ -86,7 +86,7 @@ CLASS lcl_xml IMPLEMENTATION.
     ENDIF.
 
 * buffer serializer metadata. Git node will be removed lateron
-    ms_metadata-class = li_element->get_attribute_ns( c_attr_serializer ).
+    ms_metadata-class   = li_element->get_attribute_ns( c_attr_serializer ).
     ms_metadata-version = li_element->get_attribute_ns( c_attr_serializer_version ).
 
   ENDMETHOD.                    "parse
