@@ -260,12 +260,15 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lt_local        = get_files_local( ).
     lv_branch_equal = boolc( get_sha1_remote( ) = get_sha1_local( ) ).
 
-    DELETE lt_local WHERE item IS INITIAL.
+    DELETE lt_local " Remove non-code related files except .abapgit
+      WHERE item IS INITIAL
+      AND NOT ( file-path = gc_root_dir AND file-filename = gc_dot_abapgit ).
+
     SORT lt_local BY item.
     SORT lt_remote BY path filename.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
-      IF ls_last_item <> <ls_local>-item. " New item reached ?
+      IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
         <ls_checksum>-item = <ls_local>-item.
         ls_last_item       = <ls_local>-item.
@@ -472,6 +475,7 @@ CLASS lcl_repo IMPLEMENTATION.
     ENDIF.
 
     lt_updated_files = lcl_objects=>deserialize( me ).
+    APPEND mo_dot_abapgit->get_signature( ) TO lt_updated_files.
 
     CLEAR: mt_local, mv_last_serialization.
 
