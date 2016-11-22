@@ -263,7 +263,6 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD render. "TODO refactor
 
     DATA: lv_class   TYPE string,
-          lv_text    TYPE string,
           lv_is_drop TYPE abap_bool,
           lv_last    TYPE abap_bool.
 
