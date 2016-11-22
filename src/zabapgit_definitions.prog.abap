@@ -167,6 +167,7 @@ CONSTANTS: BEGIN OF gc_action,
              repo_remote_detach     TYPE string VALUE 'repo_remote_detach',
              repo_remote_change     TYPE string VALUE 'repo_remote_change',
              repo_refresh_checksums TYPE string VALUE 'repo_refresh_checksums',
+             repo_toggle_fav        TYPE string VALUE 'repo_toggle_fav',
 
              abapgit_home       TYPE string VALUE 'abapgit_home',
              abapgit_install    TYPE string VALUE 'abapgit_install',
