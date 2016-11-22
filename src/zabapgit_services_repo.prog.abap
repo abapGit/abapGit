@@ -66,6 +66,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repo->deserialize( ).
 
     lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
+    toggle_favorite( lo_repo->get_key( ) ).
 
     COMMIT WORK.
 
@@ -174,6 +175,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       iv_package = ls_popup-package ).
 
     lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
+    toggle_favorite( lo_repo->get_key( ) ).
 
     COMMIT WORK.
 
