@@ -109,6 +109,15 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     ro_html->add( '<td class="repo_attr right">' ).
 
+    IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
+      lv_icon = 'img/star' ##NO_TEXT.
+    ELSE.
+      lv_icon = 'img/star-grey' ##NO_TEXT.
+    ENDIF.
+    lv_icon = |<img class="pad-sides" src="{ lv_icon }" title="Click to toggle favorite">|.
+    ro_html->add_anchor( iv_act = |{ gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+                         iv_txt = lv_icon ).
+
     IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
       ro_html->add( '<span class="bg_marker" title="background">BG</span>' ).
     ENDIF.
@@ -370,6 +379,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.crossout         { text-decoration: line-through !important; }'.
     _add '.right            { text-align:right; }'.
     _add '.paddings         { padding: 0.5em 0.5em; }'.
+    _add '.pad-sides        { padding: 0 0.3em; }'.
 
     " Structure div styles: header, footer, toc
     _add '/* STRUCTURE DIVS, HEADER & FOOTER */'.
@@ -468,6 +478,17 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '    text-decoration: none;'.
     _add '    display: block;'.
     _add '}'.
+
+    _add '.dropdown_content td {'. " TODO refactor
+    _add '    text-align: left;'.
+    _add '}'.
+    _add '.dropdown_content td a {'. " TODO refactor
+    _add '    padding: 0em 0.2em;'.
+    _add '}'.
+    _add '.dropdown_content td.icon {'. " TODO refactor
+    _add '    padding: 0 3px 0 6px;'.
+    _add '}'.
+
     _add '.dropdown_content a:hover { background-color: #f1f1f1 }'.
     _add '.dropdown:hover .dropdown_content { display: block; }'.
     _add '.dropdown:hover .dropbtn  { color: #79a0d2; }'.

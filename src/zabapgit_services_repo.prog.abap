@@ -39,6 +39,10 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception lcx_cancel.
 
+    CLASS-METHODS toggle_favorite
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -281,5 +285,11 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repo->rebuild_local_checksums( ).
 
   ENDMETHOD.  "refresh_local_checksums
+
+  METHOD toggle_favorite.
+
+    lcl_app=>user( )->toggle_favorite( iv_key ).
+
+  ENDMETHOD.  " toggle_favorite.
 
 ENDCLASS. "lcl_services_repo
