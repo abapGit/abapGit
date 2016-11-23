@@ -362,7 +362,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
     IF iv_package IS INITIAL. " Empty package -> can be created
       lv_button2 = 'Create package' ##NO_TEXT.
-      lv_icon2   = icon_msg.
+      lv_icon2   = icon_folder.
     ENDIF.
 
 *                   TAB           FLD       LABEL            DEF        ATTR
