@@ -12,8 +12,26 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+    TYPES: ty_wwwparams_tt TYPE STANDARD TABLE OF wwwparams WITH DEFAULT KEY.
+
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE ty_item
+          iv_language TYPE spras.
+
+  PROTECTED SECTION.
+
+    METHODS get_metadata REDEFINITION.
+
   PRIVATE SECTION.
-    METHODS init_key RETURNING VALUE(rs_key) TYPE wwwdatatab.
+
+    DATA ms_key TYPE wwwdatatab.
+
+    METHODS get_ext
+      IMPORTING it_params TYPE ty_wwwparams_tt
+      RETURNING VALUE(rv_ext) TYPE string
+      RAISING   lcx_exception.
 
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
@@ -24,6 +42,12 @@ ENDCLASS. "lcl_object_W3SUPER DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3super IMPLEMENTATION.
 
+  METHOD constructor.
+    super->constructor( is_item = is_item iv_language = iv_language ).
+    ms_key-relid = ms_item-obj_type+2(2).
+    ms_key-objid = ms_item-obj_name.
+  ENDMETHOD.  " constructor.
+
   METHOD lif_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.  "lif_object~has_changed_since
@@ -32,13 +56,8 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD init_key.
-    rs_key-relid = ms_item-obj_type+2(2).
-    rs_key-objid = ms_item-obj_name.
-  ENDMETHOD.                    " init_key
-
   METHOD lif_object~jump.
-    " No idea how to just to SMW0
+    " No idea how to jump to SMW0
     lcx_exception=>raise( 'Please go to SMW0 for W3MI object' ).
   ENDMETHOD.                    "jump
 
@@ -46,18 +65,17 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-  " W3xx EXISTS
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  METHOD get_metadata. "Redefinition
+    rs_metadata         = super->get_metadata( ).
+    rs_metadata-version = 'v2.0.0'. " Seriazation v2, separate data file
+  ENDMETHOD.  " get_metadata. "Redefinition
+
   METHOD lif_object~exists.
-    DATA ls_key   TYPE wwwdatatab.
 
-    ls_key = init_key( ).
-
-    SELECT SINGLE objid INTO ls_key-objid
+    SELECT SINGLE objid INTO ms_key-objid
       FROM wwwdata
-      WHERE relid = ls_key-relid
-      AND   objid = ls_key-objid
+      WHERE relid = ms_key-relid
+      AND   objid = ms_key-objid
       AND   srtf2 = 0.
 
     IF sy-subrc IS NOT INITIAL.
@@ -68,26 +86,19 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~exists
 
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-  " W3xx SERIALIZE
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~serialize.
-    DATA ls_key       TYPE wwwdatatab.
+
     DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
     DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
     DATA lv_xstring   TYPE xstring.
     DATA ls_wwwparam  LIKE LINE OF lt_w3params.
     DATA lv_size      TYPE int4.
-    DATA lv_base64str TYPE string.
-    DATA lo_utility   TYPE REF TO cl_http_utility.
 
-    ls_key = init_key( ).
-
-    SELECT SINGLE * INTO CORRESPONDING FIELDS OF ls_key
+    SELECT SINGLE * INTO CORRESPONDING FIELDS OF ms_key
       FROM wwwdata
-      WHERE relid = ls_key-relid
-      AND   objid = ls_key-objid
+      WHERE relid = ms_key-relid
+      AND   objid = ms_key-objid
       AND   srtf2 = 0.
 
     IF sy-subrc IS NOT INITIAL.
@@ -96,7 +107,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     CALL FUNCTION 'WWWDATA_IMPORT'
       EXPORTING
-        key               = ls_key
+        key               = ms_key
       TABLES
         mime              = lt_w3mime
         html              = lt_w3html
@@ -110,8 +121,8 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     CALL FUNCTION 'WWWPARAMS_READ_ALL'
       EXPORTING
-        type             = ls_key-relid
-        objid            = ls_key-objid
+        type             = ms_key-relid
+        objid            = ms_key-objid
       TABLES
         params           = lt_w3params
       EXCEPTIONS
@@ -128,7 +139,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     lv_size = ls_wwwparam-value.
 
-    CASE ls_key-relid.
+    CASE ms_key-relid.
       WHEN 'MI'.
         CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
           EXPORTING
@@ -155,53 +166,54 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot convert W3xx to xstring' ).
     ENDIF.
 
-    CREATE OBJECT lo_utility.
-    lv_base64str = lo_utility->encode_x_base64( lv_xstring ).
-
     io_xml->add( iv_name = 'NAME'
-                 ig_data = ls_key-objid ).
+                 ig_data = ms_key-objid ).
 
     io_xml->add( iv_name = 'TEXT'
-                 ig_data = ls_key-text ).
-
-    io_xml->add( iv_name = 'DATA'
-                 ig_data = lv_base64str ).
+                 ig_data = ms_key-text ).
 
     io_xml->add( iv_name = 'PARAMS'
                  ig_data = lt_w3params ).
 
+    " Seriazation v2, separate data file. 'extra' added to prevent conflict with .xml
+    lif_object~mo_files->add_raw( iv_data  = lv_xstring
+                                  iv_extra = 'data'
+                                  iv_ext   = get_ext( lt_w3params ) ).
+
   ENDMETHOD.                    "serialize
 
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-  " W3xx DESERIALIZE
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~deserialize.
 
-    DATA ls_key       TYPE wwwdatatab.
     DATA lv_base64str TYPE string.
     DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
     DATA lv_xstring   TYPE xstring.
-    DATA lo_utility   TYPE REF TO cl_http_utility.
     DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
     DATA lv_size      TYPE int4.
     DATA lv_tadir_obj TYPE tadir-object.
 
-    ls_key = init_key( ).
 
     io_xml->read( EXPORTING iv_name = 'TEXT'
-                  CHANGING  cg_data = ls_key-text ).
-
-    io_xml->read( EXPORTING iv_name = 'DATA'
-                  CHANGING  cg_data = lv_base64str ).
+                  CHANGING  cg_data = ms_key-text ).
 
     io_xml->read( EXPORTING iv_name = 'PARAMS'
                   CHANGING  cg_data = lt_w3params ).
 
-    CREATE OBJECT lo_utility.
-    lv_xstring = lo_utility->decode_x_base64( lv_base64str ).
+    CASE io_xml->get_metadata( )-version.
+      WHEN 'v1.0.0'.
+        io_xml->read( EXPORTING iv_name = 'DATA'
+                      CHANGING  cg_data = lv_base64str ).
+        lv_xstring = cl_http_utility=>decode_x_base64( lv_base64str ).
+      WHEN 'v2.0.0'.
+        lv_xstring = lif_object~mo_files->read_raw( iv_extra = 'data'
+                                                    iv_ext   = get_ext( lt_w3params ) ).
+      WHEN OTHERS.
+        lcx_exception=>raise( 'W3xx: Unknown serializer version' ).
 
-    CASE ls_key-relid.
+    ENDCASE.
+
+
+    CASE ms_key-relid.
       WHEN 'MI'.
         CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
           EXPORTING
@@ -248,14 +260,14 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot update W3xx params' ).
     ENDIF.
 
-    ls_key-tdate    = sy-datum.
-    ls_key-ttime    = sy-uzeit.
-    ls_key-chname   = sy-uname.
-    ls_key-devclass = iv_package.
+    ms_key-tdate    = sy-datum.
+    ms_key-ttime    = sy-uzeit.
+    ms_key-chname   = sy-uname.
+    ms_key-devclass = iv_package.
 
     CALL FUNCTION 'WWWDATA_EXPORT'
       EXPORTING
-        key               = ls_key
+        key               = ms_key
       TABLES
         mime              = lt_w3mime
         html              = lt_w3html
@@ -267,14 +279,14 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot upload W3xx data' ).
     ENDIF.
 
-    CONCATENATE 'W3' ls_key-relid INTO lv_tadir_obj.
+    CONCATENATE 'W3' ms_key-relid INTO lv_tadir_obj.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
         wi_tadir_pgmid                 = 'R3TR'
         wi_tadir_object                = lv_tadir_obj
         wi_tadir_devclass              = iv_package
-        wi_tadir_obj_name              = ls_key-objid
+        wi_tadir_obj_name              = ms_key-objid
         wi_test_modus                  = space
       EXCEPTIONS
         tadir_entry_not_existing       = 1
@@ -309,17 +321,11 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~deserialize
 
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-  " W3xx DELETE
-  """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
   METHOD lif_object~delete.
-    DATA ls_key TYPE wwwdatatab.
-
-    ls_key = init_key( ).
 
     CALL FUNCTION 'WWWDATA_DELETE'
       EXPORTING
-        key               = ls_key
+        key               = ms_key
       EXCEPTIONS
         wrong_object_type = 1
         delete_error      = 2.
@@ -330,7 +336,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     CALL FUNCTION 'WWWPARAMS_DELETE_ALL'
       EXPORTING
-        key          = ls_key
+        key          = ms_key
       EXCEPTIONS
         delete_error = 1.
 
@@ -339,6 +345,21 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "lif_object~delete
+
+  METHOD get_ext.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF it_params.
+
+    READ TABLE it_params ASSIGNING <param> WITH KEY name = 'fileextension'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find file ext for { ms_key-objid }| ).
+    ENDIF.
+
+    rv_ext = <param>-value.
+    SHIFT rv_ext LEFT DELETING LEADING '.'.
+
+  ENDMETHOD.  " get_ext.
 
 ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
 
