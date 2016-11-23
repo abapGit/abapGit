@@ -238,4 +238,8 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_ssfo IMPLEMENTATION

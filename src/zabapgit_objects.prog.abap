@@ -255,6 +255,31 @@ CLASS lcl_objects_files DEFINITION FINAL.
 
 ENDCLASS.                    "lcl_objects_files DEFINITION
 
+INTERFACE lif_object_comparison_result.
+  METHODS:
+    show_confirmation_dialog,
+    is_result_complete_halt
+      RETURNING VALUE(rv_response) TYPE abap_bool.
+
+ENDINTERFACE.
+
+"Null Object Pattern
+CLASS lcl_null_comparison_result DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object_comparison_result.
+ENDCLASS.
+CLASS lcl_null_comparison_result IMPLEMENTATION.
+
+  METHOD lif_object_comparison_result~is_result_complete_halt.
+    rv_response = abap_false.
+  ENDMETHOD.
+
+  METHOD lif_object_comparison_result~show_confirmation_dialog.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       INTERFACE lif_object DEFINITION
 *----------------------------------------------------------------------*
@@ -285,6 +310,11 @@ INTERFACE lif_object.
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
+      RAISING   lcx_exception.
+  METHODS:
+    compare_to_remote_version
+      IMPORTING io_remote_version_xml     TYPE REF TO lcl_xml_input
+      RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_object_comparison_result
       RAISING   lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
@@ -727,6 +757,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
+  METHOD lif_object~compare_to_remote_version.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
 
 **********************************************************************
@@ -791,7 +825,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
-            INCLUDE TYPE textpool.
+        INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 

@@ -587,15 +587,18 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item    TYPE ty_item,
-          lv_cancel  TYPE abap_bool,
-          li_obj     TYPE REF TO lif_object,
-          lt_remote  TYPE ty_files_tt,
-          lv_package TYPE devclass,
-          lo_files   TYPE REF TO lcl_objects_files,
-          lo_xml     TYPE REF TO lcl_xml_input,
-          lt_results TYPE ty_results_tt,
-          lt_late    TYPE TABLE OF ty_late.
+    DATA: ls_item              TYPE ty_item,
+          lv_cancel            TYPE abap_bool,
+          li_obj               TYPE REF TO lif_object,
+          lt_remote            TYPE ty_files_tt,
+          ls_remote_file       LIKE LINE OF lt_remote,
+          lv_package           TYPE devclass,
+          lo_files             TYPE REF TO lcl_objects_files,
+          lo_xml               TYPE REF TO lcl_xml_input,
+          lt_results           TYPE ty_results_tt,
+          lt_late              TYPE TABLE OF ty_late,
+          lo_current_version   TYPE REF TO lcl_xml_input,
+          lo_comparison_result TYPE REF TO lif_object_comparison_result.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
                    <ls_late>   LIKE LINE OF lt_late.
@@ -652,6 +655,26 @@ CLASS lcl_objects IMPLEMENTATION.
                               iv_language = io_repo->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
+    break copat.
+      READ TABLE lt_remote WITH KEY filename = <ls_result>-filename INTO ls_remote_file.
+      IF ls_remote_file-filename NS '.abap'.
+
+      "if file does not exist in remote, we don't need to validate
+      IF sy-subrc = 0.
+        CREATE OBJECT lo_current_version
+          EXPORTING
+            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+        lo_comparison_result = li_obj->compare_to_remote_version( lo_current_version ).
+        lo_comparison_result->show_confirmation_dialog( ).
+
+        IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text = 'Deserialization aborted by user'.
+        ENDIF.
+      ENDIF.
+      endif.
+
       li_obj->mo_files = lo_files.
 
       IF li_obj->get_metadata( )-late_deser = abap_true.
@@ -661,6 +684,7 @@ CLASS lcl_objects IMPLEMENTATION.
         <ls_late>-package = lv_package.
         CONTINUE.
       ENDIF.
+
 
       li_obj->deserialize( iv_package = lv_package
                            io_xml     = lo_xml ).
