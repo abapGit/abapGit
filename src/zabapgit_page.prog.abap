@@ -452,14 +452,15 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '}'.
     _add '.dropdown_angle {'.
     _add '    position: absolute !important;'.
-    _add '    right: -2px;'.
+    _add '    right: -4px;'.
+    _add '    top: -1px;'.
     _add '}'.
     _add '.dropbtn_angle {'.
     _add '    width: 0;'.
     _add '    height: 0;'.
-    _add '    border-left: 5px solid transparent;'.
-    _add '    border-right: 5px solid transparent;'.
-    _add '    border-bottom: 5px solid #4078c0;'.
+    _add '    border-left: 7px solid transparent;'.
+    _add '    border-right: 7px solid transparent;'.
+    _add '    border-bottom: 7px solid #4078c0;'.
     _add '    transform: rotate(45deg);'.
     _add '    -ms-transform: rotate(45deg);'.
     _add '}'.
@@ -481,6 +482,9 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '    height: 16px;'.
     _add '    bottom: 0px;'.
     _add '    left: -16px;'.
+    _add '}'.
+    _add '.dropdown_angle .dropdown_content {'.
+    _add '    top: -1px;'.
     _add '}'.
 
     _add '.dropdown:hover .dropdown_content { display: block; }'.
