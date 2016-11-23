@@ -231,14 +231,14 @@ CLASS lcl_objects_files DEFINITION FINAL.
       add
         IMPORTING is_file TYPE ty_file,
       add_raw
-        IMPORTING iv_extra  TYPE clike OPTIONAL
-                  iv_ext    TYPE string
-                  iv_data   TYPE xstring
+        IMPORTING iv_extra TYPE clike OPTIONAL
+                  iv_ext   TYPE string
+                  iv_data  TYPE xstring
         RAISING   lcx_exception,
       read_raw
-        IMPORTING iv_extra         TYPE clike OPTIONAL
-                  iv_ext           TYPE string
-        RETURNING VALUE(rv_data)   TYPE xstring
+        IMPORTING iv_extra       TYPE clike OPTIONAL
+                  iv_ext         TYPE string
+        RETURNING VALUE(rv_data) TYPE xstring
         RAISING   lcx_exception,
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
@@ -323,7 +323,7 @@ INTERFACE lif_object.
       RAISING   lcx_exception.
   METHODS:
     compare_to_remote_version
-      IMPORTING io_remote_version_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
       RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_object_comparison_result
       RAISING   lcx_exception.
 
@@ -794,7 +794,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
   ENDMETHOD.                    "class_constructor
 
   METHOD lif_object~compare_to_remote_version.
-	  CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
@@ -1734,5 +1734,13 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE ty_item
       RAISING   lcx_exception.
+
+    CLASS-METHODS compare_remote_to_local
+      IMPORTING
+        io_object TYPE REF TO lif_object
+        it_remote TYPE ty_files_tt
+        is_result TYPE ty_result
+      RAISING
+        lcx_exception.
 
 ENDCLASS.                    "lcl_object DEFINITION
