@@ -655,25 +655,24 @@ CLASS lcl_objects IMPLEMENTATION.
                               iv_language = io_repo->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
-    break copat.
       READ TABLE lt_remote WITH KEY filename = <ls_result>-filename INTO ls_remote_file.
       IF ls_remote_file-filename NS '.abap'.
 
-      "if file does not exist in remote, we don't need to validate
-      IF sy-subrc = 0.
-        CREATE OBJECT lo_current_version
-          EXPORTING
-            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
-        lo_comparison_result = li_obj->compare_to_remote_version( lo_current_version ).
-        lo_comparison_result->show_confirmation_dialog( ).
-
-        IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
-          RAISE EXCEPTION TYPE lcx_exception
+        "if file does not exist in remote, we don't need to validate
+        IF sy-subrc = 0.
+          CREATE OBJECT lo_current_version
             EXPORTING
-              iv_text = 'Deserialization aborted by user'.
+              iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+          lo_comparison_result = li_obj->compare_to_remote_version( lo_current_version ).
+          lo_comparison_result->show_confirmation_dialog( ).
+
+          IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
+            RAISE EXCEPTION TYPE lcx_exception
+              EXPORTING
+                iv_text = 'Deserialization aborted by user'.
+          ENDIF.
         ENDIF.
       ENDIF.
-      endif.
 
       li_obj->mo_files = lo_files.
 

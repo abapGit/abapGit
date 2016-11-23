@@ -307,7 +307,7 @@ CLASS lcl_http_digest IMPLEMENTATION.
         internal_error = 3
         OTHERS         = 4.
     IF sy-subrc <> 0.
-      BREAK-POINT.
+
     ENDIF.
 
     rv_hash = lv_hash.
