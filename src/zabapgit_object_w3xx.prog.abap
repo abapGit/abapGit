@@ -346,11 +346,6 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-<<<<<<< HEAD
-  METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
-  ENDMETHOD.
-=======
   METHOD get_ext.
 
     FIELD-SYMBOLS <param> LIKE LINE OF it_params.
@@ -365,7 +360,10 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
   ENDMETHOD.  " get_ext.
->>>>>>> refs/remotes/larshp/master
+  
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.  
 
 ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
 
