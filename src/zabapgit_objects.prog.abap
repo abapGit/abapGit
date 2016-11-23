@@ -1194,7 +1194,10 @@ CLASS lcl_objects_program IMPLEMENTATION.
       lcx_exception=>raise( 'PROG, error inserting' ).
     ENDIF.
 
-    IF is_progdir-varcl = space AND ls_progdir_new = abap_true.
+    SELECT SINGLE * FROM progdir INTO ls_progdir_new
+      WHERE name = ls_progdir_new-name
+      AND state = ls_progdir_new-state.
+    IF sy-subrc = 0 AND is_progdir-varcl = space AND ls_progdir_new-varcl = abap_true.
 * function module UPDATE_PROGDIR does not update VARCL
       UPDATE progdir SET varcl = is_progdir-varcl
         WHERE name = ls_progdir_new-name
