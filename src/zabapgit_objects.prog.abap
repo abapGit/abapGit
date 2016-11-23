@@ -231,14 +231,14 @@ CLASS lcl_objects_files DEFINITION FINAL.
       add
         IMPORTING is_file TYPE ty_file,
       add_raw
-        IMPORTING iv_extra  TYPE clike OPTIONAL
-                  iv_ext    TYPE string
-                  iv_data   TYPE xstring
+        IMPORTING iv_extra TYPE clike OPTIONAL
+                  iv_ext   TYPE string
+                  iv_data  TYPE xstring
         RAISING   lcx_exception,
       read_raw
-        IMPORTING iv_extra         TYPE clike OPTIONAL
-                  iv_ext           TYPE string
-        RETURNING VALUE(rv_data)   TYPE xstring
+        IMPORTING iv_extra       TYPE clike OPTIONAL
+                  iv_ext         TYPE string
+        RETURNING VALUE(rv_data) TYPE xstring
         RAISING   lcx_exception,
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
@@ -264,6 +264,31 @@ CLASS lcl_objects_files DEFINITION FINAL.
         RETURNING VALUE(rv_filename) TYPE string.
 
 ENDCLASS.                    "lcl_objects_files DEFINITION
+
+INTERFACE lif_object_comparison_result.
+  METHODS:
+    show_confirmation_dialog,
+    is_result_complete_halt
+      RETURNING VALUE(rv_response) TYPE abap_bool.
+
+ENDINTERFACE.
+
+"Null Object Pattern
+CLASS lcl_null_comparison_result DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object_comparison_result.
+ENDCLASS.
+CLASS lcl_null_comparison_result IMPLEMENTATION.
+
+  METHOD lif_object_comparison_result~is_result_complete_halt.
+    rv_response = abap_false.
+  ENDMETHOD.
+
+  METHOD lif_object_comparison_result~show_confirmation_dialog.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       INTERFACE lif_object DEFINITION
@@ -295,6 +320,11 @@ INTERFACE lif_object.
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
+      RAISING   lcx_exception.
+  METHODS:
+    compare_to_remote_version
+      IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
+      RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_object_comparison_result
       RAISING   lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
@@ -763,6 +793,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
 
 **********************************************************************
@@ -827,7 +861,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
-            INCLUDE TYPE textpool.
+        INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -1700,5 +1734,13 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE ty_item
       RAISING   lcx_exception.
+
+    CLASS-METHODS compare_remote_to_local
+      IMPORTING
+        io_object TYPE REF TO lif_object
+        it_remote TYPE ty_files_tt
+        is_result TYPE ty_result
+      RAISING
+        lcx_exception.
 
 ENDCLASS.                    "lcl_object DEFINITION

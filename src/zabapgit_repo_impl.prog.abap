@@ -446,7 +446,10 @@ CLASS lcl_repo IMPLEMENTATION.
       READ TABLE lt_local ASSIGNING <ls_local>
         WITH KEY file-path = <ls_new_state>-path file-filename = <ls_new_state>-filename
         BINARY SEARCH.
-      ASSERT sy-subrc = 0. " All new state relate files must be local already
+      IF sy-subrc <> 0.
+* if the deserialization fails, the local file might not be there
+        CONTINUE.
+      ENDIF.
 
       READ TABLE lt_checksums ASSIGNING <ls_checksum> " TODO Optimize
         WITH KEY item = <ls_local>-item.

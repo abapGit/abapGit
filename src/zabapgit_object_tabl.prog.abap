@@ -7,6 +7,7 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+
 CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
@@ -378,5 +379,33 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~compare_to_remote_version.
+    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_validation,
+          lo_local_version_output TYPE REF TO lcl_xml_output,
+          lo_local_version_input  TYPE REF TO lcl_xml_input,
+          lv_validation_text      TYPE string.
+
+    CREATE OBJECT lo_local_version_output.
+    me->lif_object~serialize( lo_local_version_output ).
+
+    CREATE OBJECT lo_local_version_input
+      EXPORTING
+        iv_xml = lo_local_version_output->render( ).
+
+    CREATE OBJECT lo_table_validation.
+
+    lv_validation_text = lo_table_validation->validate(
+      io_remote_version = io_remote_version_xml
+      io_local_version  = lo_local_version_input ).
+    IF lv_validation_text IS NOT INITIAL.
+      lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
+      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
+        EXPORTING
+          iv_message = lv_validation_text.
+    ELSE.
+      CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    ENDIF.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION
