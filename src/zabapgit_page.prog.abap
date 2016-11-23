@@ -380,6 +380,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '.right            { text-align:right; }'.
     _add '.paddings         { padding: 0.5em 0.5em; }'.
     _add '.pad-sides        { padding: 0 0.3em; }'.
+    _add '.pad4px           { padding: 4px; }'.
 
     " Structure div styles: header, footer, toc
     _add '/* STRUCTURE DIVS, HEADER & FOOTER */'.
@@ -443,7 +444,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '  font-size: 12pt;'.
     _add '}'.
 
-    " Drop down styles
+    " Dropdown styles :mechanics
     _add '/*DROP DOWN*/'.
     _add '.dropdown {'.
     _add '    position: relative;'.
@@ -466,31 +467,47 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     _add '    display: none;'.
     _add '    z-index: 1;'.
     _add '    position: absolute;'.
-    _add '    right: 0;'.
-*    _add '    top: 1.1em; /*IE7 woraround*/'.
-    _add '    background-color: #f9f9f9;'.
+    _add '    right: -12px;'.
+    _add '    top: 1em;'.
+    _add '    padding: 6px 10px 10px 10px;'.
     _add '    white-space: nowrap;'.
-*    _add '    min-width: 10em;'.
-    _add '    border-bottom: 1px solid lightgrey;'.
     _add '}'.
+    _add '.dropdown div.minizone {'.
+    _add '    display: none;'.
+    _add '    z-index: 1;'.
+    _add '    position: absolute;'.
+    _add '    padding: 0px;'.
+    _add '    width: 16px;'.
+    _add '    height: 16px;'.
+    _add '    bottom: 0px;'.
+    _add '    left: -16px;'.
+    _add '}'.
+
+    _add '.dropdown:hover .dropdown_content { display: block; }'.
+    _add '.dropdown:hover .minizone { display: block; }'.
+
+    " Dropdown styles :styling
     _add '.dropdown_content a {'.
     _add '    padding: 0.2em;'.
+    _add '    background-color: #f9f9f9;'.
     _add '    text-decoration: none;'.
     _add '    display: block;'.
+    _add '    border: none !important;'.
     _add '}'.
 
-    _add '.dropdown_content td {'. " TODO refactor
-    _add '    text-align: left;'.
+
+    _add '.dropdown_content div.box {'.
+    _add '    border-bottom: 1px solid #C0C0C0;'.
+    _add '    border-right: 1px solid #C0C0C0;'.
+    _add '    background-color: #f9f9f9;'.
+    _add '    padding: 2px;'.
     _add '}'.
-    _add '.dropdown_content td a {'. " TODO refactor
-    _add '    padding: 0em 0.2em;'.
-    _add '}'.
-    _add '.dropdown_content td.icon {'. " TODO refactor
-    _add '    padding: 0 3px 0 6px;'.
-    _add '}'.
+
+    _add '.dropdown_content td      { text-align: left; padding: 2px; }'. " TODO refactor
+    _add '.dropdown_content td a    { padding: 0em 0.2em; }'. " TODO refactor
+    _add '.dropdown_content td.icon { padding: 0 3px 0 6px; }'. " TODO refactor
 
     _add '.dropdown_content a:hover { background-color: #f1f1f1 }'.
-    _add '.dropdown:hover .dropdown_content { display: block; }'.
     _add '.dropdown:hover .dropbtn  { color: #79a0d2; }'.
 
     " REPOSITORY

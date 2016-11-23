@@ -267,9 +267,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="right">' ).
-    ro_html->add( lo_allbar->render( iv_as_droplist_with_label = '<img src="img/burger">'
-                                     iv_sort                   = abap_true
-                                     iv_with_icons             = abap_true ) ).
+    ro_html->add( lo_allbar->render(
+      iv_as_droplist_with_label = '<img class="pad4px" src="img/burger">'
+      iv_sort                   = abap_true
+      iv_with_icons             = abap_true
+      iv_add_minizone           = abap_true ) ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
 
