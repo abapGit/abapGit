@@ -861,7 +861,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -1038,8 +1038,10 @@ CLASS lcl_objects_program IMPLEMENTATION.
                    ig_data = lt_dynpros ).
 
       ls_cua = serialize_cua( lv_program_name ).
-      lo_xml->add( iv_name = 'CUA'
-                   ig_data = ls_cua ).
+      IF NOT ls_cua IS INITIAL.
+        lo_xml->add( iv_name = 'CUA'
+                     ig_data = ls_cua ).
+      ENDIF.
     ENDIF.
 
     IF lines( lt_tpool ) = 1.
