@@ -143,6 +143,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include TYPE rs38l-include,
           lv_area    TYPE rs38l-area,
+          lv_message TYPE string,
           lt_source  TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
@@ -208,7 +209,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           canceled_in_corr        = 10
           OTHERS                  = 11.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from RS_FUNCTIONMODULE_INSERT' ).
+        lcx_exception=>raise( |error from RS_FUNCTIONMODULE_INSERT: {
+          sy-subrc } { sy-msgid }{ sy-msgno }| ).
       ENDIF.
 
       INSERT REPORT lv_include FROM lt_source.

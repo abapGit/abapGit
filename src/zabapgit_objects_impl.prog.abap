@@ -24,7 +24,9 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_index = sy-tabix.
 
       IF <ls_result>-lstate IS NOT INITIAL
-          AND <ls_result>-lstate <> gc_state-deleted.
+          AND <ls_result>-lstate <> gc_state-deleted
+          AND NOT ( <ls_result>-lstate = gc_state-added
+          AND <ls_result>-rstate IS INITIAL ).
         lv_question = |It looks like object {
           <ls_result>-obj_type } { <ls_result>-obj_name
           } has been modified locally, overwrite object?|.
@@ -620,7 +622,8 @@ CLASS lcl_objects IMPLEMENTATION.
     warning_overwrite( EXPORTING io_repo = io_repo
                        CHANGING ct_results = lt_results ).
 
-    LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL.
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
+        AND NOT ( lstate = gc_state-added AND rstate IS INITIAL ).
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_results )

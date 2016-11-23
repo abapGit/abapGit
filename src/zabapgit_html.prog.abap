@@ -204,6 +204,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_txt TYPE string
           io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
           iv_act TYPE string    OPTIONAL
+          iv_ico TYPE string    OPTIONAL
           iv_opt TYPE c         OPTIONAL
           iv_typ TYPE c         DEFAULT gc_action_type-sapevent,
       count
@@ -215,6 +216,8 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_vertical               TYPE abap_bool OPTIONAL
           iv_sort                   TYPE abap_bool OPTIONAL
           iv_as_angle               TYPE abap_bool OPTIONAL
+          iv_with_icons             TYPE abap_bool OPTIONAL
+          iv_add_minizone           TYPE abap_bool OPTIONAL
         RETURNING
           VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
@@ -222,6 +225,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
     TYPES: BEGIN OF ty_item,
              txt TYPE string,
              act TYPE string,
+             ico TYPE string,
              sub TYPE REF TO lcl_html_toolbar,
              opt TYPE char1,
              typ TYPE char1,
@@ -250,13 +254,14 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ls_item-txt = iv_txt.
     ls_item-act = iv_act.
+    ls_item-ico = iv_ico.
     ls_item-sub = io_sub.
     ls_item-opt = iv_opt.
     ls_item-typ = iv_typ.
     APPEND ls_item TO mt_items.
   ENDMETHOD.  "add
 
-  METHOD render.
+  METHOD render. "TODO refactor
 
     DATA: lv_class   TYPE string,
           lv_is_drop TYPE abap_bool,
@@ -292,11 +297,21 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ENDIF.
         ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ENDIF.
+
+      IF iv_add_minizone = abap_true.
+        ro_html->add( '<div class="minizone"></div>' ).
+      ENDIF.
+
       ro_html->add( '<div class="dropdown_content">' ).
+      ro_html->add( '<div class="box">' ).
     ENDIF.
 
     IF iv_sort = abap_true.
       SORT mt_items BY txt ASCENDING AS TEXT.
+    ENDIF.
+
+    IF iv_with_icons = abap_true.
+      ro_html->add( '<table>' ).
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.
@@ -309,11 +324,24 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
             AND iv_as_droplist_with_label IS INITIAL.
           lv_class = 'menu_end'.
         ENDIF.
+
+        IF iv_with_icons = abap_true.
+          ro_html->add( '<tr>' ).
+          ro_html->add( |<td class="icon">{ <ls_item>-ico }</td>| ).
+          ro_html->add( '<td width="100%">' ).
+        ENDIF.
+
         ro_html->add_anchor( iv_txt   = <ls_item>-txt
                              iv_act   = <ls_item>-act
                              iv_opt   = <ls_item>-opt
                              iv_typ   = <ls_item>-typ
                              iv_class = lv_class ).
+
+        IF iv_with_icons = abap_true.
+          ro_html->add( '</td>' ).
+          ro_html->add( '</tr>' ).
+        ENDIF.
+
       ELSE.
         ro_html->add( <ls_item>-sub->render(
           iv_as_droplist_with_label = <ls_item>-txt
@@ -322,8 +350,12 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ENDLOOP.
 
+    IF iv_with_icons = abap_true.
+      ro_html->add( '</table>' ).
+    ENDIF.
+
     IF lv_is_drop = abap_true. " Dropdown
-      ro_html->add( '</div>' ).
+      ro_html->add( '</div></div>' ).
     ENDIF.
 
     ro_html->add( '</div>' ).

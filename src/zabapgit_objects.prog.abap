@@ -230,6 +230,16 @@ CLASS lcl_objects_files DEFINITION FINAL.
         RAISING   lcx_exception,
       add
         IMPORTING is_file TYPE ty_file,
+      add_raw
+        IMPORTING iv_extra  TYPE clike OPTIONAL
+                  iv_ext    TYPE string
+                  iv_data   TYPE xstring
+        RAISING   lcx_exception,
+      read_raw
+        IMPORTING iv_extra         TYPE clike OPTIONAL
+                  iv_ext           TYPE string
+        RETURNING VALUE(rv_data)   TYPE xstring
+        RAISING   lcx_exception,
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
       set_files
@@ -530,6 +540,32 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ev_data = <ls_file>-data.
 
   ENDMETHOD.  " read_file.
+
+  METHOD add_raw.
+
+    DATA: ls_file TYPE ty_file.
+
+    ls_file-path     = '/'.
+    ls_file-data     = iv_data.
+    ls_file-filename = filename( iv_extra = iv_extra
+                                 iv_ext   = iv_ext ).
+
+    APPEND ls_file TO mt_files.
+
+  ENDMETHOD.                    "add_raw
+
+  METHOD read_raw.
+
+    DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring.
+
+    lv_filename = filename( iv_extra = iv_extra
+                            iv_ext   = iv_ext ).
+
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = rv_data ).
+
+  ENDMETHOD.                    "read_raw
 
 ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 
