@@ -10,10 +10,12 @@ CLASS lcl_http_digest DEFINITION FINAL.
         IMPORTING
           ii_client TYPE REF TO if_http_client
           iv_username TYPE string
-          iv_password TYPE string,
+          iv_password TYPE string
+        RAISING lcx_exception,
       run
         IMPORTING
-          ii_client TYPE REF TO if_http_client.
+          ii_client TYPE REF TO if_http_client
+        RAISING lcx_exception.
 
   PRIVATE SECTION.
     DATA: mv_ha1      TYPE string,
@@ -29,7 +31,8 @@ CLASS lcl_http_digest DEFINITION FINAL.
         IMPORTING
           iv_data        TYPE string
         RETURNING
-          VALUE(rv_hash) TYPE string.
+          VALUE(rv_hash) TYPE string
+        RAISING lcx_exception.
 
     METHODS:
       hash
@@ -39,8 +42,9 @@ CLASS lcl_http_digest DEFINITION FINAL.
           iv_uri             TYPE string
           iv_method          TYPE string
           iv_cnonse          TYPE string
-       RETURNING
-          VALUE(rv_response) TYPE string,
+        RETURNING
+          VALUE(rv_response) TYPE string
+        RAISING lcx_exception,
       parse
         IMPORTING
           ii_client TYPE REF TO if_http_client.

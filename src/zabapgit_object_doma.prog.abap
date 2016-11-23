@@ -262,6 +262,10 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     ENDLOOP.
 
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd01_texts BY ddlanguage ASCENDING.
+    SORT lt_dd07_texts BY ddlanguage ASCENDING.
+
     IF lines( lt_i18n_langs ) > 1.
       io_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
