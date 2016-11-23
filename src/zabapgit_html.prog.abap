@@ -217,6 +217,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_sort                   TYPE abap_bool OPTIONAL
           iv_as_angle               TYPE abap_bool OPTIONAL
           iv_with_icons             TYPE abap_bool OPTIONAL
+          iv_add_minizone           TYPE abap_bool OPTIONAL
         RETURNING
           VALUE(ro_html)            TYPE REF TO lcl_html_helper.
 
@@ -296,11 +297,21 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ENDIF.
         ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
       ENDIF.
+
+      IF iv_add_minizone = abap_true.
+        ro_html->add( '<div class="minizone"></div>' ).
+      ENDIF.
+
       ro_html->add( '<div class="dropdown_content">' ).
+      ro_html->add( '<div class="box">' ).
     ENDIF.
 
     IF iv_sort = abap_true.
       SORT mt_items BY txt ASCENDING AS TEXT.
+    ENDIF.
+
+    IF iv_with_icons = abap_true.
+      ro_html->add( '<table>' ).
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.
@@ -315,7 +326,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ENDIF.
 
         IF iv_with_icons = abap_true.
-          ro_html->add( '<table><tr>' ).
+          ro_html->add( '<tr>' ).
           ro_html->add( |<td class="icon">{ <ls_item>-ico }</td>| ).
           ro_html->add( '<td width="100%">' ).
         ENDIF.
@@ -328,7 +339,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
         IF iv_with_icons = abap_true.
           ro_html->add( '</td>' ).
-          ro_html->add( '</tr></table>' ).
+          ro_html->add( '</tr>' ).
         ENDIF.
 
       ELSE.
@@ -339,8 +350,12 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ENDLOOP.
 
+    IF iv_with_icons = abap_true.
+      ro_html->add( '</table>' ).
+    ENDIF.
+
     IF lv_is_drop = abap_true. " Dropdown
-      ro_html->add( '</div>' ).
+      ro_html->add( '</div></div>' ).
     ENDIF.
 
     ro_html->add( '</div>' ).
