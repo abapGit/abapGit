@@ -1792,6 +1792,7 @@ CLASS ltcl_path IMPLEMENTATION.
 
 
   ENDMETHOD.
+
 ENDCLASS.   "ltcl_path
 
 CLASS ltcl_file_status DEFINITION

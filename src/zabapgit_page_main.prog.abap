@@ -26,12 +26,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       retrieve_active_repo
         RAISING lcx_exception,
       render_toc
-        IMPORTING it_list        TYPE lcl_repo_srv=>ty_repo_tt
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      render_toc_line
-        IMPORTING io_toolbar     TYPE REF TO lcl_html_toolbar
-                  iv_image_url   TYPE string
+        IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
       build_main_menu
@@ -194,80 +189,99 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_toc.
 
     DATA: lo_pback      TYPE REF TO lcl_persistence_background,
-          lo_repo       LIKE LINE OF it_list,
-          lv_opt        TYPE c LENGTH 1,
-          lo_online     TYPE REF TO lcl_html_toolbar,
-          lo_offline    TYPE REF TO lcl_html_toolbar,
+          lv_opt        TYPE char1,
+          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_icon       TYPE string,
+          lo_repo       LIKE LINE OF it_repo_list,
+          lo_favbar     TYPE REF TO lcl_html_toolbar,
+          lo_allbar     TYPE REF TO lcl_html_toolbar,
+          lt_favorites  TYPE lcl_persistence_user=>tt_favorites,
           lv_repo_title TYPE string.
 
 
     CREATE OBJECT ro_html.
-    CREATE OBJECT lo_online.
-    CREATE OBJECT lo_offline.
+    CREATE OBJECT lo_favbar.
+    CREATE OBJECT lo_allbar.
     CREATE OBJECT lo_pback.
 
-    IF lines( it_list ) = 0.
-      RETURN.
-    ENDIF.
+    lt_favorites = lcl_app=>user( )->get_favorites( ).
 
-    LOOP AT it_list INTO lo_repo.
-      IF mv_show = lo_repo->get_key( ).
+    LOOP AT it_repo_list INTO lo_repo.
+      lv_key = lo_repo->get_key( ).
+      IF lv_key = mv_show.
         lv_opt = gc_html_opt-emphas.
       ELSE.
         CLEAR lv_opt.
       ENDIF.
 
-      IF lo_repo->is_offline( ) = abap_true.
-        lo_offline->add( iv_txt = lo_repo->get_name( )
-                         iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                         iv_opt = lv_opt ).
-      ELSE.
-
-        lv_repo_title = lo_repo->get_name( ).
-        IF lo_pback->exists( lo_repo->get_key( ) ) = abap_true.
-          lv_repo_title = lv_repo_title && '<sup>bg</sup>'. " Background marker
-        ENDIF.
-
-        lo_online->add( iv_txt = lv_repo_title
-                        iv_act = |{ c_actions-show }?{ lo_repo->get_key( ) }|
-                        iv_opt = lv_opt ).
-
+      lv_repo_title = lo_repo->get_name( ).
+      IF lo_pback->exists( lv_key ) = abap_true.
+        lv_repo_title = lv_repo_title && '<sup>bg</sup>'. " Background marker
       ENDIF.
 
+      READ TABLE lt_favorites TRANSPORTING NO FIELDS
+        WITH KEY table_line = lv_key.
+
+      IF sy-subrc = 0.
+        DELETE lt_favorites INDEX sy-tabix. " for later cleanup
+        lo_favbar->add( iv_txt = lv_repo_title
+                        iv_act = |{ c_actions-show }?{ lv_key }|
+                        iv_opt = lv_opt ).
+      ENDIF.
+
+      IF lo_repo->is_offline( ) = abap_true.
+        lv_icon = '<img src="img/repo_offline">'.
+      ELSE.
+        lv_icon = '<img src="img/repo_online">'.
+      ENDIF.
+
+      lo_allbar->add( iv_txt = lv_repo_title
+                      iv_act = |{ c_actions-show }?{ lv_key }|
+                      iv_ico = lv_icon
+                      iv_opt = lv_opt ).
     ENDLOOP.
 
-    ro_html->add( '<div id="toc"><div class="toc_grid">' ) ##NO_TEXT.
+    " Cleanup orphan favorites (for removed repos)
+    LOOP AT lt_favorites INTO lv_key.
+      lcl_app=>user( )->toggle_favorite( lv_key ).
+    ENDLOOP.
 
-    IF lo_online->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_online
-                                     iv_image_url = 'img/repo_online' ) ).
+    " Render HTML
+    ro_html->add( '<div id="toc">' )          ##NO_TEXT. " TODO refactor html & css
+    ro_html->add( '<div class="toc_grid">' )  ##NO_TEXT.
+    ro_html->add( '<div class="toc_row">' )   ##NO_TEXT.
+
+**********************************************************************
+
+    ro_html->add( '<table width="100%"><tr>' ).
+    ro_html->add( '<td class="pad-sides"><img src="img/star"></td>' ).
+
+    ro_html->add( '<td class="pad-sides" width="100%">' ). " Maximize width
+    IF lo_favbar->count( ) > 0.
+      ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
+    ELSE.
+      ro_html->add( '<span class="grey">No favorites found. Please'
+                 && ' click <img src="img/star-grey"> icon repo toolbar to add'
+                 && ' it as favourite. Choose a repo there &#x2192;</span>' ).
     ENDIF.
+    ro_html->add( '</td>' ).
 
-    IF lo_offline->count( ) > 0.
-      ro_html->add( render_toc_line( io_toolbar   = lo_offline
-                                     iv_image_url = 'img/repo_offline' ) ).
-    ENDIF.
+    ro_html->add( '<td class="right">' ).
+    ro_html->add( lo_allbar->render(
+      iv_as_droplist_with_label = '<img class="pad4px" src="img/burger">'
+      iv_sort                   = abap_true
+      iv_with_icons             = abap_true
+      iv_add_minizone           = abap_true ) ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr></table>' ).
 
-    ro_html->add( '</div></div>' ).
+**********************************************************************
+
+    ro_html->add( '</div>' ).
+    ro_html->add( '</div>' ).
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_toc
-
-  METHOD render_toc_line.
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div class="toc_row"><table><tr>' ).
-
-    ro_html->add( '<td>' ).
-    ro_html->add( |<img src="{ iv_image_url }">| ).
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td>' ).
-    ro_html->add( io_toolbar->render( iv_sort = abap_true ) ).
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '</tr></table></div>' ).
-
-  ENDMETHOD.  "render_toc_line
 
   METHOD render_explore.
 
@@ -430,34 +444,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ls_image-url     = 'img/repo_offline' ##NO_TEXT.
     ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBB'
-      && 'ZG9iZSBJbWFnZVJlYWR5ccllPAAAA3hpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/'
-      && 'eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+'
-      && 'IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2Jl'
-      && 'IFhNUCBDb3JlIDUuNi1jMTMyIDc5LjE1OTI4NCwgMjAxNi8wNC8xOS0xMzoxMzo0MCAg'
-      && 'ICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5'
-      && 'LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9'
-      && 'IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHht'
-      && 'bG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3Vy'
-      && 'Y2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHht'
-      && 'cE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkOTZmYmU4Yi0yMjEzLTZlNDct'
-      && 'ODZiZC05NGE1ZTM1ZmJiMzUiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDQ2RTFD'
-      && 'MTA0OTkwMTFFNjlCMzk5MTg2OTAzMDVDRDIiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5p'
-      && 'aWQ6NDQ2RTFDMEY0OTkwMTFFNjlCMzk5MTg2OTAzMDVDRDIiIHhtcDpDcmVhdG9yVG9v'
-      && 'bD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUuNSAoV2luZG93cykiPiA8eG1wTU06RGVy'
-      && 'aXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpkOTZmYmU4Yi0yMjEzLTZl'
-      && 'NDctODZiZC05NGE1ZTM1ZmJiMzUiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6ZDk2'
-      && 'ZmJlOGItMjIxMy02ZTQ3LTg2YmQtOTRhNWUzNWZiYjM1Ii8+IDwvcmRmOkRlc2NyaXB0'
-      && 'aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+SXqL'
-      && 'ugAAAWVJREFUeNrEk7tKxEAYheeSm0RXUNBaEcTOB7CxsrBXwWIbEQuLiGAnhtQW6XwK'
-      && 'O1/CN/ARBLuwmrC5jOfEGVhFIbCFP3z7zyY7J+f8s5HGGDFPKTFnSbfIskwopTbDMFzW'
-      && 'Wi/hUg3e4bCWUmqsV8EE6xdeT5Kk3+c5ga7rbtDS6XTaosf2smFhE3Mq3/ffwCXWj3me'
-      && 'G4r0EdI0HaHd4smR53kxnEiC4ofG2ouiiALr+N0dWPs5gyOwyEhwIJumEXVdC3Y4E+67'
-      && 'HfgOOHARnMDYxvhzWE4MpSG0iwh9fAX7W+h7NrCAZYEoIgiCHtg2iCUI73EmZVmeF0Wx'
-      && '7RyMZwb5DSvIefCERNu2oqoqRoxx78SdwjM4BQFngI2EwtIOcIF86XcfBJsnPFIncAgu'
-      && 'fstNB3wqcaOwROAePCl7AkPrGGzQjdvnWSsrAwX27X9AzUa4Ag9gNEDgzPZXcN2/C//+'
-      && 'Nn4KMABcS6Z2qzb7wwAAAABJRU5ErkJggg=='.
-
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAVFBMVEUAAACAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
+      && 'gICAgICAgICAgICAgICAgICAgICAgICuaWnmAAAAG3RSTlMAAgQFBgsQFxweIiMtN3yI'
+      && 'nqOvt9Hp6/Hz9fktMNR/AAAAXElEQVQYV5WO2xJAMAxES1q3ugfF/v9/0qLyyL4k58xk'
+      && 'J0p9D7N5oeqZgSwy7fDZnHNdEE1gWK116tksl7hPimGFFPWYl7MU0zksRCl8TStKg1AJ'
+      && '0XNC8Zm4/c0BUVQHi0llOUYAAAAASUVORK5CYII='.
     APPEND ls_image TO rt_assets.
 
     ls_image-url     = 'img/pkg' ##NO_TEXT.
@@ -533,6 +525,38 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       && 'ksxmksxmksxmksxMwQo8AAAAF3RSTlMABhIYIy1fZmhpe3+IiYuMkZvD7e/x93sipD4A'
       && 'AAA+SURBVBhXY2BABzwiokAgzAYXEGdiBAIWIYQAPzcQCApzgwEXM4M4KuBDFxAYKAEx'
       && 'VAFeBlYOTiTAzoThewD5hBAcnWM4gwAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/burger' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAHlBMVEUAAABtktltktlt'
+      && 'ktltktltktltktltktltktltktk7ccVDAAAACXRSTlMAFDBLY2SFoPGv/DFMAAAAJ0lE'
+      && 'QVQIW2NggIHKmWAwmaETwpjGoBoKBo4MmIAkxXApuGK4dgwAAJa5IzLs+gRBAAAAAElF'
+      && 'TkSuQmCC'.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/star' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAABejclejcle'
+      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
+      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
+      && 'jclejclejclejclejclejclejclejclejcn2yvsVAAAALXRSTlMAAQIFBwkKCw0QERUY'
+      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
+      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
+      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
+      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
+    APPEND ls_image TO rt_assets.
+
+    ls_image-url     = 'img/star-grey' ##NO_TEXT.
+    ls_image-content =
+         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAADQ0NDQ0NDQ'
+      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
+      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
+      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NC2QdifAAAALXRSTlMAAQIFBwkKCw0QERUY'
+      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
+      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
+      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
+      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
     APPEND ls_image TO rt_assets.
 
   ENDMETHOD.  "get_assets

@@ -249,8 +249,10 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     io_xml->add( iv_name = 'DD02V'
                  ig_data = ls_dd02v ).
-    io_xml->add( iv_name = 'DD09L'
-                 ig_data = ls_dd09l ).
+    IF NOT ls_dd09l IS INITIAL.
+      io_xml->add( iv_name = 'DD09L'
+                   ig_data = ls_dd09l ).
+    ENDIF.
     io_xml->add( ig_data = lt_dd03p
                  iv_name = 'DD03P_TABLE' ).
     io_xml->add( ig_data = lt_dd05m
