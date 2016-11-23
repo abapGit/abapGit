@@ -658,8 +658,9 @@ CLASS lcl_objects IMPLEMENTATION.
                               iv_language = io_repo->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
-      READ TABLE lt_remote WITH KEY filename = <ls_result>-filename INTO ls_remote_file.
-      IF ls_remote_file-filename NS '.abap'.
+
+      IF <ls_result>-filename CS '.XML'.
+        READ TABLE lt_remote WITH KEY filename = <ls_result>-filename INTO ls_remote_file.
 
         "if file does not exist in remote, we don't need to validate
         IF sy-subrc = 0.
