@@ -696,13 +696,16 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD compare_remote_to_local.
 
-    DATA ls_remote_file TYPE ty_file.
+    DATA: ls_remote_file       TYPE ty_file,
+          lo_remote_version    TYPE REF TO lcl_xml_input,
+          lo_comparison_result TYPE REF TO lif_object_comparison_result.
 
-    DATA:
-      lo_remote_version    TYPE REF TO lcl_xml_input,
-      lo_comparison_result TYPE REF TO lif_object_comparison_result.
 
     IF is_result-filename CS '.XML'.
+      IF io_object->exists( ) = abap_false.
+        RETURN.
+      ENDIF.
+
       READ TABLE it_remote WITH KEY filename = is_result-filename INTO ls_remote_file.
 
       "if file does not exist in remote, we don't need to validate
