@@ -485,6 +485,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       APPEND INITIAL LINE TO rt_functions ASSIGNING <ls_ret>.
       MOVE-CORRESPONDING <ls_func> TO <ls_ret>.
 
+      CLEAR lt_new_source.
+      CLEAR lt_source.
+
       CALL FUNCTION 'RPY_FUNCTIONMODULE_READ_NEW'
         EXPORTING
           functionname            = <ls_func>-funcname
