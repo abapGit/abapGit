@@ -15,6 +15,8 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_proxy
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+    METHODS render_development_internals
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_form_begin
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_form_end
@@ -49,6 +51,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
     ro_html->add( render_form_begin( ) ).
     ro_html->add( render_proxy( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_development_internals( ) ).
     ro_html->add( render_form_end( ) ).
   ENDMETHOD.
 
@@ -86,7 +90,6 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
         lt_post_fields = parse_post( it_postdata ).
 
         build_settings( lt_post_fields ).
-
         validate_settings( ).
 
         IF mv_error = abap_true.
@@ -115,6 +118,13 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
       mv_error = abap_true.
     ENDIF.
     mo_settings->set_proxy_port( ls_post_field-value ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'critical_tests'.
+    IF sy-subrc = 0.
+      mo_settings->set_run_critical_tests( abap_true ).
+    ELSE.
+      mo_settings->set_run_critical_tests( abap_false ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -159,11 +169,22 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
 
   METHOD read_settings.
-
     DATA lo_settings_persistence TYPE REF TO lcl_persistence_settings.
     lo_settings_persistence = lcl_app=>settings( ).
     mo_settings = lo_settings_persistence->read( ).
+  ENDMETHOD.
 
+  METHOD render_development_internals.
+    DATA lv_checked TYPE string.
+    IF mo_settings->get_run_critical_tests( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>abapGit Development Internals settings</h2>| ).
+    ro_html->add( `<input type="checkbox" name="critical_tests" value="X" `
+                   && lv_checked && ` > Enable critical unit tests (see LTCL_DANGEROUS)` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
   ENDMETHOD.
 
 ENDCLASS.
