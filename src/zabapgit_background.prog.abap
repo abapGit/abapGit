@@ -130,7 +130,7 @@ CLASS lcl_background IMPLEMENTATION.
       CLEAR ls_comment.
       ls_comment-username = lcl_objects=>changed_by( <ls_local>-item ).
       ls_comment-email    = |{ ls_comment-username }@localhost|.
-      ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
+      ls_comment-comment  = build_comment( ls_files ).
 
       CREATE OBJECT lo_stage
         EXPORTING
