@@ -81,6 +81,28 @@ CLASS ltcl_convert IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_convert IMPLEMENTATION
 
+CLASS lth_critical_tests DEFINITION .
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      check_run_permission.
+ENDCLASS.
+
+CLASS lth_critical_tests IMPLEMENTATION.
+
+  METHOD check_run_permission.
+    DATA: lo_settings TYPE REF TO lcl_settings.
+    lo_settings = lcl_app=>settings( )->read( ).
+
+    "Objects will be created and deleted, do not run in customer system!
+    "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
+
+    IF lo_settings->get_run_critical_tests( ) = abap_false.
+      cl_abap_unit_assert=>fail( 'Cancelled' ).
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS ltcl_dangerous DEFINITION
 *----------------------------------------------------------------------*
@@ -111,28 +133,7 @@ ENDCLASS.                    "ltcl_dangerous DEFINITION
 CLASS ltcl_dangerous IMPLEMENTATION.
 
   METHOD class_setup.
-
-    DATA: lv_text   TYPE c LENGTH 100,
-          lv_answer TYPE c LENGTH 1.
-
-
-    lv_text = 'Objects will be created and deleted, do not run in customer system!'.
-
-    CALL FUNCTION 'POPUP_TO_CONFIRM'
-      EXPORTING
-        titlebar              = 'Warning'
-        text_question         = lv_text
-        text_button_1         = 'Run'
-        text_button_2         = 'Cancel'
-        default_button        = '2'
-        display_cancel_button = abap_false
-      IMPORTING
-        answer                = lv_answer.
-
-    IF lv_answer = '2'.
-      cl_abap_unit_assert=>fail( 'Cancelled' ).
-    ENDIF.
-
+    lth_critical_tests=>check_run_permission( ).
   ENDMETHOD.                    "class_setup
 
   METHOD run.
@@ -255,12 +256,12 @@ CLASS ltcl_diff IMPLEMENTATION.
 
   METHOD test.
 
-    DATA: lv_new     TYPE string,
-          lv_xnew    TYPE xstring,
-          lv_old     TYPE string,
-          lv_xold    TYPE xstring,
-          lo_diff    TYPE REF TO lcl_diff,
-          lt_diff    TYPE lcl_diff=>ty_diffs_tt.
+    DATA: lv_new  TYPE string,
+          lv_xnew TYPE xstring,
+          lv_old  TYPE string,
+          lv_xold TYPE xstring,
+          lo_diff TYPE REF TO lcl_diff,
+          lt_diff TYPE lcl_diff=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
@@ -685,10 +686,10 @@ CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
 
     METHODS:
-    repo_host FOR TESTING RAISING lcx_exception,
-    repo_name1 FOR TESTING RAISING lcx_exception,
-    repo_name2 FOR TESTING RAISING lcx_exception,
-    repo_error FOR TESTING.
+      repo_host FOR TESTING RAISING lcx_exception,
+      repo_name1 FOR TESTING RAISING lcx_exception,
+      repo_name2 FOR TESTING RAISING lcx_exception,
+      repo_error FOR TESTING.
 
 ENDCLASS.                    "ltcl_url DEFINITION
 
@@ -1609,7 +1610,7 @@ ENDCLASS.
 
 CLASS ltcl_html_action_utils DEFINITION
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
-  INHERITING FROM CL_AUNIT_ASSERT.
+  INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
 
@@ -1668,7 +1669,7 @@ ENDCLASS. "ltcl_html_action_utils
 
 CLASS ltcl_path DEFINITION
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
-  INHERITING FROM CL_AUNIT_ASSERT.
+  INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
     METHODS is_root FOR TESTING.
@@ -1797,7 +1798,7 @@ ENDCLASS.   "ltcl_path
 
 CLASS ltcl_file_status DEFINITION
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
-  INHERITING FROM CL_AUNIT_ASSERT.
+  INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
     METHODS calculate_status FOR TESTING.
@@ -1898,7 +1899,7 @@ ENDCLASS.   "ltcl_file_status
 
 CLASS ltcl_sap_package DEFINITION
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
-  INHERITING FROM CL_AUNIT_ASSERT.
+  INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
     METHODS check FOR TESTING.
@@ -1909,8 +1910,8 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: lt_results    TYPE ty_results_tt,
-          lo_log        TYPE REF TO lcl_log.
+    DATA: lt_results TYPE ty_results_tt,
+          lo_log     TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.
 
@@ -2010,3 +2011,171 @@ CLASS ltcl_sap_package IMPLEMENTATION.
   ENDMETHOD.  " check.
 
 ENDCLASS. "ltcl_sap_package
+
+CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL DANGEROUS.
+
+  PRIVATE SECTION.
+    CLASS-METHODS:
+      class_setup.
+
+    METHODS:
+      setup,
+      clear_settings_database,
+      "Proxy
+      modify_settings_proxy_url     FOR TESTING RAISING cx_static_check,
+      modify_settings_proxy_port    FOR TESTING RAISING cx_static_check,
+      read_proxy_settings           FOR TESTING RAISING cx_static_check,
+      read_not_found_url            FOR TESTING RAISING cx_static_check,
+      read_not_found_port           FOR TESTING RAISING cx_static_check,
+      "Run critical tests
+      modify_run_critical_tests     FOR TESTING RAISING cx_static_check,
+      read_run_critical_tests       FOR TESTING RAISING cx_static_check,
+      read_not_found_critical_tests FOR TESTING RAISING cx_static_check.
+    DATA:
+      mo_persistence_settings TYPE REF TO lcl_persistence_settings,
+      mo_settings             TYPE REF TO lcl_settings.
+ENDCLASS.
+
+CLASS ltcl_persistence_settings IMPLEMENTATION.
+  METHOD class_setup.
+    lth_critical_tests=>check_run_permission( ).
+  ENDMETHOD.
+  METHOD setup.
+    CREATE OBJECT mo_persistence_settings.
+    CREATE OBJECT mo_settings.
+    clear_settings_database( ).
+  ENDMETHOD.
+
+  METHOD modify_settings_proxy_url.
+    DATA lv_proxy_url TYPE string.
+
+    mo_settings->set_proxy_url( 'http://proxy' ).
+
+    mo_persistence_settings->modify( mo_settings ).
+
+    lv_proxy_url = lcl_app=>db( )->read(
+      iv_type  = 'SETTINGS'
+      iv_value = 'PROXY_URL' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_proxy_url
+      exp = 'http://proxy' ).
+  ENDMETHOD.
+
+  METHOD modify_settings_proxy_port.
+    DATA lv_proxy_port TYPE string.
+    mo_settings->set_proxy_port( '8080' ).
+
+    mo_persistence_settings->modify( mo_settings ).
+
+    lv_proxy_port = lcl_app=>db( )->read(
+      iv_type  = 'SETTINGS'
+      iv_value = 'PROXY_PORT' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_proxy_port
+      exp = '8080' ).
+  ENDMETHOD.
+
+  METHOD read_proxy_settings.
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_URL'
+      iv_data       = 'A_URL' ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_PORT'
+      iv_data       = '1000' ).
+
+    mo_settings = mo_persistence_settings->read( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_proxy_url( )
+      exp = 'A_URL' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_proxy_port( )
+      exp = '1000' ).
+  ENDMETHOD.
+
+  METHOD read_not_found_port.
+    mo_settings = mo_persistence_settings->read( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_proxy_port( )
+      exp = '' ).
+  ENDMETHOD.
+
+  METHOD read_not_found_url.
+
+    mo_settings = mo_persistence_settings->read( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_proxy_url( )
+      exp = '' ).
+  ENDMETHOD.
+
+  METHOD modify_run_critical_tests.
+    DATA lv_run_critical_tests TYPE abap_bool.
+    mo_settings->set_run_critical_tests( abap_true ).
+
+    mo_persistence_settings->modify( mo_settings ).
+
+    lv_run_critical_tests = lcl_app=>db( )->read(
+      iv_type  = 'SETTINGS'
+      iv_value = 'CRIT_TESTS' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_run_critical_tests
+      exp = abap_true ).
+  ENDMETHOD.
+
+  METHOD read_run_critical_tests.
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'CRIT_TESTS'
+      iv_data       = 'X' ).
+    mo_settings = mo_persistence_settings->read( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_run_critical_tests( )
+      exp = abap_true ).
+  ENDMETHOD.
+  METHOD read_not_found_critical_tests.
+    mo_settings = mo_persistence_settings->read( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_settings->get_run_critical_tests( )
+      exp = abap_false ).
+  ENDMETHOD.
+
+
+  METHOD clear_settings_database.
+
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type       = 'SETTINGS'
+          iv_value      = 'PROXY_URL' ).
+      CATCH cx_static_check.
+        "If entry didn't exist, that's okay
+    ENDTRY.
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type       = 'SETTINGS'
+          iv_value      = 'PROXY_PORT' ).
+      CATCH cx_static_check.
+        "If entry didn't exist, that's okay
+    ENDTRY.
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type       = 'SETTINGS'
+          iv_value      = 'CRIT_TESTS' ).
+      CATCH cx_static_check.
+        "If entry didn't exist, that's okay
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
