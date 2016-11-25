@@ -556,8 +556,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   METHOD read_raw.
 
-    DATA: lv_filename TYPE string,
-          lv_data     TYPE xstring.
+    DATA: lv_filename TYPE string.
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = iv_ext ).

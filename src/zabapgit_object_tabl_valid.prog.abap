@@ -143,8 +143,7 @@ CLASS lct_table_validation IMPLEMENTATION.
 
   METHOD no_type_changes.
     DATA:
-      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
-      ls_current_table_field  LIKE LINE OF mt_current_table_fields.
+      ls_previous_table_field LIKE LINE OF mt_previous_table_fields.
 
     ls_previous_table_field-fieldname = 'FIELD1'.
     ls_previous_table_field-rollname  = 'INT4'.
@@ -189,7 +188,6 @@ CLASS lct_table_validation IMPLEMENTATION.
 
   METHOD no_fields_no_message.
     DATA:
-      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
       ls_current_table_field  LIKE LINE OF mt_current_table_fields.
 
     create_xmls( ).

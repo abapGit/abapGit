@@ -90,7 +90,6 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     DATA: lv_spot_name  TYPE enhspotcompositename,
           lv_message    TYPE string,
           lv_enh_shtext TYPE string,
-          lv_parent     TYPE enhspotcompositename,
           lt_enh_spots  TYPE enhspotname_it,
           lt_comp_spots TYPE enhspotname_it,
           lx_root       TYPE REF TO cx_root,
@@ -109,7 +108,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
         lv_enh_shtext = li_spot_ref->if_enh_object_docu~get_shorttext( ).
         "find parent = composite enhancement (ENSC)
-        lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
+*        lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
         "find subsequent enhancement spots
         lt_enh_spots = lo_spot_ref->if_enh_spot_composite~get_enh_spot_childs( ).
         "find subsequent composite enhancement spots

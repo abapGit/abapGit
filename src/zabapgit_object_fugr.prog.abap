@@ -143,7 +143,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include TYPE rs38l-include,
           lv_area    TYPE rs38l-area,
-          lv_message TYPE string,
           lt_source  TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.

@@ -593,7 +593,6 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_cancel      TYPE abap_bool,
           li_obj         TYPE REF TO lif_object,
           lt_remote      TYPE ty_files_tt,
-          ls_remote_file TYPE ty_file,
           lv_package     TYPE devclass,
           lo_files       TYPE REF TO lcl_objects_files,
           lo_xml         TYPE REF TO lcl_xml_input,

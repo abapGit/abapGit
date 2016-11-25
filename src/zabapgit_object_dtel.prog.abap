@@ -210,9 +210,9 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           lv_index      TYPE i,
           ls_dd04v      TYPE dd04v,
-          ls_tpara      TYPE tpara,
           lt_dd04_texts TYPE tt_dd04_texts,
           lt_i18n_langs TYPE TABLE OF langu.
+
     FIELD-SYMBOLS: <lang>      LIKE LINE OF lt_i18n_langs,
                    <dd04_text> TYPE ty_dd04_texts.
 
@@ -232,7 +232,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
           langu         = <lang>
         IMPORTING
           dd04v_wa      = ls_dd04v
-          tpara_wa      = ls_tpara
+*          tpara_wa      = ls_tpara
         EXCEPTIONS
           illegal_input = 1
           OTHERS        = 2.

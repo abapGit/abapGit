@@ -193,18 +193,18 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           lt_add      TYPE scomeldata,
           lv_index    TYPE i,
           lv_found    TYPE abap_bool,
-          ls_sign     TYPE scomelsign,
+*          ls_sign     TYPE scomelsign,
           ls_attr     TYPE scomeldtln.
 
     FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_existing,
                    <ls_element> LIKE LINE OF is_pinf-elements.
 
 
-    ls_sign-usag_restr                 = abap_true.
-    ls_sign-stability                  = abap_true.
-    ls_sign-no_check                   = abap_true.
-    ls_sign-useastype                  = abap_true.
-    ls_sign-asforgnkey                 = abap_true.
+*    ls_sign-usag_restr                 = abap_true.
+*    ls_sign-stability                  = abap_true.
+*    ls_sign-no_check                   = abap_true.
+*    ls_sign-useastype                  = abap_true.
+*    ls_sign-asforgnkey                 = abap_true.
 *    ls_sign-deprecation_type           = abap_true. backport
 *    ls_sign-replacement_object_type    = abap_true. backport
 *    ls_sign-replacement_object_name    = abap_true. backport
