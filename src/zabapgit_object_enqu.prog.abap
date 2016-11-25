@@ -24,9 +24,9 @@ CLASS lcl_object_enqu IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
 
-    DATA: lv_date    TYPE dats,
-          lv_time    TYPE tims,
-          lv_ts      TYPE timestamp.
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
 
     SELECT SINGLE as4date as4time FROM dd25l
       INTO (lv_date, lv_time)
@@ -39,7 +39,16 @@ CLASS lcl_object_enqu IMPLEMENTATION.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE AS4USER FROM dd25l
+      INTO rv_user
+      WHERE viewname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
