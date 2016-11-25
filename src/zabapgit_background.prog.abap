@@ -110,9 +110,10 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_auto.
 
-    DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE ty_stage_files,
-          lo_stage   TYPE REF TO lcl_stage.
+    DATA: ls_comment    TYPE ty_comment,
+          ls_files      TYPE ty_stage_files,
+          ls_user_files LIKE ls_files,
+          lo_stage      TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
 
@@ -121,7 +122,6 @@ CLASS lcl_background IMPLEMENTATION.
     ls_files = lcl_stage_logic=>get( io_repo ).
 
     DO.
-
       READ TABLE ls_files-local INDEX 1 ASSIGNING <ls_local>.
       IF sy-subrc <> 0.
         EXIT.
@@ -130,12 +130,13 @@ CLASS lcl_background IMPLEMENTATION.
       CLEAR ls_comment.
       ls_comment-username = lcl_objects=>changed_by( <ls_local>-item ).
       ls_comment-email    = |{ ls_comment-username }@localhost|.
-      ls_comment-comment  = build_comment( ls_files ).
 
       CREATE OBJECT lo_stage
         EXPORTING
           iv_branch_name = io_repo->get_branch_name( )
           iv_branch_sha1 = io_repo->get_sha1_remote( ).
+
+      CLEAR ls_user_files.
 
       LOOP AT ls_files-local ASSIGNING <ls_local>.
         IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-username.
@@ -147,8 +148,12 @@ CLASS lcl_background IMPLEMENTATION.
           lo_stage->add( iv_path     = <ls_local>-file-path
                          iv_filename = <ls_local>-file-filename
                          iv_data     = <ls_local>-file-data ).
+
+          APPEND <ls_local> TO ls_user_files-local.
         ENDIF.
       ENDLOOP.
+
+      ls_comment-comment  = build_comment( ls_user_files ).
 
       io_repo->push( is_comment = ls_comment
                      io_stage   = lo_stage ).
