@@ -81,7 +81,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_convert IMPLEMENTATION
 
-CLASS lth_critical_tests DEFINITION .
+CLASS lth_critical_tests DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       check_run_permission.
