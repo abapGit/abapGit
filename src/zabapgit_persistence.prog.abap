@@ -427,7 +427,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS toggle_favorite
-      IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
     METHODS is_favorite_repo
@@ -1426,11 +1426,18 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS get_proxy_port
       RETURNING
         VALUE(rv_port) TYPE string.
+    METHODS set_run_critical_tests
+      IMPORTING
+        iv_run TYPE abap_bool.
+    METHODS
+      get_run_critical_tests
+        RETURNING VALUE(rv_run) TYPE abap_bool.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
     DATA mv_proxy_url TYPE string.
     DATA mv_proxy_port TYPE string.
+    DATA mv_run_critical_tests TYPE abap_bool.
 
 
 ENDCLASS.
@@ -1452,6 +1459,14 @@ CLASS lcl_settings IMPLEMENTATION.
 
   METHOD get_proxy_port.
     rv_port = mv_proxy_port.
+  ENDMETHOD.
+
+  METHOD set_run_critical_tests.
+    mv_run_critical_tests = iv_run.
+  ENDMETHOD.
+
+  METHOD get_run_critical_tests.
+    rv_run = mv_run_critical_tests.
   ENDMETHOD.
 
 ENDCLASS.
@@ -1488,10 +1503,18 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_PORT'
       iv_data       = io_settings->get_proxy_port( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'CRIT_TESTS'
+      iv_data       = io_settings->get_run_critical_tests( ) ).
   ENDMETHOD.
 
 
   METHOD read.
+    DATA: lv_critical_tests_as_string  TYPE string,
+          lv_critical_tests_as_boolean TYPE abap_bool.
+
     CREATE OBJECT ro_settings.
     TRY.
         ro_settings->set_proxy_url(
@@ -1511,136 +1534,14 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.
-  ENDMETHOD.
-
-ENDCLASS.
-
-CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
-
-  PRIVATE SECTION.
-    METHODS:
-      setup,
-      modify_settings_proxy_url  FOR TESTING,
-      modify_settings_proxy_port FOR TESTING,
-      read_settings              FOR TESTING,
-      read_not_found_url         FOR TESTING,
-      read_not_found_port        FOR TESTING.
-    DATA:
-      mo_persistence_settings TYPE REF TO lcl_persistence_settings,
-      mo_settings             TYPE REF TO lcl_settings.
-ENDCLASS.
-
-CLASS ltcl_persistence_settings IMPLEMENTATION.
-  METHOD setup.
-    CREATE OBJECT mo_persistence_settings.
-    "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
-  ENDMETHOD.
-
-  METHOD modify_settings_proxy_url.
-    DATA lv_proxy_url TYPE string.
     TRY.
-        CREATE OBJECT mo_settings.
-        mo_settings->set_proxy_url( 'http://proxy' ).
-
-        mo_persistence_settings->modify( mo_settings ).
-
-        lv_proxy_url = lcl_app=>db( )->read(
-          iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_URL' ).
-
-        cl_abap_unit_assert=>assert_equals(
-          act = lv_proxy_url
-          exp = 'http://proxy' ).
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Unexpected exception' ).
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD modify_settings_proxy_port.
-    DATA lv_proxy_port TYPE string.
-    TRY.
-        CREATE OBJECT mo_settings.
-        mo_settings->set_proxy_port( '8080' ).
-
-        mo_persistence_settings->modify( mo_settings ).
-
-        lv_proxy_port = lcl_app=>db( )->read(
-          iv_type  = 'SETTINGS'
-          iv_value = 'PROXY_PORT' ).
-
-        cl_abap_unit_assert=>assert_equals(
-          act = lv_proxy_port
-          exp = '8080' ).
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Unexpected exception' ).
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD read_settings.
-    TRY.
-        lcl_app=>db( )->modify(
-          iv_type       = 'SETTINGS'
-          iv_value      = 'PROXY_URL'
-          iv_data       = 'A_URL' ).
-
-        lcl_app=>db( )->modify(
-          iv_type       = 'SETTINGS'
-          iv_value      = 'PROXY_PORT'
-          iv_data       = '1000' ).
-
-        mo_settings = mo_persistence_settings->read( ).
-
-        cl_abap_unit_assert=>assert_equals(
-          act = mo_settings->get_proxy_url( )
-          exp = 'A_URL' ).
-        cl_abap_unit_assert=>assert_equals(
-          act = mo_settings->get_proxy_port( )
-          exp = '1000' ).
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Unexpected exception' ).
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD read_not_found_port.
-    TRY.
-        lcl_app=>db( )->modify(
-          iv_type       = 'SETTINGS'
-          iv_value      = 'PROXY_URL'
-          iv_data       = 'A_URL' ).
-        lcl_app=>db( )->modify(
-          iv_type       = 'SETTINGS'
-          iv_value      = 'PROXY_PORT'
-          iv_data       = '' ).
-
-        mo_settings = mo_persistence_settings->read( ).
-
-        cl_abap_unit_assert=>assert_equals(
-          act = mo_settings->get_proxy_port( )
-          exp = '' ).
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Unexpected exception' ).
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD read_not_found_url.
-    TRY.
-        lcl_app=>db( )->modify(
-           iv_type       = 'SETTINGS'
-           iv_value      = 'PROXY_PORT'
-           iv_data       = '1000' ).
-        lcl_app=>db( )->modify(
-          iv_type       = 'SETTINGS'
-          iv_value      = 'PROXY_URL'
-          iv_data       = '' ).
-        mo_settings = mo_persistence_settings->read( ).
-
-        cl_abap_unit_assert=>assert_equals(
-          act = mo_settings->get_proxy_url( )
-          exp = '' ).
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Unexpected exception' ).
+        lv_critical_tests_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'CRIT_TESTS' ).
+        lv_critical_tests_as_boolean = lv_critical_tests_as_string.
+        ro_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
+      CATCH lcx_not_found.
+        ro_settings->set_run_critical_tests( abap_false ).
     ENDTRY.
   ENDMETHOD.
 
