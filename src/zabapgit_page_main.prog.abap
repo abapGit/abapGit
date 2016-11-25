@@ -14,13 +14,16 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show TYPE string VALUE 'show' ##NO_TEXT,
+                 show       TYPE string VALUE 'show' ##NO_TEXT,
+                 changed_by TYPE string VALUE 'changed_by',
                END OF c_actions.
 
     DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
           mo_repo_content TYPE REF TO lcl_gui_view_repo_content.
 
     METHODS:
+      test_changed_by
+        RAISING lcx_exception,
       styles
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       retrieve_active_repo
@@ -80,9 +83,33 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDTRY.
 
         ev_state = gc_event_state-re_render.
+      WHEN c_actions-changed_by.
+        test_changed_by( ).
+        ev_state = gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.  "on_event
+
+  METHOD test_changed_by.
+
+    DATA: ls_tadir TYPE tadir,
+          lv_user  TYPE xubname,
+          ls_item  TYPE ty_item.
+
+
+    ls_tadir = lcl_popups=>popup_object( ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
+
+    lv_user = lcl_objects=>changed_by( ls_item ).
+
+    MESSAGE lv_user TYPE 'S'.
+
+  ENDMETHOD.
 
 **********************************************************************
 * RENDERING
@@ -172,6 +199,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Object to files'  iv_act = gc_action-zip_object ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Settings'         iv_act = gc_action-go_settings ) ##NO_TEXT.
