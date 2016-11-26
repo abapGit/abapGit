@@ -198,7 +198,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
 
-    lo_toolbar->add( iv_act = 'submitCommit();'
+    lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
                      iv_typ = gc_action_type-onclick
                      iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
@@ -216,14 +216,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD scripts.
 
     CREATE OBJECT ro_html.
-
-    _add 'function setInitialFocus() {'.
-    _add '  document.getElementById("commit_msg").focus();'.
-    _add '}'.
-    _add 'function submitCommit() {'.
-    _add '  document.getElementById("commit_form").submit();'.
-    _add '}'.
-    _add 'setInitialFocus();'.
+    _add 'setInitialFocus("commit_msg");'.
 
   ENDMETHOD.    "scripts
 

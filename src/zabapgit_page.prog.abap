@@ -226,6 +226,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
+    ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '<body>' ).                               "#EC NOTEXT
 
@@ -270,32 +271,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '</td><td id="stdout" width="40%"></td></tr></table>' ). "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
     ro_html->add( '</body>' ).                              "#EC NOTEXT
-
-    " Common JS routines
-    _add '<script type="text/javascript">' .                "#EC NOTEXT
-
-    _add 'function debugOutput(text, dstID) {'.             "#EC NOTEXT
-    _add '  var stdout = document.getElementById(dstID || "stdout");'. "#EC NOTEXT
-    _add '  var wrapped = "<p>" + text + "</p>";'.                     "#EC NOTEXT
-    _add '  stdout.innerHTML = stdout.innerHTML + wrapped;'.           "#EC NOTEXT
-    _add '}'.                                               "#EC NOTEXT
-
-    _add 'function submitForm(params, action) {'.           "#EC NOTEXT
-    _add '  var form = document.createElement("form"); '.   "#EC NOTEXT
-    _add '  form.setAttribute("method", "post"); '.         "#EC NOTEXT
-    _add '  form.setAttribute("action", "sapevent:" + action); '. "#EC NOTEXT
-    _add '  for(var key in params) {'.                      "#EC NOTEXT
-    _add '    var hiddenField = document.createElement("input"); '. "#EC NOTEXT
-    _add '    hiddenField.setAttribute("type", "hidden"); '. "#EC NOTEXT
-    _add '    hiddenField.setAttribute("name", key); '.     "#EC NOTEXT
-    _add '    hiddenField.setAttribute("value", params[key]); '. "#EC NOTEXT
-    _add '    form.appendChild(hiddenField); '.             "#EC NOTEXT
-    _add '  }'.                                             "#EC NOTEXT
-    _add '  document.body.appendChild(form); '.             "#EC NOTEXT
-    _add '  form.submit(); '.                               "#EC NOTEXT
-    _add '}'.                                               "#EC NOTEXT
-
-    _add '</script>'.                                       "#EC NOTEXT
 
     IF io_include_script IS BOUND.
       ro_html->add( '<script type="text/javascript">' ).

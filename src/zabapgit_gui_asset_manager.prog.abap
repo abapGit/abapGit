@@ -119,7 +119,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       WHEN 'CSS_COMMON'.
         " @@abapmerge include src/zabapgit_css_common.data.css > APPEND '$$' TO lt_data.
       WHEN 'JS_COMMON'.
-
+        " @@abapmerge include src/zabapgit_js_common.data.css > APPEND '$$' TO lt_data.
       WHEN OTHERS.
         lcx_exception=>raise( |No inline resource: { iv_asset_name }| ).
     ENDCASE.

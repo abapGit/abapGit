@@ -240,10 +240,10 @@ CLASS lcl_gui IMPLEMENTATION.
                  iv_type    = 'text'
                  iv_subtype = 'css' ).
 
-*    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'js_common' )
-*                 iv_url     = 'js/common.js'
-*                 iv_type    = 'text'
-*                 iv_subtype = 'javascript' ).
+    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'js_common' )
+                 iv_url     = 'js/common.js'
+                 iv_type    = 'text'
+                 iv_subtype = 'javascript' ).
 
     ls_event-eventid    = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.

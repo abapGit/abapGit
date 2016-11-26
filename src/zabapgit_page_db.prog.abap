@@ -79,9 +79,6 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
-    METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit IMPLEMENTATION.
@@ -135,7 +132,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( '</form>' ).
 
     " Menu
-    lo_toolbar->add( iv_act = 'submitDBForm();'
+    lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
                      iv_txt = 'Save'
                      iv_typ = gc_action_type-onclick
                      iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
@@ -146,19 +143,9 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     ro_html->add( '</div>' ). "db_entry
 
-    ro_html->add( footer( io_include_script = scripts( ) ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
-
-  METHOD scripts.
-
-    CREATE OBJECT ro_html.
-
-    _add 'function submitDBForm() {'.
-    _add '  document.getElementById("db_form").submit();'.
-    _add '}'.
-
-  ENDMETHOD.    "scripts
 
 ENDCLASS.
 
