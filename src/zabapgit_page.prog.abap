@@ -227,13 +227,14 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<html>' ).                               "#EC NOTEXT
     ro_html->add( '<head>' ).                               "#EC NOTEXT
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
-    ro_html->add( styles( ) ).
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
+*    ro_html->add( styles( ) ).
 
-    IF io_include_style IS BOUND.
-      ro_html->add( '<style type="text/css">' ).            "#EC NOTEXT
-      ro_html->add( io_include_style ).
-      ro_html->add( '</style>' ).                           "#EC NOTEXT
-    ENDIF.
+*    IF io_include_style IS BOUND.
+*      ro_html->add( '<style type="text/css">' ).            "#EC NOTEXT
+*      ro_html->add( io_include_style ).
+*      ro_html->add( '</style>' ).                           "#EC NOTEXT
+*    ENDIF.
 
     ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT

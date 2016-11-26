@@ -31,6 +31,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
           mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
+          mo_asset_man   TYPE REF TO lcl_gui_asset_manager,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
@@ -41,10 +42,19 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS cache_image
       IMPORTING iv_url    TYPE w3url
-                iv_base64 TYPE string.
+                iv_base64 TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS cache_html
-      IMPORTING iv_html       TYPE string
+      IMPORTING iv_text       TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
+
+    METHODS cache_asset
+      IMPORTING iv_text       TYPE string OPTIONAL
+                iv_xdata      TYPE xstring OPTIONAL
+                iv_url        TYPE w3url OPTIONAL
+                iv_type       TYPE c
+                iv_subtype    TYPE c
       RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
@@ -219,17 +229,27 @@ CLASS lcl_gui IMPLEMENTATION.
           ls_event  LIKE LINE OF lt_events.
 
     CREATE OBJECT mo_router.
+    CREATE OBJECT mo_asset_man.
     CREATE OBJECT mo_html_viewer
       EXPORTING
         query_table_disabled = abap_true
         parent               = cl_gui_container=>screen0.
 
-    CLEAR ls_event.
-    ls_event-eventid = mo_html_viewer->m_id_sapevent.
+    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'css_common' )
+                 iv_url     = 'css/common.css'
+                 iv_type    = 'text'
+                 iv_subtype = 'css' ).
+
+*    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'js_common' )
+*                 iv_url     = 'js/common.js'
+*                 iv_type    = 'text'
+*                 iv_subtype = 'javascript' ).
+
+    ls_event-eventid    = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
-    mo_html_viewer->set_registered_events( lt_events ).
 
+    mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "startup
@@ -246,57 +266,80 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD cache_html.
 
-    DATA: lt_data TYPE TABLE OF text200.
-
-    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
-      EXPORTING
-        text      = iv_html
-      TABLES
-        ftext_tab = lt_data.
-
-    mo_html_viewer->load_data(
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_data ).
+    rv_url = cache_asset( iv_text    = iv_text
+                          iv_type    = 'text'
+                          iv_subtype = 'html' ).
 
   ENDMETHOD.                    "cache_html
 
   METHOD cache_image.
 
-    DATA lv_xtmp  TYPE xstring.
-    DATA lv_size  TYPE int4.
-    DATA lt_xdata TYPE TABLE OF w3_mime. " RAW255
+    DATA lv_xstr  TYPE xstring.
 
     CALL FUNCTION 'SSFC_BASE64_DECODE'
       EXPORTING
         b64data = iv_base64
       IMPORTING
-        bindata = lv_xtmp
+        bindata = lv_xstr
       EXCEPTIONS
         OTHERS  = 1.
 
     ASSERT sy-subrc = 0. " Image data error
 
+    rv_url = cache_asset( iv_xdata   = lv_xstr
+                          iv_url     = iv_url
+                          iv_type    = 'image'
+                          iv_subtype = 'png' ).
+
+  ENDMETHOD.                  "cache_image
+
+  METHOD cache_asset.
+
+    DATA: lv_xstr  TYPE xstring,
+          lt_xdata TYPE TABLE OF w3_mime, " RAW255
+          lv_size  TYPE int4.
+
+    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
+
+    IF iv_text IS SUPPLIED. " String input
+
+      CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
+        EXPORTING
+          text      = iv_text
+        IMPORTING
+          buffer    = lv_xstr
+        EXCEPTIONS
+          OTHERS    = 1.
+      ASSERT sy-subrc = 0.
+
+    ELSE. " Raw input
+      lv_xstr = iv_xdata.
+    ENDIF.
+
     CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
       EXPORTING
-        buffer        = lv_xtmp
+        buffer        = lv_xstr
       IMPORTING
         output_length = lv_size
       TABLES
         binary_tab    = lt_xdata.
 
     mo_html_viewer->load_data(
-      EXPORTING  type         = 'image'
-                 subtype      = 'png'
-                 size         = lv_size
-                 url          = iv_url
-      CHANGING   data_table   = lt_xdata
-      EXCEPTIONS OTHERS       = 1 ) ##NO_TEXT.
+      EXPORTING
+        type         = iv_type
+        subtype      = iv_subtype
+        size         = lv_size
+        url          = iv_url
+      IMPORTING
+        assigned_url = rv_url
+      CHANGING
+        data_table   = lt_xdata
+      EXCEPTIONS
+        OTHERS       = 1 ) ##NO_TEXT.
 
     ASSERT sy-subrc = 0. " Image data error
 
-  ENDMETHOD.                  "cache_image
+  ENDMETHOD.  " cache_asset.
 
   METHOD get_current_page_name.
     IF mi_cur_page IS BOUND.
