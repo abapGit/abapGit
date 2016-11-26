@@ -11,8 +11,6 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action.
   PRIVATE SECTION.
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_proxy
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_development_internals
@@ -46,7 +44,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
     read_settings( ).
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'Settings' ) ).
 
     ro_html->add( render_form_begin( ) ).
@@ -54,18 +52,6 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<hr>| ).
     ro_html->add( render_development_internals( ) ).
     ro_html->add( render_form_end( ) ).
-  ENDMETHOD.
-
-  METHOD styles.
-    CREATE OBJECT ro_html.
-
-    _add '/* settings STYLES */'.
-    _add 'div.settings_container {'.
-    _add '  padding: 0.5em;'.
-    _add '  font-size: 10pt;'.
-    _add '  color: #444;'.
-    _add '  background-color: #f2f2f2;'.
-    _add '}'.
   ENDMETHOD.
 
   METHOD render_proxy.

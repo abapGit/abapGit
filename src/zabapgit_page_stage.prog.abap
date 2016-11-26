@@ -32,8 +32,6 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_menu
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
-      styles
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       scripts
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -217,7 +215,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'STAGE' ) ).
 
     ro_html->add( '<div class="repo">' ).
@@ -247,40 +245,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.      "render_menu
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* STAGE */'.
-    _add '.stage_tab {'.
-    _add '  border: 1px solid #DDD;'.
-    _add '  background: #fff;'.
-    _add '  margin-top: 0.2em;'.
-    _add '}'.
-    _add '.stage_tab td {'.
-    _add '  border-top: 1px solid #eee;'.
-    _add '  color: #333;'.
-    _add '  vertical-align: middle;'.
-    _add '  padding: 2px 0.5em;'.
-    _add '}'.
-    _add '.stage_tab th {'.
-    _add '  color: #BBB;'.
-    _add '  font-size: 10pt;'.
-    _add '  text-align: left;'.
-    _add '  font-weight: normal;'.
-    _add '  background-color: #edf2f9;'.
-    _add '  padding: 4px 0.5em;'.
-    _add '}'.
-    _add '.stage_tab td.status {'.
-    _add '  width: 2em;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add '.stage_tab tbody tr:first-child td { padding-top: 0.5em; }'.
-    _add '.stage_tab tbody tr:last-child td { padding-bottom: 0.5em; }'.
-    _add '.stage_tab td.cmd a { padding: 0px 4px; }'.
-
-  ENDMETHOD.    "styles
 
   METHOD scripts.
 

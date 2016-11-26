@@ -32,8 +32,6 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       render_form
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
         RAISING   lcx_exception,
-      styles
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       scripts
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -74,7 +72,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'COMMIT' ) ).
 
     ro_html->add( '<div class="repo">' ).
@@ -214,47 +212,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.      "render_menu
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* STAGE */'.
-    _add '.stage_tab {'.
-    _add '  border: 1px solid #DDD;'.
-    _add '  background: #fff;'.
-    _add '  margin-top: 0.2em;'.
-    _add '}'.
-    _add '.stage_tab td {'.
-    _add '  border-top: 1px solid #eee;'.
-    _add '  color: #333;'.
-    _add '  vertical-align: middle;'.
-    _add '  padding: 2px 0.5em;'.
-    _add '}'.
-    _add '.stage_tab td.method {'.
-    _add '  color: #ccc;'.
-    _add '}'.
-    _add '.stage_tab tr.firstrow td { border-top: 0px; } '.
-    _add '.stage_tab tr.title td {'.
-    _add '  color: #BBB;'.
-    _add '  font-size: 10pt;'.
-    _add '  background-color: #edf2f9;'.
-    _add '  padding: 4px 0.5em;'.
-    _add '  text-align: center;'.
-    _add '}'.
-
-    _add '/* COMMIT */'.
-    _add 'div.form_div {'.
-    _add '  margin: 0.5em 0em;'.
-    _add '  background-color: #F8F8F8;'.
-    _add '  padding: 1em 1em;'.
-    _add '}'.
-    _add 'div.form_div td.field_name {'.
-    _add '  color: #BBB;'.
-    _add '  padding-right: 1em;'.
-    _add '}'.
-
-  ENDMETHOD.    "styles
 
   METHOD scripts.
 
