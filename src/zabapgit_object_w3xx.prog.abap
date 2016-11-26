@@ -33,6 +33,11 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
       RETURNING VALUE(rv_ext) TYPE string
       RAISING   lcx_exception.
 
+    METHODS patch_size
+      IMPORTING iv_size   TYPE i
+      CHANGING  ct_params TYPE ty_wwwparams_tt
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
 *----------------------------------------------------------------------*
@@ -250,6 +255,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         lcx_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
+    " Update size of file (for the case file was actually changed remotely)
+    " Will also trigger "stage" at next sync if remote XML
+    " was not updated with the new file size
+    patch_size( EXPORTING iv_size   = lv_size
+                CHANGING  ct_params = lt_w3params ).
+
     CALL FUNCTION 'WWWPARAMS_UPDATE'
       TABLES
         params       = lt_w3params
@@ -360,6 +371,21 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
   ENDMETHOD.  " get_ext.
+
+  METHOD patch_size.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'filesize'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find file size for { ms_key-objid }| ).
+    ENDIF.
+
+    <param>-value = iv_size.
+    SHIFT <param>-value LEFT DELETING LEADING space.
+
+  ENDMETHOD.  " patch_size.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
