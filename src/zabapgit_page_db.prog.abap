@@ -13,9 +13,6 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_supe
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
 
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
 ENDCLASS.
 
 CLASS lcl_gui_page_db_display IMPLEMENTATION.
@@ -47,7 +44,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
                               format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'CONFIG DISPLAY' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
@@ -69,43 +66,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* DB ENTRY DISPLAY */'.
-    _add 'div.db_entry {'.
-    _add '  background-color: #f2f2f2;'.
-    _add '  padding: 0.5em;'.
-    _add '}'.
-
-    _add 'div.db_entry pre {'.
-    _add '  display: block;'.
-    _add '  overflow: hidden;'.
-    _add '  word-wrap:break-word;'.
-    _add '  white-space: pre-wrap;'.
-    _add '  background-color: #eaeaea;'.
-    _add '  padding: 0.5em;'.
-    _add '  margin: 0.5em 0em;'.
-    _add '  width: 50em;'.
-    _add '}'.
-
-    _add 'div.db_entry table.toolbar {'.
-    _add '  width: 50em;'.
-    _add '}'.
-
-    _add 'table.tag {'.
-    _add '  display: inline-block;'.
-    _add '  border: 1px #b3c1cc solid;'.
-    _add '  background-color: #eee;'.
-    _add '  border-radius: 3px;'.
-    _add '  margin-right: 0.5em; '.
-    _add '}'.
-    _add 'table.tag td { padding: 0.2em 0.5em; }'.
-    _add 'table.tag td.label { background-color: #b3c1cc; }'.
-
-  ENDMETHOD.            "styles
-
 ENDCLASS.
 
 CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
@@ -118,12 +78,6 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
-
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-    METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
 ENDCLASS.
 
@@ -158,7 +112,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'CONFIG EDIT' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
@@ -178,7 +132,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( '</form>' ).
 
     " Menu
-    lo_toolbar->add( iv_act = 'submitDBForm();'
+    lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
                      iv_txt = 'Save'
                      iv_typ = gc_action_type-onclick
                      iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
@@ -189,41 +143,9 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     ro_html->add( '</div>' ). "db_entry
 
-    ro_html->add( footer( io_include_script = scripts( ) ) ).
+    ro_html->add( footer( ) ).
 
   ENDMETHOD.
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* DB ENTRY DISPLAY */'.
-    _add 'div.db_entry {'.
-    _add '  background-color: #f2f2f2;'.
-    _add '  padding: 0.5em;'.
-    _add '}'.
-    _add 'div.db_entry textarea { margin: 0.5em 0em; }'.
-    _add 'table.tag {'.
-    _add '  display: inline-block;'.
-    _add '  border: 1px #b3c1cc solid;'.
-    _add '  background-color: #eee;'.
-    _add '  border-radius: 3px;'.
-    _add '  margin-right: 0.5em; '.
-    _add '}'.
-    _add 'table.tag td { padding: 0.2em 0.5em; }'.
-    _add 'table.tag td.label { background-color: #b3c1cc; }'.
-
-  ENDMETHOD.            "styles
-
-  METHOD scripts.
-
-    CREATE OBJECT ro_html.
-
-    _add 'function submitDBForm() {'.
-    _add '  document.getElementById("db_form").submit();'.
-    _add '}'.
-
-  ENDMETHOD.    "scripts
 
 ENDCLASS.
 
@@ -233,8 +155,6 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
     METHODS lif_gui_page~render REDEFINITION.
 
   PRIVATE SECTION.
-    METHODS styles
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS explain_content
       IMPORTING is_data TYPE lcl_persistence_db=>ty_content
       RETURNING VALUE(rv_text) TYPE string
@@ -259,7 +179,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'DATABASE PERSISTENCY' ) ).
 
     ro_html->add( '<div class="db_list">' ).
@@ -349,41 +269,5 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         rv_text = |<pre>{ rv_text }</pre>|.
     ENDCASE.
   ENDMETHOD.  "explain_content
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* DB ENTRIES */'.
-    _add 'div.db_list {'.
-    _add '  background-color: #f2f2f2;'.
-    _add '  padding: 0.5em;'.
-    _add '}'.
-    _add 'table.db_tab pre {'.
-    _add '  display: inline-block;'.
-    _add '  overflow: hidden;'.
-    _add '  word-wrap:break-word;'.
-    _add '  white-space: pre-wrap;'.
-    _add '  margin: 0px;'.
-    _add '  width: 30em;'.
-    _add '}'.
-    _add 'table.db_tab tr.firstrow td { padding-top: 0.5em; }'.
-    _add 'table.db_tab th {'.
-    _add '  text-align: left;'.
-    _add '  color: #888;'.
-    _add '  padding: 0.5em;'.
-    _add '  border-bottom: 1px #ddd solid;'.
-    _add '}'.
-    _add 'table.db_tab td {'.
-    _add '  color: #333;'.
-    _add '  padding: 0.5em;'.
-    _add '  vertical-align: top;'.
-    _add '}'.
-    _add 'table.db_tab td.data {'.
-    _add '  color: #888;'.
-    _add '  font-style: italic;'.
-    _add '}'.
-
-  ENDMETHOD.            "styles
 
 ENDCLASS.
