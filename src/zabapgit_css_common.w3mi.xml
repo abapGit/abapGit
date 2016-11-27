@@ -15,13 +15,13 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>filename</NAME>
-     <VALUE>styles.css</VALUE>
+     <VALUE>common.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>filesize</NAME>
-     <VALUE>    12130</VALUE>
+     <VALUE>    12136</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
@@ -33,7 +33,7 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>version</NAME>
-     <VALUE>00001</VALUE>
+     <VALUE>00002</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

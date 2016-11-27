@@ -236,7 +236,7 @@ div.repo {
   overflow: hidden;
 }
 
-#stdout {
+#debug-output {
   text-align: right;
   padding-right: 0.5em;
   color: #ccc;

@@ -1,16 +1,50 @@
-//
-// ABAPGIT JS function library
-//
+/**********************************************************
+ * ABAPGIT JS function library
+ **********************************************************/
+
+/**********************************************************
+ * Polyfills
+ **********************************************************/
+
+// Bind polyfill (for IE7), taken from https://developer.mozilla.org/
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function(oThis) {
+    if (typeof this !== "function") {
+      throw new TypeError("Function.prototype.bind - subject is not callable");
+    }
+
+    var aArgs   = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP    = function() {},
+        fBound  = function() {
+          return fToBind.apply(this instanceof fNOP
+                 ? this
+                 : oThis,
+                 aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+
+    if (this.prototype) {
+      fNOP.prototype = this.prototype; 
+    }
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
+/**********************************************************
+ * Common functions
+ **********************************************************/
 
 // Output text to the debug div
 function debugOutput(text, dstID) {
-  var stdout       = document.getElementById(dstID || "stdout");
+  var stdout       = document.getElementById(dstID || "debug-output");
   var wrapped      = "<p>" + text + "</p>";
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
-// Submit form data with sapevent
-function submitForm(params, action) {
+// Create hidden form and submit with sapevent
+function submitSapeventForm(params, action) {
   var form = document.createElement("form");
   form.setAttribute("method", "post");
   form.setAttribute("action", "sapevent:" + action);
@@ -27,40 +61,55 @@ function submitForm(params, action) {
   form.submit();
 }
 
+// Set focus to a control
 function setInitialFocus(id) {
   document.getElementById(id).focus();
 }
 
+// Submit an existing form
 function submitFormById(id) {
   document.getElementById(id).submit();
 }
 
+/**********************************************************
+ * STAGE PAGE Logic
+ **********************************************************/
 
-// STAGE
-// Hook global click listener on table, global action counter
-function setHook() {
-  var stageTab = document.getElementById("stage_tab");
+// Stage helper constructor
+function StageHelper(params) {
+  this.pageSeed        = params.seed;
+  this.tabId           = params.stageTabId;
+  this.formAction      = params.formAction;
+  this.commitNodeId    = params.commitNodeId;
+  this.commitAllNodeId = params.commitAllNodeId;
+  this.choiseCount     = 0;
+  this.setHook();
+}
+
+// Hook global click listener on table, load/unload actions
+StageHelper.prototype.setHook = function() {
+  var stageTab = document.getElementById(this.tabId);
 
   if (stageTab.addEventListener) {
-    stageTab.addEventListener("click", onEvent);
+    stageTab.addEventListener("click", this.onEvent.bind(this));
   } else {
-    stageTab.attachEvent("onclick", onEvent);
+    stageTab.attachEvent("onclick", this.onEvent.bind(this));
   }
 
-  window.onbeforeunload = onPageUnload;
-  window.onload         = onPageLoad;
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload         = this.onPageLoad.bind(this);
 }
 
 // Store table state on leaving the page
-function onPageUnload() {
-  var data = collectData();
-  window.sessionStorage.setItem(gPageID, JSON.stringify(data));
+StageHelper.prototype.onPageUnload = function() {
+  var data = this.collectData();
+  window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
 }
 
 // Re-store table state on entering the page
-function onPageLoad() {
-  var data  = JSON.parse(window.sessionStorage.getItem(gPageID));
-  var stage = document.getElementById("stage_tab");
+StageHelper.prototype.onPageLoad = function() {
+  var data  = JSON.parse(window.sessionStorage.getItem(this.pageSeed));
+  var stage = document.getElementById(this.tabId);
 
   for (var i = stage.rows.length - 1; i >= 0; i--) {
     var tr      = stage.rows[i];
@@ -69,23 +118,18 @@ function onPageLoad() {
     var cmd     = data[tr.cells[1].innerText];
     if (!cmd) continue;
     
-    formatTR(tr, cmd, context);
-    if (countChoiceImpact(cmd) > 0) {
-      gChoiceCount++;
-    }
+    this.formatTR(tr, cmd, context);
+    this.choiseCount += (this.countChoiceImpact(cmd) > 0) ? 1 : 0;
   }
 
-  updateMenu();
+  this.updateMenu();
 }
 
 // Event handler, change status
-function onEvent(event) {
+StageHelper.prototype.onEvent = function (event) {
   if (!event.target) {
-    if (event.srcElement) {
-      event.target = event.srcElement;
-    } else {
-      return;
-    }
+    if (event.srcElement) { event.target = event.srcElement; }
+    else { return; }
   }
 
   if (event.target.tagName != "A") return;
@@ -104,58 +148,57 @@ function onEvent(event) {
     case "reset":  cmd = "?"; break;
   }
   
-  formatTR(tr, cmd, context);
-  gChoiceCount += countChoiceImpact(cmd);
-
-  updateMenu();
+  this.formatTR(tr, cmd, context);
+  this.choiseCount += this.countChoiceImpact(cmd);
+  this.updateMenu();
 }
 
 // Update action counter -> affects menu update after
-function countChoiceImpact(cmd) {
-  if ("ARI".indexOf(cmd) > -1) {
-    return 1;
-  } else if ("?".indexOf(cmd) > -1) {
-    return -1;
-  } else {
-    alert("Unknown command");
-  }
+StageHelper.prototype.countChoiceImpact = function (cmd) {
+  if ("ARI".indexOf(cmd) > -1) { return 1; }
+  else if ("?".indexOf(cmd) > -1) { return -1; }
+  else { alert("Unknown command"); }
 }
 
 // Re-format table line
-function formatTR(tr, cmd, context) {
+StageHelper.prototype.formatTR = function (tr, cmd, context) {
   var cmdReset  = "<a>reset</a>";
   var cmdLocal  = "<a>add</a>";
   var cmdRemote = "<a>ignore</a><a>remove</a>";
 
   tr.cells[0].innerText   = cmd;
-  tr.cells[0].style.color = (cmd == "?") ? "#CCC" : "";
-  tr.cells[2].innerHTML   = (cmd != "?") ? cmdReset
-                                         :(context == "local") ? cmdLocal : cmdRemote;
-}
-
-// Update menu items visibility
-function updateMenu() {
-  if (gChoiceCount > 0) {
-    document.getElementById("act_commit").style.display     = "inline";
-    document.getElementById("act_commit_all").style.display = "none";
+  if (cmd == "?") {
+    tr.cells[0].style.color = "#CCC"; //grey
+    tr.cells[2].innerHTML   = (context == "local") ? cmdLocal : cmdRemote;
   } else {
-    document.getElementById("act_commit").style.display     = "none";
-    document.getElementById("act_commit_all").style.display = "inline";
+    tr.cells[0].style.color = "";
+    tr.cells[2].innerHTML   = cmdReset;
   }
 }
 
-// Commit change to the server
-function commit(action) {
-  var data = collectData();
-  submitForm(data, action);
+// Update menu items visibility
+StageHelper.prototype.updateMenu = function () {
+  if (this.choiseCount > 0) {
+    document.getElementById(this.commitNodeId).style.display    = "inline";
+    document.getElementById(this.commitAllNodeId).style.display = "none";
+  } else {
+    document.getElementById(this.commitNodeId).style.display    = "none";
+    document.getElementById(this.commitAllNodeId).style.display = "inline";
+  }
+}
+
+// Submin stage state to the server
+StageHelper.prototype.submit = function () {
+  var data = this.collectData();
+  submitSapeventForm(data, this.formAction);
 }
 
 // Extract data from the table
-function collectData() {
-  var stage = document.getElementById("stage_tab");
+StageHelper.prototype.collectData = function () {
+  var stage = document.getElementById(this.tabId);
   var data  = {};
 
-  for (var i = stage.rows.length - 1; i >= 0; i--) {
+  for (var i = 0; i < stage.rows.length; i++) {
     var row = stage.rows[i];
     if (row.parentNode.tagName == "THEAD") continue;
     data[row.cells[1].innerText] = row.cells[0].innerText;

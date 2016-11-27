@@ -268,13 +268,14 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<img src="img/logo" >' ).                "#EC NOTEXT
     ro_html->add( '<table width="100%"><tr><td width="40%"></td><td>' ). "#EC NOTEXT
     ro_html->add( |<span class="version">{ gc_abap_version }</span>| ). "#EC NOTEXT
-    ro_html->add( '</td><td id="stdout" width="40%"></td></tr></table>' ). "#EC NOTEXT
+    ro_html->add( '</td><td id="debug-output" width="40%"></td></tr></table>' ). "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     IF io_include_script IS BOUND.
       ro_html->add( '<script type="text/javascript">' ).
       ro_html->add( io_include_script ).
+      ro_html->add( 'debugOutput("js: OK");' ).
       ro_html->add( '</script>' ).
     ENDIF.
 

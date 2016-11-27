@@ -233,7 +233,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add_anchor( iv_act   = |commit('{ c_action-stage_commit }');|
+    ro_html->add_anchor( iv_act   = 'gHelper.submit();'
                          iv_typ   = gc_action_type-onclick
                          iv_id    = 'act_commit'
                          iv_style = 'display: none'
@@ -250,10 +250,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    " Globals & initialization
-    ro_html->add( |var gPageID = "stage{ mv_ts }";| ).
-    _add 'var gChoiceCount = 0;'.
-    _add 'setHook();'.
+    ro_html->add( 'var gStageParams = {' ).
+    ro_html->add( |  seed:            "stage{ mv_ts }",| ).
+    ro_html->add( '  stageTabId:      "stage_tab",' ).
+    ro_html->add( '  formAction:      "stage_commit",' ).
+    ro_html->add( '  commitNodeId:    "act_commit",' ).
+    ro_html->add( '  commitAllNodeId: "act_commit_all"' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
   ENDMETHOD.  "scripts
 

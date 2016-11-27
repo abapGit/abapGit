@@ -15,13 +15,13 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>filename</NAME>
-     <VALUE>script.js</VALUE>
+     <VALUE>common.js</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>filesize</NAME>
-     <VALUE>     4416</VALUE>
+     <VALUE>     6500</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
@@ -33,7 +33,7 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>version</NAME>
-     <VALUE>00001</VALUE>
+     <VALUE>00004</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>
