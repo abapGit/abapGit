@@ -614,7 +614,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD serialize_xml.
+    METHOD serialize_xml.
 
     DATA: ls_vseoclass  TYPE vseoclass,
           lv_cp         TYPE program,
@@ -624,7 +624,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey,
           lt_sotr       TYPE ty_sotr_tt,
-          lt_lines      TYPE tlinetab.
+          lt_lines      TYPE tlinetab,
+          lt_methods    TYPE seoo_methods_r.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -677,6 +678,24 @@ CLASS lcl_object_clas IMPLEMENTATION.
         io_xml->add( iv_name = 'TPOOL'
                      ig_data = add_tpool( lt_tpool ) ).
 
+        CALL FUNCTION 'SEO_CLASS_TYPEINFO_GET'
+          EXPORTING
+            clskey       = ls_clskey
+            version      = seoc_version_active
+          IMPORTING
+            methods      = lt_methods
+          EXCEPTIONS
+            not_existing = 1
+            is_interface = 2
+            model_only   = 3
+            OTHERS       = 4.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
+        ENDIF.
+
+        io_xml->add( iv_name = 'METHODS'
+                     ig_data = lt_methods ).
+
         IF ls_vseoclass-category = seoc_category_exception.
           lt_sotr = read_sotr( ).
           IF lines( lt_sotr ) > 0.
@@ -687,6 +706,25 @@ CLASS lcl_object_clas IMPLEMENTATION.
       WHEN 'INTF'.
         io_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
+
+        CALL FUNCTION 'SEO_INTERFACE_TYPEINFO_GET'
+          EXPORTING
+            intkey       = ls_clskey
+            version      = seoc_version_active
+          IMPORTING
+            methods      = lt_methods
+          EXCEPTIONS
+            not_existing = 1
+            is_interface = 2
+            model_only   = 3
+            OTHERS       = 4.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
+        ENDIF.
+
+        io_xml->add( iv_name = 'METHODS'
+                     ig_data = lt_methods ).
+
       WHEN OTHERS.
         ASSERT 0 = 1.
     ENDCASE.
@@ -878,7 +916,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_locals_imp  TYPE seop_source_string,
           lt_locals_mac  TYPE seop_source_string,
           lt_testclasses TYPE seop_source_string,
-          ls_clskey      TYPE seoclskey.
+          ls_clskey      TYPE seoclskey,
+          lt_methods     TYPE seoo_methods_r.
 
 
     lt_source = mo_files->read_abap( ).
@@ -895,8 +934,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lt_testclasses = mo_files->read_abap( iv_extra = 'testclasses'
                                           iv_error = abap_false ). "#EC NOTEXT
 
-    ls_clskey-clsname = ms_item-obj_name.
 
+    io_xml->read( EXPORTING iv_name = 'METHODS'
+                  CHANGING cg_data = lt_methods ).
+
+    ls_clskey-clsname = ms_item-obj_name.
 
     CASE ms_item-obj_type.
       WHEN 'CLAS'.
@@ -909,6 +951,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             class           = ls_vseoclass
+            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
             is_interface    = 2
@@ -931,6 +974,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             interface       = ls_vseointerf
+            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
             is_class        = 2
@@ -976,6 +1020,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           is_clskey = ls_clskey
           it_source = lt_source ).
     ENDTRY.
+
+
 
     lcl_objects_activation=>add_item( ms_item ).
 
