@@ -614,7 +614,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.
 
-    METHOD serialize_xml.
+  METHOD serialize_xml.
 
     DATA: ls_vseoclass  TYPE vseoclass,
           lv_cp         TYPE program,
