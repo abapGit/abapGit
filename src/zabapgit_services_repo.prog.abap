@@ -62,11 +62,13 @@ CLASS lcl_services_repo IMPLEMENTATION.
       iv_url         = ls_popup-url
       iv_branch_name = ls_popup-branch_name
       iv_package     = ls_popup-package ).
+
+    toggle_favorite( lo_repo->get_key( ) ).
+
     lo_repo->status( ). " check for errors
     lo_repo->deserialize( ).
 
     lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
-    toggle_favorite( lo_repo->get_key( ) ).
 
     COMMIT WORK.
 
