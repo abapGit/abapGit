@@ -33,6 +33,20 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
       RETURNING VALUE(rv_ext) TYPE string
       RAISING   lcx_exception.
 
+    METHODS patch_size
+      IMPORTING iv_size   TYPE i OPTIONAL       " Overwrite if given
+      EXPORTING ev_size   TYPE i                " Return size as integer
+      CHANGING  ct_params TYPE ty_wwwparams_tt  " Param table to patch
+      RAISING   lcx_exception.
+
+    METHODS patch_filename
+      CHANGING  ct_params TYPE ty_wwwparams_tt
+      RAISING   lcx_exception.
+
+    METHODS clear_version
+      CHANGING  ct_params TYPE ty_wwwparams_tt
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
 *----------------------------------------------------------------------*
@@ -92,7 +106,6 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
     DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
     DATA lv_xstring   TYPE xstring.
-    DATA ls_wwwparam  LIKE LINE OF lt_w3params.
     DATA lv_size      TYPE int4.
 
     SELECT SINGLE * INTO CORRESPONDING FIELDS OF ms_key
@@ -132,12 +145,15 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
-    READ TABLE lt_w3params INTO ls_wwwparam WITH KEY name = 'filesize' ##NO_TEXT.
-    IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot read W3xx filesize' ).
-    ENDIF.
+    " Condense size string + get size to local integer
+    patch_size( IMPORTING ev_size   = lv_size
+                CHANGING  ct_params = lt_w3params ).
 
-    lv_size = ls_wwwparam-value.
+    " Remove file path (for security concerns)
+    patch_filename( CHANGING  ct_params = lt_w3params ).
+
+    " Clear version
+    clear_version( CHANGING  ct_params = lt_w3params ).
 
     CASE ms_key-relid.
       WHEN 'MI'.
@@ -209,9 +225,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
                                                     iv_ext   = get_ext( lt_w3params ) ).
       WHEN OTHERS.
         lcx_exception=>raise( 'W3xx: Unknown serializer version' ).
-
     ENDCASE.
-
 
     CASE ms_key-relid.
       WHEN 'MI'.
@@ -249,6 +263,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       WHEN OTHERS.
         lcx_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
+
+    " Update size of file (for the case file was actually changed remotely)
+    " Will also trigger "stage" at next sync if remote XML
+    " was not updated with the new file size
+    patch_size( EXPORTING iv_size   = lv_size
+                CHANGING  ct_params = lt_w3params ).
 
     CALL FUNCTION 'WWWPARAMS_UPDATE'
       TABLES
@@ -360,6 +380,55 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
   ENDMETHOD.  " get_ext.
+
+  METHOD patch_size.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'filesize'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find file size for { ms_key-objid }| ).
+    ENDIF.
+
+    IF iv_size IS NOT INITIAL.
+      <param>-value = iv_size.
+    ENDIF.
+    CONDENSE <param>-value.
+
+    ev_size = <param>-value.
+
+  ENDMETHOD.  " patch_size.
+
+  METHOD patch_filename.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'filename'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find file name for { ms_key-objid }| ).
+    ENDIF.
+
+    " Remove path
+    <param>-value = lcl_path=>get_filename_from_syspath( |{ <param>-value }| ).
+
+  ENDMETHOD.  " patch_filename.
+
+  METHOD clear_version.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'version'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find version for { ms_key-objid }| ).
+    ENDIF.
+
+    " Clear version
+    CLEAR <param>-value.
+
+  ENDMETHOD.  " clear_version.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.

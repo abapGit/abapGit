@@ -360,6 +360,10 @@ CLASS lcl_path DEFINITION FINAL.
                 iv_cd          TYPE string
       RETURNING VALUE(rv_path) TYPE string.
 
+    CLASS-METHODS get_filename_from_syspath
+      IMPORTING iv_path            TYPE string
+      RETURNING VALUE(rv_filename) TYPE string.
+
 ENDCLASS. "lcl_path
 
 CLASS lcl_path IMPLEMENTATION.
@@ -433,6 +437,15 @@ CLASS lcl_path IMPLEMENTATION.
     " TODO: improve logic and cases
 
   ENDMETHOD. "change_dir
+
+  METHOD get_filename_from_syspath.
+
+    " filename | c:\filename | /dir/filename | \\server\filename
+    FIND FIRST OCCURRENCE OF REGEX '^(?:/(?:.+/)*|(?:\w:|\\)\\(?:.+\\)*)?([^\\/]+)$'
+      IN iv_path
+      SUBMATCHES rv_filename.
+
+  ENDMETHOD.  " get_filename_from_syspath.
 
 ENDCLASS. "lcl_path
 

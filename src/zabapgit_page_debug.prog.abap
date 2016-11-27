@@ -6,8 +6,6 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page_super
   PUBLIC SECTION.
     METHODS lif_gui_page~render REDEFINITION.
 
-    METHODS styles
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS scripts
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -25,7 +23,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'DEBUG INFO' ) ).
 
     ro_html->add( '<div id="debug_info" class="debug_container">' ).
@@ -88,23 +86,6 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
     rv_html = |</p>Supported objects: { lv_list }</p>|.
 
   ENDMETHOD.  " render_supported_object_types
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* DEBUG INFO STYLES */'.
-    _add 'div.debug_container {'.
-    _add '  padding: 0.5em;'.
-    _add '  font-size: 10pt;'.
-    _add '  color: #444;'.
-    _add '  font-family: Consolas, Courier, monospace;'.
-    _add '}'.
-    _add 'div.debug_container p {'.
-    _add '  margin: 0px;'.
-    _add '}'.
-
-  ENDMETHOD.
 
   METHOD scripts.
 

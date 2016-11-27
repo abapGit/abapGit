@@ -32,8 +32,6 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       render_menu
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
-      styles
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
       scripts
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
 
@@ -217,7 +215,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'STAGE' ) ).
 
     ro_html->add( '<div class="repo">' ).
@@ -235,7 +233,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add_anchor( iv_act   = |commit('{ c_action-stage_commit }');|
+    ro_html->add_anchor( iv_act   = 'gHelper.submit();'
                          iv_typ   = gc_action_type-onclick
                          iv_id    = 'act_commit'
                          iv_style = 'display: none'
@@ -248,152 +246,18 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   ENDMETHOD.      "render_menu
 
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* STAGE */'.
-    _add '.stage_tab {'.
-    _add '  border: 1px solid #DDD;'.
-    _add '  background: #fff;'.
-    _add '  margin-top: 0.2em;'.
-    _add '}'.
-    _add '.stage_tab td {'.
-    _add '  border-top: 1px solid #eee;'.
-    _add '  color: #333;'.
-    _add '  vertical-align: middle;'.
-    _add '  padding: 2px 0.5em;'.
-    _add '}'.
-    _add '.stage_tab th {'.
-    _add '  color: #BBB;'.
-    _add '  font-size: 10pt;'.
-    _add '  text-align: left;'.
-    _add '  font-weight: normal;'.
-    _add '  background-color: #edf2f9;'.
-    _add '  padding: 4px 0.5em;'.
-    _add '}'.
-    _add '.stage_tab td.status {'.
-    _add '  width: 2em;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add '.stage_tab tbody tr:first-child td { padding-top: 0.5em; }'.
-    _add '.stage_tab tbody tr:last-child td { padding-bottom: 0.5em; }'.
-    _add '.stage_tab td.cmd a { padding: 0px 4px; }'.
-
-  ENDMETHOD.    "styles
-
   METHOD scripts.
 
     CREATE OBJECT ro_html.
 
-    " Globals & initialization
-    ro_html->add( |var gPageID = "stage{ mv_ts }";| ).
-    _add 'var gChoiceCount = 0;'.
-    _add 'setHook();'.
-
-    " Hook global click listener on table, global action counter
-    _add 'function setHook() {'.
-    _add '  var stageTab = document.getElementById("stage_tab");'.
-    _add '  if (stageTab.addEventListener) {'.
-    _add '    stageTab.addEventListener("click", onEvent);'.
-    _add '  } else {'.
-    _add '    stageTab.attachEvent("onclick", onEvent);'. " <IE9 crutch
-    _add '  }'.
-    _add '  window.onbeforeunload = onPageUnload;'.
-    _add '  window.onload         = onPageLoad;'.
-    _add '}'.
-
-    " Store table state on leaving the page
-    _add 'function onPageUnload() {'.
-    _add '  var data = collectData();'.
-    _add '  window.sessionStorage.setItem(gPageID, JSON.stringify(data));'.
-    _add '}'.
-
-    " Re-store table state on entering the page
-    _add 'function onPageLoad() {'.
-    _add '  var data = JSON.parse(window.sessionStorage.getItem(gPageID));'.
-    _add '  var stage = document.getElementById("stage_tab");'.
-    _add '  for (var i = stage.rows.length - 1; i >= 0; i--) {'.
-    _add '    var tr = stage.rows[i];'.
-    _add '    if (tr.parentNode.tagName == "THEAD") continue;'.
-    _add '    var context = tr.parentNode.className;'.
-    _add '    var cmd     = data[tr.cells[1].innerText];'.
-    _add '    if (!cmd) continue;'.
-    _add '    formatTR(tr, cmd, context);'.
-    _add '    if (countChoiceImpact(cmd) > 0) gChoiceCount++;'.
-    _add '  }'.
-    _add '  updateMenu();'.
-    _add '}'.
-
-    " Event handler, change status
-    _add 'function onEvent(event) {'.
-    _add '  if (!event.target) {'. " <IE9 crutch
-    _add '    if (event.srcElement) event.target = event.srcElement;'.
-    _add '    else return;'.
-    _add '  }'.
-    _add '  if (event.target.tagName != "A") return;'.
-    _add '  var td = event.target.parentNode;'.
-    _add '  if (!td || td.tagName != "TD" || td.className != "cmd") return;'.
-    _add '  var cmd     = event.target.innerText;'.
-    _add '  var tr      = td.parentNode;'.
-    _add '  var context = tr.parentNode.className;'.
-    _add '  switch (cmd) {'.
-    _add '    case "add":    cmd = "A"; break;'.
-    _add '    case "remove": cmd = "R"; break;'.
-    _add '    case "ignore": cmd = "I"; break;'.
-    _add '    case "reset":  cmd = "?"; break;'.
-    _add '  }'.
-    _add '  formatTR(tr, cmd, context);'.
-    _add '  gChoiceCount += countChoiceImpact(cmd);'.
-    _add '  updateMenu();'.
-    _add '}'.
-
-    " Update action counter -> affects menu update after
-    _add 'function countChoiceImpact(cmd) {'.
-    _add '  if      ("ARI".indexOf(cmd) > -1) return 1;'.
-    _add '  else if ("?".indexOf(cmd) > -1)   return -1;'.
-    _add '  else alert("Unknown command");'.
-    _add '}'.
-
-    " Re-format table line
-    _add 'function formatTR(tr, cmd, context) {'.
-    _add '  var cmdReset  = "<a>reset</a>"; '.
-    _add '  var cmdLocal  = "<a>add</a>"; '.
-    _add '  var cmdRemote = "<a>ignore</a><a>remove</a>";'.
-    _add '  tr.cells[0].innerText   = cmd;'.
-    _add '  tr.cells[0].style.color = (cmd == "?")?"#CCC":"";'.
-    _add '  tr.cells[2].innerHTML   = (cmd != "?")?cmdReset'.
-    _add '    :(context == "local")?cmdLocal:cmdRemote;'.
-    _add '}'.
-
-    " Update menu items visibility
-    _add 'function updateMenu() {'.
-    _add '  if (gChoiceCount > 0) {'.
-    _add '    document.getElementById("act_commit").style.display     = "inline";'.
-    _add '    document.getElementById("act_commit_all").style.display = "none";'.
-    _add '  } else {'.
-    _add '    document.getElementById("act_commit").style.display     = "none";'.
-    _add '    document.getElementById("act_commit_all").style.display = "inline";'.
-    _add '  }'.
-    _add '}'.
-
-    " Commit change to the server
-    _add 'function commit(action) {'.
-    _add '  var data = collectData();'.
-    _add '  submitForm(data, action);'.
-    _add '}'.
-
-    " Extract data from the table
-    _add 'function collectData() {'.
-    _add '  var stage = document.getElementById("stage_tab");'.
-    _add '  var data = {};'.
-    _add '  for (var i = stage.rows.length - 1; i >= 0; i--) {'.
-    _add '    var row = stage.rows[i];'.
-    _add '    if (row.parentNode.tagName == "THEAD") continue;'.
-    _add '    data[row.cells[1].innerText] = row.cells[0].innerText;'.
-    _add '  }'.
-    _add '  return data;      '.
-    _add '}'.
+    ro_html->add( 'var gStageParams = {' ).
+    ro_html->add( |  seed:            "stage{ mv_ts }",| ).
+    ro_html->add( '  stageTabId:      "stage_tab",' ).
+    ro_html->add( '  formAction:      "stage_commit",' ).
+    ro_html->add( '  commitNodeId:    "act_commit",' ).
+    ro_html->add( '  commitAllNodeId: "act_commit_all"' ).
+    ro_html->add( '}' ).
+    ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
   ENDMETHOD.  "scripts
 

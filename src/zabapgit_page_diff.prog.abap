@@ -33,7 +33,6 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
   PRIVATE SECTION.
     DATA: mt_diff_files TYPE tt_file_diff.
 
-    METHODS styles       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
@@ -174,133 +173,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "append_diff
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* DIFF */'.                           "#EC NOTEXT
-    _add 'div.diff {'.                           "#EC NOTEXT
-    _add '  background-color: #f2f2f2;'.         "#EC NOTEXT
-    _add '  padding: 0.7em    '.                 "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'div.diff_head {'.                      "#EC NOTEXT
-    _add '  padding-bottom: 0.7em;'.             "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'span.diff_name {'.                     "#EC NOTEXT
-    _add '  padding-left: 0.5em;'.               "#EC NOTEXT
-    _add '  color: grey;'.                       "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'span.diff_name strong {'.              "#EC NOTEXT
-    _add '  color: #333;'.                       "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'span.diff_banner {'.                   "#EC NOTEXT
-    _add '  border-style: solid;'.               "#EC NOTEXT
-    _add '  border-width: 1px;'.                 "#EC NOTEXT
-    _add '  border-radius: 3px;'.                "#EC NOTEXT
-    _add '  padding-left: 0.3em;'.               "#EC NOTEXT
-    _add '  padding-right: 0.3em;'.              "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add '.diff_ins {'.                          "#EC NOTEXT
-    _add '  border-color: #7bea7b;'.             "#EC NOTEXT
-    _add '  background-color: #d3f8d3;'.         "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add '.diff_del {'.                          "#EC NOTEXT
-    _add '  border-color: #ff667d;'.             "#EC NOTEXT
-    _add '  background-color: #ffccd4;'.         "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add '.diff_upd {'.                          "#EC NOTEXT
-    _add '  border-color: #dada00;'.             "#EC NOTEXT
-    _add '  background-color: #ffffcc;'.         "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'div.diff_content {'.                   "#EC NOTEXT
-    _add '  background: #fff;'.                  "#EC NOTEXT
-    _add '  border-top: 1px solid #DDD;'.        "#EC NOTEXT
-    _add '  border-bottom: 1px solid #DDD;'.     "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-
-    _add 'div.diff_head span.state-block {'.
-    _add '  margin-left: 0.5em;'.
-    _add '  font-family: Consolas, Lucida Console, Courier, monospace;'.
-    _add '  display: inline-block;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span {'.
-    _add '  display: inline-block;'.
-    _add '  padding: 0px 4px;'.
-    _add '  border: 1px solid #000;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span.added {'.
-    _add '  background-color: #69ad74; '.
-    _add '  border-color: #579e64;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span.changed {'.
-    _add '  background-color: #e0c150;'.
-    _add '  border-color: #d4af25;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span.mixed {'.
-    _add '  background-color: #e0c150;'.
-    _add '  border-color: #579e64;'.
-    _add '  color: #69ad74;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span.deleted {'.
-    _add '  background-color: #c76861;'.
-    _add '  border-color: #b8605a;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add 'div.diff_head span.state-block span.none {'.
-    _add '  background-color: #e8e8e8;'.
-    _add '  border-color: #dbdbdb;'.
-    _add '  color: #c8c8c8;'.
-    _add '}'.
-
-    " Table part
-    _add '/* DIFF TABLE */'.                     "#EC NOTEXT
-    _add 'table.diff_tab {'.                     "#EC NOTEXT
-    _add '  font-family: Consolas, Courier, monospace;'. "#EC NOTEXT
-    _add '  font-size: 10pt;'.                   "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab td,th {'.                  "#EC NOTEXT
-    _add '  color: #444;'.                       "#EC NOTEXT
-    _add '  padding-left: 0.5em;'.               "#EC NOTEXT
-    _add '  padding-right: 0.5em;'.              "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab th {'.                  "#EC NOTEXT
-    _add '  text-align: left;'.                  "#EC NOTEXT
-    _add '  font-weight: normal;'.               "#EC NOTEXT
-    _add '  padding-top: 3px;'.                  "#EC NOTEXT
-    _add '  padding-bottom: 3px;'.               "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab thead.header th {'.     "#EC NOTEXT
-    _add '  color: #EEE;'.                       "#EC NOTEXT
-    _add '  background-color: #BBB;'.            "#EC NOTEXT
-    _add '  text-align: left;'.                  "#EC NOTEXT
-    _add '  font-weight: bold;'.                 "#EC NOTEXT
-    _add '  padding-left: 0.5em;'.               "#EC NOTEXT
-    _add '  font-size: 9pt;'.                    "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab thead.nav_line {'.      "#EC NOTEXT
-    _add '  background-color: #edf2f9;'.         "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab thead.nav_line th {'.   "#EC NOTEXT
-    _add '  color: #bbb;'.                       "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab td.num, th.num {'.      "#EC NOTEXT
-    _add '  text-align: right;'.                 "#EC NOTEXT
-    _add '  color: #ccc;'.                       "#EC NOTEXT
-    _add '  border-left: 1px solid #eee;'.       "#EC NOTEXT
-    _add '  border-right: 1px solid #eee;'.      "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab code {'.                "#EC NOTEXT
-    _add '  font-family: inherit;'.              "#EC NOTEXT
-    _add '  white-space: pre;'.                  "#EC NOTEXT
-    _add '}'.                                    "#EC NOTEXT
-    _add 'table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }'.
-    _add 'table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }'.
-
-  ENDMETHOD.
 
   METHOD render_diff_head.
     DATA: lo_html  TYPE REF TO lcl_html_helper,
@@ -467,7 +339,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( 'DIFF' ) ).
 
     LOOP AT mt_diff_files INTO ls_diff_file.

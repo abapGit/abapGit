@@ -78,7 +78,7 @@ CLASS lcl_http_client DEFINITION FINAL.
                   iv_service TYPE string
         RAISING   lcx_exception.
 
-  PROTECTED SECTION.
+  PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
           mo_digest TYPE REF TO lcl_http_digest.
 

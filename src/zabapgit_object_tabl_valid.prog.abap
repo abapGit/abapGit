@@ -2,7 +2,7 @@
 *&  Include  zabapgit_object_tabl_valid
 *&---------------------------------------------------------------------*
 
-CLASS lcl_object_tabl_validation DEFINITION.
+CLASS lcl_object_tabl_validation DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS validate
       IMPORTING
@@ -14,7 +14,7 @@ CLASS lcl_object_tabl_validation DEFINITION.
         lcx_exception.
 ENDCLASS.
 
-CLASS lcl_tabl_validation_dialog DEFINITION.
+CLASS lcl_tabl_validation_dialog DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS:
       constructor
@@ -91,7 +91,7 @@ CLASS lcl_tabl_validation_dialog IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
     METHODS:
       setup,
@@ -143,8 +143,7 @@ CLASS lct_table_validation IMPLEMENTATION.
 
   METHOD no_type_changes.
     DATA:
-      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
-      ls_current_table_field  LIKE LINE OF mt_current_table_fields.
+      ls_previous_table_field LIKE LINE OF mt_previous_table_fields.
 
     ls_previous_table_field-fieldname = 'FIELD1'.
     ls_previous_table_field-rollname  = 'INT4'.
@@ -189,7 +188,6 @@ CLASS lct_table_validation IMPLEMENTATION.
 
   METHOD no_fields_no_message.
     DATA:
-      ls_previous_table_field LIKE LINE OF mt_previous_table_fields,
       ls_current_table_field  LIKE LINE OF mt_current_table_fields.
 
     create_xmls( ).

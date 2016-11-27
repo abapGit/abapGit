@@ -9,20 +9,20 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       constructor
         RAISING lcx_exception,
       lif_gui_page~render     REDEFINITION,
-      lif_gui_page~on_event   REDEFINITION,
-      lif_gui_page~get_assets REDEFINITION.
+      lif_gui_page~on_event   REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show TYPE string VALUE 'show' ##NO_TEXT,
+                 show       TYPE string VALUE 'show' ##NO_TEXT,
+                 changed_by TYPE string VALUE 'changed_by',
                END OF c_actions.
 
     DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
           mo_repo_content TYPE REF TO lcl_gui_view_repo_content.
 
     METHODS:
-      styles
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      test_changed_by
+        RAISING lcx_exception,
       retrieve_active_repo
         RAISING lcx_exception,
       render_toc
@@ -80,9 +80,33 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         ENDTRY.
 
         ev_state = gc_event_state-re_render.
+      WHEN c_actions-changed_by.
+        test_changed_by( ).
+        ev_state = gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.  "on_event
+
+  METHOD test_changed_by.
+
+    DATA: ls_tadir TYPE tadir,
+          lv_user  TYPE xubname,
+          ls_item  TYPE ty_item.
+
+
+    ls_tadir = lcl_popups=>popup_object( ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
+
+    lv_user = lcl_objects=>changed_by( ls_item ).
+
+    MESSAGE lv_user TYPE 'S'.
+
+  ENDMETHOD.
 
 **********************************************************************
 * RENDERING
@@ -98,7 +122,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( io_include_style = styles( ) ) ).
+    ro_html->add( header( ) ).
     ro_html->add( title( iv_title = 'HOME'
                          io_menu  = build_main_menu( ) ) ).
 
@@ -172,6 +196,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Object to files'  iv_act = gc_action-zip_object ) ##NO_TEXT.
+    lo_betasub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
     lo_betasub->add( iv_txt = 'Settings'         iv_act = gc_action-go_settings ) ##NO_TEXT.
@@ -309,256 +334,5 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_repo
-
-**********************************************************************
-* ASSETS, STYLES, SCRIPTS
-**********************************************************************
-
-  METHOD styles.
-
-    CREATE OBJECT ro_html.
-
-    _add '/* REPOSITORY TABLE*/'.
-    _add 'div.repo_container {'.
-    _add '  position: relative;'.
-    _add '}'.
-    _add '.repo_tab {'.
-    _add '  border: 1px solid #DDD;'.
-    _add '  border-radius: 3px;'.
-    _add '  background: #fff;'.
-    _add '  margin-top: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td {'.
-    _add '  border-top: 1px solid #eee;'.
-    _add '  vertical-align: middle;'.
-    _add '  color: #333;'.
-    _add '  padding-top: 2px;'.
-    _add '  padding-bottom: 2px;'.
-    _add '}'.
-    _add '.repo_tab td.icon {'.
-    _add '  width: 32px;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add '.repo_tab td.type {'.
-    _add '  width: 3em;'.
-    _add '}'.
-    _add '.repo_tab td.object {'.
-    _add '  padding-left: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td.files {'.
-    _add '  padding-left: 0.5em;'.
-    _add '}'.
-    _add '.repo_tab td.cmd {'.
-    _add '  text-align: right;'.
-    _add '  padding-left: 0.5em;'.
-    _add '  padding-right: 0.7em;'.
-    _add '}'.
-    _add '.repo_tab tr.unsupported    { color: lightgrey; }'.
-    _add '.repo_tab tr.modified       { background: #fbf7e9; }'.
-    _add '.repo_tab tr:first-child td { border-top: 0px; }'.
-    _add '.repo_tab td.current_dir    { color: #ccc; }'.
-
-    " States
-    _add '.repo_tab td.cmd span.state-block {'.
-    _add '  margin-left: 1em;'.
-    _add '  font-family: Consolas, Lucida Console, Courier, monospace;'.
-    _add '  font-size: x-small;'.
-    _add '  vertical-align: 13%;'.
-    _add '  display: inline-block;'.
-    _add '  text-align: center;'.
-    _add '}'.
-    _add '.repo_tab td.cmd span.state-block span {'.
-    _add '  display: inline-block;'.
-    _add '  padding: 0px 2px;'.
-    _add '  border: 1px solid #000;'.
-    _add '}'.
-
-    _add '.repo_tab td.cmd span.state-block span.added {'.
-    _add '  background-color: #69ad74; '.
-    _add '  border-color: #579e64;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add '.repo_tab td.cmd span.state-block span.changed {'.
-    _add '  background-color: #e0c150;'.
-    _add '  border-color: #d4af25;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add '.repo_tab td.cmd span.state-block span.mixed {'.
-    _add '  background-color: #e0c150;'.
-    _add '  border-color: #579e64;'.
-    _add '  color: #69ad74;'.
-    _add '}'.
-    _add '.repo_tab td.cmd span.state-block span.deleted {'.
-    _add '  background-color: #c76861;'.
-    _add '  border-color: #b8605a;'.
-    _add '  color: white;'.
-    _add '}'.
-    _add '.repo_tab td.cmd span.state-block span.none {'.
-    _add '  background-color: #e8e8e8;'.
-    _add '  border-color: #dbdbdb;'.
-    _add '  color: #c8c8c8;'.
-    _add '}'.
-
-  ENDMETHOD.  "styles
-
-  METHOD lif_gui_page~get_assets.
-* http://fa2png.io/r/octicons/
-* colour: #808080
-* size: 16
-* https://www.base64-image.de/ can be used to convert images to base64
-
-    DATA ls_image TYPE ty_web_asset.
-
-    rt_assets = super->lif_gui_page~get_assets( ).
-
-    ls_image-url     = 'img/sync' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA6ElEQVQYGY3BIWuUAQAG'
-      && '4Pc7N72xsbGBYNE8tYpVZKDZX2CcYLEZ9yQxOQSz3D/YmkUsVovRQ2SYNJnlkFfH7VZu'
-      && 'wefJgrGHXnjrpQeu5B93smCwr6qqqp54433mDI5Ucds1u577o+p35hyoqe2cMThWVatJ'
-      && '7KiZrZxz18SJqqtJPFXPssRgw0oSH9WNXMCQU76qzSxx2cxxTlk3yhKb6mcSQy7kvjpM'
-      && 'Ylt98tpjN3POyFTdSuKSqppayxkjE/Uhc36p+m7PhhXr7vmmfhhnzpHPJqqqquqdcRY8'
-      && 'spq47sAXMyde2c3/+wvX7Y18BexhBwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/toc' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
-      && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
-      && 'AABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/repo_online' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAApVBMVEUAAABQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJz+TJ01AAAANnRSTlMAAQIDBAcJCgwSFBocHygqMTM1NkRHSU1QUWFiZGlweHuDiImL'
-      && 'lZiio6a5vsfT3uTo6e3x9fsxY2JuAAAAgUlEQVQYGXXB6RaBUBSA0e+IEuIiMs9zhlDn'
-      && '/R/NZWmt/LA3f1RcoaB50SydCbn20wjedkPu3sKSpMGH21PhLdZ0BATZ+cCXtxtDHGLV'
-      && 'pgFW9QqJj2U0wvJvMF+5jiNGI3HK9dMQSouH6sRoFGoWd8l1dEDRWlWPQsFS98KPvvDH'
-      && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/repo_offline' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAVFBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICuaWnmAAAAG3RSTlMAAgQFBgsQFxweIiMtN3yI'
-      && 'nqOvt9Hp6/Hz9fktMNR/AAAAXElEQVQYV5WO2xJAMAxES1q3ugfF/v9/0qLyyL4k58xk'
-      && 'J0p9D7N5oeqZgSwy7fDZnHNdEE1gWK116tksl7hPimGFFPWYl7MU0zksRCl8TStKg1AJ'
-      && '0XNC8Zm4/c0BUVQHi0llOUYAAAAASUVORK5CYII='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/pkg' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
-      && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
-      && 'BWVjT7hwOQ+HEzEbMhU7jrTd69q2KhtFRU2nrvS927dm3pyqPXcuNRVD7sxiRIQlDSc+'
-      && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
-      && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
-      && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/branch' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgID/OyosAAAAN3RSTlMAAQIDBAYICQ8TFRweJScoKSo3Oj1FRk1dYWJjZmhzdIaJ'
-      && 'j5GVm6CwsrS5vsHDyszV19ne7/X583teZAAAAIFJREFUGFdVytkagVAYheFvFzJlnqc0'
-      && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
-      && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
-      && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/link' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICVwFMKAAAAHnRSTlMAAwQFBgcK'
-      && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
-      && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
-      && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/code' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
-      && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
-      && 'rkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/bin' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
-      && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
-      && 'RotPsQAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/obj' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
-      && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
-      && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/lock' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAOVBMVEUAAACIiIiIiIiI'
-      && 'iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjNaTNB'
-      && 'AAAAEnRSTlMABgdBVXt8iYuRsNXZ3uDi6Pmu6tfUAAAASUlEQVQYV63KSxJAQBAE0TQ0'
-      && 'Znym1f0PayE0QdjJ5asCgGTu1hClqjppvaRXB60swBeA2QNUAIq+ICvKx367nqAn/P8Y'
-      && 't2jg3Q5rgASaF3KNRwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/dir' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAASFBMVEUAAABmksxmksxm'
-      && 'ksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxm'
-      && 'ksxmksxmksxmksxMwQo8AAAAF3RSTlMABhIYIy1fZmhpe3+IiYuMkZvD7e/x93sipD4A'
-      && 'AAA+SURBVBhXY2BABzwiokAgzAYXEGdiBAIWIYQAPzcQCApzgwEXM4M4KuBDFxAYKAEx'
-      && 'VAFeBlYOTiTAzoThewD5hBAcnWM4gwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/burger' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAHlBMVEUAAABtktltktlt'
-      && 'ktltktltktltktltktltktltktk7ccVDAAAACXRSTlMAFDBLY2SFoPGv/DFMAAAAJ0lE'
-      && 'QVQIW2NggIHKmWAwmaETwpjGoBoKBo4MmIAkxXApuGK4dgwAAJa5IzLs+gRBAAAAAElF'
-      && 'TkSuQmCC'.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/star' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAABejclejcle'
-      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
-      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
-      && 'jclejclejclejclejclejclejclejclejcn2yvsVAAAALXRSTlMAAQIFBwkKCw0QERUY'
-      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
-      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
-      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
-      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-    ls_image-url     = 'img/star-grey' ##NO_TEXT.
-    ls_image-content =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAADQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NC2QdifAAAALXRSTlMAAQIFBwkKCw0QERUY'
-      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
-      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
-      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
-      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_assets.
-
-  ENDMETHOD.  "get_assets
 
 ENDCLASS.
