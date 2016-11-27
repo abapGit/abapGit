@@ -29,7 +29,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
-          mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
           mo_asset_man   TYPE REF TO lcl_gui_asset_manager,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
@@ -39,11 +38,6 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS startup
       RAISING lcx_exception.
-
-    METHODS cache_image
-      IMPORTING iv_url    TYPE w3url
-                iv_base64 TYPE string
-      RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS cache_html
       IMPORTING iv_text       TYPE string
@@ -192,24 +186,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    DATA: lt_assets TYPE tt_web_assets,
-          ls_stack  TYPE ty_page_stack.
-    FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
+    DATA: ls_stack  TYPE ty_page_stack.
 
     IF iv_replacing = abap_false AND NOT mi_cur_page IS INITIAL.
       ls_stack-page     = mi_cur_page.
       ls_stack-bookmark = iv_with_bookmark.
       APPEND ls_stack TO mt_stack.
-    ENDIF.
-
-    lt_assets = ii_page->get_assets( ).
-    IF lines( lt_assets ) > 0.
-      LOOP AT lt_assets ASSIGNING <ls_asset>.
-        READ TABLE mt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
-        CHECK sy-subrc IS NOT INITIAL.
-        APPEND <ls_asset>-url TO mt_assets.
-        cache_image( iv_url = <ls_asset>-url iv_base64 = <ls_asset>-content ).
-      ENDLOOP.
     ENDIF.
 
     mi_cur_page = ii_page.
@@ -226,7 +208,10 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD startup.
 
     DATA: lt_events TYPE cntl_simple_events,
-          ls_event  LIKE LINE OF lt_events.
+          ls_event  LIKE LINE OF lt_events,
+          lt_assets TYPE tt_web_assets.
+
+    FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     CREATE OBJECT mo_router.
     CREATE OBJECT mo_asset_man.
@@ -244,6 +229,16 @@ CLASS lcl_gui IMPLEMENTATION.
                  iv_url     = 'js/common.js'
                  iv_type    = 'text'
                  iv_subtype = 'javascript' ).
+
+    lt_assets = mo_asset_man->get_images( ).
+    IF lines( lt_assets ) > 0.
+      LOOP AT lt_assets ASSIGNING <ls_asset>.
+        cache_asset( iv_xdata   = <ls_asset>-content
+                     iv_url     = <ls_asset>-url
+                     iv_type    = 'image'
+                     iv_subtype = 'png' ).
+      ENDLOOP.
+    ENDIF.
 
     ls_event-eventid    = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
@@ -271,27 +266,6 @@ CLASS lcl_gui IMPLEMENTATION.
                           iv_subtype = 'html' ).
 
   ENDMETHOD.                    "cache_html
-
-  METHOD cache_image.
-
-    DATA lv_xstr  TYPE xstring.
-
-    CALL FUNCTION 'SSFC_BASE64_DECODE'
-      EXPORTING
-        b64data = iv_base64
-      IMPORTING
-        bindata = lv_xstr
-      EXCEPTIONS
-        OTHERS  = 1.
-
-    ASSERT sy-subrc = 0. " Image data error
-
-    rv_url = cache_asset( iv_xdata   = lv_xstr
-                          iv_url     = iv_url
-                          iv_type    = 'image'
-                          iv_subtype = 'png' ).
-
-  ENDMETHOD.                  "cache_image
 
   METHOD cache_asset.
 

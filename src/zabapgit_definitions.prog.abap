@@ -55,7 +55,8 @@ TYPES: BEGIN OF ty_metadata,
 
 TYPES: BEGIN OF ty_web_asset,
          url     TYPE w3url,
-         content TYPE string,
+         base64  TYPE string,
+         content TYPE xstring,
        END OF ty_web_asset.
 TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
 
