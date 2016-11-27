@@ -110,6 +110,10 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_mime_asset.
 
+  DEFINE _inline.
+    APPEND &1 TO lt_data.
+  END-OF-DEFINITION.
+
   METHOD get_inline_asset.
 
     DATA: lt_data TYPE ty_string_tt,
@@ -117,9 +121,9 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
     CASE iv_asset_name.
       WHEN 'CSS_COMMON'.
-        " @@abapmerge include src/zabapgit_css_common.data.css > APPEND '$$' TO lt_data.
+        " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
       WHEN 'JS_COMMON'.
-        " @@abapmerge include src/zabapgit_js_common.data.css > APPEND '$$' TO lt_data.
+        " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
       WHEN OTHERS.
         lcx_exception=>raise( |No inline resource: { iv_asset_name }| ).
     ENDCASE.
