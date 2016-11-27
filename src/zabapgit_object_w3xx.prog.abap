@@ -43,6 +43,10 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
       CHANGING  ct_params TYPE ty_wwwparams_tt
       RAISING   lcx_exception.
 
+    METHODS clear_version
+      CHANGING  ct_params TYPE ty_wwwparams_tt
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
 *----------------------------------------------------------------------*
@@ -147,6 +151,9 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     " Remove file path (for security concerns)
     patch_filename( CHANGING  ct_params = lt_w3params ).
+
+    " Clear version
+    clear_version( CHANGING  ct_params = lt_w3params ).
 
     CASE ms_key-relid.
       WHEN 'MI'.
@@ -407,6 +414,21 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     <param>-value = lcl_path=>get_filename_from_syspath( |{ <param>-value }| ).
 
   ENDMETHOD.  " patch_filename.
+
+  METHOD clear_version.
+
+    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'version'.
+
+    IF sy-subrc > 0.
+      lcx_exception=>raise( |W3xx: Cannot find version for { ms_key-objid }| ).
+    ENDIF.
+
+    " Clear version
+    CLEAR <param>-value.
+
+  ENDMETHOD.  " clear_version.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
