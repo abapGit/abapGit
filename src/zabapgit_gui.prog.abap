@@ -29,8 +29,8 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     DATA: mi_cur_page    TYPE REF TO lif_gui_page,
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
-          mt_assets      TYPE tt_w3urls,
           mo_router      TYPE REF TO lcl_gui_router,
+          mo_asset_man   TYPE REF TO lcl_gui_asset_manager,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
@@ -39,12 +39,16 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     METHODS startup
       RAISING lcx_exception.
 
-    METHODS cache_image
-      IMPORTING iv_url    TYPE w3url
-                iv_base64 TYPE string.
-
     METHODS cache_html
-      IMPORTING iv_html       TYPE string
+      IMPORTING iv_text       TYPE string
+      RETURNING VALUE(rv_url) TYPE w3url.
+
+    METHODS cache_asset
+      IMPORTING iv_text       TYPE string OPTIONAL
+                iv_xdata      TYPE xstring OPTIONAL
+                iv_url        TYPE w3url OPTIONAL
+                iv_type       TYPE c
+                iv_subtype    TYPE c
       RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
@@ -182,24 +186,12 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    DATA: lt_assets TYPE tt_web_assets,
-          ls_stack  TYPE ty_page_stack.
-    FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
+    DATA: ls_stack  TYPE ty_page_stack.
 
     IF iv_replacing = abap_false AND NOT mi_cur_page IS INITIAL.
       ls_stack-page     = mi_cur_page.
       ls_stack-bookmark = iv_with_bookmark.
       APPEND ls_stack TO mt_stack.
-    ENDIF.
-
-    lt_assets = ii_page->get_assets( ).
-    IF lines( lt_assets ) > 0.
-      LOOP AT lt_assets ASSIGNING <ls_asset>.
-        READ TABLE mt_assets TRANSPORTING NO FIELDS WITH KEY table_line = <ls_asset>-url.
-        CHECK sy-subrc IS NOT INITIAL.
-        APPEND <ls_asset>-url TO mt_assets.
-        cache_image( iv_url = <ls_asset>-url iv_base64 = <ls_asset>-content ).
-      ENDLOOP.
     ENDIF.
 
     mi_cur_page = ii_page.
@@ -216,20 +208,43 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD startup.
 
     DATA: lt_events TYPE cntl_simple_events,
-          ls_event  LIKE LINE OF lt_events.
+          ls_event  LIKE LINE OF lt_events,
+          lt_assets TYPE tt_web_assets.
+
+    FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
     CREATE OBJECT mo_router.
+    CREATE OBJECT mo_asset_man.
     CREATE OBJECT mo_html_viewer
       EXPORTING
         query_table_disabled = abap_true
         parent               = cl_gui_container=>screen0.
 
-    CLEAR ls_event.
-    ls_event-eventid = mo_html_viewer->m_id_sapevent.
+    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'css_common' )
+                 iv_url     = 'css/common.css'
+                 iv_type    = 'text'
+                 iv_subtype = 'css' ).
+
+    cache_asset( iv_xdata   = mo_asset_man->get_asset( 'js_common' )
+                 iv_url     = 'js/common.js'
+                 iv_type    = 'text'
+                 iv_subtype = 'javascript' ).
+
+    lt_assets = mo_asset_man->get_images( ).
+    IF lines( lt_assets ) > 0.
+      LOOP AT lt_assets ASSIGNING <ls_asset>.
+        cache_asset( iv_xdata   = <ls_asset>-content
+                     iv_url     = <ls_asset>-url
+                     iv_type    = 'image'
+                     iv_subtype = 'png' ).
+      ENDLOOP.
+    ENDIF.
+
+    ls_event-eventid    = mo_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
-    mo_html_viewer->set_registered_events( lt_events ).
 
+    mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "startup
@@ -246,57 +261,59 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD cache_html.
 
-    DATA: lt_data TYPE TABLE OF text200.
-
-    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
-      EXPORTING
-        text      = iv_html
-      TABLES
-        ftext_tab = lt_data.
-
-    mo_html_viewer->load_data(
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_data ).
+    rv_url = cache_asset( iv_text    = iv_text
+                          iv_type    = 'text'
+                          iv_subtype = 'html' ).
 
   ENDMETHOD.                    "cache_html
 
-  METHOD cache_image.
+  METHOD cache_asset.
 
-    DATA lv_xtmp  TYPE xstring.
-    DATA lv_size  TYPE int4.
-    DATA lt_xdata TYPE TABLE OF w3_mime. " RAW255
+    DATA: lv_xstr  TYPE xstring,
+          lt_xdata TYPE TABLE OF w3_mime, " RAW255
+          lv_size  TYPE int4.
 
-    CALL FUNCTION 'SSFC_BASE64_DECODE'
-      EXPORTING
-        b64data = iv_base64
-      IMPORTING
-        bindata = lv_xtmp
-      EXCEPTIONS
-        OTHERS  = 1.
+    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
-    ASSERT sy-subrc = 0. " Image data error
+    IF iv_text IS SUPPLIED. " String input
+
+      CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
+        EXPORTING
+          text      = iv_text
+        IMPORTING
+          buffer    = lv_xstr
+        EXCEPTIONS
+          OTHERS    = 1.
+      ASSERT sy-subrc = 0.
+
+    ELSE. " Raw input
+      lv_xstr = iv_xdata.
+    ENDIF.
 
     CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
       EXPORTING
-        buffer        = lv_xtmp
+        buffer        = lv_xstr
       IMPORTING
         output_length = lv_size
       TABLES
         binary_tab    = lt_xdata.
 
     mo_html_viewer->load_data(
-      EXPORTING  type         = 'image'
-                 subtype      = 'png'
-                 size         = lv_size
-                 url          = iv_url
-      CHANGING   data_table   = lt_xdata
-      EXCEPTIONS OTHERS       = 1 ) ##NO_TEXT.
+      EXPORTING
+        type         = iv_type
+        subtype      = iv_subtype
+        size         = lv_size
+        url          = iv_url
+      IMPORTING
+        assigned_url = rv_url
+      CHANGING
+        data_table   = lt_xdata
+      EXCEPTIONS
+        OTHERS       = 1 ) ##NO_TEXT.
 
     ASSERT sy-subrc = 0. " Image data error
 
-  ENDMETHOD.                  "cache_image
+  ENDMETHOD.  " cache_asset.
 
   METHOD get_current_page_name.
     IF mi_cur_page IS BOUND.

@@ -69,6 +69,7 @@ INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
 
 INCLUDE zabapgit_services.            " All services here
+INCLUDE zabapgit_gui_asset_manager.
 INCLUDE zabapgit_gui_pages.           " All GUI pages here
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 INCLUDE zabapgit_gui_router.
