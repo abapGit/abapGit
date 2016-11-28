@@ -96,13 +96,20 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-go_playground.                   " Create playground page
         ei_page  = get_page_playground( ).
         ev_state = gc_event_state-new_page.
+      WHEN gc_action-go_tutorial.                     " Go to tutorial
+        lcl_app=>user( )->set_repo_show( '' ).        " Clear show_id
+        ev_state = gc_event_state-re_render.          " Assume we are on main page
 
         " SAP GUI actions
-      WHEN gc_action-jump.
+      WHEN gc_action-jump.                          " Open object editor
         lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
                                             IMPORTING ev_obj_type = ls_item-obj_type
                                                       ev_obj_name = ls_item-obj_name ).
         lcl_objects=>jump( ls_item ).
+        ev_state = gc_event_state-no_more_act.
+
+      WHEN gc_action-jump_pkg.                      " Open SE80
+        lcl_services_repo=>open_se80( |{ iv_getdata }| ).
         ev_state = gc_event_state-no_more_act.
 
         " DB actions
@@ -124,6 +131,9 @@ CLASS lcl_gui_router IMPLEMENTATION.
         " Abapgit services actions
       WHEN gc_action-abapgit_home.                    " Go abapGit homepage
         lcl_services_abapgit=>open_abapgit_homepage( ).
+        ev_state = gc_event_state-no_more_act.
+      WHEN gc_action-abapgit_wiki.                    " Go abapGit wikipage
+        lcl_services_abapgit=>open_abapgit_wikipage( ).
         ev_state = gc_event_state-no_more_act.
       WHEN gc_action-abapgit_install.                 " Install abapGit
         lcl_services_abapgit=>install_abapgit( ).
