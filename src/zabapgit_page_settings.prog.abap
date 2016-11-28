@@ -3,14 +3,22 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+
   PUBLIC SECTION.
+
     METHODS lif_gui_page~render REDEFINITION.
     METHODS lif_gui_page~on_event REDEFINITION.
     CONSTANTS:
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action.
+
   PRIVATE SECTION.
+
+    DATA:
+      mo_settings TYPE REF TO lcl_settings,
+      mv_error    TYPE abap_bool.
+
     METHODS render_proxy
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_development_internals
@@ -32,14 +40,13 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RAISING
         lcx_exception.
     METHODS read_settings.
-    DATA:
-      mo_settings TYPE REF TO lcl_settings,
-      mv_error    TYPE abap_bool.
+
 ENDCLASS.
 
 CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
+
     CREATE OBJECT ro_html.
 
     read_settings( ).
@@ -52,10 +59,15 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<hr>| ).
     ro_html->add( render_development_internals( ) ).
     ro_html->add( render_form_end( ) ).
+
+    ro_html->add( footer( ) ).
+
   ENDMETHOD.
 
   METHOD render_proxy.
+
     CREATE OBJECT ro_html.
+
     ro_html->add( |<h2>Proxy</h2>| ).
     ro_html->add( |<label for="proxy_url">Proxy URL</label>| ).
     ro_html->add( |<br>| ).
@@ -66,11 +78,14 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( `<input name="proxy_port" type="text" size="5" value="` && mo_settings->get_proxy_port( ) && `">` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
+
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
+
     DATA:
       lt_post_fields TYPE tihttpnvp.
+
     CASE iv_action.
       WHEN c_action-save_settings.
         lt_post_fields = parse_post( it_postdata ).
@@ -86,10 +101,12 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
         ev_state = gc_event_state-go_back.
     ENDCASE.
+
   ENDMETHOD.
 
 
   METHOD build_settings.
+
     DATA ls_post_field TYPE ihttpnvp.
 
     CREATE OBJECT mo_settings.
@@ -111,22 +128,27 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ELSE.
       mo_settings->set_run_critical_tests( abap_false ).
     ENDIF.
+
   ENDMETHOD.
 
 
   METHOD validate_settings.
+
     IF ( mo_settings->get_proxy_url( ) IS NOT INITIAL AND  mo_settings->get_proxy_port( ) IS INITIAL ) OR
                  ( mo_settings->get_proxy_url( ) IS INITIAL AND  mo_settings->get_proxy_port( ) IS NOT INITIAL ).
       MESSAGE 'If specifying proxy, specify both URL and port' TYPE 'W'.
     ENDIF.
+
   ENDMETHOD.
 
 
   METHOD parse_post.
+
     DATA lv_serialized_post_data TYPE string.
 
     CONCATENATE LINES OF it_postdata INTO lv_serialized_post_data.
     rt_post_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_serialized_post_data ).
+
   ENDMETHOD.
 
 
@@ -141,36 +163,47 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_form_begin.
+
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="settings_container">' ).
     ro_html->add( `<form id="settings_form" method="post" action="sapevent:` && c_action-save_settings && `">` ).
+
   ENDMETHOD.
 
   METHOD render_form_end.
+
     CREATE OBJECT ro_html.
     ro_html->add( '<input type="submit" value="Save" class="submit">' ).
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
+
   ENDMETHOD.
 
 
   METHOD read_settings.
+
     DATA lo_settings_persistence TYPE REF TO lcl_persistence_settings.
+
     lo_settings_persistence = lcl_app=>settings( ).
     mo_settings = lo_settings_persistence->read( ).
+
   ENDMETHOD.
 
   METHOD render_development_internals.
+
     DATA lv_checked TYPE string.
+
     IF mo_settings->get_run_critical_tests( ) = abap_true.
       lv_checked = 'checked'.
     ENDIF.
+
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>abapGit Development Internals settings</h2>| ).
     ro_html->add( `<input type="checkbox" name="critical_tests" value="X" `
                    && lv_checked && ` > Enable critical unit tests (see LTCL_DANGEROUS)` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
+
   ENDMETHOD.
 
 ENDCLASS.

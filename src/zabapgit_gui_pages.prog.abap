@@ -13,6 +13,7 @@ INCLUDE zabapgit_repo_browser_util.
 
 * Components and templates
 INCLUDE zabapgit_view_repo.
+INCLUDE zabapgit_view_tutorial.
 
 * Pages
 INCLUDE zabapgit_page_commit.

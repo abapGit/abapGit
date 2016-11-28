@@ -6,10 +6,9 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page_super
   PUBLIC SECTION.
     METHODS lif_gui_page~render REDEFINITION.
 
+  PRIVATE SECTION.
     METHODS scripts
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-
-  PRIVATE SECTION.
     METHODS render_debug_info
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_supported_object_types

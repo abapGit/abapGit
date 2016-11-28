@@ -171,6 +171,7 @@ CONSTANTS: BEGIN OF gc_action,
              repo_toggle_fav        TYPE string VALUE 'repo_toggle_fav',
 
              abapgit_home       TYPE string VALUE 'abapgit_home',
+             abapgit_wiki       TYPE string VALUE 'abapgit_wiki',
              abapgit_install    TYPE string VALUE 'abapgit_install',
 
              zip_import         TYPE string VALUE 'zip_import',
@@ -203,6 +204,7 @@ CONSTANTS: BEGIN OF gc_action,
              go_branch_overview TYPE string VALUE 'go_branch_overview',
              go_playground      TYPE string VALUE 'go_playground',
              go_debuginfo       TYPE string VALUE 'go_debuginfo',
-             go_settings        type string value 'go_settings',
+             go_settings        TYPE STRING VALUE 'go_settings',
+             go_tutorial        TYPE STRING VALUE 'go_tutorial',
              jump               TYPE string VALUE 'jump',
            END OF gc_action.

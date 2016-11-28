@@ -6,12 +6,16 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
   PUBLIC SECTION.
 
     CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
+    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'https://github.com/larshp/abapGit/wiki'.
     CONSTANTS c_package_abapgit  TYPE devclass VALUE '$ABAPGIT'.
     CONSTANTS c_package_plugins  TYPE devclass VALUE '$ABAPGIT_PLUGINS'.
     CONSTANTS c_abapgit_url      TYPE string VALUE 'https://github.com/larshp/abapGit.git'.
     CONSTANTS c_plugins_url      TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git'.
 
     CLASS-METHODS open_abapgit_homepage
+      RAISING lcx_exception.
+
+    CLASS-METHODS open_abapgit_wikipage
       RAISING lcx_exception.
 
     CLASS-METHODS install_abapgit
@@ -34,6 +38,17 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "open_abapgit_homepage
+
+  METHOD open_abapgit_wikipage.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING document = c_abapgit_wikipage
+      EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Opening page in external browser failed.' ).
+    ENDIF.
+
+  ENDMETHOD.  "open_abapgit_wikipage
 
   METHOD install_abapgit.
 
