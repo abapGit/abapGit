@@ -207,4 +207,5 @@ CONSTANTS: BEGIN OF gc_action,
              go_settings        TYPE STRING VALUE 'go_settings',
              go_tutorial        TYPE STRING VALUE 'go_tutorial',
              jump               TYPE string VALUE 'jump',
+             jump_pkg           TYPE string VALUE 'jump_pkg',
            END OF gc_action.
