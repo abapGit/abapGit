@@ -255,7 +255,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
+    DATA: lo_highlighter TYPE REF TO lcl_code_highlighter,
+          lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
           lv_local       TYPE string,
           lv_remote      TYPE string,
           lv_lattr       TYPE string,
@@ -264,8 +265,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-
+    CREATE OBJECT lo_highlighter.
     CREATE OBJECT ro_html.
+
     lt_diffs = is_diff-o_diff->get( ).
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
@@ -280,11 +282,15 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDIF.
 
       IF is_diff-mod = c_mod-remote. " Remote file leading changes
-        lv_local  = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
-        lv_remote = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
+        lv_local  = lo_highlighter->process_line( <ls_diff>-old ).
+        lv_remote = lo_highlighter->process_line( <ls_diff>-new ).
+*        lv_local  = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
+*        lv_remote = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
       ELSE.             " Local leading changes or both were modified
-        lv_local  = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
-        lv_remote = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
+        lv_local  = lo_highlighter->process_line( <ls_diff>-new ).
+        lv_remote = lo_highlighter->process_line( <ls_diff>-old ).
+*        lv_local  = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
+*        lv_remote = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
       get_line_hl( EXPORTING iv_mod    = is_diff-mod
