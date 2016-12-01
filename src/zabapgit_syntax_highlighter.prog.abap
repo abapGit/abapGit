@@ -402,8 +402,7 @@ ENDCLASS.                       " lcl_code_highlighter IMPLEMENTATION
 *       CLASS ltcl_code_highlighter definition
 *----------------------------------------------------------------------*
 CLASS ltcl_code_highlighter DEFINITION FINAL
-  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
-  INHERITING FROM cl_aunit_assert.
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
 
@@ -468,16 +467,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
 ******************************************************
 * Test parsing and ordering of remainder of string   *
@@ -501,16 +500,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
 ******************************************************
 * Test parsing and ordering of key words & texts     *
@@ -540,16 +539,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
 ******************************************************
 * Test parsing and ordering of key words in texts    *
@@ -581,16 +580,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
 ******************************************************
 * Test parsing and ordering texts in curly brackets  *
@@ -624,16 +623,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
 ******************************************************
 * Test parsing and ordering of texts                 *
@@ -681,16 +680,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
 
     SORT: lt_matches_act BY offset.
 
-    assert_equals( exp = lt_after_parse
-                   act = lt_matches_act
-                   msg = | Error during parsing: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { lv_line }| ).
 
     mo->order_matches( EXPORTING iv_line    = lv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
-    assert_equals( exp = lt_after_order
-                   act = lt_matches_act
-                   msg = | Error during ordering: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { lv_line }| ).
 
   ENDMETHOD.            " parse_and_order
 
@@ -721,9 +720,9 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
     lv_line_act = mo->format_line( iv_line    = lv_line
                                    it_matches = lt_after_order ).
 
-    assert_equals( exp = lv_line_exp
-                   act = lv_line_act
-                   msg = | Error during formating: { lv_line }| ).
+    cl_abap_unit_assert=>assert_equals( exp = lv_line_exp
+                                        act = lv_line_act
+                                        msg = | Error during formating: { lv_line }| ).
 
   ENDMETHOD.                    " format_line
 
@@ -735,9 +734,9 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
     lv_line_act = mo->apply_style( iv_line  = 'CALL FUNCTION'
                                    iv_class = lcl_code_highlighter=>c_css-keyword ).
 
-    assert_equals( act = lv_line_act
-                   exp = '<span class="keyword">CALL FUNCTION</span>'
-                   msg = 'Failure during applying of style.' ).
+    cl_abap_unit_assert=>assert_equals( act = lv_line_act
+                                        exp = '<span class="keyword">CALL FUNCTION</span>'
+                                        msg = 'Failure during applying of style.' ).
   ENDMETHOD.                    " apply_style
 
   METHOD process_line.
@@ -747,16 +746,16 @@ CLASS ltcl_code_highlighter IMPLEMENTATION.
     " Call the method with empty parameter and compare results
     lv_line_act = mo->process_line( iv_line  = '' ).
 
-    assert_equals( act = lv_line_act
-                   exp = ''
-                   msg = 'Failure in method process_line.' ).
+    cl_abap_unit_assert=>assert_equals( act = lv_line_act
+                                        exp = ''
+                                        msg = 'Failure in method process_line.' ).
 
     " Call the method with non-empty line and compare results
     lv_line_act = mo->process_line( iv_line  = '* CALL FUNCTION' ).
 
-    assert_equals( act = lv_line_act
-                   exp = '<span class="comment">* CALL FUNCTION</span>'
-                   msg = 'Failure in method process_line.' ).
+    cl_abap_unit_assert=>assert_equals( act = lv_line_act
+                                        exp = '<span class="comment">* CALL FUNCTION</span>'
+                                        msg = 'Failure in method process_line.' ).
   ENDMETHOD.                    " process_line
 
 ENDCLASS.                       " ltcl_code_highlighter
