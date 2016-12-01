@@ -284,13 +284,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       IF is_diff-mod = c_mod-remote. " Remote file leading changes
         lv_local  = lo_highlighter->process_line( <ls_diff>-old ).
         lv_remote = lo_highlighter->process_line( <ls_diff>-new ).
-*        lv_local  = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
-*        lv_remote = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
       ELSE.             " Local leading changes or both were modified
         lv_local  = lo_highlighter->process_line( <ls_diff>-new ).
         lv_remote = lo_highlighter->process_line( <ls_diff>-old ).
-*        lv_local  = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
-*        lv_remote = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
       get_line_hl( EXPORTING iv_mod    = is_diff-mod

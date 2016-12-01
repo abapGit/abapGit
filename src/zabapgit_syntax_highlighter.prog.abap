@@ -243,7 +243,7 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
         ls_match-length = <result>-length.
 
         IF ls_match-token = c_token-text.
-          ls_match-text_tag = iv_line+ls_match-offset(ls_match-length).
+          ls_match-text_tag = substring( val = iv_line off = ls_match-offset len = ls_match-length ).
         ENDIF.
 
         APPEND ls_match TO rt_matches.
@@ -343,7 +343,7 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
           <match> TYPE ty_match.
 
     LOOP AT it_matches ASSIGNING <match>.
-      lv_chunk = iv_line+<match>-offset(<match>-length).
+      lv_chunk = substring( val = iv_line off = <match>-offset len = <match>-length ).
 
       CASE <match>-token.
         WHEN c_token-keyword.
