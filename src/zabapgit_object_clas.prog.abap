@@ -105,6 +105,25 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     METHODS get_all_class_includes
       RETURNING VALUE(rt_includes) TYPE seoincl_t.
 
+    TYPES:
+      ty_lt_methods_descriptions TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+    METHODS map_methods_to_description
+      IMPORTING
+        it_methods                     TYPE seoo_methods_r
+      RETURNING
+        VALUE(rt_methods_descriptions) TYPE ty_lt_methods_descriptions.
+    TYPES:
+      ty_lt_methods_descriptions_2 TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+    METHODS update_method_descriptions
+      IMPORTING
+        io_xml    TYPE REF TO lcl_xml_input
+        is_clskey TYPE seoclskey
+      RAISING
+        lcx_exception.
+    TYPES:
+      ty_lt_methods_descriptions_1 TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
+
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -616,17 +635,17 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: ls_vseoclass  TYPE vseoclass,
-          lv_cp         TYPE program,
-          lt_tpool      TYPE textpool_table,
-          lv_object     TYPE dokhl-object,
-          lv_state      TYPE dokhl-dokstate,
-          ls_vseointerf TYPE vseointerf,
-          ls_clskey     TYPE seoclskey,
-          lt_sotr       TYPE ty_sotr_tt,
-          lt_lines      TYPE tlinetab,
-          lt_methods    TYPE seoo_methods_r.
-
+    DATA: ls_vseoclass            TYPE vseoclass,
+          lv_cp                   TYPE program,
+          lt_tpool                TYPE textpool_table,
+          lv_object               TYPE dokhl-object,
+          lv_state                TYPE dokhl-dokstate,
+          ls_vseointerf           TYPE vseointerf,
+          ls_clskey               TYPE seoclskey,
+          lt_sotr                 TYPE ty_sotr_tt,
+          lt_lines                TYPE tlinetab,
+          lt_methods              TYPE seoo_methods_r,
+          lt_methods_descriptions TYPE TABLE OF seocompotx.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -693,8 +712,29 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
         ENDIF.
 
-        io_xml->add( iv_name = 'METHODS'
-                     ig_data = lt_methods ).
+        "It may be the case where this class has just been deserialized into the system and it
+        "is not active yet. Therefore, we must check the inactive version
+        IF lt_methods IS INITIAL.
+          CALL FUNCTION 'SEO_CLASS_TYPEINFO_GET'
+            EXPORTING
+              clskey       = ls_clskey
+              version      = seoc_version_inactive
+            IMPORTING
+              methods      = lt_methods
+            EXCEPTIONS
+              not_existing = 1
+              is_interface = 2
+              model_only   = 3
+              OTHERS       = 4.
+          IF sy-subrc <> 0.
+            lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET inactive read' ).
+          ENDIF.
+        ENDIF.
+
+        lt_methods_descriptions = map_methods_to_description( lt_methods ).
+
+        io_xml->add( iv_name = 'METHODS_DESCRIPTIONS'
+                     ig_data = lt_methods_descriptions ).
 
         IF ls_vseoclass-category = seoc_category_exception.
           lt_sotr = read_sotr( ).
@@ -719,11 +759,32 @@ CLASS lcl_object_clas IMPLEMENTATION.
             model_only   = 3
             OTHERS       = 4.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
+          lcx_exception=>raise( 'error from SEO_INTERFACE_TYPEINFO_GET' ).
         ENDIF.
 
-        io_xml->add( iv_name = 'METHODS'
-                     ig_data = lt_methods ).
+        "It may be the case where this class has just been deserialized into the system and it
+        "is not active yet. Therefore, we must check the inactive version
+        IF lt_methods IS INITIAL.
+          CALL FUNCTION 'SEO_INTERFACE_TYPEINFO_GET'
+            EXPORTING
+              intkey       = ls_clskey
+              version      = seoc_version_inactive
+            IMPORTING
+              methods      = lt_methods
+            EXCEPTIONS
+              not_existing = 1
+              is_interface = 2
+              model_only   = 3
+              OTHERS       = 4.
+          IF sy-subrc <> 0.
+            lcx_exception=>raise( 'error from SEO_INTERFACE_TYPEINFO_GET inactive' ).
+          ENDIF.
+        ENDIF.
+
+        lt_methods_descriptions = map_methods_to_description( lt_methods ).
+
+        io_xml->add( iv_name = 'METHODS_DESCRIPTIONS'
+                     ig_data = lt_methods_descriptions ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -909,15 +970,18 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_abap.
 
-    DATA: ls_vseoclass   TYPE vseoclass,
-          ls_vseointerf  TYPE vseointerf,
-          lt_source      TYPE seop_source_string,
-          lt_locals_def  TYPE seop_source_string,
-          lt_locals_imp  TYPE seop_source_string,
-          lt_locals_mac  TYPE seop_source_string,
-          lt_testclasses TYPE seop_source_string,
-          ls_clskey      TYPE seoclskey,
-          lt_methods     TYPE seoo_methods_r.
+    DATA: ls_vseoclass            TYPE vseoclass,
+          ls_vseointerf           TYPE vseointerf,
+          lt_source               TYPE seop_source_string,
+          lt_locals_def           TYPE seop_source_string,
+          lt_locals_imp           TYPE seop_source_string,
+          lt_locals_mac           TYPE seop_source_string,
+          lt_testclasses          TYPE seop_source_string,
+          ls_clskey               TYPE seoclskey,
+          lt_methods              TYPE seoo_methods_r,
+          ls_method               TYPE LINE OF seoo_methods_r,
+          lt_methods_descriptions TYPE TABLE OF seocompotx,
+          ls_method_description   TYPE seocompotx.
 
 
     lt_source = mo_files->read_abap( ).
@@ -934,10 +998,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lt_testclasses = mo_files->read_abap( iv_extra = 'testclasses'
                                           iv_error = abap_false ). "#EC NOTEXT
 
-
-    io_xml->read( EXPORTING iv_name = 'METHODS'
-                  CHANGING cg_data = lt_methods ).
-
     ls_clskey-clsname = ms_item-obj_name.
 
     CASE ms_item-obj_type.
@@ -951,10 +1011,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             class           = ls_vseoclass
-            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
-            is_interface    = 2
+            is_class        = 2
             db_error        = 3
             component_error = 4
             no_access       = 5
@@ -974,7 +1033,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             interface       = ls_vseointerf
-            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
             is_class        = 2
@@ -1021,7 +1079,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
           it_source = lt_source ).
     ENDTRY.
 
-
+    update_method_descriptions(
+          io_xml    = io_xml
+          is_clskey = ls_clskey ).
 
     lcl_objects_activation=>add_item( ms_item ).
 
@@ -1090,6 +1150,90 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
+
+  METHOD map_methods_to_description.
+    DATA ls_method TYPE seoo_method_r.
+    DATA ls_method_description TYPE seocompotx.
+
+    LOOP AT it_methods INTO ls_method.
+      CLEAR ls_method_description.
+      ls_method_description-clsname  = ls_method-clsname.
+      ls_method_description-cmpname  = ls_method-cmpname.
+      ls_method_description-descript = ls_method-descript.
+      ls_method_description-langu    = ls_method-langu.
+      APPEND ls_method_description TO rt_methods_descriptions.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+
+  METHOD update_method_descriptions.
+    DATA:
+      lt_methods              TYPE seoo_methods_r,
+      lt_methods_descriptions TYPE ty_lt_methods_descriptions,
+      ls_method_description   TYPE seocompotx.
+
+    FIELD-SYMBOLS: <fs_method> TYPE seoo_method_r.
+
+    IF ms_item-obj_type = 'CLAS'.
+      CALL FUNCTION 'SEO_CLASS_TYPEINFO_GET'
+        EXPORTING
+          clskey       = is_clskey
+          version      = seoc_version_inactive
+        IMPORTING
+          methods      = lt_methods
+        EXCEPTIONS
+          not_existing = 1
+          is_interface = 2
+          model_only   = 3
+          OTHERS       = 4.
+
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'SEO_CLASS_TYPEINFO_GET.' ).
+      ENDIF.
+    ELSE.
+      CALL FUNCTION 'SEO_INTERFACE_TYPEINFO_GET'
+        EXPORTING
+          intkey       = is_clskey
+          version      = seoc_version_inactive
+        IMPORTING
+          methods      = lt_methods
+        EXCEPTIONS
+          not_existing = 1
+          is_interface = 2
+          model_only   = 3
+          OTHERS       = 4.
+
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'SEO_CLASS_TYPEINFO_GET.' ).
+      ENDIF.
+    ENDIF.
+
+    io_xml->read( EXPORTING iv_name = 'METHODS_DESCRIPTIONS'
+                  CHANGING cg_data  = lt_methods_descriptions ).
+
+
+
+    LOOP AT lt_methods ASSIGNING <fs_method>.
+      READ TABLE lt_methods_descriptions WITH KEY cmpname = <fs_method>-cmpname INTO ls_method_description.
+      <fs_method>-descript = ls_method_description-descript.
+      <fs_method>-langu    = ls_method_description-langu.
+    ENDLOOP.
+
+    CALL FUNCTION 'SEO_METHOD_MODIFY'
+      EXPORTING
+        cifkey            = is_clskey
+        methods           = lt_methods
+      EXCEPTIONS
+        clif_not_existing = 1
+        not_specified     = 2
+        not_existing      = 3
+        OTHERS            = 4.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'SEO_METHOD_MODIFY' ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
