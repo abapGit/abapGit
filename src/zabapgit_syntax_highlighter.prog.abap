@@ -114,7 +114,7 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
 
     DATA: ls_regex_table TYPE ty_regex.
 
-    c_regex-comment = '##|"|\*'.
+    c_regex-comment = '##|"|^\*'.
     c_regex-text    = '`|''|\||\{|\}'.
     c_regex-keyword = '&&|\b(' &&
       '\*-INPUT|\?TO|ABAP-SOURCE|ABBREVIATED|ABS|ABSTRACT|ACCEPT|ACCEPTING|ACCESSPOLICY' &&
@@ -420,7 +420,8 @@ CLASS ltcl_code_highlighter1 DEFINITION FINAL
       test03 FOR TESTING,
       test04 FOR TESTING,
       test05 FOR TESTING,
-      test06 FOR TESTING.
+      test06 FOR TESTING,
+      test07 FOR TESTING.
 
 ENDCLASS.                       " ltcl_code_highlighter
 *----------------------------------------------------------------------*
@@ -463,12 +464,14 @@ CLASS ltcl_code_highlighter1 IMPLEMENTATION.
                                         act = lt_matches_act
                                         msg = | Error during parsing: { iv_line }| ).
 
-    mo->order_matches( EXPORTING iv_line    = iv_line
-                       CHANGING  ct_matches = lt_matches_act ).
+    IF lines( mt_after_order ) > 0.
+      mo->order_matches( EXPORTING iv_line    = iv_line
+                         CHANGING  ct_matches = lt_matches_act ).
 
-    cl_abap_unit_assert=>assert_equals( exp = mt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { iv_line }| ).
+      cl_abap_unit_assert=>assert_equals( exp = mt_after_order
+                                          act = lt_matches_act
+                                          msg = | Error during ordering: { iv_line }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -656,6 +659,20 @@ CLASS ltcl_code_highlighter1 IMPLEMENTATION.
     _generate_order 'T' 51 1  '}'.
     _generate_order 'N' 52 2  ''.
     _generate_order 'T' 54 1  '}'.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+  METHOD test07.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'SELECT * FROM foo'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'K' 0  6  ''.
+    _generate_parse 'K' 9  4  ''.
 
     test( lv_line ).
 
