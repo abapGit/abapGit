@@ -21,6 +21,8 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
 
+    TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
     DATA mv_skip_testclass TYPE abap_bool.
 
     METHODS deserialize_abap
@@ -621,6 +623,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_tpool      TYPE textpool_table,
           lv_object     TYPE dokhl-object,
           lv_state      TYPE dokhl-dokstate,
+          lt_seocompotx TYPE ty_seocompotx_tt,
           ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey,
           lt_sotr       TYPE ty_sotr_tt,
@@ -710,6 +713,14 @@ CLASS lcl_object_clas IMPLEMENTATION.
     IF sy-subrc = 0 AND lv_state = 'R'.
       io_xml->add( iv_name = 'LINES'
                    ig_data = lt_lines ).
+    ENDIF.
+
+    SELECT * FROM seocompotx INTO TABLE lt_seocompotx
+      WHERE clsname = ls_clskey-clsname.
+    DELETE lt_seocompotx WHERE descript IS INITIAL.
+    IF lines( lt_seocompotx ) > 0.
+      io_xml->add( iv_name = 'DESCRIPTIONS'
+                   ig_data = lt_seocompotx ).
     ENDIF.
 
   ENDMETHOD.                    "serialize_xml
@@ -878,6 +889,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_locals_imp  TYPE seop_source_string,
           lt_locals_mac  TYPE seop_source_string,
           lt_testclasses TYPE seop_source_string,
+          lt_seocompotx  TYPE ty_seocompotx_tt,
           ls_clskey      TYPE seoclskey.
 
 
@@ -976,6 +988,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
           is_clskey = ls_clskey
           it_source = lt_source ).
     ENDTRY.
+
+    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                  CHANGING cg_data = lt_seocompotx ).
+    DELETE FROM seocompotx WHERE clsname = ls_clskey-clsname.
+    INSERT seocompotx FROM TABLE lt_seocompotx.
 
     lcl_objects_activation=>add_item( ms_item ).
 
