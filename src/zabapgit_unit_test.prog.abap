@@ -1846,69 +1846,69 @@ CLASS ltcl_file_status IMPLEMENTATION.
                    <result> LIKE LINE OF lt_results,
                    <state>  LIKE LINE OF lt_state.
 
-    "STATE        FILE                            SHA1
-    _append_state 'zclass1.clas.xml'              'C1_F1'.
+    "STATE         FILE                              SHA1
+    _append_state '$$zclass1.clas.xml'              'C1_F1'.
     " class1 testclasses is new locally, abap is new remotely
     " class2 is completely new remotely
-    _append_state 'zdoma1.doma.xml'               'D1'.
-    _append_state 'zdoma2.doma.xml'               'D2'.
-    _append_state 'zdoma3.doma.xml'               'D3'.
+    _append_state '$$zdoma1.doma.xml'               'D1'.
+    _append_state '$$zdoma2.doma.xml'               'D2'.
+    _append_state '$$zdoma3.doma.xml'               'D3'.
     " doma4 is new locally
     " doma5 is new remotely
-    _append_state 'zdoma6.doma.xml'               'D6'.
+    _append_state '$$zdoma6.doma.xml'               'D6'.
     " doma7 is not in state - emulate brocken cache
     " doma8 is not in state - emulate brocken cache
-    _append_state 'zdoma9.doma.xml'               'D9'.
-    _append_state 'xfeld.doma.xml'                'XFELD'. " from different package
-    _append_state 'num01.doma.xml'                'NUM01'. " another from different package
+    _append_state '$$zdoma9.doma.xml'               'D9'.
+    _append_state 'num01.doma.xml'                  'NUM01'. " another from different package
+    _append_state 'xfeld.doma.xml'                  'XFELD'. " from different package
 
-    "LOCAL        TYPE   NAME      FILE                            SHA1
-    _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.testclasses.abap' 'C1_F3'.
-    _append_local 'CLAS' 'ZCLASS1' 'zclass1.clas.xml'              'C1_F1'.
-    _append_local 'DOMA' 'ZDOMA1'  'zdoma1.doma.xml'               'D1'.
-    _append_local 'DOMA' 'ZDOMA2'  'zdoma2.doma.xml'               'D2_CHANGED_L'.
-    _append_local 'DOMA' 'ZDOMA3'  'zdoma3.doma.xml'               'D3'.
-    _append_local 'DOMA' 'ZDOMA4'  'zdoma4.doma.xml'               'D4'.
-    _append_local 'DOMA' 'ZDOMA6'  'zdoma6.doma.xml'               'D6_CHANGED_L'.
-    _append_local 'DOMA' 'ZDOMA7'  'zdoma7.doma.xml'               'D7'.
-    _append_local 'DOMA' 'ZDOMA8'  'zdoma8.doma.xml'               'D8'.
+    "LOCAL         TYPE   NAME        FILE                              SHA1
+    _append_local 'CLAS' '$$ZCLASS1' '$$zclass1.clas.testclasses.abap' 'C1_F3'.
+    _append_local 'CLAS' '$$ZCLASS1' '$$zclass1.clas.xml'              'C1_F1'.
+    _append_local 'DOMA' '$$ZDOMA1'  '$$zdoma1.doma.xml'               'D1'.
+    _append_local 'DOMA' '$$ZDOMA2'  '$$zdoma2.doma.xml'               'D2_CHANGED_L'.
+    _append_local 'DOMA' '$$ZDOMA3'  '$$zdoma3.doma.xml'               'D3'.
+    _append_local 'DOMA' '$$ZDOMA4'  '$$zdoma4.doma.xml'               'D4'.
+    _append_local 'DOMA' '$$ZDOMA6'  '$$zdoma6.doma.xml'               'D6_CHANGED_L'.
+    _append_local 'DOMA' '$$ZDOMA7'  '$$zdoma7.doma.xml'               'D7'.
+    _append_local 'DOMA' '$$ZDOMA8'  '$$zdoma8.doma.xml'               'D8'.
     " dome9 was deleted from local system. Can be found by existing state
 
-    "REMOTE        FILE                SHA1
-    _append_remote 'textfile.txt'      'T1'.
-    _append_remote 'zclass1.clas.abap' 'C1_F2'. " Must be before xml for tougher test
-    _append_remote 'zclass1.clas.xml'  'C1_F1'.
-    _append_remote 'zclass2.clas.abap' 'C1_F2'. " Must be before xml for tougher test
-    _append_remote 'zclass2.clas.xml'  'C1_F1'.
-    _append_remote 'zdoma1.doma.xml'   'D1'.
-    _append_remote 'zdoma2.doma.xml'   'D2'.
-    _append_remote 'zdoma3.doma.xml'   'D3_CHANGED_R'.
-    _append_remote 'zdoma5.doma.xml'   'D5'.
-    _append_remote 'zdoma6.doma.xml'   'D6_CHANGED_R'.
-    _append_remote 'zdoma7.doma.xml'   'D7'.
-    _append_remote 'zdoma8.doma.xml'   'D8_CHANGED_R'.  " This one is changed
-    _append_remote 'zdoma9.doma.xml'   'D9'.            " This one is deleted locally
-    _append_remote 'xfeld.doma.xml'    'XFELD'.         " Object from different package
-    _append_remote 'num01.doma.xml'    'NUM01_CHANGED'. " Changed object from different package
+    "REMOTE         FILE                  SHA1
+    _append_remote 'textfile.txt'        'T1'.
+    _append_remote '$$zclass1.clas.abap' 'C1_F2'. " Must be before xml for tougher test
+    _append_remote '$$zclass1.clas.xml'  'C1_F1'.
+    _append_remote '$$zclass2.clas.abap' 'C1_F2'. " Must be before xml for tougher test
+    _append_remote '$$zclass2.clas.xml'  'C1_F1'.
+    _append_remote '$$zdoma1.doma.xml'   'D1'.
+    _append_remote '$$zdoma2.doma.xml'   'D2'.
+    _append_remote '$$zdoma3.doma.xml'   'D3_CHANGED_R'.
+    _append_remote '$$zdoma5.doma.xml'   'D5'.
+    _append_remote '$$zdoma6.doma.xml'   'D6_CHANGED_R'.
+    _append_remote '$$zdoma7.doma.xml'   'D7'.
+    _append_remote '$$zdoma8.doma.xml'   'D8_CHANGED_R'.  " This one is changed
+    _append_remote '$$zdoma9.doma.xml'   'D9'.            " This one is deleted locally
+    _append_remote 'xfeld.doma.xml'      'XFELD'.         " Object from different package
+    _append_remote 'num01.doma.xml'      'NUM01_CHANGED'. " Changed object from different package
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
-    _append_result ''     ''        ' '   ' '   'A'  ''     '/'  'textfile.txt'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' ' '   'A'   ' '  '$Z$'  '/'  'zclass1.clas.testclasses.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS2' ' '   ' '   'A'  ''     '/'  'zclass2.clas.xml'.
-    _append_result 'DOMA' 'NUM01'   ' '   ' '   'M'  'SUTI' '/'  'num01.doma.xml'.
-    _append_result 'DOMA' 'XFELD'   'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA3'  ' '   ' '   'M'  '$Z$'  '/'  'zdoma3.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA4'  ' '   'A'   ' '  '$Z$'  '/'  'zdoma4.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA5'  ' '   ' '   'A'  ''     '/'  'zdoma5.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA6'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma6.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA7'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma7.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA8'  ' '   'M'   'M'  '$Z$'  '/'  'zdoma8.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA9'  ' '   'D'   ' '  ''     '/'  'zdoma9.doma.xml'.
+    "EXP RESULT    TYPE   NAME        MATCH LST   RST  PKG    PATH FILE
+    _append_result ''     ''          ' '   ' '   'A'  ''     '/'  'textfile.txt'.
+    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  '$$zclass1.clas.abap'.
+    _append_result 'CLAS' '$$ZCLASS1' ' '   'A'   ' '  '$Z$'  '/'  '$$zclass1.clas.testclasses.abap'.
+    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  '$$zclass1.clas.xml'.
+    _append_result 'CLAS' '$$ZCLASS2' ' '   ' '   'A'  ''     '/'  '$$zclass2.clas.abap'.
+    _append_result 'CLAS' '$$ZCLASS2' ' '   ' '   'A'  ''     '/'  '$$zclass2.clas.xml'.
+    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  '$$zdoma1.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  '$$zdoma2.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA3'  ' '   ' '   'M'  '$Z$'  '/'  '$$zdoma3.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA4'  ' '   'A'   ' '  '$Z$'  '/'  '$$zdoma4.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA5'  ' '   ' '   'A'  ''     '/'  '$$zdoma5.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA6'  ' '   'M'   'M'  '$Z$'  '/'  '$$zdoma6.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA7'  'X'   ' '   ' '  '$Z$'  '/'  '$$zdoma7.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA8'  ' '   'M'   'M'  '$Z$'  '/'  '$$zdoma8.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA9'  ' '   'D'   ' '  ''     '/'  '$$zdoma9.doma.xml'.
+    _append_result 'DOMA' 'NUM01'     ' '   ' '   'M'  'SUTI' '/'  'num01.doma.xml'.
+    _append_result 'DOMA' 'XFELD'     'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
     lt_results_exp = lt_results.
 
     lt_results = lcl_file_status=>calculate_status(
@@ -1983,10 +1983,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     CREATE OBJECT lo_log.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' 'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
+    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
+    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' '$$zdoma1.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma2.doma.xml'.
 
     lcl_sap_package=>check( io_log     = lo_log
                             it_results = lt_results
@@ -2002,10 +2002,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     CREATE OBJECT lo_log.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
+    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
+    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
+    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
+    _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
 
     lcl_sap_package=>check( io_log     = lo_log
                             it_results = lt_results
@@ -2021,9 +2021,9 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     CREATE OBJECT lo_log.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
+    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
+    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
+    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
 
     lcl_sap_package=>check( io_log     = lo_log
                             it_results = lt_results
