@@ -522,8 +522,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_component_key  TYPE wdy_md_component_key,
           ls_view_key       TYPE wdy_md_view_key.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
-
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects,
+                   <ls_meta>   LIKE LINE OF rs_component-ctlr_metadata.
 
     CLEAR mt_components.
     CLEAR mt_sources.
@@ -549,6 +549,21 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     SORT rs_component-ctlr_metadata BY
       definition-component_name ASCENDING
       definition-controller_name ASCENDING.
+
+    LOOP AT rs_component-ctlr_metadata ASSIGNING <ls_meta>.
+      SORT <ls_meta>-descriptions.
+      SORT <ls_meta>-controller_usages.
+      SORT <ls_meta>-controller_components.
+      SORT <ls_meta>-controller_component_texts.
+      SORT <ls_meta>-controller_parameters.
+      SORT <ls_meta>-controller_parameter_texts.
+      SORT <ls_meta>-context_nodes.
+      SORT <ls_meta>-context_attributes.
+      SORT <ls_meta>-context_mappings.
+      SORT <ls_meta>-fieldgroups.
+      SORT <ls_meta>-controller_exceptions.
+      SORT <ls_meta>-controller_exception_texts.
+    ENDLOOP.
 
     SORT mt_components BY
       component_name ASCENDING
