@@ -5,20 +5,30 @@
 *&       Class lcl_code_highligher
 *&---------------------------------------------------------------------*
 
-CLASS ltcl_code_highlighter DEFINITION DEFERRED.
+CLASS ltcl_code_highlighter1 DEFINITION DEFERRED.
+CLASS ltcl_code_highlighter2 DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_code_highlighter DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_code_highlighter DEFINITION FRIENDS ltcl_code_highlighter.
+CLASS lcl_code_highlighter DEFINITION FRIENDS ltcl_code_highlighter1 ltcl_code_highlighter2.
 
   PUBLIC SECTION.
+    CLASS-METHODS:
+      class_constructor.
+
+    METHODS:
+      process_line
+        IMPORTING iv_line        TYPE string
+        RETURNING VALUE(rv_line) TYPE string.
+
+  PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_token,
-        keyword   TYPE c VALUE 'K',
-        text      TYPE c VALUE 'T',
-        comment   TYPE c VALUE 'C',
-        none      TYPE c VALUE 'N',
+        keyword TYPE c VALUE 'K',
+        text    TYPE c VALUE 'T',
+        comment TYPE c VALUE 'C',
+        none    TYPE c VALUE 'N',
       END OF c_token.
 
     CONSTANTS:
@@ -31,10 +41,10 @@ CLASS lcl_code_highlighter DEFINITION FRIENDS ltcl_code_highlighter.
 
     TYPES:
       BEGIN OF ty_match,
-        token        TYPE char1,  " Type of matches
-        offset       TYPE i,      " Beginning position of the string that should be formatted
-        length       TYPE i,      " Length of the string that should be formatted
-        text_tag     TYPE string, " Type of text tag
+        token    TYPE char1,  " Type of matches
+        offset   TYPE i,      " Beginning position of the string that should be formatted
+        length   TYPE i,      " Length of the string that should be formatted
+        text_tag TYPE string, " Type of text tag
       END OF ty_match.
 
     TYPES:
@@ -48,43 +58,34 @@ CLASS lcl_code_highlighter DEFINITION FRIENDS ltcl_code_highlighter.
 
     CLASS-DATA:
       BEGIN OF c_regex,
-        comment   TYPE string,
-        text      TYPE string,
-        keyword   TYPE string,
+        comment TYPE string,
+        text    TYPE string,
+        keyword TYPE string,
       END OF c_regex.
 
-    CLASS-METHODS:
-      class_constructor.
-
-    METHODS:
-      process_line
-        IMPORTING iv_line        TYPE string
-        RETURNING value(rv_line) TYPE string.
-
-  PRIVATE SECTION.
     CLASS-DATA: mo_regex_table  TYPE TABLE OF ty_regex.
 
     METHODS:
       parse_line
         IMPORTING iv_line           TYPE string
-        RETURNING value(rt_matches) TYPE ty_match_tt.
+        RETURNING VALUE(rt_matches) TYPE ty_match_tt.
 
     METHODS:
       order_matches
-        IMPORTING iv_line     TYPE string
-        CHANGING  ct_matches  TYPE ty_match_tt.
+        IMPORTING iv_line    TYPE string
+        CHANGING  ct_matches TYPE ty_match_tt.
 
     METHODS:
       format_line
         IMPORTING iv_line        TYPE string
                   it_matches     TYPE ty_match_tt
-        RETURNING value(rv_line) TYPE string.
+        RETURNING VALUE(rv_line) TYPE string.
 
     METHODS:
       apply_style
         IMPORTING iv_line        TYPE string
                   iv_class       TYPE string
-        RETURNING value(rv_line) TYPE string.
+        RETURNING VALUE(rv_line) TYPE string.
 
 ENDCLASS.                      "lcl_code_highlighter DEFINITION
 
@@ -222,15 +223,15 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
   METHOD parse_line.
 
     DATA:
-          lo_regex    TYPE REF TO cl_abap_regex,
-          lo_matcher  TYPE REF TO cl_abap_matcher,
-          lt_result   TYPE match_result_tab,
-          ls_match    TYPE ty_match.
+      lo_regex   TYPE REF TO cl_abap_regex,
+      lo_matcher TYPE REF TO cl_abap_matcher,
+      lt_result  TYPE match_result_tab,
+      ls_match   TYPE ty_match.
 
     FIELD-SYMBOLS:
-          <regex>  TYPE ty_regex,
-          <result> TYPE match_result,
-          <match>  TYPE ty_match.
+      <regex>  TYPE ty_regex,
+      <result> TYPE match_result,
+      <match>  TYPE ty_match.
 
     LOOP AT mo_regex_table ASSIGNING <regex>.
       lo_regex   = <regex>-regex.
@@ -255,16 +256,16 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
   METHOD order_matches.
 
     DATA:
-          lv_index      TYPE sy-tabix,
-          lv_line_len   TYPE i,
-          lv_prev_token TYPE c,
-          lv_last_pos   TYPE i VALUE 0,
-          lv_length     TYPE i,
-          ls_match      TYPE ty_match.
+      lv_index      TYPE sy-tabix,
+      lv_line_len   TYPE i,
+      lv_prev_token TYPE c,
+      lv_last_pos   TYPE i VALUE 0,
+      lv_length     TYPE i,
+      ls_match      TYPE ty_match.
 
     FIELD-SYMBOLS:
-         <prev>  TYPE ty_match,
-         <match> TYPE ty_match.
+      <prev>  TYPE ty_match,
+      <match> TYPE ty_match.
 
     SORT ct_matches BY offset.
 
@@ -336,8 +337,8 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
   METHOD format_line.
 
     DATA:
-          lv_chunk     TYPE string,
-          lv_css_class TYPE string.
+      lv_chunk     TYPE string,
+      lv_css_class TYPE string.
 
     FIELD-SYMBOLS:
           <match> TYPE ty_match.
@@ -397,11 +398,272 @@ CLASS lcl_code_highlighter IMPLEMENTATION.
 
 ENDCLASS.                       " lcl_code_highlighter IMPLEMENTATION
 
-
 *----------------------------------------------------------------------*
 *       CLASS ltcl_code_highlighter definition
 *----------------------------------------------------------------------*
-CLASS ltcl_code_highlighter DEFINITION FINAL
+CLASS ltcl_code_highlighter1 DEFINITION FINAL
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
+  PRIVATE SECTION.
+
+    DATA:
+      mo             TYPE REF TO lcl_code_highlighter,
+      mt_after_parse TYPE lcl_code_highlighter=>ty_match_tt,
+      ms_match       TYPE lcl_code_highlighter=>ty_match,
+      mt_after_order TYPE lcl_code_highlighter=>ty_match_tt.
+
+    METHODS:
+      setup,
+      test IMPORTING iv_line TYPE string,
+      test01 FOR TESTING,
+      test02 FOR TESTING,
+      test03 FOR TESTING,
+      test04 FOR TESTING,
+      test05 FOR TESTING,
+      test06 FOR TESTING.
+
+ENDCLASS.                       " ltcl_code_highlighter
+*----------------------------------------------------------------------*
+*       CLASS ltcl_code_highlighter IMPLEMENTATION
+*----------------------------------------------------------------------*
+CLASS ltcl_code_highlighter1 IMPLEMENTATION.
+
+  DEFINE _generate_parse.
+    ms_match-token    = &1.
+    ms_match-offset   = &2.
+    ms_match-length   = &3.
+    ms_match-text_tag = &4.
+    APPEND ms_match to mt_after_parse.
+  END-OF-DEFINITION.
+
+  DEFINE _generate_order.
+    ms_match-token    = &1.
+    ms_match-offset   = &2.
+    ms_match-length   = &3.
+    ms_match-text_tag = &4.
+    APPEND ms_match to mt_after_order.
+  END-OF-DEFINITION.
+
+  METHOD setup.
+    CREATE OBJECT mo.
+    CLEAR mt_after_parse.
+    CLEAR mt_after_order.
+  ENDMETHOD.                    " setup
+
+  METHOD test.
+
+    DATA: lt_matches_act TYPE lcl_code_highlighter=>ty_match_tt.
+
+
+    lt_matches_act = mo->parse_line( iv_line ).
+
+    SORT lt_matches_act BY offset.
+
+    cl_abap_unit_assert=>assert_equals( exp = mt_after_parse
+                                        act = lt_matches_act
+                                        msg = | Error during parsing: { iv_line }| ).
+
+    mo->order_matches( EXPORTING iv_line    = iv_line
+                       CHANGING  ct_matches = lt_matches_act ).
+
+    cl_abap_unit_assert=>assert_equals( exp = mt_after_order
+                                        act = lt_matches_act
+                                        msg = | Error during ordering: { iv_line }| ).
+
+  ENDMETHOD.
+
+
+******************************************************
+* Test parsing and ordering of comments              *
+******************************************************
+  METHOD test01.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = '* commented out line with key word data'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'C' 0  1  ''.
+    _generate_parse 'K' 12 3  ''.
+    _generate_parse 'K' 16 4  ''.
+    _generate_parse 'K' 21 4  ''.
+    _generate_parse 'K' 26 3  ''.
+    _generate_parse 'K' 30 4  ''.
+    _generate_parse 'K' 35 4  ''.
+
+    " Generate table with expected values after ordering
+    _generate_order 'C' 0  39 ''.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+******************************************************
+* Test parsing and ordering of remainder of string   *
+******************************************************
+  METHOD test02.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'data: lv_var_name type string.'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'K' 0  4  ''.
+    _generate_parse 'K' 18 4  ''.
+
+    " Generate table with expected values after ordering
+    _generate_order 'K' 0  4  ''.
+    _generate_order 'N' 4  14 ''.
+    _generate_order 'K' 18 4  ''.
+    _generate_order 'N' 22 8  ''.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+******************************************************
+* Test parsing and ordering of key words & texts     *
+******************************************************
+  METHOD test03.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'call function ''FM_NAME''. " Commented'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'K' 0  4  ''.
+    _generate_parse 'K' 5  8  ''.
+    _generate_parse 'T' 14 1  ''''.
+    _generate_parse 'T' 22 1  ''''.
+    _generate_parse 'C' 25 1  ''.
+
+    " Generate table with expected values after ordering
+    _generate_order 'K' 0  4  ''.
+    _generate_order 'N' 4  1  ''.
+    _generate_order 'K' 5  8  ''.
+    _generate_order 'N' 13 1  ''.
+    _generate_order 'T' 14 9  ''''.
+    _generate_order 'N' 23 2  ''.
+    _generate_order 'C' 25 11 ''.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+******************************************************
+* Test parsing and ordering of key words in texts    *
+******************************************************
+  METHOD test04.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'constants: lc_var type string value ''simpletext data simpletext''.'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'K' 0  9  ''.
+    _generate_parse 'K' 18 4  ''.
+    _generate_parse 'K' 30 5  ''.
+    _generate_parse 'T' 36 1  ''''.
+    _generate_parse 'K' 48 4  ''.
+    _generate_parse 'T' 63 1  ''''.
+
+    " Generate table with expected values after ordering
+    _generate_order 'K' 0  9  ''.
+    _generate_order 'N' 9  9  ''.
+    _generate_order 'K' 18 4  ''.
+    _generate_order 'N' 22 8  ''.
+    _generate_order 'K' 30 5  ''.
+    _generate_order 'N' 35 1  ''.
+    _generate_order 'T' 36 28 ''''.
+    _generate_order 'N' 64 1  ''.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+******************************************************
+* Test parsing and ordering texts in curly brackets  *
+******************************************************
+  METHOD test05.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'a = |{ b }={ c }|.'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'T' 4  1  '|'.
+    _generate_parse 'T' 5  1  '{'.
+    _generate_parse 'T' 9  1  '}'.
+    _generate_parse 'T' 11 1  '{'.
+    _generate_parse 'K' 13 1  ''.
+    _generate_parse 'T' 15 1  '}'.
+    _generate_parse 'T' 16 1  '|'.
+
+    " Generate table with expected values after ordering
+    _generate_order 'N' 0  4  ''.
+    _generate_order 'T' 4  1  '|'.
+    _generate_order 'N' 5  5  ''.
+    _generate_order 'T' 10 1  '}'.
+    _generate_order 'N' 11 2  ''.
+    _generate_order 'K' 13 1  ''.
+    _generate_order 'N' 14 2  ''.
+    _generate_order 'T' 16 1  '}'.
+    _generate_order 'N' 17 1  ''.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+******************************************************
+* Test parsing and ordering of texts                 *
+******************************************************
+  METHOD test06.
+
+    DATA: lv_line TYPE string.
+
+    lv_line = 'lv_line = lc_constant && |XYZ { ''ab'' && |ac{ ''UU'' }| }|'.
+
+    " Generate table with expected values after parsing
+    _generate_parse 'K' 22 2 ''.
+    _generate_parse 'T' 25 1 '|'.
+    _generate_parse 'T' 30 1 '{'.
+    _generate_parse 'T' 32 1 ''''.
+    _generate_parse 'T' 35 1 ''''.
+    _generate_parse 'K' 37 2 ''.
+    _generate_parse 'T' 40 1 '|'.
+    _generate_parse 'T' 43 1 '{'.
+    _generate_parse 'T' 45 1 ''''.
+    _generate_parse 'T' 48 1 ''''.
+    _generate_parse 'T' 50 1 '}'.
+    _generate_parse 'T' 51 1 '|'.
+    _generate_parse 'T' 53 1 '}'.
+    _generate_parse 'T' 54 1 '|'.
+
+    " Generate table with expected values after ordering
+    _generate_order 'N' 00 22 ''.
+    _generate_order 'K' 22 2  ''.
+    _generate_order 'N' 24 1  ''.
+    _generate_order 'T' 25 5  '|'.
+    _generate_order 'N' 30 2  ''.
+    _generate_order 'T' 32 4  ''''.
+    _generate_order 'N' 36 1  ''.
+    _generate_order 'K' 37 2  ''.
+    _generate_order 'N' 39 1  ''.
+    _generate_order 'T' 40 3  '|'.
+    _generate_order 'N' 43 2  ''.
+    _generate_order 'T' 45 4  ''''.
+    _generate_order 'N' 49 2  ''.
+    _generate_order 'T' 51 1  '}'.
+    _generate_order 'N' 52 2  ''.
+    _generate_order 'T' 54 1  '}'.
+
+    test( lv_line ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_code_highlighter2 DEFINITION FINAL
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
@@ -410,315 +672,38 @@ CLASS ltcl_code_highlighter DEFINITION FINAL
           mo  TYPE REF TO lcl_code_highlighter.
 
     METHODS: setup.
-    METHODS: process_line     FOR TESTING.
-    METHODS: parse_and_order  FOR TESTING.
+    METHODS: process_line  FOR TESTING.
     METHODS: format_line      FOR TESTING.
     METHODS: apply_style      FOR TESTING.
 
 ENDCLASS.                       " ltcl_code_highlighter
+
 *----------------------------------------------------------------------*
 *       CLASS ltcl_code_highlighter IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS ltcl_code_highlighter IMPLEMENTATION.
+CLASS ltcl_code_highlighter2 IMPLEMENTATION.
 
-  DEFINE _generate_matches.
-    ls_match-token    = &1.
-    ls_match-offset   = &2.
-    ls_match-length   = &3.
-    ls_match-text_tag = &4.
-    IF &5 = 'PARSE'.
-      APPEND ls_match to lt_after_parse.
-    ELSEIF &5 = 'ORDER'.
-      APPEND ls_match to lt_after_order.
-    ENDIF.
-  END-OF-DEFINITION.
 
   METHOD setup.
     CREATE OBJECT mo.
-  ENDMETHOD.                    " setup
-
-  METHOD parse_and_order.
-    DATA:
-          lt_matches_act TYPE lcl_code_highlighter=>ty_match_tt,
-          lt_after_parse TYPE lcl_code_highlighter=>ty_match_tt,
-          lt_after_order TYPE lcl_code_highlighter=>ty_match_tt,
-          ls_match       TYPE lcl_code_highlighter=>ty_match,
-          lv_line        TYPE string.
-
-******************************************************
-* Test parsing and ordering of comments              *
-******************************************************
-
-    lv_line = '* commented out line with key word data'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'C' 0  1  '' 'PARSE'.
-    _generate_matches 'K' 12 3  '' 'PARSE'.
-    _generate_matches 'K' 16 4  '' 'PARSE'.
-    _generate_matches 'K' 21 4  '' 'PARSE'.
-    _generate_matches 'K' 26 3  '' 'PARSE'.
-    _generate_matches 'K' 30 4  '' 'PARSE'.
-    _generate_matches 'K' 35 4  '' 'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'C' 0  39 '' 'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-******************************************************
-* Test parsing and ordering of remainder of string   *
-******************************************************
-
-    CLEAR: lt_after_parse, lt_after_order, lt_matches_act.
-
-    lv_line = 'data: lv_var_name type string.'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'K' 0  4  ''   'PARSE'.
-    _generate_matches 'K' 18 4  ''   'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'K' 0  4  ''   'ORDER'.
-    _generate_matches 'N' 4  14 ''   'ORDER'.
-    _generate_matches 'K' 18 4  ''   'ORDER'.
-    _generate_matches 'N' 22 8  ''   'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-******************************************************
-* Test parsing and ordering of key words & texts     *
-******************************************************
-
-    CLEAR: lt_after_parse, lt_after_order, lt_matches_act.
-
-    lv_line = 'call function ''FM_NAME''. " Commented'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'K' 0  4  ''   'PARSE'.
-    _generate_matches 'K' 5  8  ''   'PARSE'.
-    _generate_matches 'T' 14 1  '''' 'PARSE'.
-    _generate_matches 'T' 22 1  '''' 'PARSE'.
-    _generate_matches 'C' 25 1  ''   'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'K' 0  4  ''   'ORDER'.
-    _generate_matches 'N' 4  1  ''   'ORDER'.
-    _generate_matches 'K' 5  8  ''   'ORDER'.
-    _generate_matches 'N' 13 1  ''   'ORDER'.
-    _generate_matches 'T' 14 9  '''' 'ORDER'.
-    _generate_matches 'N' 23 2  ''   'ORDER'.
-    _generate_matches 'C' 25 11 ''   'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-******************************************************
-* Test parsing and ordering of key words in texts    *
-******************************************************
-
-    CLEAR: lt_after_parse, lt_after_order, lt_matches_act.
-
-    lv_line = 'constants: lc_var type string value ''simpletext data simpletext''.'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'K' 0  9  ''   'PARSE'.
-    _generate_matches 'K' 18 4  ''   'PARSE'.
-    _generate_matches 'K' 30 5  ''   'PARSE'.
-    _generate_matches 'T' 36 1  '''' 'PARSE'.
-    _generate_matches 'K' 48 4  ''   'PARSE'.
-    _generate_matches 'T' 63 1  '''' 'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'K' 0  9  ''   'ORDER'.
-    _generate_matches 'N' 9  9  ''   'ORDER'.
-    _generate_matches 'K' 18 4  ''   'ORDER'.
-    _generate_matches 'N' 22 8  ''   'ORDER'.
-    _generate_matches 'K' 30 5  ''   'ORDER'.
-    _generate_matches 'N' 35 1  ''   'ORDER'.
-    _generate_matches 'T' 36 28 '''' 'ORDER'.
-    _generate_matches 'N' 64 1  ''   'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-******************************************************
-* Test parsing and ordering texts in curly brackets  *
-******************************************************
-
-    CLEAR: lt_after_parse, lt_after_order, lt_matches_act.
-
-    lv_line = 'a = |{ b }={ c }|.'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'T' 4  1  '|'  'PARSE'.
-    _generate_matches 'T' 5  1  '{'  'PARSE'.
-    _generate_matches 'T' 9  1  '}'  'PARSE'.
-    _generate_matches 'T' 11 1  '{'  'PARSE'.
-    _generate_matches 'K' 13 1  ''   'PARSE'.
-    _generate_matches 'T' 15 1  '}'  'PARSE'.
-    _generate_matches 'T' 16 1  '|'  'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'N' 0  4  ''   'ORDER'.
-    _generate_matches 'T' 4  1  '|'  'ORDER'.
-    _generate_matches 'N' 5  5  ''   'ORDER'.
-    _generate_matches 'T' 10 1  '}'  'ORDER'.
-    _generate_matches 'N' 11 2  ''   'ORDER'.
-    _generate_matches 'K' 13 1  ''   'ORDER'.
-    _generate_matches 'N' 14 2  ''   'ORDER'.
-    _generate_matches 'T' 16 1  '}'  'ORDER'.
-    _generate_matches 'N' 17 1  ''   'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-******************************************************
-* Test parsing and ordering of texts                 *
-******************************************************
-
-    CLEAR: lt_after_parse, lt_after_order, lt_matches_act.
-
-    lv_line = 'lv_line = lc_constant && |XYZ { ''ab'' && |ac{ ''UU'' }| }|'.
-
-    " Generate table with expected values after parsing
-    _generate_matches 'K' 22 2 ''    'PARSE'.
-    _generate_matches 'T' 25 1 '|'   'PARSE'.
-    _generate_matches 'T' 30 1 '{'   'PARSE'.
-    _generate_matches 'T' 32 1 ''''  'PARSE'.
-    _generate_matches 'T' 35 1 ''''  'PARSE'.
-    _generate_matches 'K' 37 2 ''    'PARSE'.
-    _generate_matches 'T' 40 1 '|'   'PARSE'.
-    _generate_matches 'T' 43 1 '{'   'PARSE'.
-    _generate_matches 'T' 45 1 ''''  'PARSE'.
-    _generate_matches 'T' 48 1 ''''  'PARSE'.
-    _generate_matches 'T' 50 1 '}'   'PARSE'.
-    _generate_matches 'T' 51 1 '|'   'PARSE'.
-    _generate_matches 'T' 53 1 '}'   'PARSE'.
-    _generate_matches 'T' 54 1 '|'   'PARSE'.
-
-    " Generate table with expected values after ordering
-    _generate_matches 'N' 00 22 ''   'ORDER'.
-    _generate_matches 'K' 22 2  ''   'ORDER'.
-    _generate_matches 'N' 24 1  ''   'ORDER'.
-    _generate_matches 'T' 25 5  '|'  'ORDER'.
-    _generate_matches 'N' 30 2  ''   'ORDER'.
-    _generate_matches 'T' 32 4  '''' 'ORDER'.
-    _generate_matches 'N' 36 1  ''   'ORDER'.
-    _generate_matches 'K' 37 2  ''   'ORDER'.
-    _generate_matches 'N' 39 1  ''   'ORDER'.
-    _generate_matches 'T' 40 3  '|'  'ORDER'.
-    _generate_matches 'N' 43 2  ''   'ORDER'.
-    _generate_matches 'T' 45 4  '''' 'ORDER'.
-    _generate_matches 'N' 49 2  ''   'ORDER'.
-    _generate_matches 'T' 51 1  '}'  'ORDER'.
-    _generate_matches 'N' 52 2  ''   'ORDER'.
-    _generate_matches 'T' 54 1  '}'  'ORDER'.
-
-    lt_matches_act = mo->parse_line( lv_line ).
-
-    SORT: lt_matches_act BY offset.
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_parse
-                                        act = lt_matches_act
-                                        msg = | Error during parsing: { lv_line }| ).
-
-    mo->order_matches( EXPORTING iv_line    = lv_line
-                       CHANGING  ct_matches = lt_matches_act ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_after_order
-                                        act = lt_matches_act
-                                        msg = | Error during ordering: { lv_line }| ).
-
-  ENDMETHOD.            " parse_and_order
+  ENDMETHOD.
 
   METHOD format_line.
+
     DATA:
-          lt_matches_act TYPE lcl_code_highlighter=>ty_match_tt,
-          lt_after_parse TYPE lcl_code_highlighter=>ty_match_tt,
-          lt_after_order TYPE lcl_code_highlighter=>ty_match_tt,
-          ls_match       TYPE lcl_code_highlighter=>ty_match,
-          lv_line        TYPE string,
-          lv_line_act    TYPE string,
-          lv_line_exp    TYPE string.
+      lv_line     TYPE string,
+      lv_line_act TYPE string,
+      lv_line_exp TYPE string.
 
     lv_line = 'call function ''FM_NAME''. " Commented'.
 
-    " Generate expected value of formated line
-    lv_line_exp = '<span class="keyword">call function</span>'  &&
-                  ' <span class="text">&#39;FM_NAME&#39;</span>.' &&
-                  ' <span class="comment">&quot; Commented</span>'.
+    lv_line_exp =
+      '<span class="keyword">call</span>' &&
+      ' <span class="keyword">function</span>' &&
+      ' <span class="text">&#39;FM_NAME&#39;</span>.' &&
+      ' <span class="comment">&quot; Commented</span>'.
 
-    " Generate table with expected values after ordering
-    _generate_matches 'K' 0  13 ''   'ORDER'.
-    _generate_matches 'N' 13 1  ''   'ORDER'.
-    _generate_matches 'T' 14 9  '''' 'ORDER'.
-    _generate_matches 'N' 23 2  ''   'ORDER'.
-    _generate_matches 'C' 25 11 ''   'ORDER'.
-
-    lv_line_act = mo->format_line( iv_line    = lv_line
-                                   it_matches = lt_after_order ).
+    lv_line_act = mo->process_line( lv_line ).
 
     cl_abap_unit_assert=>assert_equals( exp = lv_line_exp
                                         act = lv_line_act
