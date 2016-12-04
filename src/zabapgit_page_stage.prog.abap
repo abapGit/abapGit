@@ -239,9 +239,11 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                          iv_style = 'display: none'
                          iv_txt   = 'Commit'
                          iv_opt   = gc_html_opt-emphas ) ##NO_TEXT.
-    ro_html->add_anchor( iv_act   = |{ c_action-stage_all }|
-                         iv_id    = 'act_commit_all'
-                         iv_txt   = 'Add all and commit') ##NO_TEXT.
+    IF lines( ms_files-local ) > 0.
+      ro_html->add_anchor( iv_act = |{ c_action-stage_all }|
+                           iv_id  = 'act_commit_all'
+                           iv_txt = 'Add all and commit') ##NO_TEXT.
+    ENDIF.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.      "render_menu
