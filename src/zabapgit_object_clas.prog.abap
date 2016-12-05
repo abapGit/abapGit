@@ -102,9 +102,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     METHODS reduce
       CHANGING ct_source TYPE ty_string_tt.
 
-    METHODS get_all_class_includes
-      RETURNING VALUE(rt_includes) TYPE seoincl_t.
-
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -123,37 +120,6 @@ ENDCLASS.                    "lcl_object_intf DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_clas IMPLEMENTATION.
-
-  METHOD get_all_class_includes.
-* note: includes returned might not exist
-* method cl_oo_classname_service=>GET_ALL_CLASS_INCLUDES does not exist in 702
-
-    DATA: lv_clsname TYPE seoclsname,
-          lt_methods TYPE seop_methods_w_include.
-
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods.
-
-
-    lv_clsname = ms_item-obj_name.
-
-    APPEND cl_oo_classname_service=>get_ccdef_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccmac_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccimp_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_cl_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccau_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_pubsec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_prosec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_prisec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_classpool_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ct_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_cs_name( lv_clsname ) TO rt_includes.
-
-    lt_methods = cl_oo_classname_service=>get_all_method_includes( lv_clsname ).
-    LOOP AT lt_methods ASSIGNING <ls_method>.
-      APPEND <ls_method>-incname TO rt_includes.
-    ENDLOOP.
-
-  ENDMETHOD.
 
   METHOD lif_object~has_changed_since.
 
@@ -203,39 +169,18 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~changed_by.
-
-    TYPES: BEGIN OF ty_includes,
-             programm TYPE programm,
-           END OF ty_includes.
-
-    TYPES: BEGIN OF ty_reposrc,
-             unam  TYPE reposrc-unam,
-             udat  TYPE reposrc-udat,
-             utime TYPE reposrc-utime,
-           END OF ty_reposrc.
-
-    DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
-          ls_reposrc  LIKE LINE OF lt_reposrc,
-          lt_includes TYPE STANDARD TABLE OF ty_includes.
-
-
-    lt_includes = get_all_class_includes( ).
-    ASSERT lines( lt_includes ) > 0.
-
-    SELECT unam udat utime FROM reposrc
-      INTO TABLE lt_reposrc
-      FOR ALL ENTRIES IN lt_includes
-      WHERE progname = lt_includes-programm
-      AND   r3state = 'A'.
+* todo, not sure this is correct, to be tested
+    SELECT SINGLE changedby FROM seoclassdf INTO rv_user
+      WHERE clsname = ms_item-obj_name
+      AND version = '1'.                                "#EC CI_GENBUFF
+    IF sy-subrc = 0 AND rv_user IS INITIAL.
+      SELECT SINGLE author FROM seoclassdf INTO rv_user
+        WHERE clsname = ms_item-obj_name
+        AND version = '1'.                              "#EC CI_GENBUFF
+    ENDIF.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
-    ELSE.
-      SORT lt_reposrc BY udat DESCENDING utime DESCENDING.
-      READ TABLE lt_reposrc INDEX 1 INTO ls_reposrc.
-      ASSERT sy-subrc = 0.
-      rv_user = ls_reposrc-unam.
     ENDIF.
-
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -624,7 +569,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           ls_vseointerf TYPE vseointerf,
           ls_clskey     TYPE seoclskey,
           lt_sotr       TYPE ty_sotr_tt,
-          lt_lines      TYPE tlinetab.
+          lt_lines      TYPE tlinetab,
+          lt_methods    TYPE seoo_methods_r.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -677,6 +623,24 @@ CLASS lcl_object_clas IMPLEMENTATION.
         io_xml->add( iv_name = 'TPOOL'
                      ig_data = add_tpool( lt_tpool ) ).
 
+        CALL FUNCTION 'SEO_CLASS_TYPEINFO_GET'
+          EXPORTING
+            clskey       = ls_clskey
+            version      = seoc_version_active
+          IMPORTING
+            methods      = lt_methods
+          EXCEPTIONS
+            not_existing = 1
+            is_interface = 2
+            model_only   = 3
+            OTHERS       = 4.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
+        ENDIF.
+
+        io_xml->add( iv_name = 'METHODS'
+                     ig_data = lt_methods ).
+
         IF ls_vseoclass-category = seoc_category_exception.
           lt_sotr = read_sotr( ).
           IF lines( lt_sotr ) > 0.
@@ -687,6 +651,25 @@ CLASS lcl_object_clas IMPLEMENTATION.
       WHEN 'INTF'.
         io_xml->add( iv_name = 'VSEOINTERF'
                      ig_data = ls_vseointerf ).
+
+        CALL FUNCTION 'SEO_INTERFACE_TYPEINFO_GET'
+          EXPORTING
+            intkey       = ls_clskey
+            version      = seoc_version_active
+          IMPORTING
+            methods      = lt_methods
+          EXCEPTIONS
+            not_existing = 1
+            is_interface = 2
+            model_only   = 3
+            OTHERS       = 4.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from SEO_CLASS_TYPEINFO_GET' ).
+        ENDIF.
+
+        io_xml->add( iv_name = 'METHODS'
+                     ig_data = lt_methods ).
+
       WHEN OTHERS.
         ASSERT 0 = 1.
     ENDCASE.
@@ -878,7 +861,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_locals_imp  TYPE seop_source_string,
           lt_locals_mac  TYPE seop_source_string,
           lt_testclasses TYPE seop_source_string,
-          ls_clskey      TYPE seoclskey.
+          ls_clskey      TYPE seoclskey,
+          lt_methods     TYPE seoo_methods_r.
 
 
     lt_source = mo_files->read_abap( ).
@@ -895,8 +879,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lt_testclasses = mo_files->read_abap( iv_extra = 'testclasses'
                                           iv_error = abap_false ). "#EC NOTEXT
 
-    ls_clskey-clsname = ms_item-obj_name.
 
+    io_xml->read( EXPORTING iv_name = 'METHODS'
+                  CHANGING cg_data = lt_methods ).
+
+    ls_clskey-clsname = ms_item-obj_name.
 
     CASE ms_item-obj_type.
       WHEN 'CLAS'.
@@ -909,6 +896,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             class           = ls_vseoclass
+            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
             is_interface    = 2
@@ -931,6 +919,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
             overwrite       = seox_true
           CHANGING
             interface       = ls_vseointerf
+            methods         = lt_methods
           EXCEPTIONS
             existing        = 1
             is_class        = 2
@@ -976,6 +965,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           is_clskey = ls_clskey
           it_source = lt_source ).
     ENDTRY.
+
+
 
     lcl_objects_activation=>add_item( ms_item ).
 
