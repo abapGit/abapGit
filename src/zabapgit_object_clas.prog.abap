@@ -618,16 +618,16 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: ls_vseoclass  TYPE vseoclass,
-          lv_cp         TYPE program,
-          lt_tpool      TYPE textpool_table,
-          lv_object     TYPE dokhl-object,
-          lv_state      TYPE dokhl-dokstate,
-          lt_seocompotx TYPE ty_seocompotx_tt,
-          ls_vseointerf TYPE vseointerf,
-          ls_clskey     TYPE seoclskey,
-          lt_sotr       TYPE ty_sotr_tt,
-          lt_lines      TYPE tlinetab.
+    DATA: ls_vseoclass    TYPE vseoclass,
+          lv_cp           TYPE program,
+          lt_tpool        TYPE textpool_table,
+          lv_object       TYPE dokhl-object,
+          lv_state        TYPE dokhl-dokstate,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_vseointerf   TYPE vseointerf,
+          ls_clskey       TYPE seoclskey,
+          lt_sotr         TYPE ty_sotr_tt,
+          lt_lines        TYPE tlinetab.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -715,12 +715,12 @@ CLASS lcl_object_clas IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    SELECT * FROM seocompotx INTO TABLE lt_seocompotx
+    SELECT * FROM seocompotx INTO TABLE lt_descriptions
       WHERE clsname = ls_clskey-clsname.
-    DELETE lt_seocompotx WHERE descript IS INITIAL.
-    IF lines( lt_seocompotx ) > 0.
+    DELETE lt_descriptions WHERE descript IS INITIAL.
+    IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
-                   ig_data = lt_seocompotx ).
+                   ig_data = lt_descriptions ).
     ENDIF.
 
   ENDMETHOD.                    "serialize_xml
@@ -882,15 +882,15 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_abap.
 
-    DATA: ls_vseoclass   TYPE vseoclass,
-          ls_vseointerf  TYPE vseointerf,
-          lt_source      TYPE seop_source_string,
-          lt_locals_def  TYPE seop_source_string,
-          lt_locals_imp  TYPE seop_source_string,
-          lt_locals_mac  TYPE seop_source_string,
-          lt_testclasses TYPE seop_source_string,
-          lt_seocompotx  TYPE ty_seocompotx_tt,
-          ls_clskey      TYPE seoclskey.
+    DATA: ls_vseoclass    TYPE vseoclass,
+          ls_vseointerf   TYPE vseointerf,
+          lt_source       TYPE seop_source_string,
+          lt_locals_def   TYPE seop_source_string,
+          lt_locals_imp   TYPE seop_source_string,
+          lt_locals_mac   TYPE seop_source_string,
+          lt_testclasses  TYPE seop_source_string,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_clskey       TYPE seoclskey.
 
 
     lt_source = mo_files->read_abap( ).
@@ -990,9 +990,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDTRY.
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING cg_data = lt_seocompotx ).
+                  CHANGING cg_data = lt_descriptions ).
     DELETE FROM seocompotx WHERE clsname = ls_clskey-clsname.
-    INSERT seocompotx FROM TABLE lt_seocompotx.
+    INSERT seocompotx FROM TABLE lt_descriptions.
 
     lcl_objects_activation=>add_item( ms_item ).
 
