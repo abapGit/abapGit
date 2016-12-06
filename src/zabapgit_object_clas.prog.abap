@@ -218,11 +218,21 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
-          lt_includes TYPE STANDARD TABLE OF ty_includes.
+          lt_includes TYPE STANDARD TABLE OF ty_includes,
+          lv_clsname  TYPE seoclsname.
 
 
-    lt_includes = get_all_class_includes( ).
-    ASSERT lines( lt_includes ) > 0.
+    lv_clsname = ms_item-obj_name.
+
+    CASE ms_item-obj_type.
+      WHEN 'CLAS'.
+        lt_includes = get_all_class_includes( ).
+        ASSERT lines( lt_includes ) > 0.
+      WHEN 'INTF'.
+        APPEND cl_oo_classname_service=>get_interfacepool_name( lv_clsname ) TO lt_includes.
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
 
     SELECT unam udat utime FROM reposrc
       INTO TABLE lt_reposrc
