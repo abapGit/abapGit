@@ -97,7 +97,9 @@ CLASS lth_critical_tests IMPLEMENTATION.
     "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
 
     IF lo_settings->get_run_critical_tests( ) = abap_false.
-      cl_abap_unit_assert=>fail( 'Cancelled. You can enable these tests at the Settings page' ).
+      cl_abap_unit_assert=>fail(
+        msg   = 'Cancelled. You can enable these tests at the Settings page'
+        level = if_aunit_constants=>tolerable ).
     ENDIF.
   ENDMETHOD.
 
