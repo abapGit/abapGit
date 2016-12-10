@@ -468,22 +468,47 @@ CLASS lcl_http IMPLEMENTATION.
   ENDMETHOD.  "check_auth_requested
 
   METHOD acquire_login_details.
+    CONSTANTS: BEGIN OF lc_host_urls,
+                 github TYPE string VALUE 'https://github.com',
+               END OF lc_host_urls.
+    STATICS: st_supported_2fa_urls TYPE RANGE OF string.
+    DATA: lv_default_user  TYPE string,
+          lv_user          TYPE string,
+          lv_pass          TYPE string,
+          lv_2fa_token     TYPE string,
+          lt_2fa_cookies   TYPE tihttpcki,
+          lt_orig_cookies  TYPE tihttpcki,
+          lo_digest        TYPE REF TO lcl_http_digest,
+          ls_url           LIKE LINE OF st_supported_2fa_urls,
+          lv_2fa_supported TYPE abap_bool,
+          lv_host          TYPE string,
+          li_2fa_client    TYPE REF TO if_http_client.
 
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO lcl_http_digest.
+    IF st_supported_2fa_urls IS INITIAL.
+      ls_url-option = 'EQ'.
+      ls_url-sign   = 'I'.
+      ls_url-low    = lc_host_urls-github.
+      APPEND ls_url TO st_supported_2fa_urls.
+      CLEAR ls_url.
+    ENDIF.
 
+    lv_host = lcl_url=>host( iv_url ).
+
+    IF lv_host IN st_supported_2fa_urls.
+      lv_2fa_supported = abap_true.
+    ENDIF.
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
       EXPORTING
-        iv_repo_url = iv_url
+        iv_repo_url  = iv_url
+        iv_allow_2fa = lv_2fa_supported
       CHANGING
-        cv_user     = lv_user
-        cv_pass     = lv_pass ).
+        cv_user      = lv_user
+        cv_pass      = lv_pass
+        cv_2fa_token = lv_2fa_token ).
 
     IF lv_user IS INITIAL.
       lcx_exception=>raise( 'HTTP 401, unauthorized' ).
@@ -496,6 +521,45 @@ CLASS lcl_http IMPLEMENTATION.
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
+
+    " Two factor authentication was requested by user
+    IF lv_2fa_token IS NOT INITIAL.
+      CASE lv_host.
+        WHEN lc_host_urls-github.
+          " For github the token needs to be submitted along with regular basic authentication
+          " in an additional header. Only api.github.com works for this so we cannot use the
+          " original http request. Cookies are therefore added to the normal auth request
+          " afterwards.
+          cl_http_client=>create_by_url(
+            EXPORTING
+              url                = 'https://api.github.com'    " URL
+            IMPORTING
+              client             = li_2fa_client    " HTTP Client Abstraction
+            EXCEPTIONS
+              argument_not_found = 1
+              plugin_not_active  = 2
+              internal_error     = 3
+              OTHERS             = 4
+          ).
+          IF sy-subrc <> 0.
+            lcx_exception=>raise( |2FA request failed: { sy-subrc }| ) ##NO_TEXT.
+          ENDIF.
+          li_2fa_client->request->set_header_field( name  = 'X-Github-OTP'
+                                                    value = lv_2fa_token ).
+          li_2fa_client->authenticate( username = lv_user
+                                       password = lv_pass ).
+          li_2fa_client->propertytype_logon_popup = if_http_client=>co_disabled.
+          li_2fa_client->send( ).
+          li_2fa_client->receive( ).
+          li_2fa_client->response->get_cookies( CHANGING cookies = lt_2fa_cookies ).
+          ii_client->response->get_cookies( CHANGING cookies = lt_orig_cookies ).
+          APPEND LINES OF lt_2fa_cookies TO lt_orig_cookies.
+
+        WHEN OTHERS.
+          lcx_exception=>raise( |2FA for { lv_host } is not yet fully supported.| ) ##NO_TEXT.
+
+      ENDCASE.
+    ENDIF.
 
     CASE rv_scheme.
       WHEN gc_scheme-digest.
