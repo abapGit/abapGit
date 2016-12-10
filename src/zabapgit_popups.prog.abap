@@ -59,7 +59,13 @@ CLASS lcl_popups DEFINITION FINAL.
                   default_button        TYPE char1 DEFAULT '1'
                   display_cancel_button TYPE char1 DEFAULT abap_true
         RETURNING VALUE(rv_answer)      TYPE char1
-        RAISING   lcx_exception.
+        RAISING   lcx_exception,
+      popup_to_inform
+      IMPORTING
+                titlebar              TYPE clike
+                text_message          TYPE clike
+      RAISING   lcx_exception.
+
 
 ENDCLASS.
 
@@ -437,5 +443,23 @@ CLASS lcl_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "popup_to_confirm
+
+  METHOD popup_to_inform.
+
+    DATA: lv_line1 TYPE char70,
+          lv_line2 TYPE char70.
+
+    lv_line1 = text_message.
+    IF strlen( text_message ) > 70.
+      lv_line2 = text_message+70.
+    ENDIF.
+
+    CALL FUNCTION 'POPUP_TO_DISPLAY_TEXT'
+      EXPORTING
+        titel                 = titlebar
+        textline1             = lv_line1
+        textline2             = lv_line2.
+
+  ENDMETHOD.  " popup_to_inform.
 
 ENDCLASS.
