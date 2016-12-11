@@ -454,11 +454,11 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_line2 = text_message+70.
     ENDIF.
 
-    CALL FUNCTION 'POPUP_TO_DISPLAY_TEXT'
+    CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
-        titel                 = titlebar
-        textline1             = lv_line1
-        textline2             = lv_line2.
+        titel = titlebar
+        txt1  = lv_line1
+        txt2  = lv_line2.
 
   ENDMETHOD.  " popup_to_inform.
 
