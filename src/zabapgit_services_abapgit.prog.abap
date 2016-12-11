@@ -21,8 +21,23 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
     CLASS-METHODS install_abapgit
       RAISING lcx_exception lcx_cancel.
 
-    CLASS-METHODS needs_installation
-      RETURNING VALUE(rv_not_completely_installed) TYPE abap_bool.
+    CLASS-METHODS install_abapgit_pi
+      RAISING lcx_exception lcx_cancel.
+
+    CLASS-METHODS is_installed
+      RETURNING VALUE(rv_installed) TYPE abap_bool.
+
+    CLASS-METHODS is_installed_pi
+      RETURNING VALUE(rv_installed) TYPE abap_bool.
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS do_install
+      IMPORTING iv_title   TYPE c
+                iv_text    TYPE c
+                iv_url     TYPE string
+                iv_package TYPE devclass
+      RAISING lcx_exception.
 
 ENDCLASS. "lcl_services_abapgit
 
@@ -52,69 +67,108 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
   METHOD install_abapgit.
 
-    DATA lv_text            TYPE c LENGTH 100.
-    DATA lv_answer          TYPE c LENGTH 1.
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_url             TYPE string.
-    DATA lv_target_package  TYPE devclass.
+    CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit'.
+    DATA lv_text       TYPE c LENGTH 100.
 
-    lv_text = |Installing current version ABAPGit to package { c_package_abapgit } |
-           && |and plugins to { c_package_plugins }|.
+    IF is_installed( ) = abap_true.
+      lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
+      lcl_popups=>popup_to_inform(
+        titlebar              = lc_title
+        text_message          = lv_text ).
+      RETURN.
+    ENDIF.
+
+    lv_text = |Confirm to install current version of ABAPGit to package { c_package_abapgit }|.
+
+    do_install( iv_title   = lc_title
+                iv_text    = lv_text
+                iv_url     = c_abapgit_url
+                iv_package = c_package_abapgit ).
+
+  ENDMETHOD.  "install_abapgit
+
+  METHOD install_abapgit_pi.
+
+    CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit plugins'.
+    DATA lv_text       TYPE c LENGTH 100.
+
+    IF is_installed_pi( ) = abap_true.
+      lv_text = 'Seems like abapGit plugins package is already installed. No changes to be done'.
+      lcl_popups=>popup_to_inform(
+        titlebar              = lc_title
+        text_message          = lv_text ).
+      RETURN.
+    ENDIF.
+
+    lv_text = |Confirm to install current version ABAPGit plugins to package {
+               c_package_plugins }|.
+
+    do_install( iv_title   = lc_title
+                iv_text    = lv_text
+                iv_url     = c_plugins_url
+                iv_package = c_package_plugins ).
+
+  ENDMETHOD.  "install_abapgit_pi
+
+  METHOD do_install.
+
+    DATA lo_repo            TYPE REF TO lcl_repo_online.
+    DATA lv_answer          TYPE c LENGTH 1.
 
     lv_answer = lcl_popups=>popup_to_confirm(
-      titlebar              = 'Install abapGit'
-      text_question         = lv_text
+      titlebar              = iv_title
+      text_question         = iv_text
       text_button_1         = 'Continue'
       text_button_2         = 'Cancel'
       default_button        = '2'
       display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer <> '1'.
-      RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      RETURN.
     ENDIF.
 
-    DO 2 TIMES.
-      CASE sy-index.
-        WHEN 1.
-          lv_url            = c_abapgit_url.
-          lv_target_package = c_package_abapgit.
-        WHEN 2.
-          lv_url            = c_plugins_url.
-          lv_target_package = c_package_plugins.
-      ENDCASE.
+    IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
+        iv_url              = iv_url
+        iv_target_package   = iv_package ).
 
-      IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
-          iv_url              = lv_url
-          iv_target_package   = lv_target_package ).
+      lcl_sap_package=>create_local( iv_package ).
 
-        lcl_sap_package=>create_local( lv_target_package ).
+      lo_repo = lcl_app=>repo_srv( )->new_online(
+        iv_url         = iv_url
+        iv_branch_name = 'refs/heads/master'
+        iv_package     = iv_package ) ##NO_TEXT.
 
-        lo_repo = lcl_app=>repo_srv( )->new_online(
-          iv_url         = lv_url
-          iv_branch_name = 'refs/heads/master' "TODO replace with HEAD ?
-          iv_package     = lv_target_package ) ##NO_TEXT.
-
-        lo_repo->status( ). " check for errors
-        lo_repo->deserialize( ).
-      ENDIF.
-    ENDDO.
+      lo_repo->status( ). " check for errors
+      lo_repo->deserialize( ).
+    ENDIF.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "install_abapgit
+  ENDMETHOD.  " do_install.
 
-  METHOD needs_installation.
+
+  METHOD is_installed.
 
     TRY.
-        IF lcl_app=>repo_srv( )->is_repo_installed( c_abapgit_url ) = abap_false
-            OR lcl_app=>repo_srv( )->is_repo_installed( c_plugins_url ) = abap_false.
-          rv_not_completely_installed = abap_true.
-        ENDIF.
+        rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_abapgit_url ).
+        " TODO, alternative checks for presence in the system
       CATCH lcx_exception.
         " cannot be installed anyway in this case, e.g. no connection
-        rv_not_completely_installed = abap_false.
+        rv_installed = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "needs_installation
+  ENDMETHOD.                    "is_installed
+
+  METHOD is_installed_pi.
+
+    TRY.
+        rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_plugins_url ).
+        " TODO, alternative checks for presence in the system
+      CATCH lcx_exception.
+        " cannot be installed anyway in this case, e.g. no connection
+        rv_installed = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.                    "is_installed_pi
 
 ENDCLASS. "lcl_services_abapgit

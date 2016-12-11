@@ -205,14 +205,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = gc_action-go_tutorial ) ##NO_TEXT.
     lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = gc_action-abapgit_wiki ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'          iv_act = gc_action-go_explore ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
-    IF lcl_services_abapgit=>needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
-    ENDIF.
-    ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_advsub ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Help'             io_sub = lo_helpsub ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Offline'          iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'            iv_act = gc_action-go_explore ) ##NO_TEXT.
+
+    ro_menu->add( iv_txt = 'Advanced'           io_sub = lo_advsub ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Help'               io_sub = lo_helpsub ) ##NO_TEXT.
 
   ENDMETHOD.                    "build main_menu
 

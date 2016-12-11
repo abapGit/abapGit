@@ -587,3 +587,21 @@ table.tag {
 }
 table.tag td { padding: 0.2em 0.5em; }
 table.tag td.label { background-color: #b3c1cc; }
+
+/* TUTORIAL */
+
+div.tutorial {
+  margin-top:       3px;
+  background-color: #f2f2f2;
+  padding: 0.5em 1em 0.5em 1em;
+}
+
+div.tutorial hr { border-color: #CCC; }
+div.tutorial h1 {
+  font-size: 18pt;
+  color: #404040;
+}
+div.tutorial h2 {
+  font-size: 14pt;
+  color: #404040;
+}

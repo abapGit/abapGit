@@ -173,6 +173,7 @@ CONSTANTS: BEGIN OF gc_action,
              abapgit_home       TYPE string VALUE 'abapgit_home',
              abapgit_wiki       TYPE string VALUE 'abapgit_wiki',
              abapgit_install    TYPE string VALUE 'abapgit_install',
+             abapgit_install_pi TYPE string VALUE 'abapgit_install_pi',
 
              zip_import         TYPE string VALUE 'zip_import',
              zip_export         TYPE string VALUE 'zip_export',
