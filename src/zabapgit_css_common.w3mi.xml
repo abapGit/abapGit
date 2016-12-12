@@ -20,20 +20,8 @@
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
-     <NAME>filesize</NAME>
-     <VALUE>12615</VALUE>
-    </WWWPARAMS>
-    <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/css</VALUE>
-    </WWWPARAMS>
-    <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
-     <NAME>version</NAME>
-     <VALUE/>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

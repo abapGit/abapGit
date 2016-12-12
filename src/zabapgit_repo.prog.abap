@@ -46,6 +46,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       update_local_checksums
         IMPORTING it_files            TYPE ty_file_signatures_tt
         RAISING   lcx_exception,
+      rebuild_local_checksums
+        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.
@@ -118,8 +120,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rt_results) TYPE ty_results_tt
         RAISING   lcx_exception,
       reset_status,
-      rebuild_local_checksums
-        RAISING   lcx_exception,
+      rebuild_local_checksums REDEFINITION,
       push
         IMPORTING is_comment TYPE ty_comment
                   io_stage   TYPE REF TO lcl_stage

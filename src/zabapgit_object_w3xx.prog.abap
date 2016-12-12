@@ -12,13 +12,20 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
-    TYPES: ty_wwwparams_tt TYPE STANDARD TABLE OF wwwparams WITH DEFAULT KEY.
+    TYPES ty_wwwparams_tt TYPE STANDARD TABLE OF wwwparams WITH DEFAULT KEY.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE ty_item
-          iv_language TYPE spras.
+    CONSTANTS: BEGIN OF c_param_names,
+                 version  TYPE w3_name VALUE 'version',
+                 fileext  TYPE w3_name VALUE 'fileextension',
+                 filesize TYPE w3_name VALUE 'filesize',
+                 filename TYPE w3_name VALUE 'filename',
+                 mimetype TYPE w3_name VALUE 'mimetype',
+               END OF c_param_names.
+
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE ty_item
+        iv_language TYPE spras.
 
   PROTECTED SECTION.
 
@@ -33,18 +40,19 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
       RETURNING VALUE(rv_ext) TYPE string
       RAISING   lcx_exception.
 
-    METHODS patch_size
-      IMPORTING iv_size   TYPE i OPTIONAL       " Overwrite if given
-      EXPORTING ev_size   TYPE i                " Return size as integer
+    METHODS normalize_params
+      IMPORTING iv_size   TYPE i
       CHANGING  ct_params TYPE ty_wwwparams_tt  " Param table to patch
       RAISING   lcx_exception.
 
-    METHODS patch_filename
+    METHODS strip_params
       CHANGING  ct_params TYPE ty_wwwparams_tt
       RAISING   lcx_exception.
 
-    METHODS clear_version
-      CHANGING  ct_params TYPE ty_wwwparams_tt
+    METHODS find_param
+      IMPORTING it_params TYPE ty_wwwparams_tt
+                iv_name   TYPE w3_name
+      RETURNING VALUE(rv_value) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
@@ -145,15 +153,9 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       lcx_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
-    " Condense size string + get size to local integer
-    patch_size( IMPORTING ev_size   = lv_size
-                CHANGING  ct_params = lt_w3params ).
-
-    " Remove file path (for security concerns)
-    patch_filename( CHANGING  ct_params = lt_w3params ).
-
-    " Clear version
-    clear_version( CHANGING  ct_params = lt_w3params ).
+    lv_size = find_param( it_params = lt_w3params iv_name = c_param_names-filesize ).
+    " Clean params (remove version, filesize & clear filename from path)
+    strip_params( CHANGING  ct_params = lt_w3params ).
 
     CASE ms_key-relid.
       WHEN 'MI'.
@@ -264,11 +266,9 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         lcx_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
-    " Update size of file (for the case file was actually changed remotely)
-    " Will also trigger "stage" at next sync if remote XML
-    " was not updated with the new file size
-    patch_size( EXPORTING iv_size   = lv_size
-                CHANGING  ct_params = lt_w3params ).
+    " Update size of file based on actual data file size, prove param object name
+    normalize_params( EXPORTING iv_size   = lv_size
+                      CHANGING  ct_params = lt_w3params ).
 
     CALL FUNCTION 'WWWPARAMS_UPDATE'
       TABLES
@@ -368,67 +368,60 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   METHOD get_ext.
 
-    FIELD-SYMBOLS <param> LIKE LINE OF it_params.
-
-    READ TABLE it_params ASSIGNING <param> WITH KEY name = 'fileextension'.
-
-    IF sy-subrc > 0.
-      lcx_exception=>raise( |W3xx: Cannot find file ext for { ms_key-objid }| ).
-    ENDIF.
-
-    rv_ext = <param>-value.
+    rv_ext = find_param( it_params = it_params iv_name = c_param_names-fileext ).
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
   ENDMETHOD.  " get_ext.
 
-  METHOD patch_size.
+  METHOD normalize_params.
 
     FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
 
-    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'filesize'.
-
-    IF sy-subrc > 0.
-      lcx_exception=>raise( |W3xx: Cannot find file size for { ms_key-objid }| ).
+    " Ensure filesize param exists
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = c_param_names-filesize.
+    IF sy-subrc <> 0.
+      APPEND INITIAL LINE TO ct_params ASSIGNING <param>.
+      <param>-name  = c_param_names-filesize.
     ENDIF.
 
-    IF iv_size IS NOT INITIAL.
-      <param>-value = iv_size.
-    ENDIF.
-    CONDENSE <param>-value.
+    LOOP AT ct_params ASSIGNING <param>.
+      <param>-relid = ms_key-relid. " Ensure param key = object key
+      <param>-objid = ms_key-objid.
+      IF <param>-name = c_param_names-filesize. " Patch filesize = real file size
+        <param>-value = iv_size.
+        CONDENSE <param>-value.
+      ENDIF.
+    ENDLOOP.
 
-    ev_size = <param>-value.
+  ENDMETHOD.  " normalize_params.
 
-  ENDMETHOD.  " patch_size.
-
-  METHOD patch_filename.
+  METHOD strip_params.
 
     FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
 
-    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'filename'.
-
-    IF sy-subrc > 0.
-      lcx_exception=>raise( |W3xx: Cannot find file name for { ms_key-objid }| ).
-    ENDIF.
-
-    " Remove path
+    " Remove path from filename
+    find_param( it_params = ct_params iv_name = c_param_names-filename ). " Check exists
+    READ TABLE ct_params ASSIGNING <param> WITH KEY name = c_param_names-filename.
     <param>-value = lcl_path=>get_filename_from_syspath( |{ <param>-value }| ).
 
-  ENDMETHOD.  " patch_filename.
+    " Clear version & filesize
+    DELETE ct_params WHERE name = c_param_names-version.
+    DELETE ct_params WHERE name = c_param_names-filesize.
 
-  METHOD clear_version.
+  ENDMETHOD.  " strip_params.
 
-    FIELD-SYMBOLS <param> LIKE LINE OF ct_params.
+  METHOD find_param.
 
-    READ TABLE ct_params ASSIGNING <param> WITH KEY name = 'version'.
+    FIELD-SYMBOLS <param> LIKE LINE OF it_params.
 
+    READ TABLE it_params ASSIGNING <param> WITH KEY name = iv_name.
     IF sy-subrc > 0.
-      lcx_exception=>raise( |W3xx: Cannot find version for { ms_key-objid }| ).
+      lcx_exception=>raise( |W3xx: Cannot find { iv_name } for { ms_key-objid }| ).
     ENDIF.
 
-    " Clear version
-    CLEAR <param>-value.
+    rv_value = <param>-value.
 
-  ENDMETHOD.  " clear_version.
+  ENDMETHOD.  " find_param.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.

@@ -243,7 +243,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD rebuild_local_checksums.
+  METHOD rebuild_local_checksums. "REMOTE
 
     DATA: lt_remote       TYPE ty_files_tt,
           lt_local        TYPE ty_files_item_tt,
@@ -638,6 +638,40 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD is_write_protected.
     rv_yes = ms_data-write_protect.
   ENDMETHOD.                    "is_write_protected
+
+  METHOD rebuild_local_checksums. "LOCAL (BASE)
+
+    DATA: lt_local        TYPE ty_files_item_tt,
+          ls_last_item    TYPE ty_item,
+          lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+
+    FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
+                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+                   <ls_local>    LIKE LINE OF lt_local.
+
+    lt_local        = get_files_local( ).
+
+    DELETE lt_local " Remove non-code related files except .abapgit
+      WHERE item IS INITIAL
+      AND NOT ( file-path = gc_root_dir AND file-filename = gc_dot_abapgit ).
+
+    SORT lt_local BY item.
+
+    LOOP AT lt_local ASSIGNING <ls_local>.
+      IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
+        APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
+        <ls_checksum>-item = <ls_local>-item.
+        ls_last_item       = <ls_local>-item.
+      ENDIF.
+
+      APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
+      MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
+
+    ENDLOOP.
+
+    set( it_checksums = lt_checksums ).
+
+  ENDMETHOD.  " rebuild_local_checksums.
 
 ENDCLASS.                    "lcl_repo IMPLEMENTATION
 
