@@ -7,6 +7,91 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+INTERFACE lif_object_oriented_object.
+  METHODS:
+    create
+      IMPORTING
+        iv_package    TYPE devclass
+        iv_overwrite  TYPE seox_boolean DEFAULT seox_true
+      CHANGING
+        is_properties TYPE any
+      RAISING
+        lcx_exception.
+ENDINTERFACE.
+
+CLASS lcl_object_oriented_class DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES: lif_object_oriented_object.
+ENDCLASS.
+CLASS lcl_object_oriented_class IMPLEMENTATION.
+  METHOD lif_object_oriented_object~create.
+    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+      CHANGING
+        class           = is_properties
+      EXCEPTIONS
+        existing        = 1
+        is_interface    = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_object_oriented_interface DEFINITION.
+  PUBLIC SECTION.
+    INTERFACES: lif_object_oriented_object.
+ENDCLASS.
+
+CLASS lcl_object_oriented_interface IMPLEMENTATION.
+  METHOD lif_object_oriented_object~create.
+    CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+      CHANGING
+        interface       = is_properties
+      EXCEPTIONS
+        existing        = 1
+        is_class        = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_object_oriented_factory DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      create
+        IMPORTING
+          iv_object_type                   TYPE tadir-object
+        RETURNING
+          VALUE(ro_object_oriented_object) TYPE REF TO lif_object_oriented_object.
+ENDCLASS.
+CLASS lcl_object_oriented_factory IMPLEMENTATION.
+  METHOD create.
+    IF iv_object_type = 'CLAS'.
+      CREATE OBJECT ro_object_oriented_object TYPE lcl_object_oriented_class.
+    ELSEIF iv_object_type = 'INTF'.
+      CREATE OBJECT ro_object_oriented_object TYPE lcl_object_oriented_interface.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+
 CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
   PUBLIC SECTION.
