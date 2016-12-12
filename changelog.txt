@@ -8,6 +8,10 @@ Legend
 + : added
 - : removed
 
+2016-12-01 v1.24.0
+------------------
++ abap syntax highlighting
+
 2016-11-22
 ------------------
 + supported object list @debugpage

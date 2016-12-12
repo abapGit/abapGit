@@ -43,6 +43,10 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
+    CLASS-METHODS open_se80
+      IMPORTING iv_package TYPE devclass
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -295,5 +299,17 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lcl_app=>user( )->toggle_favorite( iv_key ).
 
   ENDMETHOD.  " toggle_favorite.
+
+  METHOD open_se80.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+         OPERATION       = 'SHOW'
+         IN_NEW_WINDOW   = 'X'
+         OBJECT_NAME     = iv_package
+         OBJECT_TYPE     = 'DEVC'
+         WITH_OBJECTLIST = 'X'.
+
+  ENDMETHOD.  " open_se80.
 
 ENDCLASS. "lcl_services_repo

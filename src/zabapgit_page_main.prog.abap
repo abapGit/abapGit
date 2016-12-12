@@ -114,9 +114,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA: lt_repos TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error TYPE REF TO lcx_exception,
-          lo_repo  LIKE LINE OF lt_repos.
+    DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
+          lx_error    TYPE REF TO lcx_exception,
+          lo_tutorial TYPE REF TO lcl_gui_view_tutorial,
+          lo_repo     LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
 
@@ -137,8 +138,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
     ELSE.
-      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
-      ro_html->add( render_repo( lo_repo ) ).
+      IF mv_show IS INITIAL.
+        CREATE OBJECT lo_tutorial.
+        ro_html->add( lo_tutorial->lif_gui_page~render( ) ).
+      ELSE.
+        lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+        ro_html->add( render_repo( lo_repo ) ).
+      ENDIF.
     ENDIF.
 
     ro_html->add( footer( ) ).
@@ -165,15 +171,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
           CLEAR mv_show.
+          lcl_app=>user( )->set_repo_show( mv_show ).
       ENDTRY.
-    ENDIF.
-
-    IF mv_show IS INITIAL. " Fall back to first available repo
-      READ TABLE lt_repos INTO lo_repo INDEX 1.
-      IF sy-subrc = 0.
-        mv_show = lo_repo->get_key( ).
-        lcl_app=>user( )->set_repo_show( mv_show ).
-      ENDIF.
     ENDIF.
 
     IF lv_show_old <> mv_show AND NOT mv_show IS INITIAL.
@@ -186,28 +185,32 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    DATA lo_betasub TYPE REF TO lcl_html_toolbar.
+    DATA: lo_advsub  TYPE REF TO lcl_html_toolbar,
+          lo_helpsub TYPE REF TO lcl_html_toolbar.
 
 
     CREATE OBJECT ro_menu.
-    CREATE OBJECT lo_betasub.
+    CREATE OBJECT lo_advsub.
+    CREATE OBJECT lo_helpsub.
 
-    lo_betasub->add( iv_txt = 'Database util'    iv_act = gc_action-go_db ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Object to files'  iv_act = gc_action-zip_object ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
-    lo_betasub->add( iv_txt = 'Settings'         iv_act = gc_action-go_settings ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Database util'    iv_act = gc_action-go_db ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Object to files'  iv_act = gc_action-zip_object ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Settings'         iv_act = gc_action-go_settings ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'          iv_act = gc_action-go_explore ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'New offline repo' iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
-    IF lcl_services_abapgit=>needs_installation( ) = abap_true.
-      ro_menu->add( iv_txt = 'Get abapGit'    iv_act = gc_action-abapgit_install ) ##NO_TEXT.
-    ENDIF.
-    ro_menu->add( iv_txt = 'Advanced'         io_sub = lo_betasub ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = gc_action-go_tutorial ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = gc_action-abapgit_wiki ) ##NO_TEXT.
+
+    ro_menu->add( iv_txt = '+ Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Offline'          iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'            iv_act = gc_action-go_explore ) ##NO_TEXT.
+
+    ro_menu->add( iv_txt = 'Advanced'           io_sub = lo_advsub ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Help'               io_sub = lo_helpsub ) ##NO_TEXT.
 
   ENDMETHOD.                    "build main_menu
 
@@ -285,9 +288,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF lo_favbar->count( ) > 0.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
-      ro_html->add( '<span class="grey">No favorites found. Please'
-                 && ' click <img src="img/star-grey"> icon repo toolbar to add'
-                 && ' it as favourite. Choose a repo there &#x2192;</span>' ).
+      ro_html->add( `<span class="grey">No favorites so far. For more info please check ` ).
+      ro_html->add_anchor( iv_txt = 'tutorial' iv_act = gc_action-go_tutorial ).
+      ro_html->add( '</span>' ).
     ENDIF.
     ro_html->add( '</td>' ).
 

@@ -21,6 +21,8 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
 
+    TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
     DATA mv_skip_testclass TYPE abap_bool.
 
     METHODS deserialize_abap
@@ -216,11 +218,21 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
-          lt_includes TYPE STANDARD TABLE OF ty_includes.
+          lt_includes TYPE STANDARD TABLE OF ty_includes,
+          lv_clsname  TYPE seoclsname.
 
 
-    lt_includes = get_all_class_includes( ).
-    ASSERT lines( lt_includes ) > 0.
+    lv_clsname = ms_item-obj_name.
+
+    CASE ms_item-obj_type.
+      WHEN 'CLAS'.
+        lt_includes = get_all_class_includes( ).
+        ASSERT lines( lt_includes ) > 0.
+      WHEN 'INTF'.
+        APPEND cl_oo_classname_service=>get_interfacepool_name( lv_clsname ) TO lt_includes.
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
 
     SELECT unam udat utime FROM reposrc
       INTO TABLE lt_reposrc
@@ -616,15 +628,16 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: ls_vseoclass  TYPE vseoclass,
-          lv_cp         TYPE program,
-          lt_tpool      TYPE textpool_table,
-          lv_object     TYPE dokhl-object,
-          lv_state      TYPE dokhl-dokstate,
-          ls_vseointerf TYPE vseointerf,
-          ls_clskey     TYPE seoclskey,
-          lt_sotr       TYPE ty_sotr_tt,
-          lt_lines      TYPE tlinetab.
+    DATA: ls_vseoclass    TYPE vseoclass,
+          lv_cp           TYPE program,
+          lt_tpool        TYPE textpool_table,
+          lv_object       TYPE dokhl-object,
+          lv_state        TYPE dokhl-dokstate,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_vseointerf   TYPE vseointerf,
+          ls_clskey       TYPE seoclskey,
+          lt_sotr         TYPE ty_sotr_tt,
+          lt_lines        TYPE tlinetab.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -710,6 +723,14 @@ CLASS lcl_object_clas IMPLEMENTATION.
     IF sy-subrc = 0 AND lv_state = 'R'.
       io_xml->add( iv_name = 'LINES'
                    ig_data = lt_lines ).
+    ENDIF.
+
+    SELECT * FROM seocompotx INTO TABLE lt_descriptions
+      WHERE clsname = ls_clskey-clsname.
+    DELETE lt_descriptions WHERE descript IS INITIAL.
+    IF lines( lt_descriptions ) > 0.
+      io_xml->add( iv_name = 'DESCRIPTIONS'
+                   ig_data = lt_descriptions ).
     ENDIF.
 
   ENDMETHOD.                    "serialize_xml
@@ -871,14 +892,15 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_abap.
 
-    DATA: ls_vseoclass   TYPE vseoclass,
-          ls_vseointerf  TYPE vseointerf,
-          lt_source      TYPE seop_source_string,
-          lt_locals_def  TYPE seop_source_string,
-          lt_locals_imp  TYPE seop_source_string,
-          lt_locals_mac  TYPE seop_source_string,
-          lt_testclasses TYPE seop_source_string,
-          ls_clskey      TYPE seoclskey.
+    DATA: ls_vseoclass    TYPE vseoclass,
+          ls_vseointerf   TYPE vseointerf,
+          lt_source       TYPE seop_source_string,
+          lt_locals_def   TYPE seop_source_string,
+          lt_locals_imp   TYPE seop_source_string,
+          lt_locals_mac   TYPE seop_source_string,
+          lt_testclasses  TYPE seop_source_string,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_clskey       TYPE seoclskey.
 
 
     lt_source = mo_files->read_abap( ).
@@ -976,6 +998,11 @@ CLASS lcl_object_clas IMPLEMENTATION.
           is_clskey = ls_clskey
           it_source = lt_source ).
     ENDTRY.
+
+    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                  CHANGING cg_data = lt_descriptions ).
+    DELETE FROM seocompotx WHERE clsname = ls_clskey-clsname.
+    INSERT seocompotx FROM TABLE lt_descriptions.
 
     lcl_objects_activation=>add_item( ms_item ).
 

@@ -137,7 +137,10 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
 
     IF iv_show_package = abap_true.
       ro_html->add( '<img src="img/pkg">' ).
-      ro_html->add( |<span>{ io_repo->get_package( ) }</span>| ).
+      ro_html->add( '<span>' ).
+      ro_html->add_anchor( iv_txt = io_repo->get_package( )
+                           iv_act = |{ gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
+      ro_html->add( '</span>' ).
     ENDIF.
 
     ro_html->add( '</td>' ).

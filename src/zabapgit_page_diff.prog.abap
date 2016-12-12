@@ -54,9 +54,9 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       EXPORTING ev_lattr  TYPE string
                 ev_rattr  TYPE string.
     METHODS append_diff
-      IMPORTING it_remote   TYPE ty_files_tt
-                it_local    TYPE ty_files_item_tt
-                is_status   TYPE ty_result
+      IMPORTING it_remote TYPE ty_files_tt
+                it_local  TYPE ty_files_item_tt
+                is_status TYPE ty_result
       RAISING   lcx_exception.
 
 ENDCLASS. "lcl_gui_page_diff
@@ -121,8 +121,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   METHOD append_diff.
 
     DATA:
-      ls_r_dummy   LIKE LINE OF it_remote ##NEEDED,
-      ls_l_dummy   LIKE LINE OF it_local  ##NEEDED.
+      ls_r_dummy LIKE LINE OF it_remote ##NEEDED,
+      ls_l_dummy LIKE LINE OF it_local  ##NEEDED.
 
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
@@ -202,14 +202,14 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
-    ro_html->add( '<tr>' ).                               "#EC NOTEXT
-    ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add( '<th>LOCAL</th>' ).                     "#EC NOTEXT
-    ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-    ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
-    ro_html->add( '</tr>' ).                              "#EC NOTEXT
-    ro_html->add( '</thead>' ).                           "#EC NOTEXT
+    ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
+    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    ro_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
+    ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    ro_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
+    ro_html->add( '</tr>' ).                                "#EC NOTEXT
+    ro_html->add( '</thead>' ).                             "#EC NOTEXT
 
   ENDMETHOD.  " render_table_head.
 
@@ -255,18 +255,23 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
+    DATA: lo_highlighter TYPE REF TO lcl_code_highlighter,
+          lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
           lv_local       TYPE string,
           lv_remote      TYPE string,
           lv_lattr       TYPE string,
           lv_rattr       TYPE string,
+          lv_highlight   TYPE abap_bool,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-
+    CREATE OBJECT lo_highlighter.
     CREATE OBJECT ro_html.
+
     lt_diffs = is_diff-o_diff->get( ).
+
+    lv_highlight = boolc( is_diff-filename CP '*.abap' ).
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
@@ -280,11 +285,19 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ENDIF.
 
       IF is_diff-mod = c_mod-remote. " Remote file leading changes
-        lv_local  = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
-        lv_remote = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
+        lv_local  = <ls_diff>-old.
+        lv_remote = <ls_diff>-new.
       ELSE.             " Local leading changes or both were modified
-        lv_local  = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
-        lv_remote = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
+        lv_local  = <ls_diff>-new.
+        lv_remote = <ls_diff>-old.
+      ENDIF.
+
+      IF lv_highlight = abap_true.
+        lv_local  = lo_highlighter->process_line( lv_local ).
+        lv_remote = lo_highlighter->process_line( lv_remote ).
+      ELSE.
+        lv_local  = escape( val = lv_local format = cl_abap_format=>e_html_attr ).
+        lv_remote = escape( val = lv_remote format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
       get_line_hl( EXPORTING iv_mod    = is_diff-mod
@@ -313,21 +326,21 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Both file changed ? Or line updated ? - All yellow
     IF iv_mod = c_mod-both OR iv_result = lcl_diff=>c_diff-update.
-      ev_lattr = ' class="diff_upd"'.             "#EC NOTEXT
-      ev_rattr = ' class="diff_upd"'.             "#EC NOTEXT
+      ev_lattr = ' class="diff_upd"'.                       "#EC NOTEXT
+      ev_rattr = ' class="diff_upd"'.                       "#EC NOTEXT
     ELSEIF iv_mod = c_mod-local. " Changed locally
       CASE iv_result.
         WHEN lcl_diff=>c_diff-insert.
-          ev_lattr = ' class="diff_ins"'.            "#EC NOTEXT
+          ev_lattr = ' class="diff_ins"'.                   "#EC NOTEXT
         WHEN lcl_diff=>c_diff-delete.
-          ev_rattr = ' class="diff_del"'.             "#EC NOTEXT
+          ev_rattr = ' class="diff_del"'.                   "#EC NOTEXT
       ENDCASE.
     ELSEIF iv_mod = c_mod-remote. " Changed remotely - invert sides
       CASE iv_result.
         WHEN lcl_diff=>c_diff-insert.
-          ev_rattr = ' class="diff_ins"'.            "#EC NOTEXT
+          ev_rattr = ' class="diff_ins"'.                   "#EC NOTEXT
         WHEN lcl_diff=>c_diff-delete.
-          ev_lattr = ' class="diff_del"'.             "#EC NOTEXT
+          ev_lattr = ' class="diff_del"'.                   "#EC NOTEXT
       ENDCASE.
     ENDIF.
 
@@ -343,6 +356,11 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add( title( 'DIFF' ) ).
 
     LOOP AT mt_diff_files INTO ls_diff_file.
+      lcl_progress=>show( iv_key     = 'Diff'
+                          iv_current = sy-tabix
+                          iv_total   = lines( mt_diff_files )
+                          iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
 

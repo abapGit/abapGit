@@ -215,9 +215,10 @@ CLASS lcl_sap_package IMPLEMENTATION.
     ENDIF.
 
     ls_child-devclass  = iv_child.
+    ls_child-dlvunit   = li_parent->software_component.
     ls_child-ctext     = iv_child.
     ls_child-parentcl  = iv_parent.
-    ls_child-component = li_parent->transport_layer.
+    ls_child-pdevclass = li_parent->transport_layer.
     ls_child-as4user   = sy-uname.
 
     create( ls_child ).
@@ -246,6 +247,12 @@ CLASS lcl_sap_package IMPLEMENTATION.
     ENDIF.
 
     ls_package = is_package.
+
+    " Set software component to 'HOME' if none is set at this point.
+    " Otherwise SOFTWARE_COMPONENT_INVALID will be raised.
+    IF ls_package-dlvunit IS INITIAL.
+      ls_package-dlvunit = 'HOME'.
+    ENDIF.
 
     cl_package_factory=>create_new_package(
       EXPORTING
@@ -348,7 +355,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     ls_package-devclass  = iv_package.
     ls_package-ctext     = iv_package.
     ls_package-parentcl  = '$TMP'.
-    ls_package-component = 'LOCAL'.
+    ls_package-dlvunit   = 'LOCAL'.
     ls_package-as4user   = sy-uname.
 
     create( ls_package ).
