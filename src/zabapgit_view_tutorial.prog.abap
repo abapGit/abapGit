@@ -31,14 +31,6 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     _add '<h1>Tutorial</h1>'.
     _add '<hr>'.
 
-    _add '<h2>Repository list and favorites</h2>'.
-    _add '<p><ul>'.
-    _add '<li>To choose a repo press <img src="img/burger"> at the favorite bar.</li>'.
-    _add '<li>To add a repo as favorite'.
-    _add ' click <img src="img/star-grey"> icon at repo toolbar.</li>'.
-    _add '</ul></p>'.
-
-
     _add '<h2>Adding and cloning repos</h2>'.
     _add '<p><ul>'.
     _add `<li>To clone a remote repo (e.g. from github) click `.
@@ -51,8 +43,13 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     _add ' or just serialize as a zip file</li>'.
     _add '</ul></p>'.
 
-    _add '<h2>abapGit related repositories</h2>'.
+    _add '<h2>Repository list and favorites</h2>'.
+    _add '<p><ul>'.
+    _add '<li>To choose a repo press <img src="img/burger"> at the favorite bar.</li>'.
+    _add '<li>To favorite a repo click <img src="img/star-grey"> icon at repo toolbar.</li>'.
+    _add '</ul></p>'.
 
+    _add '<h2>abapGit related repositories</h2>'.
     _add '<p><ul>'.
     _add '<li>'.
     ro_html->add_anchor( iv_txt = 'install abapGit repo' iv_act = gc_action-abapgit_install ).
