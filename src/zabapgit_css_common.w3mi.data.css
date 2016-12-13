@@ -597,6 +597,7 @@ div.tutorial {
 }
 
 div.tutorial hr { border-color: #CCC; }
+div.tutorial li { margin: 2px 0px }
 div.tutorial h1 {
   font-size: 18pt;
   color: #404040;

@@ -20,20 +20,8 @@
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_JS_COMMON</OBJID>
-     <NAME>filesize</NAME>
-     <VALUE>6500</VALUE>
-    </WWWPARAMS>
-    <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_JS_COMMON</OBJID>
      <NAME>mimetype</NAME>
      <VALUE>text/javascript</VALUE>
-    </WWWPARAMS>
-    <WWWPARAMS>
-     <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_JS_COMMON</OBJID>
-     <NAME>version</NAME>
-     <VALUE/>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>
