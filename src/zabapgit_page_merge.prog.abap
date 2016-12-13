@@ -283,7 +283,7 @@ CLASS lcl_merge IMPLEMENTATION.
       <ls_ancestor>-commit = lv_commit.
       <ls_ancestor>-tree = ls_commit-tree.
       <ls_ancestor>-body = ls_commit-body.
-      FIND REGEX '^[\w\s]+ <.*> (\d{10}) .\d{4}$' IN ls_commit-author
+      FIND REGEX gc_author_regex IN ls_commit-author
         SUBMATCHES <ls_ancestor>-time ##NO_TEXT.
       ASSERT sy-subrc = 0.
     ENDLOOP.
