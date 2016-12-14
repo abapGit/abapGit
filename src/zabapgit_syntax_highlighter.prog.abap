@@ -1,9 +1,6 @@
 *&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_SYNTAX_HIGHLIGHTER
 *&---------------------------------------------------------------------*
-*&---------------------------------------------------------------------*
-*&       Class lcl_syntax_highligher
-*&---------------------------------------------------------------------*
 
 CLASS ltcl_syntax_cases DEFINITION DEFERRED.
 CLASS ltcl_syntax_basic_logic DEFINITION DEFERRED.
@@ -52,8 +49,8 @@ CLASS lcl_syntax_highlighter DEFINITION ABSTRACT
     DATA mt_rules TYPE STANDARD TABLE OF ty_rule.
 
     METHODS parse_line
-      IMPORTING iv_line           TYPE string
-      RETURNING VALUE(rt_matches) TYPE ty_match_tt.
+      IMPORTING iv_line    TYPE string
+      EXPORTING et_matches TYPE ty_match_tt.
 
     METHODS order_matches ABSTRACT
       IMPORTING iv_line    TYPE string
@@ -78,50 +75,48 @@ ENDCLASS.                       " lcl_syntax_highlighter DEFINITION
 *----------------------------------------------------------------------*
 *       CLASS lcl_syntax_abap DEFINITION
 *----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
 CLASS lcl_syntax_abap DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
 
   PUBLIC SECTION.
 
-   CLASS-METHODS class_constructor.
-   METHODS constructor.
+    CLASS-METHODS class_constructor.
+    METHODS constructor.
 
     CONSTANTS:
       BEGIN OF c_css,
         keyword  TYPE string VALUE 'keyword',                "#EC NOTEXT
         text     TYPE string VALUE 'text',                   "#EC NOTEXT
         comment  TYPE string VALUE 'comment',                "#EC NOTEXT
-      END OF c_css.
+      END OF c_css,
 
-    CONSTANTS:
       BEGIN OF c_token,
         keyword  TYPE c VALUE 'K',                           "#EC NOTEXT
         text     TYPE c VALUE 'T',                           "#EC NOTEXT
         comment  TYPE c VALUE 'C',                           "#EC NOTEXT
-      END OF c_token.
+      END OF c_token,
+
+      BEGIN OF c_regex,
+        comment  TYPE string VALUE '##|"|^\*',
+        text     TYPE string VALUE '`|''|\||\{|\}',
+        keyword  TYPE string VALUE '&&|\b[-_a-z0-9]+\b',
+      END OF c_regex.
 
   PROTECTED SECTION.
 
-    CLASS-DATA:
-      c_keyword_regex TYPE REF TO cl_abap_regex, " Temporary
-      BEGIN OF c_regex,
-        comment  TYPE string,
-        text     TYPE string,
-        keyword  TYPE string,
-      END OF c_regex.
+    CLASS-DATA gt_keywords TYPE HASHED TABLE OF string WITH UNIQUE KEY table_line.
 
-    CLASS-METHODS get_keywords
-      RETURNING VALUE(rv_string) TYPE string.
+    CLASS-METHODS init_keywords.
+    CLASS-METHODS is_keyword
+      IMPORTING iv_chunk      TYPE string
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
     METHODS order_matches REDEFINITION.
+    METHODS parse_line REDEFINITION.
 
 ENDCLASS.                       " lcl_syntax_abap DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_syntax_xml DEFINITION
-*----------------------------------------------------------------------*
-*
 *----------------------------------------------------------------------*
 CLASS lcl_syntax_xml DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
 
@@ -134,23 +129,21 @@ CLASS lcl_syntax_xml DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
         xml_tag  TYPE string VALUE 'xml_tag',                "#EC NOTEXT
         attr     TYPE string VALUE 'attr',                   "#EC NOTEXT
         attr_val TYPE string VALUE 'attr_val',               "#EC NOTEXT
-      END OF c_css.
+      END OF c_css,
 
-    CONSTANTS:
       BEGIN OF c_token,
         xml_tag  TYPE c VALUE 'X',                           "#EC NOTEXT
         attr     TYPE c VALUE 'A',                           "#EC NOTEXT
         attr_val TYPE c VALUE 'V',                           "#EC NOTEXT
-      END OF c_token.
+      END OF c_token,
+
+      BEGIN OF c_regex,
+        xml_tag  TYPE string VALUE '[<>]',                   "#EC NOTEXT
+        attr     TYPE string VALUE '\s[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
+        attr_val TYPE string VALUE '["''][^''"]+[''"]',      "#EC NOTEXT
+      END OF c_regex.
 
   PROTECTED SECTION.
-
-    CLASS-DATA:
-      BEGIN OF c_regex,
-        xml_tag  TYPE string,
-        attr     TYPE string,
-        attr_val TYPE string,
-      END OF c_regex.
 
     METHODS order_matches REDEFINITION.
 
@@ -207,6 +200,8 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
       <result> TYPE match_result,
       <match>  TYPE ty_match.
 
+    CLEAR et_matches.
+
     " Process syntax-dependent regex table and find all matches
     LOOP AT mt_rules ASSIGNING <regex>.
       lo_regex   = <regex>-regex.
@@ -219,7 +214,7 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
         ls_match-token  = <regex>-token.
         ls_match-offset = <result>-offset.
         ls_match-length = <result>-length.
-        APPEND ls_match TO rt_matches.
+        APPEND ls_match TO et_matches.
       ENDLOOP.
     ENDLOOP.
 
@@ -305,7 +300,8 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_matches = me->parse_line( iv_line = iv_line ).
+    me->parse_line( EXPORTING iv_line    = iv_line
+                    IMPORTING et_matches = lt_matches ).
 
     me->order_matches( EXPORTING iv_line    = iv_line
                        CHANGING  ct_matches = lt_matches ).
@@ -330,12 +326,19 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    CREATE OBJECT c_keyword_regex
-      EXPORTING
-        pattern     = '&&|\b(' && get_keywords( ) && ')\b'
-        ignore_case = abap_true.
+    init_keywords( ).
 
   ENDMETHOD.                    " class_constructor
+
+  METHOD is_keyword.
+
+    DATA lv_str TYPE string.
+
+    lv_str = to_upper( iv_chunk ).
+    READ TABLE gt_keywords WITH KEY table_line = lv_str TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.  " is_keyword.
 
   METHOD constructor.
 
@@ -343,26 +346,20 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
 
     super->constructor( ).
 
-    " Declare regular expressions' constants
-    c_regex-comment = '##|"|^\*'.            "#EC NOTEXT
-    c_regex-text    = '`|''|\||\{|\}'.       "#EC NOTEXT
-
     " Initialize instances of regular expression
+    _add_rule keyword.
     _add_rule comment.
     _add_rule text.
 
-    " Temporary
-    ls_rule-regex = c_keyword_regex.
-    ls_rule-token = c_token-keyword.
-    ls_rule-style = c_css-keyword.
-    APPEND ls_rule TO mt_rules.
-
   ENDMETHOD.                    " constructor
 
-  METHOD get_keywords.
+  METHOD init_keywords.
 
-    rv_string =
-      '\?TO|ABAP-SOURCE|ABBREVIATED|ABS|ABSTRACT|ACCEPT|ACCEPTING|ACCESSPOLICY' &&
+    DATA: lv_keywords TYPE string,
+          lt_keywords TYPE STANDARD TABLE OF string.
+
+    lv_keywords =
+      '&&|?TO|ABAP-SOURCE|ABBREVIATED|ABS|ABSTRACT|ACCEPT|ACCEPTING|ACCESSPOLICY' &&
       '|ACCORDING|ACOS|ACTIVATION|ACTUAL|ADD|ADD-CORRESPONDING|ADJACENT|AFTER|ALIAS' &&
       '|ALIASES|ALIGN|ALL|ALLOCATE|ALPHA|ANALYSIS|ANALYZER|AND|ANY|APPEND|APPENDAGE' &&
       '|APPENDING|APPLICATION|ARCHIVE|AREA|ARITHMETIC|AS|ASCENDING|ASIN|ASPECT|ASSERT' &&
@@ -435,17 +432,18 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
       '|REPLACEMENT|REPLACING|REPORT|REQUEST|REQUESTED|RESERVE|RESET|RESOLUTION' &&
       '|RESPECTING|RESPONSIBLE|RESULT|RESULTS|RESUMABLE|RESUME|RETRY|RETURN|RETURNCODE' &&
       '|RETURNING|RIGHT|RIGHT-JUSTIFIED|RIGHTPLUS|RIGHTSPACE|RISK|RMC_COMMUNICATION_FAILURE' &&
-      '|RMC_INVALID_STATUS|RMC_SYSTEM_FAILURE|ROLE|ROLLBACK|ROUND|ROWS|RTTI|RUN|SAP|SAP-SPOOL' &&
-      '|SAVING|SCALE_PRESERVING|SCALE_PRESERVING_SCIENTIFIC|SCAN|SCIENTIFIC|SCIENTIFIC_WITH_LEADING_ZERO' &&
-      '|SCREEN|SCROLL|SCROLL-BOUNDARY|SCROLLING|SEARCH|SECONDARY|SECONDS|SECTION|SELECT|SELECTION' &&
-      '|SELECTIONS|SELECTION-SCREEN|SELECTION-SET|SELECTION-SETS|SELECTION-TABLE|SELECT-OPTIONS' &&
-      '|SELECTOR|SEND|SEPARATE|SEPARATED|SET|SHARED|SHIFT|SHORT|SHORTDUMP-ID|SIGN' &&
-      '|SIGN_AS_POSTFIX|SIMPLE|SIN|SINGLE|SINH|SIZE|SKIP|SKIPPING|SMART|SOME|SORT|SORTABLE' &&
-      '|SORTED|SOURCE|SPACE|SPECIFIED|SPLIT|SPOOL|SPOTS|SQL|SQLSCRIPT|SQRT|STABLE|STAMP' &&
-      '|STANDARD|STARTING|START-OF-SELECTION|STATE|STATEMENT|STATEMENTS|STATIC|STATICS|STATUSINFO' &&
-      '|STEP-LOOP|STOP|STRLEN|STRUCTURE|STRUCTURES|STYLE|SUBKEY|SUBMATCHES|SUBMIT|SUBROUTINE' &&
-      '|SUBSCREEN|SUBSTRING|SUBTRACT|SUBTRACT-CORRESPONDING|SUFFIX|SUM|SUMMARY|SUMMING|SUPPLIED' &&
-      '|SUPPLY|SUPPRESS|SWITCH|SWITCHSTATES|SYMBOL|SYNCPOINTS|SYNTAX|SYNTAX-CHECK|SYNTAX-TRACE' &&
+      '|RMC_INVALID_STATUS|RMC_SYSTEM_FAILURE|ROLE|ROLLBACK|ROUND|ROWS|RTTI|RUN|SAP' &&
+      '|SAP-SPOOL|SAVING|SCALE_PRESERVING|SCALE_PRESERVING_SCIENTIFIC|SCAN|SCIENTIFIC' &&
+      '|SCIENTIFIC_WITH_LEADING_ZERO|SCREEN|SCROLL|SCROLL-BOUNDARY|SCROLLING|SEARCH' &&
+      '|SECONDARY|SECONDS|SECTION|SELECT|SELECTION|SELECTIONS|SELECTION-SCREEN|SELECTION-SET' &&
+      '|SELECTION-SETS|SELECTION-TABLE|SELECT-OPTIONS|SELECTOR|SEND|SEPARATE|SEPARATED|SET' &&
+      '|SHARED|SHIFT|SHORT|SHORTDUMP-ID|SIGN|SIGN_AS_POSTFIX|SIMPLE|SIN|SINGLE|SINH|SIZE' &&
+      '|SKIP|SKIPPING|SMART|SOME|SORT|SORTABLE|SORTED|SOURCE|SPACE|SPECIFIED|SPLIT|SPOOL' &&
+      '|SPOTS|SQL|SQLSCRIPT|SQRT|STABLE|STAMP|STANDARD|STARTING|START-OF-SELECTION|STATE' &&
+      '|STATEMENT|STATEMENTS|STATIC|STATICS|STATUSINFO|STEP-LOOP|STOP|STRLEN|STRUCTURE' &&
+      '|STRUCTURES|STYLE|SUBKEY|SUBMATCHES|SUBMIT|SUBROUTINE|SUBSCREEN|SUBSTRING|SUBTRACT' &&
+      '|SUBTRACT-CORRESPONDING|SUFFIX|SUM|SUMMARY|SUMMING|SUPPLIED|SUPPLY|SUPPRESS|SWITCH' &&
+      '|SWITCHSTATES|SYMBOL|SYNCPOINTS|SYNTAX|SYNTAX-CHECK|SYNTAX-TRACE' &&
       '|SYSTEM-CALL|SYSTEM-EXCEPTIONS|SYSTEM-EXIT|TAB|TABBED|TABLE|TABLES|TABLEVIEW|TABSTRIP' &&
       '|TAN|TANH|TARGET|TASK|TASKS|TEST|TESTING|TEXT|TEXTPOOL|THEN|THROW|TIME|TIMES|TIMESTAMP' &&
       '|TIMEZONE|TITLE|TITLEBAR|TITLE-LINES|TO|TOKENIZATION|TOKENS|TOP-LINES|TOP-OF-PAGE' &&
@@ -457,7 +455,31 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
       '|WHERE|WHILE|WIDTH|WINDOW|WINDOWS|WITH|WITH-HEADING|WITHOUT|WITH-TITLE|WORD|WORK' &&
       '|WRITE|WRITER|X|XML|XOR|XSD|XSTRLEN|YELLOW|YES|YYMMDD|Z|ZERO|ZONE'.
 
-  ENDMETHOD.                    " get_keywords.
+    SPLIT lv_keywords AT '|' INTO TABLE lt_keywords.
+    gt_keywords = lt_keywords. " Hash table
+
+  ENDMETHOD.                    " init_keywords
+
+  METHOD parse_line. "REDEFINITION
+
+    DATA lv_index TYPE i.
+
+    FIELD-SYMBOLS <match> LIKE LINE OF et_matches.
+
+    super->parse_line( EXPORTING iv_line    = iv_line
+                       IMPORTING et_matches = et_matches ).
+
+    " Remove non-keywords
+    LOOP AT et_matches ASSIGNING <match> WHERE token = c_token-keyword.
+      lv_index = sy-tabix.
+      IF abap_false = is_keyword( substring( val = iv_line
+                                             off = <match>-offset
+                                             len = <match>-length ) ).
+        DELETE et_matches INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.  " parse_line.
 
   METHOD order_matches.
 
@@ -499,21 +521,23 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
           CONTINUE.
 
         WHEN c_token-text.
-          <match>-text_tag = substring( val = iv_line off = <match>-offset len = <match>-length ).
+          <match>-text_tag = substring( val = iv_line
+                                        off = <match>-offset
+                                        len = <match>-length ).
           IF lv_prev_token = c_token-text.
             IF <match>-text_tag = <prev>-text_tag.
               <prev>-length = <match>-offset + <match>-length - <prev>-offset.
               CLEAR lv_prev_token.
             ELSEIF <prev>-text_tag = '}' AND <match>-text_tag = '{'.
-              <prev>-length = <match>-offset - <prev>-offset - 1.   " Shifted } out of highlight
-              <prev>-offset = <prev>-offset + 1.                    " Shifted { out of highlight
+              <prev>-length = <match>-offset - <prev>-offset - 1.  " Shift } out of scope
+              <prev>-offset = <prev>-offset + 1.                   " Shift { out of scope
               CLEAR lv_prev_token.
             ELSEIF <match>-text_tag = '{'.
               <prev>-length = <match>-offset - <prev>-offset.
               CLEAR lv_prev_token.
             ELSEIF <prev>-text_tag = '}'.
               <prev>-length = <match>-offset - <prev>-offset.
-              <prev>-offset = <prev>-offset + 1.                    " Shifted } out of highlight
+              <prev>-offset = <prev>-offset + 1.                   " Shift } out of scope
               CLEAR lv_prev_token.
             ENDIF.
             DELETE ct_matches INDEX lv_index.
@@ -543,10 +567,6 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
 
     super->constructor( ).
 
-    c_regex-xml_tag  = '[<>]'.                   "#EC NOTEXT
-    c_regex-attr     = '\s[-a-z:_0-9]+\s*(?==)'. "#EC NOTEXT
-    c_regex-attr_val = '["''][^''"]+[''"]'.      "#EC NOTEXT
-
     " Initialize instances of regular expressions
     _add_rule xml_tag.
     _add_rule attr.
@@ -575,13 +595,19 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
 
       CASE <match>-token.
         WHEN c_token-xml_tag.
-          <match>-text_tag = substring( val = iv_line off = <match>-offset len = <match>-length ).
-          IF <match>-text_tag = '>' AND lv_prev_token = c_token-xml_tag. " No other matches between two tags
+          <match>-text_tag = substring( val = iv_line
+                                        off = <match>-offset
+                                        len = <match>-length ).
+
+          " No other matches between two tags
+          IF <match>-text_tag = '>' AND lv_prev_token = c_token-xml_tag.
             lv_state = 'C'.
             <prev>-length = <match>-offset - <prev>-offset + <match>-length.
             DELETE ct_matches INDEX lv_index.
             CONTINUE.
-          ELSEIF <match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag. " Adjust length and offset of closing tag
+
+          " Adjust length and offset of closing tag
+          ELSEIF <match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
             lv_state = 'C'.
             <match>-length = <match>-offset - <prev>-offset - <prev>-length + <match>-length.
             <match>-offset = <prev>-offset + <prev>-length.
@@ -677,7 +703,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
 
     lo             = lcl_syntax_highlighter=>create( iv_filename ).
-    lt_matches_act = lo->parse_line( iv_line = iv_line ).
+    lo->parse_line( EXPORTING iv_line    = iv_line
+                    IMPORTING et_matches = lt_matches_act ).
 
     SORT lt_matches_act BY offset.
 
@@ -1181,9 +1208,10 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     lv_line_act = mo->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
                                    iv_class = lcl_syntax_abap=>c_css-keyword ).
 
-    cl_abap_unit_assert=>assert_equals( act = lv_line_act
-                                        exp = '<span class="keyword">CALL FUNCTION</span>' "#EC NOTEXT
-                                        msg = 'Failure during applying of style.' ). "#EC NOTEXT
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_line_act
+      exp = '<span class="keyword">CALL FUNCTION</span>' "#EC NOTEXT
+      msg = 'Failure during applying of style.' ). "#EC NOTEXT
 
   ENDMETHOD.                    " apply_style
 
@@ -1194,16 +1222,18 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     " Call the method with empty parameter and compare results
     lv_line_act = mo->process_line( iv_line  = '' ).
 
-    cl_abap_unit_assert=>assert_equals( act = lv_line_act
-                                        exp = ''
-                                        msg = 'Failure in method process_line.' ). "#EC NOTEXT
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_line_act
+      exp = ''
+      msg = 'Failure in method process_line.' ). "#EC NOTEXT
 
     " Call the method with non-empty line and compare results
     lv_line_act = mo->process_line( iv_line  = '* CALL FUNCTION' ). "#EC NOTEXT
 
-    cl_abap_unit_assert=>assert_equals( act = lv_line_act
-                                        exp = '<span class="comment">* CALL FUNCTION</span>' "#EC NOTEXT
-                                        msg = 'Failure in method process_line.' ). "#EC NOTEXT
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_line_act
+      exp = '<span class="comment">* CALL FUNCTION</span>' "#EC NOTEXT
+      msg = 'Failure in method process_line.' ). "#EC NOTEXT
 
   ENDMETHOD.                    " process_line
 
