@@ -25,6 +25,10 @@ CLASS lcl_objects_activation DEFINITION FINAL.
     CLASS-METHODS clear.
 
   PRIVATE SECTION.
+    CLASS-METHODS fix_class_methods
+      IMPORTING iv_obj_name TYPE trobj_name
+      CHANGING  ct_objects  TYPE dwinactiv_tab.
+
     CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
                 gt_programs TYPE TABLE OF dwinactiv.
 
@@ -87,6 +91,40 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   ENDMETHOD.                    "activate
 
+  METHOD fix_class_methods.
+* function module RS_WORKING_OBJECTS_ACTIVATE assumes that
+* METH lines contains spaces between class and method name
+* however, classes named with 30 characters
+* eg. ZCL_CLAS_TESTTESTTESTTESTTESTT
+* this will not be true, so find all the method includes instead
+
+    DATA: lt_methods TYPE seop_methods_w_include,
+          lv_class   TYPE seoclsname.
+
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods,
+                   <ls_object> LIKE LINE OF ct_objects.
+
+
+    lv_class = iv_obj_name.
+
+    cl_oo_classname_service=>get_all_method_includes(
+      EXPORTING
+        clsname            = lv_class
+      RECEIVING
+        result             = lt_methods
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2 ).
+    ASSERT sy-subrc = 0.
+    DELETE ct_objects WHERE object = 'METH'.
+    LOOP AT lt_methods ASSIGNING <ls_method>.
+      APPEND INITIAL LINE TO ct_objects ASSIGNING <ls_object>.
+      <ls_object>-object = 'METH'.
+      <ls_object>-obj_name = <ls_method>-incname.
+    ENDLOOP.
+
+  ENDMETHOD.
+
   METHOD add.
 
 * function group SEWORKINGAREA
@@ -115,6 +153,11 @@ CLASS lcl_objects_activation IMPLEMENTATION.
             OTHERS           = 2.
         IF sy-subrc <> 0.
           lcx_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
+        ENDIF.
+
+        IF iv_type = 'CLAS'.
+          fix_class_methods( EXPORTING iv_obj_name = lv_obj_name
+                             CHANGING ct_objects = lt_objects ).
         ENDIF.
 
         APPEND LINES OF lt_objects TO gt_programs.
@@ -187,22 +230,65 @@ CLASS lcl_objects_files DEFINITION FINAL.
         RAISING   lcx_exception,
       add
         IMPORTING is_file TYPE ty_file,
+      add_raw
+        IMPORTING iv_extra TYPE clike OPTIONAL
+                  iv_ext   TYPE string
+                  iv_data  TYPE xstring
+        RAISING   lcx_exception,
+      read_raw
+        IMPORTING iv_extra       TYPE clike OPTIONAL
+                  iv_ext         TYPE string
+        RETURNING VALUE(rv_data) TYPE xstring
+        RAISING   lcx_exception,
       get_files
         RETURNING VALUE(rt_files) TYPE ty_files_tt,
       set_files
-        IMPORTING it_files TYPE ty_files_tt.
+        IMPORTING it_files TYPE ty_files_tt,
+      get_accessed_files
+        RETURNING VALUE(rt_files) TYPE ty_file_signatures_tt.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ty_item,
-          mt_files TYPE ty_files_tt.
+    DATA: ms_item           TYPE ty_item,
+          mt_accessed_files TYPE ty_file_signatures_tt,
+          mt_files          TYPE ty_files_tt.
 
     METHODS:
+      read_file
+        IMPORTING iv_filename TYPE string
+                  iv_error    TYPE abap_bool DEFAULT abap_true
+        EXPORTING ev_data     TYPE xstring
+        RAISING   lcx_exception,
       filename
         IMPORTING iv_extra           TYPE clike OPTIONAL
                   iv_ext             TYPE string
         RETURNING VALUE(rv_filename) TYPE string.
 
 ENDCLASS.                    "lcl_objects_files DEFINITION
+
+INTERFACE lif_object_comparison_result.
+  METHODS:
+    show_confirmation_dialog,
+    is_result_complete_halt
+      RETURNING VALUE(rv_response) TYPE abap_bool.
+
+ENDINTERFACE.
+
+"Null Object Pattern
+CLASS lcl_null_comparison_result DEFINITION FINAL.
+  PUBLIC SECTION.
+    INTERFACES lif_object_comparison_result.
+ENDCLASS.
+CLASS lcl_null_comparison_result IMPLEMENTATION.
+
+  METHOD lif_object_comparison_result~is_result_complete_halt.
+    rv_response = abap_false.
+  ENDMETHOD.
+
+  METHOD lif_object_comparison_result~show_confirmation_dialog.
+    RETURN.
+  ENDMETHOD.
+
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       INTERFACE lif_object DEFINITION
@@ -230,7 +316,16 @@ INTERFACE lif_object.
     jump
       RAISING lcx_exception,
     get_metadata
-      RETURNING VALUE(rs_metadata) TYPE ty_metadata.
+      RETURNING VALUE(rs_metadata) TYPE ty_metadata,
+    has_changed_since
+      IMPORTING iv_timestamp      TYPE timestamp
+      RETURNING VALUE(rv_changed) TYPE abap_bool
+      RAISING   lcx_exception.
+  METHODS:
+    compare_to_remote_version
+      IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
+      RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_object_comparison_result
+      RAISING   lcx_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -259,47 +354,44 @@ CLASS lcl_objects_files IMPLEMENTATION.
     mt_files = it_files.
   ENDMETHOD.                    "set_files
 
+  METHOD get_accessed_files.
+    rt_files = mt_accessed_files.
+  ENDMETHOD.  " get_accessed_files.
+
   METHOD read_string.
 
-    DATA: lv_filename TYPE string.
-
-    FIELD-SYMBOLS: <ls_html> LIKE LINE OF mt_files.
-
+    DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring.
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = iv_ext ).            "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_html> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'html not found' ).
-    ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = lv_data ).
 
-    rv_string = lcl_convert=>xstring_to_string_utf8( <ls_html>-data ).
+    rv_string = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
   ENDMETHOD.                    "read_string
 
   METHOD read_abap.
 
     DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring,
           lv_abap     TYPE string.
 
-    FIELD-SYMBOLS: <ls_abap> LIKE LINE OF mt_files.
-
-
-    CLEAR rt_abap.
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'abap' ).            "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_abap> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      IF iv_error = abap_true.
-        lcx_exception=>raise( 'abap not found' ).
-      ELSE.
-        RETURN.
-      ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+                         iv_error    = iv_error
+               IMPORTING ev_data     = lv_data ).
+
+    IF lv_data IS INITIAL. " Post-handling of iv_error = false
+      RETURN.
     ENDIF.
-    lv_abap = lcl_convert=>xstring_to_string_utf8( <ls_abap>-data ).
+
+    lv_abap = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
     SPLIT lv_abap AT gc_newline INTO TABLE rt_abap.
 
@@ -363,20 +455,16 @@ CLASS lcl_objects_files IMPLEMENTATION.
   METHOD read_xml.
 
     DATA: lv_filename TYPE string,
+          lv_data     TYPE xstring,
           lv_xml      TYPE string.
-
-    FIELD-SYMBOLS: <ls_xml> LIKE LINE OF mt_files.
-
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'xml' ).             "#EC NOTEXT
 
-    READ TABLE mt_files ASSIGNING <ls_xml> WITH KEY filename = lv_filename.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'xml not found' ).
-    ENDIF.
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = lv_data ).
 
-    lv_xml = lcl_convert=>xstring_to_string_utf8( <ls_xml>-data ).
+    lv_xml = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
     CREATE OBJECT ro_xml
       EXPORTING
@@ -425,6 +513,59 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   ENDMETHOD.                    "add_xml_from_plugin
 
+  METHOD read_file.
+
+    FIELD-SYMBOLS: <ls_file>     LIKE LINE OF mt_files,
+                   <ls_accessed> LIKE LINE OF mt_accessed_files.
+
+    CLEAR ev_data.
+    READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
+
+    IF sy-subrc <> 0.
+      IF iv_error = abap_true.
+        lcx_exception=>raise( |File not found: { iv_filename }| ).
+      ELSE.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    " Update access table
+    READ TABLE mt_accessed_files TRANSPORTING NO FIELDS
+      WITH KEY path = <ls_file>-path filename = <ls_file>-filename.
+    IF sy-subrc > 0. " Not found ? -> Add
+      APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
+      MOVE-CORRESPONDING <ls_file> TO <ls_accessed>.
+    ENDIF.
+
+    ev_data = <ls_file>-data.
+
+  ENDMETHOD.  " read_file.
+
+  METHOD add_raw.
+
+    DATA: ls_file TYPE ty_file.
+
+    ls_file-path     = '/'.
+    ls_file-data     = iv_data.
+    ls_file-filename = filename( iv_extra = iv_extra
+                                 iv_ext   = iv_ext ).
+
+    APPEND ls_file TO mt_files.
+
+  ENDMETHOD.                    "add_raw
+
+  METHOD read_raw.
+
+    DATA: lv_filename TYPE string.
+
+    lv_filename = filename( iv_extra = iv_extra
+                            iv_ext   = iv_ext ).
+
+    read_file( EXPORTING iv_filename = lv_filename
+               IMPORTING ev_data     = rv_data ).
+
+  ENDMETHOD.                    "read_raw
+
 ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -435,15 +576,16 @@ ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 CLASS lcl_objects_super DEFINITION ABSTRACT.
 
   PUBLIC SECTION.
+
     METHODS:
       constructor
         IMPORTING
           is_item     TYPE ty_item
           iv_language TYPE spras.
 
-  PROTECTED SECTION.
-
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
+
+  PROTECTED SECTION.
 
     DATA: ms_item     TYPE ty_item,
           mv_language TYPE spras.
@@ -496,6 +638,10 @@ ENDCLASS.                    "lcl_objects_bridge DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_objects_bridge IMPLEMENTATION.
+
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~get_metadata.
 
@@ -646,6 +792,10 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_objects_bridge IMPLEMENTATION
 
 **********************************************************************
@@ -706,10 +856,11 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
   PROTECTED SECTION.
+
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_tpool.
-        INCLUDE TYPE textpool.
+            INCLUDE TYPE textpool.
     TYPES:   split TYPE c LENGTH 8.
     TYPES: END OF ty_tpool.
 
@@ -758,6 +909,12 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING iv_program_name TYPE programm
                 is_cua          TYPE ty_cua
       RAISING   lcx_exception.
+
+    METHODS check_prog_changed_since
+      IMPORTING iv_program        TYPE programm
+                iv_timestamp      TYPE timestamp
+                iv_skip_gui       TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(rv_changed) TYPE abap_bool.
 
     CLASS-METHODS:
       add_tpool
@@ -880,8 +1037,10 @@ CLASS lcl_objects_program IMPLEMENTATION.
                    ig_data = lt_dynpros ).
 
       ls_cua = serialize_cua( lv_program_name ).
-      lo_xml->add( iv_name = 'CUA'
-                   ig_data = ls_cua ).
+      IF NOT ls_cua IS INITIAL.
+        lo_xml->add( iv_name = 'CUA'
+                     ig_data = ls_cua ).
+      ENDIF.
     ENDIF.
 
     IF lines( lt_tpool ) = 1.
@@ -1032,6 +1191,16 @@ CLASS lcl_objects_program IMPLEMENTATION.
         OTHERS       = 2.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'PROG, error inserting' ).
+    ENDIF.
+
+    SELECT SINGLE * FROM progdir INTO ls_progdir_new
+      WHERE name = ls_progdir_new-name
+      AND state = ls_progdir_new-state.
+    IF sy-subrc = 0 AND is_progdir-varcl = space AND ls_progdir_new-varcl = abap_true.
+* function module UPDATE_PROGDIR does not update VARCL
+      UPDATE progdir SET varcl = is_progdir-varcl
+        WHERE name = ls_progdir_new-name
+        AND state = ls_progdir_new-state.
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'
@@ -1309,6 +1478,57 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_cua
 
+  METHOD check_prog_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp,
+          lt_screens TYPE STANDARD TABLE OF d020s,
+          lt_eudb    TYPE STANDARD TABLE OF eudb.
+
+    FIELD-SYMBOLS: <ls_screen> LIKE LINE OF lt_screens,
+                   <ls_eudb>   LIKE LINE OF lt_eudb.
+
+    SELECT SINGLE udat utime FROM reposrc " Program
+      INTO (lv_date, lv_time)
+      WHERE progname = iv_program
+      AND   r3state = 'A'.
+
+    _object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE udat utime FROM repotext " Program text pool
+      INTO (lv_date, lv_time)
+      WHERE progname = iv_program
+      AND   r3state = 'A'.
+
+    IF sy-subrc = 0. " Text not found ? Assuming no changes, see #404
+      _object_check_timestamp lv_date lv_time.
+    ENDIF.
+
+    IF iv_skip_gui = abap_true.
+      RETURN.
+    ENDIF.
+
+    SELECT dgen tgen FROM d020s           " Screens
+      INTO CORRESPONDING FIELDS OF TABLE lt_screens
+      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_screens ASSIGNING <ls_screen>.
+      _object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
+    ENDLOOP.
+
+    SELECT vdatum vzeit FROM eudb         " GUI
+      INTO CORRESPONDING FIELDS OF TABLE lt_eudb
+      WHERE relid = 'CU'
+      AND   name  = iv_program
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_eudb ASSIGNING <ls_eudb>.
+      _object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.
+    ENDLOOP.
+
+  ENDMETHOD.  "check_prog_changed_since
+
 ENDCLASS.                    "lcl_objects_program IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -1411,6 +1631,12 @@ CLASS lcl_objects DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_late,
+             obj     TYPE REF TO lif_object,
+             xml     TYPE REF TO lcl_xml_input,
+             package TYPE devclass,
+           END OF ty_late.
+
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
                 iv_language     TYPE spras
@@ -1419,7 +1645,8 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS deserialize
-      IMPORTING io_repo TYPE REF TO lcl_repo
+      IMPORTING io_repo                  TYPE REF TO lcl_repo
+      RETURNING VALUE(rt_accessed_files) TYPE ty_file_signatures_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS delete
@@ -1435,8 +1662,15 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rv_user) TYPE xubname
       RAISING   lcx_exception.
 
+    CLASS-METHODS has_changed_since
+      IMPORTING is_item           TYPE ty_item
+                iv_timestamp      TYPE timestamp
+      RETURNING VALUE(rv_changed) TYPE abap_bool
+      RAISING   lcx_exception.
+
     CLASS-METHODS is_supported
       IMPORTING is_item        TYPE ty_item
+                iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
     CLASS-METHODS exists
@@ -1446,16 +1680,24 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS supported_list
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
+    CLASS-METHODS is_language_installed
+      IMPORTING iv_language   TYPE langu
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
+
   PRIVATE SECTION.
+
+    CLASS-DATA: mv_langs_installed TYPE scplangs.
+
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS create_object
-      IMPORTING is_item       TYPE ty_item
-                iv_language   TYPE spras
-                is_metadata   TYPE ty_metadata OPTIONAL
-      RETURNING VALUE(ri_obj) TYPE REF TO lif_object
+      IMPORTING is_item        TYPE ty_item
+                iv_language    TYPE spras
+                is_metadata    TYPE ty_metadata OPTIONAL
+                iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
       RAISING   lcx_exception.
 
     CLASS-METHODS
@@ -1496,5 +1738,13 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE ty_item
       RAISING   lcx_exception.
+
+    CLASS-METHODS compare_remote_to_local
+      IMPORTING
+        io_object TYPE REF TO lif_object
+        it_remote TYPE ty_files_tt
+        is_result TYPE ty_result
+      RAISING
+        lcx_exception.
 
 ENDCLASS.                    "lcl_object DEFINITION

@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_suso DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_suso IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
@@ -164,5 +168,9 @@ CLASS lcl_object_suso IMPLEMENTATION.
         object = lv_object.
 
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_suso IMPLEMENTATION

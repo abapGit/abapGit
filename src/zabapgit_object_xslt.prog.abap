@@ -28,6 +28,10 @@ ENDCLASS.                    "lcl_object_xslt DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_xslt IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
@@ -121,6 +125,8 @@ CLASS lcl_object_xslt IMPLEMENTATION.
       lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
     ENDIF.
 
+    lo_xslt->activate( ).
+
     lo_xslt->save( ).
 
     lo_xslt->set_changeable( abap_false ).
@@ -181,5 +187,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_xslt IMPLEMENTATION

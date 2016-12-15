@@ -2,7 +2,6 @@
 *&  Include           ZABAPGIT_FORMS
 *&---------------------------------------------------------------------*
 
-
 *&---------------------------------------------------------------------*
 *&      Form  run
 *&---------------------------------------------------------------------*
@@ -22,7 +21,7 @@ FORM run.
   ENDIF.
 
   TRY.
-      lcl_persistence_migrate=>run( ).
+      lcl_migrations=>run( ).
       lcl_app=>run( ).
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.

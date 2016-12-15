@@ -22,12 +22,17 @@ ENDCLASS.                    "lcl_object_susc DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_susc IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -117,5 +122,9 @@ CLASS lcl_object_susc IMPLEMENTATION.
         objclass = lv_objclass.
 
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_susc IMPLEMENTATION

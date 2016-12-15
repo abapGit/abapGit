@@ -68,6 +68,10 @@ ENDCLASS.                    "lcl_object_wdyn DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdyn IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
@@ -518,8 +522,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_component_key  TYPE wdy_md_component_key,
           ls_view_key       TYPE wdy_md_view_key.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
-
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects,
+                   <ls_meta>   LIKE LINE OF rs_component-ctlr_metadata.
 
     CLEAR mt_components.
     CLEAR mt_sources.
@@ -545,6 +549,21 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     SORT rs_component-ctlr_metadata BY
       definition-component_name ASCENDING
       definition-controller_name ASCENDING.
+
+    LOOP AT rs_component-ctlr_metadata ASSIGNING <ls_meta>.
+      SORT <ls_meta>-descriptions.
+      SORT <ls_meta>-controller_usages.
+      SORT <ls_meta>-controller_components.
+      SORT <ls_meta>-controller_component_texts.
+      SORT <ls_meta>-controller_parameters.
+      SORT <ls_meta>-controller_parameter_texts.
+      SORT <ls_meta>-context_nodes.
+      SORT <ls_meta>-context_attributes.
+      SORT <ls_meta>-context_mappings.
+      SORT <ls_meta>-fieldgroups.
+      SORT <ls_meta>-controller_exceptions.
+      SORT <ls_meta>-controller_exception_texts.
+    ENDLOOP.
 
     SORT mt_components BY
       component_name ASCENDING
@@ -642,5 +661,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION

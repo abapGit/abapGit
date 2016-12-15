@@ -193,7 +193,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
       SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
 
 * unix time stamps are in same time zone, so ignore the zone,
-      FIND REGEX '^([\w\s]+) <(.*)> (\d{10}) .\d{4}$' IN ls_raw-author
+      FIND REGEX gc_author_regex IN ls_raw-author
         SUBMATCHES
         ls_commit-author
         ls_commit-email

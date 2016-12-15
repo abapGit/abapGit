@@ -268,11 +268,11 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
   METHOD is_ignored.
 
-    IF   iv_branch_name EQ 'refs/heads/gh-pages'. " Github pages
+    IF iv_branch_name = 'refs/heads/gh-pages'. " Github pages
       rv_ignore = abap_true.
     ENDIF.
 
-    IF   iv_branch_name CP 'refs/pull/*'
+    IF iv_branch_name CP 'refs/pull/*'
       OR iv_branch_name CP 'refs/merge-requests/*'
       OR iv_branch_name CP 'refs/keep-around/*'
       OR iv_branch_name CP 'refs/tmp/*'.
@@ -302,7 +302,6 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
     IF iv_branch_name CP 'refs/tags/*'.
       rv_type = c_type-tag.
-      RETURN.
     ENDIF.
 
   ENDMETHOD.  "get_type

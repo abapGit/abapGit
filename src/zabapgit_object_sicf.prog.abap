@@ -62,6 +62,10 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     DATA: ls_icfservice TYPE icfservice.
@@ -413,5 +417,9 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   METHOD lif_object~jump.
     lcx_exception=>raise( 'todo, SICF, jump' ).
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_sicf IMPLEMENTATION

@@ -7,6 +7,7 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+
 CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
@@ -21,6 +22,43 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
+
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date    TYPE dats,
+          lv_time    TYPE tims,
+          lv_ts      TYPE timestamp,
+          lt_indexes TYPE STANDARD TABLE OF dd09l.
+
+    FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
+
+    SELECT SINGLE as4date as4time FROM dd02l " Table
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    _object_check_timestamp lv_date lv_time.
+
+    SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
+      INTO (lv_date, lv_time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000'.
+
+    _object_check_timestamp lv_date lv_time.
+
+    SELECT as4date as4time FROM dd12l " Table tech settings
+      INTO CORRESPONDING FIELDS OF TABLE lt_indexes
+      WHERE sqltab = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
+
+    LOOP AT lt_indexes ASSIGNING <ls_index>.
+      _object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+    ENDLOOP.
+
+  ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~changed_by.
 
@@ -92,9 +130,12 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           lt_dd12v TYPE dd12vtab,
           lt_dd17v TYPE dd17vtab,
           lt_dd35v TYPE TABLE OF dd35v,
+          lv_index LIKE sy-index,
           lt_dd36m TYPE dd36mttyp.
 
     FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
+                   <ls_dd05m> LIKE LINE OF lt_dd05m,
+                   <ls_dd36m> LIKE LINE OF lt_dd36m,
                    <ls_dd03p> LIKE LINE OF lt_dd03p.
 
 
@@ -139,9 +180,15 @@ CLASS lcl_object_tabl IMPLEMENTATION.
              <ls_dd12v>-as4time.
     ENDLOOP.
 
+* remove nested structures
+    DELETE lt_dd03p WHERE depth <> '00'.
+* remove fields from .INCLUDEs
+    DELETE lt_dd03p WHERE adminfield <> '0'.
+
     LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
       CLEAR: <ls_dd03p>-ddlanguage,
         <ls_dd03p>-dtelmaster,
+        <ls_dd03p>-logflag,
         <ls_dd03p>-ddtext,
         <ls_dd03p>-reptext,
         <ls_dd03p>-scrtext_s,
@@ -162,6 +209,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           <ls_dd03p>-datatype,
           <ls_dd03p>-leng,
           <ls_dd03p>-outputlen,
+          <ls_dd03p>-deffdname,
+          <ls_dd03p>-convexit,
           <ls_dd03p>-entitytab,
           <ls_dd03p>-dommaster,
           <ls_dd03p>-domname3l.
@@ -179,10 +228,32 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+* remove foreign keys inherited from .INCLUDEs
+    DELETE lt_dd08v WHERE noinherit = 'N'.
+    LOOP AT lt_dd05m ASSIGNING <ls_dd05m>.
+      lv_index = sy-tabix.
+      READ TABLE lt_dd08v WITH KEY fieldname = <ls_dd05m>-fieldname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE lt_dd05m INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+* remove inherited search helps
+    DELETE lt_dd35v WHERE shlpinher = abap_true.
+    LOOP AT lt_dd36m ASSIGNING <ls_dd36m>.
+      lv_index = sy-tabix.
+      READ TABLE lt_dd35v WITH KEY fieldname = <ls_dd36m>-fieldname TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        DELETE lt_dd36m INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
     io_xml->add( iv_name = 'DD02V'
                  ig_data = ls_dd02v ).
-    io_xml->add( iv_name = 'DD09L'
-                 ig_data = ls_dd09l ).
+    IF NOT ls_dd09l IS INITIAL.
+      io_xml->add( iv_name = 'DD09L'
+                   ig_data = ls_dd09l ).
+    ENDIF.
     io_xml->add( ig_data = lt_dd03p
                  iv_name = 'DD03P_TABLE' ).
     io_xml->add( ig_data = lt_dd05m
@@ -308,5 +379,33 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~compare_to_remote_version.
+    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_validation,
+          lo_local_version_output TYPE REF TO lcl_xml_output,
+          lo_local_version_input  TYPE REF TO lcl_xml_input,
+          lv_validation_text      TYPE string.
+
+    CREATE OBJECT lo_local_version_output.
+    me->lif_object~serialize( lo_local_version_output ).
+
+    CREATE OBJECT lo_local_version_input
+      EXPORTING
+        iv_xml = lo_local_version_output->render( ).
+
+    CREATE OBJECT lo_table_validation.
+
+    lv_validation_text = lo_table_validation->validate(
+      io_remote_version = io_remote_version_xml
+      io_local_version  = lo_local_version_input ).
+    IF lv_validation_text IS NOT INITIAL.
+      lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
+      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
+        EXPORTING
+          iv_message = lv_validation_text.
+    ELSE.
+      CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    ENDIF.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_TABL IMPLEMENTATION

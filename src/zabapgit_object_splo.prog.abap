@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_splo DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_splo IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE chgname1 FROM tsp1d INTO rv_user
@@ -34,6 +38,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~serialize.
@@ -105,14 +110,6 @@ CLASS lcl_object_splo IMPLEMENTATION.
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
 
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_delete_tadir_entry = abap_true
-        wi_tadir_pgmid        = 'R3TR'
-        wi_tadir_object       = ms_item-obj_type
-        wi_tadir_obj_name     = ms_item-obj_name
-        wi_test_modus         = abap_false.
-
   ENDMETHOD.                    "lif_object~delete
 
   METHOD lif_object~exists.
@@ -129,5 +126,9 @@ CLASS lcl_object_splo IMPLEMENTATION.
   METHOD lif_object~jump.
     lcx_exception=>raise( 'todo, jump, SPLO' ).
   ENDMETHOD.                    "lif_object~jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_splo IMPLEMENTATION

@@ -34,12 +34,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       RETURNING VALUE(ro_branch_list) TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
-    CLASS-METHODS class_constructor.
-
-
   PRIVATE SECTION.
-    CLASS-DATA: gv_agent TYPE string.
-
     CONSTANTS: BEGIN OF c_service,
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
                  upload  TYPE string VALUE 'upload',        "#EC NOTEXT
@@ -48,7 +43,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
-      EXPORTING ei_client      TYPE REF TO if_http_client
+      EXPORTING eo_client      TYPE REF TO lcl_http_client
                 eo_branch_list TYPE REF TO lcl_git_branch_list
       RAISING   lcx_exception.
 
@@ -56,37 +51,13 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
                 iv_branch_name TYPE string
-      EXPORTING ei_client      TYPE REF TO if_http_client
+      EXPORTING eo_client      TYPE REF TO lcl_http_client
                 ev_branch      TYPE ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
       EXPORTING ev_pack TYPE xstring
       CHANGING  cv_data TYPE xstring
-      RAISING   lcx_exception.
-
-    CLASS-METHODS set_headers
-      IMPORTING iv_url     TYPE string
-                iv_service TYPE string
-                ii_client  TYPE REF TO if_http_client
-      RAISING   lcx_exception.
-
-    CLASS-METHODS check_http_200
-      IMPORTING ii_client TYPE REF TO if_http_client
-      RAISING   lcx_exception.
-
-    CLASS-METHODS send_receive
-      IMPORTING ii_client      TYPE REF TO if_http_client
-      RAISING   lcx_exception.
-
-    CLASS-METHODS check_auth_requested
-      IMPORTING ii_client TYPE REF TO if_http_client
-      RETURNING VALUE(rv_auth_requested) TYPE abap_bool
-      RAISING   lcx_exception.
-
-    CLASS-METHODS acquire_login_details
-      IMPORTING ii_client TYPE REF TO if_http_client
-                iv_url    TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
@@ -189,114 +160,6 @@ ENDCLASS.                    "lcl_pack DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_git_transport IMPLEMENTATION.
 
-  METHOD class_constructor.
-
-* bitbucket require agent prefix = "git/"
-    gv_agent = 'git/abapGit-' && gc_abap_version.
-
-  ENDMETHOD.                    "class_constructor
-
-  METHOD set_headers.
-
-    DATA: lv_value TYPE string.
-
-
-    ii_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'POST' ).
-
-    lv_value = lcl_url=>path_name( iv_url ) &&
-      '.git/git-' &&
-      iv_service &&
-      '-pack'.
-    ii_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_value ).
-
-    lv_value = 'application/x-git-'
-                  && iv_service && '-pack-request'.         "#EC NOTEXT
-    ii_client->request->set_header_field(
-        name  = 'Content-Type'
-        value = lv_value ).                                 "#EC NOTEXT
-
-    lv_value = 'application/x-git-'
-                  && iv_service && '-pack-result'.          "#EC NOTEXT
-    ii_client->request->set_header_field(
-        name  = 'Accept'
-        value = lv_value ).                                 "#EC NOTEXT
-
-  ENDMETHOD.                    "set_headers
-
-  METHOD check_http_200.
-
-    DATA: lv_code TYPE i.
-
-
-    ii_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-    CASE lv_code.
-      WHEN 200.
-        RETURN.
-      WHEN 302.
-        lcx_exception=>raise( 'HTTP redirect, check URL' ).
-      WHEN 401.
-        lcx_exception=>raise( 'HTTP 401, unauthorized' ).
-      WHEN 403.
-        lcx_exception=>raise( 'HTTP 403, forbidden' ).
-      WHEN 404.
-        lcx_exception=>raise( 'HTTP 404, not found' ).
-      WHEN 415.
-        lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
-      WHEN OTHERS.
-        lcx_exception=>raise( 'HTTP error code' ).
-    ENDCASE.
-
-  ENDMETHOD.                                                "http_200
-
-  METHOD check_auth_requested.
-
-    DATA: lv_code TYPE i.
-
-    ii_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
-    IF lv_code = 401.
-      rv_auth_requested = abap_true.
-    ENDIF.
-
-  ENDMETHOD.  "check_auth_requested
-
-  METHOD acquire_login_details.
-    DATA:
-          lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string.
-
-    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url = iv_url ).
-    lv_user         = lv_default_user.
-
-    lcl_password_dialog=>popup(
-      EXPORTING
-        iv_repo_url = iv_url
-      CHANGING
-        cv_user     = lv_user
-        cv_pass     = lv_pass ).
-
-    IF lv_user IS INITIAL.
-      lcx_exception=>raise( 'HTTP 401, unauthorized' ).
-    ENDIF.
-
-    IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_username( iv_url = iv_url iv_username = lv_user ).
-    ENDIF.
-
-    ii_client->authenticate(
-      username = lv_user
-      password = lv_pass ).
-
-  ENDMETHOD.  "acquire_login_details
-
   METHOD find_branch.
 
     DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
@@ -306,7 +169,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_url          = iv_url
         iv_service      = iv_service
       IMPORTING
-        ei_client       = ei_client
+        eo_client       = eo_client
         eo_branch_list  = lo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
@@ -317,7 +180,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD branches.
 
-    DATA: li_client TYPE REF TO if_http_client.
+    DATA: lo_client TYPE REF TO lcl_http_client.
 
 
     lcl_git_transport=>branch_list(
@@ -325,98 +188,33 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_url         = iv_url
         iv_service     = c_service-upload
       IMPORTING
-        ei_client      = li_client
+        eo_client      = lo_client
         eo_branch_list = ro_branch_list ).
-    li_client->close( ).
+
+    lo_client->close( ).
 
   ENDMETHOD.                    "branches
 
   METHOD branch_list.
 
-    DATA: lv_data                  TYPE string,
-          lv_uri                   TYPE string,
-          lv_expect_potentual_auth TYPE abap_bool.
+    DATA: lv_data TYPE string.
 
 
-    cl_http_client=>create_by_url(
+    eo_client = lcl_http=>create_by_url(
+      iv_url     = iv_url
+      iv_service = iv_service ).
+
+    lv_data = eo_client->get_cdata( ).
+
+    CREATE OBJECT eo_branch_list
       EXPORTING
-        url    = lcl_url=>host( iv_url )
-        ssl_id = 'ANONYM'
-      IMPORTING
-        client = ei_client ).
-
-    ei_client->request->set_cdata( '' ).
-    ei_client->request->set_header_field(
-        name  = '~request_method'
-        value = 'GET' ).
-    ei_client->request->set_header_field(
-        name  = 'user-agent'
-        value = gv_agent ).                                 "#EC NOTEXT
-    lv_uri = lcl_url=>path_name( iv_url ) &&
-             '.git/info/refs?service=git-' &&
-             iv_service &&
-             '-pack'.
-    ei_client->request->set_header_field(
-        name  = '~request_uri'
-        value = lv_uri ).
-
-    " Disable internal auth dialog (due to its unclarity)
-    ei_client->propertytype_logon_popup = if_http_client=>co_disabled.
-
-    lv_expect_potentual_auth = boolc(
-      lcl_login_manager=>load( iv_uri    = iv_url
-                               ii_client = ei_client ) IS INITIAL ).
-
-    send_receive( ei_client ).
-    IF lv_expect_potentual_auth = abap_true
-       AND check_auth_requested( ei_client ) = abap_true.
-      acquire_login_details( ii_client = ei_client iv_url = iv_url ).
-      send_receive( ei_client ).
-    ENDIF.
-    check_http_200( ei_client ).
-
-    lcl_login_manager=>save( iv_uri    = iv_url
-                             ii_client = ei_client ).
-
-    lv_data = ei_client->response->get_cdata( ).
-    create object eo_branch_list exporting iv_data = lv_data.
+        iv_data = lv_data.
 
   ENDMETHOD.                    "branch_list
 
-  METHOD send_receive.
-
-    DATA lv_text TYPE string.
-
-    ii_client->send( ).
-    ii_client->receive(
-      EXCEPTIONS
-        http_communication_failure = 1
-        http_invalid_state         = 2
-        http_processing_failed     = 3
-        OTHERS                     = 4 ).
-    IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-        " make sure:
-        " a) SSL is setup properly in STRUST
-        " b) no firewalls
-        " check trace file in transaction SMICM
-          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-        WHEN 2.
-          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-        WHEN 3.
-          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-        WHEN OTHERS.
-          lv_text = 'Another error occured'.                "#EC NOTEXT
-      ENDCASE.
-      lcx_exception=>raise( lv_text ).
-    ENDIF.
-
-  ENDMETHOD.  "send_receive
-
   METHOD receive_pack.
 
-    DATA: li_client   TYPE REF TO if_http_client,
+    DATA: lo_client   TYPE REF TO lcl_http_client,
           lv_cmd_pkt  TYPE string,
           lv_line     TYPE string,
           lv_tmp      TYPE xstring,
@@ -432,14 +230,13 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-receive
         iv_branch_name = iv_branch_name
       IMPORTING
-        ei_client      = li_client ).
+        eo_client      = lo_client ).
 
-    set_headers(
+    lo_client->set_headers(
       iv_url     = iv_url
-      iv_service = c_service-receive
-      ii_client  = li_client ).
+      iv_service = c_service-receive ).
 
-    lv_cap_list = 'report-status agent=' && gv_agent ##NO_TEXT.
+    lv_cap_list = 'report-status agent=' && lcl_http=>get_agent( ) ##NO_TEXT.
 
     lv_line = iv_old &&
               ` ` &&
@@ -457,13 +254,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     CONCATENATE lv_tmp iv_pack INTO lv_xstring IN BYTE MODE.
 
-    li_client->request->set_data( lv_xstring ).
-
-    send_receive( li_client ).
-    check_http_200( li_client ).
-
-    lv_xstring = li_client->response->get_data( ).
-    li_client->close( ).
+    lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
@@ -512,7 +303,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: li_client   TYPE REF TO if_http_client,
+    DATA: lo_client   TYPE REF TO lcl_http_client,
           lv_buffer   TYPE string,
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
@@ -531,7 +322,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
         iv_service     = c_service-upload
         iv_branch_name = io_repo->get_branch_name( )
       IMPORTING
-        ei_client      = li_client
+        eo_client      = lo_client
         ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.
@@ -541,13 +332,12 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lt_branches = it_branches.
     ENDIF.
 
-    set_headers( iv_url     = io_repo->get_url( )
-                 iv_service = c_service-upload
-                 ii_client  = li_client ).
+    lo_client->set_headers( iv_url     = io_repo->get_url( )
+                            iv_service = c_service-upload ).
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress agent=' && gv_agent ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack agent=' && lcl_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
       ELSE.
@@ -565,12 +355,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
              && '0000'
              && '0009done' && gc_newline.
 
-* do not use set_cdata as it modifies the Content-Type header field
-    li_client->request->set_data( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
-    send_receive( li_client ).
-    check_http_200( li_client ).
-    lv_xstring = li_client->response->get_data( ).
-    li_client->close( ).
+    lv_xstring = lo_client->send_receive_close( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
     parse( IMPORTING ev_pack = lv_pack
            CHANGING cv_data = lv_xstring ).
@@ -1285,7 +1070,8 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
                 is_comment       TYPE ty_comment
                 io_stage         TYPE REF TO lcl_stage
-      RETURNING VALUE(rv_branch) TYPE ty_sha1
+      EXPORTING ev_branch        TYPE ty_sha1
+                et_updated_files TYPE ty_file_signatures_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS create_branch
@@ -1432,7 +1218,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       iv_data = lv_commit ).
 
     lcl_git_transport=>receive_pack(
-      iv_url = io_repo->get_url( )
+      iv_url         = io_repo->get_url( )
       iv_old         = io_stage->get_branch_sha1( )
       iv_new         = rv_branch
       iv_branch_name = io_stage->get_branch_name( )
@@ -1488,10 +1274,13 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
-    FIELD-SYMBOLS: <ls_stage>  LIKE LINE OF lt_stage,
-                   <ls_branch> LIKE LINE OF lt_branches,
-                   <ls_exp>    LIKE LINE OF lt_expanded.
+    FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,
+                   <ls_updated> LIKE LINE OF et_updated_files,
+                   <ls_branch>  LIKE LINE OF lt_branches,
+                   <ls_exp>     LIKE LINE OF lt_expanded.
 
+
+    CLEAR et_updated_files.
 
     IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
 * objects cached in io_repo can be used, if pushing to the branch configured in repo
@@ -1511,6 +1300,11 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
+
+      " Save file ref to updated files table
+      APPEND INITIAL LINE TO et_updated_files ASSIGNING <ls_updated>.
+      MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
+
       CASE <ls_stage>-method.
         WHEN lcl_stage=>c_method-add.
 
@@ -1531,11 +1325,17 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
+
+          <ls_updated>-sha1 = lv_sha1.   "New sha1
+
         WHEN lcl_stage=>c_method-rm.
           DELETE lt_expanded
             WHERE name = <ls_stage>-file-filename
-            AND path = <ls_stage>-file-path.
+            AND   path = <ls_stage>-file-path.
           ASSERT sy-subrc = 0.
+
+          CLEAR <ls_updated>-sha1.       " Mark as deleted
+
         WHEN OTHERS.
           lcx_exception=>raise( 'stage method not supported, todo' ).
       ENDCASE.
@@ -1543,7 +1343,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lt_trees = build_trees( lt_expanded ).
 
-    rv_branch = receive_pack( is_comment = is_comment
+    ev_branch = receive_pack( is_comment = is_comment
                               io_repo    = io_repo
                               it_trees   = lt_trees
                               it_blobs   = lt_blobs
@@ -1763,6 +1563,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
         ls_file-path     = iv_path.
         ls_file-filename = <ls_node>-name.
         ls_file-data     = <ls_blob>-data.
+        ls_file-sha1     = <ls_blob>-sha1.
         APPEND ls_file TO ct_files.
       ENDIF.
     ENDLOOP.

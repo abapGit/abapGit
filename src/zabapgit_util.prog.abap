@@ -337,6 +337,118 @@ CLASS lcl_hash IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_hash IMPLEMENTATION
 
+CLASS lcl_path DEFINITION FINAL.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS split_file_location
+      IMPORTING iv_fullpath TYPE string
+      EXPORTING ev_path     TYPE string
+                ev_filename TYPE string.
+
+    CLASS-METHODS is_root
+      IMPORTING iv_path       TYPE string
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
+
+    CLASS-METHODS is_subdir
+      IMPORTING iv_path       TYPE string
+                iv_parent     TYPE string
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
+
+    CLASS-METHODS change_dir
+      IMPORTING iv_cur_dir     TYPE string
+                iv_cd          TYPE string
+      RETURNING VALUE(rv_path) TYPE string.
+
+    CLASS-METHODS get_filename_from_syspath
+      IMPORTING iv_path            TYPE string
+      RETURNING VALUE(rv_filename) TYPE string.
+
+ENDCLASS. "lcl_path
+
+CLASS lcl_path IMPLEMENTATION.
+
+  METHOD split_file_location.
+
+    DATA: lv_cnt TYPE i,
+          lv_off TYPE i,
+          lv_len TYPE i.
+
+    FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
+      MATCH COUNT lv_cnt
+      MATCH OFFSET lv_off
+      MATCH LENGTH lv_len.
+
+    IF lv_cnt > 0.
+      ev_path     = iv_fullpath+0(lv_len).
+      ev_filename = iv_fullpath+lv_len.
+    ELSE.
+      CLEAR ev_path.
+      ev_filename = iv_fullpath.
+    ENDIF.
+
+  ENDMETHOD.  "split_file_location
+
+  METHOD is_root.
+    rv_yes = boolc( iv_path = '/' ).
+  ENDMETHOD. "is_root
+
+  METHOD is_subdir.
+
+    DATA lv_len  TYPE i.
+    DATA lv_last TYPE i.
+
+    lv_len  = strlen( iv_parent ).
+    lv_last = lv_len - 1.
+    rv_yes  = boolc( strlen( iv_path ) > lv_len
+                 AND iv_path+0(lv_len) = iv_parent
+                 AND ( iv_parent+lv_last(1) = '/' OR iv_path+lv_len(1) = '/' ) ).
+
+  ENDMETHOD. "is_subdir
+
+  METHOD change_dir.
+
+    DATA lv_last TYPE i.
+    DATA lv_temp TYPE string.
+
+    lv_last = strlen( iv_cur_dir ) - 1.
+
+    IF iv_cd = '' OR iv_cd = '.'. " No change
+      rv_path = iv_cur_dir.
+    ELSEIF iv_cd+0(1) = '/'.      " Absolute path
+      rv_path = iv_cd.
+    ELSEIF iv_cd = '..'.          " CD back
+      IF iv_cur_dir = '/' OR iv_cur_dir = ''. " Back from root = root
+        rv_path = iv_cur_dir.
+      ELSE.
+        lv_temp = reverse( iv_cur_dir ).
+        IF lv_temp+0(1) = '/'.
+          SHIFT lv_temp BY 1 PLACES LEFT.
+        ENDIF.
+        SHIFT lv_temp UP TO '/' LEFT.
+        rv_path = reverse( lv_temp ).
+      ENDIF.
+    ELSEIF iv_cur_dir+lv_last(1) = '/'.  " Append cd to cur_dir separated by /
+      rv_path = iv_cur_dir && iv_cd.
+    ELSE.
+      rv_path = iv_cur_dir && '/' && iv_cd.
+    ENDIF.
+
+    " TODO: improve logic and cases
+
+  ENDMETHOD. "change_dir
+
+  METHOD get_filename_from_syspath.
+
+    " filename | c:\filename | /dir/filename | \\server\filename
+    FIND FIRST OCCURRENCE OF REGEX '^(?:/(?:.+/)*|(?:\w:|\\)\\(?:.+\\)*)?([^\\/]+)$'
+      IN iv_path
+      SUBMATCHES rv_filename.
+
+  ENDMETHOD.  " get_filename_from_syspath.
+
+ENDCLASS. "lcl_path
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_url DEFINITION
 *----------------------------------------------------------------------*
@@ -389,21 +501,17 @@ CLASS lcl_url IMPLEMENTATION.
 
   METHOD path_name.
 
-    DATA: lv_path TYPE string,
-          lv_name TYPE string.
+    DATA: lv_host TYPE string.
 
-    regex( EXPORTING iv_repo = iv_repo
-           IMPORTING ev_path = lv_path
-                     ev_name = lv_name ).
-
-    CONCATENATE lv_path lv_name INTO rv_path_name.
+    FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
+      SUBMATCHES lv_host rv_path_name.
 
   ENDMETHOD.                    "path_name
 
   METHOD regex.
 
-    FIND REGEX '(.*://[^/]*)(.*/)(.*).git' IN iv_repo
-                     SUBMATCHES ev_host ev_path ev_name.
+    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
+      SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Malformed URL' ).
     ENDIF.
@@ -427,11 +535,11 @@ CLASS lcl_diff DEFINITION FINAL.
                END OF c_diff.
 
     TYPES: BEGIN OF ty_diff,
-             local_line  TYPE c LENGTH 6,
-             local       TYPE string,
+             new_line    TYPE c LENGTH 6,
+             new         TYPE string,
              result      TYPE c LENGTH 1,
-             remote_line TYPE c LENGTH 6,
-             remote      TYPE string,
+             old_line    TYPE c LENGTH 6,
+             old         TYPE string,
              short       TYPE abap_bool,
              beacon      TYPE i,
            END OF ty_diff.
@@ -448,8 +556,8 @@ CLASS lcl_diff DEFINITION FINAL.
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
     METHODS constructor
-      IMPORTING iv_local  TYPE xstring
-                iv_remote TYPE xstring.
+      IMPORTING iv_new TYPE xstring
+                iv_old TYPE xstring.
 
     METHODS get
       RETURNING VALUE(rt_diff) TYPE ty_diffs_tt.
@@ -458,23 +566,23 @@ CLASS lcl_diff DEFINITION FINAL.
       RETURNING VALUE(rs_count) TYPE ty_count.
 
   PRIVATE SECTION.
-    DATA mt_diff    TYPE ty_diffs_tt.
-    DATA ms_stats   TYPE ty_count.
+    DATA mt_diff     TYPE ty_diffs_tt.
+    DATA ms_stats    TYPE ty_count.
 
     CLASS-METHODS:
       unpack
-        IMPORTING iv_local  TYPE xstring
-                  iv_remote TYPE xstring
-        EXPORTING et_local  TYPE abaptxt255_tab
-                  et_remote TYPE abaptxt255_tab,
+        IMPORTING iv_new TYPE xstring
+                  iv_old TYPE xstring
+        EXPORTING et_new TYPE abaptxt255_tab
+                  et_old TYPE abaptxt255_tab,
       render
-        IMPORTING it_local       TYPE abaptxt255_tab
-                  it_remote      TYPE abaptxt255_tab
+        IMPORTING it_new         TYPE abaptxt255_tab
+                  it_old         TYPE abaptxt255_tab
                   it_delta       TYPE vxabapt255_tab
         RETURNING VALUE(rt_diff) TYPE ty_diffs_tt,
       compute
-        IMPORTING it_local        TYPE abaptxt255_tab
-                  it_remote       TYPE abaptxt255_tab
+        IMPORTING it_new          TYPE abaptxt255_tab
+                  it_old          TYPE abaptxt255_tab
         RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
 
     METHODS:
@@ -501,15 +609,15 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD unpack.
 
-    DATA: lv_local  TYPE string,
-          lv_remote TYPE string.
+    DATA: lv_new TYPE string,
+          lv_old TYPE string.
 
 
-    lv_local  = lcl_convert=>xstring_to_string_utf8( iv_local ).
-    lv_remote = lcl_convert=>xstring_to_string_utf8( iv_remote ).
+    lv_new = lcl_convert=>xstring_to_string_utf8( iv_new ).
+    lv_old = lcl_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_local  AT gc_newline INTO TABLE et_local.
-    SPLIT lv_remote AT gc_newline INTO TABLE et_remote.
+    SPLIT lv_new AT gc_newline INTO TABLE et_new.
+    SPLIT lv_old AT gc_newline INTO TABLE et_old.
 
   ENDMETHOD.                    "unpack
 
@@ -522,8 +630,8 @@ CLASS lcl_diff IMPLEMENTATION.
 
     CALL FUNCTION 'SVRS_COMPUTE_DELTA_REPS'
       TABLES
-        texttab_old  = it_remote
-        texttab_new  = it_local
+        texttab_old  = it_old
+        texttab_new  = it_new
         trdirtab_old = lt_trdirtab_old
         trdirtab_new = lt_trdirtab_new
         trdir_delta  = lt_trdir_delta
@@ -537,7 +645,7 @@ CLASS lcl_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-    IF lines( mt_diff ) < 500.
+    IF lines( mt_diff ) < 20.
       LOOP AT mt_diff ASSIGNING <ls_diff>.
         <ls_diff>-short = abap_true.
       ENDLOOP.
@@ -546,7 +654,7 @@ CLASS lcl_diff IMPLEMENTATION.
           WHERE NOT result IS INITIAL AND short = abap_false.
         lv_index = sy-tabix.
 
-        DO 20 TIMES. " Backward
+        DO 8 TIMES. " Backward
           READ TABLE mt_diff INDEX ( lv_index - sy-index ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0 OR <ls_diff>-short = abap_true. " tab bound or prev marker
             EXIT.
@@ -554,7 +662,7 @@ CLASS lcl_diff IMPLEMENTATION.
           <ls_diff>-short = abap_true.
         ENDDO.
 
-        DO 20 TIMES. " Forward
+        DO 8 TIMES. " Forward
           READ TABLE mt_diff INDEX ( lv_index + sy-index - 1 ) ASSIGNING <ls_diff>.
           IF sy-subrc <> 0. " tab bound reached
             EXIT.
@@ -570,26 +678,26 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD calculate_line_num_and_stats.
 
-    DATA: lv_local  TYPE i VALUE 1,
-          lv_remote TYPE i VALUE 1.
+    DATA: lv_new TYPE i VALUE 1,
+          lv_old TYPE i VALUE 1.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
-      <ls_diff>-local_line = lv_local.
-      <ls_diff>-remote_line = lv_remote.
+      <ls_diff>-new_line = lv_new.
+      <ls_diff>-old_line = lv_old.
 
       CASE <ls_diff>-result. " Line nums
         WHEN c_diff-delete.
-          lv_remote = lv_remote + 1.
-          CLEAR <ls_diff>-local_line.
+          lv_old = lv_old + 1.
+          CLEAR <ls_diff>-new_line.
         WHEN c_diff-insert.
-          lv_local = lv_local + 1.
-          CLEAR <ls_diff>-remote_line.
+          lv_new = lv_new + 1.
+          CLEAR <ls_diff>-old_line.
         WHEN OTHERS.
-          lv_local = lv_local + 1.
-          lv_remote = lv_remote + 1.
+          lv_new = lv_new + 1.
+          lv_old = lv_old + 1.
       ENDCASE.
 
       CASE <ls_diff>-result. " Stats
@@ -630,9 +738,9 @@ CLASS lcl_diff IMPLEMENTATION.
     LOOP AT mt_diff ASSIGNING <ls_diff>.
       <ls_diff>-beacon = lv_beacon.
       LOOP AT lt_regex_set INTO lo_regex.
-        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-local.
+        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new.
         IF sy-subrc = 0. " Match
-          lv_code_line = <ls_diff>-local.
+          lv_code_line = <ls_diff>-new.
 
           " Get rid of comments
           FIND FIRST OCCURRENCE OF '.' IN lv_code_line MATCH OFFSET lv_offs.
@@ -653,21 +761,21 @@ CLASS lcl_diff IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lt_delta  TYPE vxabapt255_tab,
-          lt_local  TYPE abaptxt255_tab,
-          lt_remote TYPE abaptxt255_tab.
+          lt_new    TYPE abaptxt255_tab,
+          lt_old    TYPE abaptxt255_tab.
 
 
-    unpack( EXPORTING iv_local  = iv_local
-                      iv_remote = iv_remote
-            IMPORTING et_local  = lt_local
-                      et_remote = lt_remote ).
+    unpack( EXPORTING iv_new = iv_new
+                      iv_old = iv_old
+            IMPORTING et_new = lt_new
+                      et_old = lt_old ).
 
-    lt_delta = compute( it_local  = lt_local
-                        it_remote = lt_remote ).
+    lt_delta = compute( it_new = lt_new
+                        it_old = lt_old ).
 
-    mt_diff = render( it_local  = lt_local
-                      it_remote = lt_remote
-                      it_delta  = lt_delta ).
+    mt_diff = render( it_new   = lt_new
+                      it_old   = lt_old
+                      it_delta = lt_delta ).
 
     calculate_line_num_and_stats( ).
     map_beacons( ).
@@ -679,16 +787,16 @@ CLASS lcl_diff IMPLEMENTATION.
 
     DEFINE _append.
       CLEAR ls_diff.
-      ls_diff-local = &1.
+      ls_diff-new    = &1.
       ls_diff-result = &2.
-      ls_diff-remote = &3.
+      ls_diff-old    = &3.
       APPEND ls_diff TO rt_diff.
     END-OF-DEFINITION.
 
-    DATA: lv_rindex TYPE i VALUE 1,
-          lv_lindex TYPE i VALUE 1,
-          ls_local  LIKE LINE OF it_local,
-          ls_remote LIKE LINE OF it_remote,
+    DATA: lv_oindex TYPE i VALUE 1,
+          lv_nindex TYPE i VALUE 1,
+          ls_new    LIKE LINE OF it_new,
+          ls_old    LIKE LINE OF it_old,
           ls_diff   LIKE LINE OF rt_diff,
           lt_delta  LIKE it_delta,
           ls_delta  LIKE LINE OF it_delta.
@@ -697,41 +805,42 @@ CLASS lcl_diff IMPLEMENTATION.
     lt_delta = it_delta.
 
     DO.
-      READ TABLE lt_delta INTO ls_delta WITH KEY number = lv_rindex.
+      READ TABLE lt_delta INTO ls_delta WITH KEY number = lv_oindex.
       IF sy-subrc = 0.
         DELETE lt_delta INDEX sy-tabix.
 
         CASE ls_delta-vrsflag.
           WHEN c_diff-delete.
             _append '' c_diff-delete ls_delta-line.
-            lv_rindex = lv_rindex + 1.
+            lv_oindex = lv_oindex + 1.
           WHEN c_diff-insert.
             _append ls_delta-line c_diff-insert ''.
-            lv_lindex = lv_lindex + 1.
+            lv_nindex = lv_nindex + 1.
           WHEN c_diff-update.
-            CLEAR ls_local.
-            READ TABLE it_local INTO ls_local INDEX lv_lindex.
+            CLEAR ls_new.
+            READ TABLE it_new INTO ls_new INDEX lv_nindex.
             ASSERT sy-subrc = 0.
-            _append ls_local c_diff-update ls_delta-line.
-            lv_lindex = lv_lindex + 1.
-            lv_rindex = lv_rindex + 1.
+            _append ls_new c_diff-update ls_delta-line.
+            lv_nindex = lv_nindex + 1.
+            lv_oindex = lv_oindex + 1.
           WHEN OTHERS.
             ASSERT 0 = 1.
         ENDCASE.
       ELSE.
-        CLEAR ls_local.
-        READ TABLE it_local INTO ls_local INDEX lv_lindex. "#EC CI_SUBRC
-        lv_lindex = lv_lindex + 1.
-        CLEAR ls_remote.
-        READ TABLE it_remote INTO ls_remote INDEX lv_rindex. "#EC CI_SUBRC
-        lv_rindex = lv_rindex + 1.
-        _append ls_local '' ls_remote.
+        CLEAR ls_new.
+        READ TABLE it_new INTO ls_new INDEX lv_nindex. "#EC CI_SUBRC
+        lv_nindex = lv_nindex + 1.
+        CLEAR ls_old.
+        READ TABLE it_old INTO ls_old INDEX lv_oindex. "#EC CI_SUBRC
+        lv_oindex = lv_oindex + 1.
+        _append ls_new '' ls_old.
       ENDIF.
 
-      IF lv_lindex > lines( it_local ) AND lv_rindex > lines( it_remote ).
+      IF lv_nindex > lines( it_new ) AND lv_oindex > lines( it_old ).
         EXIT. " current loop
       ENDIF.
     ENDDO.
+
 
   ENDMETHOD.                " render
 
@@ -865,21 +974,11 @@ CLASS lcl_progress DEFINITION FINAL.
           iv_text           TYPE csequence.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_stack,
-             key     TYPE string,
-             current TYPE i,
-             total   TYPE i,
-             text    TYPE string,
-           END OF ty_stack.
-
-    CLASS-DATA:
-      gt_stack TYPE STANDARD TABLE OF ty_stack WITH DEFAULT KEY.
-
     CLASS-METHODS:
       calc_pct
-        RETURNING VALUE(rv_pct) TYPE i,
-      build_text
-        RETURNING VALUE(rv_text) TYPE string.
+        IMPORTING iv_current    TYPE i
+                  iv_total      TYPE i
+        RETURNING VALUE(rv_pct) TYPE i.
 
 ENDCLASS.
 
@@ -890,52 +989,15 @@ CLASS lcl_progress IMPLEMENTATION.
     DATA: lv_pct  TYPE i,
           lv_text TYPE string.
 
-    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
 
-* assumption:
-* all callers must end with calling this method with iv_current = iv_total
-* to clear the progress of that sub element
-    ASSERT lines( gt_stack ) < 10.
-
-    READ TABLE gt_stack INDEX lines( gt_stack ) ASSIGNING <ls_stack>.
-    IF sy-subrc <> 0 OR <ls_stack>-key <> iv_key.
-      APPEND INITIAL LINE TO gt_stack ASSIGNING <ls_stack>.
-    ENDIF.
-    <ls_stack>-key     = iv_key.
-    <ls_stack>-current = iv_current.
-    <ls_stack>-total   = iv_total.
-    <ls_stack>-text    = iv_text.
-
-    lv_pct = calc_pct( ).
-    lv_text = build_text( ).
+    lv_pct = calc_pct( iv_current = iv_current
+                       iv_total   = iv_total ).
+    CONCATENATE iv_key '-' iv_text INTO lv_text SEPARATED BY space.
 
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
       EXPORTING
         percentage = lv_pct
         text       = lv_text.
-
-    IF iv_current = iv_total.
-      DELETE gt_stack INDEX lines( gt_stack ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD build_text.
-
-    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
-
-
-    LOOP AT gt_stack ASSIGNING <ls_stack>.
-      IF sy-tabix = 1.
-        rv_text = |{ <ls_stack>-key } { <ls_stack>-text }|.
-      ELSE.
-        rv_text = |{ rv_text } - { <ls_stack>-key } { <ls_stack>-text }|.
-
-        IF <ls_stack>-current <> 1 AND <ls_stack>-total <> 1.
-          rv_text = |{ rv_text } ({ <ls_stack>-current }/{ <ls_stack>-total })|.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -943,13 +1005,8 @@ CLASS lcl_progress IMPLEMENTATION.
 
     DATA: lv_f TYPE f.
 
-    FIELD-SYMBOLS: <ls_stack> LIKE LINE OF gt_stack.
 
-
-    READ TABLE gt_stack ASSIGNING <ls_stack> INDEX 1.
-    ASSERT sy-subrc = 0.
-
-    lv_f = ( <ls_stack>-current / <ls_stack>-total ) * 100.
+    lv_f = ( iv_current / iv_total ) * 100.
     rv_pct = lv_f.
 
     IF rv_pct = 100.
@@ -957,5 +1014,100 @@ CLASS lcl_progress IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_log DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS:
+      add
+        IMPORTING
+          iv_msgv1 TYPE csequence
+          iv_msgv2 TYPE csequence OPTIONAL
+          iv_msgv3 TYPE csequence OPTIONAL
+          iv_msgv4 TYPE csequence OPTIONAL
+          iv_rc    TYPE balsort   OPTIONAL,
+      count
+        RETURNING VALUE(rv_count) TYPE i,
+      to_html
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+      clear,
+      has_rc "For unit tests mainly
+        IMPORTING iv_rc         TYPE balsort
+        RETURNING VALUE(rv_yes) TYPE abap_bool,
+      show.
+
+  PRIVATE SECTION.
+    DATA: mt_log TYPE rs_t_msg.
+
+ENDCLASS.
+
+CLASS lcl_log IMPLEMENTATION.
+
+  METHOD to_html.
+
+    DATA: lv_string TYPE string.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    CREATE OBJECT ro_html.
+
+    IF count( ) = 0.
+      RETURN.
+    ENDIF.
+
+    ro_html->add( '<br>' ).
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      CONCATENATE <ls_log>-msgv1
+        <ls_log>-msgv2
+        <ls_log>-msgv3
+        <ls_log>-msgv4 INTO lv_string SEPARATED BY space.
+      ro_html->add( lv_string ).
+      ro_html->add( '<br>' ).
+    ENDLOOP.
+    ro_html->add( '<br>' ).
+
+  ENDMETHOD.
+
+  METHOD add.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
+    <ls_log>-msgty  = 'W'.
+    <ls_log>-msgid  = '00'.
+    <ls_log>-msgno  = '001'.
+    <ls_log>-msgv1  = iv_msgv1.
+    <ls_log>-msgv2  = iv_msgv2.
+    <ls_log>-msgv3  = iv_msgv3.
+    <ls_log>-msgv4  = iv_msgv4.
+    <ls_log>-alsort = iv_rc. " Error code for unit test, not sure about better field
+
+  ENDMETHOD.
+
+  METHOD show.
+    CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
+      EXPORTING
+        i_t_msg           = mt_log
+        i_txt             = 'Warning'
+        i_with_s_on_empty = abap_false
+        i_one_msg_direct  = abap_false
+        i_one_msg_type_s  = abap_false
+        ##no_text.
+  ENDMETHOD.
+
+  METHOD count.
+    rv_count = lines( mt_log ).
+  ENDMETHOD.
+
+  METHOD clear.
+    CLEAR mt_log.
+  ENDMETHOD.  " clear.
+
+  METHOD has_rc.
+    READ TABLE mt_log WITH KEY alsort = iv_rc TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+  ENDMETHOD. "has_rc
 
 ENDCLASS.

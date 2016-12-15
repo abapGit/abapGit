@@ -35,27 +35,6 @@
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <DYNPROS/>
-   <CUA>
-    <ADM>
-     <ACTCODE/>
-     <MENCODE/>
-     <PFKCODE/>
-     <DEFAULTACT/>
-     <DEFAULTPFK/>
-     <MOD_LANGU/>
-    </ADM>
-    <STA/>
-    <FUN/>
-    <MEN/>
-    <MTX/>
-    <ACT/>
-    <BUT/>
-    <PFK/>
-    <SET/>
-    <DOC/>
-    <TIT/>
-    <BIV/>
-   </CUA>
    <TPOOL>
     <item>
      <ID>R</ID>

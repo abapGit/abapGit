@@ -5,11 +5,15 @@
 CLASS lcl_background DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: run
-      RAISING lcx_exception.
+    CLASS-METHODS:
+      run
+        RAISING lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
+      build_comment
+        IMPORTING is_files          TYPE ty_stage_files
+        RETURNING VALUE(rv_comment) TYPE string,
       push
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
                   is_settings TYPE lcl_persistence_background=>ty_background
@@ -54,13 +58,8 @@ CLASS lcl_background IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
 
 
-
     ls_files = lcl_stage_logic=>get( io_repo ).
     ASSERT lines( ls_files-local ) > 0.
-
-    ls_comment-username = is_settings-aname.
-    ls_comment-email    = is_settings-amail.
-    ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
 
     CREATE OBJECT lo_stage
       EXPORTING
@@ -76,16 +75,45 @@ CLASS lcl_background IMPLEMENTATION.
                      iv_data     = <ls_local>-file-data ).
     ENDLOOP.
 
+    ls_comment-username = is_settings-aname.
+    ls_comment-email    = is_settings-amail.
+    ls_comment-comment  = build_comment( ls_files ).
+
     io_repo->push( is_comment = ls_comment
                    io_stage   = lo_stage ).
 
   ENDMETHOD.
 
+  METHOD build_comment.
+
+    DATA: lt_objects TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+          lv_str     TYPE string.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF is_files-local.
+
+
+    LOOP AT is_files-local ASSIGNING <ls_local>.
+      lv_str = |{ <ls_local>-item-obj_type } { <ls_local>-item-obj_name }|.
+      APPEND lv_str TO lt_objects.
+    ENDLOOP.
+
+    IF lines( lt_objects ) = 1.
+      rv_comment = |BG: { lv_str }|.
+    ELSE.
+      rv_comment = 'BG: Multiple objects'.
+      LOOP AT lt_objects INTO lv_str.
+        CONCATENATE rv_comment gc_newline lv_str INTO rv_comment.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD push_auto.
 
-    DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE ty_stage_files,
-          lo_stage   TYPE REF TO lcl_stage.
+    DATA: ls_comment    TYPE ty_comment,
+          ls_files      TYPE ty_stage_files,
+          ls_user_files LIKE ls_files,
+          lo_stage      TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
 
@@ -94,7 +122,6 @@ CLASS lcl_background IMPLEMENTATION.
     ls_files = lcl_stage_logic=>get( io_repo ).
 
     DO.
-
       READ TABLE ls_files-local INDEX 1 ASSIGNING <ls_local>.
       IF sy-subrc <> 0.
         EXIT.
@@ -103,12 +130,13 @@ CLASS lcl_background IMPLEMENTATION.
       CLEAR ls_comment.
       ls_comment-username = lcl_objects=>changed_by( <ls_local>-item ).
       ls_comment-email    = |{ ls_comment-username }@localhost|.
-      ls_comment-comment  = 'abapGit background mode' ##NO_TEXT.
 
       CREATE OBJECT lo_stage
         EXPORTING
           iv_branch_name = io_repo->get_branch_name( )
           iv_branch_sha1 = io_repo->get_sha1_remote( ).
+
+      CLEAR ls_user_files.
 
       LOOP AT ls_files-local ASSIGNING <ls_local>.
         IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-username.
@@ -120,8 +148,12 @@ CLASS lcl_background IMPLEMENTATION.
           lo_stage->add( iv_path     = <ls_local>-file-path
                          iv_filename = <ls_local>-file-filename
                          iv_data     = <ls_local>-file-data ).
+
+          APPEND <ls_local> TO ls_user_files-local.
         ENDIF.
       ENDLOOP.
+
+      ls_comment-comment  = build_comment( ls_user_files ).
 
       io_repo->push( is_comment = ls_comment
                      io_stage   = lo_stage ).

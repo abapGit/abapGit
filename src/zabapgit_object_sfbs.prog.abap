@@ -27,6 +27,10 @@ ENDCLASS.                    "lcl_object_SFBS DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sfbs IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     rv_user = get( )->get_header_data( )-changedby.
@@ -202,5 +206,11 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
         in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
+
 
 ENDCLASS.                    "lcl_object_SFBS IMPLEMENTATION

@@ -1,4 +1,4 @@
-*&---------------------------------------------------------------------*
+*&----------------------------
 *&  Include           ZABAPGIT_PERSISTENCE
 *&---------------------------------------------------------------------*
 
@@ -91,8 +91,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_local_checksum,
-             item TYPE ty_item,
-             sha1 TYPE ty_sha1,
+             item  TYPE ty_item,
+             files TYPE ty_file_signatures_tt,
            END OF ty_local_checksum.
 
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
@@ -105,6 +105,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              offline         TYPE sap_bool,
              local_checksums TYPE ty_local_checksum_tt,
              master_language TYPE spras,
+             head_branch     TYPE string,   " HEAD symref of the repo, master branch
+             write_protect   TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
@@ -112,6 +114,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
         INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
+    TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
 
     METHODS constructor.
 
@@ -137,6 +140,16 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_branch_name
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_name TYPE ty_repo_xml-branch_name
+      RAISING   lcx_exception.
+
+    METHODS update_head_branch
+      IMPORTING iv_key         TYPE ty_repo-key
+                iv_head_branch TYPE ty_repo_xml-head_branch
+      RAISING   lcx_exception.
+
+    METHODS update_offline
+      IMPORTING iv_key     TYPE ty_repo-key
+                iv_offline TYPE ty_repo_xml-offline
       RAISING   lcx_exception.
 
     METHODS add
@@ -183,367 +196,6 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
 ENDCLASS.
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_persistence DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
-
-* this class is obsolete, use LCL_PERSISTENCE_REPO instead
-
-  PRIVATE SECTION.
-    TYPES: BEGIN OF ty_repo_persi,
-             url         TYPE string,
-             branch_name TYPE string,
-             sha1        TYPE ty_sha1,
-             package     TYPE devclass,
-             offline     TYPE sap_bool,
-           END OF ty_repo_persi.
-    TYPES: ty_repos_persi_tt TYPE STANDARD TABLE OF ty_repo_persi WITH DEFAULT KEY.
-
-    METHODS list
-      RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
-
-    METHODS update
-      IMPORTING iv_url         TYPE ty_repo_persi-url
-                iv_branch_name TYPE ty_repo_persi-branch_name
-                iv_branch      TYPE ty_sha1
-      RAISING   lcx_exception.
-
-    METHODS add
-      IMPORTING iv_url         TYPE string
-                iv_branch_name TYPE string
-                iv_branch      TYPE ty_sha1 OPTIONAL
-                iv_package     TYPE devclass
-                iv_offline     TYPE sap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
-
-    METHODS delete
-      IMPORTING iv_url         TYPE ty_repo_persi-url
-                iv_branch_name TYPE ty_repo_persi-branch_name
-      RAISING   lcx_exception.
-
-    METHODS read_text_online
-      RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
-
-    METHODS save_text_online
-      IMPORTING it_repos TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
-
-    METHODS header_online
-      RETURNING VALUE(rs_header) TYPE thead.
-
-    METHODS read_text_offline
-      RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
-
-    METHODS save_text_offline
-      IMPORTING it_repos TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
-
-    METHODS header_offline
-      RETURNING VALUE(rs_header) TYPE thead.
-
-    METHODS read_text
-      IMPORTING is_header       TYPE thead
-      RETURNING VALUE(rt_lines) TYPE tlinetab
-      RAISING   lcx_exception.
-
-    METHODS save_text
-      IMPORTING is_header TYPE thead
-                it_lines  TYPE tlinetab
-      RAISING   lcx_exception.
-
-ENDCLASS.                    "lcl_persistence DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_persistence IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_persistence IMPLEMENTATION.
-
-  METHOD save_text.
-
-    CALL FUNCTION 'SAVE_TEXT'
-      EXPORTING
-        header   = is_header
-      TABLES
-        lines    = it_lines
-      EXCEPTIONS
-        id       = 1
-        language = 2
-        name     = 3
-        object   = 4
-        OTHERS   = 5.
-    IF sy-subrc <> 0.
-      ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      lcx_exception=>raise( 'error from SAVE_TEXT' ).
-    ENDIF.
-
-  ENDMETHOD.                    "save_text
-
-  METHOD header_online.
-    rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = gc_english.
-    rs_header-tdname   = 'ZABAPGIT'.
-    rs_header-tdobject = 'TEXT'.
-  ENDMETHOD.                    "header
-
-  METHOD header_offline.
-    rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = gc_english.
-    rs_header-tdname   = 'ZABAPGIT_OFFLINE'.
-    rs_header-tdobject = 'TEXT'.
-  ENDMETHOD.                    "header_offline
-
-  METHOD delete.
-
-    DATA: lt_repos TYPE ty_repos_persi_tt.
-
-
-    lt_repos = list( ).
-
-    DELETE lt_repos WHERE url = iv_url AND branch_name = iv_branch_name.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'repo not found, delete' ).
-    ENDIF.
-
-    save_text_online( lt_repos ).
-    save_text_offline( lt_repos ).
-
-  ENDMETHOD.                    "delete
-
-  METHOD save_text_online.
-
-    DATA: lt_lines  TYPE TABLE OF tline.
-
-    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repos,
-                   <ls_line> LIKE LINE OF lt_lines.
-
-
-    LOOP AT it_repos ASSIGNING <ls_repo> WHERE offline = abap_false.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-url.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-branch_name.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-sha1.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-package.
-    ENDLOOP.
-
-    save_text( is_header = header_online( )
-               it_lines  = lt_lines ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "save_text
-
-  METHOD save_text_offline.
-
-    DATA: lt_lines  TYPE TABLE OF tline.
-
-    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repos,
-                   <ls_line> LIKE LINE OF lt_lines.
-
-
-    LOOP AT it_repos ASSIGNING <ls_repo> WHERE offline = abap_true.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-url.
-      APPEND INITIAL LINE TO lt_lines ASSIGNING <ls_line>.
-      <ls_line>-tdformat = '*'.
-      <ls_line>-tdline = <ls_repo>-package.
-    ENDLOOP.
-
-    save_text( is_header = header_offline( )
-               it_lines  = lt_lines ).
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "save_text_offline
-
-  METHOD add.
-
-    DATA: lt_repos TYPE ty_repos_persi_tt.
-
-    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF lt_repos.
-
-
-    ASSERT NOT iv_url IS INITIAL.
-    ASSERT NOT iv_package IS INITIAL.
-
-    lt_repos = list( ).
-
-    READ TABLE lt_repos WITH KEY url = iv_url branch_name = iv_branch_name
-      TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      lcx_exception=>raise( 'already inserted' ).
-    ENDIF.
-
-    APPEND INITIAL LINE TO lt_repos ASSIGNING <ls_repo>.
-    <ls_repo>-url         = iv_url.
-    <ls_repo>-branch_name = iv_branch_name.
-    <ls_repo>-sha1        = iv_branch.
-    <ls_repo>-package     = iv_package.
-    <ls_repo>-offline     = iv_offline.
-
-    save_text_online( lt_repos ).
-    save_text_offline( lt_repos ).
-
-  ENDMETHOD.                    "insert
-
-  METHOD update.
-
-    DATA: lt_repos TYPE ty_repos_persi_tt.
-
-    FIELD-SYMBOLS: <ls_repo> LIKE LINE OF lt_repos.
-
-
-    IF iv_branch IS INITIAL.
-      lcx_exception=>raise( 'update, sha empty' ).
-    ENDIF.
-
-    lt_repos = list( ).
-
-    READ TABLE lt_repos ASSIGNING <ls_repo>
-      WITH KEY url = iv_url branch_name = iv_branch_name.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'persist update, repo not found' ).
-    ENDIF.
-
-    <ls_repo>-sha1 = iv_branch.
-
-    save_text_online( lt_repos ).
-
-  ENDMETHOD.                    "update
-
-  METHOD list.
-    CLEAR rt_repos.
-    APPEND LINES OF read_text_online( ) TO rt_repos.
-    APPEND LINES OF read_text_offline( ) TO rt_repos.
-  ENDMETHOD.                    "list
-
-  METHOD read_text.
-
-    CALL FUNCTION 'READ_TEXT'
-      EXPORTING
-        id                      = is_header-tdid
-        language                = is_header-tdspras
-        name                    = is_header-tdname
-        object                  = is_header-tdobject
-      TABLES
-        lines                   = rt_lines
-      EXCEPTIONS
-        id                      = 1
-        language                = 2
-        name                    = 3
-        not_found               = 4
-        object                  = 5
-        reference_check         = 6
-        wrong_access_to_archive = 7
-        OTHERS                  = 8.
-    IF sy-subrc = 4.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from READ_TEXT' ).
-    ENDIF.
-
-  ENDMETHOD.                    "read_text
-
-  METHOD read_text_online.
-
-    DATA: lt_lines TYPE TABLE OF tline,
-          lv_step  TYPE i,
-          ls_repo  TYPE ty_repo_persi.
-
-    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
-
-
-    lt_lines = read_text( header_online( ) ).
-    IF lines( lt_lines ) = 0.
-      RETURN.
-    ENDIF.
-
-    IF lines( lt_lines ) MOD 4 <> 0.
-* if this happens, delete text ZABAPGIT in SO10 or edit the text
-* manually, so it contains the right information
-      lcx_exception=>raise( 'Persistence, text broken' ).
-    ENDIF.
-
-    CLEAR ls_repo.
-    LOOP AT lt_lines ASSIGNING <ls_line>.
-      lv_step = lv_step + 1.
-      CASE lv_step.
-        WHEN 4.
-          ls_repo-package = <ls_line>-tdline.
-
-          IF ls_repo-url IS INITIAL OR ls_repo-branch_name IS INITIAL.
-            lcx_exception=>raise( 'Persistence, text broken 2' ).
-          ENDIF.
-          APPEND ls_repo TO rt_repos.
-          CLEAR ls_repo.
-          lv_step = 0.
-        WHEN 3.
-          ls_repo-sha1 = <ls_line>-tdline.
-        WHEN 2.
-          ls_repo-branch_name = <ls_line>-tdline.
-        WHEN 1.
-          ls_repo-url = <ls_line>-tdline.
-        WHEN OTHERS.
-          ASSERT 1 = 0.
-      ENDCASE.
-    ENDLOOP.
-
-  ENDMETHOD.                    "list
-
-  METHOD read_text_offline.
-
-    DATA: lt_lines TYPE TABLE OF tline,
-          ls_repo  TYPE ty_repo_persi.
-
-    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
-
-
-    lt_lines = read_text( header_offline( ) ).
-    IF lines( lt_lines ) = 0.
-      RETURN.
-    ENDIF.
-
-    IF lines( lt_lines ) MOD 2 <> 0.
-* if this happens, delete text ZABAPGIT in SO10 or edit the text
-* manually, so it contains the right information
-      lcx_exception=>raise( 'Persistence, text broken' ).
-    ENDIF.
-
-    CLEAR ls_repo.
-    LOOP AT lt_lines ASSIGNING <ls_line>.
-      IF <ls_line>-tdline IS INITIAL.
-        lcx_exception=>raise( 'Persistence, text broken' ).
-      ENDIF.
-      IF ls_repo-url IS INITIAL.
-        ls_repo-url = <ls_line>-tdline.
-        CONTINUE. " current loop
-      ENDIF.
-
-      ls_repo-package = <ls_line>-tdline.
-      ls_repo-offline = abap_true.
-      APPEND ls_repo TO rt_repos.
-      CLEAR ls_repo.
-    ENDLOOP.
-
-  ENDMETHOD.                    "list
-
-ENDCLASS.                    "lcl_persistence IMPLEMENTATION
-
 CLASS lcl_persistence_background DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -588,10 +240,16 @@ CLASS lcl_persistence_background DEFINITION FINAL.
       IMPORTING iv_key TYPE ty_background-key
       RAISING   lcx_exception.
 
+    METHODS exists
+      IMPORTING iv_key        TYPE ty_background-key
+      RETURNING VALUE(rv_yes) TYPE abap_bool
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
 
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
+    DATA: mo_db   TYPE REF TO lcl_persistence_db,
+          mt_jobs TYPE tt_background.
 
     METHODS from_xml
       IMPORTING iv_string     TYPE string
@@ -618,6 +276,11 @@ CLASS lcl_persistence_background IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
                    <ls_output> LIKE LINE OF rt_list.
 
+    IF lines( mt_jobs ) > 0.
+      rt_list = mt_jobs.
+      RETURN.
+    ENDIF.
+
 
     lt_list = mo_db->list_by_type( c_type ).
 
@@ -629,7 +292,17 @@ CLASS lcl_persistence_background IMPLEMENTATION.
       <ls_output>-key = <ls_list>-value.
     ENDLOOP.
 
+    mt_jobs = rt_list.
+
   ENDMETHOD.
+
+  METHOD exists.
+
+    list( ). " Ensure mt_jobs is populated
+    READ TABLE mt_jobs WITH KEY key = iv_key TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.  "exists
 
   METHOD modify.
 
@@ -639,6 +312,9 @@ CLASS lcl_persistence_background IMPLEMENTATION.
       iv_type  = c_type
       iv_value = is_data-key
       iv_data  = to_xml( is_data ) ).
+
+    DELETE mt_jobs WHERE key = is_data-key.
+    APPEND is_data TO mt_jobs.
 
   ENDMETHOD.
 
@@ -653,6 +329,8 @@ CLASS lcl_persistence_background IMPLEMENTATION.
 
     mo_db->delete( iv_type  = c_type
                    iv_value = iv_key ).
+
+    DELETE mt_jobs WHERE key = iv_key.
 
   ENDMETHOD.
 
@@ -682,6 +360,8 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
+    TYPES: tt_favorites TYPE lcl_persistence_repo=>tt_repo_keys.
+
     METHODS set_username
       IMPORTING iv_username TYPE string
       RAISING   lcx_exception.
@@ -707,23 +387,52 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS set_repo_username
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url      TYPE lcl_persistence_repo=>ty_repo-url
                 iv_username TYPE string
       RAISING   lcx_exception.
 
     METHODS get_repo_username
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url             TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
     METHODS set_repo_email
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
                 iv_email TYPE string
       RAISING   lcx_exception.
 
     METHODS get_repo_email
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_email) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS toggle_hide_files
+      RETURNING VALUE(rv_hide) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_hide_files
+      RETURNING VALUE(rv_hide) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS toggle_changes_only
+      RETURNING VALUE(rv_changes_only) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_changes_only
+      RETURNING VALUE(rv_changes_only) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_favorites
+      RETURNING VALUE(rt_favorites) TYPE tt_favorites
+      RAISING   lcx_exception.
+
+    METHODS toggle_favorite
+      IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   lcx_exception.
+
+    METHODS is_favorite_repo
+      IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_yes) TYPE abap_bool
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -731,23 +440,21 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     DATA: mv_user TYPE xubname.
 
-    TYPES:
-      ty_repo_hidden_tt
-        TYPE STANDARD TABLE OF lcl_persistence_repo=>ty_repo-key
-        WITH DEFAULT KEY.
-
     TYPES: BEGIN OF ty_repo_config,
-             url       TYPE lcl_persistence_repo=>ty_repo-url,
-             username  TYPE string,
-             email     TYPE string,
+             url      TYPE lcl_persistence_repo=>ty_repo-url,
+             username TYPE string,
+             email    TYPE string,
            END OF ty_repo_config.
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_user,
-             username    TYPE string,
-             email       TYPE string,
-             repo_show   TYPE lcl_persistence_repo=>ty_repo-key,
-             repo_config TYPE ty_repo_config_tt,
+             username     TYPE string,
+             email        TYPE string,
+             repo_show    TYPE lcl_persistence_repo=>ty_repo-key,
+             repo_config  TYPE ty_repo_config_tt,
+             hide_files   TYPE abap_bool,
+             changes_only TYPE abap_bool,
+             favorites    TYPE tt_favorites,
            END OF ty_user.
 
     METHODS constructor
@@ -771,219 +478,16 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   lcx_exception.
 
     METHODS read_repo_config
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url                TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rs_repo_config) TYPE ty_repo_config
       RAISING   lcx_exception.
 
     METHODS update_repo_config
-      IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
                 is_repo_config TYPE ty_repo_config
       RAISING   lcx_exception.
 
 ENDCLASS.             "lcl_persistence_user DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_user DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persistence_migrate.
-
-* this class is obsolete, use LCL_PERSISTENCE_USER instead
-
-  PRIVATE SECTION.
-    TYPES: BEGIN OF ty_user,
-             user     LIKE sy-uname,
-             username TYPE string,
-             email    TYPE string,
-           END OF ty_user.
-
-    TYPES: ty_user_tt TYPE STANDARD TABLE OF ty_user WITH DEFAULT KEY.
-
-    CLASS-METHODS set_username
-      IMPORTING iv_user     TYPE xubname DEFAULT sy-uname
-                iv_username TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_username
-      IMPORTING iv_user            TYPE xubname DEFAULT sy-uname
-      RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS set_email
-      IMPORTING iv_user  TYPE xubname DEFAULT sy-uname
-                iv_email TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS get_email
-      IMPORTING iv_user         TYPE xubname DEFAULT sy-uname
-      RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS list
-      RETURNING VALUE(rt_data) TYPE ty_user_tt
-      RAISING   lcx_exception.
-
-    CLASS-METHODS read
-      IMPORTING iv_name         TYPE tdobname
-      RETURNING VALUE(rv_value) TYPE string
-      RAISING   lcx_exception.
-
-    CLASS-METHODS save
-      IMPORTING iv_name  TYPE tdobname
-                iv_value TYPE string
-      RAISING   lcx_exception.
-
-ENDCLASS.                    "lcl_user DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_user IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_user IMPLEMENTATION.
-
-* this class is obsolete, use LCL_PERSISTENCE_USER instead
-
-  METHOD read.
-
-    DATA: lt_lines TYPE TABLE OF tline,
-          ls_line  LIKE LINE OF lt_lines.
-
-
-    CALL FUNCTION 'READ_TEXT'
-      EXPORTING
-        id                      = 'ST'
-        language                = gc_english
-        name                    = iv_name
-        object                  = 'TEXT'
-      TABLES
-        lines                   = lt_lines
-      EXCEPTIONS
-        id                      = 1
-        language                = 2
-        name                    = 3
-        not_found               = 4
-        object                  = 5
-        reference_check         = 6
-        wrong_access_to_archive = 7
-        OTHERS                  = 8.
-    IF sy-subrc <> 4 AND sy-subrc <> 0.
-      lcx_exception=>raise( 'error from READ_TEXT' ).
-    ENDIF.
-
-    READ TABLE lt_lines INTO ls_line INDEX 1.
-    IF sy-subrc = 0.
-      rv_value = ls_line-tdline.
-    ENDIF.
-
-  ENDMETHOD.                    "get_details
-
-  METHOD save.
-
-    DATA: ls_header TYPE thead,
-          lt_lines  TYPE TABLE OF tline,
-          ls_line   LIKE LINE OF lt_lines.
-
-
-    ls_line-tdformat = '*'.
-    ls_line-tdline = iv_value.
-    APPEND ls_line TO lt_lines.
-
-    ls_header-tdid       = 'ST'.
-    ls_header-tdspras    = gc_english.
-    ls_header-tdname     = iv_name.
-    ls_header-tdobject   = 'TEXT'.
-
-    CALL FUNCTION 'SAVE_TEXT'
-      EXPORTING
-        header   = ls_header
-      TABLES
-        lines    = lt_lines
-      EXCEPTIONS
-        id       = 1
-        language = 2
-        name     = 3
-        object   = 4
-        OTHERS   = 5.
-    IF sy-subrc <> 0.
-      ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      lcx_exception=>raise( 'error from SAVE_TEXT' ).
-    ENDIF.
-
-    COMMIT WORK.
-
-  ENDMETHOD.                    "change
-
-  METHOD set_username.
-
-    DATA: lv_name TYPE tdobname.
-
-
-    CONCATENATE 'ZABAPGIT_USERNAME_' iv_user INTO lv_name.
-
-    save( iv_name  = lv_name
-          iv_value = iv_username ).
-
-  ENDMETHOD.                    "set_username
-
-  METHOD get_username.
-
-    DATA: lv_name TYPE tdobname.
-
-
-    CONCATENATE 'ZABAPGIT_USERNAME_' iv_user INTO lv_name.
-
-    rv_username = read( lv_name ).
-
-  ENDMETHOD.                    "get_username
-
-  METHOD set_email.
-
-    DATA: lv_name TYPE tdobname.
-
-
-    CONCATENATE 'ZABAPGIT_EMAIL_' iv_user INTO lv_name.
-
-    save( iv_name  = lv_name
-          iv_value = iv_email ).
-
-  ENDMETHOD.                    "set_email
-
-  METHOD list.
-
-    DATA: lt_stxh TYPE STANDARD TABLE OF stxh WITH DEFAULT KEY.
-
-    FIELD-SYMBOLS: <ls_output> LIKE LINE OF rt_data,
-                   <ls_stxh>   LIKE LINE OF lt_stxh.
-
-
-    SELECT * FROM stxh INTO TABLE lt_stxh
-      WHERE tdobject = 'TEXT'
-      AND tdname LIKE 'ZABAPGIT_USERNAME_%'.
-
-    LOOP AT lt_stxh ASSIGNING <ls_stxh>.
-      APPEND INITIAL LINE TO rt_data ASSIGNING <ls_output>.
-
-      <ls_output>-user     = <ls_stxh>-tdname+18.
-      <ls_output>-username = get_username( <ls_output>-user ).
-      <ls_output>-email    = get_email( <ls_output>-user ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD get_email.
-
-    DATA: lv_name TYPE tdobname.
-
-
-    CONCATENATE 'ZABAPGIT_EMAIL_' iv_user INTO lv_name.
-
-    rv_email = read( lv_name ).
-
-  ENDMETHOD.                    "get_email
-
-ENDCLASS.                    "lcl_user IMPLEMENTATION
 
 CLASS lcl_persistence_user IMPLEMENTATION.
 
@@ -1038,7 +542,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     ls_user-repo_show = iv_key.
     update( ls_user ).
 
-    COMMIT WORK.
+    COMMIT WORK AND WAIT.
 
   ENDMETHOD.
 
@@ -1158,7 +662,86 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.  "get_repo_email
 
+  METHOD toggle_hide_files.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-hide_files = boolc( ls_user-hide_files = abap_false ).
+    update( ls_user ).
+
+    rv_hide = ls_user-hide_files.
+
+  ENDMETHOD. "toggle_hide_files
+
+  METHOD get_hide_files.
+
+    rv_hide = read( )-hide_files.
+
+  ENDMETHOD. "get_hide_files
+
+  METHOD toggle_changes_only.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-changes_only = boolc( ls_user-changes_only = abap_false ).
+    update( ls_user ).
+
+    rv_changes_only = ls_user-changes_only.
+
+  ENDMETHOD. "toggle_changes_only
+
+  METHOD get_changes_only.
+
+    rv_changes_only = read( )-changes_only.
+
+  ENDMETHOD. "get_changes_only
+
+  METHOD get_favorites.
+
+    rt_favorites = read( )-favorites.
+
+  ENDMETHOD.  "get_favorites
+
+  METHOD toggle_favorite.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    READ TABLE ls_user-favorites TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_key.
+
+    IF sy-subrc = 0.
+      DELETE ls_user-favorites INDEX sy-tabix.
+    ELSE.
+      APPEND iv_repo_key TO ls_user-favorites.
+    ENDIF.
+
+    update( ls_user ).
+
+  ENDMETHOD.  " toggle_favorite.
+
+  METHOD is_favorite_repo.
+
+    DATA: lt_favorites TYPE tt_favorites.
+
+    lt_favorites = get_favorites( ).
+
+    READ TABLE lt_favorites TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_key.
+
+    rv_yes = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.  " is_favorite_repo.
+
 ENDCLASS.
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_persistence_db
+*----------------------------------------------------------------------*
 
 CLASS lcl_persistence_db IMPLEMENTATION.
 
@@ -1276,6 +859,11 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
 ENDCLASS.
 
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_persistence_repo
+*----------------------------------------------------------------------*
+
 CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD add.
@@ -1372,10 +960,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
           ls_repo    TYPE ty_repo.
 
 
-    IF iv_branch_name IS INITIAL.
-      lcx_exception=>raise( 'update, branch name empty' ).
-    ENDIF.
-
     ASSERT NOT iv_key IS INITIAL.
 
     TRY.
@@ -1393,16 +977,59 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD update_sha1.
+  METHOD update_head_branch.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
 
-    IF iv_branch_sha1 IS INITIAL.
-      lcx_exception=>raise( 'update, sha empty' ).
-    ENDIF.
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        lcx_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-head_branch = iv_head_branch.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.  "update_head_branch
+
+  METHOD update_offline.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        lcx_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-offline = iv_offline.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.  "update_offline
+
+  METHOD update_sha1.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
 
     ASSERT NOT iv_key IS INITIAL.
 
@@ -1780,6 +1407,142 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
       lcx_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
     ENDIF.
 
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_settings DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS set_proxy_url
+      IMPORTING
+        iv_url TYPE string.
+    METHODS set_proxy_port
+      IMPORTING
+        iv_port TYPE string.
+    METHODS get_proxy_url
+      RETURNING
+        VALUE(rv_proxy_url) TYPE string.
+    METHODS get_proxy_port
+      RETURNING
+        VALUE(rv_port) TYPE string.
+    METHODS set_run_critical_tests
+      IMPORTING
+        iv_run TYPE abap_bool.
+    METHODS
+      get_run_critical_tests
+        RETURNING VALUE(rv_run) TYPE abap_bool.
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+    DATA mv_proxy_url TYPE string.
+    DATA mv_proxy_port TYPE string.
+    DATA mv_run_critical_tests TYPE abap_bool.
+
+
+ENDCLASS.
+
+CLASS lcl_settings IMPLEMENTATION.
+
+
+  METHOD set_proxy_url.
+    mv_proxy_url = iv_url.
+  ENDMETHOD.
+
+  METHOD get_proxy_url.
+    rv_proxy_url = mv_proxy_url.
+  ENDMETHOD.
+
+  METHOD set_proxy_port.
+    mv_proxy_port = iv_port.
+  ENDMETHOD.
+
+  METHOD get_proxy_port.
+    rv_port = mv_proxy_port.
+  ENDMETHOD.
+
+  METHOD set_run_critical_tests.
+    mv_run_critical_tests = iv_run.
+  ENDMETHOD.
+
+  METHOD get_run_critical_tests.
+    rv_run = mv_run_critical_tests.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS lcl_persistence_settings DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS modify
+      IMPORTING
+        io_settings TYPE REF TO lcl_settings
+      RAISING
+        lcx_exception.
+    METHODS read
+      RETURNING
+        VALUE(ro_settings) TYPE REF TO lcl_settings.
+
+  PROTECTED SECTION.
+
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+CLASS lcl_persistence_settings IMPLEMENTATION.
+
+
+  METHOD modify.
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_URL'
+      iv_data       = io_settings->get_proxy_url( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_PORT'
+      iv_data       = io_settings->get_proxy_port( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'CRIT_TESTS'
+      iv_data       = io_settings->get_run_critical_tests( ) ).
+  ENDMETHOD.
+
+
+  METHOD read.
+    DATA: lv_critical_tests_as_string  TYPE string,
+          lv_critical_tests_as_boolean TYPE abap_bool.
+
+    CREATE OBJECT ro_settings.
+    TRY.
+        ro_settings->set_proxy_url(
+          lcl_app=>db( )->read(
+            iv_type  = 'SETTINGS'
+            iv_value = 'PROXY_URL'
+          ) ).
+      CATCH lcx_not_found.
+        ro_settings->set_proxy_url( '' ).
+    ENDTRY.
+    TRY.
+        ro_settings->set_proxy_port(
+          lcl_app=>db( )->read(
+            iv_type  = 'SETTINGS'
+            iv_value = 'PROXY_PORT'
+          ) ).
+      CATCH lcx_not_found.
+        ro_settings->set_proxy_port( '' ).
+    ENDTRY.
+    TRY.
+        lv_critical_tests_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'CRIT_TESTS' ).
+        lv_critical_tests_as_boolean = lv_critical_tests_as_string.
+        ro_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
+      CATCH lcx_not_found.
+        ro_settings->set_run_critical_tests( abap_false ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.

@@ -47,6 +47,10 @@ ENDCLASS.                    "lcl_object_PINF DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_pinf IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE changed_by FROM intf INTO rv_user
@@ -189,18 +193,18 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           lt_add      TYPE scomeldata,
           lv_index    TYPE i,
           lv_found    TYPE abap_bool,
-          ls_sign     TYPE scomelsign,
+*          ls_sign     TYPE scomelsign,
           ls_attr     TYPE scomeldtln.
 
     FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_existing,
                    <ls_element> LIKE LINE OF is_pinf-elements.
 
 
-    ls_sign-usag_restr                 = abap_true.
-    ls_sign-stability                  = abap_true.
-    ls_sign-no_check                   = abap_true.
-    ls_sign-useastype                  = abap_true.
-    ls_sign-asforgnkey                 = abap_true.
+*    ls_sign-usag_restr                 = abap_true.
+*    ls_sign-stability                  = abap_true.
+*    ls_sign-no_check                   = abap_true.
+*    ls_sign-useastype                  = abap_true.
+*    ls_sign-asforgnkey                 = abap_true.
 *    ls_sign-deprecation_type           = abap_true. backport
 *    ls_sign-replacement_object_type    = abap_true. backport
 *    ls_sign-replacement_object_name    = abap_true. backport
@@ -219,11 +223,8 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         <li_element>->get_all_attributes( IMPORTING e_element_data = ls_attr ).
         IF <ls_element>-elem_type = ls_attr-elem_type
             AND <ls_element>-elem_key = ls_attr-elem_key.
-          <li_element>->set_all_attributes(
-            i_element_data = <ls_element>
-            i_data_sign    = ls_sign ).
-          lv_found = abap_true.
-          EXIT. " current loop
+          DELETE lt_existing INDEX lv_index.
+          CONTINUE. " current loop
         ENDIF.
       ENDLOOP.
 
@@ -232,9 +233,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    ii_interface->add_elements( lt_add ).
-
     ii_interface->remove_elements( lt_existing ).
+
+    ii_interface->add_elements( lt_add ).
 
     ii_interface->save_elements( ).
 
@@ -346,5 +347,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_PINF IMPLEMENTATION

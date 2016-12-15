@@ -22,6 +22,10 @@ ENDCLASS.                    "lcl_object_auth DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_auth IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
@@ -114,5 +118,9 @@ CLASS lcl_object_auth IMPLEMENTATION.
     lcx_exception=>raise( 'todo, AUTH jump' ).
 
   ENDMETHOD.                    "lif_object~jump
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_auth IMPLEMENTATION

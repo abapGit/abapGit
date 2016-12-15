@@ -22,6 +22,21 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_shlp IMPLEMENTATION.
 
+  METHOD lif_object~has_changed_since.
+
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
+
+    SELECT SINGLE as4date as4time FROM dd30l
+      INTO (lv_date, lv_time)
+      WHERE shlpname = ms_item-obj_name
+      AND as4local = 'A'.
+
+    _object_check_timestamp lv_date lv_time.
+
+  ENDMETHOD.  "lif_object~has_changed_since
+
   METHOD lif_object~changed_by.
 
     SELECT SINGLE as4user FROM dd30l INTO rv_user
@@ -87,6 +102,8 @@ CLASS lcl_object_shlp IMPLEMENTATION.
           lt_dd32p TYPE TABLE OF dd32p,
           lt_dd33v TYPE TABLE OF dd33v.
 
+    FIELD-SYMBOLS: <ls_dd32p> LIKE LINE OF lt_dd32p.
+
 
     lv_name = ms_item-obj_name.
 
@@ -114,6 +131,21 @@ CLASS lcl_object_shlp IMPLEMENTATION.
     CLEAR: ls_dd30v-as4user,
            ls_dd30v-as4date,
            ls_dd30v-as4time.
+
+    LOOP AT lt_dd32p ASSIGNING <ls_dd32p>.
+* clear information inherited from domain
+      CLEAR: <ls_dd32p>-domname,
+        <ls_dd32p>-headlen,
+        <ls_dd32p>-scrlen1,
+        <ls_dd32p>-scrlen2,
+        <ls_dd32p>-datatype,
+        <ls_dd32p>-leng,
+        <ls_dd32p>-outputlen,
+        <ls_dd32p>-decimals,
+        <ls_dd32p>-lowercase,
+        <ls_dd32p>-signflag,
+        <ls_dd32p>-convexit.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'DD30V'
                  ig_data = ls_dd30v ).
@@ -170,5 +202,9 @@ CLASS lcl_object_shlp IMPLEMENTATION.
     lcl_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_shlp IMPLEMENTATION
