@@ -57,7 +57,19 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
       delta_view
         IMPORTING is_view         TYPE wdy_md_view_meta_data
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
-        RAISING   lcx_exception.
+        RAISING   lcx_exception,
+      add_fm_param_exporting
+        IMPORTING name            TYPE string
+                  value           TYPE any
+        RETURNING VALUE(rs_param) TYPE abap_func_parmbind,
+      add_fm_param_tables
+        IMPORTING name            TYPE string
+        CHANGING  value           TYPE ANY TABLE
+        RETURNING VALUE(rs_param) TYPE abap_func_parmbind,
+      add_fm_exception
+        IMPORTING name                TYPE string
+                  value               TYPE i
+        RETURNING VALUE(rs_exception) TYPE abap_func_excpbind.
 
 ENDCLASS.                    "lcl_object_wdyn DEFINITION
 
@@ -155,8 +167,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_obj_new    TYPE svrs2_versionable_object,
           ls_obj_old    TYPE svrs2_versionable_object.
 
-    FIELD-SYMBOLS: <ls_component> LIKE LINE OF mt_components,
-                   <ls_source>    LIKE LINE OF mt_sources.
+    FIELD-SYMBOLS: <ls_component>            LIKE LINE OF mt_components,
+                   <ls_source>               LIKE LINE OF mt_sources,
+                   <lt_ctrl_exceptions>      TYPE ANY TABLE,
+                   <lt_ctrl_exception_texts> TYPE ANY TABLE,
+                   <excp>                    TYPE ANY TABLE,
+                   <excpt>                   TYPE ANY TABLE.
 
 
     ls_key-component_name = is_controller-definition-component_name.
@@ -205,8 +221,22 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     ls_obj_old-wdyc-cnode = is_controller-context_nodes.
     ls_obj_old-wdyc-cattr = is_controller-context_attributes.
     ls_obj_old-wdyc-cmapp = is_controller-context_mappings.
-    ls_obj_old-wdyc-excp  = is_controller-controller_exceptions.
-    ls_obj_old-wdyc-excpt = is_controller-controller_exception_texts.
+*   Version 702 doesn't have these two attributes so we
+*   use them dynamically for downward compatibility
+    ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE is_controller TO <lt_ctrl_exceptions>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'EXCP' OF STRUCTURE ls_obj_old-wdyc TO <excp>.
+      IF sy-subrc = 0.
+        <excp> = <lt_ctrl_exceptions>.
+      ENDIF.
+    ENDIF.
+    ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS_TEXTS' OF STRUCTURE is_controller TO <lt_ctrl_exception_texts>.
+    IF sy-subrc = 0.
+      ASSIGN COMPONENT 'EXCPT' OF STRUCTURE ls_obj_old-wdyc TO <excpt>.
+      IF sy-subrc = 0.
+        <excpt> = <lt_ctrl_exception_texts>.
+      ENDIF.
+    ENDIF.
     ls_obj_old-wdyc-fgrps = is_controller-fieldgroups.
 
     CALL FUNCTION 'SVRS_MAKE_OBJECT_DELTA'
@@ -355,37 +385,92 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD read_controller.
 
-    DATA: lt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
-          lt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs,
-          lt_definition TYPE TABLE OF wdy_controller,
-          lt_psmodilog  TYPE TABLE OF smodilog,
-          lt_psmodisrc  TYPE TABLE OF smodisrc.
+    DATA: lt_components   TYPE TABLE OF wdy_ctlr_compo_vrs,
+          lt_sources      TYPE TABLE OF wdy_ctlr_compo_source_vrs,
+          lt_definition   TYPE TABLE OF wdy_controller,
+          lt_psmodilog    TYPE TABLE OF smodilog,
+          lt_psmodisrc    TYPE TABLE OF smodisrc,
+          lt_fm_param     TYPE abap_func_parmbind_tab,
+          lt_fm_exception TYPE abap_func_excpbind_tab.
 
+    FIELD-SYMBOLS: <lt_ctrl_exceptions>      TYPE ANY TABLE,
+                   <lt_ctrl_exception_texts> TYPE ANY TABLE.
+
+*   Calling FM dynamically because version 702 has less parameters
+
+*   FM parameters
+    INSERT add_fm_param_exporting( name     = 'CONTROLLER_KEY'
+                                   value    = is_key ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_exporting( name     = 'GET_ALL_TRANSLATIONS'
+                                   value    = abap_false ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'DEFINITION'
+      CHANGING value = lt_definition ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'DESCRIPTIONS'
+      CHANGING value = rs_controller-descriptions ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_USAGES'
+      CHANGING value = rs_controller-controller_usages ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENTS'
+      CHANGING value = lt_components ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENT_SOURCES'
+      CHANGING value = lt_sources ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENT_TEXTS'
+      CHANGING value = rs_controller-controller_component_texts ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_PARAMETERS'
+      CHANGING value = rs_controller-controller_parameters ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_PARAMETER_TEXTS'
+      CHANGING value = rs_controller-controller_parameter_texts ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_NODES'
+      CHANGING value = rs_controller-context_nodes ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_ATTRIBUTES'
+      CHANGING value = rs_controller-context_attributes ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_MAPPINGS'
+      CHANGING value = rs_controller-context_mappings ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'FIELDGROUPS'
+      CHANGING value = rs_controller-fieldgroups ) INTO TABLE lt_fm_param.
+*   Version 702 doesn't have these two attributes so we
+*   use them dynamically for downward compatibility
+    ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE rs_controller TO <lt_ctrl_exceptions>.
+    IF sy-subrc = 0.
+      INSERT add_fm_param_tables(
+        EXPORTING name = 'CONTROLLER_EXCEPTIONS'
+        CHANGING value = <lt_ctrl_exceptions> ) INTO TABLE lt_fm_param.
+    ENDIF.
+    ASSIGN COMPONENT 'CONTROLLER_EXCEPTION_TEXTS' OF STRUCTURE rs_controller TO <lt_ctrl_exception_texts>.
+    IF sy-subrc = 0.
+      INSERT add_fm_param_tables(
+        EXPORTING name = 'CONTROLLER_EXCEPTION_TEXTS'
+        CHANGING value = <lt_ctrl_exception_texts> ) INTO TABLE lt_fm_param.
+    ENDIF.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'PSMODILOG'
+      CHANGING value = lt_psmodilog ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'PSMODISRC'
+      CHANGING value = lt_psmodisrc ) INTO TABLE lt_fm_param.
+
+*   FM exceptions
+    INSERT add_fm_exception( name = 'NOT_EXISTING'
+                             value = 1 ) INTO TABLE lt_fm_exception.
+    INSERT add_fm_exception( name = 'OTHERS'
+                             value = 2 ) INTO TABLE lt_fm_exception.
 
     CALL FUNCTION 'WDYC_GET_OBJECT'
-      EXPORTING
-        controller_key               = is_key
-        get_all_translations         = abap_false
-      TABLES
-        definition                   = lt_definition
-        descriptions                 = rs_controller-descriptions
-        controller_usages            = rs_controller-controller_usages
-        controller_components        = lt_components
-        controller_component_sources = lt_sources
-        controller_component_texts   = rs_controller-controller_component_texts
-        controller_parameters        = rs_controller-controller_parameters
-        controller_parameter_texts   = rs_controller-controller_parameter_texts
-        context_nodes                = rs_controller-context_nodes
-        context_attributes           = rs_controller-context_attributes
-        context_mappings             = rs_controller-context_mappings
-        fieldgroups                  = rs_controller-fieldgroups
-        controller_exceptions        = rs_controller-controller_exceptions
-        controller_exception_texts   = rs_controller-controller_exception_texts
-        psmodilog                    = lt_psmodilog " not optional in all versions
-        psmodisrc                    = lt_psmodisrc " not optional in all versions
-      EXCEPTIONS
-        not_existing                 = 1
-        OTHERS                       = 2.
+      PARAMETER-TABLE
+      lt_fm_param
+      EXCEPTION-TABLE
+      lt_fm_exception.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error from WDYC_GET_OBJECT' ).
     ENDIF.
@@ -522,8 +607,10 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_component_key  TYPE wdy_md_component_key,
           ls_view_key       TYPE wdy_md_view_key.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects,
-                   <ls_meta>   LIKE LINE OF rs_component-ctlr_metadata.
+    FIELD-SYMBOLS: <ls_object>               LIKE LINE OF lt_objects,
+                   <ls_meta>                 LIKE LINE OF rs_component-ctlr_metadata,
+                   <lt_ctrl_exceptions>      TYPE ANY TABLE,
+                   <lt_ctrl_exception_texts> TYPE ANY TABLE.
 
     CLEAR mt_components.
     CLEAR mt_sources.
@@ -561,8 +648,16 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       SORT <ls_meta>-context_attributes.
       SORT <ls_meta>-context_mappings.
       SORT <ls_meta>-fieldgroups.
-      SORT <ls_meta>-controller_exceptions.
-      SORT <ls_meta>-controller_exception_texts.
+*     Version 702 doesn't have these two attributes so we
+*     use them dynamically for downward compatibility
+      ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE <ls_meta> TO <lt_ctrl_exceptions>.
+      IF sy-subrc = 0.
+        SORT <lt_ctrl_exceptions>.
+      ENDIF.
+      ASSIGN COMPONENT 'CONTROLLER_EXCEPTION_TEXTS' OF STRUCTURE <ls_meta> TO <lt_ctrl_exception_texts>.
+      IF sy-subrc = 0.
+        SORT <lt_ctrl_exception_texts>.
+      ENDIF.
     ENDLOOP.
 
     SORT mt_components BY
@@ -577,6 +672,29 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       line_number ASCENDING.
 
   ENDMETHOD.                    "read
+
+  METHOD add_fm_param_exporting.
+
+    rs_param-kind = abap_func_exporting.
+    rs_param-name = name.
+    GET REFERENCE OF value INTO rs_param-value.
+
+  ENDMETHOD.                    "add_fm_param_exporting
+
+  METHOD add_fm_param_tables.
+
+    rs_param-kind = abap_func_tables.
+    rs_param-name = name.
+    GET REFERENCE OF value INTO rs_param-value.
+
+  ENDMETHOD.                    "add_fm_param_tables
+
+  METHOD add_fm_exception.
+
+    rs_exception-name = name.
+    rs_exception-value = value.
+
+  ENDMETHOD.                    "add_fm_exception
 
   METHOD lif_object~serialize.
 
