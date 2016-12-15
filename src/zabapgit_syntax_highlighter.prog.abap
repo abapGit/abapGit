@@ -1076,7 +1076,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
   ENDMETHOD.                    " test_xml_03
 
-    METHOD test_xml_04.
+  METHOD test_xml_04.
 
     DATA lv_line TYPE string.
 
@@ -1105,7 +1105,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
   ENDMETHOD.                    " test_xml_04
 
-    METHOD test_xml_05.
+  METHOD test_xml_05.
 
     DATA lv_line TYPE string.
 
@@ -1146,6 +1146,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
   ENDMETHOD.                    " test_xml_05
+
 ENDCLASS.                       " ltcl_syntax_cases IMPLEMENTATION
 
 *----------------------------------------------------------------------*
