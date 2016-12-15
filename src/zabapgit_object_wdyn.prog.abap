@@ -61,15 +61,15 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
       add_fm_param_exporting
         IMPORTING name            TYPE string
                   value           TYPE any
-        RETURNING value(rs_param) TYPE abap_func_parmbind,
+        RETURNING VALUE(rs_param) TYPE abap_func_parmbind,
       add_fm_param_tables
         IMPORTING name            TYPE string
-                  value           TYPE ANY TABLE
-        RETURNING value(rs_param) TYPE abap_func_parmbind,
+        CHANGING  value           TYPE ANY TABLE
+        RETURNING VALUE(rs_param) TYPE abap_func_parmbind,
       add_fm_exception
         IMPORTING name                TYPE string
                   value               TYPE i
-        RETURNING value(rs_exception) TYPE abap_func_excpbind.
+        RETURNING VALUE(rs_exception) TYPE abap_func_excpbind.
 
 ENDCLASS.                    "lcl_object_wdyn DEFINITION
 
@@ -167,8 +167,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_obj_new    TYPE svrs2_versionable_object,
           ls_obj_old    TYPE svrs2_versionable_object.
 
-    FIELD-SYMBOLS: <ls_component> LIKE LINE OF mt_components,
-                   <ls_source>    LIKE LINE OF mt_sources,
+    FIELD-SYMBOLS: <ls_component>            LIKE LINE OF mt_components,
+                   <ls_source>               LIKE LINE OF mt_sources,
                    <lt_ctrl_exceptions>      TYPE ANY TABLE,
                    <lt_ctrl_exception_texts> TYPE ANY TABLE,
                    <excp>                    TYPE ANY TABLE,
@@ -385,10 +385,10 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   METHOD read_controller.
 
-    DATA: lt_components TYPE TABLE OF wdy_ctlr_compo_vrs,
-          lt_sources    TYPE TABLE OF wdy_ctlr_compo_source_vrs,
-          lt_definition TYPE TABLE OF wdy_controller,
-          lt_psmodilog  TYPE TABLE OF smodilog,
+    DATA: lt_components   TYPE TABLE OF wdy_ctlr_compo_vrs,
+          lt_sources      TYPE TABLE OF wdy_ctlr_compo_source_vrs,
+          lt_definition   TYPE TABLE OF wdy_controller,
+          lt_psmodilog    TYPE TABLE OF smodilog,
           lt_psmodisrc    TYPE TABLE OF smodisrc,
           lt_fm_param     TYPE abap_func_parmbind_tab,
           lt_fm_exception TYPE abap_func_excpbind_tab.
@@ -403,46 +403,62 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
                                    value    = is_key ) INTO TABLE lt_fm_param.
     INSERT add_fm_param_exporting( name     = 'GET_ALL_TRANSLATIONS'
                                    value    = abap_false ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'DEFINITION'
-                                value    = lt_definition ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'DESCRIPTIONS'
-                                value    = rs_controller-descriptions ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_USAGES'
-                                value    = rs_controller-controller_usages ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_COMPONENTS'
-                                value    = lt_components ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_COMPONENT_SOURCES'
-                                value    = lt_sources ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_COMPONENT_TEXTS'
-                                value    = rs_controller-controller_component_texts ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_PARAMETERS'
-                                value    = rs_controller-controller_parameters ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTROLLER_PARAMETER_TEXTS'
-                                value    = rs_controller-controller_parameter_texts ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTEXT_NODES'
-                                value    = rs_controller-context_nodes ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTEXT_ATTRIBUTES'
-                                value    = rs_controller-context_attributes ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'CONTEXT_MAPPINGS'
-                                value    = rs_controller-context_mappings ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'FIELDGROUPS'
-                                value    = rs_controller-fieldgroups ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'DEFINITION'
+      CHANGING value = lt_definition ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'DESCRIPTIONS'
+      CHANGING value = rs_controller-descriptions ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_USAGES'
+      CHANGING value = rs_controller-controller_usages ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENTS'
+      CHANGING value = lt_components ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENT_SOURCES'
+      CHANGING value = lt_sources ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_COMPONENT_TEXTS'
+      CHANGING value = rs_controller-controller_component_texts ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_PARAMETERS'
+      CHANGING value = rs_controller-controller_parameters ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTROLLER_PARAMETER_TEXTS'
+      CHANGING value = rs_controller-controller_parameter_texts ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_NODES'
+      CHANGING value = rs_controller-context_nodes ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_ATTRIBUTES'
+      CHANGING value = rs_controller-context_attributes ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'CONTEXT_MAPPINGS'
+      CHANGING value = rs_controller-context_mappings ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'FIELDGROUPS'
+      CHANGING value = rs_controller-fieldgroups ) INTO TABLE lt_fm_param.
 *   Version 702 doesn't have these two attributes so we
 *   use them dynamically for downward compatibility
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE rs_controller TO <lt_ctrl_exceptions>.
     IF sy-subrc = 0.
-      INSERT add_fm_param_tables( name     = 'CONTROLLER_EXCEPTIONS'
-                                  value    = <lt_ctrl_exceptions> ) INTO TABLE lt_fm_param.
+      INSERT add_fm_param_tables(
+        EXPORTING name = 'CONTROLLER_EXCEPTIONS'
+        CHANGING value = <lt_ctrl_exceptions> ) INTO TABLE lt_fm_param.
     ENDIF.
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTION_TEXTS' OF STRUCTURE rs_controller TO <lt_ctrl_exception_texts>.
     IF sy-subrc = 0.
-      INSERT add_fm_param_tables( name     = 'CONTROLLER_EXCEPTION_TEXTS'
-                                  value    = <lt_ctrl_exception_texts> ) INTO TABLE lt_fm_param.
+      INSERT add_fm_param_tables(
+        EXPORTING name = 'CONTROLLER_EXCEPTION_TEXTS'
+        CHANGING value = <lt_ctrl_exception_texts> ) INTO TABLE lt_fm_param.
     ENDIF.
-    INSERT add_fm_param_tables( name     = 'PSMODILOG'
-                                value    = lt_psmodilog ) INTO TABLE lt_fm_param.
-    INSERT add_fm_param_tables( name     = 'PSMODISRC'
-                                value    = lt_psmodisrc ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'PSMODILOG'
+      CHANGING value = lt_psmodilog ) INTO TABLE lt_fm_param.
+    INSERT add_fm_param_tables(
+      EXPORTING name = 'PSMODISRC'
+      CHANGING value = lt_psmodisrc ) INTO TABLE lt_fm_param.
 
 *   FM exceptions
     INSERT add_fm_exception( name = 'NOT_EXISTING'
@@ -591,8 +607,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_component_key  TYPE wdy_md_component_key,
           ls_view_key       TYPE wdy_md_view_key.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects,
-                   <ls_meta>   LIKE LINE OF rs_component-ctlr_metadata,
+    FIELD-SYMBOLS: <ls_object>               LIKE LINE OF lt_objects,
+                   <ls_meta>                 LIKE LINE OF rs_component-ctlr_metadata,
                    <lt_ctrl_exceptions>      TYPE ANY TABLE,
                    <lt_ctrl_exception_texts> TYPE ANY TABLE.
 
