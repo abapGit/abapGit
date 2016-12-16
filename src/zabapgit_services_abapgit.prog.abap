@@ -140,6 +140,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
       lo_repo->status( ). " check for errors
       lo_repo->deserialize( ).
+      lcl_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
     ENDIF.
 
     COMMIT WORK.
