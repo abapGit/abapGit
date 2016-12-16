@@ -768,7 +768,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 * No exception in class-contructor possible.
 * Anyway, a shortdump is more appropriate in this case
           ASSERT 'There must not be' =
-            |multiple ABAPGit-Plugins for the same object type {
+            |multiple abapGit-Plugins for the same object type {
             ls_objtype_map-obj_typ }|.
         ENDIF.
       ENDLOOP.
