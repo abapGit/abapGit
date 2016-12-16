@@ -503,6 +503,9 @@ table.diff_tab code {
 table.diff_tab code span.keyword { color: #0a69ce; }
 table.diff_tab code span.text    { color: #48ce4f; }
 table.diff_tab code span.comment { color: #808080; font-style: italic; }
+table.diff_tab code span.xml_tag { color: #3370e0; }
+table.diff_tab code span.attr    { color: #f20707; }
+table.diff_tab code span.attr_val { color: #7a02f9; }
 
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
