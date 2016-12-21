@@ -1398,42 +1398,98 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltc_class_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
-  PRIVATE SECTION.
-    METHODS:
-      setup,
-      given_a_class_properties
-        RAISING
-          lcx_exception,
-      when_deserializing
-        RAISING
-          lcx_exception,
-      then_should_create_class,
-      then_it_should_generate_locals,
+CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT .
+  PROTECTED SECTION.
+    DATA:
+      mo_spy_oo_object     TYPE REF TO ltd_spy_oo_object,
+      mo_fake_object_files TYPE REF TO ltd_fake_object_files,
+      mo_xml_input         TYPE REF TO lcl_xml_input,
+      mo_xml_out           TYPE REF TO lcl_xml_output,
+      mo_oo_object         TYPE REF TO lif_object,
+      ms_item              TYPE ty_item.
+    METHODS: when_deserializing
+      RAISING
+        lcx_exception,
       then_should_deserialize_source,
       given_the_descriptions
         IMPORTING
           it_descriptions TYPE ty_seocompotx_tt
         RAISING
           lcx_exception,
-    then_shuld_update_descriptions
-      IMPORTING
+      then_shuld_update_descriptions
+        IMPORTING
           it_descriptions TYPE ty_seocompotx_tt,
-      then_it_should_add_activation,
+      then_it_should_add_activation.
+
+ENDCLASS.
+CLASS ltc_oo_test IMPLEMENTATION.
+
+  METHOD then_it_should_add_activation.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_item_to_activate
+      exp = ms_item
+    ).
+  ENDMETHOD.
+
+  METHOD then_shuld_update_descriptions.
+    cl_abap_unit_assert=>assert_equals(
+          act = mo_spy_oo_object->mt_descriptions
+          exp = it_descriptions
+        ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_description_key
+      exp = ms_item-obj_name
+    ).
+  ENDMETHOD.
+
+  METHOD given_the_descriptions.
+    mo_xml_out->add(
+      iv_name = 'DESCRIPTIONS'
+      ig_data = it_descriptions
+   ).
+  ENDMETHOD.
+
+  METHOD then_should_deserialize_source.
+    cl_abap_unit_assert=>assert_equals(
+       act = mo_spy_oo_object->mt_source
+       exp = mo_fake_object_files->mt_sources
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_deserialize_key
+      exp = ms_item-obj_name
+    ).
+  ENDMETHOD.
+
+  METHOD when_deserializing.
+    CREATE OBJECT mo_xml_input
+      EXPORTING
+        iv_xml = mo_xml_out->render( ).
+    mo_oo_object->deserialize(
+      iv_package    = 'package_name'
+      io_xml        = mo_xml_input
+    ).
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltc_class_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
+INHERITING FROM ltc_oo_test.
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      given_a_class_properties
+        RAISING
+          lcx_exception,
+      then_should_create_class,
+      then_it_should_generate_locals,
       should_create_class        FOR TESTING RAISING cx_static_check,
       should_generate_locals     FOR TESTING RAISING cx_static_check,
       should_deserialize_source  FOR TESTING RAISING cx_static_check,
       should_update_descriptions FOR TESTING RAISING cx_static_check,
       should_add_to_activation   FOR TESTING RAISING cx_static_check.
-
     DATA:
-      mo_spy_oo_object     TYPE REF TO ltd_spy_oo_object,
-      mo_fake_object_files TYPE REF TO ltd_fake_object_files,
-      mo_xml_input         TYPE REF TO lcl_xml_input,
-      mo_xml_out           TYPE REF TO lcl_xml_output,
-      mo_class             TYPE REF TO lif_object,
-      ms_class_properties  TYPE vseoclass,
-      ls_item              TYPE ty_item.
+      ms_class_properties  TYPE vseoclass.
 ENDCLASS.
 
 CLASS ltc_class_deserialization IMPLEMENTATION.
@@ -1443,19 +1499,19 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
     CREATE OBJECT mo_xml_out.
     lth_oo_factory_injector=>inject( mo_spy_oo_object ).
 
-    ls_item-devclass = 'package_name'.
-    ls_item-obj_name = 'zcl_class'.
-    ls_item-obj_type = 'CLAS'.
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zcl_class'.
+    ms_item-obj_type = 'CLAS'.
 
-    CREATE OBJECT mo_class TYPE lcl_object_clas
+    CREATE OBJECT mo_oo_object TYPE lcl_object_clas
       EXPORTING
-        is_item     = ls_item
+        is_item     = ms_item
         iv_language = sy-langu.
-    mo_class->mo_files = mo_fake_object_files.
+    mo_oo_object->mo_files = mo_fake_object_files.
   ENDMETHOD.
 
   METHOD should_create_class.
-    ms_class_properties-clsname = ls_item-obj_name.
+    ms_class_properties-clsname = ms_item-obj_name.
 
     given_a_class_properties( ).
 
@@ -1487,14 +1543,14 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
 
     given_a_class_properties( ).
 
-    ls_description-clsname =  ls_item-obj_name.
+    ls_description-clsname =  ms_item-obj_name.
     ls_description-cmpname = 'a_method'.
     APPEND ls_description TO lt_descriptions.
     given_the_descriptions( lt_descriptions ).
 
     when_deserializing( ).
 
-   then_shuld_update_descriptions( lt_descriptions ).
+    then_shuld_update_descriptions( lt_descriptions ).
   ENDMETHOD.
 
   METHOD should_add_to_activation.
@@ -1502,8 +1558,7 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
 
     when_deserializing( ).
 
-    "Activation
-then_it_should_add_activation( ).
+    then_it_should_add_activation( ).
   ENDMETHOD.
 
   METHOD given_a_class_properties.
@@ -1513,24 +1568,11 @@ then_it_should_add_activation( ).
    ).
   ENDMETHOD.
 
-
-  METHOD when_deserializing.
-    CREATE OBJECT mo_xml_input
-      EXPORTING
-        iv_xml = mo_xml_out->render( ).
-    mo_class->deserialize(
-      iv_package    = 'package_name'
-      io_xml        = mo_xml_input
-    ).
-  ENDMETHOD.
-
-
   METHOD then_should_create_class.
-
     cl_abap_unit_assert=>assert_equals(
-         act = mo_spy_oo_object->ms_class_properties
-         exp = ms_class_properties
-       ).
+      act = mo_spy_oo_object->ms_class_properties
+      exp = ms_class_properties
+    ).
 
     cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
 
@@ -1538,14 +1580,13 @@ then_it_should_add_activation( ).
       act = mo_spy_oo_object->mv_package
       exp = 'package_name'
     ).
-
   ENDMETHOD.
 
 
   METHOD then_it_should_generate_locals.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_locals_key
-      exp = ls_item-obj_name
+      exp = ms_item-obj_name
     ).
     cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_force ).
 
@@ -1569,46 +1610,102 @@ then_it_should_add_activation( ).
        exp = mo_fake_object_files->mt_local_test_classes
      ).
   ENDMETHOD.
+ENDCLASS.
 
+CLASS ltc_interface_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
+INHERITING FROM ltc_oo_test.
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      given_an_interface_properties
+        RAISING
+          lcx_exception,
+      then_should_create_interface,
+      create_interface    FOR TESTING RAISING cx_static_check,
+      update_descriptions FOR TESTING RAISING cx_static_check,
+      add_to_activation   FOR TESTING RAISING cx_static_check,
+      deserialize_source  FOR TESTING RAISING cx_static_check.
+    DATA:
+          ms_interface_properties TYPE vseointerf.
+ENDCLASS.
+CLASS ltc_interface_deserialization IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_fake_object_files.
+    CREATE OBJECT mo_spy_oo_object.
+    CREATE OBJECT mo_xml_out.
+    lth_oo_factory_injector=>inject( mo_spy_oo_object ).
 
-  METHOD then_should_deserialize_source.
-    cl_abap_unit_assert=>assert_equals(
-       act = mo_spy_oo_object->mt_source
-       exp = mo_fake_object_files->mt_sources
-     ).
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zif_interface'.
+    ms_item-obj_type = 'INTF'.
 
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_spy_oo_object->ms_deserialize_key
-      exp = ls_item-obj_name
-    ).
+    CREATE OBJECT mo_oo_object TYPE lcl_object_intf
+      EXPORTING
+        is_item     = ms_item
+        iv_language = sy-langu.
+    mo_oo_object->mo_files = mo_fake_object_files.
   ENDMETHOD.
 
+  METHOD create_interface.
+    ms_interface_properties-clsname = ms_item-obj_name.
+    given_an_interface_properties( ).
 
-  METHOD given_the_descriptions.
+    when_deserializing( ).
+
+    then_should_create_interface( ).
+  ENDMETHOD.
+
+  METHOD update_descriptions.
+    DATA:
+      ls_description  TYPE seocompotx,
+      lt_descriptions TYPE ty_seocompotx_tt.
+
+    given_an_interface_properties( ).
+
+    ls_description-clsname =  ms_item-obj_name.
+    ls_description-cmpname = 'a_method'.
+    APPEND ls_description TO lt_descriptions.
+    given_the_descriptions( lt_descriptions ).
+
+    when_deserializing( ).
+
+    then_shuld_update_descriptions( lt_descriptions ).
+  ENDMETHOD.
+
+  METHOD add_to_activation.
+    given_an_interface_properties( ).
+
+    when_deserializing( ).
+
+    then_it_should_add_activation( ).
+  ENDMETHOD.
+
+  METHOD deserialize_source.
+    given_an_interface_properties( ).
+
+    when_deserializing( ).
+
+    then_should_deserialize_source( ).
+  ENDMETHOD.
+
+  METHOD given_an_interface_properties.
     mo_xml_out->add(
-      iv_name = 'DESCRIPTIONS'
-      ig_data = it_descriptions
-   ).
-  ENDMETHOD.
-
-
-  METHOD then_shuld_update_descriptions.
-    cl_abap_unit_assert=>assert_equals(
-          act = mo_spy_oo_object->mt_descriptions
-          exp = it_descriptions
-        ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = mo_spy_oo_object->ms_description_key
-      exp = ls_item-obj_name
+      iv_name = 'VSEOINTERF'
+      ig_data = ms_interface_properties
     ).
   ENDMETHOD.
 
-
-  METHOD then_it_should_add_activation.
+  METHOD then_should_create_interface.
     cl_abap_unit_assert=>assert_equals(
-      act = mo_spy_oo_object->ms_item_to_activate
-      exp = ls_item
+         act = mo_spy_oo_object->ms_interface_properties
+         exp = ms_interface_properties
+       ).
+
+    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->mv_package
+      exp = 'package_name'
     ).
   ENDMETHOD.
 
