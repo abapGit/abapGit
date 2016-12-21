@@ -114,6 +114,8 @@ TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
 TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
+TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
 CONSTANTS: BEGIN OF gc_state, " https://git-scm.com/docs/git-status
              unchanged TYPE char1 VALUE '',
              added     TYPE char1 VALUE 'A',

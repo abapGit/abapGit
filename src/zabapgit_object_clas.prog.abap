@@ -16,30 +16,149 @@ INTERFACE lif_object_oriented_object.
       CHANGING
         is_properties TYPE any
       RAISING
+        lcx_exception,
+    generate_locals
+      IMPORTING
+        is_key                   TYPE seoclskey
+        iv_force                 TYPE seox_boolean DEFAULT seox_true
+        it_local_definitions     TYPE seop_source_string OPTIONAL
+        it_local_implementations TYPE seop_source_string OPTIONAL
+        it_local_macros          TYPE seop_source_string OPTIONAL
+        it_local_test_classes    TYPE seop_source_string OPTIONAL
+      RAISING
+        lcx_exception,
+    deserialize_source
+      IMPORTING
+        is_key    TYPE seoclskey
+        it_source TYPE ty_string_tt
+      RAISING
+        lcx_exception
+        cx_sy_dyn_call_error,
+    update_descriptions
+      IMPORTING
+        is_key          TYPE seoclskey
+        it_descriptions TYPE ty_seocompotx_tt,
+    add_to_activation_list
+      IMPORTING
+        is_item TYPE ty_item
+      RAISING
         lcx_exception.
-*    generate_locals
-*        CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
-*        EXPORTING
-*          clskey                 = ls_clskey
-*          force                  = seox_true
-*          locals_def             = lt_locals_def
-*          locals_imp             = lt_locals_imp
-*          locals_mac             = lt_locals_mac
-*          locals_testclasses     = lt_testclasses
-*        EXCEPTIONS
-*          not_existing           = 1
-*          model_only             = 2
-*          locals_not_generated   = 3
-*          locals_not_initialised = 4
-*          OTHERS                 = 5.
-*      IF sy-subrc <> 0.
-*        lcx_exception=>raise( 'error from generate_locals' ).
-*      ENDIF.
 ENDINTERFACE.
 
-CLASS lcl_object_oriented_class DEFINITION.
+CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES: lif_object_oriented_object.
+  PRIVATE SECTION.
+    METHODS deserialize_abap_source_old
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception.
+
+    METHODS deserialize_abap_source_new
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception
+                cx_sy_dyn_call_error.
+ENDCLASS.
+
+CLASS lcl_object_oriented_base IMPLEMENTATION.
+
+  METHOD lif_object_oriented_object~create.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~deserialize_source.
+    TRY.
+        deserialize_abap_source_new(
+          is_clskey = is_key
+          it_source = it_source ).
+      CATCH cx_sy_dyn_call_error.
+        deserialize_abap_source_old(
+          is_clskey = is_key
+          it_source = it_source ).
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~generate_locals.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD deserialize_abap_source_old.
+    "for backwards compatability down to 702
+
+    DATA: lo_source TYPE REF TO cl_oo_source.
+
+    CREATE OBJECT lo_source
+      EXPORTING
+        clskey             = is_clskey
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
+    ENDIF.
+
+    TRY.
+        lo_source->access_permission( seok_access_modify ).
+        lo_source->set_source( it_source ).
+        lo_source->save( ).
+        lo_source->access_permission( seok_access_free ).
+      CATCH cx_oo_access_permission.
+        lcx_exception=>raise( 'permission error' ).
+      CATCH cx_oo_source_save_failure.
+        lcx_exception=>raise( 'save failure' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD deserialize_abap_source_new.
+    DATA: lo_factory TYPE REF TO object,
+          lo_source  TYPE REF TO object.
+
+    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
+      RECEIVING
+        result = lo_factory.
+
+    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
+      EXPORTING
+        clif_name = is_clskey-clsname
+      RECEIVING
+        result    = lo_source.
+
+    TRY.
+        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
+      CATCH cx_oo_access_permission.
+        lcx_exception=>raise( 'source_new, access permission exception' ).
+    ENDTRY.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
+      EXPORTING
+        source = it_source.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
+
+  ENDMETHOD.
+  METHOD lif_object_oriented_object~add_to_activation_list.
+    lcl_objects_activation=>add_item( is_item ).
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~update_descriptions.
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname.
+    INSERT seocompotx FROM TABLE it_descriptions.
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS lcl_object_oriented_class DEFINITION
+  INHERITING FROM lcl_object_oriented_base.
+  PUBLIC SECTION.
+    METHODS:
+      lif_object_oriented_object~create REDEFINITION,
+      lif_object_oriented_object~generate_locals REDEFINITION.
 ENDCLASS.
 CLASS lcl_object_oriented_class IMPLEMENTATION.
   METHOD lif_object_oriented_object~create.
@@ -61,11 +180,32 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
       lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
+  METHOD lif_object_oriented_object~generate_locals.
+    CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
+      EXPORTING
+        clskey                 = is_key
+        force                  = iv_force
+        locals_def             = it_local_definitions
+        locals_imp             = it_local_implementations
+        locals_mac             = it_local_macros
+        locals_testclasses     = it_local_test_classes
+      EXCEPTIONS
+        not_existing           = 1
+        model_only             = 2
+        locals_not_generated   = 3
+        locals_not_initialised = 4
+        OTHERS                 = 5.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from generate_locals' ).
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_object_oriented_interface DEFINITION.
+CLASS lcl_object_oriented_interface DEFINITION
+  INHERITING FROM lcl_object_oriented_base.
   PUBLIC SECTION.
-    INTERFACES: lif_object_oriented_object.
+    METHODS:
+      lif_object_oriented_object~create REDEFINITION.
 ENDCLASS.
 
 CLASS lcl_object_oriented_interface IMPLEMENTATION.
@@ -146,7 +286,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
 
-    TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
 
     DATA mv_skip_testclass TYPE abap_bool.
 
@@ -861,13 +1001,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "serialize_xml
 
   METHOD lif_object~deserialize.
-
-* function group SEOK
-* function group SEOQ
-* function group SEOP
-* class CL_OO_CLASSNAME_SERVICE
-* class CL_OO_SOURCE
-
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -879,7 +1012,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDIF.
 
     deserialize_docu( io_xml ).
-
   ENDMETHOD.                    "deserialize
 
   METHOD deserialize_sotr.
@@ -1076,42 +1208,30 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDCASE.
 
     IF ms_item-obj_type = 'CLAS'.
-      CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
-        EXPORTING
-          clskey                 = ls_clskey
-          force                  = seox_true
-          locals_def             = lt_locals_def
-          locals_imp             = lt_locals_imp
-          locals_mac             = lt_locals_mac
-          locals_testclasses     = lt_testclasses
-        EXCEPTIONS
-          not_existing           = 1
-          model_only             = 2
-          locals_not_generated   = 3
-          locals_not_initialised = 4
-          OTHERS                 = 5.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from generate_locals' ).
-      ENDIF.
+      lo_object_oriented_object->generate_locals(
+        is_key                   = ls_clskey
+        iv_force                 = seox_true
+        it_local_definitions     = lt_locals_def
+        it_local_implementations = lt_locals_imp
+        it_local_macros          = lt_locals_mac
+        it_local_test_classes    = lt_testclasses
+      ).
     ENDIF.
 
-    TRY.
-        deserialize_abap_source_new(
-          is_clskey = ls_clskey
-          it_source = lt_source ).
-      CATCH cx_sy_dyn_call_error.
-        deserialize_abap_source_old(
-          is_clskey = ls_clskey
-          it_source = lt_source ).
-    ENDTRY.
+    lo_object_oriented_object->deserialize_source(
+      is_key               = ls_clskey
+      it_source            = lt_source
+    ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
-    DELETE FROM seocompotx WHERE clsname = ls_clskey-clsname.
-    INSERT seocompotx FROM TABLE lt_descriptions.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    lo_object_oriented_object->update_descriptions(
+      is_key          = ls_clskey
+      it_descriptions = lt_descriptions
+    ).
 
+    lo_object_oriented_object->add_to_activation_list( is_item = ms_item  ).
   ENDMETHOD.                    "deserialize
 
   METHOD deserialize_abap_source_old.
@@ -1185,19 +1305,55 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
   PUBLIC SECTION.
     INTERFACES: lif_object_oriented_object.
     DATA:
-      mv_package    TYPE devclass,
-      mv_overwrite  TYPE seox_boolean,
-      mr_properties TYPE REF TO data.
+      mv_package               TYPE devclass,
+      mv_overwrite             TYPE seox_boolean,
+      ms_interface_properties  TYPE vseointerf,
+      ms_class_properties      TYPE vseoclass,
+      ms_locals_key            TYPE seoclskey,
+      mt_local_definitions     TYPE rswsourcet,
+      mt_local_implementations TYPE rswsourcet,
+      mt_local_macros          TYPE rswsourcet,
+      mt_local_test_classes    TYPE rswsourcet,
+      mv_force                 TYPE seoflag,
+      ms_deserialize_key       TYPE seoclskey,
+      mt_source                TYPE ty_string_tt,
+      ms_item_to_activate      TYPE ty_item,
+      mt_descriptions          TYPE ty_seocompotx_tt,
+      ms_description_key       TYPE seoclskey.
 ENDCLASS.
 CLASS ltd_spy_oo_object IMPLEMENTATION.
   METHOD lif_object_oriented_object~create.
-    FIELD-SYMBOLS: <fs_properties> TYPE any.
-    ASSIGN is_properties to <fs_properties>.
-    "<fs_properties> = is_properties.
-    GET reference of <fs_properties> into mr_properties.
-    mv_package      = iv_package.
-    mv_overwrite    = iv_overwrite.
+    IF cl_abap_typedescr=>describe_by_data( is_properties )->absolute_name = cl_abap_typedescr=>describe_by_data( ms_interface_properties )->absolute_name.
+      ms_interface_properties = is_properties.
+    ELSE.
+      ms_class_properties     = is_properties.
+    ENDIF.
+    mv_package                = iv_package.
+    mv_overwrite              = iv_overwrite.
   ENDMETHOD.
+  METHOD lif_object_oriented_object~generate_locals.
+    ms_locals_key            = is_key.
+    mt_local_definitions     = it_local_definitions.
+    mt_local_implementations = it_local_implementations.
+    mt_local_macros          = it_local_macros.
+    mt_local_test_classes    = it_local_test_classes.
+    mv_force                 = iv_force.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~deserialize_source.
+    ms_deserialize_key = is_key.
+    mt_source          = it_source.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~add_to_activation_list.
+    ms_item_to_activate = is_item.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~update_descriptions.
+    ms_description_key = is_key.
+    mt_descriptions    = it_descriptions.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltd_fake_object_files DEFINITION FOR TESTING
@@ -1206,25 +1362,25 @@ CLASS ltd_fake_object_files DEFINITION FOR TESTING
     METHODS constructor.
     METHODS read_abap REDEFINITION.
     DATA:
-      lt_sources               TYPE seop_source_string,
-      lt_local_definitions     TYPE seop_source_string,
-      lt_local_implementations TYPE seop_source_string,
-      lt_local_macros          TYPE seop_source_string,
-      lt_test_classes          TYPE seop_source_string.
+      mt_sources               TYPE seop_source_string,
+      mt_local_definitions     TYPE seop_source_string,
+      mt_local_implementations TYPE seop_source_string,
+      mt_local_macros          TYPE seop_source_string,
+      mt_local_test_classes    TYPE seop_source_string.
 ENDCLASS.
 CLASS ltd_fake_object_files IMPLEMENTATION.
   METHOD read_abap.
     CASE iv_extra.
       WHEN 'locals_def'.
-        rt_abap = lt_local_definitions.
+        rt_abap = mt_local_definitions.
       WHEN 'locals_imp'.
-        rt_abap = lt_local_implementations.
+        rt_abap = mt_local_implementations.
       WHEN 'macros'.
-        rt_abap = lt_local_macros.
+        rt_abap = mt_local_macros.
       WHEN 'testclasses'.
-        rt_abap = lt_test_classes.
+        rt_abap = mt_local_test_classes.
       WHEN OTHERS.
-        rt_abap = lt_sources.
+        rt_abap = mt_sources.
         RETURN.
     ENDCASE.
 
@@ -1233,11 +1389,11 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
   METHOD constructor.
     DATA ls_empty_item TYPE ty_item.
     super->constructor( ls_empty_item ).
-    APPEND 'source' TO me->lt_sources.
-    APPEND 'definition' TO me->lt_local_definitions.
-    APPEND 'implementation' TO me->lt_local_implementations.
-    APPEND 'macro' TO me->lt_local_macros.
-    APPEND 'test' TO me->lt_test_classes.
+    APPEND 'source'         TO me->mt_sources.
+    APPEND 'definition'     TO me->mt_local_definitions.
+    APPEND 'implementation' TO me->mt_local_implementations.
+    APPEND 'macro'          TO me->mt_local_macros.
+    APPEND 'test'           TO me->mt_local_test_classes.
   ENDMETHOD.
 
 ENDCLASS.
@@ -1245,35 +1401,48 @@ ENDCLASS.
 CLASS ltc_class_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PRIVATE SECTION.
     METHODS:
-      create FOR TESTING RAISING cx_static_check.
+      deserialize FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 CLASS ltc_class_deserialization IMPLEMENTATION.
 
-  METHOD create.
+  METHOD deserialize.
     DATA spy_oo_object TYPE REF TO ltd_spy_oo_object.
     DATA fake_object_files TYPE REF TO ltd_fake_object_files.
+    DATA xml_input TYPE REF TO lcl_xml_input.
+    DATA xml_out TYPE REF TO lcl_xml_output.
+    DATA: ls_class_properties   TYPE vseoclass.
+    DATA lo_class TYPE REF TO lif_object.
+    DATA ls_description TYPE seocompotx.
+    DATA lt_descriptions TYPE TABLE OF seocompotx.
+
     CREATE OBJECT fake_object_files.
     CREATE OBJECT spy_oo_object.
 
     lth_oo_factory_injector=>inject( spy_oo_object ).
 
-    DATA lo_class TYPE REF TO lif_object.
+    DATA(ls_item) = VALUE ty_item( devclass = 'package_name' obj_name = 'zcl_class' obj_type = 'CLAS' ).
+
     CREATE OBJECT lo_class TYPE lcl_object_clas
       EXPORTING
-        is_item     = VALUE #( devclass = 'CLAS' obj_name = 'zclass' obj_type = 'CLAS' )
+        is_item     = ls_item
         iv_language = sy-langu.
     lo_class->mo_files = fake_object_files.
 
-    DATA xml_input TYPE REF TO lcl_xml_input.
-    DATA xml_out TYPE REF TO lcl_xml_output.
-    DATA: ls_class_properties   TYPE vseoclass.
-    ls_class_properties-clsname = 'class_name'.
+
+    ls_class_properties-clsname = 'zcl_class'.
     CREATE OBJECT xml_out.
     xml_out->add(
-      EXPORTING
-        iv_name       = 'VSEOCLASS'
-        ig_data       = ls_class_properties
+      iv_name = 'VSEOCLASS'
+      ig_data = ls_class_properties
+    ).
+
+    ls_description-clsname = 'zcl_class'.
+    ls_description-cmpname = 'a_method'.
+    APPEND ls_description TO lt_descriptions.
+    xml_out->add(
+      iv_name = 'DESCRIPTIONS'
+      ig_data = lt_descriptions
     ).
 
     CREATE OBJECT xml_input
@@ -1284,22 +1453,84 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
       io_xml        = xml_input
     ).
 
-    lcl_objects_activation=>clear( ).
-
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->mr_properties
+      act = spy_oo_object->ms_class_properties
       exp = ls_class_properties
     ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->mv_overwrite
-      exp = abap_true
-    ).
+    cl_abap_unit_assert=>assert_true( spy_oo_object->mv_overwrite ).
 
     cl_abap_unit_assert=>assert_equals(
       act = spy_oo_object->mv_package
       exp = 'package_name'
     ).
+
+    "Local generation
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->ms_locals_key
+      exp = 'zcl_class'
+    ).
+    cl_abap_unit_assert=>assert_true( spy_oo_object->mv_force ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->mt_local_definitions
+      exp = fake_object_files->mt_local_definitions
+    ).
+
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_local_implementations
+       exp = fake_object_files->mt_local_implementations
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_local_macros
+       exp = fake_object_files->mt_local_macros
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_local_test_classes
+       exp = fake_object_files->mt_local_test_classes
+     ).
+
+    "Deserialization source
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_source
+       exp = fake_object_files->mt_sources
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->ms_deserialize_key
+      exp = 'zcl_class'
+    ).
+
+    "Update descriptions
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_descriptions
+       exp = lt_descriptions
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->ms_description_key
+      exp = 'zcl_class'
+    ).
+
+    "Descriptions
+    cl_abap_unit_assert=>assert_equals(
+       act = spy_oo_object->mt_descriptions
+       exp = lt_descriptions
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->ms_description_key
+      exp = 'zcl_class'
+    ).
+
+    "Activation
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->ms_item_to_activate
+      exp = ls_item
+    ).
+
   ENDMETHOD.
 
 ENDCLASS.
