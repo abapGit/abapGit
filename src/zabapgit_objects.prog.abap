@@ -187,7 +187,7 @@ ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_objects_files DEFINITION FINAL.
+CLASS lcl_objects_files DEFINITION .
 
   PUBLIC SECTION.
     METHODS:

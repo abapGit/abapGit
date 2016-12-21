@@ -17,6 +17,24 @@ INTERFACE lif_object_oriented_object.
         is_properties TYPE any
       RAISING
         lcx_exception.
+*    generate_locals
+*        CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
+*        EXPORTING
+*          clskey                 = ls_clskey
+*          force                  = seox_true
+*          locals_def             = lt_locals_def
+*          locals_imp             = lt_locals_imp
+*          locals_mac             = lt_locals_mac
+*          locals_testclasses     = lt_testclasses
+*        EXCEPTIONS
+*          not_existing           = 1
+*          model_only             = 2
+*          locals_not_generated   = 3
+*          locals_not_initialised = 4
+*          OTHERS                 = 5.
+*      IF sy-subrc <> 0.
+*        lcx_exception=>raise( 'error from generate_locals' ).
+*      ENDIF.
 ENDINTERFACE.
 
 CLASS lcl_object_oriented_class DEFINITION.
@@ -72,17 +90,27 @@ CLASS lcl_object_oriented_interface IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_object_oriented_factory DEFINITION.
+CLASS lth_oo_factory_injector DEFINITION DEFERRED.
+
+CLASS lcl_object_oriented_factory DEFINITION
+  FRIENDS lth_oo_factory_injector.
   PUBLIC SECTION.
     CLASS-METHODS:
-      create
+      make
         IMPORTING
           iv_object_type                   TYPE tadir-object
         RETURNING
           VALUE(ro_object_oriented_object) TYPE REF TO lif_object_oriented_object.
+  PRIVATE SECTION.
+    CLASS-DATA:
+        go_object_oriented_object TYPE REF TO lif_object_oriented_object.
 ENDCLASS.
 CLASS lcl_object_oriented_factory IMPLEMENTATION.
-  METHOD create.
+  METHOD make.
+    IF go_object_oriented_object IS BOUND.
+      ro_object_oriented_object = go_object_oriented_object.
+      RETURN.
+    ENDIF.
     IF iv_object_type = 'CLAS'.
       CREATE OBJECT ro_object_oriented_object TYPE lcl_object_oriented_class.
     ELSEIF iv_object_type = 'INTF'.
@@ -91,6 +119,18 @@ CLASS lcl_object_oriented_factory IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lth_oo_factory_injector DEFINITION FOR TESTING.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      inject
+        IMPORTING
+          io_object_oriented_object TYPE REF TO lif_object_oriented_object.
+ENDCLASS.
+CLASS lth_oo_factory_injector IMPLEMENTATION.
+  METHOD inject.
+    lcl_object_oriented_factory=>go_object_oriented_object = io_object_oriented_object.
+  ENDMETHOD.
+ENDCLASS.
 
 CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
@@ -1004,51 +1044,32 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
 
+    DATA lo_object_oriented_object TYPE REF TO lif_object_oriented_object.
+    lo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+
 
     CASE ms_item-obj_type.
       WHEN 'CLAS'.
         io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                       CHANGING cg_data = ls_vseoclass ).
 
-        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+        lo_object_oriented_object->create(
           EXPORTING
-            devclass        = iv_package
-            overwrite       = seox_true
+            iv_package    = iv_package
           CHANGING
-            class           = ls_vseoclass
-          EXCEPTIONS
-            existing        = 1
-            is_interface    = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
-        ENDIF.
+            is_properties = ls_vseoclass
+        ).
 
       WHEN 'INTF'.
         io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                       CHANGING cg_data = ls_vseointerf ).
 
-        CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
-          EXPORTING
-            devclass        = iv_package
-            overwrite       = seox_true
-          CHANGING
-            interface       = ls_vseointerf
-          EXCEPTIONS
-            existing        = 1
-            is_class        = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
-        ENDIF.
+        lo_object_oriented_object->create(
+         EXPORTING
+           iv_package    = iv_package
+         CHANGING
+           is_properties = ls_vseointerf
+       ).
 
       WHEN OTHERS.
         ASSERT 0 = 1.
@@ -1159,3 +1180,126 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
+
+CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
+  PUBLIC SECTION.
+    INTERFACES: lif_object_oriented_object.
+    DATA:
+      mv_package    TYPE devclass,
+      mv_overwrite  TYPE seox_boolean,
+      mr_properties TYPE REF TO data.
+ENDCLASS.
+CLASS ltd_spy_oo_object IMPLEMENTATION.
+  METHOD lif_object_oriented_object~create.
+    FIELD-SYMBOLS: <fs_properties> TYPE any.
+    ASSIGN is_properties to <fs_properties>.
+    "<fs_properties> = is_properties.
+    GET reference of <fs_properties> into mr_properties.
+    mv_package      = iv_package.
+    mv_overwrite    = iv_overwrite.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltd_fake_object_files DEFINITION FOR TESTING
+  INHERITING FROM  lcl_objects_files.
+  PUBLIC SECTION.
+    METHODS constructor.
+    METHODS read_abap REDEFINITION.
+    DATA:
+      lt_sources               TYPE seop_source_string,
+      lt_local_definitions     TYPE seop_source_string,
+      lt_local_implementations TYPE seop_source_string,
+      lt_local_macros          TYPE seop_source_string,
+      lt_test_classes          TYPE seop_source_string.
+ENDCLASS.
+CLASS ltd_fake_object_files IMPLEMENTATION.
+  METHOD read_abap.
+    CASE iv_extra.
+      WHEN 'locals_def'.
+        rt_abap = lt_local_definitions.
+      WHEN 'locals_imp'.
+        rt_abap = lt_local_implementations.
+      WHEN 'macros'.
+        rt_abap = lt_local_macros.
+      WHEN 'testclasses'.
+        rt_abap = lt_test_classes.
+      WHEN OTHERS.
+        rt_abap = lt_sources.
+        RETURN.
+    ENDCASE.
+
+    cl_abap_unit_assert=>assert_false( iv_error ).
+  ENDMETHOD.
+  METHOD constructor.
+    DATA ls_empty_item TYPE ty_item.
+    super->constructor( ls_empty_item ).
+    APPEND 'source' TO me->lt_sources.
+    APPEND 'definition' TO me->lt_local_definitions.
+    APPEND 'implementation' TO me->lt_local_implementations.
+    APPEND 'macro' TO me->lt_local_macros.
+    APPEND 'test' TO me->lt_test_classes.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltc_class_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+  PRIVATE SECTION.
+    METHODS:
+      create FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
+CLASS ltc_class_deserialization IMPLEMENTATION.
+
+  METHOD create.
+    DATA spy_oo_object TYPE REF TO ltd_spy_oo_object.
+    DATA fake_object_files TYPE REF TO ltd_fake_object_files.
+    CREATE OBJECT fake_object_files.
+    CREATE OBJECT spy_oo_object.
+
+    lth_oo_factory_injector=>inject( spy_oo_object ).
+
+    DATA lo_class TYPE REF TO lif_object.
+    CREATE OBJECT lo_class TYPE lcl_object_clas
+      EXPORTING
+        is_item     = VALUE #( devclass = 'CLAS' obj_name = 'zclass' obj_type = 'CLAS' )
+        iv_language = sy-langu.
+    lo_class->mo_files = fake_object_files.
+
+    DATA xml_input TYPE REF TO lcl_xml_input.
+    DATA xml_out TYPE REF TO lcl_xml_output.
+    DATA: ls_class_properties   TYPE vseoclass.
+    ls_class_properties-clsname = 'class_name'.
+    CREATE OBJECT xml_out.
+    xml_out->add(
+      EXPORTING
+        iv_name       = 'VSEOCLASS'
+        ig_data       = ls_class_properties
+    ).
+
+    CREATE OBJECT xml_input
+      EXPORTING
+        iv_xml = xml_out->render( ).
+    lo_class->deserialize(
+      iv_package    = 'package_name'
+      io_xml        = xml_input
+    ).
+
+    lcl_objects_activation=>clear( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->mr_properties
+      exp = ls_class_properties
+    ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->mv_overwrite
+      exp = abap_true
+    ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = spy_oo_object->mv_package
+      exp = 'package_name'
+    ).
+  ENDMETHOD.
+
+ENDCLASS.
