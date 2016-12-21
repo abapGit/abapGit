@@ -1401,136 +1401,215 @@ ENDCLASS.
 CLASS ltc_class_deserialization DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PRIVATE SECTION.
     METHODS:
-      deserialize FOR TESTING RAISING cx_static_check.
+      setup,
+      given_a_class_properties
+        RAISING
+          lcx_exception,
+      when_deserializing
+        RAISING
+          lcx_exception,
+      then_should_create_class,
+      then_it_should_generate_locals,
+      then_should_deserialize_source,
+      given_the_descriptions
+        IMPORTING
+          it_descriptions TYPE ty_seocompotx_tt
+        RAISING
+          lcx_exception,
+    then_shuld_update_descriptions
+      IMPORTING
+          it_descriptions TYPE ty_seocompotx_tt,
+      then_it_should_add_activation,
+      should_create_class        FOR TESTING RAISING cx_static_check,
+      should_generate_locals     FOR TESTING RAISING cx_static_check,
+      should_deserialize_source  FOR TESTING RAISING cx_static_check,
+      should_update_descriptions FOR TESTING RAISING cx_static_check,
+      should_add_to_activation   FOR TESTING RAISING cx_static_check.
+
+    DATA:
+      mo_spy_oo_object     TYPE REF TO ltd_spy_oo_object,
+      mo_fake_object_files TYPE REF TO ltd_fake_object_files,
+      mo_xml_input         TYPE REF TO lcl_xml_input,
+      mo_xml_out           TYPE REF TO lcl_xml_output,
+      mo_class             TYPE REF TO lif_object,
+      ms_class_properties  TYPE vseoclass,
+      ls_item              TYPE ty_item.
 ENDCLASS.
 
 CLASS ltc_class_deserialization IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_fake_object_files.
+    CREATE OBJECT mo_spy_oo_object.
+    CREATE OBJECT mo_xml_out.
+    lth_oo_factory_injector=>inject( mo_spy_oo_object ).
 
-  METHOD deserialize.
-    DATA spy_oo_object TYPE REF TO ltd_spy_oo_object.
-    DATA fake_object_files TYPE REF TO ltd_fake_object_files.
-    DATA xml_input TYPE REF TO lcl_xml_input.
-    DATA xml_out TYPE REF TO lcl_xml_output.
-    DATA: ls_class_properties   TYPE vseoclass.
-    DATA lo_class TYPE REF TO lif_object.
-    DATA ls_description TYPE seocompotx.
-    DATA lt_descriptions TYPE TABLE OF seocompotx.
+    ls_item-devclass = 'package_name'.
+    ls_item-obj_name = 'zcl_class'.
+    ls_item-obj_type = 'CLAS'.
 
-    CREATE OBJECT fake_object_files.
-    CREATE OBJECT spy_oo_object.
-
-    lth_oo_factory_injector=>inject( spy_oo_object ).
-
-    DATA(ls_item) = VALUE ty_item( devclass = 'package_name' obj_name = 'zcl_class' obj_type = 'CLAS' ).
-
-    CREATE OBJECT lo_class TYPE lcl_object_clas
+    CREATE OBJECT mo_class TYPE lcl_object_clas
       EXPORTING
         is_item     = ls_item
         iv_language = sy-langu.
-    lo_class->mo_files = fake_object_files.
+    mo_class->mo_files = mo_fake_object_files.
+  ENDMETHOD.
 
+  METHOD should_create_class.
+    ms_class_properties-clsname = ls_item-obj_name.
 
-    ls_class_properties-clsname = 'zcl_class'.
-    CREATE OBJECT xml_out.
-    xml_out->add(
-      iv_name = 'VSEOCLASS'
-      ig_data = ls_class_properties
-    ).
+    given_a_class_properties( ).
 
-    ls_description-clsname = 'zcl_class'.
+    when_deserializing( ).
+
+    then_should_create_class( ).
+  ENDMETHOD.
+
+  METHOD should_generate_locals.
+    given_a_class_properties( ).
+
+    when_deserializing( ).
+
+    then_it_should_generate_locals( ).
+  ENDMETHOD.
+
+  METHOD should_deserialize_source.
+    given_a_class_properties( ).
+
+    when_deserializing( ).
+
+    then_should_deserialize_source( ).
+  ENDMETHOD.
+
+  METHOD should_update_descriptions.
+    DATA:
+      ls_description  TYPE seocompotx,
+      lt_descriptions TYPE ty_seocompotx_tt.
+
+    given_a_class_properties( ).
+
+    ls_description-clsname =  ls_item-obj_name.
     ls_description-cmpname = 'a_method'.
     APPEND ls_description TO lt_descriptions.
-    xml_out->add(
-      iv_name = 'DESCRIPTIONS'
-      ig_data = lt_descriptions
-    ).
+    given_the_descriptions( lt_descriptions ).
 
-    CREATE OBJECT xml_input
+    when_deserializing( ).
+
+   then_shuld_update_descriptions( lt_descriptions ).
+  ENDMETHOD.
+
+  METHOD should_add_to_activation.
+    given_a_class_properties( ).
+
+    when_deserializing( ).
+
+    "Activation
+then_it_should_add_activation( ).
+  ENDMETHOD.
+
+  METHOD given_a_class_properties.
+    mo_xml_out->add(
+      iv_name = 'VSEOCLASS'
+      ig_data = ms_class_properties
+   ).
+  ENDMETHOD.
+
+
+  METHOD when_deserializing.
+    CREATE OBJECT mo_xml_input
       EXPORTING
-        iv_xml = xml_out->render( ).
-    lo_class->deserialize(
+        iv_xml = mo_xml_out->render( ).
+    mo_class->deserialize(
       iv_package    = 'package_name'
-      io_xml        = xml_input
+      io_xml        = mo_xml_input
     ).
+  ENDMETHOD.
+
+
+  METHOD then_should_create_class.
 
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_class_properties
-      exp = ls_class_properties
-    ).
+         act = mo_spy_oo_object->ms_class_properties
+         exp = ms_class_properties
+       ).
 
-    cl_abap_unit_assert=>assert_true( spy_oo_object->mv_overwrite ).
+    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->mv_package
+      act = mo_spy_oo_object->mv_package
       exp = 'package_name'
     ).
 
-    "Local generation
+  ENDMETHOD.
+
+
+  METHOD then_it_should_generate_locals.
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_locals_key
-      exp = 'zcl_class'
+      act = mo_spy_oo_object->ms_locals_key
+      exp = ls_item-obj_name
     ).
-    cl_abap_unit_assert=>assert_true( spy_oo_object->mv_force ).
+    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_force ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->mt_local_definitions
-      exp = fake_object_files->mt_local_definitions
-    ).
-
-    cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_local_implementations
-       exp = fake_object_files->mt_local_implementations
-     ).
-
-    cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_local_macros
-       exp = fake_object_files->mt_local_macros
-     ).
-
-    cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_local_test_classes
-       exp = fake_object_files->mt_local_test_classes
-     ).
-
-    "Deserialization source
-    cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_source
-       exp = fake_object_files->mt_sources
-     ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_deserialize_key
-      exp = 'zcl_class'
+      act = mo_spy_oo_object->mt_local_definitions
+      exp = mo_fake_object_files->mt_local_definitions
     ).
 
-    "Update descriptions
     cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_descriptions
-       exp = lt_descriptions
+       act = mo_spy_oo_object->mt_local_implementations
+       exp = mo_fake_object_files->mt_local_implementations
      ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_description_key
-      exp = 'zcl_class'
-    ).
-
-    "Descriptions
-    cl_abap_unit_assert=>assert_equals(
-       act = spy_oo_object->mt_descriptions
-       exp = lt_descriptions
+       act = mo_spy_oo_object->mt_local_macros
+       exp = mo_fake_object_files->mt_local_macros
      ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_description_key
-      exp = 'zcl_class'
-    ).
+       act = mo_spy_oo_object->mt_local_test_classes
+       exp = mo_fake_object_files->mt_local_test_classes
+     ).
+  ENDMETHOD.
 
-    "Activation
+
+  METHOD then_should_deserialize_source.
     cl_abap_unit_assert=>assert_equals(
-      act = spy_oo_object->ms_item_to_activate
+       act = mo_spy_oo_object->mt_source
+       exp = mo_fake_object_files->mt_sources
+     ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_deserialize_key
+      exp = ls_item-obj_name
+    ).
+  ENDMETHOD.
+
+
+  METHOD given_the_descriptions.
+    mo_xml_out->add(
+      iv_name = 'DESCRIPTIONS'
+      ig_data = it_descriptions
+   ).
+  ENDMETHOD.
+
+
+  METHOD then_shuld_update_descriptions.
+    cl_abap_unit_assert=>assert_equals(
+          act = mo_spy_oo_object->mt_descriptions
+          exp = it_descriptions
+        ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_description_key
+      exp = ls_item-obj_name
+    ).
+  ENDMETHOD.
+
+
+  METHOD then_it_should_add_activation.
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->ms_item_to_activate
       exp = ls_item
     ).
-
   ENDMETHOD.
 
 ENDCLASS.
