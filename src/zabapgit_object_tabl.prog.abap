@@ -195,6 +195,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
 
+      IF <ls_dd03p>-masklen = '' OR NOT <ls_dd03p>-masklen CO '0123456789'.
+* make sure the field contains valid data, or the XML will dump
+        CLEAR <ls_dd03p>-masklen.
+      ENDIF.
+
       IF <ls_dd03p>-comptype = 'E'.
 * type specified via data element
         CLEAR: <ls_dd03p>-domname,
