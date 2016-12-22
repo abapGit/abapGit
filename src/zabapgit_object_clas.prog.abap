@@ -181,7 +181,19 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_documentation.
-
+    CALL FUNCTION 'DOCU_UPD'
+      EXPORTING
+        id       = 'CL'
+        langu    = iv_language
+        object   = iv_object_name
+      TABLES
+        line     = it_lines
+      EXCEPTIONS
+        ret_code = 1
+        OTHERS   = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from DOCU_UPD' ).
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
@@ -417,17 +429,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE ty_string_tt
       RAISING   lcx_exception.
-
-    METHODS deserialize_abap_source_old
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
-      RAISING   lcx_exception.
-
-    METHODS deserialize_abap_source_new
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
-      RAISING   lcx_exception
-                cx_sy_dyn_call_error.
 
     METHODS serialize_abap_new
       IMPORTING is_clskey        TYPE seoclskey
@@ -1129,8 +1130,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     mo_object_oriented_object->create_sotr(
       iv_package    = iv_package
-      it_sotr       = lt_sotr
-    ).
+      it_sotr       = lt_sotr ).
   ENDMETHOD.
 
   METHOD deserialize_docu.
@@ -1174,37 +1174,36 @@ CLASS lcl_object_clas IMPLEMENTATION.
     mo_object_oriented_object->insert_text_pool(
       iv_class_name = lv_clsname
       it_text_pool  = lt_tpool
-      iv_language   = mv_language
-    ).
+      iv_language   = mv_language ).
   ENDMETHOD.                    "deserialize_textpool
 
   METHOD deserialize_abap.
 
-    DATA: ls_vseoclass    TYPE vseoclass,
-          lt_source       TYPE seop_source_string,
-          lt_locals_def   TYPE seop_source_string,
-          lt_locals_imp   TYPE seop_source_string,
-          lt_locals_mac   TYPE seop_source_string,
-          lt_testclasses  TYPE seop_source_string,
-          lt_descriptions TYPE ty_seocompotx_tt,
-          ls_clskey       TYPE seoclskey.
+    DATA: ls_vseoclass             TYPE vseoclass,
+          lt_source                TYPE seop_source_string,
+          lt_local_definitions     TYPE seop_source_string,
+          lt_local_implementations TYPE seop_source_string,
+          lt_local_macros          TYPE seop_source_string,
+          lt_test_classes          TYPE seop_source_string,
+          lt_descriptions          TYPE ty_seocompotx_tt,
+          ls_class_key             TYPE seoclskey.
 
 
     lt_source = mo_files->read_abap( ).
 
-    lt_locals_def = mo_files->read_abap( iv_extra = 'locals_def'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_definitions = mo_files->read_abap( iv_extra = 'locals_def'
+                                                iv_error = abap_false ). "#EC NOTEXT
 
-    lt_locals_imp = mo_files->read_abap( iv_extra = 'locals_imp'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_implementations = mo_files->read_abap( iv_extra = 'locals_imp'
+                                                    iv_error = abap_false ). "#EC NOTEXT
 
-    lt_locals_mac = mo_files->read_abap( iv_extra = 'macros'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_macros = mo_files->read_abap( iv_extra = 'macros'
+                                           iv_error = abap_false ). "#EC NOTEXT
 
-    lt_testclasses = mo_files->read_abap( iv_extra = 'testclasses'
-                                          iv_error = abap_false ). "#EC NOTEXT
+    lt_test_classes = mo_files->read_abap( iv_extra = 'testclasses'
+                                           iv_error = abap_false ). "#EC NOTEXT
 
-    ls_clskey-clsname = ms_item-obj_name.
+    ls_class_key-clsname = ms_item-obj_name.
 
     io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING cg_data = ls_vseoclass ).
@@ -1213,93 +1212,28 @@ CLASS lcl_object_clas IMPLEMENTATION.
       EXPORTING
         iv_package    = iv_package
       CHANGING
-        is_properties = ls_vseoclass
-    ).
+        is_properties = ls_vseoclass ).
     mo_object_oriented_object->generate_locals(
-      is_key                   = ls_clskey
+      is_key                   = ls_class_key
       iv_force                 = seox_true
-      it_local_definitions     = lt_locals_def
-      it_local_implementations = lt_locals_imp
-      it_local_macros          = lt_locals_mac
-      it_local_test_classes    = lt_testclasses
-    ).
+      it_local_definitions     = lt_local_definitions
+      it_local_implementations = lt_local_implementations
+      it_local_macros          = lt_local_macros
+      it_local_test_classes    = lt_test_classes ).
 
     mo_object_oriented_object->deserialize_source(
-      is_key               = ls_clskey
-      it_source            = lt_source
-    ).
+      is_key               = ls_class_key
+      it_source            = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
     mo_object_oriented_object->update_descriptions(
-      is_key          = ls_clskey
-      it_descriptions = lt_descriptions
-    ).
+      is_key          = ls_class_key
+      it_descriptions = lt_descriptions ).
 
     mo_object_oriented_object->add_to_activation_list( is_item = ms_item  ).
   ENDMETHOD.                    "deserialize
-
-  METHOD deserialize_abap_source_old.
-* for backwards compatability down to 702
-
-    DATA: lo_source TYPE REF TO cl_oo_source.
-
-
-    CREATE OBJECT lo_source
-      EXPORTING
-        clskey             = is_clskey
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
-    ENDIF.
-
-    TRY.
-        lo_source->access_permission( seok_access_modify ).
-        lo_source->set_source( it_source ).
-        lo_source->save( ).
-        lo_source->access_permission( seok_access_free ).
-      CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'permission error' ).
-      CATCH cx_oo_source_save_failure.
-        lcx_exception=>raise( 'save failure' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD deserialize_abap_source_new.
-
-    DATA: lo_factory TYPE REF TO object,
-          lo_source  TYPE REF TO object.
-
-
-    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
-      RECEIVING
-        result = lo_factory.
-
-    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
-      EXPORTING
-        clif_name = is_clskey-clsname
-      RECEIVING
-        result    = lo_source.
-
-    TRY.
-        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
-      CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'source_new, access permission exception' ).
-    ENDTRY.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
-      EXPORTING
-        source = it_source.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
-
-  ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
@@ -1347,23 +1281,20 @@ CLASS lcl_object_intf IMPLEMENTATION.
      EXPORTING
        iv_package    = iv_package
      CHANGING
-       is_properties = ls_vseointerf
-   ).
+       is_properties = ls_vseointerf ).
 
     mo_object_oriented_object->deserialize_source(
       is_key               = ls_clskey
-      it_source            = lt_source
-    ).
+      it_source            = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
     mo_object_oriented_object->update_descriptions(
       is_key          = ls_clskey
-      it_descriptions = lt_descriptions
-    ).
+      it_descriptions = lt_descriptions ).
 
-    mo_object_oriented_object->add_to_activation_list( is_item = ms_item  ).
+    mo_object_oriented_object->add_to_activation_list( is_item = ms_item ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -1399,7 +1330,9 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
 ENDCLASS.
 CLASS ltd_spy_oo_object IMPLEMENTATION.
   METHOD lif_object_oriented_object~create.
-    IF cl_abap_typedescr=>describe_by_data( is_properties )->absolute_name = cl_abap_typedescr=>describe_by_data( ms_interface_properties )->absolute_name.
+    DATA lv_properties_structure_name TYPE string.
+    lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( is_properties )->absolute_name.
+    IF lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( ms_interface_properties )->absolute_name.
       ms_interface_properties = is_properties.
     ELSE.
       ms_class_properties     = is_properties.
@@ -1436,8 +1369,7 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mt_text_pool = it_text_pool.
     cl_abap_unit_assert=>assert_equals(
       act = iv_language
-      exp = sy-langu
-    ).
+      exp = sy-langu ).
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_sotr.
@@ -1532,63 +1464,53 @@ CLASS ltc_oo_test IMPLEMENTATION.
   METHOD then_docu_should_be_created.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_docu_lines
-      exp = it_lines
-    ).
+      exp = it_lines ).
 
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mv_docu_object_name
-       exp = ms_item-obj_name
-     ).
+       exp = ms_item-obj_name ).
 
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mv_docu_language
-       exp = sy-langu
-     ).
+       exp = sy-langu ).
   ENDMETHOD.
 
   METHOD given_documentation_in_xml_as.
     mo_xml_out->add(
       iv_name = 'LINES'
-      ig_data = it_lines
-    ).
+      ig_data = it_lines ).
   ENDMETHOD.
 
   METHOD then_it_should_add_activation.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_item_to_activate
-      exp = ms_item
-    ).
+      exp = ms_item ).
   ENDMETHOD.
 
   METHOD then_shuld_update_descriptions.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_descriptions
-      exp = it_descriptions
-    ).
+      exp = it_descriptions ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_description_key
-      exp = ms_item-obj_name
-    ).
+      exp = ms_item-obj_name ).
   ENDMETHOD.
 
   METHOD given_the_descriptions.
     mo_xml_out->add(
       iv_name = 'DESCRIPTIONS'
-      ig_data = it_descriptions
-   ).
+      ig_data = it_descriptions ).
   ENDMETHOD.
 
   METHOD then_should_deserialize_source.
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mt_source
-       exp = mo_fake_object_files->mt_sources
-     ).
+       exp = mo_fake_object_files->mt_sources ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_deserialize_key
-      exp = ms_item-obj_name
-    ).
+      exp = ms_item-obj_name ).
   ENDMETHOD.
 
   METHOD when_deserializing.
@@ -1597,8 +1519,7 @@ CLASS ltc_oo_test IMPLEMENTATION.
         iv_xml = mo_xml_out->render( ).
     mo_oo_object->deserialize(
       iv_package    = 'package_name'
-      io_xml        = mo_xml_input
-    ).
+      io_xml        = mo_xml_input ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -1697,51 +1618,43 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
   METHOD given_a_class_properties.
     mo_xml_out->add(
       iv_name = 'VSEOCLASS'
-      ig_data = ms_class_properties
-   ).
+      ig_data = ms_class_properties ).
   ENDMETHOD.
 
   METHOD then_should_create_class.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_class_properties
-      exp = ms_class_properties
-    ).
+      exp = ms_class_properties ).
 
     cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mv_package
-      exp = 'package_name'
-    ).
+      exp = 'package_name' ).
   ENDMETHOD.
 
 
   METHOD then_it_should_generate_locals.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_locals_key
-      exp = ms_item-obj_name
-    ).
+      exp = ms_item-obj_name ).
     cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_force ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_local_definitions
-      exp = mo_fake_object_files->mt_local_definitions
-    ).
+      exp = mo_fake_object_files->mt_local_definitions  ).
 
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mt_local_implementations
-       exp = mo_fake_object_files->mt_local_implementations
-     ).
+       exp = mo_fake_object_files->mt_local_implementations ).
 
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mt_local_macros
-       exp = mo_fake_object_files->mt_local_macros
-     ).
+       exp = mo_fake_object_files->mt_local_macros ).
 
     cl_abap_unit_assert=>assert_equals(
        act = mo_spy_oo_object->mt_local_test_classes
-       exp = mo_fake_object_files->mt_local_test_classes
-     ).
+       exp = mo_fake_object_files->mt_local_test_classes ).
   ENDMETHOD.
   METHOD no_text_pool_no_insert.
     given_a_class_properties( ).
@@ -1752,29 +1665,27 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD insert_text_pool.
-    given_a_class_properties( ).
-
-    DATA lt_pool_external TYPE textpool_table.
-    DATA ls_pool_external TYPE ty_tpool.
+    DATA: lt_pool_external TYPE textpool_table,
+          ls_pool_external TYPE ty_tpool.
     ls_pool_external-id = 'ID'.
     ls_pool_external-key = 'KEY'.
     APPEND ls_pool_external TO lt_pool_external.
+
+    given_a_class_properties( ).
+
     mo_xml_out->add(
       iv_name = 'TPOOL'
-      ig_data = lt_pool_external
-    ).
+      ig_data = lt_pool_external ).
 
     when_deserializing( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_text_pool
-      exp = lt_pool_external
-    ).
+      exp = lt_pool_external ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mv_text_pool_class_name
-      exp = 'zcl_class'
-    ).
+      exp = 'zcl_class' ).
   ENDMETHOD.
 
   METHOD create_stor_from_xml.
@@ -1788,19 +1699,16 @@ CLASS ltc_class_deserialization IMPLEMENTATION.
     APPEND ls_sotr TO lt_sotr.
     mo_xml_out->add(
       iv_name = 'SOTR'
-      ig_data = lt_sotr
-    ).
+      ig_data = lt_sotr ).
 
     when_deserializing( ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_sotr
-      exp = lt_sotr
-    ).
+      exp = lt_sotr ).
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_sotr_package
-      exp = 'package_name'
-    ).
+      exp = 'package_name' ).
   ENDMETHOD.
 
   METHOD create_documentation.
@@ -1899,22 +1807,19 @@ CLASS ltc_interface_deserialization IMPLEMENTATION.
   METHOD given_an_interface_properties.
     mo_xml_out->add(
       iv_name = 'VSEOINTERF'
-      ig_data = ms_interface_properties
-    ).
+      ig_data = ms_interface_properties ).
   ENDMETHOD.
 
   METHOD then_should_create_interface.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_interface_properties
-      exp = ms_interface_properties
-    ).
+      exp = ms_interface_properties ).
 
     cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mv_package
-      exp = 'package_name'
-    ).
+      exp = 'package_name' ).
   ENDMETHOD.
 
   METHOD create_documentation.
