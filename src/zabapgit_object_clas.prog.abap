@@ -391,21 +391,20 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
   PUBLIC SECTION.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
-
-  PRIVATE SECTION.
-    DATA mv_skip_testclass TYPE abap_bool.
-    DATA mo_object_oriented_object TYPE REF TO lif_object_oriented_object.
-
+  PROTECTED SECTION.
     METHODS deserialize_abap
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-    METHODS deserialize_textpool
+    METHODS deserialize_docu
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
+    DATA mo_object_oriented_object TYPE REF TO lif_object_oriented_object.
+  PRIVATE SECTION.
+    DATA mv_skip_testclass TYPE abap_bool.
 
-    METHODS deserialize_docu
+    METHODS deserialize_textpool
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
@@ -479,16 +478,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       RETURNING VALUE(rt_includes) TYPE seoincl_t.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_intf DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
-* todo, CLAS + INTF to be refactored, see:
-* https://github.com/larshp/abapGit/issues/21
-ENDCLASS.                    "lcl_object_intf DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_clas IMPLEMENTATION
@@ -1113,12 +1102,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
-    IF ms_item-obj_type = 'CLAS'.
-      deserialize_textpool( io_xml ).
+    deserialize_textpool( io_xml ).
 
-      deserialize_sotr( io_xml     = io_xml
-                        iv_package = iv_package ).
-    ENDIF.
+    deserialize_sotr( io_xml     = io_xml
+                      iv_package = iv_package ).
 
     deserialize_docu( io_xml ).
   ENDMETHOD.                    "deserialize
@@ -1149,7 +1136,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD deserialize_docu.
 
     DATA: lt_lines  TYPE tlinetab,
-          lv_object type dokhl-object.
+          lv_object TYPE dokhl-object.
 
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -1194,7 +1181,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD deserialize_abap.
 
     DATA: ls_vseoclass    TYPE vseoclass,
-          ls_vseointerf   TYPE vseointerf,
           lt_source       TYPE seop_source_string,
           lt_locals_def   TYPE seop_source_string,
           lt_locals_imp   TYPE seop_source_string,
@@ -1220,43 +1206,23 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
 
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
-                      CHANGING cg_data = ls_vseoclass ).
+    io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
+                  CHANGING cg_data = ls_vseoclass ).
 
-        mo_object_oriented_object->create(
-          EXPORTING
-            iv_package    = iv_package
-          CHANGING
-            is_properties = ls_vseoclass
-        ).
-
-      WHEN 'INTF'.
-        io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                      CHANGING cg_data = ls_vseointerf ).
-
-        mo_object_oriented_object->create(
-         EXPORTING
-           iv_package    = iv_package
-         CHANGING
-           is_properties = ls_vseointerf
-       ).
-
-      WHEN OTHERS.
-        ASSERT 0 = 1.
-    ENDCASE.
-
-    IF ms_item-obj_type = 'CLAS'.
-      mo_object_oriented_object->generate_locals(
-        is_key                   = ls_clskey
-        iv_force                 = seox_true
-        it_local_definitions     = lt_locals_def
-        it_local_implementations = lt_locals_imp
-        it_local_macros          = lt_locals_mac
-        it_local_test_classes    = lt_testclasses
-      ).
-    ENDIF.
+    mo_object_oriented_object->create(
+      EXPORTING
+        iv_package    = iv_package
+      CHANGING
+        is_properties = ls_vseoclass
+    ).
+    mo_object_oriented_object->generate_locals(
+      is_key                   = ls_clskey
+      iv_force                 = seox_true
+      it_local_definitions     = lt_locals_def
+      it_local_implementations = lt_locals_imp
+      it_local_macros          = lt_locals_mac
+      it_local_test_classes    = lt_testclasses
+    ).
 
     mo_object_oriented_object->deserialize_source(
       is_key               = ls_clskey
@@ -1340,6 +1306,67 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_intf DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
+* todo, CLAS + INTF to be refactored, see:
+* https://github.com/larshp/abapGit/issues/21
+  PUBLIC SECTION.
+    METHODS:
+      lif_object~deserialize REDEFINITION.
+  PROTECTED SECTION.
+    METHODS:
+      deserialize_abap REDEFINITION.
+ENDCLASS.                    "lcl_object_intf DEFINITION
+CLASS lcl_object_intf IMPLEMENTATION.
+  METHOD lif_object~deserialize.
+    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+
+    deserialize_abap( io_xml     = io_xml
+                      iv_package = iv_package ).
+
+    deserialize_docu( io_xml ).
+  ENDMETHOD.
+  METHOD deserialize_abap.
+    DATA: ls_vseointerf   TYPE vseointerf,
+          lt_source       TYPE seop_source_string,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_clskey       TYPE seoclskey.
+    ls_clskey-clsname = ms_item-obj_name.
+
+    lt_source = mo_files->read_abap( ).
+
+    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                  CHANGING cg_data = ls_vseointerf ).
+
+    mo_object_oriented_object->create(
+     EXPORTING
+       iv_package    = iv_package
+     CHANGING
+       is_properties = ls_vseointerf
+   ).
+
+    mo_object_oriented_object->deserialize_source(
+      is_key               = ls_clskey
+      it_source            = lt_source
+    ).
+
+    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                  CHANGING cg_data = lt_descriptions ).
+
+    mo_object_oriented_object->update_descriptions(
+      is_key          = ls_clskey
+      it_descriptions = lt_descriptions
+    ).
+
+    mo_object_oriented_object->add_to_activation_list( is_item = ms_item  ).
+  ENDMETHOD.
+ENDCLASS.
+
 
 CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
   PUBLIC SECTION.
@@ -1490,14 +1517,14 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT .
         IMPORTING
           it_descriptions TYPE ty_seocompotx_tt,
       then_it_should_add_activation,
-             given_documentation_in_xml_as
-                     IMPORTING
-                       it_lines TYPE tlinetab
-                     RAISING
-                       lcx_exception,
-             then_docu_should_be_created
-                     IMPORTING
-                       it_lines TYPE tlinetab.
+      given_documentation_in_xml_as
+        IMPORTING
+          it_lines TYPE tlinetab
+        RAISING
+          lcx_exception,
+      then_docu_should_be_created
+        IMPORTING
+          it_lines TYPE tlinetab.
 
 ENDCLASS.
 CLASS ltc_oo_test IMPLEMENTATION.
