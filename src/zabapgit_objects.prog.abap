@@ -859,13 +859,6 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF i WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_tpool.
-            INCLUDE TYPE textpool.
-    TYPES:   split TYPE c LENGTH 8.
-    TYPES: END OF ty_tpool.
-
-    TYPES: ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
-
     TYPES: BEGIN OF ty_dynpro,
              header     TYPE rpy_dyhead,
              containers TYPE dycatt_tab,
