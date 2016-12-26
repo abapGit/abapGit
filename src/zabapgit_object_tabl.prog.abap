@@ -170,6 +170,10 @@ CLASS lcl_object_tabl IMPLEMENTATION.
            ls_dd02v-as4date,
            ls_dd02v-as4time.
 
+    IF ls_dd02v-prozpuff = ''.
+      CLEAR ls_dd02v-prozpuff. " reset numeric field, so XML does not crash
+    ENDIF.
+
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
            ls_dd09l-as4time.
