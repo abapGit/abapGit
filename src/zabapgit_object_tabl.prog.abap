@@ -170,8 +170,15 @@ CLASS lcl_object_tabl IMPLEMENTATION.
            ls_dd02v-as4date,
            ls_dd02v-as4time.
 
+* reset numeric field, so XML does not crash
     IF ls_dd02v-prozpuff = ''.
-      CLEAR ls_dd02v-prozpuff. " reset numeric field, so XML does not crash
+      CLEAR ls_dd02v-prozpuff.
+    ENDIF.
+    IF ls_dd02v-datmin = ''.
+      CLEAR ls_dd02v-datmin.
+    ENDIF.
+    IF ls_dd02v-datmax = ''.
+      CLEAR ls_dd02v-datmax.
     ENDIF.
 
     CLEAR: ls_dd09l-as4user,
