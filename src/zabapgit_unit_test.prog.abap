@@ -2322,7 +2322,8 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
         RETURN.
     ENDCASE.
 
-    cl_abap_unit_assert=>assert_false( iv_error ).
+    cl_abap_unit_assert=>assert_equals( act = iv_error
+                                        exp = abap_false ).
   ENDMETHOD.
   METHOD constructor.
     DATA ls_empty_item TYPE ty_item.
@@ -2535,7 +2536,8 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
       act = mo_spy_oo_object->ms_class_properties
       exp = ms_class_properties ).
 
-    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
+    cl_abap_unit_assert=>assert_equals( act = mo_spy_oo_object->mv_overwrite
+                                        exp = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mv_package
@@ -2547,7 +2549,9 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->ms_locals_key
       exp = ms_item-obj_name ).
-    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_force ).
+
+    cl_abap_unit_assert=>assert_equals( act = mo_spy_oo_object->mv_force
+                                        exp = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mt_local_definitions
@@ -2570,7 +2574,8 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
 
     when_deserializing( ).
 
-    cl_abap_unit_assert=>assert_false( mo_spy_oo_object->mv_text_pool_inserted ).
+    cl_abap_unit_assert=>assert_equals( act = mo_spy_oo_object->mv_text_pool_inserted
+                                        exp = abap_false ).
   ENDMETHOD.
 
   METHOD insert_text_pool.
@@ -2724,7 +2729,8 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
       act = mo_spy_oo_object->ms_interface_properties
       exp = ms_interface_properties ).
 
-    cl_abap_unit_assert=>assert_true( mo_spy_oo_object->mv_overwrite ).
+    cl_abap_unit_assert=>assert_equals( act = mo_spy_oo_object->mv_overwrite
+                                        exp = abap_true ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object->mv_package
