@@ -132,10 +132,19 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_images.
 
+  DEFINE _inline.
+    APPEND &1 TO lt_data.  
+  END-OF-DEFINITION. 
+
   METHOD get_inline_asset.
 
     DATA: lt_data TYPE ty_string_tt,
           lv_str  TYPE string.
+
+    IF 0 = 1.
+ * used via abapmerge  
+      _inline 'foo'.  
+    ENDIF. 
 
     CASE iv_asset_name.
       WHEN 'CSS_COMMON'.
