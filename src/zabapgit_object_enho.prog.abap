@@ -325,7 +325,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
         lo_enh_class->if_enh_object~save( ).
         lo_enh_class->if_enh_object~unlock( ).
-      CATCH cx_enh_root INTO DATA(lx_error).
+      CATCH cx_enh_root.
         lcx_exception=>raise( 'error deserializing ENHO class' ).
     ENDTRY.
 
