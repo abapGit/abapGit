@@ -34,6 +34,15 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
       RAISING   lcx_exception.
+    METHODS deserialize_class
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+    METHODS hook_impl_deserialize
+      IMPORTING it_spaces TYPE ty_spaces_tt
+      CHANGING  ct_impl   TYPE enh_hook_impl_it
+      RAISING   lcx_exception.
+
 
     METHODS serialize_badi
       IMPORTING io_xml      TYPE REF TO lcl_xml_output
@@ -50,13 +59,8 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
                 iv_tool     TYPE enhtooltype
                 ii_enh_tool TYPE REF TO if_enh_tool
       RAISING   lcx_exception.
-
     METHODS hook_impl_serialize
       EXPORTING et_spaces TYPE ty_spaces_tt
-      CHANGING  ct_impl   TYPE enh_hook_impl_it
-      RAISING   lcx_exception.
-    METHODS hook_impl_deserialize
-      IMPORTING it_spaces TYPE ty_spaces_tt
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   lcx_exception.
 
@@ -206,7 +210,8 @@ CLASS lcl_object_enho IMPLEMENTATION.
         deserialize_hook( io_xml     = io_xml
                           iv_package = iv_package ).
       WHEN cl_enh_tool_class=>tooltype.
-        BREAK-POINT.
+        deserialize_class( io_xml     = io_xml
+                           iv_package = iv_package ).
 * ToDo:
 *      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
 *      WHEN cl_enh_tool_intf=>tooltype.
@@ -266,6 +271,65 @@ CLASS lcl_object_enho IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.                    "deserialize_badi
+
+  METHOD deserialize_class.
+
+    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
+          lt_owr       TYPE enhmeth_tabkeys,
+          lt_pre       TYPE enhmeth_tabkeys,
+          lt_post      TYPE enhmeth_tabkeys,
+          lt_source    TYPE rswsourcet,
+          li_tool      TYPE REF TO if_enh_tool,
+          lv_shorttext TYPE string,
+          lv_class     TYPE seoclsname,
+          lv_enhname   TYPE enhname,
+          lv_package   TYPE devclass.
+
+
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'OWR_METHODS'
+                  CHANGING cg_data = lt_owr ).
+    io_xml->read( EXPORTING iv_name = 'PRE_METHODS'
+                  CHANGING cg_data = lt_pre ).
+    io_xml->read( EXPORTING  iv_name = 'POST_METHODS'
+                  CHANGING cg_data = lt_post ).
+    io_xml->read( EXPORTING  iv_name = 'CLASS'
+                  CHANGING cg_data = lv_class ).
+    lt_source = mo_files->read_abap( ).
+
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname       = lv_enhname
+            enhtype       = ''
+            enhtooltype   = cl_enh_tool_class=>tooltype
+          IMPORTING
+            enhancement   = li_tool
+          CHANGING
+            devclass      = lv_package ).
+        lo_enh_class ?= li_tool.
+
+        lo_enh_class->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        lo_enh_class->set_class( lv_class ).
+        lo_enh_class->set_owr_methods( version = 'I'
+                                       owr_methods = lt_owr ).
+        lo_enh_class->set_pre_methods( version = 'I'
+                                       pre_methods = lt_pre ).
+        lo_enh_class->set_post_methods( version = 'I'
+                                        post_methods = lt_post ).
+        lo_enh_class->set_eimp_include( version = 'I'
+                                        eimp_source = lt_source ).
+
+        lo_enh_class->if_enh_object~save( ).
+        lo_enh_class->if_enh_object~unlock( ).
+      CATCH cx_enh_root INTO DATA(lx_error).
+        lcx_exception=>raise( 'error deserializing ENHO class' ).
+    ENDTRY.
+
+  ENDMETHOD.
 
   METHOD deserialize_hook.
 
@@ -366,6 +430,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
           lt_pre       TYPE enhmeth_tabkeys,
           lt_post      TYPE enhmeth_tabkeys,
           lt_source    TYPE rswsourcet,
+          lv_class     TYPE seoclsname,
           lv_shorttext TYPE string.
 
 
@@ -376,11 +441,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
     lt_pre = lo_enh_class->get_pre_methods( ).
     lt_post = lo_enh_class->get_post_methods( ).
     lt_source = lo_enh_class->get_eimp_include( ).
+    lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
     io_xml->add( iv_name = 'TOOL'
                  ig_data = iv_tool ).
     io_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
+    io_xml->add( iv_name = 'CLASS'
+                 ig_data = lv_class ).
     io_xml->add( iv_name = 'OWR_METHODS'
                  ig_data = lt_owr ).
     io_xml->add( iv_name = 'PRE_METHODS'
