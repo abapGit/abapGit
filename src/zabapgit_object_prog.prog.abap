@@ -13,12 +13,6 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
-  PRIVATE SECTION.
-
-    METHODS deserialize_textpool
-      IMPORTING it_tpool TYPE textpool_table
-      RAISING   lcx_exception.
-
 ENDCLASS.                    "lcl_object_prog DEFINITION
 
 *----------------------------------------------------------------------*
@@ -95,26 +89,6 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD deserialize_textpool.
-
-    READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
-    IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
-      RETURN. " no action for includes
-    ENDIF.
-
-    INSERT TEXTPOOL ms_item-obj_name
-      FROM it_tpool
-      LANGUAGE mv_language
-      STATE 'I'.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
-    ENDIF.
-
-    lcl_objects_activation=>add( iv_type = 'REPT'
-                                 iv_name = ms_item-obj_name ).
-
-  ENDMETHOD.                    "deserialize_textpool
-
   METHOD lif_object~serialize.
 
     serialize_program( io_xml   = io_xml
@@ -157,7 +131,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
     deserialize_cua( iv_program_name = lv_program_name
                      is_cua = ls_cua ).
 
-    deserialize_textpool( lt_tpool ).
+    deserialize_textpool( iv_program = ms_item-obj_name
+                          it_tpool   = lt_tpool ).
 
   ENDMETHOD.                    "lif_serialize~deserialize
 

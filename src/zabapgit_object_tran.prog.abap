@@ -387,10 +387,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
       WHERE sprsl = mv_language
-      AND tcode = lv_transaction.                       "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Transaction description not found' ).
-    ENDIF.
+      AND tcode = lv_transaction.         "#EC CI_SUBRC "#EC CI_GENBUFF
 
     SELECT SINGLE * FROM tstcp INTO ls_tstcp
       WHERE tcode = lv_transaction.       "#EC CI_SUBRC "#EC CI_GENBUFF

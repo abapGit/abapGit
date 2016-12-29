@@ -170,6 +170,17 @@ CLASS lcl_object_tabl IMPLEMENTATION.
            ls_dd02v-as4date,
            ls_dd02v-as4time.
 
+* reset numeric field, so XML does not crash
+    IF ls_dd02v-prozpuff = ''.
+      CLEAR ls_dd02v-prozpuff.
+    ENDIF.
+    IF ls_dd02v-datmin = ''.
+      CLEAR ls_dd02v-datmin.
+    ENDIF.
+    IF ls_dd02v-datmax = ''.
+      CLEAR ls_dd02v-datmax.
+    ENDIF.
+
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
            ls_dd09l-as4time.
@@ -194,6 +205,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_s,
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
+
+      IF <ls_dd03p>-masklen = '' OR NOT <ls_dd03p>-masklen CO '0123456789'.
+* make sure the field contains valid data, or the XML will dump
+        CLEAR <ls_dd03p>-masklen.
+      ENDIF.
 
       IF <ls_dd03p>-comptype = 'E'.
 * type specified via data element

@@ -37,7 +37,7 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
                 iv_text    TYPE c
                 iv_url     TYPE string
                 iv_package TYPE devclass
-      RAISING lcx_exception.
+      RAISING   lcx_exception.
 
 ENDCLASS. "lcl_services_abapgit
 
@@ -78,7 +78,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_text = |Confirm to install current version of ABAPGit to package { c_package_abapgit }|.
+    lv_text = |Confirm to install current version of abapGit to package { c_package_abapgit }|.
 
     do_install( iv_title   = lc_title
                 iv_text    = lv_text
@@ -100,7 +100,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_text = |Confirm to install current version ABAPGit plugins to package {
+    lv_text = |Confirm to install current version abapGit plugins to package {
                c_package_plugins }|.
 
     do_install( iv_title   = lc_title
@@ -140,6 +140,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
       lo_repo->status( ). " check for errors
       lo_repo->deserialize( ).
+      lcl_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
     ENDIF.
 
     COMMIT WORK.

@@ -18,8 +18,8 @@ TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAU
 TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename.
 
 TYPES: BEGIN OF ty_file.
-       INCLUDE TYPE ty_file_signature.
-TYPES:   data     TYPE xstring,
+    INCLUDE TYPE ty_file_signature.
+TYPES: data TYPE xstring,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
@@ -61,11 +61,11 @@ TYPES: BEGIN OF ty_web_asset,
 TYPES  tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_repo_file,
-         path        TYPE string,
-         filename    TYPE string,
-         is_changed  TYPE abap_bool,
-         rstate      TYPE char1,
-         lstate      TYPE char1,
+         path       TYPE string,
+         filename   TYPE string,
+         is_changed TYPE abap_bool,
+         rstate     TYPE char1,
+         lstate     TYPE char1,
        END OF ty_repo_file.
 TYPES  tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY.
 
@@ -101,18 +101,34 @@ TYPES: BEGIN OF ty_tadir,
 TYPES: ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_result,
-         obj_type    TYPE tadir-object,
-         obj_name    TYPE tadir-obj_name,
-         path        TYPE string,
-         filename    TYPE string,
-         package     TYPE devclass,
-         match       TYPE sap_bool,
-         lstate      TYPE char1,
-         rstate      TYPE char1,
+         obj_type TYPE tadir-object,
+         obj_name TYPE tadir-obj_name,
+         path     TYPE string,
+         filename TYPE string,
+         package  TYPE devclass,
+         match    TYPE sap_bool,
+         lstate   TYPE char1,
+         rstate   TYPE char1,
        END OF ty_result.
 TYPES: ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
 TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
+
+TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
+
+TYPES: BEGIN OF ty_tpool.
+    INCLUDE TYPE textpool.
+TYPES:   split TYPE c LENGTH 8.
+TYPES: END OF ty_tpool.
+
+TYPES: ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY.
+
+TYPES: BEGIN OF ty_sotr,
+         header  TYPE sotr_head,
+         entries TYPE sotr_text_tt,
+       END OF ty_sotr.
+
+TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
 
 CONSTANTS: BEGIN OF gc_state, " https://git-scm.com/docs/git-status
              unchanged TYPE char1 VALUE '',
@@ -171,43 +187,43 @@ CONSTANTS: BEGIN OF gc_action,
              repo_refresh_checksums TYPE string VALUE 'repo_refresh_checksums',
              repo_toggle_fav        TYPE string VALUE 'repo_toggle_fav',
 
-             abapgit_home       TYPE string VALUE 'abapgit_home',
-             abapgit_wiki       TYPE string VALUE 'abapgit_wiki',
-             abapgit_install    TYPE string VALUE 'abapgit_install',
-             abapgit_install_pi TYPE string VALUE 'abapgit_install_pi',
+             abapgit_home           TYPE string VALUE 'abapgit_home',
+             abapgit_wiki           TYPE string VALUE 'abapgit_wiki',
+             abapgit_install        TYPE string VALUE 'abapgit_install',
+             abapgit_install_pi     TYPE string VALUE 'abapgit_install_pi',
 
-             zip_import         TYPE string VALUE 'zip_import',
-             zip_export         TYPE string VALUE 'zip_export',
-             zip_package        TYPE string VALUE 'zip_package',
-             zip_transport      TYPE string VALUE 'zip_transport',
-             zip_object         TYPE string VALUE 'zip_object',
+             zip_import             TYPE string VALUE 'zip_import',
+             zip_export             TYPE string VALUE 'zip_export',
+             zip_package            TYPE string VALUE 'zip_package',
+             zip_transport          TYPE string VALUE 'zip_transport',
+             zip_object             TYPE string VALUE 'zip_object',
 
-             git_pull           TYPE string VALUE 'git_pull',
-             git_reset          TYPE string VALUE 'git_reset',
-             git_branch_create  TYPE string VALUE 'git_branch_create',
-             git_branch_switch  TYPE string VALUE 'git_branch_switch',
-             git_branch_delete  TYPE string VALUE 'git_branch_delete',
-             git_commit         TYPE string VALUE 'git_commit',
+             git_pull               TYPE string VALUE 'git_pull',
+             git_reset              TYPE string VALUE 'git_reset',
+             git_branch_create      TYPE string VALUE 'git_branch_create',
+             git_branch_switch      TYPE string VALUE 'git_branch_switch',
+             git_branch_delete      TYPE string VALUE 'git_branch_delete',
+             git_commit             TYPE string VALUE 'git_commit',
 
-             db_delete          TYPE string VALUE 'db_delete',
-             db_update          TYPE string VALUE 'db_update',
-             db_display         TYPE string VALUE 'db_display',
-             db_edit            TYPE string VALUE 'db_edit',
-             bg_update          TYPE string VALUE 'bg_update',
+             db_delete              TYPE string VALUE 'db_delete',
+             db_update              TYPE string VALUE 'db_update',
+             db_display             TYPE string VALUE 'db_display',
+             db_edit                TYPE string VALUE 'db_edit',
+             bg_update              TYPE string VALUE 'bg_update',
 
-             go_main            TYPE string VALUE 'go_main',
-             go_explore         TYPE string VALUE 'go_explore',
-             go_db              TYPE string VALUE 'go_db',
-             go_background      TYPE string VALUE 'go_background',
-             go_background_run  TYPE string VALUE 'go_background_run',
-             go_diff            TYPE string VALUE 'go_diff',
-             go_stage           TYPE string VALUE 'go_stage',
-             go_commit          TYPE string VALUE 'go_commit',
-             go_branch_overview TYPE string VALUE 'go_branch_overview',
-             go_playground      TYPE string VALUE 'go_playground',
-             go_debuginfo       TYPE string VALUE 'go_debuginfo',
-             go_settings        TYPE STRING VALUE 'go_settings',
-             go_tutorial        TYPE STRING VALUE 'go_tutorial',
-             jump               TYPE string VALUE 'jump',
-             jump_pkg           TYPE string VALUE 'jump_pkg',
+             go_main                TYPE string VALUE 'go_main',
+             go_explore             TYPE string VALUE 'go_explore',
+             go_db                  TYPE string VALUE 'go_db',
+             go_background          TYPE string VALUE 'go_background',
+             go_background_run      TYPE string VALUE 'go_background_run',
+             go_diff                TYPE string VALUE 'go_diff',
+             go_stage               TYPE string VALUE 'go_stage',
+             go_commit              TYPE string VALUE 'go_commit',
+             go_branch_overview     TYPE string VALUE 'go_branch_overview',
+             go_playground          TYPE string VALUE 'go_playground',
+             go_debuginfo           TYPE string VALUE 'go_debuginfo',
+             go_settings            TYPE string VALUE 'go_settings',
+             go_tutorial            TYPE string VALUE 'go_tutorial',
+             jump                   TYPE string VALUE 'jump',
+             jump_pkg               TYPE string VALUE 'jump_pkg',
            END OF gc_action.
