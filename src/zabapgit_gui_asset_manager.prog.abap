@@ -140,11 +140,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
     DATA: lt_data TYPE ty_string_tt,
           lv_str  TYPE string.
-
-    IF 0 = 1.
- * used via abapmerge  
-      _inline 'foo'.  
-    ENDIF. 
+          
 
     CASE iv_asset_name.
       WHEN 'CSS_COMMON'.
