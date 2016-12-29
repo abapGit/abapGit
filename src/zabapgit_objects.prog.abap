@@ -1443,7 +1443,17 @@ CLASS lcl_objects_program IMPLEMENTATION.
     DATA: ls_tr_key TYPE trkey.
 
 
-    IF is_cua-adm IS INITIAL.
+    IF lines( is_cua-sta ) = 0
+        AND lines( is_cua-fun ) = 0
+        AND lines( is_cua-men ) = 0
+        AND lines( is_cua-mtx ) = 0
+        AND lines( is_cua-act ) = 0
+        AND lines( is_cua-but ) = 0
+        AND lines( is_cua-pfk ) = 0
+        AND lines( is_cua-set ) = 0
+        AND lines( is_cua-doc ) = 0
+        AND lines( is_cua-tit ) = 0
+        AND lines( is_cua-biv ) = 0.
       RETURN.
     ENDIF.
 
@@ -1457,14 +1467,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     ls_tr_key-obj_type = ms_item-obj_type.
-    ls_tr_key-obj_name = iv_program_name.
+    ls_tr_key-obj_name = ms_item-obj_name.
     ls_tr_key-sub_type = 'CUAD'.
-    ls_tr_key-sub_name = ms_item-obj_name.
+    ls_tr_key-sub_name = iv_program_name.
 
     sy-tcode = 'SE41' ##write_ok. " evil hack, workaround to handle fixes in note 2159455
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
       EXPORTING
-        program   = ms_item-obj_name
+        program   = iv_program_name
         language  = mv_language
         tr_key    = ls_tr_key
         adm       = is_cua-adm
@@ -1489,7 +1499,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'CUAD'
-                                 iv_name = ms_item-obj_name ).
+                                 iv_name = iv_program_name ).
 
   ENDMETHOD.                    "deserialize_cua
 
