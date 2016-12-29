@@ -416,7 +416,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
 
-    METHODS deserialize_textpool
+    METHODS deserialize_tpool
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
@@ -1103,7 +1103,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
-    deserialize_textpool( io_xml ).
+    deserialize_tpool( io_xml ).
 
     deserialize_sotr( io_xml     = io_xml
                       iv_package = iv_package ).
@@ -1153,7 +1153,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       iv_language    = mv_language ).
   ENDMETHOD.                    "deserialize_doku
 
-  METHOD deserialize_textpool.
+  METHOD deserialize_tpool.
 
     DATA: lv_cp        TYPE program,
           lv_clsname   TYPE seoclsname,
@@ -1175,6 +1175,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       iv_class_name = lv_clsname
       it_text_pool  = lt_tpool
       iv_language   = mv_language ).
+
   ENDMETHOD.                    "deserialize_textpool
 
   METHOD deserialize_abap.

@@ -898,6 +898,11 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING it_dynpros TYPE ty_dynpro_tt
       RAISING   lcx_exception.
 
+    METHODS deserialize_textpool
+      IMPORTING iv_program TYPE programm
+                it_tpool   TYPE textpool_table
+      RAISING   lcx_exception.
+
     METHODS deserialize_cua
       IMPORTING iv_program_name TYPE programm
                 is_cua          TYPE ty_cua
@@ -1036,12 +1041,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lines( lt_tpool ) = 1.
-      READ TABLE lt_tpool INDEX 1 INTO ls_tpool.
-      ASSERT sy-subrc = 0.
-      IF ls_tpool-id = 'R' AND ls_tpool-key = '' AND ls_tpool-length = 0.
-        DELETE lt_tpool INDEX 1.
-      ENDIF.
+    READ TABLE lt_tpool WITH KEY id = 'R' INTO ls_tpool.
+    IF sy-subrc = 0 AND ls_tpool-key = '' AND ls_tpool-length = 0.
+      DELETE lt_tpool INDEX sy-tabix.
     ENDIF.
 
     lo_xml->add( iv_name = 'TPOOL'
@@ -1415,6 +1417,26 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "read_tpool
+
+  METHOD deserialize_textpool.
+
+    READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
+    IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
+      RETURN. " no action for includes
+    ENDIF.
+
+    INSERT TEXTPOOL iv_program
+      FROM it_tpool
+      LANGUAGE mv_language
+      STATE 'I'.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+    ENDIF.
+
+    lcl_objects_activation=>add( iv_type = 'REPT'
+                                 iv_name = iv_program ).
+
+  ENDMETHOD.                    "deserialize_textpool
 
   METHOD deserialize_cua.
 
