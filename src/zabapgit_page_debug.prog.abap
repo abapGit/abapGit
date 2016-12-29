@@ -8,11 +8,11 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page_super
 
   PRIVATE SECTION.
     METHODS scripts
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_debug_info
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
     METHODS render_supported_object_types
-        RETURNING VALUE(rv_html) TYPE string.
+      RETURNING VALUE(rv_html) TYPE string.
 
 ENDCLASS.                       "lcl_gui_page_debuginfo
 
@@ -69,7 +69,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
       TABLES
         wt_object_text = lt_objects
       EXCEPTIONS
-        OTHERS         = 1.
+        OTHERS         = 1 ##FM_SUBRC_OK.
 
     LOOP AT lt_objects ASSIGNING <object> WHERE pgmid = 'R3TR'.
       ls_item-obj_type = <object>-object.

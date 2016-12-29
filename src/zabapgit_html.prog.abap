@@ -93,7 +93,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     FIND FIRST OCCURRENCE OF '}' IN iv_str MATCH OFFSET lv_close_offs. " Find close } @beginning
     IF ( mv_within_style > 0 OR mv_within_js > 0 )
-      AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
+        AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
       lv_shift_back = 1.
     ENDIF.
 

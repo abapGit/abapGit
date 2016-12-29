@@ -53,7 +53,6 @@ CLASS lcl_gui_page_super DEFINITION ABSTRACT.
       RAISING   lcx_exception.
 
     METHODS header
-      IMPORTING io_include_style TYPE REF TO lcl_html_helper OPTIONAL
       RETURNING VALUE(ro_html)   TYPE REF TO lcl_html_helper.
 
     METHODS footer

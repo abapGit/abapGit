@@ -1432,13 +1432,11 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS
       get_run_critical_tests
         RETURNING VALUE(rv_run) TYPE abap_bool.
-  PROTECTED SECTION.
 
   PRIVATE SECTION.
     DATA mv_proxy_url TYPE string.
     DATA mv_proxy_port TYPE string.
     DATA mv_run_critical_tests TYPE abap_bool.
-
 
 ENDCLASS.
 
@@ -1484,10 +1482,6 @@ CLASS lcl_persistence_settings DEFINITION FINAL.
       RETURNING
         VALUE(ro_settings) TYPE REF TO lcl_settings.
 
-  PROTECTED SECTION.
-
-  PRIVATE SECTION.
-
 ENDCLASS.
 
 CLASS lcl_persistence_settings IMPLEMENTATION.
@@ -1520,8 +1514,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_proxy_url(
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
-            iv_value = 'PROXY_URL'
-          ) ).
+            iv_value = 'PROXY_URL' ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_url( '' ).
     ENDTRY.
@@ -1529,8 +1522,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_proxy_port(
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
-            iv_value = 'PROXY_PORT'
-          ) ).
+            iv_value = 'PROXY_PORT' ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.

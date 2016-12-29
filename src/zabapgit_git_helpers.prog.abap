@@ -273,9 +273,9 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
     ENDIF.
 
     IF iv_branch_name CP 'refs/pull/*'
-      OR iv_branch_name CP 'refs/merge-requests/*'
-      OR iv_branch_name CP 'refs/keep-around/*'
-      OR iv_branch_name CP 'refs/tmp/*'.
+        OR iv_branch_name CP 'refs/merge-requests/*'
+        OR iv_branch_name CP 'refs/keep-around/*'
+        OR iv_branch_name CP 'refs/tmp/*'.
       rv_ignore = abap_true.
     ENDIF.
 

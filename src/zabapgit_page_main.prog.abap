@@ -137,14 +137,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
+    ELSEIF mv_show IS INITIAL.
+      CREATE OBJECT lo_tutorial.
+      ro_html->add( lo_tutorial->lif_gui_page~render( ) ).
     ELSE.
-      IF mv_show IS INITIAL.
-        CREATE OBJECT lo_tutorial.
-        ro_html->add( lo_tutorial->lif_gui_page~render( ) ).
-      ELSE.
-        lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
-        ro_html->add( render_repo( lo_repo ) ).
-      ENDIF.
+      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+      ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
     ro_html->add( footer( ) ).

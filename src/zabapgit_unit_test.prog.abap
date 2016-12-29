@@ -1839,7 +1839,6 @@ CLASS ltcl_file_status IMPLEMENTATION.
     DATA: lt_local       TYPE ty_files_item_tt,
           lt_remote      TYPE ty_files_tt,
           lt_state       TYPE ty_file_signatures_tt,
-          lt_tadir       TYPE ty_tadir_tt,
           lt_results     TYPE ty_results_tt,
           lt_results_exp TYPE ty_results_tt.
 
@@ -2185,21 +2184,21 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
         lcl_app=>db( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_URL' ).
-      CATCH cx_static_check.
+      CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
     TRY.
         lcl_app=>db( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_PORT' ).
-      CATCH cx_static_check.
+      CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
     TRY.
         lcl_app=>db( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'CRIT_TESTS' ).
-      CATCH cx_static_check.
+      CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
 
@@ -2337,7 +2336,7 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT .
+CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PROTECTED SECTION.
     DATA:
       mo_spy_oo_object     TYPE REF TO ltd_spy_oo_object,

@@ -21,7 +21,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
       RAISING   lcx_exception lcx_cancel.
 
     CLASS-METHODS new_offline
-      RAISING   lcx_exception lcx_cancel.
+      RAISING lcx_exception lcx_cancel.
 
     CLASS-METHODS remote_attach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -53,7 +53,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD clone.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online,
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
           ls_popup TYPE lcl_popups=>ty_popup.
 
 
@@ -105,8 +105,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -149,8 +148,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
         text_button_2         = 'Cancel'
         icon_button_2         = 'ICON_CANCEL'
         default_button        = '2'
-        display_cancel_button = abap_false
-      ).  "#EC NOTEXT
+        display_cancel_button = abap_false ).               "#EC NOTEXT
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE lcx_cancel.
@@ -199,8 +197,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -215,8 +212,8 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD remote_attach.
 
-    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
-          lo_repo   TYPE REF TO lcl_repo_online.
+    DATA: ls_popup TYPE lcl_popups=>ty_popup,
+          lo_repo  TYPE REF TO lcl_repo_online.
 
     ls_popup = lcl_popups=>repo_popup(
       iv_title          = 'Attach repo to remote ...'
@@ -239,8 +236,8 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD remote_change.
 
-    DATA: ls_popup  TYPE lcl_popups=>ty_popup,
-          lo_repo   TYPE REF TO lcl_repo_online.
+    DATA: ls_popup TYPE lcl_popups=>ty_popup,
+          lo_repo  TYPE REF TO lcl_repo_online.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -267,7 +264,8 @@ CLASS lcl_services_repo IMPLEMENTATION.
           lv_question TYPE string,
           lo_repo     TYPE REF TO lcl_repo.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
 
     lv_question =  'This will rebuild and overwrite local repo checksums.'.
 
@@ -288,7 +286,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false ).               "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -308,11 +306,11 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-         OPERATION       = 'SHOW'
-         IN_NEW_WINDOW   = 'X'
-         OBJECT_NAME     = iv_package
-         OBJECT_TYPE     = 'DEVC'
-         WITH_OBJECTLIST = 'X'.
+        operation       = 'SHOW'
+        in_new_window   = 'X'
+        object_name     = iv_package
+        object_type     = 'DEVC'
+        with_objectlist = 'X'.
 
   ENDMETHOD.  " open_se80.
 

@@ -108,11 +108,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       TABLES
         binary_tab   = lt_w3mime
       EXCEPTIONS
-        failed       = 1.
-
-    IF sy-subrc IS NOT INITIAL.
-      RETURN.
-    ENDIF.
+        failed       = 1 ##FM_SUBRC_OK.
 
   ENDMETHOD.  " get_mime_asset.
 
@@ -136,10 +132,6 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_images.
 
-  DEFINE _inline.
-    APPEND &1 TO lt_data.
-  END-OF-DEFINITION.
-
   METHOD get_inline_asset.
 
     DATA: lt_data TYPE ty_string_tt,
@@ -158,11 +150,11 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
       EXPORTING
-        text      = lv_str
+        text   = lv_str
       IMPORTING
-        buffer    = rv_data
+        buffer = rv_data
       EXCEPTIONS
-        OTHERS    = 1.
+        OTHERS = 1.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.  " get_inline_asset.

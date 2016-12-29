@@ -207,17 +207,17 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "supported_list
 
-  METHOD is_language_installed.
-
-    IF mv_langs_installed IS INITIAL.
-      CALL FUNCTION 'RSAQ_READ_INSTALLED_LANGUAGES'
-        IMPORTING
-          inst_languages = mv_langs_installed.
-    ENDIF.
-
-    rv_yes = boolc( mv_langs_installed CA iv_language ).
-
-  ENDMETHOD.  "is_language_installed
+*  METHOD is_language_installed.
+*
+*    IF mv_langs_installed IS INITIAL.
+*      CALL FUNCTION 'RSAQ_READ_INSTALLED_LANGUAGES'
+*        IMPORTING
+*          inst_languages = mv_langs_installed.
+*    ENDIF.
+*
+*    rv_yes = boolc( mv_langs_installed CA iv_language ).
+*
+*  ENDMETHOD.  "is_language_installed
 
   METHOD exists.
 
@@ -616,8 +616,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_results = prioritize_deser( lt_results ).
 
-    warning_overwrite( EXPORTING io_repo = io_repo
-                       CHANGING ct_results = lt_results ).
+    warning_overwrite( CHANGING ct_results = lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
         AND NOT ( lstate = gc_state-added AND rstate IS INITIAL ).
@@ -656,9 +655,9 @@ CLASS lcl_objects IMPLEMENTATION.
                               is_metadata = lo_xml->get_metadata( ) ).
 
       compare_remote_to_local(
-       io_object = li_obj
-       it_remote = lt_remote
-       is_result = <ls_result> ).
+        io_object = li_obj
+        it_remote = lt_remote
+        is_result = <ls_result> ).
 
       li_obj->mo_files = lo_files.
 

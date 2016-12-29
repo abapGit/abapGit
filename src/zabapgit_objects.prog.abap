@@ -187,7 +187,7 @@ ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_objects_files DEFINITION .
+CLASS lcl_objects_files DEFINITION.
 
   PUBLIC SECTION.
     METHODS:
@@ -1705,9 +1705,9 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS supported_list
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
-    CLASS-METHODS is_language_installed
-      IMPORTING iv_language   TYPE langu
-      RETURNING VALUE(rv_yes) TYPE abap_bool.
+*    CLASS-METHODS is_language_installed
+*      IMPORTING iv_language   TYPE langu
+*      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
   PRIVATE SECTION.
 
@@ -1747,7 +1747,6 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING  lcx_exception.
 
     CLASS-METHODS warning_overwrite
-      IMPORTING io_repo    TYPE REF TO lcl_repo
       CHANGING  ct_results TYPE ty_results_tt
       RAISING   lcx_exception.
 

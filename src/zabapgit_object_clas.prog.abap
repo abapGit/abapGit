@@ -1114,11 +1114,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD deserialize_sotr.
     "OTR stands for Online Text Repository
     DATA: lt_sotr    TYPE ty_sotr_tt,
-          lt_objects TYPE sotr_objects,
-          ls_paket   TYPE sotr_pack,
-          lv_object  LIKE LINE OF lt_objects.
-
-    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
+          lt_objects TYPE sotr_objects.
 
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
@@ -1155,8 +1151,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_tpool.
 
-    DATA: lv_cp        TYPE program,
-          lv_clsname   TYPE seoclsname,
+    DATA: lv_clsname   TYPE seoclsname,
           lt_tpool_ext TYPE ty_tpool_tt,
           lt_tpool     TYPE textpool_table.
 
@@ -1279,10 +1274,10 @@ CLASS lcl_object_intf IMPLEMENTATION.
                   CHANGING cg_data = ls_vseointerf ).
 
     mo_object_oriented_object->create(
-     EXPORTING
-       iv_package    = iv_package
-     CHANGING
-       is_properties = ls_vseointerf ).
+      EXPORTING
+        iv_package    = iv_package
+      CHANGING
+        is_properties = ls_vseointerf ).
 
     mo_object_oriented_object->deserialize_source(
       is_key               = ls_clskey

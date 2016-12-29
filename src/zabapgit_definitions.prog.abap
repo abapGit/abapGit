@@ -14,8 +14,11 @@ TYPES: BEGIN OF ty_file_signature,
          sha1     TYPE ty_sha1,
        END OF ty_file_signature.
 
-TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
-TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename.
+TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF
+         ty_file_signature WITH DEFAULT KEY.
+
+TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF
+         ty_file_signature WITH UNIQUE KEY path filename.
 
 TYPES: BEGIN OF ty_file.
     INCLUDE TYPE ty_file_signature.
@@ -24,7 +27,6 @@ TYPES: data TYPE xstring,
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
-TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_comment,
          username TYPE string,

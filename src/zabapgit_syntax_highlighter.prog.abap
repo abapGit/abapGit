@@ -197,8 +197,7 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <regex>  LIKE LINE OF mt_rules,
-      <result> TYPE match_result,
-      <match>  TYPE ty_match.
+      <result> TYPE match_result.
 
     CLEAR et_matches.
 
@@ -651,8 +650,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL
 
     METHODS:
       do_test IMPORTING iv_line     TYPE string
-                        iv_filename TYPE string
-              RETURNING VALUE(ro_instance) TYPE REF TO lcl_syntax_highlighter,
+                        iv_filename TYPE string,
       test_abap_01 FOR TESTING,
       test_abap_02 FOR TESTING,
       test_abap_03 FOR TESTING,
@@ -702,7 +700,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
           lo             TYPE REF TO lcl_syntax_highlighter.
 
 
-    lo             = lcl_syntax_highlighter=>create( iv_filename ).
+    lo = lcl_syntax_highlighter=>create( iv_filename ).
     lo->parse_line( EXPORTING iv_line    = iv_line
                     IMPORTING et_matches = lt_matches_act ).
 
