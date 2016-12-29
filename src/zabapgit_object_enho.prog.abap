@@ -2,6 +2,11 @@
 *&  Include           ZABAPGIT_OBJECT_ENHO
 *&---------------------------------------------------------------------*
 
+* todo, this include could use some refactoring
+
+* todo, CL_ENH_TOOL_CLASS inherits from CL_ENH_TOOL_CLIF so this
+* should also be reflected in the code in this include
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enho DEFINITION
 *----------------------------------------------------------------------*
@@ -36,6 +41,11 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
                 ii_enh_tool TYPE REF TO if_enh_tool
       RAISING   lcx_exception.
     METHODS serialize_hook
+      IMPORTING io_xml      TYPE REF TO lcl_xml_output
+                iv_tool     TYPE enhtooltype
+                ii_enh_tool TYPE REF TO if_enh_tool
+      RAISING   lcx_exception.
+    METHODS serialize_class
       IMPORTING io_xml      TYPE REF TO lcl_xml_output
                 iv_tool     TYPE enhtooltype
                 ii_enh_tool TYPE REF TO if_enh_tool
@@ -162,8 +172,11 @@ CLASS lcl_object_enho IMPLEMENTATION.
         serialize_hook( io_xml = io_xml
                         iv_tool = lv_tool
                         ii_enh_tool = li_enh_tool ).
+      WHEN cl_enh_tool_class=>tooltype.
+        serialize_class( io_xml = io_xml
+                         iv_tool = lv_tool
+                         ii_enh_tool = li_enh_tool ).
 * ToDo:
-*      WHEN cl_enh_tool_class=>tooltype.
 *      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
 *      WHEN cl_enh_tool_intf=>tooltype.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
@@ -192,8 +205,9 @@ CLASS lcl_object_enho IMPLEMENTATION.
       WHEN cl_enh_tool_hook_impl=>tooltype.
         deserialize_hook( io_xml     = io_xml
                           iv_package = iv_package ).
+      WHEN cl_enh_tool_class=>tooltype.
+        BREAK-POINT.
 * ToDo:
-*      WHEN cl_enh_tool_class=>tooltype.
 *      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
 *      WHEN cl_enh_tool_intf=>tooltype.
 *      WHEN cl_wdr_cfg_enhancement=>tooltype.
@@ -344,6 +358,39 @@ CLASS lcl_object_enho IMPLEMENTATION.
                  ig_data = lt_impl ).
 
   ENDMETHOD.                    "serialize_badi
+
+  METHOD serialize_class.
+
+    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
+          lt_owr       TYPE enhmeth_tabkeys,
+          lt_pre       TYPE enhmeth_tabkeys,
+          lt_post      TYPE enhmeth_tabkeys,
+          lt_source    TYPE rswsourcet,
+          lv_shorttext TYPE string.
+
+
+    lo_enh_class ?= ii_enh_tool.
+
+    lv_shorttext = lo_enh_class->if_enh_object_docu~get_shorttext( ).
+    lt_owr = lo_enh_class->get_owr_methods( ).
+    lt_pre = lo_enh_class->get_pre_methods( ).
+    lt_post = lo_enh_class->get_post_methods( ).
+    lt_source = lo_enh_class->get_eimp_include( ).
+
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = iv_tool ).
+    io_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    io_xml->add( iv_name = 'OWR_METHODS'
+                 ig_data = lt_owr ).
+    io_xml->add( iv_name = 'PRE_METHODS'
+                 ig_data = lt_pre ).
+    io_xml->add( iv_name = 'POST_METHODS'
+                 ig_data = lt_post ).
+
+    mo_files->add_abap( lt_source ).
+
+  ENDMETHOD.
 
   METHOD serialize_hook.
 
