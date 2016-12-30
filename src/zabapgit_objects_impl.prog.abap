@@ -238,26 +238,29 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD path_to_package.
 
     DATA: lv_length TYPE i,
+          lv_parent TYPE devclass,
+          lv_new    TYPE string,
           lv_path   TYPE string.
 
 
-    lv_length = strlen( iv_start ) - 1.
+    lv_length = strlen( iv_start ).
     lv_path = iv_path+lv_length.
+    lv_parent = iv_top.
+    rv_package = iv_top.
 
-    CONCATENATE iv_top lv_path INTO rv_package.
+    WHILE lv_path CA '/'.
+      SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-    TRANSLATE rv_package USING '/_'.
+      CONCATENATE rv_package '_' lv_new INTO rv_package.
+      TRANSLATE rv_package TO UPPER CASE.
 
-    lv_length = strlen( rv_package ) - 1.
+      IF lcl_sap_package=>exists( rv_package ) = abap_false.
+        lcl_sap_package=>create_child( iv_parent = lv_parent
+                                       iv_child  = rv_package ).
+      ENDIF.
 
-    rv_package = rv_package(lv_length).
-
-    TRANSLATE rv_package TO UPPER CASE.
-
-    IF lcl_sap_package=>exists( rv_package ) = abap_false.
-      lcl_sap_package=>create_child( iv_parent = iv_top
-                                     iv_child = rv_package ).
-    ENDIF.
+      lv_parent = rv_package.
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -589,15 +592,15 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item        TYPE ty_item,
-          lv_cancel      TYPE abap_bool,
-          li_obj         TYPE REF TO lif_object,
-          lt_remote      TYPE ty_files_tt,
-          lv_package     TYPE devclass,
-          lo_files       TYPE REF TO lcl_objects_files,
-          lo_xml         TYPE REF TO lcl_xml_input,
-          lt_results     TYPE ty_results_tt,
-          lt_late        TYPE TABLE OF ty_late.
+    DATA: ls_item    TYPE ty_item,
+          lv_cancel  TYPE abap_bool,
+          li_obj     TYPE REF TO lif_object,
+          lt_remote  TYPE ty_files_tt,
+          lv_package TYPE devclass,
+          lo_files   TYPE REF TO lcl_objects_files,
+          lo_xml     TYPE REF TO lcl_xml_input,
+          lt_results TYPE ty_results_tt,
+          lt_late    TYPE TABLE OF ty_late.
 
     FIELD-SYMBOLS: <ls_result> TYPE ty_result,
                    <ls_late>   LIKE LINE OF lt_late.
