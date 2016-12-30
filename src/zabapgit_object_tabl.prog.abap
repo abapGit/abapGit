@@ -229,7 +229,10 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           <ls_dd03p>-convexit,
           <ls_dd03p>-entitytab,
           <ls_dd03p>-dommaster,
-          <ls_dd03p>-domname3l.
+          <ls_dd03p>-domname3l,
+          <ls_dd03p>-decimals,
+          <ls_dd03p>-lowercase,
+          <ls_dd03p>-signflag.
       ENDIF.
 
       IF <ls_dd03p>-shlporigin = 'D'.
