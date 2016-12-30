@@ -24,9 +24,9 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
 
-    DATA: lv_date    TYPE dats,
-          lv_time    TYPE tims,
-          lv_ts      TYPE timestamp.
+    DATA: lv_date TYPE dats,
+          lv_time TYPE tims,
+          lv_ts   TYPE timestamp.
 
     SELECT SINGLE as4date as4time FROM dd25l " View
       INTO (lv_date, lv_time)
@@ -115,6 +115,8 @@ CLASS lcl_object_view IMPLEMENTATION.
           lt_dd28j TYPE TABLE OF dd28j,
           lt_dd28v TYPE TABLE OF dd28v.
 
+    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
+
 
     lv_name = ms_item-obj_name.
 
@@ -148,6 +150,30 @@ CLASS lcl_object_view IMPLEMENTATION.
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
            ls_dd09l-as4time.
+
+    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+      CLEAR: <ls_dd27p>-ddtext,
+             <ls_dd27p>-reptext,
+             <ls_dd27p>-scrtext_s,
+             <ls_dd27p>-scrtext_m,
+             <ls_dd27p>-scrtext_l,
+             <ls_dd27p>-outputlen,
+             <ls_dd27p>-decimals,
+             <ls_dd27p>-lowercase,
+             <ls_dd27p>-convexit,
+             <ls_dd27p>-signflag,
+             <ls_dd27p>-flength,
+             <ls_dd27p>-domname,
+             <ls_dd27p>-datatype,
+             <ls_dd27p>-entitytab,
+             <ls_dd27p>-inttype,
+             <ls_dd27p>-intlen,
+             <ls_dd27p>-headlen,
+             <ls_dd27p>-scrlen1,
+             <ls_dd27p>-scrlen2,
+             <ls_dd27p>-scrlen3,
+             <ls_dd27p>-memoryid.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'DD25V'
                  ig_data = ls_dd25v ).
