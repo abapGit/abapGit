@@ -321,7 +321,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</td>' ).
-    ro_html->add( '<tr></table>' ).
+    ro_html->add( '</tr></table>' ).
     ro_html->add( '</div>' ).
 
 

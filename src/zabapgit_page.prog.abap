@@ -88,7 +88,6 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
       lv_icon = 'img/repo_online' ##NO_TEXT.
     ENDIF.
 
-    ro_html->add( |<a id="repo{ io_repo->get_key( ) }"></a>| ).
     ro_html->add( '<table width="100%"><tr>' ).
 
     ro_html->add( '<td class="repo_name">' ).
@@ -225,6 +224,7 @@ CLASS lcl_gui_page_super IMPLEMENTATION.
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
+    ro_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ). "#EC NOTEXT
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '<body>' ).                               "#EC NOTEXT
