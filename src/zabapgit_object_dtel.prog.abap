@@ -73,6 +73,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
