@@ -122,17 +122,18 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd02v TYPE dd02v,
-          ls_dd09l TYPE dd09l,
-          lt_dd03p TYPE TABLE OF dd03p,
-          lt_dd05m TYPE TABLE OF dd05m,
-          lt_dd08v TYPE TABLE OF dd08v,
-          lt_dd12v TYPE dd12vtab,
-          lt_dd17v TYPE dd17vtab,
-          lt_dd35v TYPE TABLE OF dd35v,
-          lv_index LIKE sy-index,
-          lt_dd36m TYPE dd36mttyp.
+    DATA: lv_name    TYPE ddobjname,
+          ls_dd02v   TYPE dd02v,
+          ls_dd09l   TYPE dd09l,
+          lt_dd03p   TYPE TABLE OF dd03p,
+          lt_dd05m   TYPE TABLE OF dd05m,
+          lt_dd08v   TYPE TABLE OF dd08v,
+          lt_dd12v   TYPE dd12vtab,
+          lt_dd17v   TYPE dd17vtab,
+          lt_dd35v   TYPE TABLE OF dd35v,
+          lv_index   LIKE sy-index,
+          lv_masklen TYPE c LENGTH 4,
+          lt_dd36m   TYPE dd36mttyp.
 
     FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
                    <ls_dd05m> LIKE LINE OF lt_dd05m,
@@ -181,6 +182,9 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     IF ls_dd02v-datmax = ''.
       CLEAR ls_dd02v-datmax.
     ENDIF.
+    IF ls_dd02v-datavg = ''.
+      CLEAR ls_dd02v-datavg.
+    ENDIF.
 
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
@@ -207,7 +211,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
 
-      IF <ls_dd03p>-masklen = '' OR NOT <ls_dd03p>-masklen CO '0123456789'.
+      lv_masklen = <ls_dd03p>-masklen.
+      IF lv_masklen = '' OR NOT lv_masklen CO '0123456789'.
 * make sure the field contains valid data, or the XML will dump
         CLEAR <ls_dd03p>-masklen.
       ENDIF.

@@ -398,10 +398,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT SINGLE areat INTO lv_areat
       FROM tlibt
       WHERE spras = mv_language
-      AND area = ms_item-obj_name.                      "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'not found in TLIBT' ).
-    ENDIF.
+      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
 
     lt_functab = functions( ).
     lt_includes = includes( ).

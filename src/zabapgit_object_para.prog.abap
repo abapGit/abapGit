@@ -60,10 +60,7 @@ CLASS lcl_object_para IMPLEMENTATION.
 
     SELECT SINGLE * FROM tparat INTO ls_tparat
       WHERE paramid = ms_item-obj_name
-      AND sprache = mv_language.                        "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'PARA no english description' ).
-    ENDIF.
+      AND sprache = mv_language.          "#EC CI_GENBUFF "#EC CI_SUBRC
 
     io_xml->add( iv_name = 'TPARA'
                  ig_data = ls_tpara ).

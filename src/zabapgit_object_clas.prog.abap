@@ -962,7 +962,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           no_entry_found = 1
           OTHERS         = 2.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_GET_CONCEPT' ).
+        CONTINUE.
       ENDIF.
 
       CLEAR: ls_header-paket,
