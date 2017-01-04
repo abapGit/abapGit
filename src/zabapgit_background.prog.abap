@@ -166,6 +166,8 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD run.
 
+    CONSTANTS: c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
+
     DATA: lo_per       TYPE REF TO lcl_persistence_background,
           lo_repo      TYPE REF TO lcl_repo_online,
           lt_list      TYPE lcl_persistence_background=>tt_background,
@@ -173,6 +175,20 @@ CLASS lcl_background IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
+
+    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
+      EXPORTING
+        mode_zabapgit  = 'E'
+        type           = c_enq_type
+        _scope         = '3'
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+    IF sy-subrc <> 0.
+      WRITE: / 'Another intance of the program is already running'.
+      RETURN.
+    ENDIF.
 
     CREATE OBJECT lo_per.
     lt_list = lo_per->list( ).
@@ -203,6 +219,10 @@ CLASS lcl_background IMPLEMENTATION.
     IF lines( lt_list ) = 0.
       WRITE: / 'Nothing configured' ##NO_TEXT.
     ENDIF.
+
+    CALL FUNCTION 'DEQUEUE_EZABAPGIT'
+      EXPORTING
+        type = c_enq_type.
 
   ENDMETHOD.
 
