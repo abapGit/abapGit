@@ -1819,6 +1819,10 @@ CLASS ltcl_path IMPLEMENTATION.
     lv_filename = lcl_path=>get_filename_from_syspath( '\\server$\file.txt' ).
     assert_equals( act = lv_filename exp = 'file.txt' ).
 
+    lv_filename = lcl_path=>get_filename_from_syspath(
+      'C:\foo\bar\moo.boo\dev\qas\_blah\goog\muuh\sap\hello\world\lorem\ipsum\s_foo.gif' ).
+    assert_equals( act = lv_filename exp = 's_foo.gif' ).
+
   ENDMETHOD.  " get_filename_from_syspath.
 
 ENDCLASS.   "ltcl_path

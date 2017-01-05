@@ -440,10 +440,22 @@ CLASS lcl_path IMPLEMENTATION.
 
   METHOD get_filename_from_syspath.
 
-    " filename | c:\filename | /dir/filename | \\server\filename
-    FIND FIRST OCCURRENCE OF REGEX '^(?:/(?:.+/)*|(?:\w:|\\)\\(?:.+\\)*)?([^\\/]+)$'
-      IN iv_path
-      SUBMATCHES rv_filename.
+    DATA: lv_split TYPE c LENGTH 1,
+          lv_index TYPE i,
+          lt_split TYPE TABLE OF string.
+
+" filename | c:\filename | /dir/filename | \\server\filename
+    IF iv_path CA '/'.
+      lv_split = '/'.
+    ELSE.
+      lv_split = '\'.
+    ENDIF.
+
+    SPLIT iv_path AT lv_split INTO TABLE lt_split.
+
+    lv_index = lines( lt_split ).
+
+    READ TABLE lt_split INDEX lv_index INTO rv_filename.
 
   ENDMETHOD.  " get_filename_from_syspath.
 
@@ -535,13 +547,13 @@ CLASS lcl_diff DEFINITION FINAL.
                END OF c_diff.
 
     TYPES: BEGIN OF ty_diff,
-             new_line    TYPE c LENGTH 6,
-             new         TYPE string,
-             result      TYPE c LENGTH 1,
-             old_line    TYPE c LENGTH 6,
-             old         TYPE string,
-             short       TYPE abap_bool,
-             beacon      TYPE i,
+             new_line TYPE c LENGTH 6,
+             new      TYPE string,
+             result   TYPE c LENGTH 1,
+             old_line TYPE c LENGTH 6,
+             old      TYPE string,
+             short    TYPE abap_bool,
+             beacon   TYPE i,
            END OF ty_diff.
     TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -760,9 +772,9 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lt_delta  TYPE vxabapt255_tab,
-          lt_new    TYPE abaptxt255_tab,
-          lt_old    TYPE abaptxt255_tab.
+    DATA: lt_delta TYPE vxabapt255_tab,
+          lt_new   TYPE abaptxt255_tab,
+          lt_old   TYPE abaptxt255_tab.
 
 
     unpack( EXPORTING iv_new = iv_new
@@ -828,10 +840,10 @@ CLASS lcl_diff IMPLEMENTATION.
         ENDCASE.
       ELSE.
         CLEAR ls_new.
-        READ TABLE it_new INTO ls_new INDEX lv_nindex. "#EC CI_SUBRC
+        READ TABLE it_new INTO ls_new INDEX lv_nindex.    "#EC CI_SUBRC
         lv_nindex = lv_nindex + 1.
         CLEAR ls_old.
-        READ TABLE it_old INTO ls_old INDEX lv_oindex. "#EC CI_SUBRC
+        READ TABLE it_old INTO ls_old INDEX lv_oindex.    "#EC CI_SUBRC
         lv_oindex = lv_oindex + 1.
         _append ls_new '' ls_old.
       ENDIF.
