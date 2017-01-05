@@ -39,12 +39,18 @@ CLASS lcl_object_vcls IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
-    DATA lv_vclname TYPE vcl_name.
 
-    SELECT SINGLE vclname INTO lv_vclname FROM vcldir
+    DATA lv_changedate TYPE vcldir-changedate.
+
+    SELECT SINGLE changedate INTO lv_changedate FROM vcldir
       WHERE vclname = ms_item-obj_name.
 
     rv_bool = boolc( sy-subrc = 0 ).
+
+    IF lv_changedate IS INITIAL.
+* same logic as in function module VIEWCLUSTER_GET_DEFINITION
+      rv_bool = abap_false.
+    ENDIF.
 
   ENDMETHOD.                    "lif_object~exists
 
