@@ -191,7 +191,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           not_found          = 3
           permission_failure = 4
           OTHERS             = 5 ).
-      IF sy-subrc <> 0 AND sy-subrc <> 3.
+      IF sy-subrc <> 0 AND sy-subrc <> 2 AND sy-subrc <> 3.
         lcx_exception=>raise( 'error from mime api->get:' && sy-msgv1 ).
       ENDIF.
 
