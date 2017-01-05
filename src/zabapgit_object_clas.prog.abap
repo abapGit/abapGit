@@ -770,7 +770,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ELSEIF lines( rt_source ) = 1.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
       ASSERT sy-subrc = 0.
-      IF lv_line1 IS INITIAL OR lv_line1(3) = '*"*'.
+      IF lv_line1 IS INITIAL
+          OR ( strlen( lv_line1 ) >= 3 AND lv_line1(3) = '*"*' )
+          OR ( strlen( lv_line1 ) = 1 AND lv_line1(1) = '*' ).
         mv_skip_testclass = abap_true.
       ENDIF.
     ELSEIF lines( rt_source ) = 0.
