@@ -1237,7 +1237,7 @@ ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
 CLASS ltcl_html_helper DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    DATA: mo_html TYPE REF TO lcl_html_helper.
+    DATA: mo_html TYPE REF TO lcl_html.
 
     METHODS:
       indent1 FOR TESTING RAISING lcx_exception,
