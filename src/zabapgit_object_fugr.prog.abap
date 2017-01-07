@@ -490,6 +490,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       lcx_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
     ENDIF.
 
+    SORT rt_functab BY funcname ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
+
   ENDMETHOD.                    "functions
 
   METHOD main_name.
@@ -533,10 +536,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     DATA:
       lt_source     TYPE TABLE OF rssource,
       lt_functab    TYPE ty_rs38l_incl_tt,
-      lt_new_source TYPE rsfb_source.
+      lt_new_source TYPE rsfb_source,
+      ls_ret        LIKE LINE OF rt_functions.
 
-    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab,
-                   <ls_ret>  LIKE LINE OF rt_functions.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
 
 
     lt_functab = functions( ).
@@ -544,8 +547,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     LOOP AT lt_functab ASSIGNING <ls_func>.
 * fm RPY_FUNCTIONMODULE_READ does not support source code
 * lines longer than 72 characters
-      APPEND INITIAL LINE TO rt_functions ASSIGNING <ls_ret>.
-      MOVE-CORRESPONDING <ls_func> TO <ls_ret>.
+      CLEAR ls_ret.
+      MOVE-CORRESPONDING <ls_func> TO ls_ret.
 
       CLEAR lt_new_source.
       CLEAR lt_source.
@@ -554,18 +557,18 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         EXPORTING
           functionname            = <ls_func>-funcname
         IMPORTING
-          global_flag             = <ls_ret>-global_flag
-          remote_call             = <ls_ret>-remote_call
-          update_task             = <ls_ret>-update_task
-          short_text              = <ls_ret>-short_text
-          remote_basxml_supported = <ls_ret>-remote_basxml
+          global_flag             = ls_ret-global_flag
+          remote_call             = ls_ret-remote_call
+          update_task             = ls_ret-update_task
+          short_text              = ls_ret-short_text
+          remote_basxml_supported = ls_ret-remote_basxml
         TABLES
-          import_parameter        = <ls_ret>-import
-          changing_parameter      = <ls_ret>-changing
-          export_parameter        = <ls_ret>-export
-          tables_parameter        = <ls_ret>-tables
-          exception_list          = <ls_ret>-exception
-          documentation           = <ls_ret>-documentation
+          import_parameter        = ls_ret-import
+          changing_parameter      = ls_ret-changing
+          export_parameter        = ls_ret-export
+          tables_parameter        = ls_ret-tables
+          exception_list          = ls_ret-exception
+          documentation           = ls_ret-documentation
           source                  = lt_source
         CHANGING
           new_source              = lt_new_source
@@ -574,9 +577,13 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           function_not_found      = 2
           invalid_name            = 3
           OTHERS                  = 4.
-      IF sy-subrc <> 0.
+      IF sy-subrc = 2.
+        CONTINUE.
+      ELSEIF sy-subrc <> 0.
         lcx_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
+
+      APPEND ls_ret TO rt_functions.
 
       IF NOT lt_new_source IS INITIAL.
         mo_files->add_abap( iv_extra = <ls_func>-funcname

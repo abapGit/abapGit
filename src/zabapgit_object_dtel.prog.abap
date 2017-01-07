@@ -163,6 +163,9 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 * numeric field, make sure it is initial or XML serilization will dump
       CLEAR ls_dd04v-routputlen.
     ENDIF.
+    IF ls_dd04v-authclass = ''.
+      CLEAR ls_dd04v-authclass.
+    ENDIF.
 
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).

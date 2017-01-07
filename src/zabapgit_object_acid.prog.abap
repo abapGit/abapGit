@@ -71,7 +71,9 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
     lo_aab = create_object( ).
 
-    lo_aab->get_descript( IMPORTING ex_descript = lv_description ).
+    lo_aab->get_descript(
+      IMPORTING ex_descript = lv_description
+      EXCEPTIONS no_description_found = 1 ).
 
     io_xml->add( iv_name = 'DESCRIPTION'
                  ig_data = lv_description ).
