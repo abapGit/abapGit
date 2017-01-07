@@ -51,9 +51,9 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     _add '<h2>Repository list and favorites</h2>'.
     _add '<p><ul>'.
     ro_html->add( |<li>To choose a repo press {
-                  lcl_html=>icon( 'burger' ) } at the favorite bar.</li>| ).
+                  lcl_html=>icon( 'three-bars/blue' ) } at the favorite bar.</li>| ).
     ro_html->add( |<li>To favorite a repo click {
-                  lcl_html=>icon( 'star-grey' ) } icon at repo toolbar.</li>| ).
+                  lcl_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
     _add '</ul></p>'.
 
     _add '<h2>abapGit related repositories</h2>'.

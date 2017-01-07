@@ -348,17 +348,17 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CASE is_item-obj_type.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
-        rv_html = lcl_html=>icon( 'code' ).
+        rv_html = lcl_html=>icon( 'file-code/darkgrey' ).
       WHEN 'W3MI' OR 'W3HT'.
-        rv_html = lcl_html=>icon( 'bin' ).
+        rv_html = lcl_html=>icon( 'file-binary/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = lcl_html=>icon( 'obj' ).
+        rv_html = lcl_html=>icon( 'file/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = lcl_html=>icon( 'dir' ).
+      rv_html = lcl_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
   ENDMETHOD. "get_item_icon

@@ -238,22 +238,23 @@ CLASS lcl_html IMPLEMENTATION.
   METHOD icon.
 
     DATA: lv_hint  TYPE string,
-          lv_alt   TYPE string,
+          lv_name  TYPE string,
+          lv_color TYPE string,
           lv_class TYPE string.
+
+    SPLIT iv_name AT '/' INTO lv_name lv_color.
 
     IF iv_hint IS NOT INITIAL.
       lv_hint  = | title="{ iv_hint }"|.
     ENDIF.
     IF iv_class IS NOT INITIAL.
-      lv_class = | class="{ iv_class }"|.
+      lv_class = | { iv_class }|.
     ENDIF.
-    IF iv_alt IS INITIAL.
-      lv_alt = | alt|. " To pass html validation
-    ELSE.
-      lv_alt = | alt="{ iv_alt }"|.
+    IF lv_color IS NOT INITIAL.
+      lv_color = | { lv_color }|.
     ENDIF.
 
-    rv_str = |<img src="img/{ iv_name }"{ lv_alt }{ lv_class }{ lv_hint }> |.
+    rv_str = |<i class="octicon octicon-{ lv_name }{ lv_color }{ lv_class }"{ lv_hint }></i>|.
 
   ENDMETHOD. "icon
 
