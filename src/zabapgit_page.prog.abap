@@ -36,25 +36,28 @@ CLASS lcl_gui_page DEFINITION ABSTRACT.
 
     DATA: ms_control TYPE ty_control.
 
+    METHODS render_content ABSTRACT
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      RAISING   lcx_exception.
+
+    METHODS scripts
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+
     METHODS html_head
       RETURNING VALUE(ro_html)   TYPE REF TO lcl_html.
 
     METHODS title
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
-    METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-      RAISING   lcx_exception.
 
     METHODS footer
       RETURNING VALUE(ro_html)    TYPE REF TO lcl_html.
 
     METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
-
-    METHODS render_content ABSTRACT
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-      RAISING   lcx_exception.
 
 ENDCLASS. "lcl_gui_page
 
