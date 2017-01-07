@@ -48,10 +48,10 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     CREATE OBJECT lo_pback.
 
     IF io_repo->is_offline( ) = abap_true.
-      lv_icon = 'repo_offline' ##NO_TEXT.
+      lv_icon = 'plug/darkgrey' ##NO_TEXT.
       lv_hint = 'Offline repository' ##NO_TEXT.
     ELSE.
-      lv_icon = 'repo_online' ##NO_TEXT.
+      lv_icon = 'cloud-upload/blue' ##NO_TEXT.
       lv_hint = 'On-line repository' ##NO_TEXT.
     ENDIF.
 
@@ -69,9 +69,9 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<td class="repo_attr right">' ).
 
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
-      lv_icon = 'star' ##NO_TEXT.
+      lv_icon = 'star/blue' ##NO_TEXT.
     ELSE.
-      lv_icon = 'star-grey' ##NO_TEXT.
+      lv_icon = 'star/grey' ##NO_TEXT.
     ENDIF.
     ro_html->add_a( iv_act = |{ gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
                     iv_txt = lcl_html=>icon( iv_name  = lv_icon
@@ -83,7 +83,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     IF io_repo->is_write_protected( ) = abap_true.
-      ro_html->add_icon( iv_name = 'lock' iv_hint = 'Locked from pulls' ).
+      ro_html->add_icon( iv_name = 'lock/darkgrey' iv_hint = 'Locked from pulls' ).
     ENDIF.
 
     IF io_repo->is_offline( ) = abap_false.
@@ -102,7 +102,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     IF iv_show_package = abap_true.
-      ro_html->add_icon( iv_name = 'pkg' iv_hint = 'SAP package' ).
+      ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
       ro_html->add_a( iv_txt = io_repo->get_package( )
                       iv_act = |{ gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
@@ -172,7 +172,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( |<span class="{ lv_class }">| ).
-    ro_html->add_icon( iv_name = 'branch' iv_hint = 'Current branch' ).
+    ro_html->add_icon( iv_name = 'git-branch/darkgrey' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
       ro_html->add_a( iv_act = |{ gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
@@ -185,14 +185,18 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_error.
 
+    DATA lv_error TYPE string.
+
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="dummydiv attention">' ).
     IF ix_error IS BOUND.
-      ro_html->add( |Error: { ix_error->mv_text }| ).
+      lv_error = ix_error->mv_text.
     ELSE.
-      ro_html->add( |Error: { iv_error }| ).
+      lv_error = iv_error.
     ENDIF.
+
+    ro_html->add( '<div class="dummydiv attention">' ).
+    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD. "render_error

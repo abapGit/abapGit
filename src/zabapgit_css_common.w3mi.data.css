@@ -35,6 +35,7 @@ form input:focus, textarea:focus {
 
 /* COLOR PALETTE */
 .grey             { color: lightgrey  !important; }
+.darkgrey         { color: #808080    !important; }
 .attention        { color: red        !important; }
 .blue             { color: #5e8dc9;   !important; }
 .red              { color: red        !important; }

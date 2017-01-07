@@ -131,6 +131,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lt_repos = lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception INTO lx_error.
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        RETURN.
     ENDTRY.
 
     ro_html->add( render_toc( lt_repos ) ).
@@ -254,9 +255,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ENDIF.
 
       IF lo_repo->is_offline( ) = abap_true.
-        lv_icon = 'repo_offline'.
+        lv_icon = 'plug/darkgrey'.
       ELSE.
-        lv_icon = 'repo_online'.
+        lv_icon = 'cloud-upload/blue'.
       ENDIF.
 
       lo_allbar->add( iv_txt = lv_repo_title
@@ -279,7 +280,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  lcl_html=>icon( iv_name = 'star' iv_alt = 'Favs' iv_hint = 'Favorites' )
+                  lcl_html=>icon( iv_name = 'star/blue' iv_alt = 'Favs' iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100">' ). " Maximize width
@@ -294,7 +295,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_allbar->render(
-      iv_as_droplist_with_label = lcl_html=>icon( iv_name = 'burger' iv_class = 'pad4px' )
+      iv_as_droplist_with_label = lcl_html=>icon( iv_name = 'three-bars/blue' iv_class = 'pad4px' )
       iv_sort                   = abap_true
       iv_with_icons             = abap_true
       iv_add_minizone           = abap_true ) ).
