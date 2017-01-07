@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_STAGE
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     CONSTANTS: BEGIN OF c_action,
@@ -14,8 +14,12 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online
         RAISING   lcx_exception,
-      lif_gui_page~render REDEFINITION,
       lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS:
+      render_content REDEFINITION,
+      scripts        REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
@@ -25,15 +29,13 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
     METHODS:
       render_list
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_file
         IMPORTING is_file        TYPE ty_file
                   iv_context     TYPE string
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
-      scripts
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
     METHODS process_stage_list
       IMPORTING it_postdata TYPE cnht_post_data_tab
@@ -46,6 +48,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
+    ms_control-page_title = 'STAGE'.
     mo_repo = io_repo.
 
     ms_files = lcl_stage_logic=>get( mo_repo ).
@@ -150,8 +153,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         ro_html->add('<thead><tr>').
         ro_html->add('<th></th><th colspan="2">LOCAL</th><th>' ).
         IF lines( ms_files-local ) > 1.
-          ro_html->add_anchor( iv_txt = |{ lines( ms_files-local ) } diffs|
-                               iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+          ro_html->add_a( iv_txt = |{ lines( ms_files-local ) } diffs|
+                          iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
         ENDIF.
         ro_html->add('</th></tr></thead>').
         ro_html->add('<tbody class="local">').
@@ -200,7 +203,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                                                        ig_file = is_file ).
         ro_html->add( '<td class="cmd"><a>add</a></td>' ).
         ro_html->add( '<td>' ).
-        ro_html->add_anchor( iv_txt = 'diff' iv_act = |{ gc_action-go_diff }?{ lv_param }| ).
+        ro_html->add_a( iv_txt = 'diff' iv_act = |{ gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( '</td>' ).
       WHEN 'remote'.
         ro_html->add( '<td class="cmd"><a>ignore</a><a>remove</a></td>' ).
@@ -211,38 +214,33 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   ENDMETHOD.  "render_file
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'STAGE' ) ).
-
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( render_repo_top( mo_repo ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ro_html->add( render_menu( ) ).
     ro_html->add( render_list( ) ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( scripts( ) ) ).
-
-  ENDMETHOD.      "lif_gui_page~render
+  ENDMETHOD.      "render_content
 
   METHOD render_menu.
 
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add_anchor( iv_act   = 'gHelper.submit();'
-                         iv_typ   = gc_action_type-onclick
-                         iv_id    = 'act_commit'
-                         iv_style = 'display: none'
-                         iv_txt   = 'Commit'
-                         iv_opt   = gc_html_opt-emphas ) ##NO_TEXT.
+    ro_html->add_a( iv_act   = 'gHelper.submit();'
+                    iv_typ   = gc_action_type-onclick
+                    iv_id    = 'act_commit'
+                    iv_style = 'display: none'
+                    iv_txt   = 'Commit'
+                    iv_opt   = gc_html_opt-strong ) ##NO_TEXT.
     IF lines( ms_files-local ) > 0.
-      ro_html->add_anchor( iv_act = |{ c_action-stage_all }|
-                           iv_id  = 'act_commit_all'
-                           iv_txt = 'Add all and commit') ##NO_TEXT.
+      ro_html->add_a( iv_act = |{ c_action-stage_all }|
+                      iv_id  = 'act_commit_all'
+                      iv_txt = 'Add all and commit') ##NO_TEXT.
     ENDIF.
     ro_html->add( '</div>' ).
 

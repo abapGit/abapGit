@@ -159,7 +159,7 @@ CONSTANTS: BEGIN OF gc_event_state,
            END OF gc_event_state.
 
 CONSTANTS: BEGIN OF gc_html_opt,
-             emphas   TYPE c VALUE 'E',
+             strong   TYPE c VALUE 'E',
              cancel   TYPE c VALUE 'C',
              crossout TYPE c VALUE 'X',
            END OF gc_html_opt.

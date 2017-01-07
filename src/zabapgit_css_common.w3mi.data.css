@@ -33,15 +33,21 @@ form input:focus, textarea:focus {
   border: 1px solid #8cadd9;
 }
 
-/* MODIFIERS */
+/* COLOR PALETTE */
 .grey             { color: lightgrey  !important; }
-.emphasis         { font-weight: bold !important; }
 .attention        { color: red        !important; }
+.blue             { color: #5e8dc9;   !important; }
+.red              { color: red        !important; }
+
+/* MODIFIERS */
+.emphasis         { font-weight: bold !important; }
 .crossout         { text-decoration: line-through !important; }
 .right            { text-align:right; }
 .paddings         { padding: 0.5em 0.5em; }
 .pad-sides        { padding: 0 0.3em; }
 .pad4px           { padding: 4px; }
+.w100             { width: 100%; }
+.w40              { width: 40%; }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 td.headpad { padding-top: 11px; }
@@ -172,6 +178,7 @@ div.menu_vertical a {
 .dropdown_content td      { text-align: left; padding: 2px; }
 .dropdown_content td a    { padding: 0em 0.2em; }
 .dropdown_content td.icon { padding: 0 3px 0 6px; }
+.dropdown_content td.text { width: 100%; }
 .dropdown_content a:hover { background-color: #f1f1f1 }
 .dropdown:hover .dropbtn  { color: #79a0d2; }
 
@@ -248,11 +255,12 @@ div.repo {
 div.repo_container {
   position: relative;
 }
-.repo_tab {
+table.repo_tab {
   border: 1px solid #DDD;
   border-radius: 3px;
   background: #fff;
   margin-top: 0.5em;
+  width: 100%;
 }
 .repo_tab td {
   border-top: 1px solid #eee;
@@ -463,6 +471,7 @@ div.diff_head span.state-block span.none {
 table.diff_tab {
   font-family: Consolas, Courier, monospace;
   font-size: 10pt;
+  width: 100%;
 }
 table.diff_tab td,th {
   color: #444;

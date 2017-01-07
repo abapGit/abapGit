@@ -7,9 +7,9 @@ DEFINE _add.
 END-OF-DEFINITION.
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_html_helper DEFINITION
+*       CLASS lcl_html DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_html_helper DEFINITION FINAL.
+CLASS lcl_html DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS: c_indent_size TYPE i VALUE 2.
 
@@ -21,27 +21,49 @@ CLASS lcl_html_helper DEFINITION FINAL.
     METHODS add IMPORTING iv_chunk TYPE any.
     METHODS reset.
 
-    METHODS add_anchor IMPORTING iv_txt   TYPE string
-                                 iv_act   TYPE string
-                                 iv_opt   TYPE clike  OPTIONAL
-                                 iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
+    METHODS add_a IMPORTING iv_txt   TYPE string
+                            iv_act   TYPE string
+                            iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
+                            iv_opt   TYPE clike  OPTIONAL
+                            iv_class TYPE string OPTIONAL
+                            iv_id    TYPE string OPTIONAL
+                            iv_style TYPE string OPTIONAL.
+
+    METHODS add_icon IMPORTING iv_name  TYPE string
+                               iv_hint  TYPE string OPTIONAL
+                               iv_alt   TYPE string OPTIONAL
+                               iv_class TYPE string OPTIONAL.
+
+    CLASS-METHODS a IMPORTING iv_txt   TYPE string
+                              iv_act   TYPE string
+                              iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
+                              iv_opt   TYPE clike  OPTIONAL
+                              iv_class TYPE string OPTIONAL
+                              iv_id    TYPE string OPTIONAL
+                              iv_style TYPE string OPTIONAL
+                    RETURNING VALUE(rv_str) TYPE string.
+
+    CLASS-METHODS icon IMPORTING iv_name  TYPE string
+                                 iv_hint  TYPE string OPTIONAL
+                                 iv_alt   TYPE string OPTIONAL
                                  iv_class TYPE string OPTIONAL
-                                 iv_id    TYPE string OPTIONAL
-                                 iv_style TYPE string OPTIONAL.
+                    RETURNING VALUE(rv_str) TYPE string.
 
   PRIVATE SECTION.
     METHODS _add_str IMPORTING iv_str  TYPE csequence.
-    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html_helper.
+    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html.
 
-ENDCLASS.                    "lcl_html_helper DEFINITION
+ENDCLASS.                    "lcl_html DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_html_helper IMPLEMENTATION
+*       CLASS lcl_html IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcl_html_helper IMPLEMENTATION.
+CLASS lcl_html IMPLEMENTATION.
+
   METHOD add.
+
     DATA lo_type TYPE REF TO cl_abap_typedescr.
-    DATA lo_html TYPE REF TO lcl_html_helper.
+    DATA lo_html TYPE REF TO lcl_html.
 
     lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
 
@@ -71,6 +93,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
   ENDMETHOD.                    "reset
 
   METHOD _add_str.
+
     CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
       VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source|!)'.
 
@@ -145,7 +168,20 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
   ENDMETHOD.                    "_add_htm
 
-  METHOD add_anchor.
+  METHOD add_a.
+
+    _add_str( a( iv_txt   = iv_txt
+                 iv_act   = iv_act
+                 iv_typ   = iv_typ
+                 iv_opt   = iv_opt
+                 iv_class = iv_class
+                 iv_id    = iv_id
+                 iv_style = iv_style ) ).
+
+  ENDMETHOD.                    "add_a
+
+  METHOD a.
+
     DATA: lv_class TYPE string,
           lv_href  TYPE string,
           lv_id    TYPE string,
@@ -153,7 +189,7 @@ CLASS lcl_html_helper IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt CA gc_html_opt-emphas.
+    IF iv_opt CA gc_html_opt-strong.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
     IF iv_opt CA gc_html_opt-cancel.
@@ -186,11 +222,42 @@ CLASS lcl_html_helper IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    _add_str( |<a{ lv_id }{ lv_class }{ lv_href }{ lv_style }>{ iv_txt }</a>| ).
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_style }>{ iv_txt }</a>|.
 
-  ENDMETHOD.                    "add_action
+  ENDMETHOD. "a
 
-ENDCLASS.                    "lcl_html_helper IMPLEMENTATION
+  METHOD add_icon.
+
+    _add_str( icon( iv_name  = iv_name
+                    iv_class = iv_class
+                    iv_alt   = iv_alt
+                    iv_hint  = iv_hint ) ).
+
+  ENDMETHOD.                    "add_icon
+
+  METHOD icon.
+
+    DATA: lv_hint  TYPE string,
+          lv_alt   TYPE string,
+          lv_class TYPE string.
+
+    IF iv_hint IS NOT INITIAL.
+      lv_hint  = | title="{ iv_hint }"|.
+    ENDIF.
+    IF iv_class IS NOT INITIAL.
+      lv_class = | class="{ iv_class }"|.
+    ENDIF.
+    IF iv_alt IS INITIAL.
+      lv_alt = | alt|. " To pass html validation
+    ELSE.
+      lv_alt = | alt="{ iv_alt }"|.
+    ENDIF.
+
+    rv_str = |<img src="img/{ iv_name }"{ lv_alt }{ lv_class }{ lv_hint }> |.
+
+  ENDMETHOD. "icon
+
+ENDCLASS.                    "lcl_html IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_html_toolbar DEFINITION
@@ -219,7 +286,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_with_icons             TYPE abap_bool OPTIONAL
           iv_add_minizone           TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html_helper.
+          VALUE(ro_html)            TYPE REF TO lcl_html.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_item,
@@ -295,7 +362,10 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         IF iv_no_separator = abap_true.
           lv_class = lv_class && ' menu_end' ##NO_TEXT.
         ENDIF.
-        ro_html->add( |<a class="{ lv_class }">{ iv_as_droplist_with_label }</a>| ).
+
+        ro_html->add_a( iv_txt   = iv_as_droplist_with_label
+                        iv_class = lv_class
+                        iv_act   = '' ).
       ENDIF.
 
       IF iv_add_minizone = abap_true.
@@ -327,15 +397,15 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
         IF iv_with_icons = abap_true.
           ro_html->add( '<tr>' ).
-          ro_html->add( |<td class="icon">{ <ls_item>-ico }</td>| ).
-          ro_html->add( '<td width="100%">' ).
+          ro_html->add( |<td class="icon">{ lcl_html=>icon( <ls_item>-ico ) }</td>| ).
+          ro_html->add( '<td class="text">' ).
         ENDIF.
 
-        ro_html->add_anchor( iv_txt   = <ls_item>-txt
-                             iv_act   = <ls_item>-act
-                             iv_opt   = <ls_item>-opt
-                             iv_typ   = <ls_item>-typ
-                             iv_class = lv_class ).
+        ro_html->add_a( iv_txt   = <ls_item>-txt
+                        iv_act   = <ls_item>-act
+                        iv_opt   = <ls_item>-opt
+                        iv_typ   = <ls_item>-typ
+                        iv_class = lv_class ).
 
         IF iv_with_icons = abap_true.
           ro_html->add( '</td>' ).
