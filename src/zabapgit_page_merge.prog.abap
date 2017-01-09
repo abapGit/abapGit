@@ -315,7 +315,7 @@ ENDCLASS.
 
 *********************************
 
-CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
@@ -324,8 +324,10 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                   iv_source TYPE string
                   iv_target TYPE string
         RAISING   lcx_exception,
-      lif_gui_page~on_event REDEFINITION,
-      lif_gui_page~render REDEFINITION.
+      lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
@@ -346,6 +348,8 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
+    ms_control-page_title = 'MERGE'.
+    ms_control-page_menu  = build_menu( ).
 
     mo_repo = io_repo.
 
@@ -381,7 +385,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DEFINE _show_file.
       READ TABLE &1 ASSIGNING <ls_show>
@@ -410,10 +414,8 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_title = 'MERGE' io_menu = build_menu( ) ) ).
     ro_html->add( '<div id="toc">' ).
-    ro_html->add( render_repo_top(
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_show_branch  = abap_false ) ).
@@ -473,8 +475,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
     ro_html->add( ms_merge-conflict ).
     ro_html->add( '</b>' ).
     ro_html->add( '</div>' ).
-    ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.

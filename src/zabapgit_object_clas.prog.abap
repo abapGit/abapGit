@@ -7,34 +7,416 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
+INTERFACE lif_object_oriented_object.
+  METHODS:
+    create
+      IMPORTING
+        iv_package    TYPE devclass
+        iv_overwrite  TYPE seox_boolean DEFAULT seox_true
+      CHANGING
+        is_properties TYPE any
+      RAISING
+        lcx_exception,
+    generate_locals
+      IMPORTING
+        is_key                   TYPE seoclskey
+        iv_force                 TYPE seox_boolean DEFAULT seox_true
+        it_local_definitions     TYPE seop_source_string OPTIONAL
+        it_local_implementations TYPE seop_source_string OPTIONAL
+        it_local_macros          TYPE seop_source_string OPTIONAL
+        it_local_test_classes    TYPE seop_source_string OPTIONAL
+      RAISING
+        lcx_exception,
+    deserialize_source
+      IMPORTING
+        is_key    TYPE seoclskey
+        it_source TYPE ty_string_tt
+      RAISING
+        lcx_exception
+        cx_sy_dyn_call_error,
+    insert_text_pool
+      IMPORTING
+        iv_class_name TYPE seoclsname
+        it_text_pool  TYPE textpool_table
+        iv_language   TYPE spras
+      RAISING
+        lcx_exception,
+    update_descriptions
+      IMPORTING
+        is_key          TYPE seoclskey
+        it_descriptions TYPE ty_seocompotx_tt,
+    add_to_activation_list
+      IMPORTING
+        is_item TYPE ty_item
+      RAISING
+        lcx_exception,
+    create_sotr
+      IMPORTING
+        iv_package TYPE devclass
+        it_sotr    TYPE ty_sotr_tt
+      RAISING
+        lcx_exception,
+    create_documentation
+      IMPORTING
+        it_lines       TYPE tlinetab
+        iv_object_name TYPE dokhl-object
+        iv_language    TYPE spras
+      RAISING
+        lcx_exception.
+ENDINTERFACE.
+
+CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
+  PUBLIC SECTION.
+    INTERFACES: lif_object_oriented_object.
+  PRIVATE SECTION.
+    METHODS deserialize_abap_source_old
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception.
+
+    METHODS deserialize_abap_source_new
+      IMPORTING is_clskey TYPE seoclskey
+                it_source TYPE ty_string_tt
+      RAISING   lcx_exception
+                cx_sy_dyn_call_error.
+ENDCLASS.
+
+CLASS lcl_object_oriented_base IMPLEMENTATION.
+
+  METHOD lif_object_oriented_object~create.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~deserialize_source.
+    TRY.
+        deserialize_abap_source_new(
+          is_clskey = is_key
+          it_source = it_source ).
+      CATCH cx_sy_dyn_call_error.
+        deserialize_abap_source_old(
+          is_clskey = is_key
+          it_source = it_source ).
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~generate_locals.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD deserialize_abap_source_old.
+    "for backwards compatability down to 702
+
+    DATA: lo_source TYPE REF TO cl_oo_source.
+
+    CREATE OBJECT lo_source
+      EXPORTING
+        clskey             = is_clskey
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
+    ENDIF.
+
+    TRY.
+        lo_source->access_permission( seok_access_modify ).
+        lo_source->set_source( it_source ).
+        lo_source->save( ).
+        lo_source->access_permission( seok_access_free ).
+      CATCH cx_oo_access_permission.
+        lcx_exception=>raise( 'permission error' ).
+      CATCH cx_oo_source_save_failure.
+        lcx_exception=>raise( 'save failure' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD deserialize_abap_source_new.
+    DATA: lo_factory TYPE REF TO object,
+          lo_source  TYPE REF TO object.
+
+    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
+      RECEIVING
+        result = lo_factory.
+
+    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
+      EXPORTING
+        clif_name = is_clskey-clsname
+      RECEIVING
+        result    = lo_source.
+
+    TRY.
+        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
+      CATCH cx_oo_access_permission.
+        lcx_exception=>raise( 'source_new, access permission exception' ).
+    ENDTRY.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
+      EXPORTING
+        source = it_source.
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
+
+    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
+
+  ENDMETHOD.
+  METHOD lif_object_oriented_object~add_to_activation_list.
+    lcl_objects_activation=>add_item( is_item ).
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~update_descriptions.
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname.
+    INSERT seocompotx FROM TABLE it_descriptions.
+  ENDMETHOD.
+  METHOD lif_object_oriented_object~insert_text_pool.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~create_sotr.
+    "Subclass responsibility
+    RETURN.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~create_documentation.
+    CALL FUNCTION 'DOCU_UPD'
+      EXPORTING
+        id       = 'CL'
+        langu    = iv_language
+        object   = iv_object_name
+      TABLES
+        line     = it_lines
+      EXCEPTIONS
+        ret_code = 1
+        OTHERS   = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from DOCU_UPD' ).
+    ENDIF.
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS lcl_object_oriented_class DEFINITION
+  INHERITING FROM lcl_object_oriented_base.
+  PUBLIC SECTION.
+    METHODS:
+      lif_object_oriented_object~create REDEFINITION,
+      lif_object_oriented_object~generate_locals REDEFINITION,
+      lif_object_oriented_object~insert_text_pool REDEFINITION,
+      lif_object_oriented_object~create_sotr REDEFINITION.
+
+ENDCLASS.
+CLASS lcl_object_oriented_class IMPLEMENTATION.
+  METHOD lif_object_oriented_object~create.
+    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+      CHANGING
+        class           = is_properties
+      EXCEPTIONS
+        existing        = 1
+        is_interface    = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD lif_object_oriented_object~generate_locals.
+    CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
+      EXPORTING
+        clskey                 = is_key
+        force                  = iv_force
+        locals_def             = it_local_definitions
+        locals_imp             = it_local_implementations
+        locals_mac             = it_local_macros
+        locals_testclasses     = it_local_test_classes
+      EXCEPTIONS
+        not_existing           = 1
+        model_only             = 2
+        locals_not_generated   = 3
+        locals_not_initialised = 4
+        OTHERS                 = 5.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from generate_locals' ).
+    ENDIF.
+  ENDMETHOD.
+  METHOD lif_object_oriented_object~insert_text_pool.
+    DATA: lv_cp        TYPE program.
+
+    lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
+
+    INSERT TEXTPOOL lv_cp
+      FROM it_text_pool
+      LANGUAGE iv_language
+      STATE 'I'.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+    ENDIF.
+
+    lcl_objects_activation=>add( iv_type = 'REPT'
+                                 iv_name = lv_cp ).
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~create_sotr.
+    DATA: lt_sotr    TYPE ty_sotr_tt,
+          lt_objects TYPE sotr_objects,
+          ls_paket   TYPE sotr_pack,
+          lv_object  LIKE LINE OF lt_objects.
+
+    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
+
+    LOOP AT it_sotr ASSIGNING <ls_sotr>.
+      CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
+        EXPORTING
+          object_vector    = <ls_sotr>-header-objid_vec
+        IMPORTING
+          objects          = lt_objects
+        EXCEPTIONS
+          object_not_found = 1
+          OTHERS           = 2.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
+      ENDIF.
+
+      READ TABLE lt_objects INDEX 1 INTO lv_object.
+      ASSERT sy-subrc = 0.
+
+      ls_paket-paket = iv_package.
+
+      CALL FUNCTION 'SOTR_CREATE_CONCEPT'
+        EXPORTING
+          paket                         = ls_paket
+          crea_lan                      = <ls_sotr>-header-crea_lan
+          alias_name                    = <ls_sotr>-header-alias_name
+          object                        = lv_object
+          entries                       = <ls_sotr>-entries
+          concept_default               = <ls_sotr>-header-concept
+        EXCEPTIONS
+          package_missing               = 1
+          crea_lan_missing              = 2
+          object_missing                = 3
+          paket_does_not_exist          = 4
+          alias_already_exist           = 5
+          object_type_not_found         = 6
+          langu_missing                 = 7
+          identical_context_not_allowed = 8
+          text_too_long                 = 9
+          error_in_update               = 10
+          no_master_langu               = 11
+          error_in_concept_id           = 12
+          alias_not_allowed             = 13
+          tadir_entry_creation_failed   = 14
+          internal_error                = 15
+          error_in_correction           = 16
+          user_cancelled                = 17
+          no_entry_found                = 18
+          OTHERS                        = 19.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_oriented_interface DEFINITION
+  INHERITING FROM lcl_object_oriented_base.
+  PUBLIC SECTION.
+    METHODS:
+      lif_object_oriented_object~create REDEFINITION.
+ENDCLASS.
+
+CLASS lcl_object_oriented_interface IMPLEMENTATION.
+  METHOD lif_object_oriented_object~create.
+    CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+      CHANGING
+        interface       = is_properties
+      EXCEPTIONS
+        existing        = 1
+        is_class        = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lth_oo_factory_injector DEFINITION DEFERRED.
+
+CLASS lcl_object_oriented_factory DEFINITION
+  FRIENDS lth_oo_factory_injector.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      make
+        IMPORTING
+          iv_object_type                   TYPE tadir-object
+        RETURNING
+          VALUE(ro_object_oriented_object) TYPE REF TO lif_object_oriented_object.
+  PRIVATE SECTION.
+    CLASS-DATA:
+        go_object_oriented_object TYPE REF TO lif_object_oriented_object.
+ENDCLASS.
+CLASS lcl_object_oriented_factory IMPLEMENTATION.
+  METHOD make.
+    IF go_object_oriented_object IS BOUND.
+      ro_object_oriented_object = go_object_oriented_object.
+      RETURN.
+    ENDIF.
+    IF iv_object_type = 'CLAS'.
+      CREATE OBJECT ro_object_oriented_object TYPE lcl_object_oriented_class.
+    ELSEIF iv_object_type = 'INTF'.
+      CREATE OBJECT ro_object_oriented_object TYPE lcl_object_oriented_interface.
+    ENDIF.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lth_oo_factory_injector DEFINITION FOR TESTING.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      inject
+        IMPORTING
+          io_object_oriented_object TYPE REF TO lif_object_oriented_object.
+ENDCLASS.
+CLASS lth_oo_factory_injector IMPLEMENTATION.
+  METHOD inject.
+    lcl_object_oriented_factory=>go_object_oriented_object = io_object_oriented_object.
+  ENDMETHOD.
+ENDCLASS.
+
 CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
-
-  PRIVATE SECTION.
-    TYPES: BEGIN OF ty_sotr,
-             header  TYPE sotr_head,
-             entries TYPE sotr_text_tt,
-           END OF ty_sotr.
-
-    TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
-
-    TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
-
-    DATA mv_skip_testclass TYPE abap_bool.
-
+  PROTECTED SECTION.
     METHODS deserialize_abap
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
       RAISING   lcx_exception.
 
-    METHODS deserialize_textpool
+    METHODS deserialize_docu
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
+    DATA mo_object_oriented_object TYPE REF TO lif_object_oriented_object.
+  PRIVATE SECTION.
+    DATA mv_skip_testclass TYPE abap_bool.
 
-    METHODS deserialize_docu
+    METHODS deserialize_tpool
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
 
@@ -47,17 +429,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE ty_string_tt
       RAISING   lcx_exception.
-
-    METHODS deserialize_abap_source_old
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
-      RAISING   lcx_exception.
-
-    METHODS deserialize_abap_source_new
-      IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
-      RAISING   lcx_exception
-                cx_sy_dyn_call_error.
 
     METHODS serialize_abap_new
       IMPORTING is_clskey        TYPE seoclskey
@@ -108,16 +479,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       RETURNING VALUE(rt_includes) TYPE seoincl_t.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_intf DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
-* todo, CLAS + INTF to be refactored, see:
-* https://github.com/larshp/abapGit/issues/21
-ENDCLASS.                    "lcl_object_intf DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_clas IMPLEMENTATION
@@ -409,7 +770,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ELSEIF lines( rt_source ) = 1.
       READ TABLE rt_source INDEX 1 INTO lv_line1.
       ASSERT sy-subrc = 0.
-      IF lv_line1(3) = '*"*' OR lv_line1 IS INITIAL.
+      IF lv_line1 IS INITIAL
+          OR ( strlen( lv_line1 ) >= 3 AND lv_line1(3) = '*"*' )
+          OR ( strlen( lv_line1 ) = 1 AND lv_line1(1) = '*' ).
         mv_skip_testclass = abap_true.
       ENDIF.
     ELSEIF lines( rt_source ) = 0.
@@ -601,7 +964,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           no_entry_found = 1
           OTHERS         = 2.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_GET_CONCEPT' ).
+        CONTINUE.
       ENDIF.
 
       CLEAR: ls_header-paket,
@@ -737,34 +1100,23 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-* function group SEOK
-* function group SEOQ
-* function group SEOP
-* class CL_OO_CLASSNAME_SERVICE
-* class CL_OO_SOURCE
+    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
 
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
-    IF ms_item-obj_type = 'CLAS'.
-      deserialize_textpool( io_xml ).
+    deserialize_tpool( io_xml ).
 
-      deserialize_sotr( io_xml     = io_xml
-                        iv_package = iv_package ).
-    ENDIF.
+    deserialize_sotr( io_xml     = io_xml
+                      iv_package = iv_package ).
 
     deserialize_docu( io_xml ).
-
   ENDMETHOD.                    "deserialize
 
   METHOD deserialize_sotr.
-
+    "OTR stands for Online Text Repository
     DATA: lt_sotr    TYPE ty_sotr_tt,
-          lt_objects TYPE sotr_objects,
-          ls_paket   TYPE sotr_pack,
-          lv_object  LIKE LINE OF lt_objects.
-
-    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
+          lt_objects TYPE sotr_objects.
 
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
@@ -774,65 +1126,15 @@ CLASS lcl_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT lt_sotr ASSIGNING <ls_sotr>.
-      CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
-        EXPORTING
-          object_vector    = <ls_sotr>-header-objid_vec
-        IMPORTING
-          objects          = lt_objects
-        EXCEPTIONS
-          object_not_found = 1
-          OTHERS           = 2.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
-      ENDIF.
-
-      READ TABLE lt_objects INDEX 1 INTO lv_object.
-      ASSERT sy-subrc = 0.
-
-      ls_paket-paket = iv_package.
-
-      CALL FUNCTION 'SOTR_CREATE_CONCEPT'
-        EXPORTING
-          paket                         = ls_paket
-          crea_lan                      = <ls_sotr>-header-crea_lan
-          alias_name                    = <ls_sotr>-header-alias_name
-          object                        = lv_object
-          entries                       = <ls_sotr>-entries
-          concept_default               = <ls_sotr>-header-concept
-        EXCEPTIONS
-          package_missing               = 1
-          crea_lan_missing              = 2
-          object_missing                = 3
-          paket_does_not_exist          = 4
-          alias_already_exist           = 5
-          object_type_not_found         = 6
-          langu_missing                 = 7
-          identical_context_not_allowed = 8
-          text_too_long                 = 9
-          error_in_update               = 10
-          no_master_langu               = 11
-          error_in_concept_id           = 12
-          alias_not_allowed             = 13
-          tadir_entry_creation_failed   = 14
-          internal_error                = 15
-          error_in_correction           = 16
-          user_cancelled                = 17
-          no_entry_found                = 18
-          OTHERS                        = 19.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
-      ENDIF.
-
-    ENDLOOP.
-
+    mo_object_oriented_object->create_sotr(
+      iv_package    = iv_package
+      it_sotr       = lt_sotr ).
   ENDMETHOD.
 
   METHOD deserialize_docu.
 
     DATA: lt_lines  TYPE tlinetab,
           lv_object TYPE dokhl-object.
-
 
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -842,26 +1144,16 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDIF.
 
     lv_object = ms_item-obj_name.
-    CALL FUNCTION 'DOCU_UPD'
-      EXPORTING
-        id       = 'CL'
-        langu    = mv_language
-        object   = lv_object
-      TABLES
-        line     = lt_lines
-      EXCEPTIONS
-        ret_code = 1
-        OTHERS   = 2.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DOCU_UPD' ).
-    ENDIF.
 
+    mo_object_oriented_object->create_documentation(
+      it_lines       = lt_lines
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
   ENDMETHOD.                    "deserialize_doku
 
-  METHOD deserialize_textpool.
+  METHOD deserialize_tpool.
 
-    DATA: lv_cp        TYPE program,
-          lv_clsname   TYPE seoclsname,
+    DATA: lv_clsname   TYPE seoclsname,
           lt_tpool_ext TYPE ty_tpool_tt,
           lt_tpool     TYPE textpool_table.
 
@@ -875,202 +1167,131 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDIF.
 
     lv_clsname = ms_item-obj_name.
-    lv_cp = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
 
-    INSERT TEXTPOOL lv_cp
-      FROM lt_tpool
-      LANGUAGE mv_language
-      STATE 'I'.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
-    ENDIF.
-
-    lcl_objects_activation=>add( iv_type = 'REPT'
-                                 iv_name = lv_cp ).
+    mo_object_oriented_object->insert_text_pool(
+      iv_class_name = lv_clsname
+      it_text_pool  = lt_tpool
+      iv_language   = mv_language ).
 
   ENDMETHOD.                    "deserialize_textpool
 
   METHOD deserialize_abap.
 
-    DATA: ls_vseoclass    TYPE vseoclass,
-          ls_vseointerf   TYPE vseointerf,
-          lt_source       TYPE seop_source_string,
-          lt_locals_def   TYPE seop_source_string,
-          lt_locals_imp   TYPE seop_source_string,
-          lt_locals_mac   TYPE seop_source_string,
-          lt_testclasses  TYPE seop_source_string,
-          lt_descriptions TYPE ty_seocompotx_tt,
-          ls_clskey       TYPE seoclskey.
+    DATA: ls_vseoclass             TYPE vseoclass,
+          lt_source                TYPE seop_source_string,
+          lt_local_definitions     TYPE seop_source_string,
+          lt_local_implementations TYPE seop_source_string,
+          lt_local_macros          TYPE seop_source_string,
+          lt_test_classes          TYPE seop_source_string,
+          lt_descriptions          TYPE ty_seocompotx_tt,
+          ls_class_key             TYPE seoclskey.
 
 
     lt_source = mo_files->read_abap( ).
 
-    lt_locals_def = mo_files->read_abap( iv_extra = 'locals_def'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_definitions = mo_files->read_abap( iv_extra = 'locals_def'
+                                                iv_error = abap_false ). "#EC NOTEXT
 
-    lt_locals_imp = mo_files->read_abap( iv_extra = 'locals_imp'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_implementations = mo_files->read_abap( iv_extra = 'locals_imp'
+                                                    iv_error = abap_false ). "#EC NOTEXT
 
-    lt_locals_mac = mo_files->read_abap( iv_extra = 'macros'
-                                         iv_error = abap_false ). "#EC NOTEXT
+    lt_local_macros = mo_files->read_abap( iv_extra = 'macros'
+                                           iv_error = abap_false ). "#EC NOTEXT
 
-    lt_testclasses = mo_files->read_abap( iv_extra = 'testclasses'
-                                          iv_error = abap_false ). "#EC NOTEXT
+    lt_test_classes = mo_files->read_abap( iv_extra = 'testclasses'
+                                           iv_error = abap_false ). "#EC NOTEXT
 
-    ls_clskey-clsname = ms_item-obj_name.
+    ls_class_key-clsname = ms_item-obj_name.
 
+    io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
+                  CHANGING cg_data = ls_vseoclass ).
 
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
-                      CHANGING cg_data = ls_vseoclass ).
+    mo_object_oriented_object->create(
+      EXPORTING
+        iv_package    = iv_package
+      CHANGING
+        is_properties = ls_vseoclass ).
+    mo_object_oriented_object->generate_locals(
+      is_key                   = ls_class_key
+      iv_force                 = seox_true
+      it_local_definitions     = lt_local_definitions
+      it_local_implementations = lt_local_implementations
+      it_local_macros          = lt_local_macros
+      it_local_test_classes    = lt_test_classes ).
 
-        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-          EXPORTING
-            devclass        = iv_package
-            overwrite       = seox_true
-          CHANGING
-            class           = ls_vseoclass
-          EXCEPTIONS
-            existing        = 1
-            is_interface    = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
-        ENDIF.
-
-      WHEN 'INTF'.
-        io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
-                      CHANGING cg_data = ls_vseointerf ).
-
-        CALL FUNCTION 'SEO_INTERFACE_CREATE_COMPLETE'
-          EXPORTING
-            devclass        = iv_package
-            overwrite       = seox_true
-          CHANGING
-            interface       = ls_vseointerf
-          EXCEPTIONS
-            existing        = 1
-            is_class        = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
-        ENDIF.
-
-      WHEN OTHERS.
-        ASSERT 0 = 1.
-    ENDCASE.
-
-    IF ms_item-obj_type = 'CLAS'.
-      CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
-        EXPORTING
-          clskey                 = ls_clskey
-          force                  = seox_true
-          locals_def             = lt_locals_def
-          locals_imp             = lt_locals_imp
-          locals_mac             = lt_locals_mac
-          locals_testclasses     = lt_testclasses
-        EXCEPTIONS
-          not_existing           = 1
-          model_only             = 2
-          locals_not_generated   = 3
-          locals_not_initialised = 4
-          OTHERS                 = 5.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from generate_locals' ).
-      ENDIF.
-    ENDIF.
-
-    TRY.
-        deserialize_abap_source_new(
-          is_clskey = ls_clskey
-          it_source = lt_source ).
-      CATCH cx_sy_dyn_call_error.
-        deserialize_abap_source_old(
-          is_clskey = ls_clskey
-          it_source = lt_source ).
-    ENDTRY.
+    mo_object_oriented_object->deserialize_source(
+      is_key               = ls_class_key
+      it_source            = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
-    DELETE FROM seocompotx WHERE clsname = ls_clskey-clsname.
-    INSERT seocompotx FROM TABLE lt_descriptions.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    mo_object_oriented_object->update_descriptions(
+      is_key          = ls_class_key
+      it_descriptions = lt_descriptions ).
 
+    mo_object_oriented_object->add_to_activation_list( is_item = ms_item  ).
   ENDMETHOD.                    "deserialize
-
-  METHOD deserialize_abap_source_old.
-* for backwards compatability down to 702
-
-    DATA: lo_source TYPE REF TO cl_oo_source.
-
-
-    CREATE OBJECT lo_source
-      EXPORTING
-        clskey             = is_clskey
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
-    ENDIF.
-
-    TRY.
-        lo_source->access_permission( seok_access_modify ).
-        lo_source->set_source( it_source ).
-        lo_source->save( ).
-        lo_source->access_permission( seok_access_free ).
-      CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'permission error' ).
-      CATCH cx_oo_source_save_failure.
-        lcx_exception=>raise( 'save failure' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD deserialize_abap_source_new.
-
-    DATA: lo_factory TYPE REF TO object,
-          lo_source  TYPE REF TO object.
-
-
-    CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
-      RECEIVING
-        result = lo_factory.
-
-    CALL METHOD lo_factory->('CREATE_CLIF_SOURCE')
-      EXPORTING
-        clif_name = is_clskey-clsname
-      RECEIVING
-        result    = lo_source.
-
-    TRY.
-        CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
-      CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'source_new, access permission exception' ).
-    ENDTRY.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
-      EXPORTING
-        source = it_source.
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SAVE').
-
-    CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
-
-  ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_intf DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
+* todo, CLAS + INTF to be refactored, see:
+* https://github.com/larshp/abapGit/issues/21
+  PUBLIC SECTION.
+    METHODS:
+      lif_object~deserialize REDEFINITION.
+  PROTECTED SECTION.
+    METHODS:
+      deserialize_abap REDEFINITION.
+ENDCLASS.                    "lcl_object_intf DEFINITION
+CLASS lcl_object_intf IMPLEMENTATION.
+  METHOD lif_object~deserialize.
+    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+
+    deserialize_abap( io_xml     = io_xml
+                      iv_package = iv_package ).
+
+    deserialize_docu( io_xml ).
+  ENDMETHOD.
+  METHOD deserialize_abap.
+    DATA: ls_vseointerf   TYPE vseointerf,
+          lt_source       TYPE seop_source_string,
+          lt_descriptions TYPE ty_seocompotx_tt,
+          ls_clskey       TYPE seoclskey.
+    ls_clskey-clsname = ms_item-obj_name.
+
+    lt_source = mo_files->read_abap( ).
+
+    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                  CHANGING cg_data = ls_vseointerf ).
+
+    mo_object_oriented_object->create(
+      EXPORTING
+        iv_package    = iv_package
+      CHANGING
+        is_properties = ls_vseointerf ).
+
+    mo_object_oriented_object->deserialize_source(
+      is_key               = ls_clskey
+      it_source            = lt_source ).
+
+    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                  CHANGING cg_data = lt_descriptions ).
+
+    mo_object_oriented_object->update_descriptions(
+      is_key          = ls_clskey
+      it_descriptions = lt_descriptions ).
+
+    mo_object_oriented_object->add_to_activation_list( is_item = ms_item ).
+  ENDMETHOD.
+ENDCLASS.

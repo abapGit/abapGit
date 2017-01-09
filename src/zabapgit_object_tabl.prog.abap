@@ -74,6 +74,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -121,17 +122,18 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd02v TYPE dd02v,
-          ls_dd09l TYPE dd09l,
-          lt_dd03p TYPE TABLE OF dd03p,
-          lt_dd05m TYPE TABLE OF dd05m,
-          lt_dd08v TYPE TABLE OF dd08v,
-          lt_dd12v TYPE dd12vtab,
-          lt_dd17v TYPE dd17vtab,
-          lt_dd35v TYPE TABLE OF dd35v,
-          lv_index LIKE sy-index,
-          lt_dd36m TYPE dd36mttyp.
+    DATA: lv_name    TYPE ddobjname,
+          ls_dd02v   TYPE dd02v,
+          ls_dd09l   TYPE dd09l,
+          lt_dd03p   TYPE TABLE OF dd03p,
+          lt_dd05m   TYPE TABLE OF dd05m,
+          lt_dd08v   TYPE TABLE OF dd08v,
+          lt_dd12v   TYPE dd12vtab,
+          lt_dd17v   TYPE dd17vtab,
+          lt_dd35v   TYPE TABLE OF dd35v,
+          lv_index   LIKE sy-index,
+          lv_masklen TYPE c LENGTH 4,
+          lt_dd36m   TYPE dd36mttyp.
 
     FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
                    <ls_dd05m> LIKE LINE OF lt_dd05m,
@@ -170,6 +172,20 @@ CLASS lcl_object_tabl IMPLEMENTATION.
            ls_dd02v-as4date,
            ls_dd02v-as4time.
 
+* reset numeric field, so XML does not crash
+    IF ls_dd02v-prozpuff = ''.
+      CLEAR ls_dd02v-prozpuff.
+    ENDIF.
+    IF ls_dd02v-datmin = ''.
+      CLEAR ls_dd02v-datmin.
+    ENDIF.
+    IF ls_dd02v-datmax = ''.
+      CLEAR ls_dd02v-datmax.
+    ENDIF.
+    IF ls_dd02v-datavg = ''.
+      CLEAR ls_dd02v-datavg.
+    ENDIF.
+
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
            ls_dd09l-as4time.
@@ -195,7 +211,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         <ls_dd03p>-scrtext_m,
         <ls_dd03p>-scrtext_l.
 
-      IF <ls_dd03p>-masklen = '' OR NOT <ls_dd03p>-masklen CO '0123456789'.
+      lv_masklen = <ls_dd03p>-masklen.
+      IF lv_masklen = '' OR NOT lv_masklen CO '0123456789'.
 * make sure the field contains valid data, or the XML will dump
         CLEAR <ls_dd03p>-masklen.
       ENDIF.
@@ -218,7 +235,10 @@ CLASS lcl_object_tabl IMPLEMENTATION.
           <ls_dd03p>-convexit,
           <ls_dd03p>-entitytab,
           <ls_dd03p>-dommaster,
-          <ls_dd03p>-domname3l.
+          <ls_dd03p>-domname3l,
+          <ls_dd03p>-decimals,
+          <ls_dd03p>-lowercase,
+          <ls_dd03p>-signflag.
       ENDIF.
 
       IF <ls_dd03p>-shlporigin = 'D'.

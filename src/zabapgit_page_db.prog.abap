@@ -2,13 +2,14 @@
 *&  Include           ZABAPGIT_PAGE_DB
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render   REDEFINITION.
-
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
@@ -20,9 +21,10 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
+    ms_control-page_title = 'CONFIG DISPLAY'.
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DATA: lv_data   TYPE lcl_persistence_db=>ty_content-data_str,
           ls_action TYPE lcl_persistence_db=>ty_content,
@@ -44,8 +46,6 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
                               format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'CONFIG DISPLAY' ) ).
 
     ro_html->add( '<div class="db_entry">' ).
     ro_html->add( '<table class="toolbar"><tr><td>' ).
@@ -56,25 +56,24 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
                   |  <td>{ ms_key-value }</td></tr></table>| ).
 
     ro_html->add( '</td><td class="right">' ).
-    ro_html->add_anchor( iv_txt = 'Edit' iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
+    ro_html->add_a( iv_txt = 'Edit' iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
     ro_html->add( '</td></tr></table>' ).
 
     ro_html->add( |<pre>{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render REDEFINITION.
-
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA: ms_key TYPE lcl_persistence_db=>ty_content.
@@ -86,9 +85,10 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
+    ms_control-page_title = 'CONFIG EDIT'.
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
           lo_toolbar TYPE REF TO lcl_html_toolbar.
@@ -112,9 +112,6 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'CONFIG EDIT' ) ).
-
     ro_html->add( '<div class="db_entry">' ).
 
     " Banners
@@ -135,7 +132,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
                      iv_txt = 'Save'
                      iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
+                     iv_opt = gc_html_opt-strong ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -143,16 +140,17 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     ro_html->add( '</div>' ). "db_entry
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
-    METHODS lif_gui_page~render REDEFINITION.
+    METHODS constructor.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     METHODS explain_content
@@ -160,12 +158,16 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       RETURNING VALUE(rv_text) TYPE string
       RAISING   lcx_exception.
 
-
 ENDCLASS.
 
 CLASS lcl_gui_page_db IMPLEMENTATION.
 
-  METHOD lif_gui_page~render.
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-page_title = 'DATABASE PERSISTENCY'.
+  ENDMETHOD.  " constructor.
+
+  METHOD render_content.
 
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
           lv_action  TYPE string,
@@ -178,9 +180,6 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     lt_data = lcl_app=>db( )->list( ).
 
     CREATE OBJECT ro_html.
-
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'DATABASE PERSISTENCY' ) ).
 
     ro_html->add( '<div class="db_list">' ).
     ro_html->add( '<table class="db_tab">' ).
@@ -220,9 +219,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.            "lif_gui_page~render
+  ENDMETHOD.            "render_content
 
   METHOD explain_content.
     DATA: lv_result TYPE match_result,
@@ -241,9 +238,10 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         FIND FIRST OCCURRENCE OF REGEX '<OFFLINE/>'
           IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
         IF lv_cnt > 0.
-          rv_text = |<b>On-line</b>, Name: <b>{ lcl_url=>name( rv_text ) }</b>|.
+          rv_text = |<strong>On-line</strong>, Name: <strong>{
+                    lcl_url=>name( rv_text ) }</strong>|.
         ELSE.
-          rv_text = |Off-line, Name: <b>{ rv_text }</b>|.
+          rv_text = |Off-line, Name: <strong>{ rv_text }</strong>|.
         ENDIF.
 
       WHEN 'BACKGROUND'.

@@ -549,8 +549,9 @@ CLASS lcl_repo IMPLEMENTATION.
           WITH KEY item = ls_item. " type+name+package key
         " There is something in cache and the object is unchanged
         IF sy-subrc = 0
-          AND abap_false = lcl_objects=>has_changed_since( is_item      = ls_item
-                                                           iv_timestamp = mv_last_serialization ).
+            AND abap_false = lcl_objects=>has_changed_since(
+            is_item      = ls_item
+            iv_timestamp = mv_last_serialization ).
           LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.
             APPEND <ls_cache> TO rt_files.
           ENDLOOP.

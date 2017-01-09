@@ -3,12 +3,14 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_gui_page_background_run DEFINITION FINAL
-    INHERITING FROM lcl_gui_page_super.
+    INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
-    METHODS:
-      lif_gui_page~on_event REDEFINITION,
-      lif_gui_page~render   REDEFINITION.
+    METHODS constructor.
+    METHODS lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content        REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mt_text TYPE TABLE OF string.
@@ -18,6 +20,11 @@ CLASS lcl_gui_page_background_run DEFINITION FINAL
 ENDCLASS.
 
 CLASS lcl_gui_page_background_run IMPLEMENTATION.
+
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-page_title = 'BACKGROUND_RUN'.
+  ENDMETHOD.  " constructor.
 
   METHOD lif_gui_page~on_event.
     RETURN.
@@ -47,46 +54,44 @@ CLASS lcl_gui_page_background_run IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DATA: lv_text LIKE LINE OF mt_text.
-
 
     run( ).
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'BACKGROUND_RUN' ) ).
     ro_html->add( '<div id="toc">' ).
     LOOP AT mt_text INTO lv_text.
       ro_html->add( '<pre>' && lv_text && '</pre><br>' ).
     ENDLOOP.
     ro_html->add( '</div>' ).
-    ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.
 
 CLASS lcl_gui_page_background DEFINITION FINAL
-    INHERITING FROM lcl_gui_page_super.
+    INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
-      constructor
-        IMPORTING
-          iv_key TYPE lcl_persistence_repo=>ty_repo-key,
-      lif_gui_page~on_event REDEFINITION,
-      lif_gui_page~render   REDEFINITION.
+      constructor IMPORTING  iv_key TYPE lcl_persistence_repo=>ty_repo-key,
+      lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content        REDEFINITION.
 
   PRIVATE SECTION.
     DATA:
       mv_key TYPE lcl_persistence_repo=>ty_repo-key.
 
     METHODS:
+      build_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_data
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -94,9 +99,20 @@ ENDCLASS.
 CLASS lcl_gui_page_background IMPLEMENTATION.
 
   METHOD constructor.
+
     super->constructor( ).
+
     mv_key = iv_key.
+    ms_control-page_title = 'BACKGROUND'.
+    ms_control-page_menu  = build_menu( ).
+
   ENDMETHOD.
+
+  METHOD build_menu.
+    CREATE OBJECT ro_menu.
+    ro_menu->add( iv_txt = 'Run background logic'
+                  iv_act = gc_action-go_background_run ) ##NO_TEXT.
+  ENDMETHOD. "build_menu
 
   METHOD lif_gui_page~on_event.
 
@@ -162,7 +178,7 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
         lv_afixed = ' checked' ##NO_TEXT.
     ENDCASE.
 
-    ro_html->add( render_repo_top( lo_repo ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
 
     ro_html->add( '<u>Method</u><br>' )  ##NO_TEXT.
@@ -222,22 +238,12 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-
-
-    CREATE OBJECT lo_toolbar.
     CREATE OBJECT ro_html.
 
-    lo_toolbar->add( iv_txt = 'Run background logic'
-                     iv_act = gc_action-go_background_run ) ##NO_TEXT.
-
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_title = 'BACKGROUND' io_menu = lo_toolbar ) ).
     ro_html->add( render_data( ) ).
-    ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.

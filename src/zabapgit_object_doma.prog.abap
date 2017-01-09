@@ -80,6 +80,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -128,9 +129,10 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd01v TYPE dd01v,
-          lt_dd07v TYPE TABLE OF dd07v.
+    DATA: lv_name    TYPE ddobjname,
+          ls_dd01v   TYPE dd01v,
+          lv_masklen TYPE c LENGTH 4,
+          lt_dd07v   TYPE TABLE OF dd07v.
 
 
     lv_name = ms_item-obj_name.
@@ -153,6 +155,16 @@ CLASS lcl_object_doma IMPLEMENTATION.
     CLEAR: ls_dd01v-as4user,
            ls_dd01v-as4date,
            ls_dd01v-as4time.
+
+* make sure XML serialization does not dump if the field contains invalid data
+* note that this is a N field, so '' is not valid
+    IF ls_dd01v-authclass = ''.
+      CLEAR ls_dd01v-authclass.
+    ENDIF.
+    lv_masklen = ls_dd01v-masklen.
+    IF lv_masklen = '' OR NOT lv_masklen CO '0123456789'.
+      CLEAR ls_dd01v-masklen.
+    ENDIF.
 
     io_xml->add( iv_name = 'DD01V'
                  ig_data = ls_dd01v ).

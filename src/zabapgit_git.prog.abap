@@ -337,7 +337,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress multi_ack agent=' && lcl_http=>get_agent( ) ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack agent='
+          && lcl_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
       ELSE.
@@ -348,14 +349,16 @@ CLASS lcl_git_transport IMPLEMENTATION.
     ENDLOOP.
 
     IF iv_deepen = abap_true.
-      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1' && gc_newline ). "#EC NOTEXT
+      lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1'
+        && gc_newline ).                                    "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
              && '0000'
              && '0009done' && gc_newline.
 
-    lv_xstring = lo_client->send_receive_close( lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
+    lv_xstring = lo_client->send_receive_close(
+      lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
     parse( IMPORTING ev_pack = lv_pack
            CHANGING cv_data = lv_xstring ).

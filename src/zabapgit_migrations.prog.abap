@@ -46,7 +46,7 @@ CLASS lcl_migrations IMPLEMENTATION.
 
       " Ignore empty repos or repos with file checksums
       IF lines( <repo>->get_local_checksums( ) ) = 0
-        OR lines( <repo>->get_local_checksums_per_file( ) ) > 0 .
+          OR lines( <repo>->get_local_checksums_per_file( ) ) > 0.
         DELETE lt_repos INDEX lv_index.
         CONTINUE.
       ENDIF.
@@ -61,13 +61,13 @@ CLASS lcl_migrations IMPLEMENTATION.
 
     SHIFT lv_repo_list BY 2 PLACES LEFT. " Remove leading ', '
 
-    lv_question =   'abapGit wants to rebuild missing local checksums'
-                && ' (changes from 2016-12-11).'
-                && ' Generally this is safe except if there are both local '
-                && ' and remote changes at the same time. If unsure, please'
-                && ' skip and update repos individually'
-                && ' by "Advances/Update local checksums" command.'
-                && | Repos affected: { lv_repo_list }|.
+    lv_question = 'abapGit wants to rebuild missing local checksums'
+               && ' (changes from 2016-12-11).'
+               && ' Generally this is safe except if there are both local '
+               && ' and remote changes at the same time. If unsure, please'
+               && ' skip and update repos individually'
+               && ' by "Advances/Update local checksums" command.'
+               && | Repos affected: { lv_repo_list }|.
 
     lv_answer = lcl_popups=>popup_to_confirm(
       titlebar              = 'Warning'

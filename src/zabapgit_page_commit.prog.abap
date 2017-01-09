@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_COMMIT
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
 
@@ -16,8 +16,12 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
                   io_stage TYPE REF TO lcl_stage
         RAISING   lcx_exception,
-      lif_gui_page~render REDEFINITION,
       lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS:
+      render_content REDEFINITION,
+      scripts        REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
@@ -25,15 +29,13 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
 
     METHODS:
       render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_stage
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_form
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
-        RAISING   lcx_exception,
-      scripts
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RAISING   lcx_exception.
 
 ENDCLASS.
 
@@ -44,6 +46,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     mo_repo   = io_repo.
     mo_stage  = io_stage.
+
+    ms_control-page_title = 'COMMIT'.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
@@ -68,15 +72,12 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'COMMIT' ) ).
-
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( render_repo_top(
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_branch       = mo_stage->get_branch_name( ) ) ).
@@ -86,9 +87,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( render_stage( ) ).
     ro_html->add( '</div>' ).
 
-    ro_html->add( footer( io_include_script = scripts( ) ) ).
-
-  ENDMETHOD.  "lif_gui_page~render
+  ENDMETHOD.  "render_content
 
   METHOD render_stage.
 
@@ -201,7 +200,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
                      iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-emphas ) ##NO_TEXT.
+                     iv_opt = gc_html_opt-strong ) ##NO_TEXT.
 
     lo_toolbar->add( iv_act = 'commit_cancel'
                      iv_txt = 'Cancel'

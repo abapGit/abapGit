@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_DIFF
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
 
@@ -28,26 +28,27 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
                 is_object TYPE ty_item OPTIONAL
       RAISING   lcx_exception.
 
-    METHODS lif_gui_page~render   REDEFINITION.
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mt_diff_files TYPE tt_file_diff.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_diff_head
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_table_head
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_lines
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_beacon
       IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff
                 is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS get_line_hl
       IMPORTING iv_mod    TYPE char1
                 iv_result TYPE lcl_diff=>ty_diff-result
@@ -73,6 +74,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     super->constructor( ).
+    ms_control-page_title = 'DIFF'.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
@@ -93,10 +95,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ELSEIF is_object IS NOT INITIAL.  " Diff for whole object
 
       LOOP AT lt_status ASSIGNING <ls_status>
-        WHERE obj_type = is_object-obj_type
-        AND   obj_name = is_object-obj_name
-        AND   match IS INITIAL.
-
+          WHERE obj_type = is_object-obj_type
+          AND   obj_name = is_object-obj_name
+          AND   match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
                      is_status = <ls_status> ).
@@ -175,7 +176,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.  "append_diff
 
   METHOD render_diff_head.
-    DATA: lo_html  TYPE REF TO lcl_html_helper,
+    DATA: lo_html  TYPE REF TO lcl_html,
           ls_stats TYPE lcl_diff=>ty_count.
 
     CREATE OBJECT lo_html.
@@ -192,7 +193,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     lo_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
     lo_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
     lo_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    lo_html->add( render_item_state( iv1 = is_diff-lstate iv2 = is_diff-rstate ) ).
+    lo_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_diff-lstate
+                                                        iv2 = is_diff-rstate ) ).
     lo_html->add( '</div>' ).                               "#EC NOTEXT
 
     ro_html = lo_html.
@@ -222,7 +224,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table width="100%" class="diff_tab">' ). "#EC NOTEXT
+    ro_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
     ro_html->add( render_table_head( ) ).
     ro_html->add( render_lines( is_diff ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT
@@ -343,14 +345,11 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.  " get_line_hl.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DATA ls_diff_file LIKE LINE OF mt_diff_files.
 
     CREATE OBJECT ro_html.
-
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'DIFF' ) ).
 
     LOOP AT mt_diff_files INTO ls_diff_file.
       lcl_progress=>show( iv_key     = 'Diff'
@@ -361,8 +360,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS. "lcl_gui_page_diff

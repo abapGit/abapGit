@@ -2,14 +2,16 @@
 *&  Include           ZABAPGIT_PAGE_MAIN
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
       constructor
         RAISING lcx_exception,
-      lif_gui_page~render     REDEFINITION,
       lif_gui_page~on_event   REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
@@ -27,16 +29,16 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
         RAISING lcx_exception,
       render_toc
         IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_explore
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception.
 
 ENDCLASS.
@@ -46,6 +48,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
+    ms_control-page_title = 'HOME'.
+    ms_control-page_menu  = build_main_menu( ).
   ENDMETHOD.  " constructor
 
   METHOD lif_gui_page~on_event.
@@ -112,7 +116,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 * RENDERING
 **********************************************************************
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
           lx_error    TYPE REF TO lcx_exception,
@@ -123,33 +127,26 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_title = 'HOME'
-                         io_menu  = build_main_menu( ) ) ).
-
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_error( lx_error ) ).
+        ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        RETURN.
     ENDTRY.
 
     ro_html->add( render_toc( lt_repos ) ).
 
     IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
       ro_html->add( render_explore( ) ).
+    ELSEIF mv_show IS INITIAL.
+      CREATE OBJECT lo_tutorial.
+      ro_html->add( lo_tutorial->render( ) ).
     ELSE.
-      IF mv_show IS INITIAL.
-        CREATE OBJECT lo_tutorial.
-        ro_html->add( lo_tutorial->lif_gui_page~render( ) ).
-      ELSE.
-        lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
-        ro_html->add( render_repo( lo_repo ) ).
-      ENDIF.
+      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+      ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.  "render
+  ENDMETHOD.  "render_content
 
   METHOD retrieve_active_repo.
 
@@ -237,7 +234,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     LOOP AT it_repo_list INTO lo_repo.
       lv_key = lo_repo->get_key( ).
       IF lv_key = mv_show.
-        lv_opt = gc_html_opt-emphas.
+        lv_opt = gc_html_opt-strong.
       ELSE.
         CLEAR lv_opt.
       ENDIF.
@@ -258,9 +255,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ENDIF.
 
       IF lo_repo->is_offline( ) = abap_true.
-        lv_icon = '<img src="img/repo_offline">'.
+        lv_icon = 'plug/darkgrey'.
       ELSE.
-        lv_icon = '<img src="img/repo_online">'.
+        lv_icon = 'cloud-upload/blue'.
       ENDIF.
 
       lo_allbar->add( iv_txt = lv_repo_title
@@ -281,22 +278,24 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
 **********************************************************************
 
-    ro_html->add( '<table width="100%"><tr>' ).
-    ro_html->add( '<td class="pad-sides"><img src="img/star"></td>' ).
+    ro_html->add( '<table class="w100"><tr>' ).
+    ro_html->add( |<td class="pad-sides">{
+                  lcl_html=>icon( iv_name = 'star/blue' iv_alt = 'Favs' iv_hint = 'Favorites' )
+                  }</td>| ).
 
-    ro_html->add( '<td class="pad-sides" width="100%">' ). " Maximize width
+    ro_html->add( '<td class="pad-sides w100">' ). " Maximize width
     IF lo_favbar->count( ) > 0.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
-      ro_html->add( `<span class="grey">No favorites so far. For more info please check ` ).
-      ro_html->add_anchor( iv_txt = 'tutorial' iv_act = gc_action-go_tutorial ).
-      ro_html->add( '</span>' ).
+      ro_html->add( |<span class="grey">No favorites so far. For more info please check {
+                    lcl_html=>a( iv_txt = 'tutorial' iv_act = gc_action-go_tutorial )
+                    }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_allbar->render(
-      iv_as_droplist_with_label = '<img class="pad4px" src="img/burger">'
+      iv_as_droplist_with_label = lcl_html=>icon( iv_name = 'three-bars/blue' iv_class = 'pad4px' )
       iv_sort                   = abap_true
       iv_with_icons             = abap_true
       iv_add_minizone           = abap_true ) ).
@@ -332,8 +331,9 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( render_repo_top( io_repo = io_repo iv_interactive_branch = abap_true ) ).
-    ro_html->add( mo_repo_content->lif_gui_page~render( ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( io_repo               = io_repo
+                                                      iv_interactive_branch = abap_true ) ).
+    ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_repo

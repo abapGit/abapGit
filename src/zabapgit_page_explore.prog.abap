@@ -2,19 +2,28 @@
 *&  Include           ZABAPGIT_PAGE_EXPLORE
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PUBLIC SECTION.
-    METHODS lif_gui_page~render REDEFINITION.
+
+    CONSTANTS c_explore_url TYPE string
+      VALUE 'http://larshp.github.io/abapGit/explore.html'.
+
+    METHODS constructor.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
 ENDCLASS.                       "lcl_gui_page_explore DEFINITION
 
 CLASS lcl_gui_page_explore IMPLEMENTATION.
 
-  METHOD lif_gui_page~render.
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-redirect_url = c_explore_url.
+  ENDMETHOD.  "constructor
 
-    CREATE OBJECT ro_html.
-    ro_html->add( redirect( 'http://larshp.github.io/abapGit/explore.html' ) ).
-
-  ENDMETHOD.
+  METHOD render_content.
+    ASSERT 1 = 1. " Dummy
+  ENDMETHOD. "render_content.
 
 ENDCLASS.                       "lcl_gui_page_explore IMPLEMENTATION

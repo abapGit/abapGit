@@ -117,7 +117,8 @@ CLASS lcl_sap_package IMPLEMENTATION.
     SORT lt_res_sort BY obj_type ASCENDING obj_name ASCENDING.
 
     LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
-      IF NOT ( <ls_res1>-obj_type = ls_item-obj_type AND <ls_res1>-obj_name = ls_item-obj_name ).
+      IF NOT ( <ls_res1>-obj_type = ls_item-obj_type
+          AND <ls_res1>-obj_name = ls_item-obj_name ).
         APPEND INITIAL LINE TO lt_item_idx ASSIGNING <ls_res2>.
         <ls_res2>-obj_type = <ls_res1>-obj_type.
         <ls_res2>-obj_name = <ls_res1>-obj_name.

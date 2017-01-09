@@ -2,8 +2,10 @@
 *&  Include           ZABAPGIT_VIEW_REPO
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_view_repo_content DEFINITION FINAL.
   PUBLIC SECTION.
+    INTERFACES lif_gui_page.
+    ALIASES render FOR lif_gui_page~render.
 
     CONSTANTS: BEGIN OF c_actions,
                  change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
@@ -11,9 +13,6 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
                  toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
                  toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
                END OF c_actions.
-
-    METHODS: lif_gui_page~render     REDEFINITION,
-      lif_gui_page~on_event   REDEFINITION.
 
     METHODS constructor
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -31,21 +30,21 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
       render_head_menu
         IMPORTING iv_lstate      TYPE char1
                   iv_rstate      TYPE char1
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_grid_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_item_files
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_item_command
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       get_item_class
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
@@ -55,7 +54,7 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL INHERITING FROM lcl_gui_page_su
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception.
 
     METHODS:
@@ -150,7 +149,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( render_grid_menu( ) ).
 
         " Repo content table
-        ro_html->add( '<table width="100%" class="repo_tab">' ).
+        ro_html->add( '<table class="repo_tab">' ).
 
         IF lcl_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
@@ -169,7 +168,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
       CATCH lcx_exception INTO lx_error.
         ro_html->add( render_head_menu( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
-        ro_html->add( lcl_gui_page_super=>render_error( lx_error ) ).
+        ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
@@ -233,7 +232,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       lv_wp_opt   = gc_html_opt-crossout.
       lv_pull_opt = gc_html_opt-crossout.
     ELSE.
-      lv_pull_opt = gc_html_opt-emphas.
+      lv_pull_opt = gc_html_opt-strong.
     ENDIF.
 
     " Build branch drop-down ========================
@@ -283,12 +282,12 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           IF iv_lstate IS NOT INITIAL. " Something new at local
             lo_toolbar->add( iv_txt = 'Stage'
                              iv_act = |{ gc_action-go_stage }?{ lv_key }|
-                             iv_opt = gc_html_opt-emphas ).
+                             iv_opt = gc_html_opt-strong ).
           ENDIF.
           IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
             lo_toolbar->add( iv_txt = 'Show diff'
                              iv_act = |{ gc_action-go_diff }?key={ lv_key }|
-                             iv_opt = gc_html_opt-emphas ).
+                             iv_opt = gc_html_opt-strong ).
           ENDIF.
         CATCH lcx_exception ##NO_HANDLER.
           " authorization error or repository does not exist
@@ -299,10 +298,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ELSE.
       lo_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |{ gc_action-zip_import }?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
+                       iv_opt = gc_html_opt-strong ).
       lo_toolbar->add( iv_txt = 'Export ZIP'
                        iv_act = |{ gc_action-zip_export }?{ lv_key }|
-                       iv_opt = gc_html_opt-emphas ).
+                       iv_opt = gc_html_opt-strong ).
     ENDIF.
 
     lo_toolbar->add( iv_txt = 'Advanced'
@@ -312,7 +311,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     " Render ==========================================
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add( '<table width="100%"><tr>' ).
+    ro_html->add( '<table class="w100"><tr>' ).
 
     IF mv_show_folders = abap_true.
       ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
@@ -321,7 +320,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</td>' ).
-    ro_html->add( '<tr></table>' ).
+    ro_html->add( '</tr></table>' ).
     ro_html->add( '</div>' ).
 
 
@@ -349,17 +348,17 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CASE is_item-obj_type.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
-        rv_html = |<img src="img/code">|.
+        rv_html = lcl_html=>icon( 'file-code/darkgrey' ).
       WHEN 'W3MI' OR 'W3HT'.
-        rv_html = |<img src="img/bin">|.
+        rv_html = lcl_html=>icon( 'file-binary/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = |<img src="img/obj">|.
+        rv_html = lcl_html=>icon( 'file/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = |<img src="img/dir">|.
+      rv_html = lcl_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
   ENDMETHOD. "get_item_icon
@@ -436,7 +435,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
       ro_html->add( '<div>' ).
       ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
-      ro_html->add( render_item_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
+      ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
+                                                          iv2 = is_item-rstate ) ).
       ro_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
@@ -448,9 +448,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ig_object = is_item ).
 
         ro_html->add( '<div>' ).
-        ro_html->add_anchor( iv_txt = |view diff ({ is_item-changes })|
-                             iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-        ro_html->add( render_item_state( iv1 = is_item-lstate iv2 = is_item-rstate ) ).
+        ro_html->add_a( iv_txt = |view diff ({ is_item-changes })|
+                        iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+        ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
+                                                            iv2 = is_item-rstate ) ).
         ro_html->add( '</div>' ).
 
       ELSE.
@@ -461,10 +462,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
             lv_difflink = lcl_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
-            ro_html->add_anchor(
-              iv_txt = 'view diff'
-              iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
-            ro_html->add( render_item_state( iv1 = ls_file-lstate iv2 = ls_file-rstate ) ).
+            ro_html->add_a( iv_txt = 'view diff'
+                            iv_act = |{ gc_action-go_diff }?{ lv_difflink }| ).
+            ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = ls_file-lstate
+                                                                iv2 = ls_file-rstate ) ).
           ELSE.
             ro_html->add( '&nbsp;' ).
           ENDIF.
@@ -490,7 +491,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<tr class="folder">' ).
-    ro_html->add( |<td class="icon"><img src="img/dir"></td>| ).
+    ro_html->add( |<td class="icon">{ lcl_html=>icon( 'dir' ) }</td>| ).
     ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->is_offline( ) = abap_false.
       ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
@@ -503,14 +504,14 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     DATA: lv_path   TYPE string,
           lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html_helper.
+          lo_html   TYPE REF TO lcl_html.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
 
     CREATE OBJECT lo_html.
-    lo_html->add_anchor( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    lo_html->add_a( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
   ENDMETHOD.  "build_dir_jump_link
@@ -518,14 +519,14 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD build_obj_jump_link.
 
     DATA: lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html_helper.
+          lo_html   TYPE REF TO lcl_html.
 
     lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
     CREATE OBJECT lo_html.
-    lo_html->add_anchor( iv_txt = |{ is_item-obj_name }|
-                         iv_act = |{ gc_action-jump }?{ lv_encode }| ).
+    lo_html->add_a( iv_txt = |{ is_item-obj_name }|
+                    iv_act = |{ gc_action-jump }?{ lv_encode }| ).
     rv_html = lo_html->mv_html.
 
   ENDMETHOD.  "build_obj_jump_link

@@ -243,8 +243,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         communication_failure = 2
         resource_failure      = 3
         OTHERS                = 4
-        ##fm_subrc_ok
-      .                                                   "#EC CI_SUBRC
+        ##fm_subrc_ok.    "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 

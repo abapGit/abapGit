@@ -193,7 +193,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     " Match against current state
     READ TABLE it_state INTO ls_file_sig
-      WITH KEY path = is_local-file-path filename = is_local-file-filename
+      WITH KEY path = is_local-file-path
+      filename = is_local-file-filename
       BINARY SEARCH.
 
     IF sy-subrc = 0.
@@ -203,7 +204,8 @@ CLASS lcl_file_status IMPLEMENTATION.
       IF ls_file_sig-sha1 <> is_remote-sha1.
         rs_result-rstate = gc_state-modified.
       ENDIF.
-      rs_result-match = boolc( rs_result-lstate IS INITIAL AND rs_result-rstate IS INITIAL ).
+      rs_result-match = boolc( rs_result-lstate IS INITIAL
+        AND rs_result-rstate IS INITIAL ).
     ELSE.
       " This is a strange situation. As both local and remote exist
       " the state should also be present. Maybe this is a first run of the code.

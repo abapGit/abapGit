@@ -187,9 +187,6 @@ CLASS lct_table_validation IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD no_fields_no_message.
-    DATA:
-      ls_current_table_field  LIKE LINE OF mt_current_table_fields.
-
     create_xmls( ).
 
     mv_validation_message = mo_table_validator->validate(
@@ -198,7 +195,6 @@ CLASS lct_table_validation IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_initial( mv_validation_message ).
   ENDMETHOD.
-
 
   METHOD create_xmls.
     CREATE OBJECT mo_previous_version_out_xml.
@@ -219,7 +215,5 @@ CLASS lct_table_validation IMPLEMENTATION.
       EXPORTING
         iv_xml = mo_current_version_out_xml->render( ).
   ENDMETHOD.
-
-
 
 ENDCLASS.

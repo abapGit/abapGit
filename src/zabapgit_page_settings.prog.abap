@@ -2,16 +2,19 @@
 *&  Include           ZABAPGIT_PAGE_SETTINGS
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
-
-    METHODS lif_gui_page~render REDEFINITION.
-    METHODS lif_gui_page~on_event REDEFINITION.
     CONSTANTS:
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action.
+
+    METHODS constructor.
+    METHODS lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -20,13 +23,13 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
       mv_error    TYPE abap_bool.
 
     METHODS render_proxy
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_development_internals
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_form_begin
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_form_end
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS build_settings
       IMPORTING
         it_post_fields TYPE tihttpnvp.
@@ -45,14 +48,16 @@ ENDCLASS.
 
 CLASS lcl_gui_page_settings IMPLEMENTATION.
 
-  METHOD lif_gui_page~render.
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-page_title = 'SETTINGS'.
+  ENDMETHOD.  " constructor.
+
+  METHOD render_content.
 
     CREATE OBJECT ro_html.
 
     read_settings( ).
-
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'Settings' ) ).
 
     ro_html->add( render_form_begin( ) ).
     ro_html->add( render_proxy( ) ).
@@ -60,9 +65,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_development_internals( ) ).
     ro_html->add( render_form_end( ) ).
 
-    ro_html->add( footer( ) ).
-
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
   METHOD render_proxy.
 
