@@ -265,16 +265,20 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     DATA: lv_answer   TYPE c,
           lv_question TYPE string,
-          lo_repo     TYPE REF TO lcl_repo_online.
+          lo_repo     TYPE REF TO lcl_repo.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
-    lv_question =  'This will rebuild and overwrite local repo checksums.'
+    lv_question =  'This will rebuild and overwrite local repo checksums.'.
+
+    IF lo_repo->is_offline( ) = abap_false.
+      lv_question = lv_question
                 && ' The logic: if local and remote file differs then:'
                 && ' if remote branch is ahead then assume changes are remote,'
                 && ' else (branches are equal) assume changes are local.'
                 && ' This will lead to incorrect state for files changed on both sides.'
                 && ' Please make sure you don''t have ones like that.'.
+    ENDIF.
 
     lv_answer = lcl_popups=>popup_to_confirm(
       titlebar              = 'Warning'

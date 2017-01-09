@@ -255,23 +255,20 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lo_highlighter TYPE REF TO lcl_code_highlighter,
+    DATA: lo_highlighter TYPE REF TO lcl_syntax_highlighter,
           lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
           lv_local       TYPE string,
           lv_remote      TYPE string,
           lv_lattr       TYPE string,
           lv_rattr       TYPE string,
-          lv_highlight   TYPE abap_bool,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-    CREATE OBJECT lo_highlighter.
+    lo_highlighter = lcl_syntax_highlighter=>create( is_diff-filename ).
     CREATE OBJECT ro_html.
 
     lt_diffs = is_diff-o_diff->get( ).
-
-    lv_highlight = boolc( is_diff-filename CP '*.abap' ).
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
       IF <ls_diff>-short = abap_false.
@@ -292,7 +289,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         lv_remote = <ls_diff>-old.
       ENDIF.
 
-      IF lv_highlight = abap_true.
+      IF lo_highlighter IS BOUND.
         lv_local  = lo_highlighter->process_line( lv_local ).
         lv_remote = lo_highlighter->process_line( lv_remote ).
       ELSE.
