@@ -2237,8 +2237,8 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
       mt_sotr_package          TYPE devclass,
       mv_docu_object_name      TYPE dokhl-object,
       mv_docu_language         TYPE spras,
-      mt_docu_lines            TYPE tlinetab.
-
+      mt_docu_lines            TYPE tlinetab,
+      mv_get_includes_called   TYPE abap_bool.
 ENDCLASS.
 CLASS ltd_spy_oo_object IMPLEMENTATION.
   METHOD lif_object_oriented_object~create.
@@ -2293,6 +2293,11 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mv_docu_object_name = iv_object_name.
     mv_docu_language    = iv_language.
     mt_docu_lines       = it_lines.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object~get_includes.
+    APPEND 'dummy' TO rt_includes.
+    mv_get_includes_called = abap_true.
   ENDMETHOD.
 
 ENDCLASS.
@@ -2753,5 +2758,80 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
     when_deserializing( ).
 
     then_docu_should_be_created( lt_lines ).
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltcl_class_changed DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
+INHERITING FROM ltc_oo_test.
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      should_call_get_includes FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+CLASS ltcl_class_changed IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_fake_object_files.
+    CREATE OBJECT mo_spy_oo_object.
+    CREATE OBJECT mo_xml_out.
+    lth_oo_factory_injector=>inject( mo_spy_oo_object ).
+
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zcl_class'.
+    ms_item-obj_type = 'CLAS'.
+
+    CREATE OBJECT mo_oo_object TYPE lcl_object_clas
+      EXPORTING
+        is_item     = ms_item
+        iv_language = sy-langu.
+    mo_oo_object->mo_files = mo_fake_object_files.
+  ENDMETHOD.
+  METHOD should_call_get_includes.
+    DATA lv_username TYPE xubname.
+    lv_username = mo_oo_object->changed_by( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->mv_get_includes_called
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+       act = lv_username
+       exp = lcl_objects_super=>c_user_unknown ).
+  ENDMETHOD.
+ENDCLASS.
+CLASS ltcl_interface_changed DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
+INHERITING FROM ltc_oo_test.
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      should_call_get_includes FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+CLASS ltcl_interface_changed IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_fake_object_files.
+    CREATE OBJECT mo_spy_oo_object.
+    CREATE OBJECT mo_xml_out.
+    lth_oo_factory_injector=>inject( mo_spy_oo_object ).
+
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zif_interface'.
+    ms_item-obj_type = 'INTF'.
+
+    CREATE OBJECT mo_oo_object TYPE lcl_object_intf
+      EXPORTING
+        is_item     = ms_item
+        iv_language = sy-langu.
+    mo_oo_object->mo_files = mo_fake_object_files.
+  ENDMETHOD.
+  METHOD should_call_get_includes.
+    DATA lv_username TYPE xubname.
+    lv_username = mo_oo_object->changed_by( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->mv_get_includes_called
+      exp = abap_true ).
+
+    cl_abap_unit_assert=>assert_equals(
+       act = lv_username
+       exp = lcl_objects_super=>c_user_unknown ).
   ENDMETHOD.
 ENDCLASS.
