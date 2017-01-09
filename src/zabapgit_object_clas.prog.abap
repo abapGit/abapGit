@@ -542,46 +542,21 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
+    DATA:
+      lt_includes TYPE seoincl_t.
 
-    DATA: lv_clsname TYPE seoclsname,
-          lv_program TYPE program,
-          lt_incl    TYPE seoincl_t.
+    FIELD-SYMBOLS <incl> LIKE LINE OF lt_includes.
 
-    FIELD-SYMBOLS <incl> LIKE LINE OF lt_incl.
-
-    lv_clsname = ms_item-obj_name.
-
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        TRY.
-            CALL METHOD cl_oo_classname_service=>('GET_ALL_CLASS_INCLUDES')
-              EXPORTING
-                class_name = lv_clsname
-              RECEIVING
-                result     = lt_incl.
-          CATCH cx_sy_dyn_call_illegal_method.
-* method does not exist in 702, just report everything as changed
-            rv_changed = abap_true.
-        ENDTRY.
-        LOOP AT lt_incl ASSIGNING <incl>.
-          rv_changed = check_prog_changed_since(
-            iv_program   = <incl>
-            iv_timestamp = iv_timestamp
-            iv_skip_gui  = abap_true ).
-          IF rv_changed = abap_true.
-            RETURN.
-          ENDIF.
-        ENDLOOP.
-      WHEN 'INTF'.
-        lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
-        rv_changed = check_prog_changed_since(
-          iv_program   = lv_program
-          iv_timestamp = iv_timestamp
-          iv_skip_gui  = abap_true ).
-      WHEN OTHERS.
-        lcx_exception=>raise( 'class delete, unknown type' ).
-    ENDCASE.
-
+    lt_includes = mo_object_oriented_object->get_includes( ms_item-obj_name ).
+    LOOP AT lt_includes ASSIGNING <incl>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <incl>
+        iv_timestamp = iv_timestamp
+        iv_skip_gui  = abap_true ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~get_metadata.
@@ -1265,7 +1240,8 @@ CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
 * https://github.com/larshp/abapGit/issues/21
   PUBLIC SECTION.
     METHODS:
-      lif_object~deserialize REDEFINITION.
+      lif_object~deserialize REDEFINITION,
+      lif_object~has_changed_since REDEFINITION.
   PROTECTED SECTION.
     METHODS:
       deserialize_abap REDEFINITION.
@@ -1308,4 +1284,18 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
     mo_object_oriented_object->add_to_activation_list( is_item = ms_item ).
   ENDMETHOD.
+  METHOD lif_object~has_changed_since.
+    DATA:
+      lv_program  TYPE program,
+      lt_includes TYPE seoincl_t.
+
+    lt_includes = mo_object_oriented_object->get_includes( ms_item-obj_name ).
+    READ TABLE lt_includes INDEX 1 INTO lv_program.
+    "lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
+    rv_changed = check_prog_changed_since(
+      iv_program   = lv_program
+      iv_timestamp = iv_timestamp
+      iv_skip_gui  = abap_true ).
+  ENDMETHOD.
+
 ENDCLASS.

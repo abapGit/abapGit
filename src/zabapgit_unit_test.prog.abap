@@ -2766,7 +2766,9 @@ INHERITING FROM ltc_oo_test.
   PRIVATE SECTION.
     METHODS:
       setup,
-      should_call_get_includes FOR TESTING RAISING cx_static_check.
+      changed_by_call_get_includes FOR TESTING RAISING cx_static_check,
+      changed_since_call_get_include FOR TESTING RAISING cx_static_check.
+
 ENDCLASS.
 CLASS ltcl_class_changed IMPLEMENTATION.
   METHOD setup.
@@ -2785,7 +2787,7 @@ CLASS ltcl_class_changed IMPLEMENTATION.
         iv_language = sy-langu.
     mo_oo_object->mo_files = mo_fake_object_files.
   ENDMETHOD.
-  METHOD should_call_get_includes.
+  METHOD changed_by_call_get_includes.
     DATA lv_username TYPE xubname.
     lv_username = mo_oo_object->changed_by( ).
 
@@ -2797,13 +2799,23 @@ CLASS ltcl_class_changed IMPLEMENTATION.
        act = lv_username
        exp = lcl_objects_super=>c_user_unknown ).
   ENDMETHOD.
+  METHOD changed_since_call_get_include.
+    DATA lv_timestamp TYPE timestamp.
+    GET TIME STAMP FIELD lv_timestamp.
+    mo_oo_object->has_changed_since( lv_timestamp ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->mv_get_includes_called
+      exp = abap_true ).
+  ENDMETHOD.
 ENDCLASS.
 CLASS ltcl_interface_changed DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
 INHERITING FROM ltc_oo_test.
   PRIVATE SECTION.
     METHODS:
       setup,
-      should_call_get_includes FOR TESTING RAISING cx_static_check.
+      changed_by_call_get_includes FOR TESTING RAISING cx_static_check,
+      changed_since_call_get_include FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 CLASS ltcl_interface_changed IMPLEMENTATION.
   METHOD setup.
@@ -2822,7 +2834,7 @@ CLASS ltcl_interface_changed IMPLEMENTATION.
         iv_language = sy-langu.
     mo_oo_object->mo_files = mo_fake_object_files.
   ENDMETHOD.
-  METHOD should_call_get_includes.
+  METHOD changed_by_call_get_includes.
     DATA lv_username TYPE xubname.
     lv_username = mo_oo_object->changed_by( ).
 
@@ -2833,5 +2845,14 @@ CLASS ltcl_interface_changed IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
        act = lv_username
        exp = lcl_objects_super=>c_user_unknown ).
+  ENDMETHOD.
+  METHOD changed_since_call_get_include.
+    DATA lv_timestamp TYPE timestamp.
+    GET TIME STAMP FIELD lv_timestamp.
+    mo_oo_object->has_changed_since( lv_timestamp ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_spy_oo_object->mv_get_includes_called
+      exp = abap_true ).
   ENDMETHOD.
 ENDCLASS.
