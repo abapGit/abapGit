@@ -547,13 +547,13 @@ CLASS lcl_diff DEFINITION FINAL.
                END OF c_diff.
 
     TYPES: BEGIN OF ty_diff,
-             new_line TYPE c LENGTH 6,
-             new      TYPE string,
-             result   TYPE c LENGTH 1,
-             old_line TYPE c LENGTH 6,
-             old      TYPE string,
-             short    TYPE abap_bool,
-             beacon   TYPE i,
+             new_num TYPE c LENGTH 6,
+             new     TYPE string,
+             result  TYPE c LENGTH 1,
+             old_num TYPE c LENGTH 6,
+             old     TYPE string,
+             short   TYPE abap_bool,
+             beacon  TYPE i,
            END OF ty_diff.
     TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -697,16 +697,16 @@ CLASS lcl_diff IMPLEMENTATION.
 
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
-      <ls_diff>-new_line = lv_new.
-      <ls_diff>-old_line = lv_old.
+      <ls_diff>-new_num = lv_new.
+      <ls_diff>-old_num = lv_old.
 
       CASE <ls_diff>-result. " Line nums
         WHEN c_diff-delete.
           lv_old = lv_old + 1.
-          CLEAR <ls_diff>-new_line.
+          CLEAR <ls_diff>-new_num.
         WHEN c_diff-insert.
           lv_new = lv_new + 1.
-          CLEAR <ls_diff>-old_line.
+          CLEAR <ls_diff>-old_num.
         WHEN OTHERS.
           lv_new = lv_new + 1.
           lv_old = lv_old + 1.
