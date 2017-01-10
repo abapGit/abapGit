@@ -21,6 +21,117 @@ INTERFACE lif_object_enho.
 
 ENDINTERFACE.
 
+CLASS lcl_object_enho_clif DEFINITION.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      deserialize
+        IMPORTING io_xml  TYPE REF TO lcl_xml_input
+                  io_clif TYPE REF TO cl_enh_tool_clif
+        RAISING   lcx_exception
+                  cx_enh_root,
+      serialize
+        IMPORTING io_xml  TYPE REF TO lcl_xml_output
+                  io_clif TYPE REF TO cl_enh_tool_clif
+        RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_clif IMPLEMENTATION.
+
+  METHOD serialize.
+
+    DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_methods    TYPE enhnewmeth_tab.
+
+    FIELD-SYMBOLS: <ls_attr> LIKE LINE OF lt_tab_attributes,
+                   <ls_meth> LIKE LINE OF lt_tab_methods.
+
+
+    io_clif->get_enhattributes(
+      IMPORTING
+        tab_attributes = lt_tab_attributes ).
+
+    io_clif->get_enh_new_methodes(
+      IMPORTING
+        tab_methodes = lt_tab_methods ).
+
+    LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
+      CLEAR: <ls_attr>-author,
+             <ls_attr>-createdon,
+             <ls_attr>-changedby,
+             <ls_attr>-changedon.
+    ENDLOOP.
+
+    LOOP AT lt_tab_methods ASSIGNING <ls_meth>.
+      CLEAR: <ls_meth>-meth_header-author,
+             <ls_meth>-meth_header-createdon,
+             <ls_meth>-meth_header-changedby,
+             <ls_meth>-meth_header-changedon,
+             <ls_meth>-meth_header-descript_id.
+    ENDLOOP.
+
+    io_xml->add( iv_name = 'TAB_ATTRIBUTES'
+                 ig_data = lt_tab_attributes ).
+    io_xml->add( iv_name = 'TAB_METHODS'
+                 ig_data = lt_tab_methods ).
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_methods    TYPE enhnewmeth_tab,
+          ls_header         TYPE vseomethod,
+          ls_param          TYPE vseomepara,
+          ls_exc            TYPE vseoexcep.
+
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
+                   <ls_param>  LIKE LINE OF <ls_method>-meth_param,
+                   <ls_exc>    LIKE LINE OF <ls_method>-meth_exc.
+
+
+    io_xml->read( EXPORTING iv_name = 'TAB_ATTRIBUTES'
+                  CHANGING cg_data = lt_tab_attributes ).
+    io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
+                  CHANGING cg_data = lt_tab_methods ).
+
+    io_clif->set_enhattributes(
+      EXPORTING
+        tab_attributes = lt_tab_attributes ).
+
+* SAP standard SET_ENH_NEW_METHOS does not work
+
+    LOOP AT lt_tab_methods ASSIGNING <ls_method>.
+
+      MOVE-CORRESPONDING <ls_method>-meth_header TO ls_header.
+
+      io_clif->add_change_new_enh_method(
+        methkey       = <ls_method>-methkey
+        method_header = ls_header ).
+
+* parameters
+      LOOP AT <ls_method>-meth_param ASSIGNING <ls_param>.
+        MOVE-CORRESPONDING <ls_param> TO ls_param.
+        io_clif->add_change_enh_methparam(
+          methname   = <ls_method>-methkey-cmpname
+          param_line = ls_param ).
+      ENDLOOP.
+
+* exceptions
+      LOOP AT <ls_method>-meth_exc ASSIGNING <ls_exc>.
+        MOVE-CORRESPONDING <ls_exc> TO ls_exc.
+        io_clif->add_change_enh_methexc(
+          methname    = <ls_method>-methkey-cmpname
+          except_line = ls_exc ).
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_object_enho_badi DEFINITION.
 
   PUBLIC SECTION.
@@ -31,8 +142,8 @@ CLASS lcl_object_enho_badi DEFINITION.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item TYPE ty_item.
-    DATA: mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE ty_item,
+          mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.
 
@@ -389,6 +500,10 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
 
     mo_files->add_abap( lt_source ).
 
+    lcl_object_enho_clif=>serialize(
+      io_xml  = io_xml
+      io_clif = lo_enh_class ).
+
   ENDMETHOD.
 
   METHOD lif_object_enho~deserialize.
@@ -441,6 +556,10 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
                                         post_methods = lt_post ).
         lo_enh_class->set_eimp_include( version     = 'I'
                                         eimp_source = lt_source ).
+
+        lcl_object_enho_clif=>deserialize(
+          io_xml  = io_xml
+          io_clif = lo_enh_class ).
 
         lo_enh_class->if_enh_object~save( ).
         lo_enh_class->if_enh_object~unlock( ).
