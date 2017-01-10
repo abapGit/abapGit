@@ -95,7 +95,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object~create.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~deserialize_source.
@@ -112,7 +112,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object~generate_locals.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD deserialize_abap_source_old.
@@ -182,12 +182,12 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
   METHOD lif_object_oriented_object~insert_text_pool.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_sotr.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_documentation.
@@ -208,7 +208,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object~get_includes.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
 ENDCLASS.
