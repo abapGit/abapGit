@@ -2,21 +2,300 @@
 *&  Include           ZABAPGIT_OBJECT_ENHO
 *&---------------------------------------------------------------------*
 
-* todo, this include could use some refactoring
-
-* todo, CL_ENH_TOOL_CLASS inherits from CL_ENH_TOOL_CLIF so this
-* should also be reflected in the code in this include
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_enho DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 * For complete list of tool_type - see ENHTOOLS table
+
+INTERFACE lif_object_enho.
+
+  METHODS:
+    deserialize
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
+      RAISING   lcx_exception,
+    serialize
+      IMPORTING io_xml      TYPE REF TO lcl_xml_output
+                ii_enh_tool TYPE REF TO if_enh_tool
+      RAISING   lcx_exception.
+
+ENDINTERFACE.
+
+CLASS lcl_object_enho_clif DEFINITION.
+
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    CLASS-METHODS:
+      deserialize
+        IMPORTING io_xml  TYPE REF TO lcl_xml_input
+                  io_clif TYPE REF TO cl_enh_tool_clif
+        RAISING   lcx_exception
+                  cx_enh_root,
+      serialize
+        IMPORTING io_xml   TYPE REF TO lcl_xml_output
+                  io_files TYPE REF TO lcl_objects_files
+                  io_clif  TYPE REF TO cl_enh_tool_clif
+        RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: serialize_includes
+      IMPORTING io_files TYPE REF TO lcl_objects_files
+                io_clif  TYPE REF TO cl_enh_tool_clif
+      RAISING   lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_clif IMPLEMENTATION.
+
+  METHOD serialize_includes.
+
+    DATA: lt_includes TYPE enhnewmeth_tabincl_plus_enha,
+          lt_source   TYPE TABLE OF abaptxt255,
+          lv_include  TYPE programm.
+
+    FIELD-SYMBOLS: <ls_include> LIKE LINE OF lt_includes.
+
+
+    lt_includes = io_clif->get_enh_method_includes( ).
+    LOOP AT lt_includes ASSIGNING <ls_include>.
+      lv_include = io_clif->if_enh_tool~get_name( ).
+      TRANSLATE lv_include USING ' ='.
+      lv_include+30 = 'EM'.
+      lv_include+32(8) = <ls_include>-includenr.
+
+      CALL FUNCTION 'RPY_PROGRAM_READ'
+        EXPORTING
+          program_name     = lv_include
+          with_lowercase   = abap_true
+        TABLES
+          source_extended  = lt_source
+        EXCEPTIONS
+          cancelled        = 1
+          not_found        = 2
+          permission_error = 3
+          OTHERS           = 4.
+      IF sy-subrc = 0.
+        io_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
+                            it_abap  = lt_source ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD serialize.
+
+    DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_methods    TYPE enhnewmeth_tab.
+
+    FIELD-SYMBOLS: <ls_attr> LIKE LINE OF lt_tab_attributes,
+                   <ls_meth> LIKE LINE OF lt_tab_methods.
+
+
+    io_clif->get_enhattributes(
+      IMPORTING
+        tab_attributes = lt_tab_attributes ).
+
+    io_clif->get_enh_new_methodes(
+      IMPORTING
+        tab_methodes = lt_tab_methods ).
+
+    serialize_includes( io_clif  = io_clif
+                        io_files = io_files ).
+
+    LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
+      CLEAR: <ls_attr>-author,
+             <ls_attr>-createdon,
+             <ls_attr>-changedby,
+             <ls_attr>-changedon.
+    ENDLOOP.
+
+    LOOP AT lt_tab_methods ASSIGNING <ls_meth>.
+      CLEAR: <ls_meth>-meth_header-author,
+             <ls_meth>-meth_header-createdon,
+             <ls_meth>-meth_header-changedby,
+             <ls_meth>-meth_header-changedon,
+             <ls_meth>-meth_header-descript_id.
+    ENDLOOP.
+
+    io_xml->add( iv_name = 'TAB_ATTRIBUTES'
+                 ig_data = lt_tab_attributes ).
+    io_xml->add( iv_name = 'TAB_METHODS'
+                 ig_data = lt_tab_methods ).
+
+  ENDMETHOD.
+
+  METHOD deserialize.
+
+    DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_methods    TYPE enhnewmeth_tab,
+          ls_header         TYPE vseomethod,
+          ls_param          TYPE vseomepara,
+          ls_exc            TYPE vseoexcep.
+
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
+                   <ls_param>  LIKE LINE OF <ls_method>-meth_param,
+                   <ls_exc>    LIKE LINE OF <ls_method>-meth_exc.
+
+
+    io_xml->read( EXPORTING iv_name = 'TAB_ATTRIBUTES'
+                  CHANGING cg_data = lt_tab_attributes ).
+    io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
+                  CHANGING cg_data = lt_tab_methods ).
+
+    io_clif->set_enhattributes( tab_attributes = lt_tab_attributes ).
+
+* todo: deserialize includes
+
+* SAP standard SET_ENH_NEW_METHOS does not work
+
+    LOOP AT lt_tab_methods ASSIGNING <ls_method>.
+
+      MOVE-CORRESPONDING <ls_method>-meth_header TO ls_header.
+
+      io_clif->add_change_new_enh_method(
+        methkey       = <ls_method>-methkey
+        method_header = ls_header ).
+
+* parameters
+      LOOP AT <ls_method>-meth_param ASSIGNING <ls_param>.
+        MOVE-CORRESPONDING <ls_param> TO ls_param.
+        io_clif->add_change_enh_methparam(
+          methname   = <ls_method>-methkey-cmpname
+          param_line = ls_param ).
+      ENDLOOP.
+
+* exceptions
+      LOOP AT <ls_method>-meth_exc ASSIGNING <ls_exc>.
+        MOVE-CORRESPONDING <ls_exc> TO ls_exc.
+        io_clif->add_change_enh_methexc(
+          methname    = <ls_method>-methkey-cmpname
+          except_line = ls_exc ).
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_badi DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS: constructor
+      IMPORTING
+        is_item  TYPE ty_item
+        io_files TYPE REF TO lcl_objects_files.
+    INTERFACES: lif_object_enho.
+
+  PRIVATE SECTION.
+    DATA: ms_item  TYPE ty_item,
+          mo_files TYPE REF TO lcl_objects_files.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_badi IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_item = is_item.
+    mo_files = io_files.
+  ENDMETHOD.
+
+  METHOD lif_object_enho~serialize.
+
+    DATA: lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
+          lv_spot_name TYPE enhspotname,
+          lv_shorttext TYPE string,
+          lt_impl      TYPE enh_badi_impl_data_it.
+
+    FIELD-SYMBOLS: <ls_impl>   LIKE LINE OF lt_impl,
+                   <ls_values> LIKE LINE OF <ls_impl>-filter_values,
+                   <ls_filter> LIKE LINE OF <ls_impl>-filters.
+
+
+    lo_badi_impl ?= ii_enh_tool.
+
+    lv_shorttext = lo_badi_impl->if_enh_object_docu~get_shorttext( ).
+    lv_spot_name = lo_badi_impl->get_spot_name( ).
+    lt_impl      = lo_badi_impl->get_implementations( ).
+
+    LOOP AT lt_impl ASSIGNING <ls_impl>.
+* make sure the XML serialization does not dump, field type = N
+      LOOP AT <ls_impl>-filter_values ASSIGNING <ls_values>.
+        IF <ls_values>-filter_numeric_value1 CA space.
+          CLEAR <ls_values>-filter_numeric_value1.
+        ENDIF.
+      ENDLOOP.
+      LOOP AT <ls_impl>-filters ASSIGNING <ls_filter>.
+        IF <ls_filter>-filter_numeric_value1 CA space.
+          CLEAR <ls_filter>-filter_numeric_value1.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP.
+
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    io_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    io_xml->add( iv_name = 'SPOT_NAME'
+                 ig_data = lv_spot_name ).
+    io_xml->add( iv_name = 'IMPL'
+                 ig_data = lt_impl ).
+
+  ENDMETHOD.
+
+  METHOD lif_object_enho~deserialize.
+
+    DATA: lv_spot_name TYPE enhspotname,
+          lv_shorttext TYPE string,
+          lv_enhname   TYPE enhname,
+          lo_badi      TYPE REF TO cl_enh_tool_badi_impl,
+          li_tool      TYPE REF TO if_enh_tool,
+          lv_package   TYPE devclass,
+          lt_impl      TYPE enh_badi_impl_data_it.
+
+    FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
+
+
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data  = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'SPOT_NAME'
+                  CHANGING cg_data  = lv_spot_name ).
+    io_xml->read( EXPORTING iv_name = 'IMPL'
+                  CHANGING cg_data  = lt_impl ).
+
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname     = lv_enhname
+            enhtype     = cl_abstract_enh_tool_redef=>credefinition
+            enhtooltype = cl_enh_tool_badi_impl=>tooltype
+          IMPORTING
+            enhancement = li_tool
+          CHANGING
+            devclass    = lv_package ).
+        lo_badi ?= li_tool.
+
+        lo_badi->set_spot_name( lv_spot_name ).
+        lo_badi->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        LOOP AT lt_impl ASSIGNING <ls_impl>.
+          lo_badi->add_implementation( <ls_impl> ).
+        ENDLOOP.
+        lo_badi->if_enh_object~save( ).
+        lo_badi->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        lcx_exception=>raise( 'error deserializing ENHO badi' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_hook DEFINITION.
+  PUBLIC SECTION.
+    METHODS: constructor
+      IMPORTING
+        is_item  TYPE ty_item
+        io_files TYPE REF TO lcl_objects_files.
+
+    INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_spaces,
@@ -26,63 +305,66 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
-    METHODS deserialize_badi
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
-    METHODS deserialize_hook
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
-    METHODS deserialize_class
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
+    DATA: ms_item TYPE ty_item.
+    DATA: mo_files TYPE REF TO lcl_objects_files.
+
     METHODS hook_impl_deserialize
       IMPORTING it_spaces TYPE ty_spaces_tt
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   lcx_exception.
 
-
-    METHODS serialize_badi
-      IMPORTING io_xml      TYPE REF TO lcl_xml_output
-                iv_tool     TYPE enhtooltype
-                ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING   lcx_exception.
-    METHODS serialize_hook
-      IMPORTING io_xml      TYPE REF TO lcl_xml_output
-                iv_tool     TYPE enhtooltype
-                ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING   lcx_exception.
-    METHODS serialize_class
-      IMPORTING io_xml      TYPE REF TO lcl_xml_output
-                iv_tool     TYPE enhtooltype
-                ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING   lcx_exception.
     METHODS hook_impl_serialize
       EXPORTING et_spaces TYPE ty_spaces_tt
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   lcx_exception.
 
-ENDCLASS.                    "lcl_object_enho DEFINITION
+ENDCLASS.
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_object_enho IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_object_enho IMPLEMENTATION.
+CLASS lcl_object_enho_hook IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  METHOD constructor.
+    ms_item = is_item.
+    mo_files = io_files.
+  ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  METHOD lif_object_enho~serialize.
 
-  METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+    DATA: lv_shorttext       TYPE string,
+          lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
+          ls_original_object TYPE enh_hook_admin,
+          lt_spaces          TYPE ty_spaces_tt,
+          lt_enhancements    TYPE enh_hook_impl_it.
+
+
+    lo_hook_impl ?= ii_enh_tool.
+
+    lv_shorttext = lo_hook_impl->if_enh_object_docu~get_shorttext( ).
+    lo_hook_impl->get_original_object(
+      IMPORTING
+        pgmid     = ls_original_object-pgmid
+        obj_name  = ls_original_object-org_obj_name
+        obj_type  = ls_original_object-org_obj_type
+        main_type = ls_original_object-org_main_type
+        main_name = ls_original_object-org_main_name
+        program   = ls_original_object-programname ).
+    ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
+    lt_enhancements = lo_hook_impl->get_hook_impls( ).
+
+    hook_impl_serialize(
+      IMPORTING et_spaces = lt_spaces
+      CHANGING ct_impl = lt_enhancements ).
+
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    io_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    io_xml->add( ig_data = ls_original_object
+                 iv_name = 'ORIGINAL_OBJECT' ).
+    io_xml->add( iv_name = 'ENHANCEMENTS'
+                 ig_data = lt_enhancements ).
+    io_xml->add( iv_name = 'SPACES'
+                 ig_data = lt_spaces ).
+
   ENDMETHOD.
 
   METHOD hook_impl_serialize.
@@ -132,209 +414,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
-
-    DATA: lv_enh_id TYPE enhname.
-
-
-    lv_enh_id = ms_item-obj_name.
-    TRY.
-        cl_enh_factory=>get_enhancement(
-          enhancement_id   = lv_enh_id
-          bypassing_buffer = abap_true ).
-        rv_bool = abap_true.
-      CATCH cx_enh_root.
-        rv_bool = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.                    "lif_object~exists
-
-  METHOD lif_object~serialize.
-
-    DATA: lv_enh_id   TYPE enhname,
-          lv_tool     TYPE enhtooltype,
-          li_enh_tool TYPE REF TO if_enh_tool.
-
-
-    IF lif_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    lv_enh_id = ms_item-obj_name.
-    TRY.
-        li_enh_tool = cl_enh_factory=>get_enhancement(
-          enhancement_id   = lv_enh_id
-          bypassing_buffer = abap_true ).
-      CATCH cx_enh_root.
-        lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
-    ENDTRY.
-    lv_tool = li_enh_tool->get_tool( ).
-
-    CASE lv_tool.
-      WHEN cl_enh_tool_badi_impl=>tooltype.
-        serialize_badi( io_xml      = io_xml
-                        iv_tool     = lv_tool
-                        ii_enh_tool = li_enh_tool ).
-      WHEN cl_enh_tool_hook_impl=>tooltype.
-        serialize_hook( io_xml      = io_xml
-                        iv_tool     = lv_tool
-                        ii_enh_tool = li_enh_tool ).
-      WHEN cl_enh_tool_class=>tooltype.
-        serialize_class( io_xml      = io_xml
-                         iv_tool     = lv_tool
-                         ii_enh_tool = li_enh_tool ).
-* ToDo:
-*      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
-*      WHEN cl_enh_tool_intf=>tooltype.
-*      WHEN cl_wdr_cfg_enhancement=>tooltype.
-*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
-      WHEN OTHERS.
-        lcx_exception=>raise( |Unsupported ENHO type { lv_tool }| ).
-    ENDCASE.
-
-  ENDMETHOD.                    "serialize
-
-  METHOD lif_object~deserialize.
-
-    DATA: lv_tool TYPE enhtooltype.
-
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
-    ENDIF.
-
-    io_xml->read( EXPORTING iv_name = 'TOOL'
-                  CHANGING cg_data = lv_tool ).
-
-    CASE lv_tool.
-      WHEN cl_enh_tool_badi_impl=>tooltype.
-        deserialize_badi( io_xml     = io_xml
-                          iv_package = iv_package ).
-      WHEN cl_enh_tool_hook_impl=>tooltype.
-        deserialize_hook( io_xml     = io_xml
-                          iv_package = iv_package ).
-      WHEN cl_enh_tool_class=>tooltype.
-        deserialize_class( io_xml     = io_xml
-                           iv_package = iv_package ).
-* ToDo:
-*      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
-*      WHEN cl_enh_tool_intf=>tooltype.
-*      WHEN cl_wdr_cfg_enhancement=>tooltype.
-*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
-      WHEN OTHERS.
-        lcx_exception=>raise( |Unsupported ENHO type { lv_tool }| ).
-    ENDCASE.
-
-    lcl_objects_activation=>add_item( ms_item ).
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD deserialize_badi.
-
-    DATA: lv_spot_name TYPE enhspotname,
-          lv_shorttext TYPE string,
-          lv_enhname   TYPE enhname,
-          lo_badi      TYPE REF TO cl_enh_tool_badi_impl,
-          li_tool      TYPE REF TO if_enh_tool,
-          lv_package   TYPE devclass,
-          lt_impl      TYPE enh_badi_impl_data_it.
-
-    FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
-
-
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'SPOT_NAME'
-                  CHANGING cg_data  = lv_spot_name ).
-    io_xml->read( EXPORTING iv_name = 'IMPL'
-                  CHANGING cg_data  = lt_impl ).
-
-    lv_enhname = ms_item-obj_name.
-    lv_package = iv_package.
-    TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = cl_abstract_enh_tool_redef=>credefinition
-            enhtooltype = cl_enh_tool_badi_impl=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
-        lo_badi ?= li_tool.
-
-        lo_badi->set_spot_name( lv_spot_name ).
-        lo_badi->if_enh_object_docu~set_shorttext( lv_shorttext ).
-        LOOP AT lt_impl ASSIGNING <ls_impl>.
-          lo_badi->add_implementation( <ls_impl> ).
-        ENDLOOP.
-        lo_badi->if_enh_object~save( ).
-        lo_badi->if_enh_object~unlock( ).
-      CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO badi' ).
-    ENDTRY.
-
-  ENDMETHOD.                    "deserialize_badi
-
-  METHOD deserialize_class.
-
-    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
-          lt_owr       TYPE enhmeth_tabkeys,
-          lt_pre       TYPE enhmeth_tabkeys,
-          lt_post      TYPE enhmeth_tabkeys,
-          lt_source    TYPE rswsourcet,
-          li_tool      TYPE REF TO if_enh_tool,
-          lv_shorttext TYPE string,
-          lv_class     TYPE seoclsname,
-          lv_enhname   TYPE enhname,
-          lv_package   TYPE devclass.
-
-
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'OWR_METHODS'
-                  CHANGING cg_data  = lt_owr ).
-    io_xml->read( EXPORTING iv_name = 'PRE_METHODS'
-                  CHANGING cg_data  = lt_pre ).
-    io_xml->read( EXPORTING iv_name = 'POST_METHODS'
-                  CHANGING cg_data  = lt_post ).
-    io_xml->read( EXPORTING iv_name = 'CLASS'
-                  CHANGING cg_data  = lv_class ).
-    lt_source = mo_files->read_abap( ).
-
-    lv_enhname = ms_item-obj_name.
-    lv_package = iv_package.
-    TRY.
-        cl_enh_factory=>create_enhancement(
-          EXPORTING
-            enhname     = lv_enhname
-            enhtype     = ''
-            enhtooltype = cl_enh_tool_class=>tooltype
-          IMPORTING
-            enhancement = li_tool
-          CHANGING
-            devclass    = lv_package ).
-        lo_enh_class ?= li_tool.
-
-        lo_enh_class->if_enh_object_docu~set_shorttext( lv_shorttext ).
-        lo_enh_class->set_class( lv_class ).
-        lo_enh_class->set_owr_methods( version     = 'I'
-                                       owr_methods = lt_owr ).
-        lo_enh_class->set_pre_methods( version     = 'I'
-                                       pre_methods = lt_pre ).
-        lo_enh_class->set_post_methods( version      = 'I'
-                                        post_methods = lt_post ).
-        lo_enh_class->set_eimp_include( version     = 'I'
-                                        eimp_source = lt_source ).
-
-        lo_enh_class->if_enh_object~save( ).
-        lo_enh_class->if_enh_object~unlock( ).
-      CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO class' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD deserialize_hook.
+  METHOD lif_object_enho~deserialize.
 
     DATA: lv_shorttext       TYPE string,
           lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
@@ -400,52 +480,130 @@ CLASS lcl_object_enho IMPLEMENTATION.
         lcx_exception=>raise( 'error deserializing ENHO hook' ).
     ENDTRY.
 
-  ENDMETHOD.                    "deserialize_hook
+  ENDMETHOD.
 
-  METHOD serialize_badi.
+ENDCLASS.
 
-    DATA: lo_badi_impl TYPE REF TO cl_enh_tool_badi_impl,
-          lv_spot_name TYPE enhspotname,
-          lv_shorttext TYPE string,
-          lt_impl      TYPE enh_badi_impl_data_it.
+CLASS lcl_object_enho_interface DEFINITION.
 
-    FIELD-SYMBOLS: <ls_impl>   LIKE LINE OF lt_impl,
-                   <ls_values> LIKE LINE OF <ls_impl>-filter_values,
-                   <ls_filter> LIKE LINE OF <ls_impl>-filters.
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item  TYPE ty_item
+          io_files TYPE REF TO lcl_objects_files.
+    INTERFACES: lif_object_enho.
+
+  PRIVATE SECTION.
+    DATA: ms_item  TYPE ty_item,
+          mo_files TYPE REF TO lcl_objects_files.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_interface IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_item  = is_item.
+    mo_files = io_files.
+  ENDMETHOD.
+
+  METHOD lif_object_enho~serialize.
+
+    DATA: lo_enh_intf  TYPE REF TO cl_enh_tool_intf,
+          lv_class     TYPE seoclsname,
+          lv_shorttext TYPE string.
 
 
-    lo_badi_impl ?= ii_enh_tool.
+    lo_enh_intf ?= ii_enh_tool.
 
-    lv_shorttext = lo_badi_impl->if_enh_object_docu~get_shorttext( ).
-    lv_spot_name = lo_badi_impl->get_spot_name( ).
-    lt_impl      = lo_badi_impl->get_implementations( ).
-
-    LOOP AT lt_impl ASSIGNING <ls_impl>.
-* make sure the XML serialization does not dump, field type = N
-      LOOP AT <ls_impl>-filter_values ASSIGNING <ls_values>.
-        IF <ls_values>-filter_numeric_value1 CA space.
-          CLEAR <ls_values>-filter_numeric_value1.
-        ENDIF.
-      ENDLOOP.
-      LOOP AT <ls_impl>-filters ASSIGNING <ls_filter>.
-        IF <ls_filter>-filter_numeric_value1 CA space.
-          CLEAR <ls_filter>-filter_numeric_value1.
-        ENDIF.
-      ENDLOOP.
-    ENDLOOP.
+    lv_shorttext = lo_enh_intf->if_enh_object_docu~get_shorttext( ).
+    lo_enh_intf->get_class( IMPORTING class_name = lv_class ).
 
     io_xml->add( iv_name = 'TOOL'
-                 ig_data = iv_tool ).
+                 ig_data = ii_enh_tool->get_tool( ) ).
     io_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
-    io_xml->add( iv_name = 'SPOT_NAME'
-                 ig_data = lv_spot_name ).
-    io_xml->add( iv_name = 'IMPL'
-                 ig_data = lt_impl ).
+    io_xml->add( iv_name = 'CLASS'
+                 ig_data = lv_class ).
 
-  ENDMETHOD.                    "serialize_badi
+    lcl_object_enho_clif=>serialize(
+      io_xml  = io_xml
+      io_files = mo_files
+      io_clif = lo_enh_intf ).
 
-  METHOD serialize_class.
+  ENDMETHOD.
+
+  METHOD lif_object_enho~deserialize.
+
+    DATA: lo_enh_intf  TYPE REF TO cl_enh_tool_intf,
+          lt_source    TYPE rswsourcet,
+          li_tool      TYPE REF TO if_enh_tool,
+          lv_shorttext TYPE string,
+          lv_class     TYPE seoclsname,
+          lv_enhname   TYPE enhname,
+          lv_package   TYPE devclass.
+
+
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data  = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'CLASS'
+                  CHANGING cg_data  = lv_class ).
+
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname     = lv_enhname
+            enhtype     = ''
+            enhtooltype = cl_enh_tool_intf=>tooltype
+          IMPORTING
+            enhancement = li_tool
+          CHANGING
+            devclass    = lv_package ).
+        lo_enh_intf ?= li_tool.
+
+        lo_enh_intf->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        lo_enh_intf->set_class( lv_class ).
+
+        lcl_object_enho_clif=>deserialize(
+          io_xml  = io_xml
+          io_clif = lo_enh_intf ).
+
+        lo_enh_intf->if_enh_object~save( ).
+        lo_enh_intf->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        lcx_exception=>raise( 'error deserializing ENHO interface' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_class DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item  TYPE ty_item
+          io_files TYPE REF TO lcl_objects_files.
+    INTERFACES: lif_object_enho.
+
+  PRIVATE SECTION.
+    DATA: ms_item TYPE ty_item.
+    DATA: mo_files TYPE REF TO lcl_objects_files.
+
+ENDCLASS.
+
+CLASS lcl_object_enho_class IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_item = is_item.
+    mo_files = io_files.
+  ENDMETHOD.
+
+  METHOD lif_object_enho~serialize.
 
     DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
           lt_owr       TYPE enhmeth_tabkeys,
@@ -466,7 +624,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
     lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
     io_xml->add( iv_name = 'TOOL'
-                 ig_data = iv_tool ).
+                 ig_data = ii_enh_tool->get_tool( ) ).
     io_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
     io_xml->add( iv_name = 'CLASS'
@@ -480,47 +638,219 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
     mo_files->add_abap( lt_source ).
 
+    lcl_object_enho_clif=>serialize(
+      io_xml   = io_xml
+      io_files = mo_files
+      io_clif  = lo_enh_class ).
+
   ENDMETHOD.
 
-  METHOD serialize_hook.
+  METHOD lif_object_enho~deserialize.
 
-    DATA: lv_shorttext       TYPE string,
-          lo_hook_impl       TYPE REF TO cl_enh_tool_hook_impl,
-          ls_original_object TYPE enh_hook_admin,
-          lt_spaces          TYPE ty_spaces_tt,
-          lt_enhancements    TYPE enh_hook_impl_it.
+    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
+          lt_owr       TYPE enhmeth_tabkeys,
+          lt_pre       TYPE enhmeth_tabkeys,
+          lt_post      TYPE enhmeth_tabkeys,
+          lt_source    TYPE rswsourcet,
+          li_tool      TYPE REF TO if_enh_tool,
+          lv_shorttext TYPE string,
+          lv_class     TYPE seoclsname,
+          lv_enhname   TYPE enhname,
+          lv_package   TYPE devclass.
 
 
-    lo_hook_impl ?= ii_enh_tool.
+    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+                  CHANGING cg_data  = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'OWR_METHODS'
+                  CHANGING cg_data  = lt_owr ).
+    io_xml->read( EXPORTING iv_name = 'PRE_METHODS'
+                  CHANGING cg_data  = lt_pre ).
+    io_xml->read( EXPORTING iv_name = 'POST_METHODS'
+                  CHANGING cg_data  = lt_post ).
+    io_xml->read( EXPORTING iv_name = 'CLASS'
+                  CHANGING cg_data  = lv_class ).
+    lt_source = mo_files->read_abap( ).
 
-    lv_shorttext = lo_hook_impl->if_enh_object_docu~get_shorttext( ).
-    lo_hook_impl->get_original_object(
-      IMPORTING
-        pgmid     = ls_original_object-pgmid
-        obj_name  = ls_original_object-org_obj_name
-        obj_type  = ls_original_object-org_obj_type
-        main_type = ls_original_object-org_main_type
-        main_name = ls_original_object-org_main_name
-        program   = ls_original_object-programname ).
-    ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
-    lt_enhancements = lo_hook_impl->get_hook_impls( ).
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname     = lv_enhname
+            enhtype     = ''
+            enhtooltype = cl_enh_tool_class=>tooltype
+          IMPORTING
+            enhancement = li_tool
+          CHANGING
+            devclass    = lv_package ).
+        lo_enh_class ?= li_tool.
 
-    hook_impl_serialize(
-      IMPORTING et_spaces = lt_spaces
-      CHANGING ct_impl = lt_enhancements ).
+        lo_enh_class->if_enh_object_docu~set_shorttext( lv_shorttext ).
+        lo_enh_class->set_class( lv_class ).
+        lo_enh_class->set_owr_methods( version     = 'I'
+                                       owr_methods = lt_owr ).
+        lo_enh_class->set_pre_methods( version     = 'I'
+                                       pre_methods = lt_pre ).
+        lo_enh_class->set_post_methods( version      = 'I'
+                                        post_methods = lt_post ).
+        lo_enh_class->set_eimp_include( version     = 'I'
+                                        eimp_source = lt_source ).
 
-    io_xml->add( iv_name = 'TOOL'
-                 ig_data = iv_tool ).
-    io_xml->add( ig_data = lv_shorttext
-                 iv_name = 'SHORTTEXT' ).
-    io_xml->add( ig_data = ls_original_object
-                 iv_name = 'ORIGINAL_OBJECT' ).
-    io_xml->add( iv_name = 'ENHANCEMENTS'
-                 ig_data = lt_enhancements ).
-    io_xml->add( iv_name = 'SPACES'
-                 ig_data = lt_spaces ).
+        lcl_object_enho_clif=>deserialize(
+          io_xml  = io_xml
+          io_clif = lo_enh_class ).
 
-  ENDMETHOD.                    "serialize_hook
+        lo_enh_class->if_enh_object~save( ).
+        lo_enh_class->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        lcx_exception=>raise( 'error deserializing ENHO class' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
+
+  PUBLIC SECTION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+
+  PRIVATE SECTION.
+
+    METHODS:
+      factory
+        IMPORTING
+          iv_tool        TYPE enhtooltype
+        RETURNING
+          VALUE(ri_enho) TYPE REF TO lif_object_enho
+        RAISING
+          lcx_exception.
+
+ENDCLASS.                    "lcl_object_enho DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho IMPLEMENTATION.
+
+  METHOD lif_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "lif_object~get_metadata
+
+  METHOD lif_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+
+    DATA: lv_enh_id TYPE enhname.
+
+
+    lv_enh_id = ms_item-obj_name.
+    TRY.
+        cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
+        rv_bool = abap_true.
+      CATCH cx_enh_root.
+        rv_bool = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.                    "lif_object~exists
+
+  METHOD lif_object~serialize.
+
+    DATA: lv_enh_id   TYPE enhname,
+          li_enho     TYPE REF TO lif_object_enho,
+          li_enh_tool TYPE REF TO if_enh_tool.
+
+
+    IF lif_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_enh_id = ms_item-obj_name.
+    TRY.
+        li_enh_tool = cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
+      CATCH cx_enh_root.
+        lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+    ENDTRY.
+
+    li_enho = factory( li_enh_tool->get_tool( ) ).
+
+    li_enho->serialize( io_xml      = io_xml
+                        ii_enh_tool = li_enh_tool ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD factory.
+
+    CASE iv_tool.
+      WHEN cl_enh_tool_badi_impl=>tooltype.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_badi
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
+      WHEN cl_enh_tool_hook_impl=>tooltype.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_hook
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
+      WHEN cl_enh_tool_class=>tooltype.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_class
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
+      WHEN cl_enh_tool_intf=>tooltype.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_interface
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
+* ToDo:
+*      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
+*      WHEN cl_wdr_cfg_enhancement=>tooltype.
+*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
+      WHEN OTHERS.
+        lcx_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD lif_object~deserialize.
+
+    DATA: lv_tool TYPE enhtooltype,
+          li_enho TYPE REF TO lif_object_enho.
+
+
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
+
+    io_xml->read( EXPORTING iv_name = 'TOOL'
+                  CHANGING cg_data = lv_tool ).
+
+    li_enho = factory( lv_tool ).
+
+    li_enho->deserialize( io_xml     = io_xml
+                          iv_package = iv_package ).
+
+    lcl_objects_activation=>add_item( ms_item ).
+
+  ENDMETHOD.                    "deserialize
 
   METHOD lif_object~delete.
 
