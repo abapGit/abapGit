@@ -37,7 +37,7 @@ form input:focus, textarea:focus {
 .grey             { color: lightgrey  !important; }
 .darkgrey         { color: #808080    !important; }
 .attention        { color: red        !important; }
-.blue             { color: #5e8dc9;   !important; }
+.blue             { color: #5e8dc9    !important; }
 .red              { color: red        !important; }
 
 /* MODIFIERS */
@@ -415,8 +415,8 @@ span.diff_banner {
   padding-right: 0.3em;
 }
 .diff_ins {
-  border-color: #7bea7b;
-  background-color: #d3f8d3;
+  border-color: #abf2ab;
+  background-color: #e0ffe0;
 }
 .diff_del {
   border-color: #ff667d;
@@ -500,21 +500,37 @@ table.diff_tab thead.nav_line th {
   color: #bbb;
 }
 table.diff_tab td.num, th.num {
-  text-align: right;
+  width: 1%;
+  min-width: 2em;
+  padding-right: 8px;
+  padding-left:  8px;
+  text-align: right !important;
   color: #ccc;
   border-left: 1px solid #eee;
   border-right: 1px solid #eee;
+  -ms-user-select: none;
+  user-select: none;
+}
+table.diff_tab td.num::before {
+  content: attr(line-num);
 }
 table.diff_tab code {
   font-family: inherit;
   white-space: pre;
 }
+table.diff_tab td.code {
+  /* font-family: inherit; */
+  /* white-space: pre; */
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: visible;
+}
 
 table.diff_tab code span.keyword { color: #0a69ce; }
 table.diff_tab code span.text    { color: #48ce4f; }
 table.diff_tab code span.comment { color: #808080; font-style: italic; }
-table.diff_tab code span.xml_tag { color: #3370e0; }
-table.diff_tab code span.attr    { color: #f20707; }
+table.diff_tab code span.xml_tag { color: #457ce3; }
+table.diff_tab code span.attr    { color: #b777fb; }
 table.diff_tab code span.attr_val { color: #7a02f9; }
 
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }

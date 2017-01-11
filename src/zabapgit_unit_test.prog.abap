@@ -242,11 +242,11 @@ CLASS ltcl_diff IMPLEMENTATION.
 
   DEFINE _expected.
     CLEAR ms_expected.
-    ms_expected-new_line = &1.
-    ms_expected-new      = &2.
-    ms_expected-result   = &3.
-    ms_expected-old_line = &4.
-    ms_expected-old      = &5.
+    ms_expected-new_num = &1.
+    ms_expected-new     = &2.
+    ms_expected-result  = &3.
+    ms_expected-old_num = &4.
+    ms_expected-old     = &5.
     APPEND ms_expected TO mt_expected.
   END-OF-DEFINITION.
 

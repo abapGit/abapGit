@@ -422,6 +422,14 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_changes_only) TYPE abap_bool
       RAISING   lcx_exception.
 
+    METHODS toggle_diff_unified
+      RETURNING VALUE(rv_diff_unified) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_diff_unified
+      RETURNING VALUE(rv_diff_unified) TYPE abap_bool
+      RAISING   lcx_exception.
+
     METHODS get_favorites
       RETURNING VALUE(rt_favorites) TYPE tt_favorites
       RAISING   lcx_exception.
@@ -454,6 +462,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
              repo_config  TYPE ty_repo_config_tt,
              hide_files   TYPE abap_bool,
              changes_only TYPE abap_bool,
+             diff_unified TYPE abap_bool,
              favorites    TYPE tt_favorites,
            END OF ty_user.
 
@@ -697,6 +706,24 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_changes_only = read( )-changes_only.
 
   ENDMETHOD. "get_changes_only
+
+  METHOD toggle_diff_unified.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-diff_unified = boolc( ls_user-diff_unified = abap_false ).
+    update( ls_user ).
+
+    rv_diff_unified = ls_user-diff_unified.
+
+  ENDMETHOD. "toggle_diff_unified
+
+  METHOD get_diff_unified.
+
+    rv_diff_unified = read( )-diff_unified.
+
+  ENDMETHOD. "get_diff_unified
 
   METHOD get_favorites.
 
