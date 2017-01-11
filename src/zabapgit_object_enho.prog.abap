@@ -2,9 +2,6 @@
 *&  Include           ZABAPGIT_OBJECT_ENHO
 *&---------------------------------------------------------------------*
 
-* todo, CL_ENH_TOOL_CLASS inherits from CL_ENH_TOOL_CLIF so this
-* should also be reflected in the code in this include
-
 * For complete list of tool_type - see ENHTOOLS table
 
 INTERFACE lif_object_enho.
@@ -31,13 +28,55 @@ CLASS lcl_object_enho_clif DEFINITION.
         RAISING   lcx_exception
                   cx_enh_root,
       serialize
-        IMPORTING io_xml  TYPE REF TO lcl_xml_output
-                  io_clif TYPE REF TO cl_enh_tool_clif
+        IMPORTING io_xml   TYPE REF TO lcl_xml_output
+                  io_files TYPE REF TO lcl_objects_files
+                  io_clif  TYPE REF TO cl_enh_tool_clif
         RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-METHODS: serialize_includes
+      IMPORTING io_files TYPE REF TO lcl_objects_files
+                io_clif  TYPE REF TO cl_enh_tool_clif
+      RAISING   lcx_exception.
 
 ENDCLASS.
 
 CLASS lcl_object_enho_clif IMPLEMENTATION.
+
+  METHOD serialize_includes.
+
+    DATA: lt_includes TYPE enhnewmeth_tabincl_plus_enha,
+          lt_source   TYPE TABLE OF abaptxt255,
+          lv_include  TYPE programm.
+
+    FIELD-SYMBOLS: <ls_include> LIKE LINE OF lt_includes.
+
+
+    lt_includes = io_clif->get_enh_method_includes( ).
+    LOOP AT lt_includes ASSIGNING <ls_include>.
+      lv_include = io_clif->if_enh_tool~get_name( ).
+      TRANSLATE lv_include USING ' ='.
+      lv_include+30 = 'EM'.
+      lv_include+32(8) = <ls_include>-includenr.
+
+      CALL FUNCTION 'RPY_PROGRAM_READ'
+        EXPORTING
+          program_name     = lv_include
+          with_lowercase   = abap_true
+        TABLES
+          source_extended  = lt_source
+        EXCEPTIONS
+          cancelled        = 1
+          not_found        = 2
+          permission_error = 3
+          OTHERS           = 4.
+      IF sy-subrc = 0.
+        io_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
+                            it_abap  = lt_source ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD serialize.
 
@@ -55,6 +94,9 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
     io_clif->get_enh_new_methodes(
       IMPORTING
         tab_methodes = lt_tab_methods ).
+
+    serialize_includes( io_clif  = io_clif
+                        io_files = io_files ).
 
     LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
       CLEAR: <ls_attr>-author,
@@ -97,6 +139,8 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
                   CHANGING cg_data = lt_tab_methods ).
 
     io_clif->set_enhattributes( tab_attributes = lt_tab_attributes ).
+
+* todo: deserialize includes
 
 * SAP standard SET_ENH_NEW_METHOS does not work
 
@@ -484,6 +528,7 @@ CLASS lcl_object_enho_interface IMPLEMENTATION.
 
     lcl_object_enho_clif=>serialize(
       io_xml  = io_xml
+      io_files = mo_files
       io_clif = lo_enh_intf ).
 
   ENDMETHOD.
@@ -594,8 +639,9 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
     mo_files->add_abap( lt_source ).
 
     lcl_object_enho_clif=>serialize(
-      io_xml  = io_xml
-      io_clif = lo_enh_class ).
+      io_xml   = io_xml
+      io_files = mo_files
+      io_clif  = lo_enh_class ).
 
   ENDMETHOD.
 
