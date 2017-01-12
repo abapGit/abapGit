@@ -426,7 +426,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ENDIF.
 
     IF lv_is_drop = abap_true. " Dropdown
-      ro_html->add( '</div></div>' ).
+      ro_html->add( '</div>' ).
+      ro_html->add( '</div>' ).
     ENDIF.
 
     ro_html->add( '</div>' ).
