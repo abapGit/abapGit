@@ -174,7 +174,7 @@ CLASS lcl_popups IMPLEMENTATION.
     CLEAR: ev_name, ev_cancel.
 
 *                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new_branch_name'         ''.
+    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new-branch-name'         ''.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -195,7 +195,8 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = lcl_git_branch_list=>complete_heads_branch_name( <ls_field>-value ).
+      ev_name = lcl_git_branch_list=>complete_heads_branch_name(
+        lcl_git_branch_list=>normalize_branch_name( <ls_field>-value ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -282,26 +283,42 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD branch_list_popup.
 
-    DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
-          lt_branches  TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
-          lv_answer    TYPE c LENGTH 1,
-          lv_default   TYPE i VALUE 1, "Default cursor position
-          lt_selection TYPE TABLE OF spopli.
+    DATA: lo_branches    TYPE REF TO lcl_git_branch_list,
+          lt_branches    TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+          lv_head_suffix TYPE string,
+          lv_answer      TYPE c LENGTH 1,
+          lv_default     TYPE i VALUE 1, "Default cursor position
+          lt_selection   TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
                    <ls_branch> LIKE LINE OF lt_branches.
 
 
-    lo_branches = lcl_git_transport=>branches( iv_url ).
+    lo_branches    = lcl_git_transport=>branches( iv_url ).
+    lt_branches    = lo_branches->get_branches_only( ).
+    lv_head_suffix = | ({ lcl_git_branch_list=>c_head_name })|.
 
-    lt_branches = lo_branches->get_branches_only( ).
     LOOP AT lt_branches ASSIGNING <ls_branch>.
-      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = <ls_branch>-name.
 
+      IF <ls_branch>-name = lcl_git_branch_list=>c_head_name
+         AND <ls_branch>-name <> lo_branches->get_head_symref( ).
+        " HEAD but other HEAD symref exist
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       IF iv_default_branch IS NOT INITIAL AND iv_default_branch = <ls_branch>-name.
         lv_default = sy-tabix.
       ENDIF.
+
+      IF <ls_branch>-name = lo_branches->get_head_symref( )
+         AND <ls_branch>-name <> lcl_git_branch_list=>c_head_name.
+        " HEAD symref but not HEAD itself
+        <ls_sel>-varoption = <ls_branch>-display_name && lv_head_suffix.
+      ELSE.
+        <ls_sel>-varoption = <ls_branch>-display_name.
+      ENDIF.
+
     ENDLOOP.
 
     IF iv_show_new_option = abap_true.
@@ -339,7 +356,10 @@ CLASS lcl_popups IMPLEMENTATION.
     IF iv_show_new_option = abap_true AND <ls_sel>-varoption = c_new_branch_label.
       rs_branch-name = c_new_branch_label.
     ELSE.
-      rs_branch = lo_branches->find_by_name( <ls_sel>-varoption ).
+      REPLACE FIRST OCCURRENCE OF lv_head_suffix IN <ls_sel>-varoption WITH ''.
+      READ TABLE lt_branches WITH KEY display_name = <ls_sel>-varoption ASSIGNING <ls_branch>.
+      ASSERT sy-subrc = 0.
+      rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
     ENDIF.
 
 
