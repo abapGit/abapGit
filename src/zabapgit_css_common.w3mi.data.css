@@ -111,9 +111,22 @@ div.menu .menu_end { border-right: 0px !important; }
 div.menu a {
   padding-left: 0.5em;
   padding-right: 0.5em;
-  border-right: 1px solid lightgrey;
   font-size: 12pt;
 }
+
+div.menu > a {
+  border-right: 1px solid lightgrey;
+}
+div.menu > div.dropdown > a {
+  border-right: 1px solid lightgrey;
+}
+div.menu > a:last-child {
+  border-right: 0px !important;
+}
+div.menu > div.dropdown:last-child > a {
+  border-right: 0px !important;
+}
+
 div.menu_vertical   { display: inline; }
 div.menu_vertical a {
   display: block;
@@ -519,19 +532,17 @@ table.diff_tab code {
   white-space: pre;
 }
 table.diff_tab td.code {
-  /* font-family: inherit; */
-  /* white-space: pre; */
   word-wrap: break-word;
   white-space: pre-wrap;
   overflow: visible;
 }
 
-table.diff_tab code span.keyword { color: #0a69ce; }
-table.diff_tab code span.text    { color: #48ce4f; }
-table.diff_tab code span.comment { color: #808080; font-style: italic; }
-table.diff_tab code span.xml_tag { color: #457ce3; }
-table.diff_tab code span.attr    { color: #b777fb; }
-table.diff_tab code span.attr_val { color: #7a02f9; }
+table.diff_tab .code span.keyword { color: #0a69ce; }
+table.diff_tab .code span.text    { color: #48ce4f; }
+table.diff_tab .code span.comment { color: #808080; font-style: italic; }
+table.diff_tab .code span.xml_tag { color: #457ce3; }
+table.diff_tab .code span.attr    { color: #b777fb; }
+table.diff_tab .code span.attr_val { color: #7a02f9; }
 
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
