@@ -406,6 +406,21 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
+    METHODS get_2fa_access_token
+      IMPORTING iv_service_id   TYPE string
+      RETURNING VALUE(rv_token) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_2fa_access_token
+      IMPORTING iv_service_id TYPE string
+                iv_username   TYPE string
+                iv_token      TYPE string
+      RAISING   lcx_exception.
+
+    METHODS delete_2fa_config
+      IMPORTING iv_service_id TYPE string
+      RAISING   lcx_exception.
+
     METHODS toggle_hide_files
       RETURNING VALUE(rv_hide) TYPE abap_bool
       RAISING   lcx_exception.
@@ -455,6 +470,13 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
            END OF ty_repo_config.
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_git_hosting_service,
+             service_id   TYPE string,
+             username     TYPE string,
+             access_token TYPE string,
+           END OF ty_git_hosting_service.
+    TYPES: ty_git_hosting_service_tab TYPE STANDARD TABLE OF ty_git_hosting_service WITH DEFAULT KEY.
+
     TYPES: BEGIN OF ty_user,
              username     TYPE string,
              email        TYPE string,
@@ -464,6 +486,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
              changes_only TYPE abap_bool,
              diff_unified TYPE abap_bool,
              favorites    TYPE tt_favorites,
+             two_fact_cfg TYPE ty_git_hosting_service_tab,
            END OF ty_user.
 
     METHODS constructor
@@ -494,6 +517,16 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     METHODS update_repo_config
       IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
                 is_repo_config TYPE ty_repo_config
+      RAISING   lcx_exception.
+
+    METHODS read_2fa_config
+      IMPORTING iv_service_id        TYPE ty_git_hosting_service-service_id
+      RETURNING VALUE(rs_2fa_config) TYPE ty_git_hosting_service
+      RAISING   lcx_exception.
+
+    METHODS update_2fa_config
+      IMPORTING iv_service_id TYPE ty_git_hosting_service-service_id
+                is_2fa_config TYPE ty_git_hosting_service
       RAISING   lcx_exception.
 
 ENDCLASS.             "lcl_persistence_user DEFINITION
@@ -639,6 +672,48 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.  "update_repo_config
 
+  METHOD read_2fa_config.
+    DATA: lt_2fa_config TYPE ty_git_hosting_service_tab,
+          lv_key        TYPE string.
+
+    lv_key = to_lower( iv_service_id ).
+    lt_2fa_config = read( )-two_fact_cfg.
+    READ TABLE lt_2fa_config INTO rs_2fa_config WITH KEY service_id = lv_key.
+  ENDMETHOD.
+
+  METHOD update_2fa_config.
+    DATA: ls_user TYPE ty_user,
+          lv_key  TYPE string.
+    FIELD-SYMBOLS <ls_2fa_config> TYPE ty_git_hosting_service.
+
+    ls_user = read( ).
+    lv_key = to_lower( iv_service_id ).
+
+    READ TABLE ls_user-two_fact_cfg ASSIGNING <ls_2fa_config> WITH KEY service_id = lv_key.
+    IF sy-subrc IS NOT INITIAL.
+      APPEND INITIAL LINE TO ls_user-two_fact_cfg ASSIGNING <ls_2fa_config>.
+    ENDIF.
+    <ls_2fa_config> = is_2fa_config.
+    <ls_2fa_config>-service_id = lv_key.
+
+    update( ls_user ).
+  ENDMETHOD.
+
+  METHOD delete_2fa_config.
+    DATA: ls_user TYPE ty_user,
+          lv_key  TYPE string.
+
+    ls_user = read( ).
+    lv_key = to_lower( iv_service_id ).
+
+    DELETE ls_user-two_fact_cfg WHERE service_id = lv_key.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( '2FA config could not be deleted.' ) ##NO_TEXT.
+    ENDIF.
+
+    update( ls_user ).
+  ENDMETHOD.
+
   METHOD set_repo_username.
 
     DATA: ls_repo_config TYPE ty_repo_config.
@@ -670,6 +745,21 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_email = read_repo_config( iv_url )-email.
 
   ENDMETHOD.  "get_repo_email
+
+  METHOD get_2fa_access_token.
+    rv_token = read_2fa_config( iv_service_id )-access_token.
+  ENDMETHOD.
+
+  METHOD set_2fa_access_token.
+    DATA: ls_config TYPE ty_git_hosting_service.
+
+    ls_config = read_2fa_config( iv_service_id ).
+    ls_config-service_id = iv_service_id.
+    ls_config-username = iv_username.
+    ls_config-access_token = iv_token.
+
+    update_2fa_config( iv_service_id = iv_service_id is_2fa_config = ls_config ).
+  ENDMETHOD.
 
   METHOD toggle_hide_files.
 

@@ -469,21 +469,82 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD acquire_login_details.
 
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO lcl_http_digest.
+    DATA: lv_default_user              TYPE string,
+          lv_user                      TYPE string,
+          lv_pass                      TYPE string,
+          lv_2fa_token                 TYPE string,
+          lv_access_token              TYPE string,
+          lo_digest                    TYPE REF TO lcl_http_digest,
+          lv_2fa_available             TYPE abap_bool,
+          li_authenticator             TYPE REF TO lif_2fa_authenticator,
+          lx_error                     TYPE REF TO cx_root,
+          lv_popup_mode                TYPE lcl_password_dialog=>gty_mode,
+          lv_popup_requested_token_del TYPE abap_bool,
+          lv_service_id                TYPE string.
 
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
     lv_user         = lv_default_user.
 
+
+    IF lcl_2fa_authenticator_registry=>is_url_supported( iv_url ) = abap_true.
+      TRY.
+          li_authenticator = lcl_2fa_authenticator_registry=>get_authenticator_for_url( iv_url ).
+          lv_service_id = li_authenticator->get_service_id_from_url( iv_url ).
+          IF li_authenticator->is_cached_access_token_avail( iv_url ) = abap_true.
+            lv_popup_mode = lcl_password_dialog=>gc_modes-unlock_2fa_token.
+          ELSE.
+            lv_popup_mode = lcl_password_dialog=>gc_modes-user_pass_2fa.
+          ENDIF.
+
+        CATCH lcx_2fa_error.
+          lv_2fa_available = abap_false.
+          CLEAR lv_access_token.
+      ENDTRY.
+    ELSE.
+      lv_popup_mode = lcl_password_dialog=>gc_modes-user_pass.
+    ENDIF.
+
     lcl_password_dialog=>popup(
       EXPORTING
-        iv_repo_url = iv_url
+        iv_repo_url     = iv_url
+        iv_mode         = lv_popup_mode
+      IMPORTING
+        ev_delete_token = lv_popup_requested_token_del
       CHANGING
-        cv_user     = lv_user
-        cv_pass     = lv_pass ).
+        cv_user         = lv_user
+        cv_pass         = lv_pass
+        cv_2fa_token    = lv_2fa_token ).
+
+    IF lv_popup_requested_token_del = abap_true.
+      TRY.
+          li_authenticator->delete_cached_access_token( lv_service_id ).
+        CATCH lcx_2fa_cache_deletion_failed INTO lx_error.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text     = lx_error->get_text( )
+              ix_previous = lx_error.
+      ENDTRY.
+
+      " Cancel authentication, no credentials were provided. This will cause the next http request
+      " somewhere up the callstack to result in a 401 error.
+      RETURN.
+    ENDIF.
+
+    " Unlock cached access token
+    IF lv_popup_mode = lcl_password_dialog=>gc_modes-unlock_2fa_token.
+      TRY.
+          ASSERT li_authenticator IS BOUND.
+          lv_access_token = li_authenticator->get_cached_access_token( iv_url      = iv_url
+                                                                       iv_username = lv_user
+                                                                       iv_password = lv_pass ).
+        CATCH lcx_2fa_no_cached_token INTO lx_error.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text     = lx_error->get_text( )
+              ix_previous = lx_error.
+      ENDTRY.
+    ENDIF.
 
     IF lv_user IS INITIAL.
       lcx_exception=>raise( 'HTTP 401, unauthorized' ).
@@ -492,6 +553,29 @@ CLASS lcl_http IMPLEMENTATION.
     IF lv_user <> lv_default_user.
       lcl_app=>user( )->set_repo_username( iv_url      = iv_url
                                            iv_username = lv_user ).
+    ENDIF.
+
+    IF lv_access_token IS INITIAL AND lv_2fa_token IS NOT INITIAL.
+      " There is no cached access token but the user provided a two factor token to generate a new
+      " access token
+      TRY.
+          ASSERT li_authenticator IS BOUND.
+          lv_access_token = li_authenticator->authenticate( iv_url       = iv_url
+                                                            iv_username  = lv_user
+                                                            iv_password  = lv_pass
+                                                            iv_2fa_token = lv_2fa_token ).
+        CATCH lcx_2fa_error INTO lx_error.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text     = lx_error->get_text( )
+              ix_previous = lx_error.
+      ENDTRY.
+    ENDIF.
+
+    " If there is an access token by now use that as the password instead because two factor
+    " authentication was requested.
+    IF lv_access_token IS NOT INITIAL.
+      lv_pass = lv_access_token.
     ENDIF.
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
