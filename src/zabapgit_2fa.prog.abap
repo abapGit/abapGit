@@ -397,8 +397,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     li_http_client->response->get_status(
       IMPORTING
         code   = lv_http_code
-        reason = lv_http_code_description
-    ).
+        reason = lv_http_code_description ).
     IF lv_http_code <> 200.
       RAISE EXCEPTION TYPE lcx_2fa_auth_failed
         EXPORTING
@@ -428,8 +427,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     li_http_client->response->get_status(
       IMPORTING
         code   = lv_http_code
-        reason = lv_http_code_description
-    ).
+        reason = lv_http_code_description ).
     IF lv_http_code <> 201.
       RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed
         EXPORTING
@@ -471,7 +469,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     APPEND ls_rest_line TO lt_rest_parvalues.
 
     " The fingerprint must be unique, otherwise only one token can be generated, unless the user
-    " deletes it in Github's settings. This is problematic if he deletes it in abapGit but keeps it
+    " deletes it in GitHub's settings. This is problematic if he deletes it in abapGit but keeps it
     " on GitHub.
     lv_fingerprint = |abapGit-{ sy-sysid }-{ sy-uname }-{ sy-datum }-{ sy-uzeit }|.
     GET REFERENCE OF lv_fingerprint INTO lr_data_ref.
@@ -480,7 +478,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     APPEND ls_rest_line TO lt_rest_parvalues.
 
     " Dynamic source table is used because otherwise identifiers will always be written in uppercase
-    " which is not supported by the GitHub's API.
+    " which is not supported by GitHub's API.
     CALL TRANSFORMATION id SOURCE (lt_rest_parvalues)
                            RESULT XML lo_json_writer.
 
