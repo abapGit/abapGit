@@ -337,9 +337,9 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       authenticate_internal REDEFINITION.
   PRIVATE SECTION.
     METHODS:
-      set_access_token_request IMPORTING ii_entity    TYPE REF TO if_rest_entity
+      set_access_token_request IMPORTING ii_request   TYPE REF TO if_http_request
                                          iv_repo_name TYPE string,
-      get_token_from_response IMPORTING ii_entity       TYPE REF TO if_rest_entity
+      get_token_from_response IMPORTING ii_response     TYPE REF TO if_http_response
                               RETURNING VALUE(rv_token) TYPE string,
       parse_repo_from_url IMPORTING iv_url              TYPE string
                           RETURNING VALUE(rv_repo_name) TYPE string.
@@ -354,12 +354,9 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     CONSTANTS: lc_github_api_url              TYPE string VALUE `https://api.github.com/`,
                lc_otp_header_name             TYPE string VALUE `X-Github-OTP`,
                lc_restendpoint_authorizations TYPE string VALUE `/authorizations`.
-    DATA: li_rest_client           TYPE REF TO if_rest_client,
-          li_http_client           TYPE REF TO if_http_client,
+    DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
-          li_request_entity        TYPE REF TO if_rest_entity,
-          li_response_entity       TYPE REF TO if_rest_entity,
           lv_binary_response       TYPE xstring,
           BEGIN OF ls_success_response,
             token TYPE string,
@@ -408,30 +405,38 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
           iv_error_text = |Authentication failed: { lv_http_code_description }|.
     ENDIF.
 
-    " Authentication worked, now the rest client can be used
-    CREATE OBJECT li_rest_client TYPE cl_rest_http_client
-      EXPORTING
-        io_http_client = li_http_client.
-
 
     " 2. Create an access token which can be used instead of a password
     " https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization
 
-    li_request_entity = li_rest_client->create_request_entity( ).
-    set_access_token_request( ii_entity    = li_request_entity
+    set_access_token_request( ii_request   = li_http_client->request
                               iv_repo_name = parse_repo_from_url( iv_url ) ).
-    li_rest_client->set_request_header( iv_name  = if_http_header_fields_sap=>request_uri
-                                        iv_value = lc_restendpoint_authorizations ).
-    li_rest_client->post( li_request_entity ).
+    li_http_client->request->set_header_field( name  = if_http_header_fields_sap=>request_uri
+                                               value = lc_restendpoint_authorizations ).
+    li_http_client->request->set_method( if_http_request=>co_request_method_post ).
 
-    lv_http_code = li_rest_client->get_status( ).
+    li_http_client->send( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    li_http_client->response->get_status(
+      IMPORTING
+        code   = lv_http_code
+        reason = lv_http_code_description
+    ).
     IF lv_http_code <> 201.
       RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed
         EXPORTING
-          iv_error_text = |Token generation failed: { lv_http_code }|.
+          iv_error_text = |Token generation failed: { lv_http_code } { lv_http_code_description }|.
     ENDIF.
 
-    rv_access_token = get_token_from_response( li_rest_client->get_response_entity( ) ).
+    rv_access_token = get_token_from_response( li_http_client->response ).
     IF rv_access_token IS INITIAL.
       RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed.
     ENDIF.
@@ -479,7 +484,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     CALL TRANSFORMATION id SOURCE (lt_rest_parvalues)
                            RESULT XML lo_json_writer.
 
-    ii_entity->set_string_data( cl_abap_codepage=>convert_from( lo_json_writer->get_output( ) ) ).
+    ii_request->set_data( lo_json_writer->get_output( ) ).
   ENDMETHOD.
 
   METHOD get_token_from_response.
@@ -494,7 +499,8 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     ls_result_line-value = lr_data_ref.
     APPEND ls_result_line TO lt_result_parvalues.
 
-    lv_binary_response = ii_entity->get_binary_data( ).
+    lv_binary_response = ii_response->get_data( ).
+
     CALL TRANSFORMATION id SOURCE XML lv_binary_response
                            RESULT (lt_result_parvalues).
   ENDMETHOD.
