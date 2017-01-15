@@ -102,5 +102,8 @@ AT SELECTION-SCREEN ON EXIT-COMMAND.
 
 AT SELECTION-SCREEN.
   IF sy-dynnr = lcl_password_dialog=>dynnr.
+    IF sscrfields-ucomm IS INITIAL.
+      sscrfields-ucomm = 'ENTER'.
+    ENDIF.
     lcl_password_dialog=>on_screen_event( sscrfields-ucomm ).
   ENDIF.

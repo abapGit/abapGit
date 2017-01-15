@@ -73,6 +73,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
+    p_2fat     = abap_false.
     mv_confirm = abap_false.
     gv_mode    = iv_mode.
     gv_delete_token = abap_false.
@@ -187,17 +188,9 @@ CLASS lcl_password_dialog IMPLEMENTATION.
           gv_delete_token = abap_true.
           LEAVE TO SCREEN 0.
         ENDIF.
-      WHEN 'CRET'.
+      WHEN 'CRET' OR 'ENTER'.
         mv_confirm = abap_true.
         LEAVE TO SCREEN 0.
-      WHEN OTHERS. "TODO REFACTOR !!! A CLUTCH !
-        " This will work unless any new specific logic appear
-        " for other commands. The problem is that the password dialog
-        " does not have Enter event (or I don't know how to activate it ;)
-        " so Enter issues previous command from previous screen
-        " But for now this works :) Fortunately Esc produces another flow
-*        mv_confirm = abap_true.
-*        LEAVE TO SCREEN 0.
     ENDCASE.
 
   ENDMETHOD.  "on_screen_event
