@@ -436,80 +436,52 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
     rv_access_token = get_token_from_response( li_http_client->response ).
     IF rv_access_token IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed.
+      RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed
+        EXPORTING
+          iv_error_text = 'Token generation failed: parser error' ##NO_TEXT.
     ENDIF.
   ENDMETHOD.
 
   METHOD set_access_token_request.
-    CONSTANTS: BEGIN OF lc_create_access_token_request,
-                 scopes TYPE string VALUE 'repo',
-                 note   TYPE string VALUE 'abapGit',
-               END OF lc_create_access_token_request.
-    DATA: lo_json_writer      TYPE REF TO cl_sxml_string_writer,
-          lt_scopes           TYPE stringtab,
-          lt_rest_parvalues   TYPE abap_trans_srcbind_tab,
-          ls_rest_line        LIKE LINE OF lt_rest_parvalues,
-          lt_result_parvalues TYPE abap_trans_resbind_tab,
-          ls_result_line      LIKE LINE OF lt_result_parvalues,
-          lr_data_ref         TYPE REF TO data,
-          lv_note             TYPE string,
-          lv_fingerprint      TYPE string.
-
-    lo_json_writer = cl_sxml_string_writer=>create( type = if_sxml=>co_xt_json ).
-    APPEND lc_create_access_token_request-scopes TO lt_scopes.
-
-    GET REFERENCE OF lc_create_access_token_request-scopes INTO lr_data_ref.
-    ls_rest_line-name = 'scopes'.
-    ls_rest_line-value = lr_data_ref.
-    APPEND ls_rest_line TO lt_rest_parvalues.
-
-    GET REFERENCE OF lc_create_access_token_request-note INTO lr_data_ref.
-    ls_rest_line-name = 'note'.
-    ls_rest_line-value = lr_data_ref.
-    APPEND ls_rest_line TO lt_rest_parvalues.
+    DATA: lv_fingerprint TYPE string,
+          lv_json_string TYPE string.
 
     " The fingerprint must be unique, otherwise only one token can be generated, unless the user
     " deletes it in GitHub's settings. This is problematic if he deletes it in abapGit but keeps it
     " on GitHub.
     lv_fingerprint = |abapGit-{ sy-sysid }-{ sy-uname }-{ sy-datum }-{ sy-uzeit }|.
-    GET REFERENCE OF lv_fingerprint INTO lr_data_ref.
-    ls_rest_line-name = 'fingerprint'.
-    ls_rest_line-value = lr_data_ref.
-    APPEND ls_rest_line TO lt_rest_parvalues.
 
-    " Dynamic source table is used because otherwise identifiers will always be written in uppercase
-    " which is not supported by GitHub's API.
-    CALL TRANSFORMATION id SOURCE (lt_rest_parvalues)
-                           RESULT XML lo_json_writer.
+    lv_json_string = |\{"scopes":["repo"],"note":"abapGit","fingerprint":"{ lv_fingerprint }"\}|.
 
-    ii_request->set_data( lo_json_writer->get_output( ) ).
+    ii_request->set_data( cl_abap_codepage=>convert_to( lv_json_string ) ).
   ENDMETHOD.
 
   METHOD get_token_from_response.
-    CONSTANTS: lc_token_field_name TYPE string VALUE 'token'.
-    DATA: lt_result_parvalues TYPE abap_trans_resbind_tab,
-          ls_result_line      LIKE LINE OF lt_result_parvalues,
-          lr_data_ref         TYPE REF TO data,
-          lv_binary_response  TYPE xstring.
+    CONSTANTS: lc_search_regex TYPE string VALUE '.*"token":"([^"]*).*$'.
+    DATA: lv_response TYPE string,
+          lo_regex    TYPE REF TO cl_abap_regex,
+          lo_matcher  TYPE REF TO cl_abap_matcher.
 
-    GET REFERENCE OF rv_token INTO lr_data_ref.
-    ls_result_line-name = lc_token_field_name.
-    ls_result_line-value = lr_data_ref.
-    APPEND ls_result_line TO lt_result_parvalues.
+    lv_response = cl_abap_codepage=>convert_from( ii_response->get_data( ) ).
 
-    lv_binary_response = ii_response->get_data( ).
+    CREATE OBJECT lo_regex
+      EXPORTING
+        pattern = lc_search_regex.
 
-    CALL TRANSFORMATION id SOURCE XML lv_binary_response
-                           RESULT (lt_result_parvalues).
+    lo_matcher = lo_regex->create_matcher( text = lv_response ).
+    IF lo_matcher->match( ) = abap_true.
+      rv_token = lo_matcher->get_submatch( 1 ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD parse_repo_from_url.
+    CONSTANTS: lc_search_regex TYPE string VALUE 'https?:\/\/(www\.)?github.com\/(.*)$'.
     DATA: lo_regex   TYPE REF TO cl_abap_regex,
           lo_matcher TYPE REF TO cl_abap_matcher.
 
     CREATE OBJECT lo_regex
       EXPORTING
-        pattern = 'https?:\/\/(www\.)?github.com\/(.*)$'.
+        pattern = lc_search_regex.
 
     lo_matcher = lo_regex->create_matcher( text = iv_url ).
     IF lo_matcher->match( ) = abap_true.
