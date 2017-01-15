@@ -135,13 +135,17 @@ INTERFACE lif_2fa_authenticator.
     "! Get a unique identifier for the service that hosts the repository
     "! @parameter iv_url | Repository url
     "! @parameter rv_id | Service id
+    "! @raising lcx_2fa_unsupported | Url is not supported
     get_service_id_from_url IMPORTING iv_url       TYPE string
-                            RETURNING VALUE(rv_id) TYPE string,
+                            RETURNING VALUE(rv_id) TYPE string
+                            RAISING   lcx_2fa_unsupported,
     "! Check if there is a cached access token (for the current user)
     "! @parameter iv_url | Repository url
     "! @parameter rv_available | Token is cached
+    "! @raising lcx_2fa_unsupported | Url is not supported
     is_cached_access_token_avail IMPORTING iv_url              TYPE string
-                                 RETURNING VALUE(rv_available) TYPE abap_bool,
+                                 RETURNING VALUE(rv_available) TYPE abap_bool
+                                 RAISING   lcx_2fa_unsupported,
     "! Get a cached access token
     "! <p>
     "! Username and password are also parameters to decrypt the token if needed. They must no
@@ -152,16 +156,19 @@ INTERFACE lif_2fa_authenticator.
     "! @parameter iv_password | Password
     "! @parameter rv_token | Access token
     "! @raising lcx_2fa_no_cached_token | There is no cached token
+    "! @raising lcx_2fa_unsupported | Url is not supported
     get_cached_access_token IMPORTING iv_url          TYPE string
                                       iv_username     TYPE string OPTIONAL
                                       iv_password     TYPE string OPTIONAL
                             RETURNING VALUE(rv_token) TYPE string
-                            RAISING   lcx_2fa_no_cached_token,
+                            RAISING   lcx_2fa_no_cached_token
+                                      lcx_2fa_unsupported,
     "! Delete a cached token
     "! @parameter iv_url | Repository url
     "! @raising lcx_2fa_cache_deletion_failed | Deletion failed
     delete_cached_access_token IMPORTING iv_url TYPE string
-                               RAISING   lcx_2fa_cache_deletion_failed.
+                               RAISING   lcx_2fa_cache_deletion_failed
+                                         lcx_2fa_unsupported.
 ENDINTERFACE.
 
 "! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
@@ -246,7 +253,7 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
         lcl_app=>user( )->set_2fa_access_token( iv_service_id = get_service_id_from_url( iv_url )
                                                 iv_username   = iv_username
                                                 iv_token      = lv_encrypted_token ).
-      CATCH lcx_exception ##NO_HANDLER.
+      CATCH lcx_exception lcx_2fa_unsupported ##NO_HANDLER.
         " Not the biggest of deals if caching the token fails
     ENDTRY.
   ENDMETHOD.

@@ -497,9 +497,11 @@ CLASS lcl_http IMPLEMENTATION.
             lv_popup_mode = lcl_password_dialog=>gc_modes-user_pass_2fa.
           ENDIF.
 
-        CATCH lcx_2fa_error.
-          lv_2fa_available = abap_false.
-          CLEAR lv_access_token.
+        CATCH lcx_2fa_error INTO lx_error.
+          RAISE EXCEPTION TYPE lcx_exception
+            EXPORTING
+              iv_text     = lx_error->get_text( )
+              ix_previous = lx_error.
       ENDTRY.
     ELSE.
       lv_popup_mode = lcl_password_dialog=>gc_modes-user_pass.
@@ -519,7 +521,7 @@ CLASS lcl_http IMPLEMENTATION.
     IF lv_popup_requested_token_del = abap_true.
       TRY.
           li_authenticator->delete_cached_access_token( lv_service_id ).
-        CATCH lcx_2fa_cache_deletion_failed INTO lx_error.
+        CATCH lcx_2fa_cache_deletion_failed lcx_2fa_unsupported INTO lx_error.
           RAISE EXCEPTION TYPE lcx_exception
             EXPORTING
               iv_text     = lx_error->get_text( )
@@ -538,7 +540,7 @@ CLASS lcl_http IMPLEMENTATION.
           lv_access_token = li_authenticator->get_cached_access_token( iv_url      = iv_url
                                                                        iv_username = lv_user
                                                                        iv_password = lv_pass ).
-        CATCH lcx_2fa_no_cached_token INTO lx_error.
+        CATCH lcx_2fa_no_cached_token lcx_2fa_unsupported INTO lx_error.
           RAISE EXCEPTION TYPE lcx_exception
             EXPORTING
               iv_text     = lx_error->get_text( )
