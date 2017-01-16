@@ -27,12 +27,12 @@ CLASS lcl_zip DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS file_upload
-      RETURNING value(rv_xstr) TYPE xstring
+      RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS unzip_file
       IMPORTING iv_xstr         TYPE xstring
-      RETURNING value(rt_files) TYPE ty_files_tt
+      RETURNING VALUE(rt_files) TYPE ty_files_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS normalize_path
@@ -52,11 +52,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS encode_files
       IMPORTING it_files       TYPE ty_files_item_tt
-      RETURNING value(rv_xstr) TYPE xstring
+      RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS get_message
-      RETURNING value(rv_message) TYPE string
+      RETURNING VALUE(rv_message) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_zip DEFINITION
@@ -341,12 +341,11 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD unzip_file.
 
-    DATA: lo_zip    TYPE REF TO cl_abap_zip,
-          lv_xstr   TYPE xstring,
-          lt_splice TYPE cl_abap_zip=>t_splice_entries.
+    DATA: lo_zip  TYPE REF TO cl_abap_zip,
+          lv_data TYPE xstring.
 
-    FIELD-SYMBOLS: <ls_splice> LIKE LINE OF lt_splice,
-                   <ls_file>   LIKE LINE OF rt_files.
+    FIELD-SYMBOLS: <ls_zipfile> TYPE cl_abap_zip=>t_file,
+                   <ls_file>    LIKE LINE OF rt_files.
 
 
     CREATE OBJECT lo_zip.
@@ -359,14 +358,13 @@ CLASS lcl_zip IMPLEMENTATION.
       lcx_exception=>raise( 'error from zip' ).
     ENDIF.
 
-    lt_splice = cl_abap_zip=>splice( iv_xstr ).
+    LOOP AT lo_zip->files ASSIGNING <ls_zipfile>.
 
-    LOOP AT lt_splice ASSIGNING <ls_splice>.
       lo_zip->get(
         EXPORTING
-          name                    = <ls_splice>-name
+          name                    = <ls_zipfile>-name
         IMPORTING
-          content                 = lv_xstr
+          content                 = lv_data
         EXCEPTIONS
           zip_index_error         = 1
           zip_decompression_error = 2
@@ -379,12 +377,12 @@ CLASS lcl_zip IMPLEMENTATION.
 
       filename(
         EXPORTING
-          iv_str      = <ls_splice>-name
+          iv_str      = <ls_zipfile>-name
         IMPORTING
           ev_path     = <ls_file>-path
           ev_filename = <ls_file>-filename ).
 
-      <ls_file>-data = lv_xstr.
+      <ls_file>-data = lv_data.
 
       <ls_file>-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob
                                        iv_data = <ls_file>-data ).
