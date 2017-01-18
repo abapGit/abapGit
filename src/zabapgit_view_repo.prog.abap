@@ -110,6 +110,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lx_error      TYPE REF TO lcx_exception,
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
+          lv_max        TYPE abap_bool,
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -159,11 +160,20 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
+            IF sy-tabix > 500.
+              lv_max = abap_true.
+              EXIT. " current loop
+            ENDIF.
             ro_html->add( render_item( <ls_item> ) ).
           ENDLOOP.
         ENDIF.
 
         ro_html->add( '</table>' ).
+
+        IF lv_max = abap_true.
+          ro_html->add( 'Only first 500 objects shown in list' ).
+        ENDIF.
+
         ro_html->add( '</div>' ).
 
       CATCH lcx_exception INTO lx_error.
