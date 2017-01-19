@@ -61,9 +61,9 @@ CLASS lcl_object_susc IMPLEMENTATION.
     SELECT SINGLE * FROM tobct INTO ls_tobct
       WHERE oclss = ms_item-obj_name
       AND langu = mv_language.
-    IF sy-subrc <> 0.
+*    IF sy-subrc <> 0.
 *     lcx_exception=>raise( 'TOBCT no english description' ).
-    ENDIF.
+*    ENDIF.
 
     io_xml->add( iv_name = 'TOBC'
                  ig_data = ls_tobc ).
