@@ -404,24 +404,25 @@ CLASS lcl_zip IMPLEMENTATION.
 
     CREATE OBJECT lo_log.
 
-    lt_zip = io_repo->get_files_local( lo_log ).
+    lt_zip = io_repo->get_files_local( io_log = lo_log
+                                       it_filter = it_filter ).
 
     IF lo_log->count( ) > 0.
       lo_log->show( ).
     ENDIF.
 
-    IF lines( it_filter ) > 0.
-      LOOP AT lt_zip ASSIGNING <ls_zip>.
-        lv_index = sy-tabix.
-        READ TABLE it_filter WITH KEY
-          object = <ls_zip>-item-obj_type
-          obj_name = <ls_zip>-item-obj_name
-          TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          DELETE lt_zip INDEX lv_index.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+*    IF lines( it_filter ) > 0.
+*      LOOP AT lt_zip ASSIGNING <ls_zip>.
+*        lv_index = sy-tabix.
+*        READ TABLE it_filter WITH KEY
+*          object = <ls_zip>-item-obj_type
+*          obj_name = <ls_zip>-item-obj_name
+*          TRANSPORTING NO FIELDS.
+*        IF sy-subrc <> 0.
+*          DELETE lt_zip INDEX lv_index.
+*        ENDIF.
+*      ENDLOOP.
+*    ENDIF.
 
     file_download( iv_package = io_repo->get_package( )
                    iv_xstr    = encode_files( lt_zip ) ).
