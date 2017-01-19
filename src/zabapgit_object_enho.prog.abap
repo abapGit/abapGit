@@ -45,11 +45,12 @@ CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
     DATA: lv_enhname TYPE enhname,
           lo_wdyconf TYPE REF TO cl_wdr_cfg_enhancement,
           li_tool    TYPE REF TO if_enh_tool,
+          ls_obj     TYPE wdy_config_key,
           lv_package TYPE devclass.
 
 
-*    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-*                  CHANGING cg_data  = lv_shorttext ).
+    io_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+                  CHANGING cg_data  = ls_obj ).
 
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
@@ -66,9 +67,9 @@ CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
         lo_wdyconf ?= li_tool.
 
 * todo
+* io_xml->read_xml()
 * CL_WDR_CFG_PERSISTENCE_UTILS=>COMP_XML_TO_TABLES( )
 * lo_wdyconf->set_enhancement_data( )
-
         ASSERT 0 = 1.
 
         lo_wdyconf->if_enh_object~save( ).
@@ -84,11 +85,18 @@ CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
     DATA: lo_wdyconf  TYPE REF TO cl_wdr_cfg_enhancement,
           lt_data     TYPE wdy_cfg_expl_data_tab,
           ls_outline  TYPE wdy_cfg_outline_data,
+          ls_obj      TYPE wdy_config_key,
           li_document TYPE REF TO if_ixml_document,
           li_element  TYPE REF TO if_ixml_element.
 
 
     lo_wdyconf ?= ii_enh_tool.
+
+    ls_obj = lo_wdyconf->get_original_object( ).
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    io_xml->add( iv_name = 'ORIGINAL_OBJECT'
+                 ig_data = ls_obj ).
 
     lo_wdyconf->get_enhancement_data(
       EXPORTING
@@ -104,12 +112,9 @@ CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
         element       = li_element
       CHANGING
         document      = li_document ).
-* todo
 
-    io_xml->add( iv_name = 'TOOL'
-                 ig_data = ii_enh_tool->get_tool( ) ).
-*    io_xml->add( ig_data = lv_shorttext
-*                 iv_name = 'SHORTTEXT' ).
+    io_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
+                     ii_xml = li_element ).
 
   ENDMETHOD.
 
