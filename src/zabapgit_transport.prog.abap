@@ -172,7 +172,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     SORT rt_tadir BY object ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_tadir COMPARING object obj_name.
-
+    DELETE rt_tadir WHERE table_line IS INITIAL.
   ENDMETHOD.
 
 ENDCLASS.
