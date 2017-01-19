@@ -56,7 +56,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
           activate_ddic_objects  = iv_ddic
-          with_popup             = abap_true
+          with_popup             = abap_false
         TABLES
           objects                = gt_objects
         EXCEPTIONS
