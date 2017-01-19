@@ -500,19 +500,21 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_files_local.
+   METHOD get_files_local.
 
     DATA: lt_tadir TYPE ty_tadir_tt,
           ls_item  TYPE ty_item,
           lt_files TYPE ty_files_tt.
 
     DATA: lt_cache TYPE SORTED TABLE OF ty_file_item
-          WITH NON-UNIQUE KEY item.
+          WITH NON-UNIQUE KEY item,
+          lt_tadir_aux LIKE lt_tadir.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
                    <ls_return> LIKE LINE OF rt_files,
                    <ls_cache>  LIKE LINE OF lt_cache,
-                   <ls_tadir>  LIKE LINE OF lt_tadir.
+                   <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <ls_filter> LIKE LINE OF it_filter.
 
 
     " Serialization happened before and no refresh request
@@ -533,7 +535,16 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+
+    LOOP AT it_filter ASSIGNING <ls_filter>.
+      READ TABLE lt_tadir ASSIGNING <ls_tadir> WITH KEY object = <ls_filter>-object
+                                                        obj_name = <ls_filter>-obj_name.
+      IF sy-subrc = 0.
+        APPEND <ls_tadir> TO lt_tadir_aux.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT lt_tadir_aux ASSIGNING <ls_tadir>.
 
       lcl_progress=>show( iv_key     = 'Serialize'
                           iv_current = sy-tabix
