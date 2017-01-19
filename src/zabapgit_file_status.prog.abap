@@ -61,7 +61,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     rt_results = calculate_status(
-      it_local     = io_repo->get_files_local( io_log )
+      it_local     = io_repo->get_files_local( io_log = io_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
