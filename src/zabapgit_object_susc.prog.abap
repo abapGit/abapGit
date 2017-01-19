@@ -62,7 +62,7 @@ CLASS lcl_object_susc IMPLEMENTATION.
       WHERE oclss = ms_item-obj_name
       AND langu = mv_language.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'TOBCT no english description' ).
+*      lcx_exception=>raise( 'TOBCT no english description' ).
     ENDIF.
 
     io_xml->add( iv_name = 'TOBC'
