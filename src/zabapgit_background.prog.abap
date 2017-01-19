@@ -97,6 +97,9 @@ CLASS lcl_background IMPLEMENTATION.
       APPEND lv_str TO lt_objects.
     ENDLOOP.
 
+    SORT lt_objects AS TEXT.
+    DELETE ADJACENT DUPLICATES FROM lt_objects.
+
     IF lines( lt_objects ) = 1.
       rv_comment = |BG: { lv_str }|.
     ELSE.
