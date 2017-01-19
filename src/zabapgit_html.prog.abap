@@ -332,8 +332,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD render. "TODO refactor
 
     DATA: lv_class   TYPE string,
-          lv_is_drop TYPE abap_bool,
-          lv_last    TYPE abap_bool.
+          lv_is_drop TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
@@ -359,13 +358,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       IF iv_as_angle = abap_true.
         ro_html->add( '<div class="dropbtn_angle"></div>' ).
       ELSE.
-        lv_class = 'dropbtn'.
-        IF iv_no_separator = abap_true.
-          lv_class = lv_class && ' menu_end' ##NO_TEXT.
-        ENDIF.
-
         ro_html->add_a( iv_txt   = iv_as_droplist_with_label
-                        iv_class = lv_class
+                        iv_class = 'dropbtn'
                         iv_act   = '' ).
       ENDIF.
 
@@ -386,15 +380,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ENDIF.
 
     LOOP AT mt_items ASSIGNING <ls_item>.
-      lv_last = boolc( sy-tabix = lines( mt_items ) ).
 
       IF <ls_item>-sub IS INITIAL.
-        CLEAR lv_class.
-        IF iv_no_separator = abap_true
-            OR lv_last = abap_true
-            AND iv_as_droplist_with_label IS INITIAL.
-          lv_class = 'menu_end'.
-        ENDIF.
 
         IF iv_with_icons = abap_true.
           ro_html->add( '<tr>' ).
@@ -405,8 +392,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ro_html->add_a( iv_txt   = <ls_item>-txt
                         iv_act   = <ls_item>-act
                         iv_opt   = <ls_item>-opt
-                        iv_typ   = <ls_item>-typ
-                        iv_class = lv_class ).
+                        iv_typ   = <ls_item>-typ ).
 
         IF iv_with_icons = abap_true.
           ro_html->add( '</td>' ).
@@ -414,9 +400,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ENDIF.
 
       ELSE.
-        ro_html->add( <ls_item>-sub->render(
-          iv_as_droplist_with_label = <ls_item>-txt
-          iv_no_separator           = lv_last ) ).
+        ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt ) ).
       ENDIF.
 
     ENDLOOP.
@@ -426,7 +410,8 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ENDIF.
 
     IF lv_is_drop = abap_true. " Dropdown
-      ro_html->add( '</div></div>' ).
+      ro_html->add( '</div>' ).
+      ro_html->add( '</div>' ).
     ENDIF.
 
     ro_html->add( '</div>' ).

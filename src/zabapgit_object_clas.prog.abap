@@ -8,6 +8,11 @@
 *
 *----------------------------------------------------------------------*
 INTERFACE lif_object_oriented_object.
+  TYPES: BEGIN OF ty_includes,
+           programm TYPE programm,
+         END OF ty_includes,
+         ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
+
   METHODS:
     create
       IMPORTING
@@ -62,7 +67,12 @@ INTERFACE lif_object_oriented_object.
         iv_object_name TYPE dokhl-object
         iv_language    TYPE spras
       RAISING
-        lcx_exception.
+        lcx_exception,
+    get_includes
+      IMPORTING
+        iv_object_name     TYPE sobj_name
+      RETURNING
+        VALUE(rt_includes) TYPE ty_includes_tt.
 ENDINTERFACE.
 
 CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
@@ -85,7 +95,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object~create.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~deserialize_source.
@@ -102,7 +112,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object~generate_locals.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD deserialize_abap_source_old.
@@ -172,12 +182,12 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
   METHOD lif_object_oriented_object~insert_text_pool.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_sotr.
     "Subclass responsibility
-    RETURN.
+    ASSERT 0 = 1.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object~create_documentation.
@@ -196,6 +206,11 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD lif_object_oriented_object~get_includes.
+    "Subclass responsibility
+    ASSERT 0 = 1.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -206,7 +221,8 @@ CLASS lcl_object_oriented_class DEFINITION
       lif_object_oriented_object~create REDEFINITION,
       lif_object_oriented_object~generate_locals REDEFINITION,
       lif_object_oriented_object~insert_text_pool REDEFINITION,
-      lif_object_oriented_object~create_sotr REDEFINITION.
+      lif_object_oriented_object~create_sotr REDEFINITION,
+      lif_object_oriented_object~get_includes REDEFINITION.
 
 ENDCLASS.
 CLASS lcl_object_oriented_class IMPLEMENTATION.
@@ -325,13 +341,44 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD lif_object_oriented_object~get_includes.
+* note: includes returned might not exist
+* method cl_oo_classname_service=>GET_ALL_CLASS_INCLUDES does not exist in 702
+
+    DATA: lv_class_name TYPE seoclsname,
+          lt_methods    TYPE seop_methods_w_include.
+
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods.
+
+    lv_class_name = iv_object_name.
+
+    APPEND cl_oo_classname_service=>get_ccdef_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_ccmac_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_ccimp_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_cl_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_ccau_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_pubsec_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_prosec_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_prisec_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_classpool_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_ct_name( lv_class_name ) TO rt_includes.
+    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
+
+    lt_methods = cl_oo_classname_service=>get_all_method_includes( lv_class_name ).
+    LOOP AT lt_methods ASSIGNING <ls_method>.
+      APPEND <ls_method>-incname TO rt_includes.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_object_oriented_interface DEFINITION
   INHERITING FROM lcl_object_oriented_base.
   PUBLIC SECTION.
     METHODS:
-      lif_object_oriented_object~create REDEFINITION.
+      lif_object_oriented_object~create REDEFINITION,
+      lif_object_oriented_object~get_includes REDEFINITION.
 ENDCLASS.
 
 CLASS lcl_object_oriented_interface IMPLEMENTATION.
@@ -354,6 +401,12 @@ CLASS lcl_object_oriented_interface IMPLEMENTATION.
       lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
+  METHOD lif_object_oriented_object~get_includes.
+    DATA lv_interface_name TYPE seoclsname.
+    lv_interface_name = iv_object_name.
+    APPEND cl_oo_classname_service=>get_interfacepool_name( lv_interface_name ) TO rt_includes.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lth_oo_factory_injector DEFINITION DEFERRED.
@@ -403,6 +456,11 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
   PUBLIC SECTION.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE ty_item
+        iv_language TYPE spras.
+
   PROTECTED SECTION.
     METHODS deserialize_abap
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
@@ -474,10 +532,6 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
     METHODS reduce
       CHANGING ct_source TYPE ty_string_tt.
-
-    METHODS get_all_class_includes
-      RETURNING VALUE(rt_includes) TYPE seoincl_t.
-
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -487,78 +541,22 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_clas IMPLEMENTATION.
 
-  METHOD get_all_class_includes.
-* note: includes returned might not exist
-* method cl_oo_classname_service=>GET_ALL_CLASS_INCLUDES does not exist in 702
-
-    DATA: lv_clsname TYPE seoclsname,
-          lt_methods TYPE seop_methods_w_include.
-
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods.
-
-
-    lv_clsname = ms_item-obj_name.
-
-    APPEND cl_oo_classname_service=>get_ccdef_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccmac_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccimp_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_cl_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ccau_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_pubsec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_prosec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_prisec_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_classpool_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_ct_name( lv_clsname ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_cs_name( lv_clsname ) TO rt_includes.
-
-    lt_methods = cl_oo_classname_service=>get_all_method_includes( lv_clsname ).
-    LOOP AT lt_methods ASSIGNING <ls_method>.
-      APPEND <ls_method>-incname TO rt_includes.
-    ENDLOOP.
-
-  ENDMETHOD.
-
   METHOD lif_object~has_changed_since.
+    DATA:
+      lt_includes TYPE seoincl_t.
 
-    DATA: lv_clsname TYPE seoclsname,
-          lv_program TYPE program,
-          lt_incl    TYPE seoincl_t.
+    FIELD-SYMBOLS <incl> LIKE LINE OF lt_includes.
 
-    FIELD-SYMBOLS <incl> LIKE LINE OF lt_incl.
-
-    lv_clsname = ms_item-obj_name.
-
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        TRY.
-            CALL METHOD cl_oo_classname_service=>('GET_ALL_CLASS_INCLUDES')
-              EXPORTING
-                class_name = lv_clsname
-              RECEIVING
-                result     = lt_incl.
-          CATCH cx_sy_dyn_call_illegal_method.
-* method does not exist in 702, just report everything as changed
-            rv_changed = abap_true.
-        ENDTRY.
-        LOOP AT lt_incl ASSIGNING <incl>.
-          rv_changed = check_prog_changed_since(
-            iv_program   = <incl>
-            iv_timestamp = iv_timestamp
-            iv_skip_gui  = abap_true ).
-          IF rv_changed = abap_true.
-            RETURN.
-          ENDIF.
-        ENDLOOP.
-      WHEN 'INTF'.
-        lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
-        rv_changed = check_prog_changed_since(
-          iv_program   = lv_program
-          iv_timestamp = iv_timestamp
-          iv_skip_gui  = abap_true ).
-      WHEN OTHERS.
-        lcx_exception=>raise( 'class delete, unknown type' ).
-    ENDCASE.
-
+    lt_includes = mo_object_oriented_object->get_includes( ms_item-obj_name ).
+    LOOP AT lt_includes ASSIGNING <incl>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <incl>
+        iv_timestamp = iv_timestamp
+        iv_skip_gui  = abap_true ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~get_metadata.
@@ -579,21 +577,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
           ls_reposrc  LIKE LINE OF lt_reposrc,
-          lt_includes TYPE STANDARD TABLE OF ty_includes,
-          lv_clsname  TYPE seoclsname.
+          lt_includes TYPE STANDARD TABLE OF ty_includes.
 
-
-    lv_clsname = ms_item-obj_name.
-
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        lt_includes = get_all_class_includes( ).
-        ASSERT lines( lt_includes ) > 0.
-      WHEN 'INTF'.
-        APPEND cl_oo_classname_service=>get_interfacepool_name( lv_clsname ) TO lt_includes.
-      WHEN OTHERS.
-        ASSERT 0 = 1.
-    ENDCASE.
+    lt_includes = mo_object_oriented_object->get_includes( ms_item-obj_name ).
+    ASSERT lines( lt_includes ) > 0.
 
     SELECT unam udat utime FROM reposrc
       INTO TABLE lt_reposrc
@@ -1099,9 +1086,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "serialize_xml
 
   METHOD lif_object~deserialize.
-
-    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
-
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -1237,6 +1221,13 @@ CLASS lcl_object_clas IMPLEMENTATION.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
+  METHOD constructor.
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -1249,15 +1240,14 @@ CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
 * https://github.com/larshp/abapGit/issues/21
   PUBLIC SECTION.
     METHODS:
-      lif_object~deserialize REDEFINITION.
+      lif_object~deserialize REDEFINITION,
+      lif_object~has_changed_since REDEFINITION.
   PROTECTED SECTION.
     METHODS:
       deserialize_abap REDEFINITION.
 ENDCLASS.                    "lcl_object_intf DEFINITION
 CLASS lcl_object_intf IMPLEMENTATION.
   METHOD lif_object~deserialize.
-    mo_object_oriented_object = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
-
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -1294,4 +1284,18 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
     mo_object_oriented_object->add_to_activation_list( is_item = ms_item ).
   ENDMETHOD.
+  METHOD lif_object~has_changed_since.
+    DATA:
+      lv_program  TYPE program,
+      lt_includes TYPE seoincl_t.
+
+    lt_includes = mo_object_oriented_object->get_includes( ms_item-obj_name ).
+    READ TABLE lt_includes INDEX 1 INTO lv_program.
+    "lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
+    rv_changed = check_prog_changed_since(
+      iv_program   = lv_program
+      iv_timestamp = iv_timestamp
+      iv_skip_gui  = abap_true ).
+  ENDMETHOD.
+
 ENDCLASS.
