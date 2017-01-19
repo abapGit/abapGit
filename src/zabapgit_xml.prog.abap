@@ -180,6 +180,9 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RAISING   lcx_exception,
       set_raw
         IMPORTING ii_raw TYPE REF TO if_ixml_element,
+      add_xml
+        IMPORTING iv_name TYPE clike
+                  ii_xml  TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
                   is_metadata   TYPE ty_metadata OPTIONAL
@@ -230,7 +233,18 @@ CLASS lcl_xml_output IMPLEMENTATION.
       mi_xml_doc->get_root( )->append_child( li_doc->get_root( )->get_first_child( ) ).
     ENDIF.
 
-  ENDMETHOD.                    "add
+  ENDMETHOD.
+
+  METHOD add_xml.
+
+    DATA: li_element TYPE REF TO if_ixml_element.
+
+    li_element = mi_xml_doc->create_element( iv_name ).
+    li_element->append_child( ii_xml ).
+
+    mi_xml_doc->get_root( )->get_first_child( )->get_first_child( )->append_child( li_element ).
+
+  ENDMETHOD.
 
   METHOD render.
 
@@ -280,6 +294,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RAISING   lcx_exception,
       get_raw
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_node,
+* todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
         RETURNING VALUE(rs_metadata) TYPE ty_metadata.
 
