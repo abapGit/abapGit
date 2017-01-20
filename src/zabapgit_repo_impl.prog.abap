@@ -500,7 +500,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-   METHOD get_files_local.
+  METHOD get_files_local.
 
     DATA: lt_tadir TYPE ty_tadir_tt,
           ls_item  TYPE ty_item,
@@ -535,15 +535,19 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
-
-    LOOP AT it_filter ASSIGNING <ls_filter>.
-      READ TABLE lt_tadir ASSIGNING <ls_tadir> WITH KEY object = <ls_filter>-object
-                                                        obj_name = <ls_filter>-obj_name.
-      IF sy-subrc = 0.
-        APPEND <ls_tadir> TO lt_tadir_aux.
-      ENDIF.
-    ENDLOOP.
-
+    
+    IF it_filter[] IS INITIAL.
+      lt_tadir_aux[] = lt_tadir[].
+    ELSE.
+      LOOP AT it_filter ASSIGNING <ls_filter>.
+        READ TABLE lt_tadir ASSIGNING <ls_tadir> WITH KEY object = <ls_filter>-object
+                                                          obj_name = <ls_filter>-obj_name.
+        IF sy-subrc = 0.
+          APPEND <ls_tadir> TO lt_tadir_aux.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+    
     LOOP AT lt_tadir_aux ASSIGNING <ls_tadir>.
 
       lcl_progress=>show( iv_key     = 'Serialize'
