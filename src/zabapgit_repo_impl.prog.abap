@@ -535,7 +535,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
-    
+
     IF it_filter[] IS INITIAL.
       lt_tadir_aux[] = lt_tadir[].
     ELSE.
@@ -547,7 +547,7 @@ CLASS lcl_repo IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
     ENDIF.
-    
+
     LOOP AT lt_tadir_aux ASSIGNING <ls_tadir>.
 
       lcl_progress=>show( iv_key     = 'Serialize'
