@@ -404,7 +404,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
     CREATE OBJECT lo_log.
 
-    lt_zip = io_repo->get_files_local( io_log = lo_log
+    lt_zip = io_repo->get_files_local( io_log    = lo_log
                                        it_filter = it_filter ).
 
     IF lo_log->count( ) > 0.
