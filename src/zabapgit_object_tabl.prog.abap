@@ -106,7 +106,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     CALL FUNCTION 'RS_DD_DELETE_OBJ'
       EXPORTING
-        no_ask               = abap_false
+        no_ask               = abap_true
         objname              = lv_objname
         objtype              = 'T'
       EXCEPTIONS
