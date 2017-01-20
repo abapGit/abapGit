@@ -504,17 +504,18 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DATA: lt_tadir TYPE ty_tadir_tt,
           ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+          lt_files TYPE ty_files_tt,
+          lt_cache TYPE SORTED TABLE OF ty_file_item
+                   WITH NON-UNIQUE KEY item.
 
-    DATA: lt_cache TYPE SORTED TABLE OF ty_file_item
-          WITH NON-UNIQUE KEY item,
-          lt_tadir_aux LIKE lt_tadir.
+    DATA: lt_filter TYPE SORTED TABLE OF tadir
+                    WITH NON-UNIQUE KEY object obj_name,
+          lv_filter_exist TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
                    <ls_return> LIKE LINE OF rt_files,
                    <ls_cache>  LIKE LINE OF lt_cache,
-                   <ls_tadir>  LIKE LINE OF lt_tadir,
-                   <ls_filter> LIKE LINE OF it_filter.
+                   <ls_tadir>  LIKE LINE OF lt_tadir.
 
 
     " Serialization happened before and no refresh request
@@ -536,19 +537,18 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
 
-    IF it_filter[] IS INITIAL.
-      lt_tadir_aux[] = lt_tadir[].
-    ELSE.
-      LOOP AT it_filter ASSIGNING <ls_filter>.
-        READ TABLE lt_tadir ASSIGNING <ls_tadir> WITH KEY object = <ls_filter>-object
-                                                          obj_name = <ls_filter>-obj_name.
-        IF sy-subrc = 0.
-          APPEND <ls_tadir> TO lt_tadir_aux.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+    lt_filter = it_filter.
+    lv_filter_exist = boolc( lines( lt_filter ) > 0 ) .
 
-    LOOP AT lt_tadir_aux ASSIGNING <ls_tadir>.
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      IF lv_filter_exist = abap_true.
+        READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
+                                                             obj_name = <ls_tadir>-obj_name
+                                                    BINARY SEARCH.
+        IF sy-subrc <> 0.
+          CONTINUE.
+        ENDIF.
+      ENDIF.
 
       lcl_progress=>show( iv_key     = 'Serialize'
                           iv_current = sy-tabix
