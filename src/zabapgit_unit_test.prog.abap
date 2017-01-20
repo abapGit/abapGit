@@ -1917,6 +1917,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     lt_results_exp = lt_results.
 
     lt_results = lcl_file_status=>calculate_status(
+      iv_devclass        = '$Z$'
       it_local           = lt_local
       it_remote          = lt_remote
       it_cur_state       = lt_state ).

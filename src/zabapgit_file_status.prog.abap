@@ -21,7 +21,8 @@ CLASS lcl_file_status DEFINITION FINAL
   PRIVATE SECTION.
 
     CLASS-METHODS calculate_status
-      IMPORTING it_local           TYPE ty_files_item_tt
+      IMPORTING iv_devclass        TYPE devclass
+                it_local           TYPE ty_files_item_tt
                 it_remote          TYPE ty_files_tt
                 it_cur_state       TYPE ty_file_signatures_tt
       RETURNING VALUE(rt_results)  TYPE ty_results_tt.
@@ -36,7 +37,8 @@ CLASS lcl_file_status DEFINITION FINAL
         IMPORTING is_local         TYPE ty_file_item
         RETURNING VALUE(rs_result) TYPE ty_result,
       build_new_remote
-        IMPORTING is_remote        TYPE ty_file
+        IMPORTING iv_devclass      TYPE devclass
+                  is_remote        TYPE ty_file
                   it_items         TYPE ty_items_ts
                   it_state         TYPE ty_file_signatures_ts
         RETURNING VALUE(rs_result) TYPE ty_result,
@@ -61,6 +63,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     rt_results = calculate_status(
+      iv_devclass  = io_repo->get_package( )
       it_local     = io_repo->get_files_local( io_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
@@ -147,9 +150,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Process new remote files (marked above with empty SHA1)
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
-      <ls_result> = build_new_remote( is_remote = <ls_remote>
-                                      it_items  = lt_items_idx
-                                      it_state  = lt_state_idx ).
+      <ls_result> = build_new_remote( iv_devclass = iv_devclass
+                                      is_remote   = <ls_remote>
+                                      it_items    = lt_items_idx
+                                      it_state    = lt_state_idx ).
     ENDLOOP.
 
     SORT rt_results BY
@@ -278,7 +282,8 @@ CLASS lcl_file_status IMPLEMENTATION.
         ENDIF.
 
         " Item is in state and in cache but with no package - it was deleted
-        IF ls_item-devclass IS INITIAL.
+        " OR devclass is the same as repo package (see #532)
+        IF ls_item-devclass IS INITIAL OR ls_item-devclass = iv_devclass.
           rs_result-match  = abap_false.
           rs_result-lstate = gc_state-deleted.
         ENDIF.
