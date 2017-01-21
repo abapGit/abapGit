@@ -404,6 +404,11 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY gc_newline.
+    IF strlen( lv_source ) > 0.
+      lv_source = substring( val = lv_source
+                             len = strlen( lv_source ) - 1 ).
+    ENDIF.
+
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
                                  iv_ext   = 'abap' ).       "#EC NOTEXT
@@ -1747,8 +1752,8 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING  lcx_exception.
 
     CLASS-METHODS warning_overwrite
-      CHANGING  ct_results TYPE ty_results_tt
-      RAISING   lcx_exception.
+      CHANGING ct_results TYPE ty_results_tt
+      RAISING  lcx_exception.
 
     CLASS-METHODS warning_package
       IMPORTING is_item          TYPE ty_item
@@ -1771,4 +1776,4 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING
         lcx_exception.
 
-ENDCLASS.                    "lcl_object DEFINITION
+ENDCLASS.                    "lcl_object DEFINITIO
