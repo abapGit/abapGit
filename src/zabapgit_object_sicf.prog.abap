@@ -22,6 +22,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
            END OF ty_sicf_key.
 
     METHODS read
+      IMPORTING iv_clear      TYPE abap_bool DEFAULT abap_true
       EXPORTING es_icfservice TYPE icfservice
                 es_icfdocu    TYPE icfdocu
                 et_icfhandler TYPE ty_icfhandler_tt
@@ -71,7 +72,8 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     DATA: ls_icfservice TYPE icfservice.
 
 
-    read( IMPORTING es_icfservice = ls_icfservice ).
+    read( EXPORTING iv_clear = abap_false
+          IMPORTING es_icfservice = ls_icfservice ).
 
     rv_user = ls_icfservice-icf_muser.
 
@@ -174,10 +176,12 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     MOVE-CORRESPONDING ls_serv_info-service TO es_icfservice.
-    CLEAR es_icfservice-icf_cuser.
-    CLEAR es_icfservice-icf_cdate.
-    CLEAR es_icfservice-icf_muser.
-    CLEAR es_icfservice-icf_mdate.
+    IF iv_clear = abap_true.
+      CLEAR es_icfservice-icf_cuser.
+      CLEAR es_icfservice-icf_cdate.
+      CLEAR es_icfservice-icf_muser.
+      CLEAR es_icfservice-icf_mdate.
+    ENDIF.
 
     CLEAR es_icfdocu-icfparguid.
 
