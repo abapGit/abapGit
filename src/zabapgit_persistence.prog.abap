@@ -1591,7 +1591,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         lv_max_lines_as_integer = lv_max_lines_as_string.
         ro_settings->set_max_lines( lv_max_lines_as_integer ).
       CATCH lcx_not_found.
-        ro_settings->set_max_lines( 0 ).
+        ro_settings->set_max_lines( 500 ). " default
     ENDTRY.
   ENDMETHOD.
 
