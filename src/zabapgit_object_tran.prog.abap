@@ -287,6 +287,11 @@ CLASS lcl_object_tran IMPLEMENTATION.
           lt_param_values TYPE TABLE OF rsparam,
           ls_rsstcd       TYPE rsstcd.
 
+
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'TSTC'
                   CHANGING cg_data = ls_tstc ).
     io_xml->read( EXPORTING iv_name = 'TSTCC'
