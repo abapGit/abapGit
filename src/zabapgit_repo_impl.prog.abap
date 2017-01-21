@@ -504,10 +504,13 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DATA: lt_tadir TYPE ty_tadir_tt,
           ls_item  TYPE ty_item,
-          lt_files TYPE ty_files_tt.
+          lt_files TYPE ty_files_tt,
+          lt_cache TYPE SORTED TABLE OF ty_file_item
+                   WITH NON-UNIQUE KEY item.
 
-    DATA: lt_cache TYPE SORTED TABLE OF ty_file_item
-          WITH NON-UNIQUE KEY item.
+    DATA: lt_filter TYPE SORTED TABLE OF tadir
+                    WITH NON-UNIQUE KEY object obj_name,
+          lv_filter_exist TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
                    <ls_return> LIKE LINE OF rt_files,
@@ -533,7 +536,19 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read( get_package( ) ).
+
+    lt_filter = it_filter.
+    lv_filter_exist = boolc( lines( lt_filter ) > 0 ) .
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      IF lv_filter_exist = abap_true.
+        READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
+                                                             obj_name = <ls_tadir>-obj_name
+                                                    BINARY SEARCH.
+        IF sy-subrc <> 0.
+          CONTINUE.
+        ENDIF.
+      ENDIF.
 
       lcl_progress=>show( iv_key     = 'Serialize'
                           iv_current = sy-tabix
