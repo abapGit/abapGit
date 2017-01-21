@@ -111,10 +111,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
-          lo_log        TYPE REF TO lcl_log.
+          lo_log        TYPE REF TO lcl_log,
+          lo_settings   TYPE REF TO lcl_settings,
+          lv_max_lines  TYPE i.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+    " Read global settings to get max # of objects to be listed
+    lo_settings = lcl_app=>settings( )->read( ).
+    lv_max_lines = lo_settings->get_max_lines( ).
 
     " Reinit, for the case of type change
     mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
@@ -160,7 +165,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            IF sy-tabix > 500.
+            IF lv_max_lines > 0 AND sy-tabix > lv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
@@ -171,7 +176,11 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          ro_html->add( 'Only first 500 objects shown in list' ).
+          IF lv_max_lines = 1.
+            ro_html->add( |Only 1 object shown in list (Set in Advanced > Settings )| ).
+          ELSE.
+            ro_html->add( |Only first { lv_max_lines } objects shown in list (Set in Advanced > Settings )| ).
+          ENDIF.
         ENDIF.
 
         ro_html->add( '</div>' ).
