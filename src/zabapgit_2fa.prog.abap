@@ -74,37 +74,13 @@ CLASS lcx_2fa_unsupported IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_no_cached_token DEFINITION INHERITING FROM lcx_2fa_error FINAL.
-  PROTECTED SECTION.
-    METHODS:
-      get_default_text REDEFINITION.
-ENDCLASS.
-
-CLASS lcx_2fa_no_cached_token IMPLEMENTATION.
-  METHOD get_default_text.
-    rv_text = 'Cached two factor access token requested but not available.' ##NO_TEXT.
-  ENDMETHOD.
-ENDCLASS.
-
-CLASS lcx_2fa_cache_deletion_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
-  PROTECTED SECTION.
-    METHODS:
-      get_default_text REDEFINITION.
-ENDCLASS.
-
-CLASS lcx_2fa_cache_deletion_failed IMPLEMENTATION.
-  METHOD get_default_text.
-    rv_text = 'Cache deletion failed.' ##NO_TEXT.
-  ENDMETHOD.
-ENDCLASS.
 
 "! Defines a two factor authentication authenticator
 "! <p>
 "! Authenticators support one or multiple services and are able to generate access tokens using the
 "! service's API using the users username, password and two factor authentication token
 "! (app/sms/tokengenerator). With these access tokens the user can be authenticated to the service's
-"! implementation of the git http api, just like the "normal" password would. The authenticator can
-"! also store and retrieve the access token it generated.
+"! implementation of the git http api, just like the "normal" password would.
 "! </p>
 "! <p>
 "! <em>LCL_2FA_AUTHENTICATOR_REGISTRY</em> can be used to find a suitable implementation for a given
@@ -139,42 +115,18 @@ INTERFACE lif_2fa_authenticator.
     get_service_id_from_url IMPORTING iv_url       TYPE string
                             RETURNING VALUE(rv_id) TYPE string
                             RAISING   lcx_2fa_unsupported,
-    "! Check if there is a cached access token (for the current user)
-    "! @parameter iv_url | Repository url
-    "! @parameter rv_available | Token is cached
-    "! @raising lcx_2fa_unsupported | Url is not supported
-    is_cached_access_token_avail IMPORTING iv_url              TYPE string
-                                 RETURNING VALUE(rv_available) TYPE abap_bool
-                                 RAISING   lcx_2fa_unsupported,
-    "! Get a cached access token
-    "! <p>
-    "! Username and password are also parameters to decrypt the token if needed. They must no
-    "! necessarily be provided if the used authenticator does not use encryption.
-    "! </p>
+    "! Check if two factor authentication is required
     "! @parameter iv_url | Repository url
     "! @parameter iv_username | Username
     "! @parameter iv_password | Password
-    "! @parameter rv_token | Access token
-    "! @raising lcx_2fa_no_cached_token | There is no cached token
-    "! @raising lcx_2fa_unsupported | Url is not supported
-    get_cached_access_token IMPORTING iv_url          TYPE string
-                                      iv_username     TYPE string OPTIONAL
-                                      iv_password     TYPE string OPTIONAL
-                            RETURNING VALUE(rv_token) TYPE string
-                            RAISING   lcx_2fa_no_cached_token
-                                      lcx_2fa_unsupported,
-    "! Delete a cached token
-    "! @parameter iv_url | Repository url
-    "! @raising lcx_2fa_cache_deletion_failed | Deletion failed
-    delete_cached_access_token IMPORTING iv_url TYPE string
-                               RAISING   lcx_2fa_cache_deletion_failed
-                                         lcx_2fa_unsupported.
+    "! @parameter rv_required | 2FA is required
+    is_2fa_required IMPORTING iv_url             TYPE string
+                              iv_username        TYPE string
+                              iv_password        TYPE string
+                    RETURNING VALUE(rv_required) TYPE abap_bool.
 ENDINTERFACE.
 
 "! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
-"! <p>
-"! This uses the user settings to store cached access tokens and encrypts / decrypts them as needed.
-"! </p>
 CLASS lcl_2fa_authenticator_base DEFINITION
   ABSTRACT
   CREATE PUBLIC.
@@ -186,9 +138,7 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       authenticate FOR lif_2fa_authenticator~authenticate,
       supports_url FOR lif_2fa_authenticator~supports_url,
       get_service_id_from_url FOR lif_2fa_authenticator~get_service_id_from_url,
-      is_cached_access_token_avail FOR lif_2fa_authenticator~is_cached_access_token_avail,
-      get_cached_access_token FOR lif_2fa_authenticator~get_cached_access_token,
-      delete_cached_token FOR lif_2fa_authenticator~delete_cached_access_token.
+      is_2fa_required FOR lif_2fa_authenticator~is_2fa_required.
     METHODS:
       "! @parameter iv_supported_url_regex | Regular expression to check if a repository url is
       "!                                     supported, used for default implementation of
@@ -196,24 +146,6 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       constructor IMPORTING iv_supported_url_regex TYPE clike.
   PROTECTED SECTION.
     METHODS:
-      "! Subclass implementation of <em>LIF_2FA_AUTHENTICATOR=&gtAUTHENTICATE</em>
-      "! <p>
-      "! The caller will take care of caching the token.
-      "! </p>
-      "! @parameter iv_url | Repository url
-      "! @parameter iv_username | Username
-      "! @parameter iv_password | Password
-      "! @parameter iv_2fa_token | Two factor token
-      "! @parameter rv_access_token | Generated access token
-      "! @raising lcx_2fa_auth_failed | Authentication failed
-      "! @raising lcx_2fa_token_gen_failed | Token generation failed
-      authenticate_internal ABSTRACT IMPORTING iv_url                 TYPE string
-                                               iv_username            TYPE string
-                                               iv_password            TYPE string
-                                               iv_2fa_token           TYPE string
-                                     RETURNING VALUE(rv_access_token) TYPE string
-                                     RAISING   lcx_2fa_auth_failed
-                                               lcx_2fa_token_gen_failed,
       "! Helper method to raise class based exception after traditional exception was raised
       "! <p>
       "! <em>sy-msg...</em> must be set right before calling!
@@ -233,29 +165,7 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD authenticate.
-    DATA: lv_encrypted_token TYPE string.
-
-    rv_access_token = authenticate_internal( iv_url       = iv_url
-                                             iv_username  = iv_username
-                                             iv_password  = iv_password
-                                             iv_2fa_token = iv_2fa_token ).
-
-    " Store the access token, by default in the user settings
-
-    " 1. Encrypt it
-*    lv_encrypted_token = cl_encryption_helper=>encrypt_symmetric( iv_text = rv_access_token
-*                                                                  iv_key  = iv_password ).
-    " TODO: Find something like the above for symmetric encryption
-    lv_encrypted_token = rv_access_token.
-
-    " 2. Store it
-    TRY.
-        lcl_app=>user( )->set_2fa_access_token( iv_service_id = get_service_id_from_url( iv_url )
-                                                iv_username   = iv_username
-                                                iv_token      = lv_encrypted_token ).
-      CATCH lcx_exception lcx_2fa_unsupported ##NO_HANDLER.
-        " Not the biggest of deals if caching the token fails
-    ENDTRY.
+    RAISE EXCEPTION TYPE lcx_2fa_auth_failed. " Needs to be overwritten in subclasses
   ENDMETHOD.
 
   METHOD supports_url.
@@ -266,56 +176,8 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
     rv_id = 'UNKNOWN SERVICE'. " Please overwrite in subclasses
   ENDMETHOD.
 
-  METHOD is_cached_access_token_avail.
-    DATA: lv_service_id TYPE string.
-
-    lv_service_id = get_service_id_from_url( iv_url ).
-
-    " Default storage location is user settings
-    TRY.
-        rv_available = boolc( lcl_app=>user( )->get_2fa_access_token( lv_service_id )
-                              IS NOT INITIAL ).
-      CATCH lcx_exception.
-        rv_available = abap_false.
-    ENDTRY.
-  ENDMETHOD.
-
-  METHOD get_cached_access_token.
-    DATA: lv_access_token_encrypted TYPE string,
-          lx_error                  TYPE REF TO cx_root.
-
-    TRY.
-        lv_access_token_encrypted
-          = lcl_app=>user( )->get_2fa_access_token( get_service_id_from_url( iv_url ) ).
-      CATCH lcx_exception INTO lx_error.
-        RAISE EXCEPTION TYPE lcx_2fa_no_cached_token
-          EXPORTING
-            ix_previous   = lx_error
-            iv_error_text = lx_error->get_text( ).
-    ENDTRY.
-
-    IF lv_access_token_encrypted IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_2fa_no_cached_token.
-    ENDIF.
-
-    " TODO: Decryption
-*    rv_token = cl_encryption_helper=>decrypt_symmetric( iv_encrypted = rv_access_token
-*                                                        iv_key       = iv_password ).
-    rv_token = lv_access_token_encrypted.
-  ENDMETHOD.
-
-  METHOD delete_cached_token.
-    DATA: lx_ex TYPE REF TO cx_root.
-
-    TRY.
-        " Default storage location is user settings
-        lcl_app=>user( )->delete_2fa_config( get_service_id_from_url( iv_url ) ).
-      CATCH lcx_exception INTO lx_ex.
-        RAISE EXCEPTION TYPE lcx_2fa_cache_deletion_failed
-          EXPORTING
-            ix_previous   = lx_ex
-            iv_error_text = |Cache deletion failed: { lx_ex->get_text( ) }|.
-    ENDTRY.
+  METHOD is_2fa_required.
+    rv_required = abap_false.
   ENDMETHOD.
 
   METHOD raise_internal_error_from_sy.
@@ -338,11 +200,15 @@ CLASS lcl_2fa_github_authenticator DEFINITION
   PUBLIC SECTION.
     METHODS:
       constructor,
-      get_service_id_from_url REDEFINITION.
+      get_service_id_from_url REDEFINITION,
+      authenticate REDEFINITION,
+      is_2fa_required REDEFINITION.
   PROTECTED SECTION.
-    METHODS:
-      authenticate_internal REDEFINITION.
   PRIVATE SECTION.
+    CONSTANTS:
+      gc_github_api_url              TYPE string VALUE `https://api.github.com/`,
+      gc_otp_header_name             TYPE string VALUE `X-Github-OTP`,
+      gc_restendpoint_authorizations TYPE string VALUE `/authorizations`.
     METHODS:
       set_access_token_request IMPORTING ii_request   TYPE REF TO if_http_request
                                          iv_repo_name TYPE string,
@@ -357,10 +223,8 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     super->constructor( 'https?:\/\/(www\.)?github.com.*$' ).
   ENDMETHOD.
 
-  METHOD authenticate_internal.
-    CONSTANTS: lc_github_api_url              TYPE string VALUE `https://api.github.com/`,
-               lc_otp_header_name             TYPE string VALUE `X-Github-OTP`,
-               lc_restendpoint_authorizations TYPE string VALUE `/authorizations`.
+  METHOD authenticate.
+
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
@@ -372,7 +236,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     " 1. Try to login to GitHub API with username, password and 2fa token
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = lc_github_api_url
+        url                = gc_github_api_url
       IMPORTING
         client             = li_http_client
       EXCEPTIONS
@@ -386,7 +250,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
     " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
     li_http_client->propertytype_accept_cookie = if_http_client=>co_enabled.
-    li_http_client->request->set_header_field( name = lc_otp_header_name value = iv_2fa_token ).
+    li_http_client->request->set_header_field( name = gc_otp_header_name value = iv_2fa_token ).
     li_http_client->authenticate( username = iv_username password = iv_password ).
     li_http_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
@@ -418,7 +282,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     set_access_token_request( ii_request   = li_http_client->request
                               iv_repo_name = parse_repo_from_url( iv_url ) ).
     li_http_client->request->set_header_field( name  = if_http_header_fields_sap=>request_uri
-                                               value = lc_restendpoint_authorizations ).
+                                               value = gc_restendpoint_authorizations ).
     li_http_client->request->set_method( if_http_request=>co_request_method_post ).
 
     li_http_client->send( EXCEPTIONS OTHERS = 1 ).
@@ -500,6 +364,29 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
   METHOD get_service_id_from_url.
     rv_id = 'github'.
+  ENDMETHOD.
+
+  METHOD is_2fa_required.
+    DATA: li_client TYPE REF TO if_http_client,
+          lv_header_value TYPE string.
+
+    cl_http_client=>create_by_url(
+      EXPORTING
+        url    = gc_github_api_url
+      IMPORTING
+        client = li_client ).
+
+    li_client->propertytype_logon_popup = if_http_client=>co_disabled.
+
+    " Try to authenticate without password, if 2FA is required there will be a specific response
+    " header
+    li_client->authenticate( username = iv_username password = iv_password ).
+    li_client->send( ).
+    li_client->receive( ).
+
+    IF li_client->response->get_header_field( gc_otp_header_name ) CP 'required*'.
+      rv_required = abap_true.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
 
