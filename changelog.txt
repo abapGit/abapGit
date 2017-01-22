@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2017-01-22 v1.26.0
+------------------
++ XML ignore initial fields
++ Newline added to end of all ABAP code
+
+2017-01-22 v1.25.2
+------------------
++ Possibility to set max number of objects in list
+
 2016-12-01 v1.24.0
 ------------------
 + abap syntax highlighting
