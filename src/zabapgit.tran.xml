@@ -6,20 +6,13 @@
     <TCODE>ZABAPGIT</TCODE>
     <PGMNA>ZABAPGIT</PGMNA>
     <DYPNO>1000</DYPNO>
-    <MENUE/>
     <CINFO>gA==</CINFO>
-    <ARBGB/>
    </TSTC>
    <TSTCC>
     <TCODE>ZABAPGIT</TCODE>
     <S_WEBGUI>1</S_WEBGUI>
     <S_WIN32>X</S_WIN32>
     <S_PLATIN>X</S_PLATIN>
-    <S_SERVICE/>
-    <S_PERVAS/>
-    <S_DUMMY/>
-    <S_DUMMY1/>
-    <S_DUMMY2/>
    </TSTCC>
    <TSTCT>
     <SPRSL>E</SPRSL>

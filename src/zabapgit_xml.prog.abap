@@ -222,6 +222,7 @@ CLASS lcl_xml_output IMPLEMENTATION.
     li_doc = cl_ixml=>create( )->create_document( ).
 
     CALL TRANSFORMATION id
+      OPTIONS initial_components = 'suppress'
       SOURCE (lt_stab)
       RESULT XML li_doc.
 

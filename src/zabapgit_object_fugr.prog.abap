@@ -17,19 +17,20 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
     TYPES: ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_function,
-             funcname      TYPE rs38l_fnam,
-             include       TYPE progname,
-             global_flag   TYPE rs38l-global,
-             remote_call   TYPE rs38l-remote,
-             update_task   TYPE rs38l-utask,
-             short_text    TYPE tftit-stext,
-             remote_basxml TYPE rs38l-basxml_enabled,
-             import        TYPE STANDARD TABLE OF rsimp WITH DEFAULT KEY,
-             changing      TYPE STANDARD TABLE OF rscha WITH DEFAULT KEY,
-             export        TYPE STANDARD TABLE OF rsexp WITH DEFAULT KEY,
-             tables        TYPE STANDARD TABLE OF rstbl WITH DEFAULT KEY,
-             exception     TYPE STANDARD TABLE OF rsexc WITH DEFAULT KEY,
-             documentation TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
+             funcname          TYPE rs38l_fnam,
+             include           TYPE progname,
+             global_flag       TYPE rs38l-global,
+             remote_call       TYPE rs38l-remote,
+             update_task       TYPE rs38l-utask,
+             short_text        TYPE tftit-stext,
+             remote_basxml     TYPE rs38l-basxml_enabled,
+             import            TYPE STANDARD TABLE OF rsimp WITH DEFAULT KEY,
+             changing          TYPE STANDARD TABLE OF rscha WITH DEFAULT KEY,
+             export            TYPE STANDARD TABLE OF rsexp WITH DEFAULT KEY,
+             tables            TYPE STANDARD TABLE OF rstbl WITH DEFAULT KEY,
+             exception         TYPE STANDARD TABLE OF rsexc WITH DEFAULT KEY,
+             documentation     TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
+             exception_classes TYPE abap_bool,
            END OF ty_function.
 
     TYPES: ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY.
@@ -69,6 +70,11 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
     METHODS deserialize_includes
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    METHODS are_exceptions_class_based
+      IMPORTING iv_function_name TYPE rs38l_fnam
+      RETURNING VALUE(rv_return) TYPE abap_bool
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_fugr DEFINITION
@@ -247,6 +253,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           remote_call             = <ls_func>-remote_call
           short_text              = <ls_func>-short_text
           update_task             = <ls_func>-update_task
+          exception_class         = <ls_func>-exception_classes
 *         NAMESPACE               = ' ' todo
           remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
@@ -276,10 +283,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       ENDIF.
 
       INSERT REPORT lv_include FROM lt_source.
-
-*      lcl_objects_activation=>add( iv_type = 'FUNC'
-*                                   iv_name = <ls_func>-funcname ).
-
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_functions
@@ -537,7 +540,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       lt_source     TYPE TABLE OF rssource,
       lt_functab    TYPE ty_rs38l_incl_tt,
       lt_new_source TYPE rsfb_source,
-      ls_ret        LIKE LINE OF rt_functions.
+      ls_function        LIKE LINE OF rt_functions.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
 
@@ -547,8 +550,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     LOOP AT lt_functab ASSIGNING <ls_func>.
 * fm RPY_FUNCTIONMODULE_READ does not support source code
 * lines longer than 72 characters
-      CLEAR ls_ret.
-      MOVE-CORRESPONDING <ls_func> TO ls_ret.
+      CLEAR ls_function.
+      MOVE-CORRESPONDING <ls_func> TO ls_function.
 
       CLEAR lt_new_source.
       CLEAR lt_source.
@@ -557,18 +560,18 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         EXPORTING
           functionname            = <ls_func>-funcname
         IMPORTING
-          global_flag             = ls_ret-global_flag
-          remote_call             = ls_ret-remote_call
-          update_task             = ls_ret-update_task
-          short_text              = ls_ret-short_text
-          remote_basxml_supported = ls_ret-remote_basxml
+          global_flag             = ls_function-global_flag
+          remote_call             = ls_function-remote_call
+          update_task             = ls_function-update_task
+          short_text              = ls_function-short_text
+          remote_basxml_supported = ls_function-remote_basxml
         TABLES
-          import_parameter        = ls_ret-import
-          changing_parameter      = ls_ret-changing
-          export_parameter        = ls_ret-export
-          tables_parameter        = ls_ret-tables
-          exception_list          = ls_ret-exception
-          documentation           = ls_ret-documentation
+          import_parameter        = ls_function-import
+          changing_parameter      = ls_function-changing
+          export_parameter        = ls_function-export
+          tables_parameter        = ls_function-tables
+          exception_list          = ls_function-exception
+          documentation           = ls_function-documentation
           source                  = lt_source
         CHANGING
           new_source              = lt_new_source
@@ -583,7 +586,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         lcx_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
 
-      APPEND ls_ret TO rt_functions.
+      ls_function-exception_classes = are_exceptions_class_based( <ls_func>-funcname ).
+
+      APPEND ls_function TO rt_functions.
 
       IF NOT lt_new_source IS INITIAL.
         mo_files->add_abap( iv_extra = <ls_func>-funcname
@@ -617,6 +622,35 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "serialize_includes
+
+  METHOD are_exceptions_class_based.
+    DATA:
+      lt_dokumentation    TYPE TABLE OF funct,
+      lt_exception_list   TYPE TABLE OF rsexc,
+      lt_export_parameter TYPE TABLE OF rsexp,
+      lt_import_parameter TYPE TABLE OF rsimp,
+      lt_tables_parameter TYPE TABLE OF rstbl.
+
+    CALL FUNCTION 'FUNCTION_IMPORT_DOKU'
+      EXPORTING
+        funcname           = iv_function_name
+      IMPORTING
+        exception_class    = rv_return
+      TABLES
+        dokumentation      = lt_dokumentation
+        exception_list     = lt_exception_list
+        export_parameter   = lt_export_parameter
+        import_parameter   = lt_import_parameter
+        tables_parameter   = lt_tables_parameter
+      EXCEPTIONS
+        error_message      = 1
+        function_not_found = 2
+        invalid_name       = 3
+        OTHERS             = 4.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
+    ENDIF.
+  ENDMETHOD.
 
   METHOD lif_object~serialize.
 

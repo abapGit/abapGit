@@ -373,6 +373,9 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY gc_newline.
+* when editing files via eg. GitHub web interface it adds a newline at end of file
+    lv_source = lv_source && gc_newline.
+
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
                                  iv_ext   = 'abap' ).       "#EC NOTEXT

@@ -30,6 +30,8 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_form_end
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+    METHODS render_max_lines
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS build_settings
       IMPORTING
         it_post_fields TYPE tihttpnvp.
@@ -63,6 +65,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_proxy( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_development_internals( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_max_lines( ) ).
     ro_html->add( render_form_end( ) ).
 
   ENDMETHOD.  "render_content
@@ -110,7 +114,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD build_settings.
 
-    DATA ls_post_field TYPE ihttpnvp.
+    DATA: ls_post_field           TYPE ihttpnvp,
+          lv_max_lines_as_integer TYPE i.
 
     CREATE OBJECT mo_settings.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_url'.
@@ -130,6 +135,14 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
       mo_settings->set_run_critical_tests( abap_true ).
     ELSE.
       mo_settings->set_run_critical_tests( abap_false ).
+    ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'max_lines'.
+    IF sy-subrc = 0.
+      lv_max_lines_as_integer = ls_post_field-value.
+      mo_settings->set_max_lines( lv_max_lines_as_integer ).
+    ELSE.
+      mo_settings->set_max_lines( 0 ).
     ENDIF.
 
   ENDMETHOD.
@@ -207,6 +220,17 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
 
+  ENDMETHOD.
+
+  METHOD render_max_lines.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<h2>List size</h2>| ).
+    ro_html->add( |<label for="max_lines">Max. # of objects listed (0 = all)</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
   ENDMETHOD.
 
 ENDCLASS.
