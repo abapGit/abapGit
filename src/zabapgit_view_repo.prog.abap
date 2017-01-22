@@ -503,31 +503,26 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD build_dir_jump_link.
 
     DATA: lv_path   TYPE string,
-          lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html.
+          lv_encode TYPE string.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
 
-    CREATE OBJECT lo_html.
-    lo_html->add_a( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
-    rv_html = lo_html->mv_html.
+    rv_html = lcl_html=>a( iv_txt = lv_path
+                           iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_dir_jump_link
 
   METHOD build_obj_jump_link.
 
-    DATA: lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html.
+    DATA: lv_encode TYPE string.
 
     lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
-    CREATE OBJECT lo_html.
-    lo_html->add_a( iv_txt = |{ is_item-obj_name }|
-                    iv_act = |{ gc_action-jump }?{ lv_encode }| ).
-    rv_html = lo_html->mv_html.
+    rv_html = lcl_html=>a( iv_txt = |{ is_item-obj_name }|
+                           iv_act = |{ gc_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_obj_jump_link
 

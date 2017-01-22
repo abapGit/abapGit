@@ -9,49 +9,92 @@ END-OF-DEFINITION.
 *----------------------------------------------------------------------*
 *       CLASS lcl_html DEFINITION
 *----------------------------------------------------------------------*
+
 CLASS lcl_html DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS: c_indent_size TYPE i VALUE 2.
 
-    DATA mv_html         TYPE string READ-ONLY.
-    DATA mv_indent       TYPE i READ-ONLY.
-    DATA mv_within_style TYPE i READ-ONLY.
-    DATA mv_within_js    TYPE i READ-ONLY.
-
-    METHODS add IMPORTING iv_chunk TYPE any.
+    CLASS-METHODS class_constructor.
     METHODS reset.
+    METHODS add
+      IMPORTING iv_chunk TYPE any.
+    METHODS render
+      IMPORTING iv_no_indent_jscss TYPE abap_bool OPTIONAL
+      RETURNING VALUE(rv_html)     TYPE string.
+    METHODS is_empty
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
-    METHODS add_a IMPORTING iv_txt   TYPE string
-                            iv_act   TYPE string
-                            iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
-                            iv_opt   TYPE clike  OPTIONAL
-                            iv_class TYPE string OPTIONAL
-                            iv_id    TYPE string OPTIONAL
-                            iv_style TYPE string OPTIONAL.
+    METHODS add_a
+      IMPORTING
+        iv_txt   TYPE string
+        iv_act   TYPE string
+        iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
+        iv_opt   TYPE clike  OPTIONAL
+        iv_class TYPE string OPTIONAL
+        iv_id    TYPE string OPTIONAL
+        iv_style TYPE string OPTIONAL.
 
-    METHODS add_icon IMPORTING iv_name  TYPE string
-                               iv_hint  TYPE string OPTIONAL
-                               iv_alt   TYPE string OPTIONAL
-                               iv_class TYPE string OPTIONAL.
+    METHODS add_icon
+      IMPORTING
+        iv_name  TYPE string
+        iv_hint  TYPE string OPTIONAL
+        iv_alt   TYPE string OPTIONAL
+        iv_class TYPE string OPTIONAL.
 
-    CLASS-METHODS a IMPORTING iv_txt   TYPE string
-                              iv_act   TYPE string
-                              iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
-                              iv_opt   TYPE clike  OPTIONAL
-                              iv_class TYPE string OPTIONAL
-                              iv_id    TYPE string OPTIONAL
-                              iv_style TYPE string OPTIONAL
-                    RETURNING VALUE(rv_str) TYPE string.
+    CLASS-METHODS a
+      IMPORTING
+        iv_txt                TYPE string
+        iv_act                TYPE string
+        iv_typ                TYPE char1  DEFAULT gc_action_type-sapevent
+        iv_opt                TYPE clike  OPTIONAL
+        iv_class              TYPE string OPTIONAL
+        iv_id                 TYPE string OPTIONAL
+        iv_style              TYPE string OPTIONAL
+      RETURNING VALUE(rv_str) TYPE string.
 
-    CLASS-METHODS icon IMPORTING iv_name  TYPE string
-                                 iv_hint  TYPE string OPTIONAL
-                                 iv_alt   TYPE string OPTIONAL
-                                 iv_class TYPE string OPTIONAL
-                    RETURNING VALUE(rv_str) TYPE string.
+    CLASS-METHODS icon
+      IMPORTING
+        iv_name               TYPE string
+        iv_hint               TYPE string OPTIONAL
+        iv_alt                TYPE string OPTIONAL
+        iv_class              TYPE string OPTIONAL
+      RETURNING VALUE(rv_str) TYPE string.
 
   PRIVATE SECTION.
-    METHODS _add_str IMPORTING iv_str  TYPE csequence.
-    METHODS _add_htm IMPORTING io_html TYPE REF TO lcl_html.
+    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex.
+    DATA       mt_buffer         TYPE string_table.
+
+    TYPES:
+      BEGIN OF ty_indent_context,
+        no_indent_jscss TYPE abap_bool,
+        within_style    TYPE abap_bool,
+        within_js       TYPE abap_bool,
+        indent          TYPE i,
+        indent_str      TYPE string,
+      END OF ty_indent_context,
+
+      BEGIN OF ty_study_result,
+        style_open    TYPE abap_bool,
+        style_close   TYPE abap_bool,
+        script_open   TYPE abap_bool,
+        script_close  TYPE abap_bool,
+        tag_close     TYPE abap_bool,
+        curly_close   TYPE abap_bool,
+        openings      TYPE i,
+        closings      TYPE i,
+        singles       TYPE i,
+      END OF ty_study_result.
+
+    METHODS indent_line
+      CHANGING
+        cs_context TYPE ty_indent_context
+        cv_line    TYPE string.
+
+    METHODS study_line
+      IMPORTING
+        iv_line                  TYPE string
+        is_context               TYPE ty_indent_context
+      RETURNING VALUE(rs_result) TYPE ty_study_result.
 
 ENDCLASS.                    "lcl_html DEFINITION
 
@@ -62,26 +105,28 @@ CLASS lcl_html IMPLEMENTATION.
 
   METHOD add.
 
-    DATA lo_type TYPE REF TO cl_abap_typedescr.
-    DATA lo_html TYPE REF TO lcl_html.
+    DATA: lv_type TYPE c,
+          lo_html TYPE REF TO lcl_html.
 
-    lo_type = cl_abap_typedescr=>describe_by_data( iv_chunk ).
+    FIELD-SYMBOLS: <tab> TYPE string_table,
+                   <str> LIKE LINE OF <tab>.
 
-    CASE lo_type->type_kind.
-      WHEN cl_abap_typedescr=>typekind_char
-          OR cl_abap_typedescr=>typekind_string.
-        IF strlen( iv_chunk ) = 0.
-          RETURN.
-        ENDIF.
-        _add_str( iv_chunk ).
-      WHEN cl_abap_typedescr=>typekind_oref.
+    DESCRIBE FIELD iv_chunk TYPE lv_type. " Describe is faster than RTTI classes
+
+    CASE lv_type.
+      WHEN 'C' OR 'g'.  " Char or string
+        APPEND iv_chunk TO mt_buffer.
+      WHEN 'h'.         " Table
+        ASSIGN iv_chunk TO <tab>. " Assuming table of strings ! Will dump otherwise
+        APPEND LINES OF <tab> TO mt_buffer.
+      WHEN 'r'.         " Object ref
         ASSERT iv_chunk IS BOUND. " Dev mistake
         TRY.
             lo_html ?= iv_chunk.
           CATCH cx_sy_move_cast_error.
             ASSERT 1 = 0. " Dev mistake
         ENDTRY.
-        _add_htm( lo_html ).
+        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
       WHEN OTHERS.
         ASSERT 1 = 0. " Dev mistake
     ENDCASE.
@@ -89,94 +134,153 @@ CLASS lcl_html IMPLEMENTATION.
   ENDMETHOD.  " add
 
   METHOD reset.
-    CLEAR: me->mv_html, me->mv_indent.
+    CLEAR me->mt_buffer.
   ENDMETHOD.                    "reset
 
-  METHOD _add_str.
+  METHOD is_empty.
+    rv_yes = boolc( lines( mt_buffer ) = 0 ).
+  ENDMETHOD. "is_empty
 
-    CONSTANTS lc_single_tags_re TYPE string " HTML5 singleton tags
-      VALUE '<(area|base|br|col|command|embed|hr|img|input|link|meta|param|source|!)'.
+  METHOD class_constructor.
+    CREATE OBJECT go_single_tags_re
+      EXPORTING
+        pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
+        ignore_case = abap_false.
+  ENDMETHOD. "class_constructor
 
-    DATA lv_tags            TYPE i.
-    DATA lv_tags_open       TYPE i.
-    DATA lv_tags_close      TYPE i.
-    DATA lv_tags_single     TYPE i.
-    DATA lv_close_offs      TYPE i.
-    DATA lv_shift_back      TYPE i.
-    DATA lv_style_tag_open  TYPE i.
-    DATA lv_style_tag_close TYPE i.
-    DATA lv_js_tag_open     TYPE i.
-    DATA lv_js_tag_close    TYPE i.
-    DATA lv_curly           TYPE i.
+  METHOD study_line.
 
-    FIND FIRST OCCURRENCE OF '</' IN iv_str MATCH OFFSET lv_close_offs.
-    IF sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0. " Found close tag @beginning
-      lv_shift_back = 1.
+    DATA: lv_line TYPE string,
+          lv_len  TYPE i.
+
+    lv_line = to_upper( shift_left( val = iv_line sub = ` ` ) ).
+    lv_len  = strlen( lv_line ).
+
+    " Some assumptions for simplification and speed
+    " - style & scripts tag should be opened/closed in a separate line
+    " - style & scripts opening and closing in one line is possible but only once
+
+    " TODO & Issues
+    " - What if the string IS a well formed html already not just single line ?
+
+    IF is_context-within_js = abap_true OR is_context-within_style = abap_true.
+
+      IF is_context-within_js = abap_true AND lv_len >= 8 AND lv_line(8) = '</SCRIPT'.
+        rs_result-script_close = abap_true.
+      ELSEIF is_context-within_style = abap_true AND lv_len >= 7 AND lv_line(7) = '</STYLE'.
+        rs_result-style_close = abap_true.
+      ENDIF.
+
+      IF is_context-no_indent_jscss = abap_false.
+        IF lv_len >= 1 AND lv_line(1) = '}'.
+          rs_result-curly_close = abap_true.
+        ENDIF.
+
+        FIND ALL OCCURRENCES OF '{' IN lv_line MATCH COUNT rs_result-openings.
+        FIND ALL OCCURRENCES OF '}' IN lv_line MATCH COUNT rs_result-closings.
+      ENDIF.
+
+    ELSE.
+      IF lv_len >= 7 AND lv_line(7) = '<SCRIPT'.
+        FIND FIRST OCCURRENCE OF '</SCRIPT' IN lv_line.
+        IF sy-subrc > 0. " Not found
+          rs_result-script_open = abap_true.
+        ENDIF.
+      ENDIF.
+      IF lv_len >= 6 AND lv_line(6) = '<STYLE'.
+        FIND FIRST OCCURRENCE OF '</STYLE' IN lv_line.
+        IF sy-subrc > 0. " Not found
+          rs_result-style_open = abap_true.
+        ENDIF.
+      ENDIF.
+      IF lv_len >= 2 AND lv_line(2) = '</'.
+        rs_result-tag_close = abap_true.
+      ENDIF.
+
+      FIND ALL OCCURRENCES OF '<'  IN lv_line MATCH COUNT rs_result-openings.
+      FIND ALL OCCURRENCES OF '</' IN lv_line MATCH COUNT rs_result-closings.
+      FIND ALL OCCURRENCES OF REGEX go_single_tags_re IN lv_line MATCH COUNT rs_result-singles.
+      rs_result-openings = rs_result-openings - rs_result-closings - rs_result-singles.
+
     ENDIF.
 
-    FIND FIRST OCCURRENCE OF '}' IN iv_str MATCH OFFSET lv_close_offs. " Find close } @beginning
-    IF ( mv_within_style > 0 OR mv_within_js > 0 )
-        AND sy-subrc = 0 AND lv_close_offs = 0 AND mv_indent > 0.
-      lv_shift_back = 1.
+  ENDMETHOD. "study_line
+
+  METHOD indent_line.
+
+    DATA: ls_study TYPE ty_study_result,
+          lv_x_str TYPE string.
+
+    ls_study = study_line(
+      is_context = cs_context
+      iv_line    = cv_line ).
+
+    " First closing tag - shift back exceptionally
+    IF (  ls_study-script_close = abap_true
+       OR ls_study-style_close = abap_true
+       OR ls_study-curly_close = abap_true
+       OR ls_study-tag_close = abap_true )
+       AND cs_context-indent > 0.
+      lv_x_str = repeat( val = ` ` occ = ( cs_context-indent - 1 ) * c_indent_size ).
+      cv_line  = lv_x_str && cv_line.
+    ELSE.
+      cv_line = cs_context-indent_str && cv_line.
     ENDIF.
 
-    mv_html =   mv_html
-            &&  repeat( val = ` ` occ = ( mv_indent - lv_shift_back ) * c_indent_size )
-            &&  iv_str
-            &&  gc_newline.
-
-    FIND ALL OCCURRENCES OF '<'  IN iv_str MATCH COUNT lv_tags.
-    FIND ALL OCCURRENCES OF '</' IN iv_str MATCH COUNT lv_tags_close.
-    FIND ALL OCCURRENCES OF REGEX lc_single_tags_re IN iv_str MATCH COUNT lv_tags_single.
-
-    lv_tags_open = lv_tags - lv_tags_close - lv_tags_single.
-
-    FIND ALL OCCURRENCES OF '<style'   IN iv_str MATCH COUNT lv_style_tag_open IGNORING CASE.
-    FIND ALL OCCURRENCES OF '</style>' IN iv_str MATCH COUNT lv_style_tag_close IGNORING CASE.
-    mv_within_style = mv_within_style + lv_style_tag_open - lv_style_tag_close.
-
-    FIND ALL OCCURRENCES OF '<script'   IN iv_str MATCH COUNT lv_js_tag_open IGNORING CASE.
-    FIND ALL OCCURRENCES OF '</script>' IN iv_str MATCH COUNT lv_js_tag_close IGNORING CASE.
-    mv_within_js = mv_within_js + lv_js_tag_open - lv_js_tag_close.
-
-    IF mv_within_style > 0 OR mv_within_js > 0.
-      FIND ALL OCCURRENCES OF '{'  IN iv_str MATCH COUNT lv_curly.
-      lv_tags_open  = lv_tags_open + lv_curly.
-      FIND ALL OCCURRENCES OF '}'  IN iv_str MATCH COUNT lv_curly.
-      lv_tags_close = lv_tags_close + lv_curly.
-    ENDIF.
+    " Context status update
+    CASE abap_true.
+      WHEN ls_study-script_open.
+        cs_context-within_js    = abap_true.
+        cs_context-within_style = abap_false.
+      WHEN ls_study-style_open.
+        cs_context-within_js    = abap_false.
+        cs_context-within_style = abap_true.
+      WHEN ls_study-script_close OR ls_study-style_close.
+        cs_context-within_js    = abap_false.
+        cs_context-within_style = abap_false.
+        ls_study-closings       = ls_study-closings + 1.
+    ENDCASE.
 
     " More-less logic chosen due to possible double tags in a line '<a><b>'
-    IF lv_tags_open > lv_tags_close.
-      mv_indent = mv_indent + 1.
-    ELSEIF lv_tags_open < lv_tags_close AND mv_indent > 0.
-      mv_indent = mv_indent - 1.
+    IF ls_study-openings <> ls_study-closings.
+      IF ls_study-openings > ls_study-closings.
+        cs_context-indent = cs_context-indent + 1.
+      ELSEIF cs_context-indent > 0. " AND ls_study-openings < ls_study-closings
+        cs_context-indent = cs_context-indent - 1.
+      ENDIF.
+      cs_context-indent_str = repeat( val = ` ` occ = cs_context-indent * c_indent_size ).
     ENDIF.
 
-  ENDMETHOD.                    "_add_str
+  ENDMETHOD. "indent_line
 
-  METHOD _add_htm.
+  METHOD render.
 
-    DATA lt_strtab TYPE TABLE OF string.
-    DATA lv_str    TYPE string.
+    DATA: ls_context TYPE ty_indent_context,
+          lt_temp    TYPE string_table.
 
-    SPLIT io_html->mv_html AT gc_newline INTO TABLE lt_strtab.
-    LOOP AT lt_strtab INTO lv_str.
-      SHIFT lv_str LEFT  DELETING LEADING space.
-      _add_str( lv_str ).
+    FIELD-SYMBOLS: <line>   LIKE LINE OF lt_temp,
+                   <line_c> LIKE LINE OF lt_temp.
+
+    ls_context-no_indent_jscss = iv_no_indent_jscss.
+
+    LOOP AT mt_buffer ASSIGNING <line>.
+      APPEND <line> TO lt_temp ASSIGNING <line_c>.
+      indent_line( CHANGING cs_context = ls_context cv_line = <line_c> ).
     ENDLOOP.
 
-  ENDMETHOD.                    "_add_htm
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY gc_newline.
+
+  ENDMETHOD.                    "render
 
   METHOD add_a.
 
-    _add_str( a( iv_txt   = iv_txt
-                 iv_act   = iv_act
-                 iv_typ   = iv_typ
-                 iv_opt   = iv_opt
-                 iv_class = iv_class
-                 iv_id    = iv_id
-                 iv_style = iv_style ) ).
+    add( a( iv_txt   = iv_txt
+            iv_act   = iv_act
+            iv_typ   = iv_typ
+            iv_opt   = iv_opt
+            iv_class = iv_class
+            iv_id    = iv_id
+            iv_style = iv_style ) ).
 
   ENDMETHOD.                    "add_a
 
@@ -228,10 +332,10 @@ CLASS lcl_html IMPLEMENTATION.
 
   METHOD add_icon.
 
-    _add_str( icon( iv_name  = iv_name
-                    iv_class = iv_class
-                    iv_alt   = iv_alt
-                    iv_hint  = iv_hint ) ).
+    add( icon( iv_name  = iv_name
+               iv_class = iv_class
+               iv_alt   = iv_alt
+               iv_hint  = iv_hint ) ).
 
   ENDMETHOD.                    "add_icon
 
