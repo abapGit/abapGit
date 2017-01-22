@@ -16,8 +16,127 @@ INTERFACE lif_object_enho.
                 ii_enh_tool TYPE REF TO if_enh_tool
       RAISING   lcx_exception.
 
-ENDINTERFACE.
+ENDINTERFACE.                    "lif_object_enho
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_wdyconf DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho_wdyconf DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS: constructor
+      IMPORTING
+        is_item  TYPE ty_item
+        io_files TYPE REF TO lcl_objects_files.
+    INTERFACES: lif_object_enho.
+
+  PRIVATE SECTION.
+    DATA: ms_item  TYPE ty_item,
+          mo_files TYPE REF TO lcl_objects_files.
+
+ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_wdyconf IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_item = is_item.
+    mo_files = io_files.
+  ENDMETHOD.                    "constructor
+
+  METHOD lif_object_enho~deserialize.
+
+    DATA: lv_enhname TYPE enhname,
+          lo_wdyconf TYPE REF TO cl_wdr_cfg_enhancement,
+          li_tool    TYPE REF TO if_enh_tool,
+          ls_obj     TYPE wdy_config_key,
+          lv_package TYPE devclass.
+
+
+    io_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+                  CHANGING cg_data  = ls_obj ).
+
+    lv_enhname = ms_item-obj_name.
+    lv_package = iv_package.
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname     = lv_enhname
+            enhtype     = ''
+            enhtooltype = cl_wdr_cfg_enhancement=>tooltype
+          IMPORTING
+            enhancement = li_tool
+          CHANGING
+            devclass    = lv_package ).
+        lo_wdyconf ?= li_tool.
+
+* todo
+* io_xml->read_xml()
+* CL_WDR_CFG_PERSISTENCE_UTILS=>COMP_XML_TO_TABLES( )
+* lo_wdyconf->set_enhancement_data( )
+        ASSERT 0 = 1.
+
+        lo_wdyconf->if_enh_object~save( ).
+        lo_wdyconf->if_enh_object~unlock( ).
+      CATCH cx_enh_root.
+        lcx_exception=>raise( 'error deserializing ENHO wdyconf' ).
+    ENDTRY.
+
+  ENDMETHOD.                    "lif_object_enho~deserialize
+
+  METHOD lif_object_enho~serialize.
+
+    DATA: lo_wdyconf  TYPE REF TO cl_wdr_cfg_enhancement,
+          lt_data     TYPE wdy_cfg_expl_data_tab,
+          ls_outline  TYPE wdy_cfg_outline_data,
+          ls_obj      TYPE wdy_config_key,
+          li_document TYPE REF TO if_ixml_document,
+          li_element  TYPE REF TO if_ixml_element.
+
+
+    lo_wdyconf ?= ii_enh_tool.
+
+    ls_obj = lo_wdyconf->get_original_object( ).
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    io_xml->add( iv_name = 'ORIGINAL_OBJECT'
+                 ig_data = ls_obj ).
+
+* only works on new ABAP versions, parameters differ between versions
+    CALL METHOD lo_wdyconf->('GET_ENHANCEMENT_DATA')
+      EXPORTING
+        p_scope    = 1
+      IMPORTING
+        p_enh_data = lt_data.
+
+    CALL METHOD cl_wdr_cfg_persistence_utils=>('COMP_TABLES_TO_XML')
+      EXPORTING
+        outline_data  = ls_outline
+        expl_data_tab = lt_data
+      IMPORTING
+        element       = li_element
+      CHANGING
+        document      = li_document.
+
+    io_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
+                     ii_xml = li_element ).
+
+  ENDMETHOD.                    "lif_object_enho~serialize
+
+ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
+
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_clif DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_clif DEFINITION.
 
   PUBLIC SECTION.
@@ -39,8 +158,13 @@ CLASS lcl_object_enho_clif DEFINITION.
                 io_clif  TYPE REF TO cl_enh_tool_clif
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_clif DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_clif IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_clif IMPLEMENTATION.
 
   METHOD serialize_includes.
@@ -76,7 +200,7 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize_includes
 
   METHOD serialize.
 
@@ -118,7 +242,7 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
     io_xml->add( iv_name = 'TAB_METHODS'
                  ig_data = lt_tab_methods ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "serialize
 
   METHOD deserialize.
 
@@ -170,10 +294,15 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "deserialize
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_clif IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_badi DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_badi DEFINITION.
 
   PUBLIC SECTION.
@@ -187,14 +316,19 @@ CLASS lcl_object_enho_badi DEFINITION.
     DATA: ms_item  TYPE ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_badi DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_badi IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_badi IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.
+  ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.
 
@@ -237,7 +371,7 @@ CLASS lcl_object_enho_badi IMPLEMENTATION.
     io_xml->add( iv_name = 'IMPL'
                  ig_data = lt_impl ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~serialize
 
   METHOD lif_object_enho~deserialize.
 
@@ -284,10 +418,15 @@ CLASS lcl_object_enho_badi IMPLEMENTATION.
         lcx_exception=>raise( 'error deserializing ENHO badi' ).
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~deserialize
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_badi IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_hook DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_hook DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
@@ -318,14 +457,19 @@ CLASS lcl_object_enho_hook DEFINITION.
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   lcx_exception.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_hook DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_hook IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_hook IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.
+  ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.
 
@@ -365,7 +509,7 @@ CLASS lcl_object_enho_hook IMPLEMENTATION.
     io_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~serialize
 
   METHOD hook_impl_serialize.
 * handle normalization of XML values
@@ -388,7 +532,7 @@ CLASS lcl_object_enho_hook IMPLEMENTATION.
         ENDWHILE.
       ENDLOOP.
     ENDLOOP.
-  ENDMETHOD.
+  ENDMETHOD.                    "hook_impl_serialize
 
   METHOD hook_impl_deserialize.
 
@@ -412,7 +556,7 @@ CLASS lcl_object_enho_hook IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "hook_impl_deserialize
 
   METHOD lif_object_enho~deserialize.
 
@@ -480,10 +624,15 @@ CLASS lcl_object_enho_hook IMPLEMENTATION.
         lcx_exception=>raise( 'error deserializing ENHO hook' ).
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~deserialize
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_hook IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_interface DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_interface DEFINITION.
 
   PUBLIC SECTION.
@@ -498,14 +647,19 @@ CLASS lcl_object_enho_interface DEFINITION.
     DATA: ms_item  TYPE ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_interface DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_interface IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_interface IMPLEMENTATION.
 
   METHOD constructor.
     ms_item  = is_item.
     mo_files = io_files.
-  ENDMETHOD.
+  ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.
 
@@ -531,7 +685,7 @@ CLASS lcl_object_enho_interface IMPLEMENTATION.
       io_files = mo_files
       io_clif = lo_enh_intf ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~serialize
 
   METHOD lif_object_enho~deserialize.
 
@@ -576,10 +730,15 @@ CLASS lcl_object_enho_interface IMPLEMENTATION.
         lcx_exception=>raise( 'error deserializing ENHO interface' ).
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~deserialize
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_interface IMPLEMENTATION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_class DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_class DEFINITION.
 
   PUBLIC SECTION.
@@ -594,14 +753,19 @@ CLASS lcl_object_enho_class DEFINITION.
     DATA: ms_item TYPE ty_item.
     DATA: mo_files TYPE REF TO lcl_objects_files.
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_class DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_class IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_object_enho_class IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.
+  ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.
 
@@ -643,7 +807,7 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
       io_files = mo_files
       io_clif  = lo_enh_class ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~serialize
 
   METHOD lif_object_enho~deserialize.
 
@@ -706,9 +870,9 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
         lcx_exception=>raise( 'error deserializing ENHO class' ).
     ENDTRY.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object_enho~deserialize
 
-ENDCLASS.
+ENDCLASS.                    "lcl_object_enho_class IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enho DEFINITION
@@ -728,7 +892,7 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
         IMPORTING
           iv_tool        TYPE enhtooltype
         RETURNING
-          VALUE(ri_enho) TYPE REF TO lif_object_enho
+          value(ri_enho) TYPE REF TO lif_object_enho
         RAISING
           lcx_exception.
 
@@ -751,7 +915,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~exists.
 
@@ -820,15 +984,19 @@ CLASS lcl_object_enho IMPLEMENTATION.
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
+      WHEN cl_wdr_cfg_enhancement=>tooltype.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyconf
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
 * ToDo:
 *      WHEN 'ENHFUGRDATA'. "cl_enh_tool_fugr
-*      WHEN cl_wdr_cfg_enhancement=>tooltype.
 *      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
       WHEN OTHERS.
         lcx_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
     ENDCASE.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "factory
 
   METHOD lif_object~deserialize.
 
@@ -885,6 +1053,6 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION
