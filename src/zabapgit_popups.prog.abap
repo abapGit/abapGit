@@ -66,7 +66,8 @@ CLASS lcl_popups DEFINITION FINAL.
                   text_message          TYPE clike
         RAISING   lcx_exception,
       popup_to_create_package
-        RETURNING VALUE(rs_package_data) TYPE scompkdtln
+        EXPORTING es_package_data        TYPE scompkdtln
+                  ev_create              TYPE boolean
         RAISING lcx_exception.
 ENDCLASS.
 
@@ -512,11 +513,13 @@ CLASS lcl_popups IMPLEMENTATION.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
       CHANGING
-        p_object_data    = rs_package_data
+        p_object_data    = es_package_data
       EXCEPTIONS
         action_cancelled = 1.
-    IF sy-subrc = 1.
-      RETURN.
+    IF sy-subrc = 0.
+      ev_create = abap_true.
+    ELSE.
+      ev_create = abap_false.
     ENDIF.
   ENDMETHOD.  " popup_to_create_package
 

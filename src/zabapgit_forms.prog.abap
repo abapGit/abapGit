@@ -53,7 +53,8 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   DATA: lv_url          TYPE string,
         lx_error        TYPE REF TO lcx_exception,
         ls_package_data TYPE scompkdtln,
-        ls_branch       TYPE lcl_git_branch_list=>ty_git_branch.
+        ls_branch       TYPE lcl_git_branch_list=>ty_git_branch,
+        lv_create       TYPE boolean.
 
   FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
                  <ls_fbranch> LIKE LINE OF tt_fields.
@@ -88,7 +89,11 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   ELSEIF pv_code = 'COD2'.
     cv_show_popup = abap_true.
 
-    ls_package_data = lcl_popups=>popup_to_create_package( ).
+    lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
+                                                   ev_create       = lv_create ).
+    IF lv_create = abap_false.
+      RETURN.
+    ENDIF.
 
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
@@ -107,7 +112,8 @@ FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
                    RAISING  lcx_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
-  DATA: ls_package_data TYPE scompkdtln.
+  DATA: ls_package_data TYPE scompkdtln,
+        lv_create       TYPE boolean.
 
   FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields.
 
@@ -116,7 +122,11 @@ FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
   IF pv_code = 'COD1'.
     cv_show_popup = abap_true.
 
-    ls_package_data = lcl_popups=>popup_to_create_package( ).
+    lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
+                                                   ev_create       = lv_create ).
+    IF lv_create = abap_false.
+      RETURN.
+    ENDIF.
 
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
