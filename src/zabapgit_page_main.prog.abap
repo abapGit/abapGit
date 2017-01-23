@@ -33,9 +33,6 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RAISING   lcx_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
-      render_explore
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
@@ -136,9 +133,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( render_toc( lt_repos ) ).
 
-    IF lines( lt_repos ) = 0 AND lx_error IS INITIAL.
-      ro_html->add( render_explore( ) ).
-    ELSEIF mv_show IS INITIAL.
+    IF mv_show IS INITIAL OR lines( lt_repos ) = 0.
       CREATE OBJECT lo_tutorial.
       ro_html->add( lo_tutorial->render( ) ).
     ELSE.
@@ -309,22 +304,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_toc
-
-  METHOD render_explore.
-
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
-
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_toolbar.
-
-    lo_toolbar->add( iv_txt = 'Explore new projects'
-                     iv_act = gc_action-go_explore ) ##NO_TEXT.
-
-    ro_html->add( '<div class="dummydiv">' ).
-    ro_html->add( lo_toolbar->render( ) ).
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.  "render_explore
 
   METHOD render_repo.
 
