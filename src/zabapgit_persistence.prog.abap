@@ -1459,11 +1459,17 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS
       get_run_critical_tests
         RETURNING VALUE(rv_run) TYPE abap_bool.
+    METHODS set_max_lines
+      IMPORTING iv_lines TYPE i.
+    METHODS get_max_lines
+      RETURNING
+        VALUE(rv_lines) TYPE i.
 
   PRIVATE SECTION.
     DATA mv_proxy_url TYPE string.
     DATA mv_proxy_port TYPE string.
     DATA mv_run_critical_tests TYPE abap_bool.
+    DATA mv_lines TYPE i.
 
 ENDCLASS.
 
@@ -1492,6 +1498,14 @@ CLASS lcl_settings IMPLEMENTATION.
 
   METHOD get_run_critical_tests.
     rv_run = mv_run_critical_tests.
+  ENDMETHOD.
+
+  METHOD get_max_lines.
+    rv_lines = mv_lines.
+  ENDMETHOD.
+
+  METHOD set_max_lines.
+    mv_lines = iv_lines.
   ENDMETHOD.
 
 ENDCLASS.
@@ -1529,12 +1543,20 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       iv_type       = 'SETTINGS'
       iv_value      = 'CRIT_TESTS'
       iv_data       = io_settings->get_run_critical_tests( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'MAX_LINES'
+      iv_data       = |{ io_settings->get_max_lines( ) }| ).
+
   ENDMETHOD.
 
 
   METHOD read.
     DATA: lv_critical_tests_as_string  TYPE string,
-          lv_critical_tests_as_boolean TYPE abap_bool.
+          lv_critical_tests_as_boolean TYPE abap_bool,
+          lv_max_lines_as_string       TYPE string,
+          lv_max_lines_as_integer      TYPE i.
 
     CREATE OBJECT ro_settings.
     TRY.
@@ -1561,6 +1583,15 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
       CATCH lcx_not_found.
         ro_settings->set_run_critical_tests( abap_false ).
+    ENDTRY.
+    TRY.
+        lv_max_lines_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'MAX_LINES' ).
+        lv_max_lines_as_integer = lv_max_lines_as_string.
+        ro_settings->set_max_lines( lv_max_lines_as_integer ).
+      CATCH lcx_not_found.
+        ro_settings->set_max_lines( 500 ). " default
     ENDTRY.
   ENDMETHOD.
 

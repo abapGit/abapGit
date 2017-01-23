@@ -261,6 +261,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lcx_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
       lcx_exception=>raise( 'pre-receive hook declined' ).
+    ELSEIF lv_string CP '*funny refname*'.
+      lcx_exception=>raise( 'funny refname' ).
     ENDIF.
 
   ENDMETHOD.                    "receive_pack

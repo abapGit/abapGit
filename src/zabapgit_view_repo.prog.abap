@@ -111,10 +111,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
-          lo_log        TYPE REF TO lcl_log.
+          lo_log        TYPE REF TO lcl_log,
+          lo_settings   TYPE REF TO lcl_settings,
+          lv_max_lines  TYPE i.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+    " Read global settings to get max # of objects to be listed
+    lo_settings = lcl_app=>settings( )->read( ).
+    lv_max_lines = lo_settings->get_max_lines( ).
 
     " Reinit, for the case of type change
     mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
@@ -160,7 +165,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            IF sy-tabix > 500.
+            IF lv_max_lines > 0 AND sy-tabix > lv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
@@ -171,7 +176,11 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          ro_html->add( 'Only first 500 objects shown in list' ).
+          IF lv_max_lines = 1.
+            ro_html->add( |Only 1 object shown in list (Set in Advanced > Settings )| ).
+          ELSE.
+            ro_html->add( |Only first { lv_max_lines } objects shown in list (Set in Advanced > Settings )| ).
+          ENDIF.
         ENDIF.
 
         ro_html->add( '</div>' ).
@@ -513,31 +522,26 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
   METHOD build_dir_jump_link.
 
     DATA: lv_path   TYPE string,
-          lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html.
+          lv_encode TYPE string.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
 
-    CREATE OBJECT lo_html.
-    lo_html->add_a( iv_txt = lv_path iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
-    rv_html = lo_html->mv_html.
+    rv_html = lcl_html=>a( iv_txt = lv_path
+                           iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_dir_jump_link
 
   METHOD build_obj_jump_link.
 
-    DATA: lv_encode TYPE string,
-          lo_html   TYPE REF TO lcl_html.
+    DATA: lv_encode TYPE string.
 
     lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
-    CREATE OBJECT lo_html.
-    lo_html->add_a( iv_txt = |{ is_item-obj_name }|
-                    iv_act = |{ gc_action-jump }?{ lv_encode }| ).
-    rv_html = lo_html->mv_html.
+    rv_html = lcl_html=>a( iv_txt = |{ is_item-obj_name }|
+                           iv_act = |{ gc_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_obj_jump_link
 
