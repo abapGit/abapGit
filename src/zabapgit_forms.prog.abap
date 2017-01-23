@@ -119,6 +119,52 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
 
 ENDFORM.                    "branch_popup
 
+FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
+                   USING    pv_code TYPE clike
+                   CHANGING cs_error TYPE svale
+                            cv_show_popup TYPE c
+                   RAISING  lcx_exception ##called ##needed.
+* called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
+
+  DATA: ls_package_data TYPE scompkdtln.
+
+  FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields.
+
+  CLEAR cs_error.
+
+  IF pv_code = 'COD1'.
+    cv_show_popup = abap_true.
+
+    CALL FUNCTION 'FUNCTION_EXISTS'
+      EXPORTING
+        funcname           = 'PB_POPUP_PACKAGE_CREATE'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 1.
+* looks like the function module used does not exist on all
+* versions since 702, so show an error
+      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
+    ENDIF.
+
+    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
+      CHANGING
+        p_object_data    = ls_package_data
+      EXCEPTIONS
+        action_cancelled = 1.
+    IF sy-subrc = 1.
+      RETURN.
+    ENDIF.
+
+    lcl_sap_package=>create( ls_package_data ).
+    COMMIT WORK.
+
+    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TDEVC'.
+    ASSERT sy-subrc = 0.
+    <ls_fbranch>-value = ls_package_data-devclass.
+  ENDIF.
+ENDFORM.                    "package_popup
+
 FORM output.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
