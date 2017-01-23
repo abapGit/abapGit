@@ -26,9 +26,11 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lv_data   TYPE lcl_persistence_db=>ty_content-data_str,
-          ls_action TYPE lcl_persistence_db=>ty_content,
-          lv_action TYPE string.
+    DATA:
+      lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
+      lv_data         TYPE lcl_persistence_db=>ty_content-data_str,
+      ls_action       TYPE lcl_persistence_db=>ty_content,
+      lv_action       TYPE string.
 
     TRY.
         lv_data = lcl_app=>db( )->read(
@@ -37,13 +39,14 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
       CATCH lcx_not_found ##NO_HANDLER.
     ENDTRY.
 
+    " Create syntax highlighter
+    lo_highlighter  = lcl_syntax_highlighter=>create( '*.xml' ).
+
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
     lv_action       = lcl_html_action_utils=>dbkey_encode( ls_action ).
-
     lv_data         = lcl_xml_pretty=>print( lv_data ).
-    lv_data         = escape( val    = lv_data
-                              format = cl_abap_format=>e_html_attr ).
+    lv_data         = lo_highlighter->process_line( lv_data ).
 
     CREATE OBJECT ro_html.
 

@@ -593,6 +593,7 @@ div.db_entry {
   background-color: #f2f2f2;
   padding: 0.5em;
 }
+
 div.db_entry pre {
   display: block;
   overflow: hidden;
@@ -603,6 +604,11 @@ div.db_entry pre {
   margin: 0.5em 0em;
   width: 50em;
 }
+
+div.db_entry span.xml_tag  { color: #457ce3; }
+div.db_entry span.attr     { color: #b777fb; }
+div.db_entry span.attr_val { color: #7a02f9; }
+
 div.db_entry table.toolbar {
   width: 50em;
 }
