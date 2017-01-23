@@ -66,7 +66,8 @@ CLASS lcl_popups DEFINITION FINAL.
                   text_message          TYPE clike
         RAISING   lcx_exception,
       popup_to_create_package
-        RETURNING VALUE(rs_package_data) TYPE scompkdtln.
+        RETURNING VALUE(rs_package_data) TYPE scompkdtln
+        RAISING lcx_exception.
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
