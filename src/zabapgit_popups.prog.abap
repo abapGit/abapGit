@@ -61,12 +61,12 @@ CLASS lcl_popups DEFINITION FINAL.
         RETURNING VALUE(rv_answer)      TYPE char1
         RAISING   lcx_exception,
       popup_to_inform
-      IMPORTING
-                titlebar              TYPE clike
-                text_message          TYPE clike
-      RAISING   lcx_exception.
-
-
+        IMPORTING
+                  titlebar              TYPE clike
+                  text_message          TYPE clike
+        RAISING   lcx_exception,
+      popup_to_create_package
+        RETURNING VALUE(rs_package_data) TYPE scompkdtln.
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
@@ -495,5 +495,28 @@ CLASS lcl_popups IMPLEMENTATION.
         txt2  = lv_line2.
 
   ENDMETHOD.  " popup_to_inform.
+
+  METHOD popup_to_create_package.
+    CALL FUNCTION 'FUNCTION_EXISTS'
+      EXPORTING
+        funcname           = 'PB_POPUP_PACKAGE_CREATE'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 1.
+* looks like the function module used does not exist on all
+* versions since 702, so show an error
+      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
+    ENDIF.
+
+    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
+      CHANGING
+        p_object_data    = rs_package_data
+      EXCEPTIONS
+        action_cancelled = 1.
+    IF sy-subrc = 1.
+      RETURN.
+    ENDIF.
+  ENDMETHOD.  " popup_to_create_package
 
 ENDCLASS.

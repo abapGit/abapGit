@@ -88,26 +88,7 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   ELSEIF pv_code = 'COD2'.
     cv_show_popup = abap_true.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'PB_POPUP_PACKAGE_CREATE'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 1.
-* looks like the function module used does not exist on all
-* versions since 702, so show an error
-      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
-    ENDIF.
-
-    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
-      CHANGING
-        p_object_data    = ls_package_data
-      EXCEPTIONS
-        action_cancelled = 1.
-    IF sy-subrc = 1.
-      RETURN.
-    ENDIF.
+    ls_package_data = lcl_popups=>popup_to_create_package( ).
 
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
@@ -135,26 +116,7 @@ FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
   IF pv_code = 'COD1'.
     cv_show_popup = abap_true.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'PB_POPUP_PACKAGE_CREATE'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 1.
-* looks like the function module used does not exist on all
-* versions since 702, so show an error
-      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
-    ENDIF.
-
-    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
-      CHANGING
-        p_object_data    = ls_package_data
-      EXCEPTIONS
-        action_cancelled = 1.
-    IF sy-subrc = 1.
-      RETURN.
-    ENDIF.
+    ls_package_data = lcl_popups=>popup_to_create_package( ).
 
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
