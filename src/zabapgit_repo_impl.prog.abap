@@ -473,9 +473,6 @@ CLASS lcl_repo IMPLEMENTATION.
     IF mo_dot_abapgit IS INITIAL.
       mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
     ENDIF.
-    IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
-      lcx_exception=>raise( 'Current login language does not match master language' ).
-    ENDIF.
 
     lt_updated_files = lcl_objects=>deserialize( me ).
     APPEND mo_dot_abapgit->get_signature( ) TO lt_updated_files.
