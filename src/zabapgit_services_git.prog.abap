@@ -201,7 +201,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     ls_comment-comment  = is_commit-comment.
 
     IF NOT is_commit-body IS INITIAL.
-      CONCATENATE ls_comment-comment is_commit-body
+      CONCATENATE ls_comment-comment '' is_commit-body
         INTO ls_comment-comment SEPARATED BY gc_newline.
     ENDIF.
 

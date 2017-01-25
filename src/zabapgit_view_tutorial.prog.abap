@@ -38,14 +38,21 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
 
     _add '<h2>Adding and cloning repos</h2>'.
     _add '<p><ul>'.
+
     _add `<li>To clone a remote repo (e.g. from github) click `.
     ro_html->add_a( iv_txt = '+ Clone' iv_act = gc_action-repo_clone ).
     _add ' from the top menu. This will copy a remote repo to your system.</li>'.
+
     _add `<li>To add a local package as a repo click `.
     ro_html->add_a( iv_txt = '+ Offline' iv_act = gc_action-repo_newoffline ).
     _add ' from the top menu. This will track a repo which already exist in'.
     _add ' the system with abapGit. You''ll be able to attach it to remote origin'.
     _add ' or just serialize as a zip file</li>'.
+
+    _add `<li>Go `.
+    ro_html->add_a( iv_txt = 'Explore' iv_act = gc_action-go_explore ).
+    _add ' to find projects using abapGit</li>'.
+
     _add '</ul></p>'.
 
     _add '<h2>Repository list and favorites</h2>'.
