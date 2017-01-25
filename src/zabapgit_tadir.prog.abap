@@ -12,8 +12,9 @@ CLASS lcl_tadir DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       read
-        IMPORTING iv_package      TYPE tadir-devclass
-        RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
+        IMPORTING iv_package            TYPE tadir-devclass
+                  iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
+        RETURNING VALUE(rt_tadir)       TYPE ty_tadir_tt
         RAISING   lcx_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
@@ -33,9 +34,10 @@ CLASS lcl_tadir DEFINITION FINAL.
         RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
         RAISING   lcx_exception,
       build
-        IMPORTING iv_package      TYPE tadir-devclass
-                  iv_path         TYPE string
-        RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
+        IMPORTING iv_package            TYPE tadir-devclass
+                  iv_path               TYPE string
+                  iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
+        RETURNING VALUE(rt_tadir)       TYPE ty_tadir_tt
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_tadir DEFINITION
@@ -110,8 +112,9 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD read.
 
 * start recursion
-    rt_tadir = build( iv_package = iv_package
-                      iv_path    = '' ).
+    rt_tadir = build( iv_package            = iv_package
+                      iv_path               = ''
+                      iv_ignore_subpackages = iv_ignore_subpackages ).
 
     rt_tadir = check_exists( rt_tadir ).
 
@@ -161,9 +164,12 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDLOOP.
 
 * look for subpackages
-    SELECT * FROM tdevc INTO TABLE lt_tdevc
-      WHERE parentcl = iv_package
-      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
+    IF iv_ignore_subpackages = abap_false.
+      SELECT * FROM tdevc INTO TABLE lt_tdevc
+        WHERE parentcl = iv_package
+        ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
+    ENDIF.
+
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
       lv_len = strlen( iv_package ).
       IF <ls_tdevc>-devclass(lv_len) <> iv_package.
