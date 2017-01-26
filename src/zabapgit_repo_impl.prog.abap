@@ -508,8 +508,8 @@ CLASS lcl_repo IMPLEMENTATION.
           lt_cache TYPE SORTED TABLE OF ty_file_item
                    WITH NON-UNIQUE KEY item.
 
-    DATA: lt_filter TYPE SORTED TABLE OF tadir
-                    WITH NON-UNIQUE KEY object obj_name,
+    DATA: lt_filter       TYPE SORTED TABLE OF tadir
+                          WITH NON-UNIQUE KEY object obj_name,
           lv_filter_exist TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
@@ -535,7 +535,9 @@ CLASS lcl_repo IMPLEMENTATION.
                                                 iv_data = <ls_return>-file-data ).
 
     lt_cache = mt_local.
-    lt_tadir = lcl_tadir=>read( get_package( ) ).
+    lt_tadir = lcl_tadir=>read(
+      iv_package            = get_package( )
+      iv_ignore_subpackages = ignore_subpackages( ) ).
 
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ) .
@@ -655,17 +657,22 @@ CLASS lcl_repo IMPLEMENTATION.
     rv_yes = ms_data-write_protect.
   ENDMETHOD.                    "is_write_protected
 
+  METHOD ignore_subpackages.
+    rv_yes = ms_data-ignore_subpackages.
+  ENDMETHOD.
+
   METHOD rebuild_local_checksums. "LOCAL (BASE)
 
-    DATA: lt_local        TYPE ty_files_item_tt,
-          ls_last_item    TYPE ty_item,
-          lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+    DATA: lt_local     TYPE ty_files_item_tt,
+          ls_last_item TYPE ty_item,
+          lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
                    <ls_local>    LIKE LINE OF lt_local.
 
-    lt_local        = get_files_local( ).
+
+    lt_local = get_files_local( ).
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL

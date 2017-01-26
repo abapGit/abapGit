@@ -34,6 +34,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RETURNING VALUE(rv_language) TYPE spras,
       is_write_protected
         RETURNING VALUE(rv_yes) TYPE sap_bool,
+      ignore_subpackages
+        RETURNING VALUE(rv_yes) TYPE sap_bool,
       delete
         RAISING lcx_exception,
       get_dot_abapgit
