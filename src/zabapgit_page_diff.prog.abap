@@ -239,7 +239,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table class="diff_tab">' ).             "#EC NOTEXT
+    ro_html->add( '<table class="diff_tab syntax-hl">' ).   "#EC NOTEXT
     ro_html->add( render_table_head( ) ).
     ro_html->add( render_lines( is_diff ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT
