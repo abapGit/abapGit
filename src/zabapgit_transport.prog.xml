@@ -10,7 +10,13 @@
     <RLOAD>E</RLOAD>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
-   <TPOOL/>
+   <TPOOL>
+    <item>
+     <ID>R</ID>
+     <ENTRY>Include ZABAPGIT_TRANSPORT</ENTRY>
+     <LENGTH>26</LENGTH>
+    </item>
+   </TPOOL>
   </asx:values>
  </asx:abap>
 </abapGit>

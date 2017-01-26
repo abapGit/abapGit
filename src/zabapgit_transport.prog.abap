@@ -115,19 +115,19 @@ CLASS lcl_transport IMPLEMENTATION.
     ENDWHILE.
 
     CALL FUNCTION 'TRINT_SELECT_REQUESTS'
-     EXPORTING
-       iv_username_pattern          = sy-uname
-       iv_via_selscreen             = 'X'
-       iv_complete_projects         = ''
-*       is_popup                     =
-       iv_title                     = 'abapGit: Transport Request Selection'
-     IMPORTING
-       et_requests                  = rt_trkorr
-     CHANGING
-       cs_ranges                    = ls_ranges
-     EXCEPTIONS
-       action_aborted_by_user       = 1
-       OTHERS                       = 2.
+      EXPORTING
+        iv_username_pattern    = sy-uname
+        iv_via_selscreen       = 'X'
+        iv_complete_projects   = ''
+*       is_popup               =
+        iv_title               = 'abapGit: Transport Request Selection'
+      IMPORTING
+        et_requests            = rt_trkorr
+      CHANGING
+        cs_ranges              = ls_ranges
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
