@@ -62,7 +62,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ro_html->add_a( iv_txt = 'Edit' iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
     ro_html->add( '</td></tr></table>' ).
 
-    ro_html->add( |<pre>{ lv_data }</pre>| ).
+    ro_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_content
@@ -188,12 +188,15 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     ro_html->add( '<table class="db_tab">' ).
 
     " Header
+    ro_html->add( '<thead>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<th>Type</th>' ).
     ro_html->add( '<th>Key</th>' ).
     ro_html->add( '<th>Data</th>' ).
     ro_html->add( '<th></th>' ).
     ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
+    ro_html->add( '<tbody>' ).
 
     " Lines
     LOOP AT lt_data ASSIGNING <ls_data>.
@@ -219,6 +222,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ro_html->add( '</tr>' ).
     ENDLOOP.
 
+    ro_html->add( '</tbody>' ).
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
 
