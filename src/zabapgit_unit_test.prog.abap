@@ -1234,7 +1234,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
 
-CLASS ltcl_html_helper DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_html DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
     DATA: mo_html TYPE REF TO lcl_html.
@@ -1251,9 +1251,9 @@ CLASS ltcl_html_helper DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
       last_line
         RETURNING VALUE(rv_line) TYPE string.
 
-ENDCLASS.
+ENDCLASS. "ltcl_html
 
-CLASS ltcl_html_helper IMPLEMENTATION.
+CLASS ltcl_html IMPLEMENTATION.
 
   METHOD setup.
     CREATE OBJECT mo_html.
@@ -1261,49 +1261,73 @@ CLASS ltcl_html_helper IMPLEMENTATION.
 
   METHOD indent1.
 
+    DATA lv_exp TYPE string.
+
     mo_html->add( '<td>' ).
     mo_html->add( 'hello world' ).
     mo_html->add( '</td>' ).
 
+    lv_exp = '<td>' && gc_newline &&
+             '  hello world' && gc_newline &&
+             '</td>'.
+
     cl_abap_unit_assert=>assert_equals(
-      act = last_line( )
-      exp = '</td>' ).
+      act = mo_html->render( )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
   METHOD indent2.
 
+    DATA lv_exp TYPE string.
+
     mo_html->add( '<td>' ).
     mo_html->add( '<input name="comment" type="text">' ).
     mo_html->add( '</td>' ).
 
+    lv_exp = '<td>' && gc_newline &&
+             '  <input name="comment" type="text">' && gc_newline &&
+             '</td>'.
+
     cl_abap_unit_assert=>assert_equals(
-      act = last_line( )
-      exp = '</td>' ).
+      act = mo_html->render( )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
   METHOD indent3.
 
+    DATA lv_exp TYPE string.
+
     mo_html->add( '<td>' ).
     mo_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
     mo_html->add( '</td>' ).
 
+    lv_exp = '<td>' && gc_newline &&
+             '  <textarea name="body" rows="10" cols="72"></textarea>' && gc_newline &&
+             '</td>'.
+
     cl_abap_unit_assert=>assert_equals(
-      act = last_line( )
-      exp = '</td>' ).
+      act = mo_html->render( )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
   METHOD indent4.
 
+    DATA lv_exp TYPE string.
+
     mo_html->add( '<td>' ).
     mo_html->add( 'foo<br>bar' ).
     mo_html->add( '</td>' ).
 
+    lv_exp = '<td>' && gc_newline &&
+             '  foo<br>bar' && gc_newline &&
+             '</td>'.
+
     cl_abap_unit_assert=>assert_equals(
-      act = last_line( )
-      exp = '</td>' ).
+      act = mo_html->render( )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
@@ -1311,33 +1335,37 @@ CLASS ltcl_html_helper IMPLEMENTATION.
 
     DATA: lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
-    SPLIT mo_html->mv_html AT gc_newline INTO TABLE lt_strings.
-
+    SPLIT mo_html->render( ) AT gc_newline INTO TABLE lt_strings.
     READ TABLE lt_strings INDEX lines( lt_strings ) INTO rv_line.
 
   ENDMETHOD.
 
   METHOD style1.
 
+    DATA lv_exp TYPE string.
+
     mo_html->add( '<style type="text/css">' ).
     mo_html->add( '.class1 { color: red }' ).
     mo_html->add( '.class2 {' ).
     mo_html->add( 'color: red' ).
-
-    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '    color: red' ).
-
     mo_html->add( '}' ).
-
-    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '  }' ).
-
     mo_html->add( '</style>' ).
 
-    cl_abap_unit_assert=>assert_equals( act = last_line( ) exp = '</style>' ).
+    lv_exp = '<style type="text/css">' && gc_newline &&
+             '  .class1 { color: red }' && gc_newline &&
+             '  .class2 {' && gc_newline &&
+             '    color: red' && gc_newline &&
+             '  }' && gc_newline &&
+             '</style>'.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_html->render( )
+      exp = lv_exp ).
 
   ENDMETHOD.
 
 
-ENDCLASS.
+ENDCLASS. "ltcl_html
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION

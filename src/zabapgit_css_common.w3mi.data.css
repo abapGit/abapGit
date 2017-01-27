@@ -537,15 +537,16 @@ table.diff_tab td.code {
   overflow: visible;
 }
 
-table.diff_tab .code span.keyword { color: #0a69ce; }
-table.diff_tab .code span.text    { color: #48ce4f; }
-table.diff_tab .code span.comment { color: #808080; font-style: italic; }
-table.diff_tab .code span.xml_tag { color: #457ce3; }
-table.diff_tab .code span.attr    { color: #b777fb; }
-table.diff_tab .code span.attr_val { color: #7a02f9; }
-
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
+
+/* STYLES for Syntax Highlighting */
+.syntax-hl span.keyword  { color: #0a69ce; }
+.syntax-hl span.text     { color: #48ce4f; }
+.syntax-hl span.comment  { color: #808080; font-style: italic; }
+.syntax-hl span.xml_tag  { color: #457ce3; }
+.syntax-hl span.attr     { color: #b777fb; }
+.syntax-hl span.attr_val { color: #7a02f9; }
 
 /* DEBUG INFO STYLES */
 div.debug_container {
@@ -554,15 +555,17 @@ div.debug_container {
   color: #444;
   font-family: Consolas, Courier, monospace;
 }
+
 div.debug_container p {
   margin: 0px;
 }
 
 /* DB ENTRIES */
 div.db_list {
-  background-color: #f2f2f2;
+  background-color: #fff;
   padding: 0.5em;
 }
+
 table.db_tab pre {
   display: inline-block;
   overflow: hidden;
@@ -571,10 +574,11 @@ table.db_tab pre {
   margin: 0px;
   width: 30em;
 }
+
 table.db_tab tr.firstrow td { padding-top: 0.5em; }
 table.db_tab th {
+  color: #888888;
   text-align: left;
-  color: #888;
   padding: 0.5em;
   border-bottom: 1px #ddd solid;
 }
@@ -588,24 +592,34 @@ table.db_tab td.data {
   font-style: italic;
 }
 
+table.db_tab tbody tr:hover, tr:active {
+  background-color: #f4f4f4;
+}
+
 /* DB ENTRY DISPLAY */
 div.db_entry {
   background-color: #f2f2f2;
   padding: 0.5em;
 }
+
 div.db_entry pre {
   display: block;
+  font-size: 10pt;
   overflow: hidden;
   word-wrap:break-word;
   white-space: pre-wrap;
-  background-color: #eaeaea;
+  background-color: #fcfcfc;
+  border: 1px #eaeaea solid;
+  border-radius: 3px;
   padding: 0.5em;
   margin: 0.5em 0em;
-  width: 50em;
+  width: 60em;
 }
+
 div.db_entry table.toolbar {
   width: 50em;
 }
+
 table.tag {
   display: inline-block;
   border: 1px #b3c1cc solid;

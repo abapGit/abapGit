@@ -61,12 +61,14 @@ CLASS lcl_popups DEFINITION FINAL.
         RETURNING VALUE(rv_answer)      TYPE char1
         RAISING   lcx_exception,
       popup_to_inform
-      IMPORTING
-                titlebar              TYPE clike
-                text_message          TYPE clike
-      RAISING   lcx_exception.
-
-
+        IMPORTING
+                  titlebar              TYPE clike
+                  text_message          TYPE clike
+        RAISING   lcx_exception,
+      popup_to_create_package
+        EXPORTING es_package_data        TYPE scompkdtln
+                  ev_create              TYPE boolean
+        RAISING lcx_exception.
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
@@ -241,7 +243,10 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD repo_new_offline.
 
     DATA: lv_returncode TYPE c,
-          lt_fields     TYPE TABLE OF sval.
+          lt_fields     TYPE TABLE OF sval,
+          lv_icon_ok    TYPE icon-name,
+          lv_button1    TYPE svalbutton-buttontext,
+          lv_icon1      TYPE icon-name.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
@@ -250,17 +255,28 @@ CLASS lcl_popups IMPLEMENTATION.
     _add_dialog_fld 'ABAPTXT255' 'LINE'     'Name'    ''                  ''.
     _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
 
-    CALL FUNCTION 'POPUP_GET_VALUES'
+    lv_icon_ok  = icon_okay.
+    lv_button1 = 'Create package' ##NO_TEXT.
+    lv_icon1   = icon_folder.
+
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'New Offline Project'             "#EC NOTEXT
+        popup_title       = 'New Offline Project'
+        programname       = sy-repid
+        formname          = 'PACKAGE_POPUP'
+        ok_pushbuttontext = ''
+        icon_ok_push      = lv_icon_ok
+        first_pushbutton  = lv_button1
+        icon_button_1     = lv_icon1
+        second_pushbutton = ''
+        icon_button_2     = ''
       IMPORTING
-        returncode      = lv_returncode
+        returncode        = lv_returncode
       TABLES
-        fields          = lt_fields
+        fields            = lt_fields
       EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
+        error_in_fields   = 1
+        OTHERS            = 2.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
@@ -481,5 +497,30 @@ CLASS lcl_popups IMPLEMENTATION.
         txt2  = lv_line2.
 
   ENDMETHOD.  " popup_to_inform.
+
+  METHOD popup_to_create_package.
+    CALL FUNCTION 'FUNCTION_EXISTS'
+      EXPORTING
+        funcname           = 'PB_POPUP_PACKAGE_CREATE'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 1.
+* looks like the function module used does not exist on all
+* versions since 702, so show an error
+      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
+    ENDIF.
+
+    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
+      CHANGING
+        p_object_data    = es_package_data
+      EXCEPTIONS
+        action_cancelled = 1.
+    IF sy-subrc = 0.
+      ev_create = abap_true.
+    ELSE.
+      ev_create = abap_false.
+    ENDIF.
+  ENDMETHOD.  " popup_to_create_package
 
 ENDCLASS.

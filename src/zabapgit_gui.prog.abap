@@ -251,9 +251,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD render.
 
-    DATA lv_url TYPE w3url.
+    DATA: lv_url  TYPE w3url,
+          lo_html TYPE REF TO lcl_html.
 
-    lv_url = cache_html( mi_cur_page->render( )->mv_html ).
+    lo_html = mi_cur_page->render( ).
+    lv_url  = cache_html( lo_html->render( iv_no_indent_jscss = abap_true ) ).
 
     mo_html_viewer->show_url( lv_url ).
 
