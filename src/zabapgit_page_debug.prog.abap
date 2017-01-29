@@ -13,7 +13,8 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     METHODS render_debug_info
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      RAISING lcx_exception.
     METHODS render_supported_object_types
       RETURNING VALUE(rv_html) TYPE string.
 
@@ -57,6 +58,8 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
     ro_html->add( |<p>abapGit version: { gc_abap_version }</p>| ).
     ro_html->add( |<p>XML version:     { gc_xml_version }</p>| ).
     ro_html->add( |<p>GUI version:     { lv_gui_version }</p>| ).
+    ro_html->add( |<p>LCL_TIME:        { lcl_time=>get( ) }</p>| ).
+    ro_html->add( |<p>SY time:         { sy-datum } { sy-uzeit } { sy-tzone }</p>| ).
 
   ENDMETHOD. "render_debug_info
 
@@ -93,7 +96,8 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent, "debug_info");' ).
+    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
+      '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
   ENDMETHOD.  "scripts
 
