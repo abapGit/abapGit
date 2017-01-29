@@ -96,7 +96,8 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + "<br>Frontend time: " + new Date(), "debug_info");' ).
+    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
+      '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
   ENDMETHOD.  "scripts
 
