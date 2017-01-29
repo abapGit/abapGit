@@ -232,6 +232,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
 
     lv_length = strlen( iv_start ).
+    IF lv_length > strlen( iv_path ).
+      lcx_exception=>raise( 'Error: folder structure' ).
+    ENDIF.
     lv_path = iv_path+lv_length.
     lv_parent = iv_top.
     rv_package = iv_top.
@@ -644,7 +647,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lo_xml = lo_files->read_xml( ).
 
       li_obj = create_object( is_item     = ls_item
-                              iv_language = io_repo->get_master_language( )
+                              iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
       compare_remote_to_local(

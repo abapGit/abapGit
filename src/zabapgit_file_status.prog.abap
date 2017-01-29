@@ -63,7 +63,6 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     rt_results = calculate_status(
-
       iv_devclass  = io_repo->get_package( )
       it_local     = io_repo->get_files_local( io_log = io_log )
       it_remote    = io_repo->get_files_remote( )

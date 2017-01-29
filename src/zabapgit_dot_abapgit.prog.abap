@@ -4,12 +4,17 @@
 
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
-CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
+CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_dot_abapgit,
+             master_language TYPE spras,
+             starting_folder TYPE string,
+             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           END OF ty_dot_abapgit.
+
     CLASS-METHODS:
       build_default
-        IMPORTING iv_master_language    TYPE spras
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       deserialize
         IMPORTING iv_xstr               TYPE xstring
@@ -17,9 +22,15 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
         RAISING   lcx_exception.
 
     METHODS:
+      constructor
+        IMPORTING is_data TYPE ty_dot_abapgit.
+
+    METHODS:
       serialize
         RETURNING VALUE(rv_xstr) TYPE xstring
         RAISING   lcx_exception,
+      get_data
+        RETURNING VALUE(rs_data) TYPE ty_dot_abapgit,
       add_ignore
         IMPORTING iv_path     TYPE string
                   iv_filename TYPE string,
@@ -32,28 +43,18 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
                   iv_filename TYPE string,
       get_starting_folder
         RETURNING VALUE(rv_path) TYPE string,
-*      set_starting_folder
-*        IMPORTING iv_path TYPE string,
+      set_starting_folder
+        IMPORTING iv_path TYPE string,
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
-*      set_master_language
-*        IMPORTING iv_language TYPE spras.
+      set_master_language
+        IMPORTING iv_language TYPE spras,
       get_signature
         RETURNING VALUE(rs_signature) TYPE ty_file_signature
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_dot_abapgit,
-             master_language TYPE spras,
-             starting_folder TYPE string,
-             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-           END OF ty_dot_abapgit.
-
     DATA: ms_data TYPE ty_dot_abapgit.
-
-    METHODS:
-      constructor
-        IMPORTING is_data TYPE ty_dot_abapgit.
 
     CLASS-METHODS:
       to_xml
@@ -88,6 +89,10 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_data.
+    rs_data = ms_data.
+  ENDMETHOD.
+
   METHOD serialize.
 
     DATA: lv_xml TYPE string.
@@ -103,7 +108,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     DATA: ls_data TYPE ty_dot_abapgit.
 
 
-    ls_data-master_language = iv_master_language.
+    ls_data-master_language = sy-langu.
     ls_data-starting_folder = '/'.
     APPEND '/.gitignore' TO ls_data-ignore.
     APPEND '/LICENSE' TO ls_data-ignore.
@@ -198,17 +203,17 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     rv_path = ms_data-starting_folder.
   ENDMETHOD.
 
-*  METHOD set_starting_folder.
-*    ms_data-starting_folder = iv_path.
-*  ENDMETHOD.
+  METHOD set_starting_folder.
+    ms_data-starting_folder = iv_path.
+  ENDMETHOD.
 
   METHOD get_master_language.
     rv_language = ms_data-master_language.
   ENDMETHOD.
 
-*  METHOD set_master_language.
-*    ms_data-master_language = iv_language.
-*  ENDMETHOD.
+  METHOD set_master_language.
+    ms_data-master_language = iv_language.
+  ENDMETHOD.
 
   METHOD get_signature.
 

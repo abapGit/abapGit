@@ -60,7 +60,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     super->deserialize( ).
 
-    set( iv_sha1 = mv_branch ).
+    set( iv_sha1        = mv_branch
+         is_dot_abapgit = mo_dot_abapgit->get_data( ) ).
 
     reset_status( ).
 
@@ -90,14 +91,14 @@ CLASS lcl_repo_online IMPLEMENTATION.
     mo_branches = lcl_git_transport=>branches( get_url( ) ).
     actualize_head_branch( ).
 
-    find_dot_abapgit( ).
-
     mv_initialized = abap_true.
 
   ENDMETHOD.                    "refresh
 
   METHOD actualize_head_branch.
+
     DATA lv_branch_name TYPE string.
+
     lv_branch_name = mo_branches->get_head( )-name.
 
     IF lv_branch_name <> ms_data-head_branch.
@@ -186,6 +187,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD push.
 
     DATA: lv_branch        TYPE ty_sha1,
+          lv_dot_method    LIKE lcl_stage=>c_method-add,
           lt_updated_files TYPE ty_file_signatures_tt.
 
 
@@ -207,6 +209,13 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF lcl_stage_logic=>count( me ) = 0.
       set( iv_sha1 = lv_branch ).
+    ENDIF.
+
+    lv_dot_method = io_stage->lookup(
+      iv_path     = gc_root_dir
+      iv_filename = gc_dot_abapgit ).
+    IF lv_dot_method = lcl_stage=>c_method-add.
+      set( is_dot_abapgit = mo_dot_abapgit->get_data( ) ).
     ENDIF.
 
   ENDMETHOD.                    "push
@@ -310,6 +319,14 @@ CLASS lcl_repo IMPLEMENTATION.
 
     ms_data = is_data.
 
+    IF ms_data-dot_abapgit IS INITIAL.
+      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
+    ELSE.
+      CREATE OBJECT mo_dot_abapgit
+        EXPORTING
+          is_data = ms_data-dot_abapgit.
+    ENDIF.
+
   ENDMETHOD.                    "constructor
 
   METHOD find_dot_abapgit.
@@ -321,7 +338,7 @@ CLASS lcl_repo IMPLEMENTATION.
       WITH KEY path = gc_root_dir
       filename = gc_dot_abapgit.
     IF sy-subrc = 0.
-      mo_dot_abapgit = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
+      ro_dot = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
     ENDIF.
 
   ENDMETHOD.
@@ -340,7 +357,8 @@ CLASS lcl_repo IMPLEMENTATION.
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
-      OR iv_offline IS SUPPLIED.
+      OR iv_offline IS SUPPLIED
+      OR is_dot_abapgit IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
@@ -383,6 +401,13 @@ CLASS lcl_repo IMPLEMENTATION.
       lo_persistence->update_offline(
         iv_key     = ms_data-key
         iv_offline = iv_offline ).
+      ms_data-offline = iv_offline.
+    ENDIF.
+
+    IF is_dot_abapgit IS SUPPLIED.
+      lo_persistence->update_dot_abapgit(
+        iv_key         = ms_data-key
+        is_dot_abapgit = is_dot_abapgit ).
       ms_data-offline = iv_offline.
     ENDIF.
 
@@ -468,16 +493,19 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lt_updated_files TYPE ty_file_signatures_tt.
+    DATA: lo_dot TYPE REF TO lcl_dot_abapgit,
+          lt_updated_files TYPE ty_file_signatures_tt.
 
-    IF mo_dot_abapgit IS INITIAL.
-      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
-    ENDIF.
-    IF mo_dot_abapgit->get_master_language( ) <> sy-langu.
+
+    lo_dot = find_dot_abapgit( ).
+    IF NOT lo_dot IS INITIAL AND lo_dot->get_master_language( ) <> sy-langu.
       lcx_exception=>raise( 'Current login language does not match master language' ).
+    ELSEIF NOT lo_dot IS INITIAL.
+      mo_dot_abapgit = lo_dot.
     ENDIF.
 
     lt_updated_files = lcl_objects=>deserialize( me ).
+
     APPEND mo_dot_abapgit->get_signature( ) TO lt_updated_files.
 
     CLEAR: mt_local, mv_last_serialization.
@@ -524,9 +552,6 @@ CLASS lcl_repo IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF mo_dot_abapgit IS INITIAL.
-      mo_dot_abapgit = lcl_dot_abapgit=>build_default( ms_data-master_language ).
-    ENDIF.
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
     <ls_return>-file-path     = gc_root_dir.
     <ls_return>-file-filename = gc_dot_abapgit.
@@ -579,7 +604,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
       lt_files = lcl_objects=>serialize(
         is_item     = ls_item
-        iv_language = get_master_language( )
+        iv_language = get_dot_abapgit( )->get_master_language( )
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
@@ -634,9 +659,9 @@ CLASS lcl_repo IMPLEMENTATION.
     rv_package = ms_data-package.
   ENDMETHOD.                    "get_package
 
-  METHOD get_master_language.
-    rv_language = ms_data-master_language.
-  ENDMETHOD.
+*  METHOD get_master_language.
+*    rv_language = ms_data-master_language.
+*  ENDMETHOD.
 
   METHOD get_key.
     rv_key = ms_data-key.
@@ -781,7 +806,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
       iv_package     = iv_package
-      iv_offline     = abap_false ).
+      iv_offline     = abap_false
+      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
@@ -809,7 +835,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_url         = iv_url
       iv_branch_name = ''
       iv_package     = iv_package
-      iv_offline     = abap_true ).
+      iv_offline     = abap_true
+      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).

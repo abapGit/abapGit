@@ -55,7 +55,6 @@ CLASS lcl_transport IMPLEMENTATION.
 
     ls_data-key             = 'TZIP'.
     ls_data-package         = lv_package.
-    ls_data-master_language = sy-langu.
 
     CREATE OBJECT lo_repo
       EXPORTING
