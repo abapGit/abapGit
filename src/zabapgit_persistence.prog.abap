@@ -1349,7 +1349,8 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
   METHOD table_create.
 
-    DATA: lv_obj_name TYPE tadir-obj_name,
+    DATA: lv_rc       LIKE sy-subrc,
+          lv_obj_name TYPE tadir-obj_name,
           ls_dd02v    TYPE dd02v,
           ls_dd09l    TYPE dd09l,
           lt_dd03p    TYPE STANDARD TABLE OF dd03p WITH DEFAULT KEY.
@@ -1427,11 +1428,14 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
       EXPORTING
         name        = lcl_persistence_db=>c_tabname
+        auth_chk    = abap_false
+      IMPORTING
+        rc          = lv_rc
       EXCEPTIONS
         not_found   = 1
         put_failure = 2
         OTHERS      = 3.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 OR lv_rc <> 0.
       lcx_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
     ENDIF.
 
