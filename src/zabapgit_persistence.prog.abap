@@ -81,8 +81,9 @@ CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    METHODS: validate_xml
-      IMPORTING iv_xml TYPE string
+    METHODS: validate_and_unprettify_xml
+      IMPORTING iv_xml        TYPE string
+      RETURNING VALUE(rv_xml) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -831,29 +832,32 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate_xml.
+  METHOD validate_and_unprettify_xml.
 
-    lcl_xml_pretty=>print(
+    rv_xml = lcl_xml_pretty=>print(
       iv_xml           = iv_xml
+      iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.
+  ENDMETHOD.  " validate_and_unprettify_xml
 
   METHOD update.
 
-    validate_xml( iv_data ).
+    DATA lv_data LIKE iv_data.
+
+    lv_data = validate_and_unprettify_xml( iv_data ).
 
     lock( iv_type  = iv_type
           iv_value = iv_value ).
 
-    UPDATE (c_tabname) SET data_str = iv_data
-      WHERE type = iv_type
-      AND value = iv_value.
+    UPDATE (c_tabname) SET data_str = lv_data
+      WHERE type  = iv_type
+      AND   value = iv_value.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.  "update
 
   METHOD modify.
 
