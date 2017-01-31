@@ -66,12 +66,24 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     _add '<h2>abapGit related repositories</h2>'.
     _add '<p><ul>'.
     _add '<li>'.
-    ro_html->add_a( iv_txt = 'install abapGit repo' iv_act = gc_action-abapgit_install ).
-    _add ' - To keep abapGit up-to-date (or also to contribute) you need to'.
-    _add 'install it as a repository.</li>'.
+    IF lcl_services_abapgit=>is_installed( ) = abap_true.
+      _add 'abapGit installed in package&nbsp;'.
+      _add lcl_services_abapgit=>c_package_abapgit.
+    ELSE.
+      ro_html->add_a( iv_txt = 'install abapGit repo' iv_act = gc_action-abapgit_install ).
+      _add ' - To keep abapGit up-to-date (or also to contribute) you need to'.
+      _add 'install it as a repository.'.
+    ENDIF.
+    _add '</li>'.
     _add '<li>'.
-    ro_html->add_a( iv_txt = 'install abapGit plugins' iv_act = gc_action-abapgit_install_pi ).
-    _add ' - you can also install plugins to extend supported object types</li>'.
+    IF lcl_services_abapgit=>is_installed_pi( ) = abap_true.
+      _add 'abapGit plugins installed in package&nbsp;'.
+      _add lcl_services_abapgit=>c_package_plugins.
+    ELSE.
+      ro_html->add_a( iv_txt = 'install abapGit plugins' iv_act = gc_action-abapgit_install_pi ).
+      _add ' - you can also install plugins to extend supported object types'.
+    ENDIF.
+    _add '</li>'.
     _add '</ul></p>'.
 
   ENDMETHOD. " render_content.
