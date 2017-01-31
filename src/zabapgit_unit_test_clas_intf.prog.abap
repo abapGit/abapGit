@@ -1276,6 +1276,8 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD class_delete.
+    DATA ls_expected_delete_key TYPE seoclskey.
+
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
     ms_item-obj_type = 'CLAS'.
@@ -1286,7 +1288,6 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
 
     mo_oo_object->delete( ).
 
-    DATA ls_expected_delete_key TYPE seoclskey.
     ls_expected_delete_key-clsname = ms_item-obj_name.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1295,6 +1296,8 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD interface_delete.
+    DATA ls_expected_delete_key TYPE seoclskey.
+
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
     ms_item-obj_type = 'INTF'.
@@ -1306,7 +1309,6 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
 
     mo_oo_object->delete( ).
 
-    DATA ls_expected_delete_key TYPE seoclskey.
     ls_expected_delete_key-clsname = ms_item-obj_name.
 
     cl_abap_unit_assert=>assert_equals(
