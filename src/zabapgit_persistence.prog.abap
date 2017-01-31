@@ -98,20 +98,21 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_xml,
-             url             TYPE string,
-             branch_name     TYPE string,
-             sha1            TYPE ty_sha1,
-             package         TYPE devclass,
-             offline         TYPE sap_bool,
-             local_checksums TYPE ty_local_checksum_tt,
-             master_language TYPE spras,
-             head_branch     TYPE string,   " HEAD symref of the repo, master branch
-             write_protect   TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
+             url                TYPE string,
+             branch_name        TYPE string,
+             sha1               TYPE ty_sha1,
+             package            TYPE devclass,
+             offline            TYPE sap_bool,
+             local_checksums    TYPE ty_local_checksum_tt,
+             master_language    TYPE spras,
+             head_branch        TYPE string,   " HEAD symref of the repo, master branch
+             write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
+             ignore_subpackages TYPE sap_bool,
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
              key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_repo_xml.
+            INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
     TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
@@ -222,7 +223,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_background,
              key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_xml.
+            INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
 

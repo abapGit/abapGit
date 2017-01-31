@@ -1104,12 +1104,28 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ELSE.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from INSERT REPORT' ).
+      IF strlen( is_progdir-name ) > 30.
+        " special treatment for extenstions
+        " if the program name exceeds 30 characters it is not a usual
+        " ABAP program but might be some extension, which requires the internal
+        " addition EXTENSION TYPE, see
+        " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
+        " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
+        INSERT REPORT is_progdir-name
+         FROM it_source
+         STATE 'I'
+         EXTENSION TYPE is_progdir-name+30.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
+        ENDIF.
+      ELSE.
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'I'
+          PROGRAM TYPE is_progdir-subc.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from INSERT REPORT' ).
+        ENDIF.
       ENDIF.
 
       IF NOT it_tpool[] IS INITIAL.

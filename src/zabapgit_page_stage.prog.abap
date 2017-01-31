@@ -151,12 +151,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add('<thead><tr>').
-        ro_html->add('<th></th><th colspan="2">LOCAL</th><th>' ).
+        ro_html->add('<th></th><th colspan="2">LOCAL</th>' ).
+        ro_html->add('<th>' ).
         IF lines( ms_files-local ) > 1.
           ro_html->add_a( iv_txt = |{ lines( ms_files-local ) } diffs|
                           iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
         ENDIF.
-        ro_html->add('</th></tr></thead>').
+        ro_html->add('</th>').
+        ro_html->add('</tr></thead>').
         ro_html->add('<tbody class="local">').
       ENDAT.
 

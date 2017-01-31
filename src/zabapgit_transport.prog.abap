@@ -11,9 +11,9 @@ CLASS lcl_transport DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS:
       popup
-        RETURNING VALUE(rv_trkorr) TYPE e070-trkorr,
+        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       read_requests
-        IMPORTING iv_trkorr          TYPE e070-trkorr
+        IMPORTING it_trkorr          TYPE trwbo_request_headers
         RETURNING VALUE(rt_requests) TYPE trwbo_requests
         RAISING   lcx_exception,
       find_top_package
@@ -30,20 +30,19 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD zip.
 
-    DATA: lt_requests TYPE trwbo_requests,
-          lt_tadir    TYPE scts_tadir,
-          lv_package  TYPE devclass,
-          ls_data     TYPE lcl_persistence_repo=>ty_repo,
-          lo_repo     TYPE REF TO lcl_repo_offline,
-          lv_trkorr   TYPE e070-trkorr.
+    DATA: lt_requests   TYPE trwbo_requests,
+          lt_tadir      TYPE scts_tadir,
+          lv_package    TYPE devclass,
+          ls_data       TYPE lcl_persistence_repo=>ty_repo,
+          lo_repo       TYPE REF TO lcl_repo_offline,
+          lt_trkorr TYPE trwbo_request_headers.
 
-
-    lv_trkorr = popup( ).
-    IF lv_trkorr IS INITIAL.
+    lt_trkorr = popup( ).
+    IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
 
-    lt_requests = read_requests( lv_trkorr ).
+    lt_requests = read_requests( lt_trkorr ).
     lt_tadir = resolve( lt_requests ).
     IF lines( lt_tadir ) = 0.
       lcx_exception=>raise( 'empty transport' ).
@@ -101,31 +100,60 @@ CLASS lcl_transport IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD popup.
+    DATA: lrs_trfunction TYPE trsel_trs_function,
+          lv_types       TYPE string,
+          ls_ranges      TYPE trsel_ts_ranges.
 
-    CALL FUNCTION 'TR_F4_REQUESTS'
+    " Fill all request types
+    lv_types = 'KWTCOEMPDRSXQFG'.
+    lrs_trfunction-sign   = 'I'.
+    lrs_trfunction-option = 'EQ'.
+    WHILE lv_types NE space.
+      lrs_trfunction-low = lv_types(1).
+      APPEND lrs_trfunction TO ls_ranges-request_funcs.
+      SHIFT lv_types.
+    ENDWHILE.
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
       EXPORTING
-        iv_username         = sy-uname
-        iv_trkorr_pattern   = rv_trkorr
-        iv_trfunctions      = sctsc_types_all
-        iv_trstatus         = sctsc_states_changeable
+        iv_username_pattern    = sy-uname
+        iv_via_selscreen       = 'X'
+        iv_complete_projects   = ''
+*       is_popup               =
+        iv_title               = 'abapGit: Transport Request Selection'
       IMPORTING
-        ev_selected_request = rv_trkorr.
+        et_requests            = rt_trkorr
+      CHANGING
+        cs_ranges              = ls_ranges
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 
   ENDMETHOD.
 
   METHOD read_requests.
 
-    CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
-      EXPORTING
-        iv_trkorr     = iv_trkorr
-      IMPORTING
-        et_requests   = rt_requests
-      EXCEPTIONS
-        invalid_input = 1
-        OTHERS        = 2.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
-    ENDIF.
+    DATA lt_requests LIKE rt_requests.
+    FIELD-SYMBOLS <fs_trkorr> LIKE LINE OF it_trkorr.
+
+    LOOP AT it_trkorr ASSIGNING <fs_trkorr>.
+      CALL FUNCTION 'TR_READ_REQUEST_WITH_TASKS'
+        EXPORTING
+          iv_trkorr     = <fs_trkorr>-trkorr
+        IMPORTING
+          et_requests   = lt_requests
+        EXCEPTIONS
+          invalid_input = 1
+          OTHERS        = 2.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
+      ENDIF.
+
+      APPEND LINES OF lt_requests TO rt_requests.
+    ENDLOOP.
 
   ENDMETHOD.
 

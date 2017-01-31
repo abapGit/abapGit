@@ -85,7 +85,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    rv_html = |</p>Supported objects: { lv_list }</p>|.
+    rv_html = |<p>Supported objects: { lv_list }</p>|.
 
   ENDMETHOD.  " render_supported_object_types
 

@@ -53,7 +53,8 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   DATA: lv_url          TYPE string,
         lx_error        TYPE REF TO lcx_exception,
         ls_package_data TYPE scompkdtln,
-        ls_branch       TYPE lcl_git_branch_list=>ty_git_branch.
+        ls_branch       TYPE lcl_git_branch_list=>ty_git_branch,
+        lv_create       TYPE boolean.
 
   FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
                  <ls_fbranch> LIKE LINE OF tt_fields.
@@ -88,24 +89,9 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   ELSEIF pv_code = 'COD2'.
     cv_show_popup = abap_true.
 
-    CALL FUNCTION 'FUNCTION_EXISTS'
-      EXPORTING
-        funcname           = 'PB_POPUP_PACKAGE_CREATE'
-      EXCEPTIONS
-        function_not_exist = 1
-        OTHERS             = 2.
-    IF sy-subrc = 1.
-* looks like the function module used does not exist on all
-* versions since 702, so show an error
-      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
-    ENDIF.
-
-    CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
-      CHANGING
-        p_object_data    = ls_package_data
-      EXCEPTIONS
-        action_cancelled = 1.
-    IF sy-subrc = 1.
+    lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
+                                                   ev_create       = lv_create ).
+    IF lv_create = abap_false.
       RETURN.
     ENDIF.
 
@@ -118,6 +104,38 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
   ENDIF.
 
 ENDFORM.                    "branch_popup
+
+FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
+                   USING    pv_code TYPE clike
+                   CHANGING cs_error TYPE svale
+                            cv_show_popup TYPE c
+                   RAISING  lcx_exception ##called ##needed.
+* called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
+
+  DATA: ls_package_data TYPE scompkdtln,
+        lv_create       TYPE boolean.
+
+  FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields.
+
+  CLEAR cs_error.
+
+  IF pv_code = 'COD1'.
+    cv_show_popup = abap_true.
+
+    lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
+                                                   ev_create       = lv_create ).
+    IF lv_create = abap_false.
+      RETURN.
+    ENDIF.
+
+    lcl_sap_package=>create( ls_package_data ).
+    COMMIT WORK.
+
+    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TDEVC'.
+    ASSERT sy-subrc = 0.
+    <ls_fbranch>-value = ls_package_data-devclass.
+  ENDIF.
+ENDFORM.                    "package_popup
 
 FORM output.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.

@@ -363,7 +363,6 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'BRANCH_OVERVIEW'.
-    ms_control-page_menu  = build_menu( ).
     mo_repo = io_repo.
     refresh( ).
   ENDMETHOD.
@@ -428,6 +427,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     ro_html->add( '<br>' ).
 
     ro_html->add( render_merge( ) ).
+
+    ro_html->add( '<br>' ).
+    ro_html->add( build_menu( )->render( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
