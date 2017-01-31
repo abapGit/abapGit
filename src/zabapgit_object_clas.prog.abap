@@ -129,7 +129,12 @@ INTERFACE lif_object_oriented_object_fnc.
       IMPORTING
         iv_obejct_name         TYPE seoclsname
       RETURNING
-        VALUE(rt_descriptions) TYPE ty_seocompotx_tt.
+        VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
+    delete
+      IMPORTING
+        is_deletion_key TYPE seoclskey
+      RAISING
+        lcx_exception.
 ENDINTERFACE.
 
 CLASS lcl_oo_object_serializer DEFINITION.
@@ -408,8 +413,7 @@ ENDCLASS.
 CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object_fnc~create.
-    "Subclass responsibility
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~deserialize_source.
@@ -425,8 +429,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~generate_locals.
-    "Subclass responsibility
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD deserialize_abap_source_old.
@@ -494,14 +497,13 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname.
     INSERT seocompotx FROM TABLE it_descriptions.
   ENDMETHOD.
+
   METHOD lif_object_oriented_object_fnc~insert_text_pool.
-    "Subclass responsibility
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~create_sotr.
-    "Subclass responsibility
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~create_documentation.
@@ -521,8 +523,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~get_includes.
-    "Subclass responsibility
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~exists.
@@ -560,19 +561,19 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     rv_skip = mv_skip_test_classes.
   ENDMETHOD.
   METHOD lif_object_oriented_object_fnc~get_class_properties.
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~get_interface_properties.
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~read_text_pool.
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~read_sotr.
-    ASSERT 0 = 1.
+    ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~read_documentation.
@@ -611,6 +612,10 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     DELETE rt_descriptions WHERE descript IS INITIAL.
   ENDMETHOD.
 
+  METHOD lif_object_oriented_object_fnc~delete.
+    ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -626,7 +631,9 @@ CLASS lcl_object_oriented_class DEFINITION
       lif_object_oriented_object_fnc~get_includes REDEFINITION,
       lif_object_oriented_object_fnc~get_class_properties REDEFINITION,
       lif_object_oriented_object_fnc~read_text_pool REDEFINITION,
-      lif_object_oriented_object_fnc~read_sotr REDEFINITION.
+      lif_object_oriented_object_fnc~read_sotr REDEFINITION,
+      lif_object_oriented_object_fnc~delete REDEFINITION.
+
 ENDCLASS.
 CLASS lcl_object_oriented_class IMPLEMENTATION.
   METHOD lif_object_oriented_object_fnc~create.
@@ -860,6 +867,22 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD lif_object_oriented_object_fnc~delete.
+    CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
+      EXPORTING
+        clskey       = is_deletion_key
+      EXCEPTIONS
+        not_existing = 1
+        is_interface = 2
+        db_error     = 3
+        no_access    = 4
+        other        = 5
+        OTHERS       = 6.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from SEO_CLASS_DELETE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_object_oriented_interface DEFINITION
@@ -868,7 +891,8 @@ CLASS lcl_object_oriented_interface DEFINITION
     METHODS:
       lif_object_oriented_object_fnc~create REDEFINITION,
       lif_object_oriented_object_fnc~get_includes REDEFINITION,
-      lif_object_oriented_object_fnc~get_interface_properties REDEFINITION.
+      lif_object_oriented_object_fnc~get_interface_properties REDEFINITION,
+      lif_object_oriented_object_fnc~delete REDEFINITION.
 ENDCLASS.
 
 CLASS lcl_object_oriented_interface IMPLEMENTATION.
@@ -916,6 +940,21 @@ CLASS lcl_object_oriented_interface IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD lif_object_oriented_object_fnc~delete.
+    CALL FUNCTION 'SEO_INTERFACE_DELETE_COMPLETE'
+      EXPORTING
+        intkey       = is_deletion_key
+      EXCEPTIONS
+        not_existing = 1
+        is_class     = 2
+        db_error     = 3
+        no_access    = 4
+        other        = 5
+        OTHERS       = 6.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from SEO_INTERFACE_DELETE_COMPLETE' ).
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lth_oo_factory_injector DEFINITION DEFERRED.
@@ -1083,44 +1122,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
-
     DATA: ls_clskey TYPE seoclskey.
-
-
     ls_clskey-clsname = ms_item-obj_name.
 
-    CASE ms_item-obj_type.
-      WHEN 'CLAS'.
-        CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
-          EXPORTING
-            clskey       = ls_clskey
-          EXCEPTIONS
-            not_existing = 1
-            is_interface = 2
-            db_error     = 3
-            no_access    = 4
-            other        = 5
-            OTHERS       = 6.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Error from SEO_CLASS_DELETE_COMPLETE' ).
-        ENDIF.
-      WHEN 'INTF'.
-        CALL FUNCTION 'SEO_INTERFACE_DELETE_COMPLETE'
-          EXPORTING
-            intkey       = ls_clskey
-          EXCEPTIONS
-            not_existing = 1
-            is_class     = 2
-            db_error     = 3
-            no_access    = 4
-            other        = 5
-            OTHERS       = 6.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Error from SEO_INTERFACE_DELETE_COMPLETE' ).
-        ENDIF.
-      WHEN OTHERS.
-        lcx_exception=>raise( 'class delete, unknown type' ).
-    ENDCASE.
+    mo_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.                    "delete
 
   METHOD lif_object~serialize.
