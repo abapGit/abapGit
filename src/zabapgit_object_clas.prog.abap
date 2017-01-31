@@ -82,15 +82,16 @@ INTERFACE lif_object_oriented_object_fnc.
         VALUE(rv_exists) TYPE abap_bool,
     serialize_abap
       IMPORTING
-        is_class_key            TYPE seoclskey
-        iv_type                 TYPE seop_include_ext_app OPTIONAL
-      CHANGING
-        cv_test_classes_skipped TYPE abap_bool OPTIONAL
+        is_class_key     TYPE seoclskey
+        iv_type          TYPE seop_include_ext_app OPTIONAL
       RETURNING
-        VALUE(rt_source)        TYPE ty_string_tt
+        VALUE(rt_source) TYPE ty_string_tt
       RAISING
         lcx_exception
         cx_sy_dyn_call_error,
+    get_skip_test_classes
+      RETURNING
+        VALUE(rv_skip) TYPE abap_bool,
     get_class_properties
       IMPORTING
         is_class_key               TYPE seoclskey
@@ -391,6 +392,7 @@ CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
   PUBLIC SECTION.
     INTERFACES: lif_object_oriented_object_fnc.
   PRIVATE SECTION.
+    DATA mv_skip_test_classes TYPE abap_bool.
     METHODS deserialize_abap_source_old
       IMPORTING is_clskey TYPE seoclskey
                 it_source TYPE ty_string_tt
@@ -549,9 +551,13 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
         rt_source = lo_oo_serializer->serialize_macros( is_class_key ).
       WHEN seop_ext_class_testclasses.
         rt_source = lo_oo_serializer->serialize_testclasses( is_class_key ).
+        mv_skip_test_classes = lo_oo_serializer->are_test_classes_skipped( ).
       WHEN OTHERS.
         rt_source = lo_oo_serializer->serialize_abap_clif_source( is_class_key ).
     ENDCASE.
+  ENDMETHOD.
+  METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
+    rv_skip = mv_skip_test_classes.
   ENDMETHOD.
   METHOD lif_object_oriented_object_fnc~get_class_properties.
     ASSERT 0 = 1.
@@ -1158,11 +1164,10 @@ CLASS lcl_object_clas IMPLEMENTATION.
     ENDIF.
 
     lt_source = mo_object_oriented_object_fct->serialize_abap(
-      EXPORTING
-        is_class_key            = ls_class_key
-        iv_type                 = seop_ext_class_testclasses
-      CHANGING
-        cv_test_classes_skipped = mv_skip_testclass ).
+      is_class_key            = ls_class_key
+      iv_type                 = seop_ext_class_testclasses ).
+
+    mv_skip_testclass = mo_object_oriented_object_fct->get_skip_test_classes( ).
     IF NOT lt_source[] IS INITIAL AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
                           it_abap  = lt_source ).           "#EC NOTEXT

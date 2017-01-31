@@ -111,7 +111,6 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
         rt_source = mt_local_macros.
       WHEN seop_ext_class_testclasses.
         rt_source = mt_local_test_classes.
-        cv_test_classes_skipped = mv_skip_test_classes.
       WHEN OTHERS.
         rt_source = mt_source.
     ENDCASE.
@@ -139,6 +138,10 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
 
   METHOD lif_object_oriented_object_fnc~read_descriptions.
     rt_descriptions = mt_descriptions.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
+    rv_skip = mv_skip_test_classes.
   ENDMETHOD.
 
 ENDCLASS.
