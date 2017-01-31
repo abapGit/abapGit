@@ -30,6 +30,7 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
       mv_exists                TYPE abap_bool,
       mv_exists_called         TYPE abap_bool,
       ms_serialize_key         TYPE seoclskey,
+      ms_delete_key            TYPE seoclskey,
       mv_skip_test_classes     TYPE abap_bool.
   PRIVATE SECTION.
 
@@ -142,6 +143,10 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
 
   METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
     rv_skip = mv_skip_test_classes.
+  ENDMETHOD.
+
+  METHOD lif_object_oriented_object_fnc~delete.
+    ms_delete_key = is_deletion_key.
   ENDMETHOD.
 
 ENDCLASS.
@@ -1251,5 +1256,61 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_spy_oo_object_functions->mv_exists_called
       exp = abap_true ).
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS ltcl_delete_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
+INHERITING FROM ltc_oo_test.
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      class_delete FOR TESTING RAISING cx_static_check,
+      interface_delete FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
+CLASS ltcl_delete_oo_test IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_spy_oo_object_functions.
+    me->mo_spy_oo_object_functions->mv_exists = abap_true.
+    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+  ENDMETHOD.
+
+  METHOD class_delete.
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zcl_class'.
+    ms_item-obj_type = 'CLAS'.
+    CREATE OBJECT mo_oo_object TYPE lcl_object_clas
+      EXPORTING
+        is_item     = ms_item
+        iv_language = sy-langu.
+
+    mo_oo_object->delete( ).
+
+    DATA ls_expected_delete_key TYPE seoclskey.
+    ls_expected_delete_key-clsname = ms_item-obj_name.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = me->mo_spy_oo_object_functions->ms_delete_key
+      exp = ls_expected_delete_key ).
+  ENDMETHOD.
+
+  METHOD interface_delete.
+    ms_item-devclass = 'package_name'.
+    ms_item-obj_name = 'zif_interface'.
+    ms_item-obj_type = 'INTF'.
+
+    CREATE OBJECT mo_oo_object TYPE lcl_object_intf
+      EXPORTING
+        is_item     = ms_item
+        iv_language = sy-langu.
+
+    mo_oo_object->delete( ).
+
+    DATA ls_expected_delete_key TYPE seoclskey.
+    ls_expected_delete_key-clsname = ms_item-obj_name.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = me->mo_spy_oo_object_functions->ms_delete_key
+      exp = ls_expected_delete_key ).
   ENDMETHOD.
 ENDCLASS.
