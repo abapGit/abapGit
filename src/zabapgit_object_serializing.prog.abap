@@ -6,7 +6,7 @@
 
 INCLUDE zabapgit_object_acid.
 INCLUDE zabapgit_object_auth.
-INCLUDE zabapgit_object_oo_fct.
+INCLUDE zabapgit_object_oo_functions.
 INCLUDE zabapgit_object_clas.
 INCLUDE zabapgit_object_doct.
 INCLUDE zabapgit_object_docv.
@@ -20,6 +20,7 @@ INCLUDE zabapgit_object_fugr.
 INCLUDE zabapgit_object_iarp.
 INCLUDE zabapgit_object_iasp.
 INCLUDE zabapgit_object_iatu.
+INCLUDE zabapgit_object_intf.
 INCLUDE zabapgit_object_msag.
 INCLUDE zabapgit_object_nrob.
 INCLUDE zabapgit_object_para.
@@ -50,3 +51,4 @@ INCLUDE zabapgit_object_wdya.
 INCLUDE zabapgit_object_wdyn.
 INCLUDE zabapgit_object_webi.
 INCLUDE zabapgit_object_xslt.
+INCLUDE zabapgit_object_oo_factory.
