@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <NAME>ZABAPGIT_CSS_COMMON</NAME>
-   <TEXT/>
+   <TEXT>Abapgit common CSS</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
@@ -15,7 +15,7 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>filename</NAME>
-     <VALUE>~wwwtmp.css</VALUE>
+     <VALUE>common.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>

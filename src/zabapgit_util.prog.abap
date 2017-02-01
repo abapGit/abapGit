@@ -1069,16 +1069,14 @@ CLASS lcl_log IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html->add( '<br>' ).
     LOOP AT mt_log ASSIGNING <ls_log>.
-      CONCATENATE <ls_log>-msgv1
-        <ls_log>-msgv2
-        <ls_log>-msgv3
-        <ls_log>-msgv4 INTO lv_string SEPARATED BY space.
+      CONCATENATE <ls_log>-msgv1 <ls_log>-msgv2 <ls_log>-msgv3 <ls_log>-msgv4
+        INTO lv_string SEPARATED BY space.
+      ro_html->add( '<span class="error">' ).
+      ro_html->add_icon( iv_name = 'alert' iv_class = 'error' ). " warning CSS exists too
       ro_html->add( lv_string ).
-      ro_html->add( '<br>' ).
+      ro_html->add( '</span>' ).
     ENDLOOP.
-    ro_html->add( '<br>' ).
 
   ENDMETHOD.
 

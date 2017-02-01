@@ -37,6 +37,8 @@ form input:focus, textarea:focus {
 .grey             { color: lightgrey  !important; }
 .darkgrey         { color: #808080    !important; }
 .attention        { color: red        !important; }
+.error            { color: #d41919    !important; }
+.warning          { color: #e4ae0d    !important; }
 .blue             { color: #5e8dc9    !important; }
 .red              { color: red        !important; }
 
@@ -104,6 +106,19 @@ span.page_title {
   color: #bbb;
   padding-left: 0.4em;
 }
+
+/* ERROR LOG */
+
+div.log {
+  padding: 6px;
+  margin: 4px;
+  background-color: #fee6e6;
+  border: 1px #fdcece solid;
+  border-radius: 4px;
+}
+
+div.log > span   { display:block; }
+div.log .octicon { padding-right: 6px; }
 
 /* MENU */
 div.menu           { display: inline; }

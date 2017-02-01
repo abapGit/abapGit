@@ -140,7 +140,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
         lo_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
-          ro_html->add( '<div class="log attention">' ).
+          ro_html->add( '<div class="log">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
         ENDIF.
