@@ -1111,14 +1111,12 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation     = 'SHOW'
         object_name   = ms_item-obj_name
         object_type   = 'CLAS'
         in_new_window = abap_true.
-
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
@@ -1301,7 +1299,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       it_lines       = lt_lines
       iv_object_name = lv_object
       iv_language    = mv_language ).
-  ENDMETHOD.                    "deserialize_doku
+  ENDMETHOD.
 
   METHOD deserialize_tpool.
 
@@ -1403,23 +1401,38 @@ ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_intf DEFINITION INHERITING FROM lcl_object_clas FINAL.
-* @TODO, CLAS + INTF to be refactored, see:
-* https://github.com/larshp/abapGit/issues/21
+CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
   PUBLIC SECTION.
-    METHODS:
-      lif_object~deserialize REDEFINITION,
-      lif_object~has_changed_since REDEFINITION,
-      lif_object~serialize REDEFINITION.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE ty_item
+        iv_language TYPE spras.
   PROTECTED SECTION.
-    METHODS:
-      deserialize_abap REDEFINITION.
+    METHODS deserialize_abap
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
+
+    METHODS deserialize_docu
+      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
+    DATA mo_object_oriented_object_fct TYPE REF TO lif_object_oriented_object_fnc.
+
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
       RAISING   lcx_exception.
 ENDCLASS.                    "lcl_object_intf DEFINITION
 CLASS lcl_object_intf IMPLEMENTATION.
+  METHOD constructor.
+    super->constructor(
+      is_item     = is_item
+      iv_language = iv_language ).
+    mo_object_oriented_object_fct = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+  ENDMETHOD.
   METHOD lif_object~deserialize.
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
@@ -1456,6 +1469,25 @@ CLASS lcl_object_intf IMPLEMENTATION.
       it_descriptions = lt_descriptions ).
 
     mo_object_oriented_object_fct->add_to_activation_list( is_item = ms_item ).
+  ENDMETHOD.
+  METHOD deserialize_docu.
+
+    DATA: lt_lines  TYPE tlinetab,
+          lv_object TYPE dokhl-object.
+
+    io_xml->read( EXPORTING iv_name = 'LINES'
+                  CHANGING cg_data = lt_lines ).
+
+    IF lt_lines[] IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_object = ms_item-obj_name.
+
+    mo_object_oriented_object_fct->create_documentation(
+      it_lines       = lt_lines
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
   ENDMETHOD.
   METHOD lif_object~has_changed_since.
     DATA:
@@ -1537,6 +1569,70 @@ CLASS lcl_object_intf IMPLEMENTATION.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD lif_object~changed_by.
+    TYPES: BEGIN OF ty_includes,
+             programm TYPE programm,
+           END OF ty_includes.
+
+    TYPES: BEGIN OF ty_reposrc,
+             unam  TYPE reposrc-unam,
+             udat  TYPE reposrc-udat,
+             utime TYPE reposrc-utime,
+           END OF ty_reposrc.
+
+    DATA: lt_reposrc  TYPE STANDARD TABLE OF ty_reposrc,
+          ls_reposrc  LIKE LINE OF lt_reposrc,
+          lt_includes TYPE STANDARD TABLE OF ty_includes.
+
+    lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    ASSERT lines( lt_includes ) > 0.
+
+    SELECT unam udat utime FROM reposrc
+      INTO TABLE lt_reposrc
+      FOR ALL ENTRIES IN lt_includes
+      WHERE progname = lt_includes-programm
+      AND   r3state = 'A'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ELSE.
+      SORT lt_reposrc BY udat DESCENDING utime DESCENDING.
+      READ TABLE lt_reposrc INDEX 1 INTO ls_reposrc.
+      ASSERT sy-subrc = 0.
+      rv_user = ls_reposrc-unam.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+  ENDMETHOD.
+
+  METHOD lif_object~delete.
+    DATA: ls_clskey TYPE seoclskey.
+    ls_clskey-clsname = ms_item-obj_name.
+
+    mo_object_oriented_object_fct->delete( ls_clskey ).
+  ENDMETHOD.
+
+  METHOD lif_object~exists.
+    DATA: ls_class_key TYPE seoclskey.
+    ls_class_key-clsname = ms_item-obj_name.
+
+    rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
+  ENDMETHOD.
+
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'CLAS'
+        in_new_window = abap_true.
   ENDMETHOD.
 
 ENDCLASS.
