@@ -45,8 +45,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
     lv_action       = lcl_html_action_utils=>dbkey_encode( ls_action ).
-    lv_data         = lcl_xml_pretty=>print( lv_data ).
-    lv_data         = lo_highlighter->process_line( lv_data ).
+    lv_data         = lo_highlighter->process_line( lcl_xml_pretty=>print( lv_data ) ).
 
     CREATE OBJECT ro_html.
 
@@ -107,9 +106,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
       iv_type  = ms_key-type
       iv_value = ms_key-value ).
 
-    lv_data = lcl_xml_pretty=>print( lv_data ).
-
-    lv_data = escape( val    = lv_data
+    lv_data = escape( val    = lcl_xml_pretty=>print( lv_data )
                       format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
