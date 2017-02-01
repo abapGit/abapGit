@@ -6,6 +6,7 @@
 
 INCLUDE zabapgit_object_acid.
 INCLUDE zabapgit_object_auth.
+INCLUDE zabapgit_object_oo_fct.
 INCLUDE zabapgit_object_clas.
 INCLUDE zabapgit_object_doct.
 INCLUDE zabapgit_object_docv.
