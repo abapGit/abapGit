@@ -609,6 +609,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
 ENDCLASS.
 
+"Backdoor injection for test purposes
 CLASS lth_oo_factory_injector DEFINITION DEFERRED.
 
 CLASS lcl_object_oriented_factory DEFINITION
@@ -624,3 +625,6 @@ CLASS lcl_object_oriented_factory DEFINITION
     CLASS-DATA:
         go_object_oriented_object TYPE REF TO lif_object_oriented_object_fnc.
 ENDCLASS.
+"lcl_object_oriented_factory implementation is in include ZABAPGIT_OBJECT_OO_FACTORY.
+"Reason: In this way, clas and intf specific OO functions implementations can be done
+"at the own includes.
