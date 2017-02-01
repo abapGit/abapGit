@@ -455,8 +455,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ELSE.
       lv_obj_name = ms_item-obj_name.
     ENDIF.
-* handle namespaces
-    REPLACE ALL OCCURRENCES OF '/' IN lv_obj_name WITH '#'.
+
 
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
@@ -465,6 +464,9 @@ CLASS lcl_objects_files IMPLEMENTATION.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra '.' iv_ext
         INTO rv_filename.                                   "#EC NOTEXT
     ENDIF.
+
+* handle namespaces
+    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
     TRANSLATE rv_filename TO LOWER CASE.
 
   ENDMETHOD.                    "filename

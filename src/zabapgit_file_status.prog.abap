@@ -175,6 +175,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     " Handle namespaces
     REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
+    REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
+    REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
     CLEAR es_item.
     es_item-obj_type = lv_type.
