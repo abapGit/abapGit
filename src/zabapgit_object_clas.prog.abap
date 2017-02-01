@@ -1631,7 +1631,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
       EXPORTING
         operation     = 'SHOW'
         object_name   = ms_item-obj_name
-        object_type   = 'CLAS'
+        object_type   = 'INTF'
         in_new_window = abap_true.
   ENDMETHOD.
 
