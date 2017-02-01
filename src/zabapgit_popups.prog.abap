@@ -301,9 +301,10 @@ CLASS lcl_popups IMPLEMENTATION.
 
     DATA: lo_branches    TYPE REF TO lcl_git_branch_list,
           lt_branches    TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
-          lv_head_suffix TYPE string,
           lv_answer      TYPE c LENGTH 1,
-          lv_default     TYPE i VALUE 1, "Default cursor position
+          lv_default     TYPE i,
+          lv_head_suffix TYPE string,
+          lv_head_symref TYPE string,
           lt_selection   TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
@@ -313,26 +314,41 @@ CLASS lcl_popups IMPLEMENTATION.
     lo_branches    = lcl_git_transport=>branches( iv_url ).
     lt_branches    = lo_branches->get_branches_only( ).
     lv_head_suffix = | ({ lcl_git_branch_list=>c_head_name })|.
+    lv_head_symref = lo_branches->get_head_symref( ).
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.
 
-      IF <ls_branch>-name = lcl_git_branch_list=>c_head_name
-         AND <ls_branch>-name <> lo_branches->get_head_symref( ).
-        " HEAD but other HEAD symref exist
-        CONTINUE.
-      ENDIF.
+      CHECK <ls_branch>-name IS NOT INITIAL. " To ensure some below ifs
 
-      APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
-      IF iv_default_branch IS NOT INITIAL AND iv_default_branch = <ls_branch>-name.
-        lv_default = sy-tabix.
-      ENDIF.
+      IF <ls_branch>-is_head = abap_true.
 
-      IF <ls_branch>-name = lo_branches->get_head_symref( )
-         AND <ls_branch>-name <> lcl_git_branch_list=>c_head_name.
-        " HEAD symref but not HEAD itself
-        <ls_sel>-varoption = <ls_branch>-display_name && lv_head_suffix.
+        IF <ls_branch>-name = lcl_git_branch_list=>c_head_name. " HEAD
+          IF <ls_branch>-name <> lv_head_symref AND lv_head_symref IS NOT INITIAL.
+            " HEAD but other HEAD symref exists - ignore
+            CONTINUE.
+          ELSE.
+            INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
+            <ls_sel>-varoption = <ls_branch>-name.
+          ENDIF.
+        ELSE.
+          INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
+          <ls_sel>-varoption = <ls_branch>-display_name && lv_head_suffix.
+        ENDIF.
+
+        IF lv_default > 0. " Shift down default if set
+          lv_default = lv_default + 1.
+        ENDIF.
       ELSE.
+        APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
         <ls_sel>-varoption = <ls_branch>-display_name.
+      ENDIF.
+
+      IF <ls_branch>-name = iv_default_branch.
+        IF <ls_branch>-is_head = abap_true.
+          lv_default = 1.
+        ELSE.
+          lv_default = sy-tabix.
+        ENDIF.
       ENDIF.
 
     ENDLOOP.
@@ -377,7 +393,6 @@ CLASS lcl_popups IMPLEMENTATION.
       ASSERT sy-subrc = 0.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
     ENDIF.
-
 
   ENDMETHOD.
 
