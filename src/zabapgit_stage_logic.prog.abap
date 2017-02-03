@@ -10,6 +10,7 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
+                  iv_remote_only  TYPE abap_bool DEFAULT abap_false
         RETURNING VALUE(rs_files) TYPE ty_stage_files
         RAISING   lcx_exception,
       count
@@ -30,11 +31,17 @@ ENDCLASS.
 CLASS lcl_stage_logic IMPLEMENTATION.
 
   METHOD get.
-    rs_files-local  = io_repo->get_files_local( ).
+
     rs_files-remote = io_repo->get_files_remote( ).
-    remove_identical( CHANGING cs_files = rs_files ).
-    remove_ignored( EXPORTING io_repo = io_repo
-                    CHANGING cs_files = rs_files ).
+
+    IF iv_remote_only = abap_false.
+      rs_files-local  = io_repo->get_files_local( ).
+      remove_identical( CHANGING cs_files = rs_files ).
+    ENDIF.
+
+    remove_ignored( EXPORTING io_repo  = io_repo
+                    CHANGING  cs_files = rs_files ).
+
   ENDMETHOD.
 
   METHOD count.
@@ -58,10 +65,14 @@ CLASS lcl_stage_logic IMPLEMENTATION.
       lv_index = sy-tabix.
 
       IF io_repo->get_dot_abapgit( )->is_ignored(
-          iv_path = <ls_remote>-path
+          iv_path     = <ls_remote>-path
           iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE cs_files-remote INDEX lv_index.
+      ELSEIF <ls_remote>-path = gc_root_dir AND <ls_remote>-filename = gc_dot_abapgit.
+        " Remove .abapgit from remotes - it cannot be removed or ignored
+        DELETE cs_files-remote INDEX lv_index.
       ENDIF.
+
     ENDLOOP.
 
   ENDMETHOD.

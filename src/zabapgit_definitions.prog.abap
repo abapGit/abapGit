@@ -227,6 +227,8 @@ CONSTANTS: BEGIN OF gc_action,
              go_debuginfo           TYPE string VALUE 'go_debuginfo',
              go_settings            TYPE string VALUE 'go_settings',
              go_tutorial            TYPE string VALUE 'go_tutorial',
+             go_manage_files        TYPE string VALUE 'go_manage_files',
+
              jump                   TYPE string VALUE 'jump',
              jump_pkg               TYPE string VALUE 'jump_pkg',
            END OF gc_action.
