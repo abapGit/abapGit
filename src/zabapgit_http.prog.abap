@@ -472,12 +472,7 @@ CLASS lcl_http IMPLEMENTATION.
     DATA: lv_default_user  TYPE string,
           lv_user          TYPE string,
           lv_pass          TYPE string,
-          lv_2fa_token     TYPE string,
-          lv_access_token  TYPE string,
-          lo_digest        TYPE REF TO lcl_http_digest,
-          li_authenticator TYPE REF TO lif_2fa_authenticator,
-          lx_error         TYPE REF TO cx_root,
-          lv_use_2fa       TYPE abap_bool.
+          lo_digest        TYPE REF TO lcl_http_digest.
 
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
@@ -499,50 +494,13 @@ CLASS lcl_http IMPLEMENTATION.
                                            iv_username = lv_user ).
     ENDIF.
 
-    " Is the repository hoster supported for using two factor authentication?
-    TRY.
-        IF lcl_2fa_authenticator_registry=>is_url_supported( iv_url ) = abap_true.
-          li_authenticator = lcl_2fa_authenticator_registry=>get_authenticator_for_url( iv_url ).
-
-          " Is two factor authentication required for this account?
-          IF li_authenticator->is_2fa_required( iv_url      = iv_url
-                                                iv_username = lv_user
-                                                iv_password = lv_pass ) = abap_true.
-
-            " Get a 2FA token (app/sms)
-            CALL FUNCTION 'POPUP_GET_STRING'
-              EXPORTING
-                label = 'Two factor auth. token'
-              IMPORTING
-                value = lv_2fa_token
-                okay  = lv_use_2fa.
-            IF lv_use_2fa = abap_false.
-              lcx_exception=>raise( 'Authentication cancelled' ).
-            ENDIF.
-
-            " Get a new access token
-            lv_access_token = li_authenticator->authenticate( iv_url       = iv_url
-                                                              iv_username  = lv_user
-                                                              iv_password  = lv_pass
-                                                              iv_2fa_token = lv_2fa_token ).
-
-            " Delete any old ones
-            ##TODO.
-          ENDIF.
-        ENDIF.
-
-      CATCH lcx_2fa_error INTO lx_error.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error.
-    ENDTRY.
-
-    " If there is an access token use that as the password instead because two factor authentication
-    " is required.
-    IF lv_access_token IS NOT INITIAL.
-      lv_pass = lv_access_token.
-    ENDIF.
+    " Offer two factor authentication if it is available and required
+    lcl_2fa_authenticator_registry=>use_2fa_if_required(
+      EXPORTING
+        iv_url      = iv_url
+      CHANGING
+        cv_username = lv_user
+        cv_password = lv_pass ).
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.

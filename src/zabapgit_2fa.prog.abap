@@ -74,6 +74,18 @@ CLASS lcx_2fa_unsupported IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcx_2fa_token_del_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+  PROTECTED SECTION.
+    METHODS:
+      get_default_text REDEFINITION.
+ENDCLASS.
+
+CLASS lcx_2fa_token_del_failed IMPLEMENTATION.
+  METHOD get_default_text.
+    rv_text = 'Deleting previous access tokens failed.' ##NO_TEXT.
+  ENDMETHOD.
+ENDCLASS.
+
 
 "! Defines a two factor authentication authenticator
 "! <p>
@@ -123,7 +135,20 @@ INTERFACE lif_2fa_authenticator.
     is_2fa_required IMPORTING iv_url             TYPE string
                               iv_username        TYPE string
                               iv_password        TYPE string
-                    RETURNING VALUE(rv_required) TYPE abap_bool.
+                    RETURNING VALUE(rv_required) TYPE abap_bool,
+    "! Delete all previously created access tokens for abapGit
+    "! @parameter iv_url | Repository url
+    "! @parameter iv_username | Username
+    "! @parameter iv_password | Password
+    "! @parameter iv_2fa_token | Two factor token
+    "! @raising lcx_2fa_token_del_failed | Token deletion failed
+    "! @raising lcx_2fa_auth_failed | Authentication failed
+    delete_access_tokens IMPORTING iv_url       TYPE string
+                                   iv_username  TYPE string
+                                   iv_password  TYPE string
+                                   iv_2fa_token TYPE string
+                         RAISING   lcx_2fa_token_del_failed
+                                   lcx_2fa_auth_failed.
 ENDINTERFACE.
 
 "! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
@@ -138,19 +163,20 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       authenticate FOR lif_2fa_authenticator~authenticate,
       supports_url FOR lif_2fa_authenticator~supports_url,
       get_service_id_from_url FOR lif_2fa_authenticator~get_service_id_from_url,
-      is_2fa_required FOR lif_2fa_authenticator~is_2fa_required.
+      is_2fa_required FOR lif_2fa_authenticator~is_2fa_required,
+      delete_access_tokens FOR lif_2fa_authenticator~delete_access_tokens.
     METHODS:
       "! @parameter iv_supported_url_regex | Regular expression to check if a repository url is
       "!                                     supported, used for default implementation of
       "!                                     <em>SUPPORTS_URL</em>
       constructor IMPORTING iv_supported_url_regex TYPE clike.
   PROTECTED SECTION.
-    METHODS:
+    CLASS-METHODS:
       "! Helper method to raise class based exception after traditional exception was raised
       "! <p>
       "! <em>sy-msg...</em> must be set right before calling!
       "! </p>
-      raise_internal_error_from_sy FINAL RAISING lcx_2fa_auth_failed.
+      raise_internal_error_from_sy RAISING lcx_2fa_auth_failed.
   PRIVATE SECTION.
     DATA:
       mo_url_regex TYPE REF TO cl_abap_regex.
@@ -180,6 +206,10 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
     rv_required = abap_false.
   ENDMETHOD.
 
+  METHOD delete_access_tokens.
+    RAISE EXCEPTION TYPE lcx_2fa_token_del_failed. " Needs to be overwritten in subclasses
+  ENDMETHOD.
+
   METHOD raise_internal_error_from_sy.
     DATA: lv_error_msg TYPE string.
 
@@ -202,20 +232,30 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       constructor,
       get_service_id_from_url REDEFINITION,
       authenticate REDEFINITION,
-      is_2fa_required REDEFINITION.
+      is_2fa_required REDEFINITION,
+      delete_access_tokens REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       gc_github_api_url              TYPE string VALUE `https://api.github.com/`,
       gc_otp_header_name             TYPE string VALUE `X-Github-OTP`,
       gc_restendpoint_authorizations TYPE string VALUE `/authorizations`.
-    METHODS:
-      set_access_token_request IMPORTING ii_request   TYPE REF TO if_http_request
-                                         iv_repo_name TYPE string,
+    CLASS-METHODS:
+      set_new_token_request IMPORTING ii_request   TYPE REF TO if_http_request,
       get_token_from_response IMPORTING ii_response     TYPE REF TO if_http_response
                               RETURNING VALUE(rv_token) TYPE string,
       parse_repo_from_url IMPORTING iv_url              TYPE string
-                          RETURNING VALUE(rv_repo_name) TYPE string.
+                          RETURNING VALUE(rv_repo_name) TYPE string,
+      set_list_token_request IMPORTING ii_request TYPE REF TO if_http_request,
+      get_tobedel_tokens_from_resp IMPORTING ii_response   TYPE REF TO if_http_response
+                                   RETURNING VALUE(rt_ids) TYPE stringtab,
+      set_del_token_request IMPORTING ii_request  TYPE REF TO if_http_request
+                                      iv_token_id TYPE string,
+      get_authenticated_client IMPORTING iv_username      TYPE string
+                                         iv_password      TYPE string
+                                         iv_2fa_token     TYPE string
+                               RETURNING VALUE(ri_client) TYPE REF TO if_http_client
+                               RAISING   lcx_2fa_auth_failed.
 ENDCLASS.
 
 CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
@@ -224,66 +264,19 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD authenticate.
-
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
-          lv_http_code_description TYPE string,
-          lv_binary_response       TYPE xstring,
-          BEGIN OF ls_success_response,
-            token TYPE string,
-          END OF ls_success_response.
+          lv_http_code_description TYPE string.
 
-    " 1. Try to login to GitHub API with username, password and 2fa token
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = gc_github_api_url
-      IMPORTING
-        client             = li_http_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
-    ENDIF.
-
-    " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
-    li_http_client->propertytype_accept_cookie = if_http_client=>co_enabled.
-    li_http_client->request->set_header_field( name = gc_otp_header_name value = iv_2fa_token ).
-    li_http_client->authenticate( username = iv_username password = iv_password ).
-    li_http_client->propertytype_logon_popup = if_http_client=>co_disabled.
-
-    li_http_client->send( EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
-    ENDIF.
-
-    li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
-    IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
-    ENDIF.
-
-    " Check if authentication has succeeded
-    li_http_client->response->get_status(
-      IMPORTING
-        code   = lv_http_code
-        reason = lv_http_code_description ).
-    IF lv_http_code <> 200.
-      RAISE EXCEPTION TYPE lcx_2fa_auth_failed
-        EXPORTING
-          iv_error_text = |Authentication failed: { lv_http_code_description }|.
-    ENDIF.
-
+    " 1. Try to login to GitHub API
+    li_http_client = get_authenticated_client( iv_username  = iv_username
+                                               iv_password  = iv_password
+                                               iv_2fa_token = iv_2fa_token ).
 
     " 2. Create an access token which can be used instead of a password
     " https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization
 
-    set_access_token_request( ii_request   = li_http_client->request
-                              iv_repo_name = parse_repo_from_url( iv_url ) ).
-    li_http_client->request->set_header_field( name  = if_http_header_fields_sap=>request_uri
-                                               value = gc_restendpoint_authorizations ).
-    li_http_client->request->set_method( if_http_request=>co_request_method_post ).
+    set_new_token_request( ii_request = li_http_client->request ).
 
     li_http_client->send( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
@@ -313,22 +306,37 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD set_access_token_request.
-    DATA: lv_fingerprint TYPE string,
-          lv_json_string TYPE string.
+  METHOD set_new_token_request.
+    DATA: lv_json_string TYPE string.
 
-    " The fingerprint must be unique, otherwise only one token can be generated, unless the user
-    " deletes it in GitHub's settings. This is problematic if he deletes it in abapGit but keeps it
-    " on GitHub.
-    lv_fingerprint = |abapGit-{ sy-sysid }-{ sy-uname }-{ sy-datum }-{ sy-uzeit }|.
-
-    lv_json_string = |\{"scopes":["repo"],"note":"abapGit","fingerprint":"{ lv_fingerprint }"\}|.
+    lv_json_string = |\{"scopes":["repo"],"note":"abapGit","fingerprint":"abapGit2FA"\}|.
 
     ii_request->set_data( cl_abap_codepage=>convert_to( lv_json_string ) ).
+    ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
+                                  value = gc_restendpoint_authorizations ).
+    ii_request->set_method( if_http_request=>co_request_method_post ).
+  ENDMETHOD.
+
+  METHOD set_list_token_request.
+    ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
+                                  value = gc_restendpoint_authorizations ).
+    ii_request->set_method( if_http_request=>co_request_method_get ).
+  ENDMETHOD.
+
+  METHOD set_del_token_request.
+    DATA: lv_url TYPE string.
+
+    lv_url = |{ gc_restendpoint_authorizations }/{ iv_token_id }|.
+
+    ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
+                                  value = lv_url ).
+    " Other methods than POST and GET do not have constants unfortunately
+    " ii_request->set_method( if_http_request=>co_request_method_delete ).
+    ii_request->set_method( 'DELETE' ).
   ENDMETHOD.
 
   METHOD get_token_from_response.
-    CONSTANTS: lc_search_regex TYPE string VALUE '.*"token":"([^"]*).*$'.
+    CONSTANTS: lc_search_regex TYPE string VALUE `.*"token":"([^"]*).*$`.
     DATA: lv_response TYPE string,
           lo_regex    TYPE REF TO cl_abap_regex,
           lo_matcher  TYPE REF TO cl_abap_matcher.
@@ -343,6 +351,26 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     IF lo_matcher->match( ) = abap_true.
       rv_token = lo_matcher->get_submatch( 1 ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD get_tobedel_tokens_from_resp.
+    CONSTANTS: lc_search_regex TYPE string
+               VALUE `\{"id": ?(\d+)[^\{]*"app":\{[^\{^\}]*\}[^\{]*"fingerprint": ?` &
+               `"abapGit2FA"[^\{]*\}`.
+    DATA: lv_response TYPE string,
+          lo_regex    TYPE REF TO cl_abap_regex,
+          lo_matcher  TYPE REF TO cl_abap_matcher.
+
+    lv_response = cl_abap_codepage=>convert_from( ii_response->get_data( ) ).
+
+    CREATE OBJECT lo_regex
+      EXPORTING
+        pattern = lc_search_regex.
+
+    lo_matcher = lo_regex->create_matcher( text = lv_response ).
+    WHILE lo_matcher->find_next( ) = abap_true.
+      APPEND lo_matcher->get_submatch( 1 ) TO rt_ids.
+    ENDWHILE.
   ENDMETHOD.
 
   METHOD parse_repo_from_url.
@@ -367,7 +395,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_2fa_required.
-    DATA: li_client TYPE REF TO if_http_client,
+    DATA: li_client       TYPE REF TO if_http_client,
           lv_header_value TYPE string.
 
     cl_http_client=>create_by_url(
@@ -378,14 +406,120 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    " Try to authenticate without password, if 2FA is required there will be a specific response
-    " header
+    " Try to authenticate, if 2FA is required there will be a specific response header
     li_client->authenticate( username = iv_username password = iv_password ).
     li_client->send( ).
     li_client->receive( ).
 
     IF li_client->response->get_header_field( gc_otp_header_name ) CP 'required*'.
       rv_required = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD delete_access_tokens.
+    DATA: li_http_client           TYPE REF TO if_http_client,
+          lv_http_code             TYPE i,
+          lv_http_code_description TYPE string,
+          lt_tobedeleted_tokens    TYPE stringtab.
+    FIELD-SYMBOLS: <lv_id> TYPE string.
+
+    li_http_client = get_authenticated_client( iv_username  = iv_username
+                                               iv_password  = iv_password
+                                               iv_2fa_token = iv_2fa_token ).
+
+    set_list_token_request( li_http_client->request ).
+    li_http_client->send( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    li_http_client->response->get_status(
+      IMPORTING
+        code   = lv_http_code
+        reason = lv_http_code_description ).
+    IF lv_http_code <> 200.
+      RAISE EXCEPTION TYPE lcx_2fa_token_del_failed
+        EXPORTING
+          iv_error_text = |Could not fetch current 2FA authorizations: | &&
+                          |{ lv_http_code } { lv_http_code_description }|.
+    ENDIF.
+
+    lt_tobedeleted_tokens = get_tobedel_tokens_from_resp( li_http_client->response ).
+    LOOP AT lt_tobedeleted_tokens ASSIGNING <lv_id> WHERE table_line IS NOT INITIAL.
+      set_del_token_request( ii_request  = li_http_client->request
+                             iv_token_id = <lv_id> ).
+      li_http_client->send( EXCEPTIONS OTHERS = 1 ).
+      IF sy-subrc <> 0.
+        raise_internal_error_from_sy( ).
+      ENDIF.
+
+      li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
+      IF sy-subrc <> 0.
+        raise_internal_error_from_sy( ).
+      ENDIF.
+
+      li_http_client->response->get_status(
+        IMPORTING
+          code   = lv_http_code
+          reason = lv_http_code_description ).
+      IF lv_http_code <> 204.
+        RAISE EXCEPTION TYPE lcx_2fa_token_del_failed
+          EXPORTING
+            iv_error_text = |Could not delete token '{ <lv_id> }': | &&
+                            |{ lv_http_code } { lv_http_code_description }|.
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD get_authenticated_client.
+    DATA: lv_http_code             TYPE i,
+          lv_http_code_description TYPE string.
+
+    " Try to login to GitHub API with username, password and 2fa token
+    cl_http_client=>create_by_url(
+      EXPORTING
+        url                = gc_github_api_url
+      IMPORTING
+        client             = ri_client
+      EXCEPTIONS
+        argument_not_found = 1
+        plugin_not_active  = 2
+        internal_error     = 3
+        OTHERS             = 4 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
+    ri_client->propertytype_accept_cookie = if_http_client=>co_enabled.
+    ri_client->request->set_header_field( name = gc_otp_header_name value = iv_2fa_token ).
+    ri_client->authenticate( username = iv_username password = iv_password ).
+    ri_client->propertytype_logon_popup = if_http_client=>co_disabled.
+
+    ri_client->send( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    ri_client->receive( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_internal_error_from_sy( ).
+    ENDIF.
+
+    " Check if authentication has succeeded
+    ri_client->response->get_status(
+      IMPORTING
+        code   = lv_http_code
+        reason = lv_http_code_description ).
+    IF lv_http_code <> 200.
+      RAISE EXCEPTION TYPE lcx_2fa_auth_failed
+        EXPORTING
+          iv_error_text = |Authentication failed: { lv_http_code_description }|.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
@@ -409,7 +543,22 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
       "! @parameter iv_url | Url of the repository / service
       "! @parameter rv_supported | 2FA is supported
       is_url_supported IMPORTING iv_url              TYPE string
-                       RETURNING VALUE(rv_supported) TYPE abap_bool.
+                       RETURNING VALUE(rv_supported) TYPE abap_bool,
+      "! Offer to use two factor authentication if supported and required
+      "! <p>
+      "! This uses GUI functionality to display a popup to request the user to enter a two factor
+      "! token. Also an dummy authentication request might be used to find out if two factor
+      "! authentication is required for the account.
+      "! </p>
+      "! @parameter iv_url | Url of the repository / service
+      "! @parameter cv_username | Username
+      "! @parameter cv_password | Password, will be replaced by an access token if two factor
+      "!                          authentication succeeds
+      "! @raising lcx_exception | Error in two factor authentication
+      use_2fa_if_required IMPORTING iv_url      TYPE string
+                          CHANGING  cv_username TYPE string
+                                    cv_password TYPE string
+                          RAISING   lcx_exception.
     CLASS-DATA:
       "! All authenticators managed by the registry
       gt_registered_authenticators TYPE HASHED TABLE OF REF TO lif_2fa_authenticator
@@ -451,6 +600,60 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
         get_authenticator_for_url( iv_url ).
         rv_supported = abap_true.
       CATCH lcx_2fa_unsupported ##NO_HANDLER.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD use_2fa_if_required.
+    DATA: li_authenticator TYPE REF TO lif_2fa_authenticator,
+          lv_2fa_token     TYPE string,
+          lv_use_2fa       TYPE abap_bool,
+          lv_access_token  TYPE string,
+          lx_ex            TYPE REF TO cx_root.
+
+    IF is_url_supported( iv_url ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        li_authenticator = get_authenticator_for_url( iv_url ).
+
+        " Is two factor authentication required for this account?
+        IF li_authenticator->is_2fa_required( iv_url      = iv_url
+                                              iv_username = cv_username
+                                              iv_password = cv_password ) = abap_true.
+
+          " Get a 2FA token (app/sms)
+          CALL FUNCTION 'POPUP_GET_STRING'
+            EXPORTING
+              label = 'Two factor auth. token'
+            IMPORTING
+              value = lv_2fa_token
+              okay  = lv_use_2fa.
+          IF lv_use_2fa = abap_false.
+            lcx_exception=>raise( 'Authentication cancelled' ).
+          ENDIF.
+
+          " Delete an old access token if it exists
+          li_authenticator->delete_access_tokens( iv_url       = iv_url
+                                                  iv_username  = cv_username
+                                                  iv_password  = cv_password
+                                                  iv_2fa_token = lv_2fa_token ).
+
+          " Get a new access token
+          lv_access_token = li_authenticator->authenticate( iv_url       = iv_url
+                                                            iv_username  = cv_username
+                                                            iv_password  = cv_password
+                                                            iv_2fa_token = lv_2fa_token ).
+
+          " Use the access token instead of the password
+          cv_password = lv_access_token.
+        ENDIF.
+
+      CATCH lcx_2fa_error INTO lx_ex.
+        RAISE EXCEPTION TYPE lcx_exception
+          EXPORTING
+            iv_text     = |2FA error: { lx_ex->get_text( ) }|
+            ix_previous = lx_ex.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
