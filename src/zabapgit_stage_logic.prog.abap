@@ -10,7 +10,6 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
-                  iv_remote_only  TYPE abap_bool DEFAULT abap_false
         RETURNING VALUE(rs_files) TYPE ty_stage_files
         RAISING   lcx_exception,
       count
@@ -32,13 +31,9 @@ CLASS lcl_stage_logic IMPLEMENTATION.
 
   METHOD get.
 
+    rs_files-local  = io_repo->get_files_local( ).
     rs_files-remote = io_repo->get_files_remote( ).
-
-    IF iv_remote_only = abap_false.
-      rs_files-local  = io_repo->get_files_local( ).
-      remove_identical( CHANGING cs_files = rs_files ).
-    ENDIF.
-
+    remove_identical( CHANGING cs_files = rs_files ).
     remove_ignored( EXPORTING io_repo  = io_repo
                     CHANGING  cs_files = rs_files ).
 

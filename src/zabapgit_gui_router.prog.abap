@@ -36,7 +36,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS get_page_stage
       IMPORTING iv_key          TYPE lcl_persistence_repo=>ty_repo-key
-                iv_manage_files TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(ri_page)  TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
@@ -90,9 +89,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-new_page.
       WHEN gc_action-go_stage.                        " Go Staging page
         ei_page  = get_page_stage( lv_key ).
-        ev_state = gc_event_state-new_page_w_bookmark.
-      WHEN gc_action-go_manage_files.                 " Go files management
-        ei_page  = get_page_stage( iv_key = lv_key iv_manage_files = abap_true ).
         ev_state = gc_event_state-new_page_w_bookmark.
       WHEN gc_action-go_branch_overview.              " Go repo branch overview
         ei_page  = get_page_branch_overview( iv_getdata ).
@@ -314,8 +310,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CREATE OBJECT lo_stage_page
       EXPORTING
-        io_repo         = lo_repo
-        iv_manage_files = iv_manage_files.
+        io_repo         = lo_repo.
 
     ri_page = lo_stage_page.
 

@@ -14,7 +14,6 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
       constructor
         IMPORTING
           io_repo         TYPE REF TO lcl_repo_online
-          iv_manage_files TYPE abap_bool DEFAULT abap_false
         RAISING   lcx_exception,
       lif_gui_page~on_event REDEFINITION.
 
@@ -53,13 +52,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ms_control-page_title = 'STAGE'.
     mo_repo = io_repo.
 
-    IF iv_manage_files = abap_true.
-      ms_files = lcl_stage_logic=>get(
-        io_repo        = mo_repo
-        iv_remote_only = abap_true ).
-    ELSE.
-      ms_files = lcl_stage_logic=>get( mo_repo ).
-    ENDIF.
+    ms_files = lcl_stage_logic=>get( mo_repo ).
 
     CREATE OBJECT mo_stage
       EXPORTING
