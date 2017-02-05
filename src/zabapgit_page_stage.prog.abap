@@ -12,7 +12,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo_online
+        IMPORTING
+          io_repo         TYPE REF TO lcl_repo_online
         RAISING   lcx_exception,
       lif_gui_page~on_event REDEFINITION.
 

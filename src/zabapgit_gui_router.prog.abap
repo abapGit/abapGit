@@ -35,8 +35,8 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS get_page_stage
-      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      IMPORTING iv_key          TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page)  TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
     METHODS get_page_db_by_name
@@ -310,7 +310,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CREATE OBJECT lo_stage_page
       EXPORTING
-        io_repo = lo_repo.
+        io_repo         = lo_repo.
 
     ri_page = lo_stage_page.
 
