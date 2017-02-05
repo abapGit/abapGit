@@ -86,6 +86,18 @@ CLASS lcx_2fa_token_del_failed IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcx_2fa_communication_error DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+  PROTECTED SECTION.
+    METHODS:
+      get_default_text REDEFINITION.
+ENDCLASS.
+
+CLASS lcx_2fa_communication_error IMPLEMENTATION.
+  METHOD get_default_text.
+    rv_text = 'Communication error.' ##NO_TEXT.
+  ENDMETHOD.
+ENDCLASS.
+
 
 "! Defines a two factor authentication authenticator
 "! <p>
@@ -114,7 +126,8 @@ INTERFACE lif_2fa_authenticator.
                            iv_2fa_token           TYPE string
                  RETURNING VALUE(rv_access_token) TYPE string
                  RAISING   lcx_2fa_auth_failed
-                           lcx_2fa_token_gen_failed,
+                           lcx_2fa_token_gen_failed
+                           lcx_2fa_communication_error,
     "! Check if this authenticator instance supports the give repository url
     "! @parameter iv_url | Repository url
     "! @parameter rv_supported | Is supported
@@ -135,7 +148,8 @@ INTERFACE lif_2fa_authenticator.
     is_2fa_required IMPORTING iv_url             TYPE string
                               iv_username        TYPE string
                               iv_password        TYPE string
-                    RETURNING VALUE(rv_required) TYPE abap_bool,
+                    RETURNING VALUE(rv_required) TYPE abap_bool
+                    RAISING   lcx_2fa_communication_error,
     "! Delete all previously created access tokens for abapGit
     "! @parameter iv_url | Repository url
     "! @parameter iv_username | Username
@@ -148,6 +162,7 @@ INTERFACE lif_2fa_authenticator.
                                    iv_password  TYPE string
                                    iv_2fa_token TYPE string
                          RAISING   lcx_2fa_token_del_failed
+                                   lcx_2fa_communication_error
                                    lcx_2fa_auth_failed.
 ENDINTERFACE.
 
@@ -176,7 +191,7 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       "! <p>
       "! <em>sy-msg...</em> must be set right before calling!
       "! </p>
-      raise_internal_error_from_sy RAISING lcx_2fa_auth_failed.
+      raise_comm_error_from_sy RAISING lcx_2fa_communication_error.
   PRIVATE SECTION.
     DATA:
       mo_url_regex TYPE REF TO cl_abap_regex.
@@ -210,15 +225,15 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
     RAISE EXCEPTION TYPE lcx_2fa_token_del_failed. " Needs to be overwritten in subclasses
   ENDMETHOD.
 
-  METHOD raise_internal_error_from_sy.
+  METHOD raise_comm_error_from_sy.
     DATA: lv_error_msg TYPE string.
 
     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
             WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
             INTO lv_error_msg.
-    RAISE EXCEPTION TYPE lcx_2fa_auth_failed
+    RAISE EXCEPTION TYPE lcx_2fa_communication_error
       EXPORTING
-        iv_error_text = |Internal error: { lv_error_msg }| ##NO_TEXT.
+        iv_error_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
   ENDMETHOD.
 ENDCLASS.
 
@@ -255,12 +270,13 @@ CLASS lcl_2fa_github_authenticator DEFINITION
                                          iv_password      TYPE string
                                          iv_2fa_token     TYPE string
                                RETURNING VALUE(ri_client) TYPE REF TO if_http_client
-                               RAISING   lcx_2fa_auth_failed.
+                               RAISING   lcx_2fa_auth_failed
+                                         lcx_2fa_communication_error.
 ENDCLASS.
 
 CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   METHOD constructor.
-    super->constructor( 'https?:\/\/(www\.)?github.com.*$' ).
+    super->constructor( '^https?://(www\.)?github.com.*$' ).
   ENDMETHOD.
 
   METHOD authenticate.
@@ -280,12 +296,12 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
     li_http_client->send( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     li_http_client->response->get_status(
@@ -396,20 +412,50 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
   METHOD is_2fa_required.
     DATA: li_client       TYPE REF TO if_http_client,
-          lv_header_value TYPE string.
+          lv_header_value TYPE string,
+          lo_settings     TYPE REF TO lcl_settings.
+
+    lo_settings = lcl_app=>settings( )->read( ).
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = gc_github_api_url
+        url                = gc_github_api_url
+        ssl_id             = 'ANONYM'
+        proxy_host         = lo_settings->get_proxy_url( )
+        proxy_service      = lo_settings->get_proxy_port( )
       IMPORTING
-        client = li_client ).
+        client             = li_client
+      EXCEPTIONS
+        argument_not_found = 1
+        plugin_not_active  = 2
+        internal_error     = 3
+        OTHERS             = 4 ).
+    IF sy-subrc <> 0.
+      raise_comm_error_from_sy( ).
+    ENDIF.
 
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
+    " The request needs to use something other than GET and it needs to be send to an endpoint
+    " to trigger a SMS.
+    li_client->request->set_header_field( name  = if_http_header_fields_sap=>request_uri
+                                          value = gc_restendpoint_authorizations ).
+    li_client->request->set_method( if_http_request=>co_request_method_post ).
+
     " Try to authenticate, if 2FA is required there will be a specific response header
     li_client->authenticate( username = iv_username password = iv_password ).
-    li_client->send( ).
-    li_client->receive( ).
+
+    li_client->send( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_comm_error_from_sy( ).
+    ENDIF.
+
+    li_client->receive( EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      raise_comm_error_from_sy( ).
+    ENDIF.
+
+    " The response will either be UNAUTHORIZED or MALFORMED which is both fine.
 
     IF li_client->response->get_header_field( gc_otp_header_name ) CP 'required*'.
       rv_required = abap_true.
@@ -430,12 +476,12 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     set_list_token_request( li_http_client->request ).
     li_http_client->send( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     li_http_client->response->get_status(
@@ -455,12 +501,12 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
                              iv_token_id = <lv_id> ).
       li_http_client->send( EXCEPTIONS OTHERS = 1 ).
       IF sy-subrc <> 0.
-        raise_internal_error_from_sy( ).
+        raise_comm_error_from_sy( ).
       ENDIF.
 
       li_http_client->receive( EXCEPTIONS OTHERS = 1 ).
       IF sy-subrc <> 0.
-        raise_internal_error_from_sy( ).
+        raise_comm_error_from_sy( ).
       ENDIF.
 
       li_http_client->response->get_status(
@@ -478,12 +524,19 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
   METHOD get_authenticated_client.
     DATA: lv_http_code             TYPE i,
-          lv_http_code_description TYPE string.
+          lv_http_code_description TYPE string,
+          lo_settings              TYPE REF TO lcl_settings.
 
     " Try to login to GitHub API with username, password and 2fa token
+
+    lo_settings = lcl_app=>settings( )->read( ).
+
     cl_http_client=>create_by_url(
       EXPORTING
         url                = gc_github_api_url
+        ssl_id             = 'ANONYM'
+        proxy_host         = lo_settings->get_proxy_url( )
+        proxy_service      = lo_settings->get_proxy_port( )
       IMPORTING
         client             = ri_client
       EXCEPTIONS
@@ -492,7 +545,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
         internal_error     = 3
         OTHERS             = 4 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
@@ -503,12 +556,12 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 
     ri_client->send( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     ri_client->receive( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      raise_internal_error_from_sy( ).
+      raise_comm_error_from_sy( ).
     ENDIF.
 
     " Check if authentication has succeeded
