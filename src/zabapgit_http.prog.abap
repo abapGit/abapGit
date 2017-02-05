@@ -469,10 +469,10 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD acquire_login_details.
 
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO lcl_http_digest.
+    DATA: lv_default_user  TYPE string,
+          lv_user          TYPE string,
+          lv_pass          TYPE string,
+          lo_digest        TYPE REF TO lcl_http_digest.
 
 
     lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
@@ -480,10 +480,10 @@ CLASS lcl_http IMPLEMENTATION.
 
     lcl_password_dialog=>popup(
       EXPORTING
-        iv_repo_url = iv_url
+        iv_repo_url     = iv_url
       CHANGING
-        cv_user     = lv_user
-        cv_pass     = lv_pass ).
+        cv_user         = lv_user
+        cv_pass         = lv_pass ).
 
     IF lv_user IS INITIAL.
       lcx_exception=>raise( 'HTTP 401, unauthorized' ).
@@ -493,6 +493,14 @@ CLASS lcl_http IMPLEMENTATION.
       lcl_app=>user( )->set_repo_username( iv_url      = iv_url
                                            iv_username = lv_user ).
     ENDIF.
+
+    " Offer two factor authentication if it is available and required
+    lcl_2fa_authenticator_registry=>use_2fa_if_required(
+      EXPORTING
+        iv_url      = iv_url
+      CHANGING
+        cv_username = lv_user
+        cv_password = lv_pass ).
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.

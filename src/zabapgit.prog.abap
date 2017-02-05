@@ -53,6 +53,7 @@ INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_stage_logic.
+INCLUDE zabapgit_2fa.
 INCLUDE zabapgit_http.
 INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.
