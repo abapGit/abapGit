@@ -373,6 +373,9 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
         EXPORTING
           iv_error_text = 'Token generation failed: parser error' ##NO_TEXT.
     ENDIF.
+
+    " GitHub might need some time until the new token is ready to use, give it a second
+    CALL FUNCTION 'RZL_SLEEP'.
   ENDMETHOD.
 
   METHOD set_new_token_request.
