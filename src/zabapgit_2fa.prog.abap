@@ -98,6 +98,17 @@ CLASS lcx_2fa_communication_error IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcx_2fa_illegal_state DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+  PROTECTED SECTION.
+    METHODS:
+      get_default_text REDEFINITION.
+ENDCLASS.
+
+CLASS lcx_2fa_illegal_state IMPLEMENTATION.
+  METHOD get_default_text.
+    rv_text = 'Illegal state.' ##NO_TEXT.
+  ENDMETHOD.
+ENDCLASS.
 
 "! Defines a two factor authentication authenticator
 "! <p>
@@ -109,6 +120,12 @@ ENDCLASS.
 "! <p>
 "! <em>LCL_2FA_AUTHENTICATOR_REGISTRY</em> can be used to find a suitable implementation for a given
 "! repository.
+"! </p>
+"! <p>
+"! Using the <em>begin</em> and <em>end</em> methods an internal session can be started and
+"! completed in which internal state necessary for multiple methods will be cached. This can be
+"! used to avoid having multiple http sessions between <em>authenticate</em> and
+"! <em>delete_access_tokens</em>.
 "! </p>
 INTERFACE lif_2fa_authenticator.
   METHODS:
@@ -163,7 +180,13 @@ INTERFACE lif_2fa_authenticator.
                                    iv_2fa_token TYPE string
                          RAISING   lcx_2fa_token_del_failed
                                    lcx_2fa_communication_error
-                                   lcx_2fa_auth_failed.
+                                   lcx_2fa_auth_failed,
+    "! Begin an authenticator session that uses internal caching for authorizations
+    "! @raising lcx_2fa_illegal_state | Session already started
+    begin RAISING lcx_2fa_illegal_state,
+    "! End an authenticator session and clear internal caches
+    "! @raising lcx_2fa_illegal_state | Session not running
+    end RAISING lcx_2fa_illegal_state.
 ENDINTERFACE.
 
 "! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
@@ -179,7 +202,9 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       supports_url FOR lif_2fa_authenticator~supports_url,
       get_service_id_from_url FOR lif_2fa_authenticator~get_service_id_from_url,
       is_2fa_required FOR lif_2fa_authenticator~is_2fa_required,
-      delete_access_tokens FOR lif_2fa_authenticator~delete_access_tokens.
+      delete_access_tokens FOR lif_2fa_authenticator~delete_access_tokens,
+      begin FOR lif_2fa_authenticator~begin,
+      end FOR lif_2fa_authenticator~end.
     METHODS:
       "! @parameter iv_supported_url_regex | Regular expression to check if a repository url is
       "!                                     supported, used for default implementation of
@@ -192,9 +217,13 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       "! <em>sy-msg...</em> must be set right before calling!
       "! </p>
       raise_comm_error_from_sy RAISING lcx_2fa_communication_error.
+    METHODS:
+      "! @parameter rv_running | Internal session is currently active
+      is_session_running RETURNING VALUE(rv_running) TYPE abap_bool.
   PRIVATE SECTION.
     DATA:
-      mo_url_regex TYPE REF TO cl_abap_regex.
+      mo_url_regex       TYPE REF TO cl_abap_regex,
+      mv_session_running TYPE abap_bool.
 ENDCLASS.
 
 CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
@@ -235,6 +264,26 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
       EXPORTING
         iv_error_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
   ENDMETHOD.
+
+  METHOD begin.
+    IF mv_session_running = abap_true.
+      RAISE EXCEPTION TYPE lcx_2fa_illegal_state.
+    ENDIF.
+
+    mv_session_running = abap_true.
+  ENDMETHOD.
+
+  METHOD end.
+    IF mv_session_running = abap_false.
+      RAISE EXCEPTION TYPE lcx_2fa_illegal_state.
+    ENDIF.
+
+    mv_session_running = abap_false.
+  ENDMETHOD.
+
+  METHOD is_session_running.
+    rv_running = mv_session_running.
+  ENDMETHOD.
 ENDCLASS.
 
 CLASS lcl_2fa_github_authenticator DEFINITION
@@ -248,7 +297,8 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       get_service_id_from_url REDEFINITION,
       authenticate REDEFINITION,
       is_2fa_required REDEFINITION,
-      delete_access_tokens REDEFINITION.
+      delete_access_tokens REDEFINITION,
+      end REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -265,13 +315,16 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       get_tobedel_tokens_from_resp IMPORTING ii_response   TYPE REF TO if_http_response
                                    RETURNING VALUE(rt_ids) TYPE stringtab,
       set_del_token_request IMPORTING ii_request  TYPE REF TO if_http_request
-                                      iv_token_id TYPE string,
+                                      iv_token_id TYPE string.
+    METHODS:
       get_authenticated_client IMPORTING iv_username      TYPE string
                                          iv_password      TYPE string
                                          iv_2fa_token     TYPE string
                                RETURNING VALUE(ri_client) TYPE REF TO if_http_client
                                RAISING   lcx_2fa_auth_failed
                                          lcx_2fa_communication_error.
+    DATA:
+      mi_authenticated_session TYPE REF TO if_http_client.
 ENDCLASS.
 
 CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
@@ -523,17 +576,13 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_authenticated_client.
-    STATICS: BEGIN OF ss_cached_client,
-               username TYPE string,
-               client   TYPE REF TO if_http_client,
-             END OF ss_cached_client.
     DATA: lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
           lo_settings              TYPE REF TO lcl_settings.
 
-    " If there is a cached client for the same user return it instead
-    IF ss_cached_client-client IS BOUND AND ss_cached_client-username = iv_username.
-      ri_client = ss_cached_client-client.
+    " If there is a cached client return it instead
+    IF is_session_running( ) = abap_true AND mi_authenticated_session IS BOUND.
+      ri_client = mi_authenticated_session.
       RETURN.
     ENDIF.
 
@@ -586,8 +635,14 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     ENDIF.
 
     " Cache the authenticated http session / client to avoid unnecessary additional authentication
-    ss_cached_client-username = iv_username.
-    ss_cached_client-client = ri_client.
+    IF is_session_running( ) = abap_true.
+      mi_authenticated_session = ri_client.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD end.
+    super->end( ).
+    FREE mi_authenticated_session.
   ENDMETHOD.
 ENDCLASS.
 
@@ -683,6 +738,7 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
 
     TRY.
         li_authenticator = get_authenticator_for_url( iv_url ).
+        li_authenticator->begin( ).
 
         " Is two factor authentication required for this account?
         IF li_authenticator->is_2fa_required( iv_url      = iv_url
@@ -716,7 +772,14 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
           cv_password = lv_access_token.
         ENDIF.
 
+        li_authenticator->end( ).
+
       CATCH lcx_2fa_error INTO lx_ex.
+        TRY.
+            li_authenticator->end( ).
+          CATCH lcx_2fa_illegal_state ##NO_HANDLER.
+        ENDTRY.
+
         RAISE EXCEPTION TYPE lcx_exception
           EXPORTING
             iv_text     = |2FA error: { lx_ex->get_text( ) }|
