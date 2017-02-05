@@ -523,9 +523,19 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_authenticated_client.
+    STATICS: BEGIN OF ss_cached_client,
+               username TYPE string,
+               client   TYPE REF TO if_http_client,
+             END OF ss_cached_client.
     DATA: lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
           lo_settings              TYPE REF TO lcl_settings.
+
+    " If there is a cached client for the same user return it instead
+    IF ss_cached_client-client IS BOUND AND ss_cached_client-username = iv_username.
+      ri_client = ss_cached_client-client.
+      RETURN.
+    ENDIF.
 
     " Try to login to GitHub API with username, password and 2fa token
 
@@ -574,6 +584,10 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
         EXPORTING
           iv_error_text = |Authentication failed: { lv_http_code_description }|.
     ENDIF.
+
+    " Cache the authenticated http session / client to avoid unnecessary additional authentication
+    ss_cached_client-username = iv_username.
+    ss_cached_client-client = ri_client.
   ENDMETHOD.
 ENDCLASS.
 
