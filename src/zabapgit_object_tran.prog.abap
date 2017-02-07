@@ -243,8 +243,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         communication_failure = 2
         resource_failure      = 3
         OTHERS                = 4
-        ##fm_subrc_ok
-      .                                                   "#EC CI_SUBRC
+        ##fm_subrc_ok.    "#EC CI_SUBRC
 
   ENDMETHOD.                    "jump
 
@@ -287,6 +286,11 @@ CLASS lcl_object_tran IMPLEMENTATION.
           ls_tstcp        TYPE tstcp,
           lt_param_values TYPE TABLE OF rsparam,
           ls_rsstcd       TYPE rsstcd.
+
+
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TSTC'
                   CHANGING cg_data = ls_tstc ).

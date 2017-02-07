@@ -73,6 +73,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -158,6 +159,14 @@ CLASS lcl_object_dtel IMPLEMENTATION.
              ls_dd04v-entitytab.
     ENDIF.
 
+    IF ls_dd04v-routputlen = ''.
+* numeric field, make sure it is initial or XML serilization will dump
+      CLEAR ls_dd04v-routputlen.
+    ENDIF.
+    IF ls_dd04v-authclass = ''.
+      CLEAR ls_dd04v-authclass.
+    ENDIF.
+
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
     io_xml->add( iv_name = 'TPARA'
@@ -232,7 +241,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
           langu         = <lang>
         IMPORTING
           dd04v_wa      = ls_dd04v
-*          tpara_wa      = ls_tpara
+*         tpara_wa      = ls_tpara
         EXCEPTIONS
           illegal_input = 1
           OTHERS        = 2.

@@ -32,8 +32,7 @@ CLASS lcl_services_db IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.

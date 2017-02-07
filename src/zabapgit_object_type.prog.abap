@@ -52,7 +52,7 @@ CLASS lcl_object_type IMPLEMENTATION.
     TRY.
         read( ).
         rv_bool = abap_true.
-      CATCH lcx_not_found.
+      CATCH lcx_not_found lcx_exception.
         rv_bool = abap_false.
     ENDTRY.
 

@@ -302,15 +302,17 @@ ENDCLASS.
 
 ***********************
 
-CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online
         RAISING   lcx_exception,
-      lif_gui_page~on_event REDEFINITION,
-      lif_gui_page~render REDEFINITION.
+      lif_gui_page~on_event REDEFINITION.
+
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA: mo_repo     TYPE REF TO lcl_repo_online,
@@ -333,13 +335,13 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
       refresh
         RAISING lcx_exception,
       body
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       form_select
         IMPORTING iv_name        TYPE string
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_merge
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       decode_merge
         IMPORTING it_postdata     TYPE cnht_post_data_tab
@@ -360,6 +362,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
+    ms_control-page_title = 'BRANCH_OVERVIEW'.
     mo_repo = io_repo.
     refresh( ).
   ENDMETHOD.
@@ -416,7 +419,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( render_repo_top(
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_show_branch  = abap_false ) ).
@@ -424,6 +427,9 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     ro_html->add( '<br>' ).
 
     ro_html->add( render_merge( ) ).
+
+    ro_html->add( '<br>' ).
+    ro_html->add( build_menu( )->render( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     _add '<canvas id="gitGraph"></canvas>'.
@@ -577,17 +583,14 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~render.
+  METHOD render_content.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( iv_title = 'BRANCH_OVERVIEW' io_menu = build_menu( ) ) ).
     ro_html->add( '<div id="toc">' ).
     ro_html->add( body( ) ).
     ro_html->add( '</div>' ).
-    ro_html->add( footer( ) ).
 
-  ENDMETHOD.
+  ENDMETHOD.  "render_content
 
 ENDCLASS.

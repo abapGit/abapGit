@@ -18,6 +18,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   lcx_exception,
       get_files_local
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
+                  it_filter       TYPE scts_tadir OPTIONAL
         RETURNING VALUE(rt_files) TYPE ty_files_item_tt
         RAISING   lcx_exception,
       get_local_checksums
@@ -32,6 +33,8 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
       is_write_protected
+        RETURNING VALUE(rv_yes) TYPE sap_bool,
+      ignore_subpackages
         RETURNING VALUE(rv_yes) TYPE sap_bool,
       delete
         RAISING lcx_exception,

@@ -20,7 +20,8 @@ CLASS lcl_objects_activation DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS activate
-      RAISING lcx_exception.
+      IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
+      RAISING   lcx_exception.
 
     CLASS-METHODS clear.
 
@@ -29,8 +30,7 @@ CLASS lcl_objects_activation DEFINITION FINAL.
       IMPORTING iv_obj_name TYPE trobj_name
       CHANGING  ct_objects  TYPE dwinactiv_tab.
 
-    CLASS-DATA: gt_ddic     TYPE TABLE OF dwinactiv,
-                gt_programs TYPE TABLE OF dwinactiv.
+    CLASS-DATA: gt_objects TYPE TABLE OF dwinactiv.
 
 ENDCLASS.                    "lcl_objects_activation DEFINITION
 
@@ -47,38 +47,18 @@ CLASS lcl_objects_activation IMPLEMENTATION.
   ENDMETHOD.                    "add_item
 
   METHOD clear.
-    CLEAR: gt_ddic,
-           gt_programs.
+    CLEAR gt_objects.
   ENDMETHOD.                    "clear
 
   METHOD activate.
 
-* ddic
-    IF NOT gt_ddic IS INITIAL.
+    IF NOT gt_objects IS INITIAL.
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
-          activate_ddic_objects  = abap_true
+          activate_ddic_objects  = iv_ddic
           with_popup             = abap_true
         TABLES
-          objects                = gt_ddic
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
-      ENDIF.
-    ENDIF.
-
-* programs
-    IF NOT gt_programs IS INITIAL.
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          activate_ddic_objects  = abap_false
-          with_popup             = abap_true
-        TABLES
-          objects                = gt_programs
+          objects                = gt_objects
         EXCEPTIONS
           excecution_error       = 1
           cancelled              = 2
@@ -139,9 +119,9 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
     lv_obj_name = iv_name.
 
-* todo, refactoring
     CASE iv_type.
       WHEN 'CLAS' OR 'WDYN'.
+* todo, move this to the object type include instead
         CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
           EXPORTING
             obj_name         = lv_obj_name
@@ -160,22 +140,11 @@ CLASS lcl_objects_activation IMPLEMENTATION.
                              CHANGING ct_objects = lt_objects ).
         ENDIF.
 
-        APPEND LINES OF lt_objects TO gt_programs.
-      WHEN 'DOMA' OR 'DTEL' OR 'TABL' OR 'INDX' OR 'TTYP'
-        OR 'VIEW' OR 'SHLP' OR 'ENQU'
-        OR 'SFSW' OR 'SFBF' OR 'SFBS'.
-* todo also insert_into_working_area?
-        APPEND INITIAL LINE TO gt_ddic ASSIGNING <ls_object>.
-        <ls_object>-object   = iv_type.
-        <ls_object>-obj_name = lv_obj_name.
-      WHEN 'REPS' OR 'DYNP' OR 'CUAD' OR 'REPT' OR 'INTF'
-          OR 'FUNC' OR 'ENHO' OR 'TYPE' OR 'XSLT' OR 'WEBI'.
-* these seem to go into the workarea automatically
-        APPEND INITIAL LINE TO gt_programs ASSIGNING <ls_object>.
-        <ls_object>-object   = iv_type.
-        <ls_object>-obj_name = lv_obj_name.
+        APPEND LINES OF lt_objects TO gt_objects.
       WHEN OTHERS.
-        lcx_exception=>raise( 'activate, unknown type' ).
+        APPEND INITIAL LINE TO gt_objects ASSIGNING <ls_object>.
+        <ls_object>-object   = iv_type.
+        <ls_object>-obj_name = lv_obj_name.
     ENDCASE.
 
   ENDMETHOD.                    "activate
@@ -187,7 +156,7 @@ ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_objects_files DEFINITION .
+CLASS lcl_objects_files DEFINITION.
 
   PUBLIC SECTION.
     METHODS:
@@ -404,6 +373,9 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY gc_newline.
+* when editing files via eg. GitHub web interface it adds a newline at end of file
+    lv_source = lv_source && gc_newline.
+
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
                                  iv_ext   = 'abap' ).       "#EC NOTEXT
@@ -483,8 +455,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ELSE.
       lv_obj_name = ms_item-obj_name.
     ENDIF.
-* handle namespaces
-    REPLACE ALL OCCURRENCES OF '/' IN lv_obj_name WITH '#'.
+
 
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
@@ -493,6 +464,9 @@ CLASS lcl_objects_files IMPLEMENTATION.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra '.' iv_ext
         INTO rv_filename.                                   "#EC NOTEXT
     ENDIF.
+
+* handle namespaces
+    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
     TRANSLATE rv_filename TO LOWER CASE.
 
   ENDMETHOD.                    "filename
@@ -1132,12 +1106,28 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ELSE.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
-      INSERT REPORT is_progdir-name
-        FROM it_source
-        STATE 'I'
-        PROGRAM TYPE is_progdir-subc.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from INSERT REPORT' ).
+      IF strlen( is_progdir-name ) > 30.
+        " special treatment for extenstions
+        " if the program name exceeds 30 characters it is not a usual
+        " ABAP program but might be some extension, which requires the internal
+        " addition EXTENSION TYPE, see
+        " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
+        " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
+        INSERT REPORT is_progdir-name
+         FROM it_source
+         STATE 'I'
+         EXTENSION TYPE is_progdir-name+30.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
+        ENDIF.
+      ELSE.
+        INSERT REPORT is_progdir-name
+          FROM it_source
+          STATE 'I'
+          PROGRAM TYPE is_progdir-subc.
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from INSERT REPORT' ).
+        ENDIF.
       ENDIF.
 
       IF NOT it_tpool[] IS INITIAL.
@@ -1656,11 +1646,14 @@ CLASS lcl_objects DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_late,
+    TYPES: BEGIN OF ty_deserialization,
              obj     TYPE REF TO lif_object,
              xml     TYPE REF TO lcl_xml_input,
              package TYPE devclass,
-           END OF ty_late.
+             item    TYPE ty_item,
+           END OF ty_deserialization.
+
+    TYPES: ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY.
 
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE ty_item
@@ -1705,10 +1698,6 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS supported_list
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
-    CLASS-METHODS is_language_installed
-      IMPORTING iv_language   TYPE langu
-      RETURNING VALUE(rv_yes) TYPE abap_bool.
-
   PRIVATE SECTION.
 
     CLASS-DATA: mv_langs_installed TYPE scplangs.
@@ -1747,9 +1736,8 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING  lcx_exception.
 
     CLASS-METHODS warning_overwrite
-      IMPORTING io_repo    TYPE REF TO lcl_repo
-      CHANGING  ct_results TYPE ty_results_tt
-      RAISING   lcx_exception.
+      CHANGING ct_results TYPE ty_results_tt
+      RAISING  lcx_exception.
 
     CLASS-METHODS warning_package
       IMPORTING is_item          TYPE ty_item
@@ -1771,5 +1759,12 @@ CLASS lcl_objects DEFINITION FINAL.
         is_result TYPE ty_result
       RAISING
         lcx_exception.
+
+    CLASS-METHODS deserialize_objects
+      IMPORTING it_objects TYPE ty_deserialization_tt
+                iv_ddic    TYPE abap_bool DEFAULT abap_false
+                iv_descr   TYPE string
+      CHANGING  ct_files   TYPE ty_file_signatures_tt
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object DEFINITION

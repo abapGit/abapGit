@@ -207,18 +207,6 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "supported_list
 
-  METHOD is_language_installed.
-
-    IF mv_langs_installed IS INITIAL.
-      CALL FUNCTION 'RSAQ_READ_INSTALLED_LANGUAGES'
-        IMPORTING
-          inst_languages = mv_langs_installed.
-    ENDIF.
-
-    rv_yes = boolc( mv_langs_installed CA iv_language ).
-
-  ENDMETHOD.  "is_language_installed
-
   METHOD exists.
 
     DATA: li_obj TYPE REF TO lif_object.
@@ -238,26 +226,29 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD path_to_package.
 
     DATA: lv_length TYPE i,
+          lv_parent TYPE devclass,
+          lv_new    TYPE string,
           lv_path   TYPE string.
 
 
-    lv_length = strlen( iv_start ) - 1.
+    lv_length = strlen( iv_start ).
     lv_path = iv_path+lv_length.
+    lv_parent = iv_top.
+    rv_package = iv_top.
 
-    CONCATENATE iv_top lv_path INTO rv_package.
+    WHILE lv_path CA '/'.
+      SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-    TRANSLATE rv_package USING '/_'.
+      CONCATENATE rv_package '_' lv_new INTO rv_package.
+      TRANSLATE rv_package TO UPPER CASE.
 
-    lv_length = strlen( rv_package ) - 1.
+      IF lcl_sap_package=>exists( rv_package ) = abap_false.
+        lcl_sap_package=>create_child( iv_parent = lv_parent
+                                       iv_child  = rv_package ).
+      ENDIF.
 
-    rv_package = rv_package(lv_length).
-
-    TRANSLATE rv_package TO UPPER CASE.
-
-    IF lcl_sap_package=>exists( rv_package ) = abap_false.
-      lcl_sap_package=>create_child( iv_parent = iv_top
-                                     iv_child = rv_package ).
-    ENDIF.
+      lv_parent = rv_package.
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -589,18 +580,20 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item        TYPE ty_item,
-          lv_cancel      TYPE abap_bool,
-          li_obj         TYPE REF TO lif_object,
-          lt_remote      TYPE ty_files_tt,
-          lv_package     TYPE devclass,
-          lo_files       TYPE REF TO lcl_objects_files,
-          lo_xml         TYPE REF TO lcl_xml_input,
-          lt_results     TYPE ty_results_tt,
-          lt_late        TYPE TABLE OF ty_late.
+    DATA: ls_item    TYPE ty_item,
+          lv_cancel  TYPE abap_bool,
+          li_obj     TYPE REF TO lif_object,
+          lt_remote  TYPE ty_files_tt,
+          lv_package TYPE devclass,
+          lo_files   TYPE REF TO lcl_objects_files,
+          lo_xml     TYPE REF TO lcl_xml_input,
+          lt_results TYPE ty_results_tt,
+          lt_ddic    TYPE TABLE OF ty_deserialization,
+          lt_rest    TYPE TABLE OF ty_deserialization,
+          lt_late    TYPE TABLE OF ty_deserialization.
 
     FIELD-SYMBOLS: <ls_result> TYPE ty_result,
-                   <ls_late>   LIKE LINE OF lt_late.
+                   <ls_deser>  LIKE LINE OF lt_late.
 
 
     lcl_objects_activation=>clear( ).
@@ -616,8 +609,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_results = prioritize_deser( lt_results ).
 
-    warning_overwrite( EXPORTING io_repo = io_repo
-                       CHANGING ct_results = lt_results ).
+    warning_overwrite( CHANGING ct_results = lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
         AND NOT ( lstate = gc_state-added AND rstate IS INITIAL ).
@@ -656,34 +648,38 @@ CLASS lcl_objects IMPLEMENTATION.
                               is_metadata = lo_xml->get_metadata( ) ).
 
       compare_remote_to_local(
-       io_object = li_obj
-       it_remote = lt_remote
-       is_result = <ls_result> ).
+        io_object = li_obj
+        it_remote = lt_remote
+        is_result = <ls_result> ).
 
       li_obj->mo_files = lo_files.
 
       IF li_obj->get_metadata( )-late_deser = abap_true.
-        APPEND INITIAL LINE TO lt_late ASSIGNING <ls_late>.
-        <ls_late>-obj = li_obj.
-        <ls_late>-xml = lo_xml.
-        <ls_late>-package = lv_package.
-        CONTINUE.
+        APPEND INITIAL LINE TO lt_late ASSIGNING <ls_deser>.
+      ELSEIF li_obj->get_metadata( )-ddic = abap_true.
+        APPEND INITIAL LINE TO lt_ddic ASSIGNING <ls_deser>.
+      ELSE.
+        APPEND INITIAL LINE TO lt_rest ASSIGNING <ls_deser>.
       ENDIF.
+      <ls_deser>-item    = ls_item.
+      <ls_deser>-obj     = li_obj.
+      <ls_deser>-xml     = lo_xml.
+      <ls_deser>-package = lv_package.
 
-
-      li_obj->deserialize( iv_package = lv_package
-                           io_xml     = lo_xml ).
-
-      " Remember accessed files
-      APPEND LINES OF lo_files->get_accessed_files( ) TO rt_accessed_files.
     ENDLOOP.
 
-    lcl_objects_activation=>activate( ).
+    deserialize_objects( EXPORTING it_objects = lt_ddic
+                                   iv_ddic    = abap_true
+                                   iv_descr   = 'DDIC'
+                         CHANGING ct_files = rt_accessed_files ).
 
-    LOOP AT lt_late ASSIGNING <ls_late>.
-      <ls_late>-obj->deserialize( iv_package = <ls_late>-package
-                                  io_xml     = <ls_late>-xml ).
-    ENDLOOP.
+    deserialize_objects( EXPORTING it_objects = lt_rest
+                                   iv_descr   = 'Objects'
+                         CHANGING ct_files = rt_accessed_files ).
+
+    deserialize_objects( EXPORTING it_objects = lt_late
+                                   iv_descr   = 'Late'
+                         CHANGING ct_files = rt_accessed_files ).
 
     update_package_tree( io_repo->get_package( ) ).
 
@@ -692,6 +688,27 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+  METHOD deserialize_objects.
+
+    FIELD-SYMBOLS: <ls_obj> LIKE LINE OF it_objects.
+
+
+    lcl_objects_activation=>clear( ).
+
+    LOOP AT it_objects ASSIGNING <ls_obj>.
+      lcl_progress=>show( iv_key     = |Deserialize { iv_descr }|
+                          iv_current = sy-tabix
+                          iv_total   = lines( it_objects )
+                          iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
+
+      <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
+                                 io_xml     = <ls_obj>-xml ).
+      APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
+    ENDLOOP.
+
+    lcl_objects_activation=>activate( iv_ddic ).
+
+  ENDMETHOD.
 
   METHOD compare_remote_to_local.
 

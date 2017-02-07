@@ -13,6 +13,9 @@ CLASS lcl_gui_asset_manager DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_gui.
     METHODS get_images
       RETURNING VALUE(rt_images) TYPE tt_web_assets.
 
+    CLASS-METHODS get_webfont_link
+      RETURNING VALUE(rv_link) TYPE string.
+
   PRIVATE SECTION.
 
     METHODS get_inline_asset
@@ -108,11 +111,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       TABLES
         binary_tab   = lt_w3mime
       EXCEPTIONS
-        failed       = 1.
-
-    IF sy-subrc IS NOT INITIAL.
-      RETURN.
-    ENDIF.
+        failed       = 1 ##FM_SUBRC_OK.
 
   ENDMETHOD.  " get_mime_asset.
 
@@ -145,6 +144,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
     DATA: lt_data TYPE ty_string_tt,
           lv_str  TYPE string.
 
+
     CASE iv_asset_name.
       WHEN 'CSS_COMMON'.
         " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
@@ -158,11 +158,11 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
       EXPORTING
-        text      = lv_str
+        text   = lv_str
       IMPORTING
-        buffer    = rv_data
+        buffer = rv_data
       EXCEPTIONS
-        OTHERS    = 1.
+        OTHERS = 1.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.  " get_inline_asset.
@@ -255,160 +255,15 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       && 'cpUAAAAASUVORK5CYII='.
     APPEND ls_image TO rt_images.
 
-* http://fa2png.io/r/octicons/
-* colour: #808080
-* size: 16
-* https://www.base64-image.de/ can be used to convert images to base64
-
-    ls_image-url     = 'img/sync' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA6ElEQVQYGY3BIWuUAQAG'
-      && '4Pc7N72xsbGBYNE8tYpVZKDZX2CcYLEZ9yQxOQSz3D/YmkUsVovRQ2SYNJnlkFfH7VZu'
-      && 'wefJgrGHXnjrpQeu5B93smCwr6qqqp54433mDI5Ucds1u577o+p35hyoqe2cMThWVatJ'
-      && '7KiZrZxz18SJqqtJPFXPssRgw0oSH9WNXMCQU76qzSxx2cxxTlk3yhKb6mcSQy7kvjpM'
-      && 'Ylt98tpjN3POyFTdSuKSqppayxkjE/Uhc36p+m7PhhXr7vmmfhhnzpHPJqqqquqdcRY8'
-      && 'spq47sAXMyde2c3/+wvX7Y18BexhBwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/toc' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAFVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgIAO39T0AAAABnRSTlMABBCRlMXJzV0oAAAAN0lEQVQIW2NgwABuaWlB'
-      && 'YWlpDgwJDAxiAgxACshgYwAz0tLY2NISSBWBMYAmg4ADyBZhARCJAQBBchGypGCbQgAA'
-      && 'AABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/repo_online' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAApVBMVEUAAABQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQbJxQ'
-      && 'bJz+TJ01AAAANnRSTlMAAQIDBAcJCgwSFBocHygqMTM1NkRHSU1QUWFiZGlweHuDiImL'
-      && 'lZiio6a5vsfT3uTo6e3x9fsxY2JuAAAAgUlEQVQYGXXB6RaBUBSA0e+IEuIiMs9zhlDn'
-      && '/R/NZWmt/LA3f1RcoaB50SydCbn20wjedkPu3sKSpMGH21PhLdZ0BATZ+cCXtxtDHGLV'
-      && 'pgFW9QqJj2U0wvJvMF+5jiNGI3HK9dMQSouH6sRoFGoWd8l1dEDRWlWPQsFS98KPvvDH'
-      && 'C3HLClrWc70ZAAAAAElFTkSuQmCC'.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/repo_offline' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAVFBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICuaWnmAAAAG3RSTlMAAgQFBgsQFxweIiMtN3yI'
-      && 'nqOvt9Hp6/Hz9fktMNR/AAAAXElEQVQYV5WO2xJAMAxES1q3ugfF/v9/0qLyyL4k58xk'
-      && 'J0p9D7N5oeqZgSwy7fDZnHNdEE1gWK116tksl7hPimGFFPWYl7MU0zksRCl8TStKg1AJ'
-      && '0XNC8Zm4/c0BUVQHi0llOUYAAAAASUVORK5CYII='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/pkg' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAA30lEQVQoU43OIUuDcRSF'
-      && '8fvqhuB0mFwaKLbVBVdkX0GTFss+wYL2H4rJIIgyQQSzZcUPoGHZ9CKCmAwTMS8Y/ga3'
-      && 'BWVjT7hwOQ+HEzEbMhU7jrTd69q2KhtFRU2nrvS927dm3pyqPXcuNRVD7sxiRIQlDSc+'
-      && 'PGjZUFDWkYekLfdoV2XYua4rSZ61pZBkEUq2XPty41XuXJIiZGNhPDVZiFCYIMSor+Db'
-      && '7RQhYnQnCsNvNmGgPFFYMQh1PU9aqrLxyGUNx/p66r9mUc2hFx3JhU9vDtQU4y9KGjaV'
-      && '/gXT+AGZVIinhU2EAwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/branch' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAqFBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgID/OyosAAAAN3RSTlMAAQIDBAYICQ8TFRweJScoKSo3Oj1FRk1dYWJjZmhzdIaJ'
-      && 'j5GVm6CwsrS5vsHDyszV19ne7/X583teZAAAAIFJREFUGFdVytkagVAYheFvFzJlnqc0'
-      && 'EEoR+u//zhxI7dbZ9z4LMJ1op9DmjpntdXiBigHbLiAYqukBVr63+YGRSazgCY/iEooP'
-      && 'xKZxr0EnSbo14B1Rg4msKzj150fJrQpERPLBv7mIfNxlq+zRbZsu0JYpGlcdwjY9Twfr'
-      && 'nAbNsr6IKQxJI/U5CgAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/link' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAXVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICVwFMKAAAAHnRSTlMAAwQFBgcK'
-      && 'FR4gIiMmP0JHSm+RmKDByM/R09rg+/0jN/q+AAAAX0lEQVQYV43Nxw6AIBAE0FGw916Z'
-      && '//9MRQ0S4sG5bPZlCxqSCyBGXgFUJKUA4A8PUOKONzuQOxOZIjcLkrMvxGQg3skSCFYL'
-      && 'Kl1Ds5LWz+33yyf4rQOSf6CjnV6rHeAA87gJtKzI8ocAAAAASUVORK5CYII='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/code' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAAA1SURBVAhbY2AODQ0NEWBgYGVg'
-      && 'YGByhNAMKgIMrKyhAQxMDhA+QwCCZgVqIIUP1Q+yJzTUAAAfUAq+Os55uAAAAABJRU5E'
-      && 'rkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/bin' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAElBMVEUAAACAgICAgICA'
-      && 'gICAgICAgIC07w1vAAAABXRSTlMABECUxcOwZQcAAABBSURBVAhbXcqxDYAwAMRAK8h9'
-      && 'hmAARoANvuD3X4UCiojqZMlsbe8JAuN6ZZ9ozThRCVmsJe9H0HwdXf19W9v2eAA6Fws2'
-      && 'RotPsQAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/obj' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOBAMAAADtZjDiAAAAIVBMVEUAAACAgICAgICA'
-      && 'gICAgICAgICAgICAgICAgICAgICAgIDcWqnoAAAACnRSTlMABD1AZI+RlcPFIaFe1gAA'
-      && 'AEVJREFUCFtjYF+1atVKAQYGLgYGBuaJEJrBUgBCM0+A0AwLgLQIgyOIZmwCSgNptgAG'
-      && '1gQQfzKDhgCSPFw9Kg2yZ9WqAgBWJBENLk6V3AAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/lock' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAOVBMVEUAAACIiIiIiIiI'
-      && 'iIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIjNaTNB'
-      && 'AAAAEnRSTlMABgdBVXt8iYuRsNXZ3uDi6Pmu6tfUAAAASUlEQVQYV63KSxJAQBAE0TQ0'
-      && 'Znym1f0PayE0QdjJ5asCgGTu1hClqjppvaRXB60swBeA2QNUAIq+ICvKx367nqAn/P8Y'
-      && 't2jg3Q5rgASaF3KNRwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/dir' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAASFBMVEUAAABmksxmksxm'
-      && 'ksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxmksxm'
-      && 'ksxmksxmksxmksxMwQo8AAAAF3RSTlMABhIYIy1fZmhpe3+IiYuMkZvD7e/x93sipD4A'
-      && 'AAA+SURBVBhXY2BABzwiokAgzAYXEGdiBAIWIYQAPzcQCApzgwEXM4M4KuBDFxAYKAEx'
-      && 'VAFeBlYOTiTAzoThewD5hBAcnWM4gwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/burger' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAHlBMVEUAAABtktltktlt'
-      && 'ktltktltktltktltktltktltktk7ccVDAAAACXRSTlMAFDBLY2SFoPGv/DFMAAAAJ0lE'
-      && 'QVQIW2NggIHKmWAwmaETwpjGoBoKBo4MmIAkxXApuGK4dgwAAJa5IzLs+gRBAAAAAElF'
-      && 'TkSuQmCC'.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/star' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAABejclejcle'
-      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
-      && 'jclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejclejcle'
-      && 'jclejclejclejclejclejclejclejclejcn2yvsVAAAALXRSTlMAAQIFBwkKCw0QERUY'
-      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
-      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
-      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
-      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-    ls_image-url     = 'img/star-grey' ##NO_TEXT.
-    ls_image-base64 =
-         'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAilBMVEUAAADQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ'
-      && '0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NC2QdifAAAALXRSTlMAAQIFBwkKCw0QERUY'
-      && 'HB4jLzEzNjg7PVdYYmRvd3mDm52eub7R0+Tr8fX3+/16wo8zAAAAcElEQVQYGW3BBxKC'
-      && 'MABFwYcQETv2hg1UVP79ryeTZBxw3MWL+JGltBgVtGRSSoORVOAE8Xi5zVU7rWfDCOaV'
-      && 'Gu59mLz0dTPUBg95eYjVK2VdOzjBW9YZL5FT4i2k5+YoKcY5VPsQkoumOLsu1mjFHx8o'
-      && 'ahA3YV7OfwAAAABJRU5ErkJggg=='.
-    APPEND ls_image TO rt_images.
-
-
   ENDMETHOD.  " get_inline_images.
+
+  METHOD get_webfont_link.
+
+    rv_link = '<link rel="stylesheet"'
+           && ' type="text/css" href="'
+           && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
+           && '">'. "#EC NOTEXT
+
+  ENDMETHOD.  " get_webfont_link
 
 ENDCLASS. "lcl_gui_asset_manager

@@ -34,9 +34,9 @@ CLASS lcl_services_git DEFINITION FINAL.
       RAISING   lcx_exception lcx_cancel.
 
     CLASS-METHODS commit
-      IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                is_commit   TYPE ty_commit_fields
-                io_stage    TYPE REF TO lcl_stage
+      IMPORTING io_repo   TYPE REF TO lcl_repo_online
+                is_commit TYPE ty_commit_fields
+                io_stage  TYPE REF TO lcl_stage
       RAISING   lcx_exception lcx_cancel.
 
 ENDCLASS. " lcl_services_git
@@ -63,8 +63,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false
-    ).  "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -124,7 +123,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD switch_branch.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+    DATA: lo_repo   TYPE REF TO lcl_repo_online,
           ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
 
 
@@ -202,7 +201,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     ls_comment-comment  = is_commit-comment.
 
     IF NOT is_commit-body IS INITIAL.
-      CONCATENATE ls_comment-comment is_commit-body
+      CONCATENATE ls_comment-comment '' is_commit-body
         INTO ls_comment-comment SEPARATED BY gc_newline.
     ENDIF.
 

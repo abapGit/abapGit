@@ -14,8 +14,11 @@ TYPES: BEGIN OF ty_file_signature,
          sha1     TYPE ty_sha1,
        END OF ty_file_signature.
 
-TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF ty_file_signature WITH DEFAULT KEY.
-TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF ty_file_signature WITH UNIQUE KEY path filename.
+TYPES: ty_file_signatures_tt TYPE STANDARD TABLE OF
+         ty_file_signature WITH DEFAULT KEY.
+
+TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF
+         ty_file_signature WITH UNIQUE KEY path filename.
 
 TYPES: BEGIN OF ty_file.
     INCLUDE TYPE ty_file_signature.
@@ -24,7 +27,6 @@ TYPES: data TYPE xstring,
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
-TYPES: tt_w3urls    TYPE STANDARD TABLE OF w3url  WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_comment,
          username TYPE string,
@@ -49,8 +51,9 @@ TYPES: ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY.
 TYPES: BEGIN OF ty_metadata,
          class        TYPE string,
          version      TYPE string,
-         late_deser   TYPE string,
+         late_deser   TYPE abap_bool,
          delete_tadir TYPE abap_bool,
+         ddic         TYPE abap_bool,
        END OF ty_metadata.
 
 TYPES: BEGIN OF ty_web_asset,
@@ -156,7 +159,7 @@ CONSTANTS: BEGIN OF gc_event_state,
            END OF gc_event_state.
 
 CONSTANTS: BEGIN OF gc_html_opt,
-             emphas   TYPE c VALUE 'E',
+             strong   TYPE c VALUE 'E',
              cancel   TYPE c VALUE 'C',
              crossout TYPE c VALUE 'X',
            END OF gc_html_opt.
@@ -224,6 +227,7 @@ CONSTANTS: BEGIN OF gc_action,
              go_debuginfo           TYPE string VALUE 'go_debuginfo',
              go_settings            TYPE string VALUE 'go_settings',
              go_tutorial            TYPE string VALUE 'go_tutorial',
+
              jump                   TYPE string VALUE 'jump',
              jump_pkg               TYPE string VALUE 'jump_pkg',
            END OF gc_action.

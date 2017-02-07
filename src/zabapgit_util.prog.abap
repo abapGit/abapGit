@@ -440,10 +440,22 @@ CLASS lcl_path IMPLEMENTATION.
 
   METHOD get_filename_from_syspath.
 
-    " filename | c:\filename | /dir/filename | \\server\filename
-    FIND FIRST OCCURRENCE OF REGEX '^(?:/(?:.+/)*|(?:\w:|\\)\\(?:.+\\)*)?([^\\/]+)$'
-      IN iv_path
-      SUBMATCHES rv_filename.
+    DATA: lv_split TYPE c LENGTH 1,
+          lv_index TYPE i,
+          lt_split TYPE TABLE OF string.
+
+" filename | c:\filename | /dir/filename | \\server\filename
+    IF iv_path CA '/'.
+      lv_split = '/'.
+    ELSE.
+      lv_split = '\'.
+    ENDIF.
+
+    SPLIT iv_path AT lv_split INTO TABLE lt_split.
+
+    lv_index = lines( lt_split ).
+
+    READ TABLE lt_split INDEX lv_index INTO rv_filename.
 
   ENDMETHOD.  " get_filename_from_syspath.
 
@@ -535,13 +547,13 @@ CLASS lcl_diff DEFINITION FINAL.
                END OF c_diff.
 
     TYPES: BEGIN OF ty_diff,
-             new_line    TYPE c LENGTH 6,
-             new         TYPE string,
-             result      TYPE c LENGTH 1,
-             old_line    TYPE c LENGTH 6,
-             old         TYPE string,
-             short       TYPE abap_bool,
-             beacon      TYPE i,
+             new_num TYPE c LENGTH 6,
+             new     TYPE string,
+             result  TYPE c LENGTH 1,
+             old_num TYPE c LENGTH 6,
+             old     TYPE string,
+             short   TYPE abap_bool,
+             beacon  TYPE i,
            END OF ty_diff.
     TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -685,16 +697,16 @@ CLASS lcl_diff IMPLEMENTATION.
 
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
-      <ls_diff>-new_line = lv_new.
-      <ls_diff>-old_line = lv_old.
+      <ls_diff>-new_num = lv_new.
+      <ls_diff>-old_num = lv_old.
 
       CASE <ls_diff>-result. " Line nums
         WHEN c_diff-delete.
           lv_old = lv_old + 1.
-          CLEAR <ls_diff>-new_line.
+          CLEAR <ls_diff>-new_num.
         WHEN c_diff-insert.
           lv_new = lv_new + 1.
-          CLEAR <ls_diff>-old_line.
+          CLEAR <ls_diff>-old_num.
         WHEN OTHERS.
           lv_new = lv_new + 1.
           lv_old = lv_old + 1.
@@ -760,9 +772,9 @@ CLASS lcl_diff IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lt_delta  TYPE vxabapt255_tab,
-          lt_new    TYPE abaptxt255_tab,
-          lt_old    TYPE abaptxt255_tab.
+    DATA: lt_delta TYPE vxabapt255_tab,
+          lt_new   TYPE abaptxt255_tab,
+          lt_old   TYPE abaptxt255_tab.
 
 
     unpack( EXPORTING iv_new = iv_new
@@ -828,10 +840,10 @@ CLASS lcl_diff IMPLEMENTATION.
         ENDCASE.
       ELSE.
         CLEAR ls_new.
-        READ TABLE it_new INTO ls_new INDEX lv_nindex. "#EC CI_SUBRC
+        READ TABLE it_new INTO ls_new INDEX lv_nindex.    "#EC CI_SUBRC
         lv_nindex = lv_nindex + 1.
         CLEAR ls_old.
-        READ TABLE it_old INTO ls_old INDEX lv_oindex. "#EC CI_SUBRC
+        READ TABLE it_old INTO ls_old INDEX lv_oindex.    "#EC CI_SUBRC
         lv_oindex = lv_oindex + 1.
         _append ls_new '' ls_old.
       ENDIF.
@@ -1031,7 +1043,7 @@ CLASS lcl_log DEFINITION FINAL.
       count
         RETURNING VALUE(rv_count) TYPE i,
       to_html
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper,
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       clear,
       has_rc "For unit tests mainly
         IMPORTING iv_rc         TYPE balsort
@@ -1057,16 +1069,14 @@ CLASS lcl_log IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html->add( '<br>' ).
     LOOP AT mt_log ASSIGNING <ls_log>.
-      CONCATENATE <ls_log>-msgv1
-        <ls_log>-msgv2
-        <ls_log>-msgv3
-        <ls_log>-msgv4 INTO lv_string SEPARATED BY space.
+      CONCATENATE <ls_log>-msgv1 <ls_log>-msgv2 <ls_log>-msgv3 <ls_log>-msgv4
+        INTO lv_string SEPARATED BY space.
+      ro_html->add( '<span class="error">' ).
+      ro_html->add_icon( iv_name = 'alert' iv_class = 'error' ). " warning CSS exists too
       ro_html->add( lv_string ).
-      ro_html->add( '<br>' ).
+      ro_html->add( '</span>' ).
     ENDLOOP.
-    ro_html->add( '<br>' ).
 
   ENDMETHOD.
 

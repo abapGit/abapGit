@@ -158,6 +158,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
           lt_texts  TYPE TABLE OF hier_texts,
           lt_refs   TYPE TABLE OF hier_ref.
 
+
     CALL FUNCTION 'STREE_STRUCTURE_READ'
       EXPORTING
         structure_id     = mv_tree_id
@@ -166,10 +167,6 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         structure_header = ls_head
       TABLES
         description      = lt_titles.
-
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from STREE_STRUCTURE_READ, SHI3' ).
-    ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_READ'
       EXPORTING
@@ -182,9 +179,6 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         list_of_nodes      = lt_nodes
         list_of_references = lt_refs
         list_of_texts      = lt_texts.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from STREE_HIERARCHY_READ, SHI3' ).
-    ENDIF.
 
     strip_stamps( CHANGING cs_head  = ls_head
                            ct_nodes = lt_nodes ).

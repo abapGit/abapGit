@@ -1,4 +1,4 @@
-*&----------------------------
+*&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_PERSISTENCE
 *&---------------------------------------------------------------------*
 
@@ -81,8 +81,9 @@ CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    METHODS: validate_xml
-      IMPORTING iv_xml TYPE string
+    METHODS: validate_and_unprettify_xml
+      IMPORTING iv_xml        TYPE string
+      RETURNING VALUE(rv_xml) TYPE string
       RAISING   lcx_exception.
 
 ENDCLASS.
@@ -98,20 +99,21 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_xml,
-             url             TYPE string,
-             branch_name     TYPE string,
-             sha1            TYPE ty_sha1,
-             package         TYPE devclass,
-             offline         TYPE sap_bool,
-             local_checksums TYPE ty_local_checksum_tt,
-             master_language TYPE spras,
-             head_branch     TYPE string,   " HEAD symref of the repo, master branch
-             write_protect   TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
+             url                TYPE string,
+             branch_name        TYPE string,
+             sha1               TYPE ty_sha1,
+             package            TYPE devclass,
+             offline            TYPE sap_bool,
+             local_checksums    TYPE ty_local_checksum_tt,
+             master_language    TYPE spras,
+             head_branch        TYPE string,   " HEAD symref of the repo, master branch
+             write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
+             ignore_subpackages TYPE sap_bool,
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
              key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_repo_xml.
+            INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
     TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
@@ -222,7 +224,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_background,
              key TYPE lcl_persistence_db=>ty_value.
-        INCLUDE TYPE ty_xml.
+            INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
 
@@ -422,6 +424,14 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_changes_only) TYPE abap_bool
       RAISING   lcx_exception.
 
+    METHODS toggle_diff_unified
+      RETURNING VALUE(rv_diff_unified) TYPE abap_bool
+      RAISING   lcx_exception.
+
+    METHODS get_diff_unified
+      RETURNING VALUE(rv_diff_unified) TYPE abap_bool
+      RAISING   lcx_exception.
+
     METHODS get_favorites
       RETURNING VALUE(rt_favorites) TYPE tt_favorites
       RAISING   lcx_exception.
@@ -454,6 +464,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
              repo_config  TYPE ty_repo_config_tt,
              hide_files   TYPE abap_bool,
              changes_only TYPE abap_bool,
+             diff_unified TYPE abap_bool,
              favorites    TYPE tt_favorites,
            END OF ty_user.
 
@@ -698,6 +709,24 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD. "get_changes_only
 
+  METHOD toggle_diff_unified.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-diff_unified = boolc( ls_user-diff_unified = abap_false ).
+    update( ls_user ).
+
+    rv_diff_unified = ls_user-diff_unified.
+
+  ENDMETHOD. "toggle_diff_unified
+
+  METHOD get_diff_unified.
+
+    rv_diff_unified = read( )-diff_unified.
+
+  ENDMETHOD. "get_diff_unified
+
   METHOD get_favorites.
 
     rt_favorites = read( )-favorites.
@@ -804,29 +833,32 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD validate_xml.
+  METHOD validate_and_unprettify_xml.
 
-    lcl_xml_pretty=>print(
+    rv_xml = lcl_xml_pretty=>print(
       iv_xml           = iv_xml
+      iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.
+  ENDMETHOD.  " validate_and_unprettify_xml
 
   METHOD update.
 
-    validate_xml( iv_data ).
+    DATA lv_data LIKE iv_data.
+
+    lv_data = validate_and_unprettify_xml( iv_data ).
 
     lock( iv_type  = iv_type
           iv_value = iv_value ).
 
-    UPDATE (c_tabname) SET data_str = iv_data
-      WHERE type = iv_type
-      AND value = iv_value.
+    UPDATE (c_tabname) SET data_str = lv_data
+      WHERE type  = iv_type
+      AND   value = iv_value.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.  "update
 
   METHOD modify.
 
@@ -1321,7 +1353,8 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
 
   METHOD table_create.
 
-    DATA: lv_obj_name TYPE tadir-obj_name,
+    DATA: lv_rc       LIKE sy-subrc,
+          lv_obj_name TYPE tadir-obj_name,
           ls_dd02v    TYPE dd02v,
           ls_dd09l    TYPE dd09l,
           lt_dd03p    TYPE STANDARD TABLE OF dd03p WITH DEFAULT KEY.
@@ -1399,11 +1432,14 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
       EXPORTING
         name        = lcl_persistence_db=>c_tabname
+        auth_chk    = abap_false
+      IMPORTING
+        rc          = lv_rc
       EXCEPTIONS
         not_found   = 1
         put_failure = 2
         OTHERS      = 3.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 OR lv_rc <> 0.
       lcx_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
     ENDIF.
 
@@ -1432,13 +1468,17 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS
       get_run_critical_tests
         RETURNING VALUE(rv_run) TYPE abap_bool.
-  PROTECTED SECTION.
+    METHODS set_max_lines
+      IMPORTING iv_lines TYPE i.
+    METHODS get_max_lines
+      RETURNING
+        VALUE(rv_lines) TYPE i.
 
   PRIVATE SECTION.
     DATA mv_proxy_url TYPE string.
     DATA mv_proxy_port TYPE string.
     DATA mv_run_critical_tests TYPE abap_bool.
-
+    DATA mv_lines TYPE i.
 
 ENDCLASS.
 
@@ -1469,6 +1509,14 @@ CLASS lcl_settings IMPLEMENTATION.
     rv_run = mv_run_critical_tests.
   ENDMETHOD.
 
+  METHOD get_max_lines.
+    rv_lines = mv_lines.
+  ENDMETHOD.
+
+  METHOD set_max_lines.
+    mv_lines = iv_lines.
+  ENDMETHOD.
+
 ENDCLASS.
 
 
@@ -1483,10 +1531,6 @@ CLASS lcl_persistence_settings DEFINITION FINAL.
     METHODS read
       RETURNING
         VALUE(ro_settings) TYPE REF TO lcl_settings.
-
-  PROTECTED SECTION.
-
-  PRIVATE SECTION.
 
 ENDCLASS.
 
@@ -1508,20 +1552,27 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       iv_type       = 'SETTINGS'
       iv_value      = 'CRIT_TESTS'
       iv_data       = io_settings->get_run_critical_tests( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'MAX_LINES'
+      iv_data       = |{ io_settings->get_max_lines( ) }| ).
+
   ENDMETHOD.
 
 
   METHOD read.
     DATA: lv_critical_tests_as_string  TYPE string,
-          lv_critical_tests_as_boolean TYPE abap_bool.
+          lv_critical_tests_as_boolean TYPE abap_bool,
+          lv_max_lines_as_string       TYPE string,
+          lv_max_lines_as_integer      TYPE i.
 
     CREATE OBJECT ro_settings.
     TRY.
         ro_settings->set_proxy_url(
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
-            iv_value = 'PROXY_URL'
-          ) ).
+            iv_value = 'PROXY_URL' ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_url( '' ).
     ENDTRY.
@@ -1529,8 +1580,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_proxy_port(
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
-            iv_value = 'PROXY_PORT'
-          ) ).
+            iv_value = 'PROXY_PORT' ) ).
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.
@@ -1542,6 +1592,15 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
       CATCH lcx_not_found.
         ro_settings->set_run_critical_tests( abap_false ).
+    ENDTRY.
+    TRY.
+        lv_max_lines_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'MAX_LINES' ).
+        lv_max_lines_as_integer = lv_max_lines_as_string.
+        ro_settings->set_max_lines( lv_max_lines_as_integer ).
+      CATCH lcx_not_found.
+        ro_settings->set_max_lines( 500 ). " default
     ENDTRY.
   ENDMETHOD.
 

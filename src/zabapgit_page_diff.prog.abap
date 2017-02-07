@@ -2,62 +2,75 @@
 *&  Include           ZABAPGIT_PAGE_DIFF
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page_super.
+CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
 
     CONSTANTS:
-      BEGIN OF c_mod,
+      BEGIN OF c_fstate,
         local  TYPE char1 VALUE 'L',
         remote TYPE char1 VALUE 'R',
         both   TYPE char1 VALUE 'B',
-      END OF c_mod.
+      END OF c_fstate.
 
     TYPES: BEGIN OF ty_file_diff,
              filename TYPE string,
              lstate   TYPE char1,
              rstate   TYPE char1,
-             mod      TYPE char1, " Abstraction for shorter ifs
+             fstate   TYPE char1, " FILE state - Abstraction for shorter ifs
              o_diff   TYPE REF TO lcl_diff,
            END OF ty_file_diff,
            tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
 
-    METHODS: constructor
-      IMPORTING iv_key    TYPE lcl_persistence_repo=>ty_repo-key
-                is_file   TYPE ty_file OPTIONAL
-                is_object TYPE ty_item OPTIONAL
-      RAISING   lcx_exception.
+    METHODS:
+      constructor
+        IMPORTING iv_key    TYPE lcl_persistence_repo=>ty_repo-key
+                  is_file   TYPE ty_file OPTIONAL
+                  is_object TYPE ty_item OPTIONAL
+        RAISING   lcx_exception,
+      lif_gui_page~on_event REDEFINITION.
 
-    METHODS lif_gui_page~render   REDEFINITION.
+  PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mt_diff_files TYPE tt_file_diff.
+    CONSTANTS: BEGIN OF c_actions,
+                 toggle_unified TYPE string VALUE 'toggle_unified',
+               END OF c_actions.
+
+    DATA: mt_diff_files    TYPE tt_file_diff,
+          mt_delayed_lines TYPE lcl_diff=>ty_diffs_tt,
+          mv_unified       TYPE abap_bool VALUE abap_true.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_diff_head
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_table_head
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_lines
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_beacon
       IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff
                 is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html_helper.
-    METHODS get_line_hl
-      IMPORTING iv_mod    TYPE char1
-                iv_result TYPE lcl_diff=>ty_diff-result
-      EXPORTING ev_lattr  TYPE string
-                ev_rattr  TYPE string.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+    METHODS render_line_split
+      IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff
+                iv_fstate      TYPE char1
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+    METHODS render_line_unified
+      IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS append_diff
       IMPORTING it_remote TYPE ty_files_tt
                 it_local  TYPE ty_files_item_tt
                 is_status TYPE ty_result
       RAISING   lcx_exception.
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
 ENDCLASS. "lcl_gui_page_diff
 
@@ -73,6 +86,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     super->constructor( ).
+    ms_control-page_title = 'DIFF'.
+    ms_control-page_menu  = build_menu( ).
+    mv_unified            = lcl_app=>user( )->get_diff_unified( ).
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
@@ -93,10 +109,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ELSEIF is_object IS NOT INITIAL.  " Diff for whole object
 
       LOOP AT lt_status ASSIGNING <ls_status>
-        WHERE obj_type = is_object-obj_type
-        AND   obj_name = is_object-obj_name
-        AND   match IS INITIAL.
-
+          WHERE obj_type = is_object-obj_type
+          AND   obj_name = is_object-obj_name
+          AND   match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
                      is_status = <ls_status> ).
@@ -153,14 +168,14 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     <ls_diff>-rstate   = is_status-rstate.
 
     IF <ls_diff>-lstate IS NOT INITIAL AND <ls_diff>-rstate IS NOT INITIAL.
-      <ls_diff>-mod = c_mod-both.
+      <ls_diff>-fstate = c_fstate-both.
     ELSEIF <ls_diff>-lstate IS NOT INITIAL.
-      <ls_diff>-mod = c_mod-local.
+      <ls_diff>-fstate = c_fstate-local.
     ELSE. "rstate IS NOT INITIAL, lstate = empty.
-      <ls_diff>-mod = c_mod-remote.
+      <ls_diff>-fstate = c_fstate-remote.
     ENDIF.
 
-    IF <ls_diff>-mod = c_mod-remote. " Remote file leading changes
+    IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
       CREATE OBJECT <ls_diff>-o_diff
         EXPORTING
           iv_new = <ls_remote>-data
@@ -174,44 +189,46 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.  "append_diff
 
-  METHOD render_diff_head.
-    DATA: lo_html  TYPE REF TO lcl_html_helper,
-          ls_stats TYPE lcl_diff=>ty_count.
+  METHOD build_menu.
+    CREATE OBJECT ro_menu.
+    ro_menu->add( iv_txt = 'Split/Unified view'
+                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
+  ENDMETHOD.  " build_menu.
 
-    CREATE OBJECT lo_html.
+**********************************************************************
+* EVENT HANDLING
+**********************************************************************
 
-    ls_stats = is_diff-o_diff->stats( ).
+  METHOD lif_gui_page~on_event.
 
-    IF is_diff-mod = c_mod-both. " Merge stats into 'update' if both were changed
-      ls_stats-update = ls_stats-update + ls_stats-insert + ls_stats-delete.
-      CLEAR: ls_stats-insert, ls_stats-delete.
-    ENDIF.
+    CASE iv_action.
+      WHEN c_actions-toggle_unified. " Toggle file diplay
+        mv_unified = lcl_app=>user( )->toggle_diff_unified( ).
+        ev_state   = gc_event_state-re_render.
+    ENDCASE.
 
-    lo_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
-    lo_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
-    lo_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
-    lo_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    lo_html->add( render_item_state( iv1 = is_diff-lstate iv2 = is_diff-rstate ) ).
-    lo_html->add( '</div>' ).                               "#EC NOTEXT
+  ENDMETHOD. "lif_gui_page~on_event
 
-    ro_html = lo_html.
-  ENDMETHOD.
+**********************************************************************
+* RENDER LOGIC
+**********************************************************************
 
-  METHOD render_table_head.
+  METHOD render_content.
+
+    DATA ls_diff_file LIKE LINE OF mt_diff_files.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
-    ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    ro_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
-    ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    ro_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
-    ro_html->add( '</thead>' ).                             "#EC NOTEXT
+    LOOP AT mt_diff_files INTO ls_diff_file.
+      lcl_progress=>show( iv_key     = 'Diff'
+                          iv_current = sy-tabix
+                          iv_total   = lines( mt_diff_files )
+                          iv_text    = |Render Diff - { ls_diff_file-filename }| ).
 
-  ENDMETHOD.  " render_table_head.
+      ro_html->add( render_diff( ls_diff_file ) ).
+    ENDLOOP.
+
+  ENDMETHOD.  "render_content
 
   METHOD render_diff.
 
@@ -222,7 +239,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table width="100%" class="diff_tab">' ). "#EC NOTEXT
+    ro_html->add( '<table class="diff_tab syntax-hl">' ).   "#EC NOTEXT
     ro_html->add( render_table_head( ) ).
     ro_html->add( render_lines( is_diff ) ).
     ro_html->add( '</table>' ).                             "#EC NOTEXT
@@ -230,11 +247,70 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
+  ENDMETHOD.  " render_diff
+
+**********************************************************************
+* CHUNKS
+**********************************************************************
+
+  METHOD render_diff_head.
+
+    DATA: ls_stats TYPE lcl_diff=>ty_count.
+
+    CREATE OBJECT ro_html.
+    ls_stats = is_diff-o_diff->stats( ).
+
+    IF is_diff-fstate = c_fstate-both. " Merge stats into 'update' if both were changed
+      ls_stats-update = ls_stats-update + ls_stats-insert + ls_stats-delete.
+      CLEAR: ls_stats-insert, ls_stats-delete.
+    ENDIF.
+
+    ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
+
+    ro_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
+    ro_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
+    ro_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
+    ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
+    ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_diff-lstate
+                                                        iv2 = is_diff-rstate ) ).
+
+    IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
+      ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
+                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
+    ENDIF.
+
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
   ENDMETHOD.
+
+  METHOD render_table_head.
+
+    CREATE OBJECT ro_html.
+
+    IF mv_unified = abap_true.
+      ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
+      ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+      ro_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
+      ro_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
+      ro_html->add( '<th>code</th>' ).                        "#EC NOTEXT
+      ro_html->add( '</tr>' ).                                "#EC NOTEXT
+      ro_html->add( '</thead>' ).                             "#EC NOTEXT
+    ELSE.
+      ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
+      ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+      ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+      ro_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
+      ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+      ro_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
+      ro_html->add( '</tr>' ).                                "#EC NOTEXT
+      ro_html->add( '</thead>' ).                             "#EC NOTEXT
+    ENDIF.
+
+  ENDMETHOD.  " render_table_head.
 
   METHOD render_beacon.
 
-    DATA: lv_beacon TYPE string.
+    DATA: lv_beacon  TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -244,10 +320,19 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
+
     ro_html->add( '<thead class="nav_line">' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<th class="num"></th>' ).
-    ro_html->add( |<th colspan="3">@@ { is_diff_line-new_line } @@ { lv_beacon }</th>| ).
+
+    IF mv_unified = abap_true.
+      ro_html->add( '<th class="num"></th>' ).
+      ro_html->add( '<th class="num"></th>' ).
+      ro_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+    ELSE.
+      ro_html->add( '<th class="num"></th>' ).
+      ro_html->add( |<th colspan="3">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+    ENDIF.
+
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 
@@ -257,10 +342,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     DATA: lo_highlighter TYPE REF TO lcl_syntax_highlighter,
           lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
-          lv_local       TYPE string,
-          lv_remote      TYPE string,
-          lv_lattr       TYPE string,
-          lv_rattr       TYPE string,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
@@ -281,88 +362,125 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         lv_insert_nav = abap_false.
       ENDIF.
 
-      IF is_diff-mod = c_mod-remote. " Remote file leading changes
-        lv_local  = <ls_diff>-old.
-        lv_remote = <ls_diff>-new.
-      ELSE.             " Local leading changes or both were modified
-        lv_local  = <ls_diff>-new.
-        lv_remote = <ls_diff>-old.
-      ENDIF.
-
       IF lo_highlighter IS BOUND.
-        lv_local  = lo_highlighter->process_line( lv_local ).
-        lv_remote = lo_highlighter->process_line( lv_remote ).
+        <ls_diff>-new = lo_highlighter->process_line( <ls_diff>-new ).
+        <ls_diff>-old = lo_highlighter->process_line( <ls_diff>-old ).
       ELSE.
-        lv_local  = escape( val = lv_local format = cl_abap_format=>e_html_attr ).
-        lv_remote = escape( val = lv_remote format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-new = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-old = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
-      get_line_hl( EXPORTING iv_mod    = is_diff-mod
-                             iv_result = <ls_diff>-result
-                   IMPORTING ev_lattr  = lv_lattr
-                             ev_rattr  = lv_rattr ).
+      CONDENSE <ls_diff>-new_num. "get rid of leading spaces
+      CONDENSE <ls_diff>-old_num.
 
-      ro_html->add( '<tr>' ).                               "#EC NOTEXT
-      ro_html->add( |<td class="num">{ <ls_diff>-new_line }</td>| ). "#EC NOTEXT
-      ro_html->add( |<td{ lv_lattr }><code>{ lv_local }</code></td>| ). "#EC NOTEXT
-      ro_html->add( |<td class="num">{ <ls_diff>-old_line }</td>| ). "#EC NOTEXT
-      ro_html->add( |<td{ lv_rattr }><code>{ lv_remote }</code></td>| ). "#EC NOTEXT
-      ro_html->add( '</tr>' ).                              "#EC NOTEXT
+      IF mv_unified = abap_true.
+        ro_html->add( render_line_unified( is_diff_line = <ls_diff> ) ).
+      ELSE.
+        ro_html->add( render_line_split( is_diff_line = <ls_diff>
+                                         iv_fstate    = is_diff-fstate ) ).
+      ENDIF.
 
     ENDLOOP.
 
-  ENDMETHOD.
-
-  METHOD get_line_hl.
-
-    CLEAR: ev_lattr, ev_rattr. " Class for changed lines
-
-    IF iv_result IS INITIAL.
-      RETURN.
+    IF mv_unified = abap_true.
+      ro_html->add( render_line_unified( ) ). " Release delayed lines
     ENDIF.
 
-    " Both file changed ? Or line updated ? - All yellow
-    IF iv_mod = c_mod-both OR iv_result = lcl_diff=>c_diff-update.
-      ev_lattr = ' class="diff_upd"'.                       "#EC NOTEXT
-      ev_rattr = ' class="diff_upd"'.                       "#EC NOTEXT
-    ELSEIF iv_mod = c_mod-local. " Changed locally
-      CASE iv_result.
-        WHEN lcl_diff=>c_diff-insert.
-          ev_lattr = ' class="diff_ins"'.                   "#EC NOTEXT
-        WHEN lcl_diff=>c_diff-delete.
-          ev_rattr = ' class="diff_del"'.                   "#EC NOTEXT
-      ENDCASE.
-    ELSEIF iv_mod = c_mod-remote. " Changed remotely - invert sides
-      CASE iv_result.
-        WHEN lcl_diff=>c_diff-insert.
-          ev_rattr = ' class="diff_ins"'.                   "#EC NOTEXT
-        WHEN lcl_diff=>c_diff-delete.
-          ev_lattr = ' class="diff_del"'.                   "#EC NOTEXT
-      ENDCASE.
-    ENDIF.
+  ENDMETHOD.  "render_lines
 
-  ENDMETHOD.  " get_line_hl.
+  METHOD render_line_split.
 
-  METHOD lif_gui_page~render.
-
-    DATA ls_diff_file LIKE LINE OF mt_diff_files.
+    DATA: lv_new  TYPE string,
+          lv_old  TYPE string,
+          lv_mark TYPE string,
+          lv_bg   TYPE string.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( header( ) ).
-    ro_html->add( title( 'DIFF' ) ).
+    " New line
+    lv_mark = ` `.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = lcl_diff=>c_diff-update.
+      lv_bg = ' diff_upd'.
+      lv_mark = `~`.
+    ELSEIF is_diff_line-result = lcl_diff=>c_diff-insert.
+      lv_bg = ' diff_ins'.
+      lv_mark = `+`.
+    ENDIF.
+    lv_new = |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
+          && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-new }</td>|.
 
-    LOOP AT mt_diff_files INTO ls_diff_file.
-      lcl_progress=>show( iv_key     = 'Diff'
-                          iv_current = sy-tabix
-                          iv_total   = lines( mt_diff_files )
-                          iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+    " Old line
+    CLEAR lv_bg.
+    lv_mark = ` `.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = lcl_diff=>c_diff-update.
+      lv_bg = ' diff_upd'.
+      lv_mark = `~`.
+    ELSEIF is_diff_line-result = lcl_diff=>c_diff-delete.
+      lv_bg = ' diff_del'.
+      lv_mark = `-`.
+    ENDIF.
+    lv_old = |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
+          && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
 
-      ro_html->add( render_diff( ls_diff_file ) ).
-    ENDLOOP.
+    " render line, inverse sides if remote is newer
+    ro_html->add( '<tr>' ).                               "#EC NOTEXT
+    IF iv_fstate = c_fstate-remote. " Remote file leading changes
+      ro_html->add( lv_old ). " local
+      ro_html->add( lv_new ). " remote
+    ELSE.             " Local leading changes or both were modified
+      ro_html->add( lv_new ). " local
+      ro_html->add( lv_old ). " remote
+    ENDIF.
+    ro_html->add( '</tr>' ).                              "#EC NOTEXT
 
-    ro_html->add( footer( ) ).
+  ENDMETHOD. "render_line_split
 
-  ENDMETHOD.
+  METHOD render_line_unified.
+
+    DATA lv_line TYPE string.
+
+    FIELD-SYMBOLS <diff_line> LIKE LINE OF mt_delayed_lines.
+
+    CREATE OBJECT ro_html.
+
+    " Release delayed subsequent update lines
+    IF is_diff_line-result <> lcl_diff=>c_diff-update.
+      LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
+        ro_html->add( '<tr>' ).                               "#EC NOTEXT
+        ro_html->add( |<td class="num" line-num="{ <diff_line>-old_num }"></td>|
+                   && |<td class="num" line-num=""></td>|
+                   && |<td class="code diff_del">-{ <diff_line>-old }</td>| ).
+        ro_html->add( '</tr>' ).                              "#EC NOTEXT
+      ENDLOOP.
+      LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
+        ro_html->add( '<tr>' ).                               "#EC NOTEXT
+        ro_html->add( |<td class="num" line-num=""></td>|
+                   && |<td class="num" line-num="{ <diff_line>-new_num }"></td>|
+                   && |<td class="code diff_ins">+{ <diff_line>-new }</td>| ).
+        ro_html->add( '</tr>' ).                              "#EC NOTEXT
+      ENDLOOP.
+      CLEAR mt_delayed_lines.
+    ENDIF.
+
+    ro_html->add( '<tr>' ).                               "#EC NOTEXT
+    CASE is_diff_line-result.
+      WHEN lcl_diff=>c_diff-update.
+        APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
+      WHEN lcl_diff=>c_diff-insert.
+        ro_html->add( |<td class="num" line-num=""></td>|
+                   && |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
+                   && |<td class="code diff_ins">+{ is_diff_line-new }</td>| ).
+      WHEN lcl_diff=>c_diff-delete.
+        ro_html->add( |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
+                   && |<td class="num" line-num=""></td>|
+                   && |<td class="code diff_del">-{ is_diff_line-old }</td>| ).
+      WHEN OTHERS. "none
+        ro_html->add( |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
+                   && |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
+                   && |<td class="code"> { is_diff_line-old }</td>| ).
+    ENDCASE.
+    ro_html->add( '</tr>' ).                              "#EC NOTEXT
+
+  ENDMETHOD. "render_line_unified
 
 ENDCLASS. "lcl_gui_page_diff

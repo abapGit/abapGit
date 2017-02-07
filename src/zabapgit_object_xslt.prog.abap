@@ -94,6 +94,10 @@ CLASS lcl_object_xslt IMPLEMENTATION.
           ls_attributes TYPE o2xsltattr.
 
 
+    IF lif_object~exists( ) = abap_true.
+      lif_object~delete( ).
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING cg_data = ls_attributes ).
 

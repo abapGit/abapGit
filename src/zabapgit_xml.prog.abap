@@ -180,6 +180,9 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RAISING   lcx_exception,
       set_raw
         IMPORTING ii_raw TYPE REF TO if_ixml_element,
+      add_xml
+        IMPORTING iv_name TYPE clike
+                  ii_xml  TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
                   is_metadata   TYPE ty_metadata OPTIONAL
@@ -219,6 +222,7 @@ CLASS lcl_xml_output IMPLEMENTATION.
     li_doc = cl_ixml=>create( )->create_document( ).
 
     CALL TRANSFORMATION id
+      OPTIONS initial_components = 'suppress'
       SOURCE (lt_stab)
       RESULT XML li_doc.
 
@@ -230,7 +234,18 @@ CLASS lcl_xml_output IMPLEMENTATION.
       mi_xml_doc->get_root( )->append_child( li_doc->get_root( )->get_first_child( ) ).
     ENDIF.
 
-  ENDMETHOD.                    "add
+  ENDMETHOD.
+
+  METHOD add_xml.
+
+    DATA: li_element TYPE REF TO if_ixml_element.
+
+    li_element = mi_xml_doc->create_element( iv_name ).
+    li_element->append_child( ii_xml ).
+
+    mi_xml_doc->get_root( )->get_first_child( )->get_first_child( )->append_child( li_element ).
+
+  ENDMETHOD.
 
   METHOD render.
 
@@ -280,6 +295,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RAISING   lcx_exception,
       get_raw
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_node,
+* todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
         RETURNING VALUE(rs_metadata) TYPE ty_metadata.
 
@@ -358,6 +374,7 @@ CLASS lcl_xml_pretty DEFINITION FINAL.
     CLASS-METHODS: print
       IMPORTING iv_xml           TYPE string
                 iv_ignore_errors TYPE abap_bool DEFAULT abap_true
+                iv_unpretty      TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_xml)    TYPE string
       RAISING   lcx_exception.
 
@@ -378,14 +395,14 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
 
     ASSERT NOT iv_xml IS INITIAL.
 
-    li_ixml = cl_ixml=>create( ).
+    li_ixml    = cl_ixml=>create( ).
     li_xml_doc = li_ixml->create_document( ).
 
     li_stream_factory = li_ixml->create_stream_factory( ).
-    li_istream = li_stream_factory->create_istream_string( iv_xml ).
-    li_parser = li_ixml->create_parser( stream_factory = li_stream_factory
-                                        istream        = li_istream
-                                        document       = li_xml_doc ).
+    li_istream        = li_stream_factory->create_istream_string( iv_xml ).
+    li_parser         = li_ixml->create_parser( stream_factory = li_stream_factory
+                                                istream        = li_istream
+                                                document       = li_xml_doc ).
     li_parser->set_normalizing( abap_true ).
     IF li_parser->parse( ) <> 0.
       IF iv_ignore_errors = abap_true.
@@ -398,12 +415,12 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
     li_istream->close( ).
 
 
-    li_ostream = li_stream_factory->create_ostream_cstring( rv_xml ).
+    li_ostream  = li_stream_factory->create_ostream_cstring( rv_xml ).
 
     li_renderer = li_ixml->create_renderer( ostream  = li_ostream
                                             document = li_xml_doc ).
 
-    li_renderer->set_normalizing( abap_true ).
+    li_renderer->set_normalizing( boolc( iv_unpretty = abap_false ) ).
 
     li_renderer->render( ).
 

@@ -5,32 +5,10 @@
    <PROGDIR>
     <NAME>ZABAPGIT</NAME>
     <STATE>A</STATE>
-    <SQLX/>
-    <EDTX/>
     <VARCL>X</VARCL>
     <DBAPL>S</DBAPL>
-    <DBNA/>
-    <CLAS/>
-    <TYPE/>
-    <OCCURS/>
     <SUBC>1</SUBC>
-    <APPL/>
-    <SECU/>
-    <CNAM/>
-    <CDAT>0000-00-00</CDAT>
-    <UNAM/>
-    <UDAT>0000-00-00</UDAT>
-    <VERN/>
-    <LEVL/>
-    <RSTAT/>
-    <RMAND/>
-    <RLOAD/>
     <FIXPT>X</FIXPT>
-    <SSET/>
-    <SDATE>0000-00-00</SDATE>
-    <STIME/>
-    <IDATE>0000-00-00</IDATE>
-    <ITIME/>
     <LDBNAME>D$S</LDBNAME>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
@@ -38,10 +16,8 @@
    <TPOOL>
     <item>
      <ID>R</ID>
-     <KEY/>
      <ENTRY>abapGit</ENTRY>
      <LENGTH>7</LENGTH>
-     <SPLIT/>
     </item>
    </TPOOL>
   </asx:values>
