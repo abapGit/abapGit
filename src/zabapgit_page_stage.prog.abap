@@ -270,9 +270,11 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.  "scripts
 
   METHOD read_last_changed_by.
-    DATA: ls_local_file TYPE ty_file_item.
+    DATA: ls_local_file TYPE ty_file_item,
+          t_files_local type ty_files_item_tt.
     TRY.
-        READ TABLE mo_repo->get_files_local( ) INTO ls_local_file WITH KEY file = is_file.
+        t_files_local = mo_repo->get_files_local( ).
+        READ TABLE t_files_local INTO ls_local_file WITH KEY file = is_file.
         IF sy-subrc = 0.
           rv_user = lcl_objects=>changed_by( ls_local_file-item ).
         ENDIF.
