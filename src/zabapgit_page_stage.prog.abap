@@ -36,7 +36,10 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
                   iv_context     TYPE string
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+      read_last_changed_by
+        IMPORTING is_file        TYPE ty_file
+        RETURNING VALUE(rv_user) TYPE xubname.
 
     METHODS process_stage_list
       IMPORTING it_postdata TYPE cnht_post_data_tab
@@ -66,7 +69,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
-
 
     CASE iv_action.
       WHEN c_action-stage_all.
@@ -113,7 +115,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       lcl_path=>split_file_location( EXPORTING iv_fullpath = <ls_item>-name
                                      IMPORTING ev_path     = ls_file-path
                                                ev_filename = ls_file-filename ).
-
       CASE <ls_item>-value.
         WHEN lcl_stage=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
@@ -143,7 +144,6 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF ms_files-remote,
                    <ls_local>  LIKE LINE OF ms_files-local.
 
-
     CREATE OBJECT ro_html.
 
     ro_html->add( '<table id="stage_tab" class="stage_tab">' ).
@@ -159,6 +159,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                           iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
         ENDIF.
         ro_html->add('</th>').
+        ro_html->add('<th>Last changed by</th>').
         ro_html->add('</tr></thead>').
         ro_html->add('<tbody class="local">').
       ENDAT.
@@ -192,7 +193,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD render_file.
 
-    DATA lv_param TYPE string.
+    DATA: lv_param TYPE string,
+          lv_user  TYPE xubname.
 
     CREATE OBJECT ro_html.
 
@@ -208,6 +210,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         ro_html->add( '<td>' ).
         ro_html->add_a( iv_txt = 'diff' iv_act = |{ gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( '</td>' ).
+
+        lv_user = read_last_changed_by( is_file ).
+        ro_html->add( |<td>{ lv_user }</td> | ).
       WHEN 'remote'.
         ro_html->add( '<td class="cmd"><a>ignore</a><a>remove</a></td>' ).
         ro_html->add( |<td><span class="grey">-</span></td>| ).
@@ -263,5 +268,17 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
   ENDMETHOD.  "scripts
+
+  METHOD read_last_changed_by.
+    DATA: ls_local_file TYPE ty_file_item.
+    TRY.
+        READ TABLE mo_repo->get_files_local( ) INTO ls_local_file WITH KEY file = is_file.
+        IF sy-subrc = 0.
+          rv_user = lcl_objects=>changed_by( ls_local_file-item ).
+        ENDIF.
+      CATCH lcx_exception.
+        CLEAR rv_user. "Should not raise errors if user last changed by was not found
+    ENDTRY.
+  ENDMETHOD.
 
 ENDCLASS.
