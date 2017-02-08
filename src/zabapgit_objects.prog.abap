@@ -873,8 +873,9 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
-      IMPORTING iv_program TYPE programm
-                it_tpool   TYPE textpool_table
+      IMPORTING iv_program  TYPE programm
+                iv_language TYPE langu OPTIONAL
+                it_tpool    TYPE textpool_table
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
@@ -1410,6 +1411,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   METHOD deserialize_textpool.
 
+    DATA lv_language TYPE langu.
+
+    IF iv_language IS INITIAL.
+      lv_language = mv_language.
+    ELSE.
+      lv_language = iv_language.
+    ENDIF.
+
     READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
     IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
       RETURN. " no action for includes
@@ -1417,14 +1426,16 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     INSERT TEXTPOOL iv_program
       FROM it_tpool
-      LANGUAGE mv_language
+      LANGUAGE lv_language
       STATE 'I'.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
-    lcl_objects_activation=>add( iv_type = 'REPT'
-                                 iv_name = iv_program ).
+    IF lv_language = mv_language. " Add just once
+      lcl_objects_activation=>add( iv_type = 'REPT'
+                                   iv_name = iv_program ).
+    ENDIF.
 
   ENDMETHOD.                    "deserialize_textpool
 
