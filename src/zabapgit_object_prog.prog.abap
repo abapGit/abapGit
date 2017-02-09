@@ -203,25 +203,19 @@ CLASS lcl_object_prog IMPLEMENTATION.
   ENDMETHOD.                    "serialize_texts
 
   METHOD deserialize_texts.
-    DATA:
-      lt_tpool_i18n   TYPE tt_tpool_i18n,
-      ls_tpool_i18n   LIKE LINE OF lt_tpool_i18n,
-      lt_langs_i18n   TYPE STANDARD TABLE OF langu.
 
-    FIELD-SYMBOLS:  <lang>  LIKE LINE OF lt_langs_i18n.
-
-    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
-                  CHANGING  cg_data = lt_langs_i18n ).
+    DATA lt_tpool_i18n  TYPE tt_tpool_i18n.
+    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
     io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
 
-    LOOP AT lt_langs_i18n ASSIGNING <lang>.
-      READ TABLE lt_tpool_i18n INTO ls_tpool_i18n WITH KEY langu = <lang>.
+    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
       deserialize_textpool( iv_program  = ms_item-obj_name
-                            iv_language = <lang>
-                            it_tpool    = ls_tpool_i18n-textpool ).
+                            iv_language = <tpool>-langu
+                            it_tpool    = <tpool>-textpool ).
     ENDLOOP.
+
   ENDMETHOD.                    "deserialize_texts
 
 ENDCLASS.                    "lcl_object_prog IMPLEMENTATION

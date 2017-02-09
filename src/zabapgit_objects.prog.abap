@@ -1426,8 +1426,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     INSERT TEXTPOOL iv_program
       FROM it_tpool
-      LANGUAGE lv_language
-      STATE 'I'.
+      LANGUAGE lv_language.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
