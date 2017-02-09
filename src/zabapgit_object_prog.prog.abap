@@ -15,7 +15,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PRIVATE SECTION.
     TYPES:  BEGIN OF ty_tpool_i18n,
-              langu    TYPE langu,
+              language TYPE langu,
               textpool TYPE textpool_table,
             END OF ty_tpool_i18n,
             tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
@@ -163,39 +163,28 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA:
-        lt_tpool_i18n TYPE tt_tpool_i18n,
-        ls_tpool_i18n LIKE LINE OF lt_tpool_i18n,
-        lt_langs_i18n TYPE TABLE OF langu.
+    DATA  lt_tpool_i18n TYPE tt_tpool_i18n.
 
-    FIELD-SYMBOLS:
-        <lang>  LIKE LINE OF lt_langs_i18n,
-        <text>  LIKE LINE OF lt_tpool_i18n.
+    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
     " Skip master language - it was already serialized
     SELECT DISTINCT language
-      INTO TABLE lt_langs_i18n
+      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
       WHERE r3state = 'A'
       AND   prog = ms_item-obj_name
       AND   language <> mv_language.
 
-    SORT lt_langs_i18n ASCENDING.
-    LOOP AT lt_langs_i18n ASSIGNING <lang>.
-      READ TEXTPOOL ms_item-obj_name LANGUAGE <lang> INTO ls_tpool_i18n-textpool.
-
-      IF sy-subrc IS INITIAL.
-        ls_tpool_i18n-langu = <lang>.
-        APPEND ls_tpool_i18n TO lt_tpool_i18n.
-      ENDIF.
+    SORT lt_tpool_i18n BY language ASCENDING.
+    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
+      READ TEXTPOOL ms_item-obj_name
+        LANGUAGE <tpool>-language
+        INTO <tpool>-textpool.
     ENDLOOP.
 
-    IF lines( lt_langs_i18n ) > 0.
-      io_xml->add( iv_name = 'I18N_LANGS'
-                   ig_data = lt_langs_i18n ).
-
+    IF lines( lt_tpool_i18n ) > 0.
       io_xml->add( iv_name = 'I18N_TPOOL'
                    ig_data = lt_tpool_i18n ).
     ENDIF.
@@ -212,7 +201,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
     LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
       deserialize_textpool( iv_program  = ms_item-obj_name
-                            iv_language = <tpool>-langu
+                            iv_language = <tpool>-language
                             it_tpool    = <tpool>-textpool ).
     ENDLOOP.
 

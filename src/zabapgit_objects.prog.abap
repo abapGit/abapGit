@@ -874,8 +874,8 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
     METHODS deserialize_textpool
       IMPORTING iv_program  TYPE programm
-                iv_language TYPE langu OPTIONAL
                 it_tpool    TYPE textpool_table
+                iv_language TYPE langu OPTIONAL
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
