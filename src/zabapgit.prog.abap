@@ -3,7 +3,7 @@ REPORT zabapgit LINE-SIZE 100.
 * See http://www.abapgit.org
 
 CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',      "#EC NOTEXT
-           gc_abap_version TYPE string VALUE 'v1.26.5'.     "#EC NOTEXT
+           gc_abap_version TYPE string VALUE 'v1.27.0'.     "#EC NOTEXT
 
 ********************************************************************************
 * The MIT License (MIT)
@@ -53,6 +53,7 @@ INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_stage_logic.
+INCLUDE zabapgit_2fa.
 INCLUDE zabapgit_http.
 INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.

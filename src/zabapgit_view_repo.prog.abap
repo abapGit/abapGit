@@ -146,7 +146,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
         lo_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
-          ro_html->add( '<div class="log attention">' ).
+          ro_html->add( '<div class="log">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
         ENDIF.
@@ -278,6 +278,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                            iv_act = |{ gc_action-repo_remote_change }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
                            iv_act = |{ gc_action-repo_remote_detach }?{ lv_key }| ).
+      IF iv_rstate IS INITIAL AND iv_lstate IS INITIAL.
+        lo_tb_advanced->add( iv_txt = 'Force stage'
+                             iv_act = |{ gc_action-go_stage }?{ lv_key }| ).
+      ENDIF.
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
