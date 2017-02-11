@@ -52,12 +52,17 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: li_ddl TYPE REF TO if_dd_ddl_handler.
+    DATA: li_ddl TYPE REF TO object.
 
 
-    li_ddl = cl_dd_ddl_handler_factory=>create( ).
+    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+      RECEIVING
+        handler = li_ddl.
+
     TRY.
-        li_ddl->delete( ms_item-obj_name ).
+        CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~DELETE')
+          EXPORTING
+            name = ms_item-obj_name.
       CATCH cx_dd_ddl_delete.
 * todo
     ENDTRY.
@@ -66,41 +71,59 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: li_ddl       TYPE REF TO if_dd_ddl_handler,
-          ls_ddddlsrcv TYPE ddddlsrcv.
+    DATA: li_ddl    TYPE REF TO object,
+          lv_source TYPE string,
+          lr_data   TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_data>  TYPE any,
+                   <lv_field> TYPE any.
 
 
-    li_ddl = cl_dd_ddl_handler_factory=>create( ).
+    CREATE DATA lr_data TYPE ('DDDDLSRCV').
+    ASSIGN lr_data->* TO <ls_data>.
+
+    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+      RECEIVING
+        handler = li_ddl.
 
     TRY.
-        li_ddl->read(
+        CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name         = ms_item-obj_name
             get_state    = 'A'
           IMPORTING
-            ddddlsrcv_wa = ls_ddddlsrcv ).
+            ddddlsrcv_wa = <ls_data>.
       CATCH cx_dd_ddl_read.
 * todo
         BREAK-POINT.
     ENDTRY.
 
-    CLEAR ls_ddddlsrcv-as4user.
-    CLEAR ls_ddddlsrcv-as4date.
-    CLEAR ls_ddddlsrcv-as4time.
+    ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <ls_data> TO <lv_field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <lv_field>.
+    ASSIGN COMPONENT 'AS4DATE' OF STRUCTURE <ls_data> TO <lv_field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <lv_field>.
+    ASSIGN COMPONENT 'AS4TIME' OF STRUCTURE <ls_data> TO <lv_field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <lv_field>.
+
+    ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <ls_data> TO <lv_field>.
+    ASSERT sy-subrc = 0.
 
     mo_files->add_string( iv_ext    = 'asddls'
-                          iv_string = ls_ddddlsrcv-source ) ##NO_TEXT.
+                          iv_string = <lv_field> ) ##NO_TEXT.
 
-    CLEAR ls_ddddlsrcv-source.
+    CLEAR <lv_field>.
 
     io_xml->add( iv_name = 'DDLS'
-                 ig_data = ls_ddddlsrcv ).
+                 ig_data = <ls_data> ).
 
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~deserialize.
 
-    DATA: li_ddl       TYPE REF TO if_dd_ddl_handler,
+    DATA: li_ddl       TYPE REF TO object,
           ls_ddddlsrcv TYPE ddddlsrcv.
 
 
@@ -109,19 +132,22 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
     ls_ddddlsrcv-source = mo_files->read_string( 'asddls' ) ##NO_TEXT.
 
-    li_ddl = cl_dd_ddl_handler_factory=>create( ).
+    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+      RECEIVING
+        handler = li_ddl.
 
     TRY.
-        li_ddl->save(
+        CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~SAVE')
           EXPORTING
             name         = ms_item-obj_name
             put_state    = 'N'
-            ddddlsrcv_wa = ls_ddddlsrcv ).
+            ddddlsrcv_wa = ls_ddddlsrcv.
 
-        li_ddl->write_tadir(
-          objectname = ms_item-obj_name
-          devclass   = iv_package
-          prid       = 0 ).
+        CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~WRITE_TADIR')
+          EXPORTING
+            objectname = ms_item-obj_name
+            devclass   = iv_package
+            prid       = 0.
       CATCH cx_dd_ddl_save.
 * todo
         BREAK-POINT.
