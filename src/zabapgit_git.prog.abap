@@ -1255,6 +1255,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     DATA: lt_objects TYPE ty_objects_tt,
           lv_pack    TYPE xstring.
 
+    IF iv_name CS ' '.
+      lcx_exception=>raise( 'Branch name cannot contain blank spaces' ).
+    ENDIF.
 
 * "client MUST send an empty packfile"
 * https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
