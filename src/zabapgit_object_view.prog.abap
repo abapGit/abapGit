@@ -65,7 +65,8 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: lv_viewname TYPE dd25l-viewname.
+    DATA: lv_viewname TYPE dd25l-viewname,
+          lv_ddl_view TYPE abap_bool.
 
 
     SELECT SINGLE viewname FROM dd25l INTO lv_viewname
@@ -73,6 +74,21 @@ CLASS lcl_object_view IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
+
+    IF rv_bool = abap_true.
+* todo, downport
+      TRY.
+          CALL METHOD cl_dd_ddl_utilities=>check_for_ddl_view
+            EXPORTING
+              objname     = lv_viewname
+            RECEIVING
+              is_ddl_view = lv_ddl_view.
+        CATCH cx_dd_ddl_exception.
+      ENDTRY.
+      IF lv_ddl_view = abap_true.
+        rv_bool = abap_false.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.                    "lif_object~exists
 
