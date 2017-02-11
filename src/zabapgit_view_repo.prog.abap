@@ -12,6 +12,7 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL.
                  toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
                  toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
                  toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+                 display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
                END OF c_actions.
 
     METHODS constructor
@@ -23,6 +24,8 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL.
     DATA: mo_repo         TYPE REF TO lcl_repo,
           mv_cur_dir      TYPE string,
           mv_hide_files   TYPE abap_bool,
+          mv_max_lines    TYPE i,
+          mv_max_setting  TYPE i,
           mv_show_folders TYPE abap_bool,
           mv_changes_only TYPE abap_bool.
 
@@ -71,12 +74,19 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA lo_settings TYPE REF TO lcl_settings.
+
     super->constructor( ).
 
     mo_repo         = lcl_app=>repo_srv( )->get( iv_key ).
     mv_cur_dir      = '/'. " Root
     mv_hide_files   = lcl_app=>user( )->get_hide_files( ).
     mv_changes_only = lcl_app=>user( )->get_changes_only( ).
+
+    " Read global settings to get max # of objects to be listed
+    lo_settings     = lcl_app=>settings( )->read( ).
+    mv_max_lines    = lo_settings->get_max_lines( ).
+    mv_max_setting  = mv_max_lines.
 
   ENDMETHOD. "constructor
 
@@ -99,6 +109,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
         ev_state        = gc_event_state-re_render.
+      WHEN c_actions-display_more.      " Increase MAX lines limit
+        mv_max_lines    = mv_max_lines + mv_max_setting.
+        ev_state        = gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event
@@ -111,15 +124,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
-          lo_log        TYPE REF TO lcl_log,
-          lo_settings   TYPE REF TO lcl_settings,
-          lv_max_lines  TYPE i.
+          lv_max_str    TYPE string,
+          lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
-
-    " Read global settings to get max # of objects to be listed
-    lo_settings = lcl_app=>settings( )->read( ).
-    lv_max_lines = lo_settings->get_max_lines( ).
 
     " Reinit, for the case of type change
     mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
@@ -165,7 +173,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            IF lv_max_lines > 0 AND sy-tabix > lv_max_lines.
+            IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
@@ -176,11 +184,18 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          IF lv_max_lines = 1.
-            ro_html->add( |Only 1 object shown in list (Set in Advanced > Settings )| ).
+          ro_html->add( '<div class = "dummydiv">' ).
+          IF mv_max_lines = 1.
+            lv_max_str = '1 object'.
           ELSE.
-            ro_html->add( |Only first { lv_max_lines } objects shown in list (Set in Advanced > Settings )| ).
+            lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
+          ro_html->add( |Only { lv_max_str } shown in list. Display {
+            lcl_html=>a( iv_txt = |+{ mv_max_setting }| iv_act = c_actions-display_more )
+            } more. (Set in Advanced > {
+            lcl_html=>a( iv_txt = 'Settings' iv_act = gc_action-go_settings )
+            } )| ).
+          ro_html->add( '</div>' ).
         ENDIF.
 
         ro_html->add( '</div>' ).
