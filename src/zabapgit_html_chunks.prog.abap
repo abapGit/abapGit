@@ -32,6 +32,10 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
+    CLASS-METHODS render_js_error_banner
+      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_gui_chunk_lib
 
 CLASS lcl_gui_chunk_lib IMPLEMENTATION.
@@ -196,10 +200,17 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       lv_error = iv_error.
     ENDIF.
 
-    ro_html->add( '<div class="dummydiv attention">' ).
+    ro_html->add( '<div class="dummydiv error">' ).
     ro_html->add( |{ lcl_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD. "render_error
+
+  METHOD render_js_error_banner.
+    CREATE OBJECT ro_html.
+    ro_html->add( '<div id="js-error-banner" class="dummydiv error">' ).
+    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) } JS init error, please log an issue| ).
+    ro_html->add( '</div>' ).
+  ENDMETHOD. "render_js_error_stub
 
 ENDCLASS. "lcl_gui_chunk_lib
