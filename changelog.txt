@@ -8,7 +8,12 @@ Legend
 + : added
 - : removed
 
-2017-02-25 v1.27.0
+2017-02-13 v1.28.0
+------------------
++ Staging page redesigned
++ Support for core data services
+
+2017-01-25 v1.27.0
 ------------------
 + Two factor authentication with github.com
 
