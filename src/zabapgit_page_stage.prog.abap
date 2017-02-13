@@ -32,8 +32,9 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
       render_list
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_file
-        IMPORTING is_file        TYPE ty_file
-                  iv_context     TYPE string
+        IMPORTING iv_context     TYPE string
+                  is_file        TYPE ty_file
+                  is_item        TYPE ty_item OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_menu
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
@@ -44,6 +45,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS process_stage_list
       IMPORTING it_postdata TYPE cnht_post_data_tab
       RAISING   lcx_exception.
+    METHODS build_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
 ENDCLASS.
 
@@ -52,10 +55,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    ms_control-page_title = 'STAGE'.
-    mo_repo = io_repo.
 
-    ms_files = lcl_stage_logic=>get( mo_repo ).
+    ms_control-page_title = 'STAGE'.
+    mo_repo               = io_repo.
+    ms_files              = lcl_stage_logic=>get( mo_repo ).
 
     CREATE OBJECT mo_stage
       EXPORTING
@@ -64,7 +67,20 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     GET TIME STAMP FIELD mv_ts.
 
+    ms_control-page_menu  = build_menu( ).
+
   ENDMETHOD.
+
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    IF lines( ms_files-local ) > 0.
+      ro_menu->add( iv_txt = |All diffs|
+                    iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+    ENDIF.
+
+  ENDMETHOD. "build_menu
 
   METHOD lif_gui_page~on_event.
 
@@ -146,25 +162,25 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<table id="stage_tab" class="stage_tab">' ).
+    ro_html->add( '<table id="stageTab" class="stage_tab">' ).
 
     " Local changes
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
-        ro_html->add('<thead><tr>').
-        ro_html->add('<th></th><th colspan="2">LOCAL</th>' ).
-        ro_html->add('<th>' ).
-        IF lines( ms_files-local ) > 1.
-          ro_html->add_a( iv_txt = |{ lines( ms_files-local ) } diffs|
-                          iv_act = |{ gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
-        ENDIF.
-        ro_html->add('</th>').
-        ro_html->add('<th>Last changed by</th>').
+        ro_html->add('<thead><tr class="local">').
+        ro_html->add('<th>Type</th>').
+        ro_html->add('<th>Files to add (click to see diff)</th>' ).
+        ro_html->add('<th>Changed by</th>').
+        ro_html->add('<th></th>' ). " Status
+        ro_html->add('<th class="cmd">&#x2193;<a>add</a>/<a>reset</a>&#x2193;</th>' ).
         ro_html->add('</tr></thead>').
-        ro_html->add('<tbody class="local">').
+        ro_html->add('<tbody>').
       ENDAT.
 
-      ro_html->add( render_file( is_file = <ls_local>-file iv_context = 'local' ) ).
+      ro_html->add( render_file(
+        iv_context = 'local'
+        is_file    = <ls_local>-file
+        is_item    = <ls_local>-item ) ). " TODO Refactor, unify structure
 
       AT LAST.
         ro_html->add('</tbody>').
@@ -174,13 +190,19 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     " Remote changes
     LOOP AT ms_files-remote ASSIGNING <ls_remote>.
       AT FIRST.
-        ro_html->add('<thead><tr>').
-        ro_html->add('<th></th><th colspan="3">REMOTE</th>' ).
+        ro_html->add('<thead><tr class="remote">').
+        ro_html->add('<th></th>' ). " Type
+        ro_html->add('<th colspan="2">Files to remove or non-code</th>' ).
+        ro_html->add('<th></th>' ). " Status
+        ro_html->add('<th class="cmd">' &&
+                     '&#x2193;<a>ignore</a><a>remove</a><a>reset</a>&#x2193;</th>' ).
         ro_html->add('</tr></thead>').
-        ro_html->add('<tbody class="remote">').
+        ro_html->add('<tbody>').
       ENDAT.
 
-      ro_html->add( render_file( is_file = <ls_remote> iv_context = 'remote' ) ).
+      ro_html->add( render_file(
+        iv_context = 'remote'
+        is_file    = <ls_remote> ) ).
 
       AT LAST.
         ro_html->add('</tbody>').
@@ -193,31 +215,34 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD render_file.
 
-    DATA: lv_param TYPE string,
-          lv_user  TYPE xubname.
+    DATA: lv_param    TYPE string,
+          lv_filename TYPE string.
 
     CREATE OBJECT ro_html.
 
+    lv_filename = is_file-path && is_file-filename.
+
     ro_html->add( |<tr class="{ iv_context }">| ).
-    ro_html->add( |<td class="status" style="color: #CCC">?</td>| ).
-    ro_html->add( |<td>{ is_file-path && is_file-filename }</td>| ).
 
     CASE iv_context.
       WHEN 'local'.
         lv_param = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
                                                        ig_file = is_file ).
-        ro_html->add( '<td class="cmd"><a>add</a></td>' ).
-        ro_html->add( '<td>' ).
-        ro_html->add_a( iv_txt = 'diff' iv_act = |{ gc_action-go_diff }?{ lv_param }| ).
-        ro_html->add( '</td>' ).
-
-        lv_user = read_last_changed_by( is_file ).
-        ro_html->add( |<td>{ lv_user }</td> | ).
+        ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
+        ro_html->add( |<td class="name">{
+          lcl_html=>a(
+            iv_txt = lv_filename
+            iv_act = |{ gc_action-go_diff }?{ lv_param }| )
+          }</td>| ).
+        ro_html->add( |<td class="user">{ read_last_changed_by( is_file ) }</td>| ).
       WHEN 'remote'.
-        ro_html->add( '<td class="cmd"><a>ignore</a><a>remove</a></td>' ).
-        ro_html->add( |<td><span class="grey">-</span></td>| ).
+        ro_html->add( '<td class="type">-</td>' ).  " Dummy for object type
+        ro_html->add( |<td class="name">{ lv_filename }</td>| ).
+        ro_html->add( '<td></td>' ).                " Dummy for changed-by
     ENDCASE.
 
+    ro_html->add( |<td class="status">?</td>| ).
+    ro_html->add( '<td class="cmd"></td>' ). " Command added in JS
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.  "render_file
@@ -228,6 +253,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     ro_html->add( '<div class="repo">' ).
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     ro_html->add( render_menu( ) ).
     ro_html->add( render_list( ) ).
     ro_html->add( '</div>' ).
@@ -236,20 +262,27 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD render_menu.
 
+    DATA lv_local_count TYPE i.
+
     CREATE OBJECT ro_html.
+    lv_local_count = lines( ms_files-local ).
 
     ro_html->add( '<div class="paddings">' ).
-    ro_html->add_a( iv_act   = 'gHelper.submit();'
+    ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = gc_action_type-onclick
-                    iv_id    = 'act_commit'
+                    iv_id    = 'commitButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Commit'
+                    iv_txt   = 'Commit (<span id="fileCounter"></span>)'
                     iv_opt   = gc_html_opt-strong ) ##NO_TEXT.
-    IF lines( ms_files-local ) > 0.
+    IF lv_local_count > 0.
       ro_html->add_a( iv_act = |{ c_action-stage_all }|
-                      iv_id  = 'act_commit_all'
-                      iv_txt = 'Add all and commit') ##NO_TEXT.
+                      iv_id  = 'commitAllButton'
+                      iv_txt = |Add all and commit ({ lv_local_count })| ) ##NO_TEXT.
     ENDIF.
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '<div>' ).
+    ro_html->add( '<input id="objectSearch" type="search" placeholder="Filter objects">' ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.      "render_menu
@@ -260,10 +293,16 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "stage{ mv_ts }",| ).
-    ro_html->add( '  stageTabId:      "stage_tab",' ).
     ro_html->add( '  formAction:      "stage_commit",' ).
-    ro_html->add( '  commitNodeId:    "act_commit",' ).
-    ro_html->add( '  commitAllNodeId: "act_commit_all"' ).
+
+    ro_html->add( '  ids: {' ).
+    ro_html->add( '    stageTab:      "stageTab",' ).
+    ro_html->add( '    commitBtn:     "commitButton",' ).
+    ro_html->add( '    commitAllBtn:  "commitAllButton",' ).
+    ro_html->add( '    objectSearch:  "objectSearch",' ).
+    ro_html->add( '    fileCounter:   "fileCounter"' ).
+    ro_html->add( '  }' ).
+
     ro_html->add( '}' ).
     ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
@@ -281,6 +320,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       CATCH lcx_exception.
         CLEAR rv_user. "Should not raise errors if user last changed by was not found
     ENDTRY.
+
+    rv_user = to_lower( rv_user ).
   ENDMETHOD.
 
 ENDCLASS.

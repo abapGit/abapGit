@@ -176,7 +176,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
       ro_html->add( '<script type="text/javascript">' ).
       ro_html->add( lo_script ).
-      ro_html->add( 'debugOutput("js: OK");' ).
+      ro_html->add( 'confirmInitialized();' ).
       ro_html->add( '</script>' ).
     ENDIF.
 
