@@ -190,14 +190,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     " Remote changes
     LOOP AT ms_files-remote ASSIGNING <ls_remote>.
       AT FIRST.
-        ro_html->add('<thead><tr class="remote">').
-        ro_html->add('<th></th>' ). " Type
-        ro_html->add('<th colspan="2">Files to remove or non-code</th>' ).
-        ro_html->add('<th></th>' ). " Status
-        ro_html->add('<th class="cmd">' &&
-                     '&#x2193;<a>ignore</a><a>remove</a><a>reset</a>&#x2193;</th>' ).
-        ro_html->add('</tr></thead>').
-        ro_html->add('<tbody>').
+        ro_html->add( '<thead><tr class="remote">' ).
+        ro_html->add( '<th></th>' ). " Type
+        ro_html->add( '<th colspan="2">Files to remove or non-code</th>' ).
+        ro_html->add( '<th></th>' ). " Status
+        ro_html->add( '<th class="cmd">' &&
+                      '&#x2193;<a>ignore</a><a>remove</a><a>reset</a>&#x2193;</th>' ).
+        ro_html->add( '</tr></thead>' ).
+        ro_html->add( '<tbody>' ).
       ENDAT.
 
       ro_html->add( render_file(
@@ -226,14 +226,12 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CASE iv_context.
       WHEN 'local'.
-        lv_param = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                       ig_file = is_file ).
+        lv_param    = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
+                                                          ig_file = is_file ).
+        lv_filename = lcl_html=>a( iv_txt = lv_filename
+                                   iv_act = |{ gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ro_html->add( |<td class="name">{
-          lcl_html=>a(
-            iv_txt = lv_filename
-            iv_act = |{ gc_action-go_diff }?{ lv_param }| )
-          }</td>| ).
+        ro_html->add( |<td class="name">{ lv_filename }</td>| ).
         ro_html->add( |<td class="user">{ read_last_changed_by( is_file ) }</td>| ).
       WHEN 'remote'.
         ro_html->add( '<td class="type">-</td>' ).  " Dummy for object type
