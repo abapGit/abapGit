@@ -125,6 +125,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
           lv_max_str    TYPE string,
+          lv_add_str    TYPE string,
           lo_log        TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -190,8 +191,9 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           ELSE.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
+          lv_add_str = |+{ mv_max_setting }|.
           ro_html->add( |Only { lv_max_str } shown in list. Display {
-            lcl_html=>a( iv_txt = |+{ mv_max_setting }| iv_act = c_actions-display_more )
+            lcl_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             lcl_html=>a( iv_txt = 'Settings' iv_act = gc_action-go_settings )
             } )| ).
