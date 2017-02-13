@@ -32,7 +32,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
   METHOD lif_object~changed_by.
 * todo
     rv_user = c_user_unknown.
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
@@ -63,8 +63,8 @@ CLASS lcl_object_ddls IMPLEMENTATION.
         CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~DELETE')
           EXPORTING
             name = ms_item-obj_name.
-      CATCH cx_dd_ddl_delete.
-* todo
+      CATCH cx_root.
+        lcx_exception=>raise( 'DDLS error' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete
@@ -93,9 +93,8 @@ CLASS lcl_object_ddls IMPLEMENTATION.
             get_state    = 'A'
           IMPORTING
             ddddlsrcv_wa = <ls_data>.
-      CATCH cx_dd_ddl_read.
-* todo
-        BREAK-POINT.
+      CATCH cx_root.
+        lcx_exception=>raise( 'DDLS error' ).
     ENDTRY.
 
     ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <ls_data> TO <lv_field>.
@@ -112,7 +111,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     mo_files->add_string( iv_ext    = 'asddls'
-                          iv_string = <lv_field> ) ##NO_TEXT.
+                          iv_string = <lv_field> ) ##no_text.
 
     CLEAR <lv_field>.
 
@@ -123,14 +122,22 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: li_ddl       TYPE REF TO object,
-          ls_ddddlsrcv TYPE ddddlsrcv.
+    DATA: li_ddl  TYPE REF TO object,
+          lr_data TYPE REF TO data.
 
+    FIELD-SYMBOLS: <ls_data>  TYPE any,
+                   <lv_field> TYPE any.
+
+
+    CREATE DATA lr_data TYPE ('DDDDLSRCV').
+    ASSIGN lr_data->* TO <ls_data>.
 
     io_xml->read( EXPORTING iv_name = 'DDLS'
-                  CHANGING cg_data  = ls_ddddlsrcv ).
+                  CHANGING cg_data  = <ls_data> ).
 
-    ls_ddddlsrcv-source = mo_files->read_string( 'asddls' ) ##NO_TEXT.
+    ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <ls_data> TO <lv_field>.
+    ASSERT sy-subrc = 0.
+    <lv_field> = mo_files->read_string( 'asddls' ) ##no_text.
 
     CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
       RECEIVING
@@ -141,16 +148,15 @@ CLASS lcl_object_ddls IMPLEMENTATION.
           EXPORTING
             name         = ms_item-obj_name
             put_state    = 'N'
-            ddddlsrcv_wa = ls_ddddlsrcv.
+            ddddlsrcv_wa = <ls_data>.
 
         CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~WRITE_TADIR')
           EXPORTING
             objectname = ms_item-obj_name
             devclass   = iv_package
             prid       = 0.
-      CATCH cx_dd_ddl_save.
-* todo
-        BREAK-POINT.
+      CATCH cx_root.
+        lcx_exception=>raise( 'DDLS error' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -159,6 +165,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_view IMPLEMENTATION
