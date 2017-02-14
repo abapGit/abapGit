@@ -12,7 +12,8 @@ CLASS lcl_folder_logic DEFINITION.
           io_dot         TYPE REF TO lcl_dot_abapgit
           iv_package     TYPE devclass
         RETURNING
-          VALUE(rv_path) TYPE string,
+          VALUE(rv_path) TYPE string
+        RAISING lcx_exception,
       path_to_package
         IMPORTING
           iv_top            TYPE devclass
@@ -71,6 +72,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
     DATA: lv_len      TYPE i,
           lv_path     TYPE string,
+          lv_message  TYPE string,
           lv_parentcl TYPE tdevc-parentcl.
 
 
@@ -80,7 +82,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       lv_parentcl = lcl_sap_package=>get( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
-        rv_path = 'error' ##no_text.
+        lcx_exception=>raise( 'error, expected parent package' ).
       ELSE.
         CASE io_dot->get_folder_logic( ).
           WHEN lcl_dot_abapgit=>c_folder_logic-full.
@@ -96,7 +98,11 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
         lv_path = iv_package+lv_len.
         IF strlen( lv_path ) = 0.
-          RETURN. " prevent dump
+* if abapGit project is installed in package ZZZ, all subpackages should be named
+* ZZZ_something. This will define the folder name in the zip file to be "something",
+* similarily with online projects
+          lv_message = 'Unexpected package naming(' && iv_package && ')' ##no_text.
+          lcx_exception=>raise( lv_message ).
         ENDIF.
 
         IF lv_path(1) = '_'.

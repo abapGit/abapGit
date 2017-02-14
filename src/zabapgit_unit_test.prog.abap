@@ -1961,7 +1961,7 @@ CLASS ltcl_file_status2 DEFINITION
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS check FOR TESTING.
+    METHODS check FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.   "ltcl_sap_package
 
@@ -2242,4 +2242,4 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
 ENDCLASS.
 
-INCLUDE ZABAPGIT_UNIT_TEST_CLAS_INTF.
+INCLUDE zabapgit_unit_test_clas_intf.

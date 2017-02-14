@@ -32,7 +32,8 @@ CLASS lcl_file_status DEFINITION FINAL
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE ty_results_tt
                   io_dot     TYPE REF TO lcl_dot_abapgit
-                  iv_top     TYPE devclass,
+                  iv_top     TYPE devclass
+        RAISING lcx_exception,
       build_existing
         IMPORTING is_local         TYPE ty_file_item
                   is_remote        TYPE ty_file
