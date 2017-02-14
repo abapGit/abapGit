@@ -33,10 +33,19 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
                  cs_rsstcd  TYPE rsstcd
                  cs_tstcp   TYPE tstcp
                  cs_tstc    TYPE tstc,
+
       split_parameters_comp
         IMPORTING iv_type  TYPE any
                   iv_param TYPE any
-        CHANGING  cg_value TYPE any.
+        CHANGING  cg_value TYPE any,
+
+      serialize_texts
+        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        RAISING lcx_exception,
+
+      deserialize_texts
+        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
@@ -356,6 +365,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
       lcx_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
     ENDIF.
 
+    " Texts deserializing (translations)
+    deserialize_texts( io_xml ).
+
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~serialize.
@@ -412,10 +424,56 @@ CLASS lcl_object_tran IMPLEMENTATION.
                    ig_data = ls_tstcp ).
     ENDIF.
 
+    " Texts serializing (translations)
+    serialize_texts( io_xml ).
+
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
+  METHOD serialize_texts.
+
+    DATA lt_tpool_i18n TYPE TABLE OF tstct.
+
+    " Skip master language - it was already serialized
+    " Don't serialize t-code itself
+    SELECT sprsl ttext
+      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
+      FROM tstct
+      WHERE sprsl <> mv_language
+      AND   tcode = ms_item-obj_name.
+
+    IF lines( lt_tpool_i18n ) > 0.
+      SORT lt_tpool_i18n BY sprsl ASCENDING.
+      io_xml->add( iv_name = 'I18N_TPOOL'
+                   ig_data = lt_tpool_i18n ).
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_texts
+
+  METHOD deserialize_texts.
+
+    DATA lt_tpool_i18n TYPE TABLE OF tstct.
+
+    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
+
+    " Read XML-files data
+    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+                  CHANGING  cg_data = lt_tpool_i18n ).
+
+    " Force t-code name (security reasons)
+    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
+      <tpool>-tcode = ms_item-obj_name.
+    ENDLOOP.
+
+    IF lines( lt_tpool_i18n ) > 0.
+      MODIFY tstct FROM TABLE lt_tpool_i18n.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'Update of t-code translations failed' ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.                    "deserialize_texts
 ENDCLASS.                    "lcl_object_tran IMPLEMENTATION
