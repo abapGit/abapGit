@@ -59,7 +59,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       TRANSLATE rv_package TO UPPER CASE.
 
       IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false.
-        lcl_sap_package=>get( rv_package )->create_child( rv_package ).
+        lcl_sap_package=>get( lv_parent )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.
