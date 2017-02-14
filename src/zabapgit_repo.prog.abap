@@ -30,8 +30,6 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   lcx_exception,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
-      get_master_language
-        RETURNING VALUE(rv_language) TYPE spras,
       is_write_protected
         RETURNING VALUE(rv_yes) TYPE sap_bool,
       ignore_subpackages
@@ -66,6 +64,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
 
     METHODS:
       find_dot_abapgit
+        RETURNING VALUE(ro_dot) TYPE REF TO lcl_dot_abapgit
         RAISING lcx_exception,
       set
         IMPORTING iv_sha1        TYPE ty_sha1 OPTIONAL
@@ -74,6 +73,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
                   iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
                   iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
+                  is_dot_abapgit TYPE lcl_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION

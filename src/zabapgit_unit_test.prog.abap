@@ -397,7 +397,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           ls_after  TYPE lcl_dot_abapgit=>ty_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
+    lo_dot = lcl_dot_abapgit=>build_default( ).
     ls_before = lo_dot->ms_data.
 
     lo_dot = lcl_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
@@ -418,7 +418,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           lo_dot     TYPE REF TO lcl_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
+    lo_dot = lcl_dot_abapgit=>build_default( ).
 
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(

@@ -105,7 +105,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              package            TYPE devclass,
              offline            TYPE sap_bool,
              local_checksums    TYPE ty_local_checksum_tt,
-             master_language    TYPE spras,
+             dot_abapgit        TYPE lcl_dot_abapgit=>ty_dot_abapgit,
              head_branch        TYPE string,   " HEAD symref of the repo, master branch
              write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
              ignore_subpackages TYPE sap_bool,
@@ -127,6 +127,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_repo_xml-sha1
+      RAISING   lcx_exception.
+
+    METHODS update_dot_abapgit
+      IMPORTING iv_key         TYPE ty_repo-key
+                is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
       RAISING   lcx_exception.
 
     METHODS update_local_checksums
@@ -160,6 +165,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
                 iv_branch      TYPE ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
+                is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit OPTIONAL
       RETURNING VALUE(rv_key)  TYPE ty_repo-key
       RAISING   lcx_exception.
 
@@ -909,7 +915,8 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-sha1         = iv_branch.
     ls_repo-package      = iv_package.
     ls_repo-offline      = iv_offline.
-    ls_repo-master_language = sy-langu.
+    ASSERT NOT is_dot_abapgit IS INITIAL.
+    ls_repo-dot_abapgit  = is_dot_abapgit.
 
     lv_repo_as_xml = to_xml( ls_repo ).
 
@@ -1056,6 +1063,30 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   ENDMETHOD.  "update_offline
 
+  METHOD update_dot_abapgit.
+
+    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE ty_repo.
+
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        lcx_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-dot_abapgit = is_dot_abapgit.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.
+
   METHOD update_sha1.
 
     DATA: lt_content TYPE lcl_persistence_db=>tt_content,
@@ -1156,10 +1187,6 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
       lcx_exception=>raise( 'Inconsistent repo metadata' ).
     ENDIF.
 
-* field master_language is new, so default it for old repositories
-    IF rs_repo-master_language IS INITIAL.
-      rs_repo-master_language = sy-langu.
-    ENDIF.
   ENDMETHOD.
 
   METHOD to_xml.

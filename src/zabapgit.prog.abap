@@ -45,8 +45,8 @@ INCLUDE zabapgit_xml.
 
 INCLUDE zabapgit_app.              " Some deferred definitions here
 INCLUDE zabapgit_persistence_old.
-INCLUDE zabapgit_persistence.
 INCLUDE zabapgit_dot_abapgit.
+INCLUDE zabapgit_persistence.
 INCLUDE zabapgit_sap_package.
 
 INCLUDE zabapgit_stage.

@@ -437,8 +437,7 @@ CLASS lcl_zip IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    ls_data-key             = 'DUMMY'.
-    ls_data-master_language = sy-langu.
+    ls_data-key = 'DUMMY'.
 
     CREATE OBJECT lo_repo
       EXPORTING
