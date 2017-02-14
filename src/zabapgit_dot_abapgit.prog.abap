@@ -39,6 +39,8 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
         RETURNING VALUE(rv_path) TYPE string,
       get_folder_logic
         RETURNING VALUE(rv_logic) TYPE string,
+      set_folder_logic
+        IMPORTING iv_logic TYPE string,
       set_starting_folder
         IMPORTING iv_path TYPE string,
       get_master_language
@@ -218,6 +220,10 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD get_folder_logic.
     rv_logic = ms_data-folder_logic.
+  ENDMETHOD.
+
+  METHOD set_folder_logic.
+    ms_data-folder_logic = iv_logic.
   ENDMETHOD.
 
   METHOD set_starting_folder.

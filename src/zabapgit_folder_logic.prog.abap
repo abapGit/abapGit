@@ -43,7 +43,18 @@ CLASS lcl_folder_logic IMPLEMENTATION.
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
 
-      CONCATENATE rv_package '_' lv_new INTO rv_package.
+      CASE io_dot->get_folder_logic( ).
+        WHEN lcl_dot_abapgit=>c_folder_logic-full.
+          rv_package = lv_new.
+          IF iv_top(1) = '$'.
+            CONCATENATE '$' rv_package INTO rv_package.
+          ENDIF.
+        WHEN lcl_dot_abapgit=>c_folder_logic-prefix.
+          CONCATENATE rv_package '_' lv_new INTO rv_package.
+        WHEN OTHERS.
+          ASSERT 0 = 1.
+      ENDCASE.
+
       TRANSLATE rv_package TO UPPER CASE.
 
       IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false.
@@ -52,6 +63,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
       lv_parent = rv_package.
     ENDWHILE.
+
 
   ENDMETHOD.
 
@@ -70,14 +82,27 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       IF lv_parentcl IS INITIAL.
         rv_path = 'error' ##no_text.
       ELSE.
-        lv_len = strlen( lv_parentcl ).
+        CASE io_dot->get_folder_logic( ).
+          WHEN lcl_dot_abapgit=>c_folder_logic-full.
+            lv_len = 0.
+            IF iv_package(1) = '$'.
+              lv_len = 1.
+            ENDIF.
+          WHEN lcl_dot_abapgit=>c_folder_logic-prefix.
+            lv_len = strlen( lv_parentcl ).
+          WHEN OTHERS.
+            ASSERT 0 = 1.
+        ENDCASE.
+
         lv_path = iv_package+lv_len.
         IF strlen( lv_path ) = 0.
           RETURN. " prevent dump
         ENDIF.
+
         IF lv_path(1) = '_'.
           lv_path = lv_path+1.
         ENDIF.
+
         TRANSLATE lv_path TO LOWER CASE.
         CONCATENATE lv_path '/' INTO lv_path.
 
@@ -105,14 +130,16 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
     METHODS:
       setup,
       teardown,
-      test_prefix
+      test
         IMPORTING
-          iv_logic type string
+          iv_logic   TYPE string
           iv_package TYPE devclass
-          iv_path TYPE string
+          iv_path    TYPE string
         RAISING lcx_exception,
       prefix1 FOR TESTING RAISING lcx_exception,
-      prefix2 FOR TESTING RAISING lcx_exception.
+      prefix2 FOR TESTING RAISING lcx_exception,
+      full1 FOR TESTING RAISING lcx_exception,
+      full2 FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
 
@@ -154,18 +181,30 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD prefix1.
-    test_prefix( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
-                 iv_package = lc_top
-                 iv_path    = lc_src ).
+    test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
+          iv_package = lc_top
+          iv_path    = lc_src ).
   ENDMETHOD.
 
   METHOD prefix2.
-    test_prefix( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
-                 iv_package = '$TOP_FOO'
-                 iv_path    = '/src/foo/' ).
+    test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
+          iv_package = '$TOP_FOO'
+          iv_path    = '/src/foo/' ).
   ENDMETHOD.
 
-  METHOD test_prefix.
+  METHOD full1.
+    test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-full
+          iv_package = lc_top
+          iv_path    = lc_src ).
+  ENDMETHOD.
+
+  METHOD full2.
+    test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-full
+          iv_package = '$TOP_FOO'
+          iv_path    = '/src/top_foo/' ).
+  ENDMETHOD.
+
+  METHOD test.
 
     DATA: lv_path    TYPE string,
           lv_package TYPE devclass,
@@ -174,6 +213,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
 
     lo_dot = lcl_dot_abapgit=>build_default( sy-langu ).
     lo_dot->set_starting_folder( lc_src ).
+    lo_dot->set_folder_logic( iv_logic ).
 
     lv_package = lcl_folder_logic=>path_to_package(
       iv_top  = lc_top
