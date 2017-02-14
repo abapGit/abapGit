@@ -80,7 +80,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD update_package_tree.
 
-    DATA: lt_packages TYPE lcl_sap_package=>ty_devclass_tt,
+    DATA: lt_packages TYPE lif_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
           lv_tree     TYPE dirtree-tname.
 

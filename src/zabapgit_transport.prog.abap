@@ -69,8 +69,8 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD find_top_package.
 * assumption: all objects in transport share a common super package
 
-    DATA: lt_obj   TYPE lcl_sap_package=>ty_devclass_tt,
-          lt_super TYPE lcl_sap_package=>ty_devclass_tt,
+    DATA: lt_obj   TYPE lif_sap_package=>ty_devclass_tt,
+          lt_super TYPE lif_sap_package=>ty_devclass_tt,
           lv_super LIKE LINE OF lt_super,
           lv_index TYPE i.
 

@@ -65,9 +65,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
-        WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
-      ASSERT sy-subrc = 0.
+      lv_parentcl = lcl_sap_package=>get( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
         rv_path = 'error' ##no_text.
