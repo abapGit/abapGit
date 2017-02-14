@@ -6,9 +6,10 @@
 *       CLASS lcl_file_status DEFINITION
 *----------------------------------------------------------------------*
 CLASS ltcl_file_status DEFINITION DEFERRED.
+CLASS ltcl_file_status2 DEFINITION DEFERRED.
 
 CLASS lcl_file_status DEFINITION FINAL
-  FRIENDS ltcl_file_status.
+  FRIENDS ltcl_file_status ltcl_file_status2.
 
   PUBLIC SECTION.
 
@@ -20,14 +21,18 @@ CLASS lcl_file_status DEFINITION FINAL
 
   PRIVATE SECTION.
 
-    CLASS-METHODS calculate_status
-      IMPORTING iv_devclass        TYPE devclass
-                it_local           TYPE ty_files_item_tt
-                it_remote          TYPE ty_files_tt
-                it_cur_state       TYPE ty_file_signatures_tt
-      RETURNING VALUE(rt_results)  TYPE ty_results_tt.
-
     CLASS-METHODS:
+      calculate_status
+        IMPORTING iv_devclass        TYPE devclass
+                  it_local           TYPE ty_files_item_tt
+                  it_remote          TYPE ty_files_tt
+                  it_cur_state       TYPE ty_file_signatures_tt
+        RETURNING VALUE(rt_results)  TYPE ty_results_tt,
+      run_checks
+        IMPORTING io_log     TYPE REF TO lcl_log
+                  it_results TYPE ty_results_tt
+                  iv_start   TYPE string
+                  iv_top     TYPE devclass,
       build_existing
         IMPORTING is_local         TYPE ty_file_item
                   is_remote        TYPE ty_file
@@ -53,6 +58,89 @@ ENDCLASS.                    "lcl_file_status DEFINITION
 *       CLASS lcl_file_status IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_file_status IMPLEMENTATION.
+
+  METHOD run_checks.
+
+    DATA: lv_path     TYPE string,
+          ls_item     TYPE ty_item,
+          ls_file     TYPE ty_file_signature,
+          lt_res_sort LIKE it_results,
+          lt_item_idx LIKE it_results.
+
+    FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
+                   <ls_res2> LIKE LINE OF it_results.
+
+
+    IF io_log IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Collect object indexe
+    lt_res_sort = it_results.
+    SORT lt_res_sort BY obj_type ASCENDING obj_name ASCENDING.
+
+    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
+      IF NOT ( <ls_res1>-obj_type = ls_item-obj_type
+          AND <ls_res1>-obj_name = ls_item-obj_name ).
+        APPEND INITIAL LINE TO lt_item_idx ASSIGNING <ls_res2>.
+        <ls_res2>-obj_type = <ls_res1>-obj_type.
+        <ls_res2>-obj_name = <ls_res1>-obj_name.
+        <ls_res2>-path     = <ls_res1>-path.
+        MOVE-CORRESPONDING <ls_res1> TO ls_item.
+      ENDIF.
+    ENDLOOP.
+
+    " Check files for one object is in the same folder
+
+    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
+      READ TABLE lt_item_idx ASSIGNING <ls_res2>
+        WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
+        BINARY SEARCH. " Sorted above
+
+      IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
+        io_log->add( iv_msgv1 = 'Files for object'
+                     iv_msgv2 = <ls_res1>-obj_type
+                     iv_msgv3 = <ls_res1>-obj_name
+                     iv_msgv4 = 'are not placed in the same folder'
+                     iv_rc    = '1' ) ##no_text.
+      ENDIF.
+    ENDLOOP.
+
+    " Check that objects are created in package corresponding to folder
+    LOOP AT it_results ASSIGNING <ls_res1>
+        WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
+      lv_path = lcl_folder_logic=>class_to_path( iv_top     = iv_top
+                                                 iv_start   = iv_start
+                                                 iv_package = <ls_res1>-package ).
+      IF lv_path <> <ls_res1>-path.
+        io_log->add( iv_msgv1 = 'Package and path does not match for object,'
+                     iv_msgv2 = <ls_res1>-obj_type
+                     iv_msgv3 = <ls_res1>-obj_name
+                     iv_rc    = '2' ) ##no_text.
+      ENDIF.
+    ENDLOOP.
+
+    " Check for multiple files with same filename
+    SORT lt_res_sort BY filename ASCENDING.
+
+    LOOP AT lt_res_sort ASSIGNING <ls_res1>.
+      IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
+        io_log->add( iv_msgv1 = 'Multiple files with same filename,'
+                     iv_msgv2 = <ls_res1>-filename
+                     iv_rc    = '3' ) ##no_text.
+      ENDIF.
+
+      IF <ls_res1>-filename IS INITIAL.
+        io_log->add( iv_msgv1 = 'Filename is empty for object'
+                     iv_msgv2 = <ls_res1>-obj_type
+                     iv_msgv3 = <ls_res1>-obj_name
+                     iv_rc    = '4' ) ##no_text.
+      ENDIF.
+
+      MOVE-CORRESPONDING <ls_res1> TO ls_file.
+    ENDLOOP.
+
+  ENDMETHOD.                    "check
 
   METHOD status.
 
@@ -82,7 +170,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lcl_sap_package=>check(
+    run_checks(
       io_log     = io_log
       it_results = rt_results
       iv_start   = lo_dot_abapgit->get_starting_folder( )

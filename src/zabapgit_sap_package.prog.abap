@@ -13,11 +13,6 @@ CLASS lcl_sap_package DEFINITION FINAL.
     TYPES: ty_devclass_tt TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY.
 
     CLASS-METHODS:
-      check
-        IMPORTING io_log     TYPE REF TO lcl_log
-                  it_results TYPE ty_results_tt
-                  iv_start   TYPE string
-                  iv_top     TYPE devclass,
       list_subpackages IMPORTING iv_package     TYPE devclass
                        RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
       list_superpackages IMPORTING iv_package     TYPE devclass
@@ -37,16 +32,6 @@ CLASS lcl_sap_package DEFINITION FINAL.
         IMPORTING iv_package     TYPE devclass
         RETURNING VALUE(rv_bool) TYPE abap_bool.
 
-  PRIVATE SECTION.
-    CLASS-METHODS:
-      class_to_path
-        IMPORTING
-          iv_top         TYPE devclass
-          iv_start       TYPE string
-          iv_package     TYPE devclass
-        RETURNING
-          VALUE(rv_path) TYPE string.
-
 ENDCLASS.                    "lcl_package DEFINITION
 
 *----------------------------------------------------------------------*
@@ -55,129 +40,6 @@ ENDCLASS.                    "lcl_package DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_sap_package IMPLEMENTATION.
-
-  METHOD class_to_path.
-
-    DATA: lv_len      TYPE i,
-          lv_path     TYPE string,
-          lv_parentcl TYPE tdevc-parentcl.
-
-
-    IF iv_top = iv_package.
-      rv_path = iv_start.
-    ELSE.
-      SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
-        WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
-      ASSERT sy-subrc = 0.
-
-      IF lv_parentcl IS INITIAL.
-        rv_path = 'error' ##no_text.
-      ELSE.
-        lv_len = strlen( lv_parentcl ).
-        lv_path = iv_package+lv_len.
-        IF strlen( lv_path ) = 0.
-          RETURN. " prevent dump
-        ENDIF.
-        IF lv_path(1) = '_'.
-          lv_path = lv_path+1.
-        ENDIF.
-        TRANSLATE lv_path TO LOWER CASE.
-        CONCATENATE lv_path '/' INTO lv_path.
-
-        rv_path = class_to_path( iv_top     = iv_top
-                                 iv_start   = iv_start
-                                 iv_package = lv_parentcl ).
-
-        CONCATENATE rv_path lv_path INTO rv_path.
-
-      ENDIF.
-
-    ENDIF.
-
-  ENDMETHOD.                    "class_to_path
-
-  METHOD check.
-
-    DATA: lv_path     TYPE string,
-          ls_item     TYPE ty_item,
-          ls_file     TYPE ty_file_signature,
-          lt_res_sort LIKE it_results,
-          lt_item_idx LIKE it_results.
-
-    FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
-                   <ls_res2> LIKE LINE OF it_results.
-
-
-    IF io_log IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    " Collect object indexe
-    lt_res_sort = it_results.
-    SORT lt_res_sort BY obj_type ASCENDING obj_name ASCENDING.
-
-    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
-      IF NOT ( <ls_res1>-obj_type = ls_item-obj_type
-          AND <ls_res1>-obj_name = ls_item-obj_name ).
-        APPEND INITIAL LINE TO lt_item_idx ASSIGNING <ls_res2>.
-        <ls_res2>-obj_type = <ls_res1>-obj_type.
-        <ls_res2>-obj_name = <ls_res1>-obj_name.
-        <ls_res2>-path     = <ls_res1>-path.
-        MOVE-CORRESPONDING <ls_res1> TO ls_item.
-      ENDIF.
-    ENDLOOP.
-
-    " Check files for one object is in the same folder
-
-    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
-      READ TABLE lt_item_idx ASSIGNING <ls_res2>
-        WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
-        BINARY SEARCH. " Sorted above
-
-      IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
-        io_log->add( iv_msgv1 = 'Files for object'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
-                     iv_msgv4 = 'are not placed in the same folder'
-                     iv_rc    = '1' ) ##no_text.
-      ENDIF.
-    ENDLOOP.
-
-    " Check that objects are created in package corresponding to folder
-    LOOP AT it_results ASSIGNING <ls_res1>
-        WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = class_to_path( iv_top     = iv_top
-                               iv_start   = iv_start
-                               iv_package = <ls_res1>-package ).
-      IF lv_path <> <ls_res1>-path.
-        io_log->add( iv_msgv1 = 'Package and path does not match for object,'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
-                     iv_rc    = '2' ) ##no_text.
-      ENDIF.
-    ENDLOOP.
-
-    " Check for multiple files with same filename
-    SORT lt_res_sort BY filename ASCENDING.
-
-    LOOP AT lt_res_sort ASSIGNING <ls_res1>.
-      IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
-        io_log->add( iv_msgv1 = 'Multiple files with same filename,'
-                     iv_msgv2 = <ls_res1>-filename
-                     iv_rc    = '3' ) ##no_text.
-      ENDIF.
-
-      IF <ls_res1>-filename IS INITIAL.
-        io_log->add( iv_msgv1 = 'Filename is empty for object'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
-                     iv_rc    = '4' ) ##no_text.
-      ENDIF.
-
-      MOVE-CORRESPONDING <ls_res1> TO ls_file.
-    ENDLOOP.
-
-  ENDMETHOD.                    "check
 
   METHOD exists.
 

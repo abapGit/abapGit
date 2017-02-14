@@ -1729,14 +1729,6 @@ CLASS lcl_objects DEFINITION FINAL.
         IMPORTING it_results        TYPE ty_results_tt
         RETURNING VALUE(rt_results) TYPE ty_results_tt.
 
-    CLASS-METHODS
-      path_to_package
-        IMPORTING iv_top            TYPE devclass
-                  iv_start          TYPE string
-                  iv_path           TYPE string
-        RETURNING VALUE(rv_package) TYPE devclass
-        RAISING   lcx_exception.
-
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE ty_item
       RETURNING VALUE(rv_class_name) TYPE string.
