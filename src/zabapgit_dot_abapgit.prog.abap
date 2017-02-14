@@ -4,14 +4,14 @@
 
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
-CONSTANTS: BEGIN OF c_folder_logic,
-             prefix TYPE string VALUE 'PREFIX',
-             full   TYPE string VALUE 'FULL',
-           END OF c_folder_logic.
-
 CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
+    CONSTANTS: BEGIN OF c_folder_logic,
+                 prefix TYPE string VALUE 'PREFIX',
+                 full   TYPE string VALUE 'FULL',
+               END OF c_folder_logic.
+
     CLASS-METHODS:
       build_default
         IMPORTING iv_master_language    TYPE spras
@@ -39,8 +39,8 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
         RETURNING VALUE(rv_path) TYPE string,
       get_folder_logic
         RETURNING VALUE(rv_logic) TYPE string,
-*      set_starting_folder
-*        IMPORTING iv_path TYPE string,
+      set_starting_folder
+        IMPORTING iv_path TYPE string,
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
 *      set_master_language
@@ -220,9 +220,9 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     rv_logic = ms_data-folder_logic.
   ENDMETHOD.
 
-*  METHOD set_starting_folder.
-*    ms_data-starting_folder = iv_path.
-*  ENDMETHOD.
+  METHOD set_starting_folder.
+    ms_data-starting_folder = iv_path.
+  ENDMETHOD.
 
   METHOD get_master_language.
     rv_language = ms_data-master_language.

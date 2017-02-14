@@ -21,12 +21,15 @@ INTERFACE lif_sap_package.
 
 ENDINTERFACE.
 
+CLASS ltcl_folder_logic DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_package DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_sap_package DEFINITION FINAL CREATE PRIVATE.
+CLASS lcl_sap_package DEFINITION FINAL CREATE PRIVATE
+    FRIENDS ltcl_folder_logic.
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -69,9 +72,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_injected> LIKE LINE OF gt_injected.
 
-
-    READ TABLE gt_injected ASSIGNING <ls_injected> WITH KEY package = iv_package.
-    IF sy-subrc = 0.
+    IF lines( gt_injected ) > 0.
+      READ TABLE gt_injected ASSIGNING <ls_injected> WITH KEY package = iv_package.
+      ASSERT sy-subrc = 0. " unit test should be in control
       ri_package = <ls_injected>-object.
     ELSE.
       CREATE OBJECT ri_package TYPE lcl_sap_package
