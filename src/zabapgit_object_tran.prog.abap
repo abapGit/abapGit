@@ -471,7 +471,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     IF lines( lt_tpool_i18n ) > 0.
       MODIFY tstct FROM TABLE lt_tpool_i18n.
       IF sy-subrc <> 0.
-       lcx_exception=>raise( 'Update of t-code translations failed' ).
+        lcx_exception=>raise( 'Update of t-code translations failed' ).
       ENDIF.
     ENDIF.
 
