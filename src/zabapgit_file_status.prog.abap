@@ -31,7 +31,7 @@ CLASS lcl_file_status DEFINITION FINAL
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE ty_results_tt
-                  iv_start   TYPE string
+                  io_dot     TYPE REF TO lcl_dot_abapgit
                   iv_top     TYPE devclass,
       build_existing
         IMPORTING is_local         TYPE ty_file_item
@@ -109,9 +109,9 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Check that objects are created in package corresponding to folder
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = lcl_folder_logic=>class_to_path( iv_top     = iv_top
-                                                 iv_start   = iv_start
-                                                 iv_package = <ls_res1>-package ).
+      lv_path = lcl_folder_logic=>package_to_path( iv_top     = iv_top
+                                                   io_dot     = io_dot
+                                                   iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
         io_log->add( iv_msgv1 = 'Package and path does not match for object,'
                      iv_msgv2 = <ls_res1>-obj_type
@@ -151,7 +151,6 @@ CLASS lcl_file_status IMPLEMENTATION.
 
 
     rt_results = calculate_status(
-
       iv_devclass  = io_repo->get_package( )
       it_local     = io_repo->get_files_local( io_log = io_log )
       it_remote    = io_repo->get_files_remote( )
@@ -173,7 +172,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     run_checks(
       io_log     = io_log
       it_results = rt_results
-      iv_start   = lo_dot_abapgit->get_starting_folder( )
+      io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.  "status

@@ -6,21 +6,22 @@ CLASS lcl_folder_logic DEFINITION.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      class_to_path
+      package_to_path
         IMPORTING
           iv_top         TYPE devclass
-          iv_start       TYPE string
+          io_dot         TYPE REF TO lcl_dot_abapgit
           iv_package     TYPE devclass
         RETURNING
-          VALUE(rv_path) TYPE string.
-
-    CLASS-METHODS
+          VALUE(rv_path) TYPE string,
       path_to_package
-        IMPORTING iv_top            TYPE devclass
-                  iv_start          TYPE string
-                  iv_path           TYPE string
-        RETURNING VALUE(rv_package) TYPE devclass
-        RAISING   lcx_exception.
+        IMPORTING
+          iv_top            TYPE devclass
+          io_dot            TYPE REF TO lcl_dot_abapgit
+          iv_path           TYPE string
+        RETURNING
+          VALUE(rv_package) TYPE devclass
+        RAISING
+          lcx_exception.
 
 ENDCLASS.
 
@@ -34,9 +35,9 @@ CLASS lcl_folder_logic IMPLEMENTATION.
           lv_path   TYPE string.
 
 
-    lv_length = strlen( iv_start ).
-    lv_path = iv_path+lv_length.
-    lv_parent = iv_top.
+    lv_length  = strlen( io_dot->get_starting_folder( ) ).
+    lv_path    = iv_path+lv_length.
+    lv_parent  = iv_top.
     rv_package = iv_top.
 
     WHILE lv_path CA '/'.
@@ -45,9 +46,8 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       CONCATENATE rv_package '_' lv_new INTO rv_package.
       TRANSLATE rv_package TO UPPER CASE.
 
-      IF lcl_sap_package=>exists( rv_package ) = abap_false.
-        lcl_sap_package=>create_child( iv_parent = lv_parent
-                                       iv_child  = rv_package ).
+      IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false.
+        lcl_sap_package=>get( rv_package )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.
@@ -55,7 +55,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD class_to_path.
+  METHOD package_to_path.
 
     DATA: lv_len      TYPE i,
           lv_path     TYPE string,
@@ -63,7 +63,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
 
     IF iv_top = iv_package.
-      rv_path = iv_start.
+      rv_path = io_dot->get_starting_folder( ).
     ELSE.
       SELECT SINGLE parentcl FROM tdevc INTO lv_parentcl
         WHERE devclass = iv_package.      "#EC CI_SUBRC "#EC CI_GENBUFF
@@ -83,14 +83,12 @@ CLASS lcl_folder_logic IMPLEMENTATION.
         TRANSLATE lv_path TO LOWER CASE.
         CONCATENATE lv_path '/' INTO lv_path.
 
-        rv_path = class_to_path( iv_top     = iv_top
-                                 iv_start   = iv_start
-                                 iv_package = lv_parentcl ).
+        rv_path = package_to_path( iv_top     = iv_top
+                                   io_dot     = io_dot
+                                   iv_package = lv_parentcl ).
 
         CONCATENATE rv_path lv_path INTO rv_path.
-
       ENDIF.
-
     ENDIF.
 
   ENDMETHOD.                    "class_to_path

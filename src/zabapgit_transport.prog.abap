@@ -79,10 +79,10 @@ CLASS lcl_transport IMPLEMENTATION.
 
     READ TABLE it_tadir INDEX 1 ASSIGNING <ls_tadir>.
     ASSERT sy-subrc = 0.
-    lt_super = lcl_sap_package=>list_superpackages( <ls_tadir>-devclass ).
+    lt_super = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      lt_obj = lcl_sap_package=>list_superpackages( <ls_tadir>-devclass ).
+      lt_obj = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
 * filter out possibilities from lt_super
       LOOP AT lt_super INTO lv_super.
