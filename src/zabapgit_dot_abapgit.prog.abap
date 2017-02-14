@@ -4,6 +4,11 @@
 
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
+CONSTANTS: BEGIN OF c_folder_logic,
+             prefix TYPE string VALUE 'PREFIX',
+             full   TYPE string VALUE 'FULL',
+           END OF c_folder_logic.
+
 CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
@@ -32,6 +37,8 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
                   iv_filename TYPE string,
       get_starting_folder
         RETURNING VALUE(rv_path) TYPE string,
+      get_folder_logic
+        RETURNING VALUE(rv_logic) TYPE string,
 *      set_starting_folder
 *        IMPORTING iv_path TYPE string,
       get_master_language
@@ -46,6 +53,7 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
     TYPES: BEGIN OF ty_dot_abapgit,
              master_language TYPE spras,
              starting_folder TYPE string,
+             folder_logic    TYPE string,
              ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
            END OF ty_dot_abapgit.
 
@@ -105,6 +113,8 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
     ls_data-master_language = iv_master_language.
     ls_data-starting_folder = '/'.
+    ls_data-folder_logic    = c_folder_logic-prefix.
+
     APPEND '/.gitignore' TO ls_data-ignore.
     APPEND '/LICENSE' TO ls_data-ignore.
     APPEND '/README.md' TO ls_data-ignore.
@@ -118,6 +128,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD to_xml.
+
     CALL TRANSFORMATION id
       SOURCE data = is_data
       RESULT XML rv_xml.
@@ -129,6 +140,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       IN rv_xml
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
+
   ENDMETHOD.
 
   METHOD from_xml.
@@ -145,6 +157,12 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
       RESULT data = rs_data ##NO_TEXT.
+
+* downward compatibility
+    IF rs_data-folder_logic IS INITIAL.
+      rs_data-folder_logic = c_folder_logic-prefix.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD add_ignore.
@@ -196,6 +214,10 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD get_starting_folder.
     rv_path = ms_data-starting_folder.
+  ENDMETHOD.
+
+  METHOD get_folder_logic.
+    rv_logic = ms_data-folder_logic.
   ENDMETHOD.
 
 *  METHOD set_starting_folder.

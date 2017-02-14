@@ -39,8 +39,31 @@ CLASS lcl_object_ddls IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
-* todo
-    rv_bool = abap_true.
+
+    DATA: lv_state TYPE objstate,
+          li_ddl   TYPE REF TO object.
+
+
+    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+      RECEIVING
+        handler = li_ddl.
+
+    TRY.
+        CALL METHOD li_ddl->('IF_DD_DDL_HANDLER~READ')
+          EXPORTING
+            name      = ms_item-obj_name
+            get_state = 'A'
+          IMPORTING
+            got_state = lv_state.
+        IF lv_state IS INITIAL.
+          rv_bool = abap_false.
+        ELSE.
+          rv_bool = abap_true.
+        ENDIF.
+      CATCH cx_root.
+        rv_bool = abap_false.
+    ENDTRY.
+
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.

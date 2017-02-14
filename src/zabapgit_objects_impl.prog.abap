@@ -223,35 +223,6 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.                    "exists
 
-  METHOD path_to_package.
-
-    DATA: lv_length TYPE i,
-          lv_parent TYPE devclass,
-          lv_new    TYPE string,
-          lv_path   TYPE string.
-
-
-    lv_length = strlen( iv_start ).
-    lv_path = iv_path+lv_length.
-    lv_parent = iv_top.
-    rv_package = iv_top.
-
-    WHILE lv_path CA '/'.
-      SPLIT lv_path AT '/' INTO lv_new lv_path.
-
-      CONCATENATE rv_package '_' lv_new INTO rv_package.
-      TRANSLATE rv_package TO UPPER CASE.
-
-      IF lcl_sap_package=>exists( rv_package ) = abap_false.
-        lcl_sap_package=>create_child( iv_parent = lv_parent
-                                       iv_child  = rv_package ).
-      ENDIF.
-
-      lv_parent = rv_package.
-    ENDWHILE.
-
-  ENDMETHOD.
-
   METHOD class_name.
 
     CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
@@ -624,7 +595,7 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      lv_package = path_to_package(
+      lv_package = lcl_folder_logic=>path_to_package(
         iv_top   = io_repo->get_package( )
         iv_start = io_repo->get_dot_abapgit( )->get_starting_folder( )
         iv_path  = <ls_result>-path ).
