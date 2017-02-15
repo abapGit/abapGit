@@ -92,17 +92,21 @@ CLASS lcl_folder_logic IMPLEMENTATION.
             ENDIF.
           WHEN lcl_dot_abapgit=>c_folder_logic-prefix.
             lv_len = strlen( lv_parentcl ).
+
+            IF iv_package(lv_len) <> lv_parentcl.
+* if abapGit project is installed in package ZZZ, all subpackages should be named
+* ZZZ_something. This will define the folder name in the zip file to be "something",
+* similarily with online projects. Alternatively change to FULL folder logic
+              lv_message = 'PREFIX: Unexpected package naming(' && iv_package && ')' ##no_text.
+              lcx_exception=>raise( lv_message ).
+            ENDIF.
           WHEN OTHERS.
             ASSERT 0 = 1.
         ENDCASE.
 
         lv_path = iv_package+lv_len.
         IF strlen( lv_path ) = 0.
-* if abapGit project is installed in package ZZZ, all subpackages should be named
-* ZZZ_something. This will define the folder name in the zip file to be "something",
-* similarily with online projects
-          lv_message = 'Unexpected package naming(' && iv_package && ')' ##no_text.
-          lcx_exception=>raise( lv_message ).
+          lcx_exception=>raise( 'Folder logic: length = 0' ).
         ENDIF.
 
         IF lv_path(1) = '_'.
@@ -144,6 +148,7 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
         RAISING lcx_exception,
       prefix1 FOR TESTING RAISING lcx_exception,
       prefix2 FOR TESTING RAISING lcx_exception,
+      prefix_error1 FOR TESTING RAISING lcx_exception,
       full1 FOR TESTING RAISING lcx_exception,
       full2 FOR TESTING RAISING lcx_exception.
 
@@ -180,6 +185,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '$TOP_FOO'.
     <ls_inject>-object  = me.
+
+    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    <ls_inject>-package = '$FOOBAR'.
+    <ls_inject>-object  = me.
   ENDMETHOD.
 
   METHOD teardown.
@@ -196,6 +205,17 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
           iv_package = '$TOP_FOO'
           iv_path    = '/src/foo/' ).
+  ENDMETHOD.
+
+  METHOD prefix_error1.
+* PREFIX mode, top package is $TOP, so all subpackages should be named $TOP_something
+    TRY.
+        test( iv_logic   = lcl_dot_abapgit=>c_folder_logic-prefix
+              iv_package = '$FOOBAR'
+              iv_path    = '/src/' ).
+        cl_abap_unit_assert=>fail( 'Error expected' ).
+      CATCH lcx_exception.
+    ENDTRY.
   ENDMETHOD.
 
   METHOD full1.
@@ -226,14 +246,14 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
       io_dot  = lo_dot
       iv_path = iv_path ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_package
-      exp = iv_package ).
-
     lv_path = lcl_folder_logic=>package_to_path(
       iv_top     = lc_top
       io_dot     = lo_dot
       iv_package = iv_package ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_package
+      exp = iv_package ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_path
