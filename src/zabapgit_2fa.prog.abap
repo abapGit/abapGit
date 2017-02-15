@@ -690,6 +690,10 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
                                         WITH UNIQUE KEY table_line READ-ONLY.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-METHODS:
+      popup_token
+        RETURNING VALUE(rv_token) TYPE string
+        RAISING lcx_exception.
 ENDCLASS.
 
 CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
@@ -731,7 +735,6 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
   METHOD use_2fa_if_required.
     DATA: li_authenticator TYPE REF TO lif_2fa_authenticator,
           lv_2fa_token     TYPE string,
-          lv_use_2fa       TYPE abap_bool,
           lv_access_token  TYPE string,
           lx_ex            TYPE REF TO cx_root.
 
@@ -748,16 +751,7 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
                                               iv_username = cv_username
                                               iv_password = cv_password ) = abap_true.
 
-          " Get a 2FA token (app/sms)
-          CALL FUNCTION 'POPUP_GET_STRING'
-            EXPORTING
-              label = 'Two factor auth. token'
-            IMPORTING
-              value = lv_2fa_token
-              okay  = lv_use_2fa.
-          IF lv_use_2fa = abap_false.
-            lcx_exception=>raise( 'Authentication cancelled' ).
-          ENDIF.
+          lv_2fa_token = popup_token( ).
 
           " Delete an old access token if it exists
           li_authenticator->delete_access_tokens( iv_url       = iv_url
@@ -789,4 +783,43 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
             ix_previous = lx_ex.
     ENDTRY.
   ENDMETHOD.
+
+  METHOD popup_token.
+
+    DATA: lv_returncode TYPE c,
+          lt_fields     TYPE TABLE OF sval.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname   = 'TADIR'.
+    <ls_field>-fieldname = 'OBJ_NAME'.
+    <ls_field>-fieldtext = 'Two factor auth. token'.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        no_value_check  = abap_true
+        popup_title     = 'Two factor auth. token'
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2. "#EC NOTEXT
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_returncode = 'A'.
+      lcx_exception=>raise( 'Authentication cancelled' ).
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rv_token = <ls_field>-value.
+
+  ENDMETHOD.
+
 ENDCLASS.
