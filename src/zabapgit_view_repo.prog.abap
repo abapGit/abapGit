@@ -295,10 +295,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                            iv_act = |{ gc_action-repo_remote_change }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
                            iv_act = |{ gc_action-repo_remote_detach }?{ lv_key }| ).
-      IF iv_rstate IS INITIAL AND iv_lstate IS INITIAL.
-        lo_tb_advanced->add( iv_txt = 'Force stage'
-                             iv_act = |{ gc_action-go_stage }?{ lv_key }| ).
-      ENDIF.
+      lo_tb_advanced->add( iv_txt = 'Force stage'
+                           iv_act = |{ gc_action-go_stage }?{ lv_key }| ).
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
