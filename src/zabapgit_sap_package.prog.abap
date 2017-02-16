@@ -22,6 +22,7 @@ INTERFACE lif_sap_package.
 ENDINTERFACE.
 
 CLASS ltcl_folder_logic DEFINITION DEFERRED.
+CLASS ltcl_folder_logic_namespaces DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_package DEFINITION
@@ -29,7 +30,9 @@ CLASS ltcl_folder_logic DEFINITION DEFERRED.
 *
 *----------------------------------------------------------------------*
 CLASS lcl_sap_package DEFINITION FINAL CREATE PRIVATE
-    FRIENDS ltcl_folder_logic.
+    FRIENDS
+    ltcl_folder_logic
+    ltcl_folder_logic_namespaces.
 
   PUBLIC SECTION.
     CLASS-METHODS:
