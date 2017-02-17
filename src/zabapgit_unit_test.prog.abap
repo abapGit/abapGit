@@ -1961,7 +1961,7 @@ CLASS ltcl_file_status2 DEFINITION
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS check FOR TESTING.
+    METHODS check FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.   "ltcl_sap_package
 
@@ -1986,7 +1986,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 iv_start   = '/'
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 0 ).
@@ -2004,7 +2004,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 iv_start   = '/'
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
                                  iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
@@ -2024,7 +2024,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 iv_start   = '/'
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -2043,7 +2043,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 iv_start   = '/'
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -2061,7 +2061,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 iv_start   = '/'
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( )
@@ -2242,4 +2242,4 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
 ENDCLASS.
 
-INCLUDE ZABAPGIT_UNIT_TEST_CLAS_INTF.
+INCLUDE zabapgit_unit_test_clas_intf.

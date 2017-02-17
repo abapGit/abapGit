@@ -537,7 +537,8 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read(
       iv_package            = get_package( )
-      iv_ignore_subpackages = ignore_subpackages( ) ).
+      iv_ignore_subpackages = ignore_subpackages( )
+      io_dot                = get_dot_abapgit( ) ).
 
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ) .
@@ -582,7 +583,7 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_language = get_master_language( )
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
-        <ls_file>-path = mo_dot_abapgit->get_starting_folder( ) && <ls_tadir>-path.
+        <ls_file>-path = <ls_tadir>-path.
         <ls_file>-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.

@@ -181,12 +181,16 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
                    <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
-    lt_tadir = lcl_tadir=>read( mo_repo->get_package( ) ).
+* todo, offline projects should have an dot abapgit too
+    lt_tadir = lcl_tadir=>read(
+      iv_package = mo_repo->get_package( )
+      io_dot     = lcl_dot_abapgit=>build_default( sy-langu ) ).
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
       <ls_repo_item>-obj_type = <ls_tadir>-object.
       <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
-      <ls_repo_item>-path     = '/' && <ls_tadir>-path. " Add root anchor
+      <ls_repo_item>-path     = <ls_tadir>-path.
       <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
     ENDLOOP.
 

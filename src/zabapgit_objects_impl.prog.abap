@@ -80,12 +80,12 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD update_package_tree.
 
-    DATA: lt_packages TYPE lcl_sap_package=>ty_devclass_tt,
+    DATA: lt_packages TYPE lif_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
           lv_tree     TYPE dirtree-tname.
 
 
-    lt_packages = lcl_sap_package=>list_subpackages( iv_package ).
+    lt_packages = lcl_sap_package=>get( iv_package )->list_subpackages( ).
     APPEND iv_package TO lt_packages.
 
     LOOP AT lt_packages INTO lv_package.
@@ -596,9 +596,9 @@ CLASS lcl_objects IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
       lv_package = lcl_folder_logic=>path_to_package(
-        iv_top   = io_repo->get_package( )
-        iv_start = io_repo->get_dot_abapgit( )->get_starting_folder( )
-        iv_path  = <ls_result>-path ).
+        iv_top  = io_repo->get_package( )
+        io_dot  = io_repo->get_dot_abapgit( )
+        iv_path = <ls_result>-path ).
 
       lv_cancel = warning_package( is_item    = ls_item
                                    iv_package = lv_package ).
