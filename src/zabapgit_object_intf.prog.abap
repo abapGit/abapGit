@@ -31,7 +31,10 @@ CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
       RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_object_intf DEFINITION
+
+
 CLASS lcl_object_intf IMPLEMENTATION.
   METHOD constructor.
     super->constructor(
@@ -76,6 +79,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
     mo_object_oriented_object_fct->add_to_activation_list( is_item = ms_item ).
   ENDMETHOD.
+
   METHOD deserialize_docu.
 
     DATA: lt_lines  TYPE tlinetab,
@@ -95,6 +99,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
       iv_object_name = lv_object
       iv_language    = mv_language ).
   ENDMETHOD.
+
   METHOD lif_object~has_changed_since.
     DATA:
       lv_program  TYPE program,
@@ -222,10 +227,24 @@ CLASS lcl_object_intf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~exists.
-    DATA: ls_class_key TYPE seoclskey.
+
+    DATA: ls_class_key TYPE seoclskey,
+          lv_category  TYPE seoclassdf-category.
+
     ls_class_key-clsname = ms_item-obj_name.
 
     rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
+
+    IF rv_bool = abap_true.
+      SELECT SINGLE category FROM seoclassdf INTO lv_category
+        WHERE clsname = ls_class_key-clsname
+        AND ( version = '1'
+        OR version = '0' ) ##warn_ok.                   "#EC CI_GENBUFF
+      IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
+        rv_bool = abap_false.
+      ENDIF.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
@@ -242,7 +261,6 @@ CLASS lcl_object_intf IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
-
 
 
 CLASS lcl_object_oriented_interface DEFINITION

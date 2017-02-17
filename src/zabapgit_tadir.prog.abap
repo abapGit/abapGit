@@ -131,8 +131,7 @@ CLASS lcl_tadir IMPLEMENTATION.
           lt_tdevc    TYPE STANDARD TABLE OF tdevc,
           lv_len      TYPE i,
           lv_message  TYPE string,
-          lv_path     TYPE string,
-          lv_category TYPE seoclassdf-category.
+          lv_path     TYPE string.
 
     FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
                    <ls_tadir> LIKE LINE OF rt_tadir.
@@ -164,15 +163,6 @@ CLASS lcl_tadir IMPLEMENTATION.
       CASE <ls_tadir>-object.
         WHEN 'SICF'.
           <ls_tadir>-obj_name = <ls_tadir>-obj_name(15).
-        WHEN 'INTF'.
-* todo, move this logic to INTF exists method
-          SELECT SINGLE category FROM seoclassdf INTO lv_category
-            WHERE clsname = <ls_tadir>-obj_name
-            AND ( version = '1'
-            OR version = '0' ) ##warn_ok.               "#EC CI_GENBUFF
-          IF sy-subrc = 0 AND lv_category = seoc_category_webdynpro_class.
-            DELETE rt_tadir INDEX lv_index.
-          ENDIF.
       ENDCASE.
     ENDLOOP.
 
@@ -184,24 +174,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_tdevc ASSIGNING <ls_tdevc>.
-*      lv_len = strlen( iv_package ).
-*      IF <ls_tdevc>-devclass(lv_len) <> iv_package.
-** if abapGit project is installed in package ZZZ, all subpackages should be named
-** ZZZ_something. This will define the folder name in the zip file to be "something",
-** similarily with online projects
-*        lv_message = 'Unexpected package naming(' &&
-*          <ls_tdevc>-devclass && ')' ##no_text.
-*        MESSAGE lv_message TYPE 'I'.
-*        CONTINUE.
-*      ENDIF.
-*
-*      lv_path = <ls_tdevc>-devclass+lv_len.
-*      IF lv_path(1) = '_'.
-*        lv_path = lv_path+1.
-*      ENDIF.
-*      TRANSLATE lv_path TO LOWER CASE.
-*      CONCATENATE iv_path lv_path '/' INTO lv_path.
-
       lt_tadir = build( iv_package = <ls_tdevc>-devclass
                         iv_top     = iv_top
                         io_dot     = io_dot ).
