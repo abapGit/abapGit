@@ -178,10 +178,19 @@ StageHelper.prototype.onPageLoad = function() {
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
   var target = event.target || event.srcElement;
-  if (!target || target.tagName != "A") return;
+  if (!target) return;
 
-  var td = target.parentNode;
-  if (!td || ["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
+  if (target.tagName === "A") {
+    var td = target.parentNode;
+  } else if (target.tagName === "TD") {
+    var td = target;
+    if (td.children.length === 1 && td.children[0].tagName === "A") {
+      target = td.children[0];
+    } else return;
+  } else return;
+
+
+  if (["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
   
   var status    = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;

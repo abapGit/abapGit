@@ -388,6 +388,7 @@ table.repo_tab {
   color: #444 !important;
   font-weight: bold;
 }
+.stage_tab td.cmd {  cursor: pointer; }
 .stage_tab td.cmd a { padding: 0px 4px; }
 .stage_tab th.cmd a { padding: 0px 4px; }
 .stage_tab td.method { color: #ccc; }
