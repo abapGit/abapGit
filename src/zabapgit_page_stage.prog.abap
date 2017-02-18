@@ -31,22 +31,26 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       render_list
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+
       render_file
         IMPORTING iv_context     TYPE string
                   is_file        TYPE ty_file
                   is_item        TYPE ty_item OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
-      render_menu
+
+      render_actions
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+
       read_last_changed_by
         IMPORTING is_file        TYPE ty_file
-        RETURNING VALUE(rv_user) TYPE xubname.
+        RETURNING VALUE(rv_user) TYPE xubname,
 
-    METHODS process_stage_list
-      IMPORTING it_postdata TYPE cnht_post_data_tab
-      RAISING   lcx_exception.
-    METHODS build_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+      process_stage_list
+        IMPORTING it_postdata TYPE cnht_post_data_tab
+        RAISING   lcx_exception,
+
+      build_menu
+        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
 
 ENDCLASS.
 
@@ -162,19 +166,21 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<table id="stageTab" class="stage_tab">' ).
+    ro_html->add( '<table id="stageTab" class="stage_tab w100">' ).
 
     " Local changes
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
-        ro_html->add('<thead><tr class="local">').
-        ro_html->add('<th>Type</th>').
-        ro_html->add('<th>Files to add (click to see diff)</th>' ).
-        ro_html->add('<th>Changed by</th>').
-        ro_html->add('<th></th>' ). " Status
-        ro_html->add('<th class="cmd">&#x2193;<a>add</a>/<a>reset</a>&#x2193;</th>' ).
-        ro_html->add('</tr></thead>').
-        ro_html->add('<tbody>').
+        ro_html->add( '<thead><tr class="local">' ).
+        ro_html->add( '<th>Type</th>' ).
+        ro_html->add( '<th>Files to add (click to see diff)</th>' ).
+        ro_html->add( '<th>Changed by</th>' ).
+        ro_html->add( '<th></th>' ). " Status
+        ro_html->add( '<th class="cmd">' ).
+        ro_html->add( '<a>add</a>&#x2193; <a>reset</a>&#x2193;' ).
+        ro_html->add( '</th>' ).
+        ro_html->add( '</tr></thead>' ).
+        ro_html->add( '<tbody>' ).
       ENDAT.
 
       ro_html->add( render_file(
@@ -194,8 +200,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         ro_html->add( '<th></th>' ). " Type
         ro_html->add( '<th colspan="2">Files to remove or non-code</th>' ).
         ro_html->add( '<th></th>' ). " Status
-        ro_html->add( '<th class="cmd">' &&
-                      '&#x2193;<a>ignore</a><a>remove</a><a>reset</a>&#x2193;</th>' ).
+        ro_html->add( '<th class="cmd">' ).
+        ro_html->add( '<a>ignore</a>&#x2193; <a>remove</a>&#x2193; <a>reset</a>&#x2193;' ).
+        ro_html->add( '</th>' ).
         ro_html->add( '</tr></thead>' ).
         ro_html->add( '<tbody>' ).
       ENDAT.
@@ -252,38 +259,52 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ro_html->add( '<div class="repo">' ).
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
-    ro_html->add( render_menu( ) ).
+
+    ro_html->add( '<div class="stage-container">' ).
+    ro_html->add( render_actions( ) ).
     ro_html->add( render_list( ) ).
+    ro_html->add( '</div>' ).
+
     ro_html->add( '</div>' ).
 
   ENDMETHOD.      "render_content
 
-  METHOD render_menu.
+  METHOD render_actions.
 
-    DATA lv_local_count TYPE i.
+    DATA: lv_local_count TYPE i,
+          lv_add_all_txt TYPE string.
 
     CREATE OBJECT ro_html.
     lv_local_count = lines( ms_files-local ).
+    IF lv_local_count > 0.
+      lv_add_all_txt = |Add all and commit ({ lv_local_count })|.
+      " Otherwise empty, but the element (id) is preserved for JS
+    ENDIF.
 
-    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( '<table class="w100 margin-v5"><tr>' ).
+
+    " Action buttons
+    ro_html->add( '<td class="indent5em">' ).
     ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = gc_action_type-onclick
                     iv_id    = 'commitButton'
                     iv_style = 'display: none'
                     iv_txt   = 'Commit (<span id="fileCounter"></span>)'
                     iv_opt   = gc_html_opt-strong ) ##NO_TEXT.
-    IF lv_local_count > 0.
-      ro_html->add_a( iv_act = |{ c_action-stage_all }|
-                      iv_id  = 'commitAllButton'
-                      iv_txt = |Add all and commit ({ lv_local_count })| ) ##NO_TEXT.
-    ENDIF.
-    ro_html->add( '</div>' ).
+    ro_html->add_a( iv_act = |{ c_action-stage_all }|
+                    iv_id  = 'commitAllButton'
+                    iv_txt = lv_add_all_txt ) ##NO_TEXT.
+    ro_html->add( '</td>' ).
 
-    ro_html->add( '<div>' ).
-    ro_html->add( '<input id="objectSearch" type="search" placeholder="Filter objects">' ).
-    ro_html->add( '</div>' ).
+    " Filter bar
+    ro_html->add( '<td class="right">' ).
+    ro_html->add( '<input class="stage-filter" id="objectSearch"' &&
+                  ' type="search" placeholder="Filter objects">' ).
+    ro_html->add( '</td>' ).
 
-  ENDMETHOD.      "render_menu
+    ro_html->add( '</tr></table>' ).
+
+  ENDMETHOD.      "render_actions
 
   METHOD scripts.
 
