@@ -127,6 +127,8 @@ CLASS lcl_object_suso IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TOBJVOR'
                   CHANGING  cg_data = lt_tobjvor ).
 
+    tadir_insert( iv_package ).
+
     lv_objectname = ms_item-obj_name.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
       EXPORTING
