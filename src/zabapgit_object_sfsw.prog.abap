@@ -170,13 +170,17 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     lo_switch->set_parent_bf( lt_parent_bf ).
     lo_switch->set_conflicts( lt_conflicts ).
 
+* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
+    SET PARAMETER ID 'EUK' FIELD iv_package.
     lo_switch->save_all(
       EXCEPTIONS
         not_saved = 1
         OTHERS    = 2 ).
+    SET PARAMETER ID 'EUK' FIELD ''.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
+
 
     lcl_objects_activation=>add_item( ms_item ).
 

@@ -208,7 +208,10 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
         im_sfw_bfc_tc = ls_sfw_bfc_tc ).
     lo_bf->set_parent_bfs( lt_parent_bfs ).
 
+* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
+    SET PARAMETER ID 'EUK' FIELD iv_package.
     lo_bf->save_all( ).
+    SET PARAMETER ID 'EUK' FIELD ''.
 
     lcl_objects_activation=>add_item( ms_item ).
 

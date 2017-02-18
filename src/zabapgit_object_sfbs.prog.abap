@@ -182,7 +182,10 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
     lo_bfs->set_assigned_bfs( lt_nested_bfs ).
     lo_bfs->set_nested_parent( lt_parent_bfs ).
 
+* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
+    SET PARAMETER ID 'EUK' FIELD iv_package.
     lo_bfs->save_all( ).
+    SET PARAMETER ID 'EUK' FIELD ''.
 
     lcl_objects_activation=>add_item( ms_item ).
 
