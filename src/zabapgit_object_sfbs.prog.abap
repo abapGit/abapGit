@@ -190,18 +190,21 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_bfset TYPE sfw_bset,
-          lo_bfs   TYPE REF TO cl_sfw_bfs.
+    DATA: lv_bfset  TYPE sfw_bset,
+          lt_delete TYPE sfw_bstab,
+          lt_msgtab TYPE sprot_u_tab.
 
 
     lv_bfset = ms_item-obj_name.
-    TRY.
-        lo_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
-        lo_bfs->set_delete_flag( lv_bfset ).
-        lo_bfs->save_all( ).
-      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error deleting BF' ).
-    ENDTRY.
+    APPEND lv_bfset TO lt_delete.
+
+    cl_sfw_activate=>delete_sfbs( EXPORTING p_bsets = lt_delete
+                                  IMPORTING p_msgtab = lt_msgtab ).
+
+    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      lcx_exception=>raise( 'Error deleting SFBS' ).
+    ENDIF.
 
   ENDMETHOD.                    "delete
 
@@ -219,7 +222,5 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
-
-
 
 ENDCLASS.                    "lcl_object_SFBS IMPLEMENTATION
