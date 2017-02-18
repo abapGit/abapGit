@@ -33,7 +33,15 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    rv_user = get( )->get_header_data( )-changedby.
+    DATA: ls_data TYPE sfw_switch.
+
+
+    ls_data = get( )->get_header_data( ).
+
+    rv_user = ls_data-changedby.
+    IF rv_user IS INITIAL.
+      rv_user = ls_data-author.
+    ENDIF.
 
   ENDMETHOD.
 
