@@ -218,7 +218,8 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
       li_node = li_iterator->get_next( ).
     ENDWHILE.
 
-* todo, iv_package?
+    tadir_insert( iv_package ).
+
     lv_formname = ms_item-obj_name.
     lo_sf->enqueue( suppress_corr_check = space
                     master_language     = mv_language

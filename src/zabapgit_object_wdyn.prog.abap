@@ -745,6 +745,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name  = 'SOURCES'
                   CHANGING cg_data = mt_sources ).
 
+    tadir_insert( iv_package ).
+
     ls_component-comp_metadata-definition-author = sy-uname.
     ls_component-comp_metadata-definition-createdon = sy-datum.
     recover_definition( ls_component-comp_metadata ).

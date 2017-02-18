@@ -299,6 +299,8 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
 
+    tadir_insert( iv_package ).
+
     io_xml->read( EXPORTING iv_name = 'INCLUDES'
                   CHANGING cg_data = lt_includes ).
 
