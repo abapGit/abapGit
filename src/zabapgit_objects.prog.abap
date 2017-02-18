@@ -570,6 +570,9 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       corr_insert
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
+      tadir_insert
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception,
       jump_se11
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
@@ -1615,6 +1618,25 @@ CLASS lcl_objects_super IMPLEMENTATION.
       cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
     rs_metadata-version = 'v1.0.0' ##no_text.
   ENDMETHOD.                    "get_metadata
+
+  METHOD tadir_insert.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_test_modus       = abap_false
+        wi_tadir_pgmid      = 'R3TR'
+        wi_tadir_object     = ms_item-obj_type
+        wi_tadir_obj_name   = ms_item-obj_name
+        wi_tadir_author     = sy-uname
+        wi_tadir_devclass   = iv_package
+        wi_tadir_masterlang = mv_language
+      EXCEPTIONS
+        OTHERS              = 1.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD corr_insert.
 
