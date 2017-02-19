@@ -88,6 +88,37 @@ function confirmInitialized() {
 }
 
 /**********************************************************
+ * Performance utils (for debugging)
+ **********************************************************/
+
+var gPerf = [];
+
+function perfOut(prefix) {
+  var totals = {};
+  for (var i = gPerf.length - 1; i >= 0; i--) {
+    if (!totals[gPerf[i].name]) totals[gPerf[i].name] = {count: 0, time: 0};
+    totals[gPerf[i].name].time  += gPerf[i].time;
+    totals[gPerf[i].name].count += 1;
+  }
+
+  var keys = Object.keys(totals);
+  for (var i = keys.length - 1; i >= 0; i--) {
+    console.log(prefix 
+      + " " + keys[i] + ": " 
+      + totals[keys[i]].time.toFixed(3) + "ms"
+      + " (" + totals[keys[i]].count.toFixed() +")");
+  }
+}
+
+function perfLog(name, startTime) {
+  gPerf.push({name: name, time: window.performance.now() - startTime});
+}
+
+function perfClear() {
+  gPerf = [];
+}
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 
@@ -113,12 +144,19 @@ function StageHelper(params) {
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
   this.STATUS = {
-    "add":    "A",
-    "remove": "R",
-    "ignore": "I",
-    "reset":  "?"
+    add:    "A",
+    remove: "R",
+    ignore: "I",
+    reset:  "?",
+    isValid: function (status) { return "ARI?".indexOf(status) == -1; }
   };
   
+  this.TEMPLATES = {
+    cmdReset:  "<a>reset</a>",
+    cmdLocal:  "<a>add</a>",
+    cmdRemote: "<a>ignore</a><a>remove</a>"
+  };
+
   this.setHooks();
 }
 
@@ -154,34 +192,32 @@ StageHelper.prototype.onPageUnload = function() {
 
 // Re-store table state on entering the page
 StageHelper.prototype.onPageLoad = function() {
-
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageSeed));
 
-  if (data) {
-    this.iterateStageTab(function (row) {
-      var status = data[row.cells[this.col.name].innerText];
-      this.updateRow(row, status || this.STATUS.reset);
-    });
-    debugOutput("StageHelper.onPageLoad from Storage");
-
-  } else { // Render initial commands
-
-    this.iterateStageTab(function (row) {
-      this.updateRow(row, this.STATUS.reset);
-    });
-    debugOutput("StageHelper.onPageLoad initial state");
-  }
+  this.iterateStageTab(true, function (row) {
+    var status = data && data[row.cells[this.col.name].innerText];
+    this.updateRow(row, status || this.STATUS.reset);
+  });
 
   this.updateMenu();
+  debugOutput("StageHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 }
 
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
   var target = event.target || event.srcElement;
-  if (!target || target.tagName != "A") return;
+  if (!target) return;
 
-  var td = target.parentNode;
-  if (!td || ["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
+  if (target.tagName === "A") {
+    var td = target.parentNode;
+  } else if (target.tagName === "TD") {
+    var td = target;
+    if (td.children.length === 1 && td.children[0].tagName === "A") {
+      target = td.children[0];
+    } else return;
+  } else return;
+
+  if (["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
   
   var status    = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;
@@ -189,9 +225,9 @@ StageHelper.prototype.onTableClick = function (event) {
   if (td.tagName === "TD") {
     this.updateRow(targetRow, status);
   } else { // TH
-    this.iterateStageTab(function (row) {
-      if (row.style.display !== "none"                      // Not filtered out
-        && row.className === targetRow.className            // Same context as header
+    this.iterateStageTab(true, function (row) {
+      if (row.style.display !== "none"            // Not filtered out
+        && row.className === targetRow.className  // Same context as header
         ) {
         this.updateRow(row, status);
       }
@@ -208,7 +244,7 @@ StageHelper.prototype.onSearch = function (e) {
     || e.type === "keypress" && e.which === 13 ) { 
 
     this.lastSearchValue = e.target.value;
-    this.iterateStageTab(this.applyFilterToRow, e.target.value);
+    this.iterateStageTab(true, this.applyFilterToRow, e.target.value);
   }
 }
 
@@ -219,14 +255,10 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
 
   if (filter) {
     newTxt = origTxt.replace(filter, "<mark>"+filter+"</mark>");
-    if (newTxt !== origTxt) { // fits filter
-      row.style.display = "table-row";
-    } else {
-      row.style.display = "none";
-    }
+    row.style.display = (newTxt !== origTxt) ? "" : "none";
   } else { // No filter -> just reset the value
     newTxt            = origTxt;
-    row.style.display = "table-row";
+    row.style.display = ""; // default, visible
   }
 
   if (td.firstChild.tagName === "A") {
@@ -240,7 +272,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
 StageHelper.prototype.getStatusImpact = function (status) {
   if (typeof status !== "string" 
     || status.length !== 1 
-    || "ARI?".indexOf(status) == -1) {
+    || this.STATUS.isValid(status) ) {
     alert("Unknown status");
   } else {
     return (status !== this.STATUS.reset) ? 1 : 0;
@@ -252,37 +284,41 @@ StageHelper.prototype.updateRow = function (row, newStatus) {
   var oldStatus = row.cells[this.col.status].innerText;
 
   if (oldStatus !== newStatus) {
-    row.cells[this.col.status].innerText = newStatus;
-    if (newStatus === this.STATUS.reset) {
-      row.cells[this.col.status].classList.remove(this.HIGHLIGHT_STYLE);
-    } else {
-      row.cells[this.col.status].classList.add(this.HIGHLIGHT_STYLE);
-    }
+    this.updateRowStatus(row, newStatus);
     this.updateRowCommand(row, newStatus);
-  } else if (!row.cells[this.col.cmd].innerText) {
+  } else if (!row.cells[this.col.cmd].children.length) {
     this.updateRowCommand(row, newStatus); // For initial run
   }
 
   this.choiseCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
 }
 
-// Update command cell (render set of commands)
-StageHelper.prototype.updateRowCommand = function (row, status) {
-  var CMD_RESET  = "<a>reset</a>";
-  var CMD_LOCAL  = "<a>add</a>";
-  var CMD_REMOTE = "<a>ignore</a><a>remove</a>";
-
+// Update Status cell (render set of commands)
+StageHelper.prototype.updateRowStatus = function (row, status) {
+  row.cells[this.col.status].innerText = status;
   if (status === this.STATUS.reset) {
-    row.cells[this.col.cmd].innerHTML = (row.className == "local") ? CMD_LOCAL : CMD_REMOTE;
+    row.cells[this.col.status].classList.remove(this.HIGHLIGHT_STYLE);
   } else {
-    row.cells[this.col.cmd].innerHTML = CMD_RESET;
+    row.cells[this.col.status].classList.add(this.HIGHLIGHT_STYLE);
+  }
+}
+
+// Update Command cell (render set of commands)
+StageHelper.prototype.updateRowCommand = function (row, status) {
+  var cell = row.cells[this.col.cmd];
+  if (status === this.STATUS.reset) {
+    cell.innerHTML = (row.className == "local") 
+      ? this.TEMPLATES.cmdLocal 
+      : this.TEMPLATES.cmdRemote;
+  } else {
+    cell.innerHTML = this.TEMPLATES.cmdReset;
   }
 }
 
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
-  this.dom.commitBtn.style.display    = (this.choiseCount > 0) ? "inline" : "none";
-  this.dom.commitAllBtn.style.display = (this.choiseCount > 0) ? "none" : "inline";
+  this.dom.commitBtn.style.display    = (this.choiseCount > 0) ? "" : "none";
+  this.dom.commitAllBtn.style.display = (this.choiseCount > 0) ? "none" : "";
   this.dom.fileCounter.innerHTML      = this.choiseCount.toString();
 }
 
@@ -294,19 +330,36 @@ StageHelper.prototype.submit = function () {
 // Extract data from the table
 StageHelper.prototype.collectData = function () {
   var data  = {};
-  this.iterateStageTab(function (row) {
+  this.iterateStageTab(false, function (row) {
     data[row.cells[this.col.name].innerText] = row.cells[this.col.status].innerText;
   });
   return data;
 }
 
-// table iteration helper
-StageHelper.prototype.iterateStageTab = function (cb /*, ...*/) {
-  for (var b = 0, bN = this.dom.stageTab.tBodies.length; b < bN; b++) {
-    var tbody = this.dom.stageTab.tBodies[b];
+// Table iteration helper
+StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
+  
+  var restArgs = Array.prototype.slice.call(arguments, 2);
+  var table    = this.dom.stageTab;
+
+  if (changeMode) {
+    var scrollOffset = window.pageYOffset;
+    this.dom.stageTab.style.display = "none";
+    // var stageTabParent = this.dom.stageTab.parentNode;
+    // table = stageTabParent.removeChild(this.dom.stageTab);
+  }
+
+  for (var b = 0, bN = table.tBodies.length; b < bN; b++) {
+    var tbody = table.tBodies[b];
     for (var r = 0, rN = tbody.rows.length; r < rN; r++) {
-      args = [tbody.rows[r]].concat(Array.prototype.slice.call(arguments, 1));
+      args = [tbody.rows[r]].concat(restArgs);
       cb.apply(this, args); // callback
     }
+  }
+
+  if (changeMode) {
+    this.dom.stageTab.style.display = "";
+    // stageTabParent.appendChild(table);
+    window.scrollTo(0, scrollOffset);
   }
 }

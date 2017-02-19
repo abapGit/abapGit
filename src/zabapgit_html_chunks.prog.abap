@@ -209,7 +209,9 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_js_error_banner.
     CREATE OBJECT ro_html.
     ro_html->add( '<div id="js-error-banner" class="dummydiv error">' ).
-    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) } JS init error, please log an issue| ).
+    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) }| &&
+                  ' If this does not disappear soon,' &&
+                  ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
   ENDMETHOD. "render_js_error_stub
 
