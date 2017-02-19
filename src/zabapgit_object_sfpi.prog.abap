@@ -18,6 +18,8 @@ CLASS lcl_object_sfpi DEFINITION INHERITING FROM lcl_objects_super FINAL.
       load
         RETURNING VALUE(ri_wb_interface) TYPE REF TO if_fp_wb_interface
         RAISING lcx_exception,
+      fix_oref
+        IMPORTING ii_document TYPE REF TO if_ixml_document,
       interface_to_xstring
         RETURNING VALUE(rv_xstr) TYPE xstring
         RAISING lcx_exception.
@@ -123,6 +125,58 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD fix_oref.
+
+    DATA: li_iterator TYPE REF TO if_ixml_node_iterator,
+          lv_name     TYPE string,
+          lv_value    TYPE string,
+          lv_new      TYPE n LENGTH 3,
+          lv_old      TYPE string,
+          lt_map      TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+          li_attr_map TYPE REF TO if_ixml_named_node_map,
+          li_attr     TYPE REF TO if_ixml_node,
+          li_node     TYPE REF TO if_ixml_node.
+
+    DEFINE _lookup.
+      read table lt_map from &1 transporting no fields.
+      if sy-subrc <> 0.
+        append &1 to lt_map.
+        read table lt_map from &1 transporting no fields.
+      endif.
+      lv_new = sy-tabix + 100.
+    END-OF-DEFINITION.
+
+
+    li_iterator = ii_document->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      li_attr_map = li_node->get_attributes( ).
+
+      IF li_attr_map IS BOUND.
+        li_attr = li_attr_map->get_named_item_ns( 'href' ).
+        IF li_attr IS BOUND.
+          lv_old = li_attr->get_value( ).
+          IF lv_old(2) = '#o'.
+            _lookup lv_old+1.
+            li_attr->set_value( '#o' && lv_new ).
+          ENDIF.
+        ENDIF.
+
+        li_attr = li_attr_map->get_named_item_ns( 'id' ).
+        IF li_attr IS BOUND.
+          lv_old = li_attr->get_value( ).
+          IF lv_old(1) = 'o'.
+            _lookup lv_old.
+            li_attr->set_value( 'o' && lv_new ).
+          ENDIF.
+        ENDIF.
+      ENDIF.
+
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
+
+  ENDMETHOD.
+
   METHOD lif_object~serialize.
 
     DATA: lv_xstr     TYPE xstring,
@@ -131,6 +185,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
 
     lv_xstr = interface_to_xstring( ).
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xstr ).
+    fix_oref( li_document ).
     io_xml->set_raw( li_document->get_root_element( ) ).
 
   ENDMETHOD.                    "serialize
