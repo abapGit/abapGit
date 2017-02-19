@@ -200,7 +200,7 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
     CREATE OBJECT lo_sf.
 
 * set "created by" and "changed by" to current user
-    li_iterator = io_xml->get_raw( )->create_iterator( ).
+    li_iterator = io_xml->get_raw( )->get_root_element( )->create_iterator( ).
     li_node = li_iterator->get_next( ).
     WHILE NOT li_node IS INITIAL.
       lv_name = li_node->get_name( ).
@@ -226,7 +226,7 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
                     mode                = 'INSERT'
                     formname            = lv_formname ).
 
-    lo_sf->xml_upload( EXPORTING dom      = io_xml->get_raw( )
+    lo_sf->xml_upload( EXPORTING dom      = io_xml->get_raw( )->get_root_element( )
                                  formname = lv_formname
                                  language = mv_language
                        CHANGING  sform    = lo_res ).

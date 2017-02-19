@@ -294,7 +294,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         CHANGING  cg_data TYPE any
         RAISING   lcx_exception,
       get_raw
-        RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_node,
+        RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_document,
 * todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
         RETURNING VALUE(rs_metadata) TYPE ty_metadata.
@@ -320,7 +320,7 @@ CLASS lcl_xml_input IMPLEMENTATION.
   ENDMETHOD.                    "constructor
 
   METHOD get_raw.
-    ri_raw = mi_xml_doc->get_root_element( ).
+    ri_raw = mi_xml_doc.
   ENDMETHOD.                    "get_raw
 
   METHOD fix_xml.
