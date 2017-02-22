@@ -28,11 +28,18 @@ TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
 
 TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
-TYPES: BEGIN OF ty_comment,
-         username TYPE string,
-         email    TYPE string,
-         comment  TYPE string,
-       END OF ty_comment.
+TYPES:
+  BEGIN OF ty_git_user,
+    name TYPE string,
+    email TYPE string,
+  END OF ty_git_user.
+
+TYPES:
+  BEGIN OF ty_comment,
+    committer TYPE ty_git_user,
+    author    TYPE ty_git_user,
+    comment   TYPE string,
+  END OF ty_comment.
 
 TYPES: BEGIN OF ty_item,
          obj_type TYPE tadir-object,

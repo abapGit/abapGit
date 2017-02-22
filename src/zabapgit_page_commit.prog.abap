@@ -35,7 +35,13 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RAISING   lcx_exception,
       render_form
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception.
+        RAISING   lcx_exception,
+      render_text_input
+        IMPORTING iv_name       TYPE string
+                  iv_label      TYPE string
+                  iv_value      TYPE string OPTIONAL
+                  iv_max_length TYPE string OPTIONAL
+        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
 ENDCLASS.
 
@@ -59,6 +65,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
         lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
                                                      IMPORTING es_fields   = ls_commit ).
+
+        ls_commit-repo_key = mo_repo->get_key( ).
 
         lcl_services_git=>commit( is_commit   = ls_commit
                                   io_repo     = mo_repo
@@ -124,6 +132,27 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   ENDMETHOD.    "render_stage
 
+  METHOD render_text_input.
+
+    DATA lv_attrs TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    IF iv_value IS NOT INITIAL.
+      lv_attrs = | value="{ iv_value }"|.
+    ENDIF.
+
+    IF iv_max_length IS NOT INITIAL.
+      lv_attrs = | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    ro_html->add( '<div class="row">' ).
+    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.  " render_text_input
+
   METHOD render_form.
 
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
@@ -138,58 +167,53 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lo_user  = lcl_app=>user( ).
     lv_key   = mo_repo->get_key( ).
 
-    lv_user  = lo_user->get_repo_username( mo_repo->get_url( ) ).
+    lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.
-      lv_user  = lo_user->get_username( ).
+      lv_user  = lo_user->get_default_git_user_name( ).
     ENDIF.
 
-    lv_email = lo_user->get_repo_email( mo_repo->get_url( ) ).
+    lv_email = lo_user->get_repo_git_user_email( mo_repo->get_url( ) ).
     IF lv_email IS INITIAL.
-      lv_email = lo_user->get_email( ).
+      lv_email = lo_user->get_default_git_user_email( ).
     ENDIF.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="form_div">' ).
-    ro_html->add( '<form id="commit_form" method="post" action="sapevent:commit_post">' ).
-    ro_html->add( |<input name="repo_key" type="hidden" value="{ lv_key }">| ).
-    ro_html->add( '<table>' ).
+    ro_html->add( '<div class="form-container">' ).
+    ro_html->add( '<form id="commit_form" class="aligned-form"'
+               && ' method="post" action="sapevent:commit_post">' ).
 
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="field_name">username</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( |<input name="username" type="text" size="50" value="{ lv_user }">| ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
+    ro_html->add( render_text_input( iv_name  = 'committer_name'
+                                     iv_label = 'committer name'
+                                     iv_value = lv_user ) ).
 
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="field_name">email</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( |<input name="email" type="text" size="50" value="{ lv_email }">| ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
+    ro_html->add( render_text_input( iv_name  = 'committer_email'
+                                     iv_label = 'committer e-mail'
+                                     iv_value = lv_email ) ).
 
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="field_name">comment</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add(
-      '<input name="comment" type="text" id="commit_msg" maxlength="50" size="50">' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
+    ro_html->add( render_text_input( iv_name       = 'comment'
+                                     iv_label      = 'comment'
+                                     iv_max_length = '50' ) ).
 
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td class="field_name">body</td>' ).
-    ro_html->add( '<td>' ).
-    ro_html->add( '<textarea name="body" rows="10" cols="50"></textarea>' ).
+    ro_html->add( '<div class="row">' ).
+    ro_html->add( '<label for="c-body">body</label>' ).
+    ro_html->add( '<textarea id="c-body" name="body" rows="10" cols="50"></textarea>' ).
+    ro_html->add( '<input type="submit" class="hidden-submit">' ).
+    ro_html->add( '</div>' ).
 
-    ro_html->add( '<input type="submit" class="hidden-submit">' ). "Hmmm ... reconsider
+    ro_html->add( '<div class="row">' ).
+    ro_html->add( '<span class="cell"></span>' ).
+    ro_html->add( '<span class="cell sub-title">Optionally,'
+               && ' specify author (same as committer by default)</span>' ).
+    ro_html->add( '</div>' ).
 
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr>' ).
+    ro_html->add( render_text_input( iv_name  = 'author_name'
+                                     iv_label = 'author name' ) ).
 
-    ro_html->add( '</table>' ).
+    ro_html->add( render_text_input( iv_name  = 'author_email'
+                                     iv_label = 'author e-mail' ) ).
+
     ro_html->add( '</form>' ).
-
     ro_html->add( '</div>' ).
 
   ENDMETHOD.    "render_form
@@ -206,7 +230,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                      iv_typ = gc_action_type-onclick
                      iv_opt = gc_html_opt-strong ) ##NO_TEXT.
 
-    lo_toolbar->add( iv_act = 'commit_cancel'
+    lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
                      iv_opt = gc_html_opt-cancel ) ##NO_TEXT.
 
@@ -219,7 +243,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD scripts.
 
     CREATE OBJECT ro_html.
-    _add 'setInitialFocus("commit_msg");'.
+    _add 'setInitialFocus("comment");'.
 
   ENDMETHOD.    "scripts
 
