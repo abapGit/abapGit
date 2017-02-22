@@ -448,6 +448,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       DELETE TABLE rt_includes FROM <ls_func>-include.
     ENDLOOP.
 
+* handle generated maintenance views
+    APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
+    <lv_include> = |L{ ms_item-obj_name }T00|.
 
     LOOP AT rt_includes ASSIGNING <lv_include>.
       lv_tabix = sy-tabix.
@@ -469,7 +472,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       IF sy-subrc <> 0.
         DELETE rt_includes INDEX lv_tabix.
       ENDIF.
-
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
