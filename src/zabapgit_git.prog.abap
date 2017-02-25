@@ -1176,12 +1176,18 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
 * new commit
+    ls_commit-committer = |{ is_comment-committer-name
+      } <{ is_comment-committer-email }> { lv_time }|.
+    IF is_comment-author-name IS NOT INITIAL.
+      ls_commit-author = |{ is_comment-author-name
+        } <{ is_comment-author-email }> { lv_time }|.
+    ELSE.
+      ls_commit-author = ls_commit-committer.
+    ENDIF.
+
     ls_commit-tree      = <ls_tree>-sha1.
     ls_commit-parent    = io_stage->get_branch_sha1( ).
     ls_commit-parent2   = io_stage->get_merge_source( ).
-    CONCATENATE is_comment-username space '<' is_comment-email '>' space lv_time
-      INTO ls_commit-author RESPECTING BLANKS.
-    ls_commit-committer = ls_commit-author.
     ls_commit-body      = is_comment-comment.
     lv_commit = lcl_git_pack=>encode_commit( ls_commit ).
 

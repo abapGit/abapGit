@@ -475,7 +475,7 @@ CLASS lcl_http IMPLEMENTATION.
           lo_digest        TYPE REF TO lcl_http_digest.
 
 
-    lv_default_user = lcl_app=>user( )->get_repo_username( iv_url ).
+    lv_default_user = lcl_app=>user( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
@@ -490,8 +490,8 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_username( iv_url      = iv_url
-                                           iv_username = lv_user ).
+      lcl_app=>user( )->set_repo_login( iv_url   = iv_url
+                                        iv_login = lv_user ).
     ENDIF.
 
     " Offer two factor authentication if it is available and required

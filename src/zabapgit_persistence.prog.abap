@@ -364,19 +364,19 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES: tt_favorites TYPE lcl_persistence_repo=>tt_repo_keys.
 
-    METHODS set_username
+    METHODS set_default_git_user_name
       IMPORTING iv_username TYPE string
       RAISING   lcx_exception.
 
-    METHODS get_username
+    METHODS get_default_git_user_name
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
-    METHODS set_email
+    METHODS set_default_git_user_email
       IMPORTING iv_email TYPE string
       RAISING   lcx_exception.
 
-    METHODS get_email
+    METHODS get_default_git_user_email
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
@@ -388,22 +388,32 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   lcx_exception.
 
-    METHODS set_repo_username
+    METHODS set_repo_git_user_name
       IMPORTING iv_url      TYPE lcl_persistence_repo=>ty_repo-url
                 iv_username TYPE string
       RAISING   lcx_exception.
 
-    METHODS get_repo_username
+    METHODS get_repo_git_user_name
       IMPORTING iv_url             TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_username) TYPE string
       RAISING   lcx_exception.
 
-    METHODS set_repo_email
+    METHODS set_repo_login
+      IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
+                iv_login TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_repo_login
+      IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
+      RETURNING VALUE(rv_login) TYPE string
+      RAISING   lcx_exception.
+
+    METHODS set_repo_git_user_email
       IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
                 iv_email TYPE string
       RAISING   lcx_exception.
 
-    METHODS get_repo_email
+    METHODS get_repo_git_user_email
       IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
@@ -450,23 +460,25 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     DATA: mv_user TYPE xubname.
 
-    TYPES: BEGIN OF ty_repo_config,
-             url      TYPE lcl_persistence_repo=>ty_repo-url,
-             username TYPE string,
-             email    TYPE string,
-           END OF ty_repo_config.
+    TYPES:
+      BEGIN OF ty_repo_config,
+        url      TYPE lcl_persistence_repo=>ty_repo-url,
+        login    TYPE string,
+        git_user TYPE ty_git_user,
+      END OF ty_repo_config.
+
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_user,
-             username     TYPE string,
-             email        TYPE string,
-             repo_show    TYPE lcl_persistence_repo=>ty_repo-key,
-             repo_config  TYPE ty_repo_config_tt,
-             hide_files   TYPE abap_bool,
-             changes_only TYPE abap_bool,
-             diff_unified TYPE abap_bool,
-             favorites    TYPE tt_favorites,
-           END OF ty_user.
+    TYPES:
+      BEGIN OF ty_user,
+        default_git_user TYPE ty_git_user,
+        repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
+        repo_config      TYPE ty_repo_config_tt,
+        hide_files       TYPE abap_bool,
+        changes_only     TYPE abap_bool,
+        diff_unified     TYPE abap_bool,
+        favorites        TYPE tt_favorites,
+      END OF ty_user.
 
     METHODS constructor
       IMPORTING iv_user TYPE xubname DEFAULT sy-uname.
@@ -576,39 +588,39 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD set_username.
+  METHOD set_default_git_user_name.
 
     DATA: ls_user TYPE ty_user.
 
 
     ls_user = read( ).
 
-    ls_user-username = iv_username.
+    ls_user-default_git_user-name = iv_username.
 
     update( ls_user ).
 
   ENDMETHOD.
 
-  METHOD get_username.
+  METHOD get_default_git_user_name.
 
-    rv_username = read( )-username.
+    rv_username = read( )-default_git_user-name.
 
   ENDMETHOD.
 
-  METHOD set_email.
+  METHOD set_default_git_user_email.
 
     DATA: ls_user TYPE ty_user.
 
 
     ls_user = read( ).
-    ls_user-email = iv_email.
+    ls_user-default_git_user-email = iv_email.
     update( ls_user ).
 
   ENDMETHOD.
 
-  METHOD get_email.
+  METHOD get_default_git_user_email.
 
-    rv_email = read( )-email.
+    rv_email = read( )-default_git_user-email.
 
   ENDMETHOD.
 
@@ -641,35 +653,51 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
   ENDMETHOD.  "update_repo_config
 
-  METHOD set_repo_username.
+  METHOD set_repo_git_user_name.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
-    ls_repo_config          = read_repo_config( iv_url ).
-    ls_repo_config-username = iv_username.
+    ls_repo_config               = read_repo_config( iv_url ).
+    ls_repo_config-git_user-name = iv_username.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
   ENDMETHOD.  "set_repo_username
 
-  METHOD get_repo_username.
+  METHOD get_repo_git_user_name.
 
-    rv_username = read_repo_config( iv_url )-username.
+    rv_username = read_repo_config( iv_url )-git_user-name.
 
   ENDMETHOD.  "get_repo_username
 
-  METHOD set_repo_email.
+  METHOD set_repo_login.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
     ls_repo_config       = read_repo_config( iv_url ).
-    ls_repo_config-email = iv_email.
+    ls_repo_config-login = iv_login.
+    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+
+  ENDMETHOD.  "set_repo_login
+
+  METHOD get_repo_login.
+
+    rv_login = read_repo_config( iv_url )-login.
+
+  ENDMETHOD.  "get_repo_login
+
+  METHOD set_repo_git_user_email.
+
+    DATA: ls_repo_config TYPE ty_repo_config.
+
+    ls_repo_config                = read_repo_config( iv_url ).
+    ls_repo_config-git_user-email = iv_email.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
   ENDMETHOD.  "set_repo_email
 
-  METHOD get_repo_email.
+  METHOD get_repo_git_user_email.
 
-    rv_email = read_repo_config( iv_url )-email.
+    rv_email = read_repo_config( iv_url )-git_user-email.
 
   ENDMETHOD.  "get_repo_email
 
@@ -1238,8 +1266,8 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     lt_users = lcl_user=>list( ).
     LOOP AT lt_users ASSIGNING <ls_user>.
       lo_user = lcl_app=>user( <ls_user>-user ).
-      lo_user->set_username( <ls_user>-username ).
-      lo_user->set_email( <ls_user>-email ).
+      lo_user->set_default_git_user_name( <ls_user>-username ).
+      lo_user->set_default_git_user_email( <ls_user>-email ).
     ENDLOOP.
 
   ENDMETHOD.

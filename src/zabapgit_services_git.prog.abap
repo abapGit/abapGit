@@ -6,11 +6,13 @@ CLASS lcl_services_git DEFINITION FINAL.
   PUBLIC SECTION.
 
     TYPES: BEGIN OF ty_commit_fields,
-             repo_key TYPE lcl_persistence_repo=>ty_repo-key,
-             username TYPE string,
-             email    TYPE string,
-             comment  TYPE string,
-             body     TYPE string,
+             repo_key        TYPE lcl_persistence_repo=>ty_repo-key,
+             committer_name  TYPE string,
+             committer_email TYPE string,
+             author_name     TYPE string,
+             author_email    TYPE string,
+             comment         TYPE string,
+             body            TYPE string,
            END OF ty_commit_fields.
 
     CLASS-METHODS pull
@@ -183,22 +185,26 @@ CLASS lcl_services_git IMPLEMENTATION.
           lo_user    TYPE REF TO lcl_persistence_user.
 
     lo_user = lcl_app=>user( ).
-    lo_user->set_repo_username( iv_url      = io_repo->get_url( )
-                                iv_username = is_commit-username ).
-    lo_user->set_repo_email(    iv_url      = io_repo->get_url( )
-                                iv_email    = is_commit-email ).
+    lo_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
+                                     iv_username = is_commit-committer_name ).
+    lo_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )
+                                      iv_email   = is_commit-committer_email ).
 
-    IF is_commit-username IS INITIAL.
-      lcx_exception=>raise( 'Commit: empty username' ).
-    ELSEIF is_commit-email IS INITIAL.
-      lcx_exception=>raise( 'Commit: empty email' ).
+    IF is_commit-committer_name IS INITIAL.
+      lcx_exception=>raise( 'Commit: Committer name empty' ).
+    ELSEIF is_commit-committer_email IS INITIAL.
+      lcx_exception=>raise( 'Commit: Committer email empty' ).
+    ELSEIF is_commit-author_email IS NOT INITIAL AND is_commit-author_name IS INITIAL.
+      lcx_exception=>raise( 'Commit: Author email empty' ). " Opposite should be OK ?
     ELSEIF is_commit-comment IS INITIAL.
       lcx_exception=>raise( 'Commit: empty comment' ).
     ENDIF.
 
-    ls_comment-username = is_commit-username.
-    ls_comment-email    = is_commit-email.
-    ls_comment-comment  = is_commit-comment.
+    ls_comment-committer-name  = is_commit-committer_name.
+    ls_comment-committer-email = is_commit-committer_email.
+    ls_comment-author-name     = is_commit-author_name.
+    ls_comment-author-email    = is_commit-author_email.
+    ls_comment-comment         = is_commit-comment.
 
     IF NOT is_commit-body IS INITIAL.
       CONCATENATE ls_comment-comment '' is_commit-body

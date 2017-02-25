@@ -408,16 +408,34 @@ input.stage-filter { width: 18em; }
 }
 
 /* COMMIT */
-div.form_div {
+div.form-container {
   margin: 0.5em 0em;
   background-color: #F8F8F8;
   padding: 1em 1em;
 }
 
-div.form_div td.field_name {
+form.aligned-form {
+  display: table;
+  border-spacing: 2px;
+}
+
+form.aligned-form label {
   color: #BBB;
   padding-right: 1em;
+  vertical-align: middle;
 }
+
+form.aligned-form span.sub-title {
+  color: #BBB;
+  font-size: smaller;
+  padding-top: 8px;
+}
+
+form.aligned-form div.row { display: table-row; }
+form.aligned-form label { display: table-cell; }
+form.aligned-form input { display: table-cell; }
+form.aligned-form input[type="text"] { width: 25em; }
+form.aligned-form span.cell { display: table-cell; }
 
 /* SETTINGS STYLES */
 div.settings_container {

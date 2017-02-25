@@ -293,11 +293,12 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
     field_keys_to_upper( CHANGING ct_fields = lt_fields ).
 
-    get_field( EXPORTING name = 'REPO_KEY' it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'USERNAME' it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'EMAIL'    it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'COMMENT'  it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'BODY'     it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'COMMITTER_NAME'  it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'COMMITTER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'AUTHOR_NAME'     it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'AUTHOR_EMAIL'    it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'COMMENT'         it = lt_fields CHANGING cv = es_fields ).
+    get_field( EXPORTING name = 'BODY'            it = lt_fields CHANGING cv = es_fields ).
 
     ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <body>.
     ASSERT <body> IS ASSIGNED.

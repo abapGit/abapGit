@@ -75,9 +75,9 @@ CLASS lcl_background IMPLEMENTATION.
                      iv_data     = <ls_local>-file-data ).
     ENDLOOP.
 
-    ls_comment-username = is_settings-aname.
-    ls_comment-email    = is_settings-amail.
-    ls_comment-comment  = build_comment( ls_files ).
+    ls_comment-committer-name  = is_settings-aname.
+    ls_comment-committer-email = is_settings-amail.
+    ls_comment-comment         = build_comment( ls_files ).
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = lo_stage ).
@@ -131,8 +131,8 @@ CLASS lcl_background IMPLEMENTATION.
       ENDIF.
 
       CLEAR ls_comment.
-      ls_comment-username = lcl_objects=>changed_by( <ls_local>-item ).
-      ls_comment-email    = |{ ls_comment-username }@localhost|.
+      ls_comment-committer-name  = lcl_objects=>changed_by( <ls_local>-item ).
+      ls_comment-committer-email = |{ ls_comment-committer-name }@localhost|.
 
       CREATE OBJECT lo_stage
         EXPORTING
@@ -142,9 +142,9 @@ CLASS lcl_background IMPLEMENTATION.
       CLEAR ls_user_files.
 
       LOOP AT ls_files-local ASSIGNING <ls_local>.
-        IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-username.
+        IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-committer-name.
           WRITE: / 'stage' ##NO_TEXT,
-            ls_comment-username,
+            ls_comment-committer-name,
             <ls_local>-file-path,
             <ls_local>-file-filename.
 
