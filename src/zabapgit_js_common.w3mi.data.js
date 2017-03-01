@@ -363,3 +363,13 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
     window.scrollTo(0, scrollOffset);
   }
 }
+
+/**********************************************************
+ * Other functions
+ **********************************************************/
+
+// News announcement
+function displayLog() {
+  var div = document.getElementById("changeLog"); 
+  div.style.display = (div.style.display)?'':'none';  
+}

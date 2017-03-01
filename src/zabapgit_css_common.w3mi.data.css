@@ -700,3 +700,50 @@ div.tutorial h2 {
   font-size: 14pt;
   color: #404040;
 }
+
+/* News Announcement */
+.change-log { 
+  position: absolute;
+  z-index: 99 !important;
+  top: 50%;
+  left: 50%;
+  width: 40em;
+  margin-top: -12em;
+  margin-left: -20em;
+  border: 1px solid #ccc;
+  background-color: white;
+  padding: 0.5em;
+}
+
+.change-log .change-log-title {
+  color: #888888;
+  font-weight: bold;
+  font-size: 16px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.change-log .attention {
+  background-color: #ff9800; 
+  color: white; 
+  opacity: 0.83;
+  padding: 10px;
+}
+
+.change-log li {
+  margin: 4px;
+  padding-left: 10px;
+  font-size: 15px;
+  list-style-type: none;
+}
+
+.change-log p.versionHeader { 
+  font-size: 16px;
+  color: #888888;
+  font-weight: bold;
+  text-align: left;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px #ddd solid;
+  margin: 4px;
+}

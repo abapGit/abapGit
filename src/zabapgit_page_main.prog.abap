@@ -307,11 +307,31 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo.
 
+    DATA:
+          lo_news     TYPE REF TO lcl_news,
+          lv_has_news TYPE abap_bool VALUE abap_false.
+
     CREATE OBJECT ro_html.
+
+    lo_news = lcl_news=>create( io_repo ).
+
+    IF lo_news IS BOUND.
+      lv_has_news = lo_news->has_news( ).
+    ENDIF.
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( io_repo               = io_repo
+                                                      iv_has_news           = lv_has_news
                                                       iv_interactive_branch = abap_true ) ).
+
+    IF lv_has_news = abap_true.
+      ro_html->add( lcl_gui_chunk_lib=>render_news_pop_up(
+          it_log           = lo_news->get_log( )
+          iv_has_important = lo_news->has_important_news( )
+          )
+      ).
+    ENDIF.
+
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
