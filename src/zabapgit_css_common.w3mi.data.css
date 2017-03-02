@@ -702,9 +702,9 @@ div.tutorial h2 {
 }
 
 /* News Announcement */
-.change-log { 
+.news { 
   position: absolute;
-  z-index: 99 !important;
+  z-index: 99;
   top: 50%;
   left: 50%;
   width: 40em;
@@ -715,7 +715,7 @@ div.tutorial h2 {
   padding: 0.5em;
 }
 
-.change-log .change-log-title {
+.news .title {
   color: #888888;
   font-weight: bold;
   font-size: 16px;
@@ -723,21 +723,20 @@ div.tutorial h2 {
   padding-bottom: 4px;
 }
 
-.change-log .attention {
+.news .attention {
   background-color: #ff9800; 
-  color: white; 
-  opacity: 0.83;
+  color: white;
   padding: 10px;
 }
 
-.change-log li {
+.news li {
   margin: 4px;
   padding-left: 10px;
   font-size: 15px;
   list-style-type: none;
 }
 
-.change-log p.versionHeader { 
+.news p.versionHeader { 
   font-size: 16px;
   color: #888888;
   font-weight: bold;

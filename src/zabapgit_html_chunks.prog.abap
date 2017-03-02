@@ -17,8 +17,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_show_branch        TYPE abap_bool DEFAULT abap_true
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
                 iv_branch             TYPE string OPTIONAL
-                iv_has_news           TYPE abap_bool OPTIONAL
-                iv_has_important_news TYPE abap_bool OPTIONAL
+                io_news               TYPE REF TO lcl_news OPTIONAL
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
@@ -38,10 +37,9 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
-    CLASS-METHODS render_news_pop_up
+    CLASS-METHODS render_news
       IMPORTING
-                it_log                TYPE lcl_news=>tt_log
-                iv_has_important      TYPE abap_bool
+                io_news               TYPE REF TO lcl_news
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
@@ -81,10 +79,10 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( '<td class="repo_attr right">' ).
 
-    IF iv_has_news = abap_true.
-      ro_html->add_a( iv_act   = 'displayLog()'
+    IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
+      ro_html->add_a( iv_act   = 'displayNews()'
                       iv_typ   = gc_action_type-onclick
-                      iv_txt   = lcl_html=>icon( iv_name  = 'book/dark' ) ).
+                      iv_txt   = lcl_html=>icon( iv_name  = 'history/dark' ) ).
     ENDIF.
 
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
@@ -230,40 +228,50 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '</div>' ).
   ENDMETHOD. "render_js_error_stub
 
-  METHOD render_news_pop_up.
+  METHOD render_news.
+
+    DATA lt_log TYPE lcl_news=>tt_log.
 
     CREATE OBJECT ro_html.
 
-    FIELD-SYMBOLS: <line> LIKE LINE OF it_log.
+    IF io_news IS NOT BOUND.
+      RETURN.
+    ELSEIF io_news->has_news( ) = abap_true.
+      lt_log = io_news->get_log( ).
+    ELSE.
+      RETURN.
+    ENDIF.
 
-    ro_html->add( '<div id="changeLog" class="change-log">' ).
+    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
+
+    ro_html->add( '<div id="news" class="news">' ).
 
     ro_html->add( '<table class="w100"><tr>' ).
-    ro_html->add( '<td class="change-log-title">' ).
+    ro_html->add( '<td class="title">' ).
     ro_html->add( 'Announcement of the latest changes' ).
     ro_html->add( '</td>' ).
     ro_html->add( '<td class="right">' ).
-    ro_html->add( '<a onclick="displayLog()">close</a>' ).
+    ro_html->add( '<a onclick="displayNews()">close</a>' ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
 
-    IF iv_has_important = abap_true.
+    IF io_news->has_important_news( ) = abap_true.
       ro_html->add( '<div class="attention">'
-        && '!!! Some changes mentioned in this announcement might be critical !!! '
+        && 'Some changes mentioned in this announcement might be critical !'
         && '</div>' ).
     ENDIF.
 
-    " Generate changelog table
-    LOOP AT it_log ASSIGNING <line>.
+    " Generate news
+    LOOP AT lt_log ASSIGNING <line>.
       IF <line>-header = 'X'.
-        ro_html->add( '<p class="versionHeader">' && <line>-text && '</p>' ).
+        ro_html->add( |<p class="versionHeader"> { <line>-text } </p>| ).
       ELSE.
-        ro_html->add( '<li>' && <line>-text && '</li>' ).
+        ro_html->add( |<li> { <line>-text } </li>| ).
       ENDIF.
     ENDLOOP.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_news_pop_up
+  ENDMETHOD. "render_news
 
 ENDCLASS. "lcl_gui_chunk_lib

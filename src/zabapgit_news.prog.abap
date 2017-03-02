@@ -21,8 +21,8 @@ CLASS lcl_news DEFINITION FRIENDS ltcl_news.
       tt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY.
 
     CONSTANTS:
-      mc_log_file_path TYPE string VALUE '/',
-      mc_log_file_name TYPE string VALUE 'changelog.txt'.
+      c_log_filename TYPE string VALUE '/',
+      c_log_path     TYPE string VALUE 'changelog.txt'.
 
     CLASS-METHODS create
       IMPORTING io_repo             TYPE REF TO lcl_repo
@@ -96,8 +96,8 @@ CLASS lcl_news IMPLEMENTATION.
       IF lo_repo_online->get_url( ) CS '/abapGit.git'.
         lt_remote = io_repo->get_files_remote( ).
 
-        READ TABLE lt_remote ASSIGNING <file> WITH KEY path = mc_log_file_path
-                                                   filename = mc_log_file_name.
+        READ TABLE lt_remote ASSIGNING <file> WITH KEY path = c_log_filename
+                                                   filename = c_log_path.
         IF sy-subrc = 0.
         CREATE OBJECT ro_instance EXPORTING
           iv_rawdata = <file>-data

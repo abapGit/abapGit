@@ -369,7 +369,7 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
  **********************************************************/
 
 // News announcement
-function displayLog() {
-  var div = document.getElementById("changeLog"); 
+function displayNews() {
+  var div = document.getElementById("news"); 
   div.style.display = (div.style.display)?'':'none';  
 }
