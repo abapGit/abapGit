@@ -100,7 +100,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
 
     IF ms_control-page_menu IS BOUND.
       ro_html->add( '<td class="headpad right">' ).         "#EC NOTEXT
-      ro_html->add( ms_control-page_menu->render( ) ).
+      ro_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
       ro_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
 

@@ -55,30 +55,21 @@ input:focus, textarea:focus {
 .w40              { width: 40%; }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
-td.headpad { padding-top: 11px; }
-td.logo    { width: 164px; }
-
 div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double lightgrey;
 }
+div#header td.headpad { padding-top: 11px; }
+div#header td.logo    { width: 164px; }
 
 div#toc {
   padding:          0.5em 1em;
   background-color: #f2f2f2;
 }
 
-div#toc div.toc_grid {
-  margin:           -0.3em 0em;
-}
-
-div#toc div.toc_grid a {
-  color:            #ccc;
-}
-
-div#toc:hover div.toc_grid a {
-  color:            #4078c0;
-}
+div#toc div.toc_grid { margin: -0.3em 0em; }
+div#toc .favorites a { opacity: 0.5; }
+div#toc .favorites:hover a { opacity: 1; }
 
 div#toc div.toc_row {
   margin:           0.3em 0em;
@@ -184,15 +175,15 @@ div.menu_vertical a {
   position: absolute;
   padding: 0px;
   width: 16px;
-  height: 16px;
+  height: 100%;
   bottom: 0px;
-  left: -16px;
+  right: 100%;
 }
+.dropdown:hover .minizone { display: block; }
 .dropdown_angle .dropdown_content {
   top: -1px;
 }
 .dropdown:hover .dropdown_content { display: block; }
-.dropdown:hover .minizone { display: block; }
 .dropdown_content a {
   padding: 0.2em;
   background-color: #f9f9f9;
@@ -709,4 +700,116 @@ div.tutorial h1 {
 div.tutorial h2 {
   font-size: 14pt;
   color: #404040;
+}
+
+/* NEW MENU */
+
+.nav-container ul
+{
+  list-style: none;
+  position: relative;
+  float: left;
+  margin: 0;
+  padding: 0;
+  /*text-align: left;*/
+}
+
+.nav-container.float-right ul {
+  float: right;
+  /*text-align: right;*/
+}
+
+.nav-container ul a
+{
+  display: block;
+  color: #444;
+  text-decoration: none;
+  font-size: 11pt;
+  line-height: 30px;
+  padding: 0 12px;
+}
+
+.nav-container ul li
+{
+  position: relative;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-container ul li.current-menu-item
+{
+  font-weight: 700;
+}
+
+.nav-container ul ul li:hover
+{
+  background: #f6f6f6;
+  /*color: #8cadd9;*/
+}
+
+.nav-container ul li:hover > a
+{
+  /*color: #8cadd9;*/
+  color: #6692cc;
+}
+
+.nav-container ul ul
+{
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  padding: 0;
+  box-shadow: 1px 1px 3px 0px #bbb;
+}
+
+.nav-container.float-right ul ul {
+  left: auto;
+  right: 0;
+}
+
+.nav-container ul ul li
+{
+  float: none;
+  min-width: 160px;
+}
+
+.nav-container ul ul a
+{
+  line-height: 120%;
+  padding: 8px 15px;
+}
+
+.nav-container ul ul ul
+{
+  top: 0;
+  left: 100%;
+}
+
+.nav-container ul li:hover > ul
+{
+  display: block;
+}
+
+.nav-container > ul > li > div.minizone {
+  display: none;
+  z-index: 1;
+  position: absolute;
+  padding: 0px;
+  width: 16px;
+  height: 100%;
+  bottom: 0px;
+  left: 100%;
+}
+.nav-container > ul > li:hover div.minizone { display: block; }
+.nav-container.float-right > ul > li > div.minizone {
+  left: auto;
+  right: 100%;
+}
+
+.nav-container li a .octicon {
+  padding-right: 12px;
 }

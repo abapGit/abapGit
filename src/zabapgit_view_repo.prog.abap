@@ -240,7 +240,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       lo_tab_menu->add( iv_txt = 'With folders' iv_act = c_actions-toggle_folders ).
     ENDIF.
 
-    ro_html = lo_tab_menu->render( iv_as_angle = abap_true ).
+    ro_html = lo_tab_menu->render_as_droplist( iv_label = 'SET' iv_as_angle = abap_true ).
 
   ENDMETHOD. "render_grid_menu
 
@@ -356,7 +356,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( '<td class="right">' ).
-    ro_html->add( lo_toolbar->render( ) ).
+    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
     ro_html->add( '</div>' ).

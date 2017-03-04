@@ -214,7 +214,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
       ro_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
       ro_html->add( '<td>' ).
-      ro_html->add( lo_toolbar->render( iv_vertical = abap_false ) ).
+      ro_html->add( lo_toolbar->render( ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
