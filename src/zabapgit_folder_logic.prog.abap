@@ -37,7 +37,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
-    IF lv_length > strlen( lv_path ).
+    IF lv_length > strlen( iv_path ).
       lcx_exception=>raise( 'unexpected folder structure' ).
     ENDIF.
     lv_path    = iv_path+lv_length.
