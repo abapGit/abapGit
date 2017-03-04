@@ -388,7 +388,6 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_vertical               TYPE abap_bool OPTIONAL
           iv_sort                   TYPE abap_bool OPTIONAL
           iv_as_angle               TYPE abap_bool OPTIONAL
-          iv_with_icons             TYPE abap_bool OPTIONAL
           iv_add_minizone           TYPE abap_bool OPTIONAL
         RETURNING
           VALUE(ro_html)            TYPE REF TO lcl_html.
@@ -435,8 +434,9 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
   METHOD render. "TODO refactor
 
-    DATA: lv_class   TYPE string,
-          lv_is_drop TYPE abap_bool.
+    DATA: lv_class     TYPE string,
+          lv_has_icons TYPE abap_bool,
+          lv_is_drop   TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
@@ -479,15 +479,22 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       SORT mt_items BY txt ASCENDING AS TEXT.
     ENDIF.
 
-    IF iv_with_icons = abap_true.
+    " Check has icons
+    LOOP AT mt_items ASSIGNING <ls_item> WHERE ico IS NOT INITIAL.
+      lv_has_icons = abap_true.
+      EXIT.
+    ENDLOOP.
+
+    IF lv_has_icons = abap_true.
       ro_html->add( '<table>' ).
     ENDIF.
 
+    " Render items
     LOOP AT mt_items ASSIGNING <ls_item>.
 
       IF <ls_item>-sub IS INITIAL.
 
-        IF iv_with_icons = abap_true.
+        IF lv_has_icons = abap_true.
           ro_html->add( '<tr>' ).
           ro_html->add( |<td class="icon">{ lcl_html=>icon( <ls_item>-ico ) }</td>| ).
           ro_html->add( '<td class="text">' ).
@@ -498,7 +505,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
                         iv_opt   = <ls_item>-opt
                         iv_typ   = <ls_item>-typ ).
 
-        IF iv_with_icons = abap_true.
+        IF lv_has_icons = abap_true.
           ro_html->add( '</td>' ).
           ro_html->add( '</tr>' ).
         ENDIF.
@@ -509,7 +516,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF iv_with_icons = abap_true.
+    IF lv_has_icons = abap_true.
       ro_html->add( '</table>' ).
     ENDIF.
 

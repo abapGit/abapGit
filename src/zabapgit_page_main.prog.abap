@@ -292,7 +292,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ro_html->add( lo_allbar->render(
       iv_as_droplist_with_label = lcl_html=>icon( iv_name = 'three-bars/blue' iv_class = 'pad4px' )
       iv_sort                   = abap_true
-      iv_with_icons             = abap_true
       iv_add_minizone           = abap_true ) ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).

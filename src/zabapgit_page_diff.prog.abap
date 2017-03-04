@@ -14,11 +14,13 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       END OF c_fstate.
 
     TYPES: BEGIN OF ty_file_diff,
-             filename TYPE string,
-             lstate   TYPE char1,
-             rstate   TYPE char1,
-             fstate   TYPE char1, " FILE state - Abstraction for shorter ifs
-             o_diff   TYPE REF TO lcl_diff,
+             filename   TYPE string,
+             lstate     TYPE char1,
+             rstate     TYPE char1,
+             fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+             o_diff     TYPE REF TO lcl_diff,
+             changed_by TYPE xubname,
+             type       TYPE string,
            END OF ty_file_diff,
            tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
 
@@ -87,7 +89,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     super->constructor( ).
     ms_control-page_title = 'DIFF'.
-    ms_control-page_menu  = build_menu( ).
     mv_unified            = lcl_app=>user( )->get_diff_unified( ).
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
@@ -131,11 +132,14 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lcx_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
     ENDIF.
 
+    ms_control-page_menu  = build_menu( ).
+
   ENDMETHOD.
 
   METHOD append_diff.
 
     DATA:
+      lv_offs    TYPE i,
       ls_r_dummy LIKE LINE OF it_remote ##NEEDED,
       ls_l_dummy LIKE LINE OF it_local  ##NEEDED.
 
@@ -175,6 +179,24 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       <ls_diff>-fstate = c_fstate-remote.
     ENDIF.
 
+    " Changed by
+    IF <ls_local>-item-obj_type IS NOT INITIAL.
+      <ls_diff>-changed_by = to_lower( lcl_objects=>changed_by( <ls_local>-item ) ).
+    ENDIF.
+
+    " Extension
+    IF <ls_local>-file-filename IS NOT INITIAL.
+      <ls_diff>-type = reverse( <ls_local>-file-filename ).
+    ELSE.
+      <ls_diff>-type = reverse( <ls_remote>-filename ).
+    ENDIF.
+
+    FIND FIRST OCCURRENCE OF '.' IN <ls_diff>-type MATCH OFFSET lv_offs.
+    <ls_diff>-type = reverse( substring( val = <ls_diff>-type len = lv_offs ) ).
+    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap'.
+      <ls_diff>-type = 'other'.
+    ENDIF.
+
     IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
       CREATE OBJECT <ls_diff>-o_diff
         EXPORTING
@@ -190,9 +212,51 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.  "append_diff
 
   METHOD build_menu.
+
+    DATA: lo_sub   TYPE REF TO lcl_html_toolbar,
+          lt_types TYPE string_table,
+          lt_users TYPE string_table.
+
+    FIELD-SYMBOLS: <diff> LIKE LINE OF mt_diff_files,
+                   <i>    TYPE string.
+
+    LOOP AT mt_diff_files ASSIGNING <diff>.
+      APPEND <diff>-type TO lt_types.
+      APPEND <diff>-changed_by TO lt_users.
+    ENDLOOP.
+
+    SORT: lt_types, lt_users.
+    DELETE ADJACENT DUPLICATES FROM: lt_types, lt_users.
+
     CREATE OBJECT ro_menu.
+
+    IF lines( lt_types ) > 1.
+      CREATE OBJECT lo_sub.
+      LOOP AT lt_types ASSIGNING <i>.
+        lo_sub->add( iv_txt = <i>
+                     iv_typ = gc_action_type-onclick
+                     iv_ico = 'check/blue'
+                     iv_act = 'diffFilterType(event);' ).
+      ENDLOOP.
+      ro_menu->add( iv_txt = 'Filter type'
+                    io_sub = lo_sub ) ##NO_TEXT.
+    ENDIF.
+
+    IF lines( lt_users ) > 1.
+      CREATE OBJECT lo_sub.
+      LOOP AT lt_users ASSIGNING <i>.
+        lo_sub->add( iv_txt = <i>
+                     iv_typ = gc_action_type-onclick
+                     iv_ico = 'check/blue'
+                     iv_act = 'diffFilterUser(event);' ).
+      ENDLOOP.
+      ro_menu->add( iv_txt = 'Filter user'
+                    io_sub = lo_sub ) ##NO_TEXT.
+    ENDIF.
+
     ro_menu->add( iv_txt = 'Split/Unified view'
                   iv_act = c_actions-toggle_unified ) ##NO_TEXT.
+
   ENDMETHOD.  " build_menu.
 
 **********************************************************************
@@ -219,6 +283,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->add( '<div id="diff-list">' ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       lcl_progress=>show( iv_key     = 'Diff'
                           iv_current = sy-tabix
@@ -227,6 +292,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_content
 
@@ -234,7 +300,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="diff">' ).                   "#EC NOTEXT
+    ro_html->add( |<div class="diff" data-type="{ is_diff-type
+      }" data-changed-by="{ is_diff-changed_by }">| ).       "#EC NOTEXT
     ro_html->add( render_diff_head( is_diff ) ).
 
     " Content
@@ -278,6 +345,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
                  && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
     ENDIF.
+
+    ro_html->add( |<span class="diff_changed_by">last change by: <span class="user">{
+      is_diff-changed_by }</span></span>| ).
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 

@@ -457,6 +457,16 @@ span.diff_name {
   padding-left: 0.5em;
   color: grey;
 }
+span.diff_changed_by {
+  color: grey;
+  float: right;
+}
+span.diff_changed_by span.user {
+  border-radius: 3px;
+  border: solid 1px #c2d4ea;
+  background-color: #d9e4f2;
+  padding: 1px 0.4em;
+}
 span.diff_name strong {
   color: #333;
 }

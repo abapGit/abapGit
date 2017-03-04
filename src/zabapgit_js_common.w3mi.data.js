@@ -363,3 +363,60 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
     window.scrollTo(0, scrollOffset);
   }
 }
+
+/**********************************************************
+ * Diff page logic
+ **********************************************************/
+
+function diffProcessFilterClick(e) {
+  var target = event.target || event.srcElement;
+
+  if (!target) return;
+  if (target.tagName !== "A") return;
+  if (target.parentNode.tagName !== "TD") return;
+
+  var iconTd = target.parentNode.parentNode.children[0];
+
+  if (!iconTd) return;
+  if (iconTd.tagName !== "TD") return;
+
+  var icon = iconTd.firstChild;
+  if (icon.tagName !== "I") return;
+  if (!icon.classList.contains("octicon")) return;
+
+  var state;
+  if (icon.classList.contains("blue")) {
+    icon.classList.remove("blue");
+    icon.classList.add("grey");
+    state = false;
+  } else {
+    icon.classList.add("blue");
+    icon.classList.remove("grey");
+    state = true;
+  }
+
+  return { filter: target.innerText, state: state };
+}
+
+function diffApplyFilter(param, action) {
+  var diffList = document.getElementById("diff-list");
+  // console.log("Action:", param, action.filter, action.state);
+  for (var i = diffList.children.length - 1; i >= 0; i--) {
+    var div = diffList.children[i];
+    if (div.className !== "diff") return; // Unexpected error !
+    var attr = div.getAttribute("data-"+param);
+    if (attr === action.filter) {
+      div.style.display = action.state ? "" : "none";
+    }
+  }
+}
+
+function diffFilterType(e) {
+  var action = diffProcessFilterClick(e);
+  diffApplyFilter("type", action);
+}
+
+function diffFilterUser(e) {
+  var action = diffProcessFilterClick(e);
+  diffApplyFilter("changed-by", action);
+}
