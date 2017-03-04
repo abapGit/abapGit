@@ -4,7 +4,7 @@
 
 CLASS ltcl_dot_abapgit DEFINITION DEFERRED.
 
-CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
+CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 
   PUBLIC SECTION.
     CONSTANTS: BEGIN OF c_folder_logic,
@@ -12,9 +12,15 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
                  full   TYPE string VALUE 'FULL',
                END OF c_folder_logic.
 
+    TYPES: BEGIN OF ty_dot_abapgit,
+             master_language TYPE spras,
+             starting_folder TYPE string,
+             folder_logic    TYPE string,
+             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+           END OF ty_dot_abapgit.
+
     CLASS-METHODS:
       build_default
-        IMPORTING iv_master_language    TYPE spras
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       deserialize
         IMPORTING iv_xstr               TYPE xstring
@@ -22,9 +28,13 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
         RAISING   lcx_exception.
 
     METHODS:
+      constructor
+        IMPORTING is_data TYPE ty_dot_abapgit,
       serialize
         RETURNING VALUE(rv_xstr) TYPE xstring
         RAISING   lcx_exception,
+      get_data
+        RETURNING VALUE(rs_data) TYPE ty_dot_abapgit,
       add_ignore
         IMPORTING iv_path     TYPE string
                   iv_filename TYPE string,
@@ -46,24 +56,13 @@ CLASS lcl_dot_abapgit DEFINITION CREATE PRIVATE FINAL FRIENDS ltcl_dot_abapgit.
       get_master_language
         RETURNING VALUE(rv_language) TYPE spras,
 *      set_master_language
-*        IMPORTING iv_language TYPE spras.
+*        IMPORTING iv_language TYPE spras,
       get_signature
         RETURNING VALUE(rs_signature) TYPE ty_file_signature
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_dot_abapgit,
-             master_language TYPE spras,
-             starting_folder TYPE string,
-             folder_logic    TYPE string,
-             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-           END OF ty_dot_abapgit.
-
     DATA: ms_data TYPE ty_dot_abapgit.
-
-    METHODS:
-      constructor
-        IMPORTING is_data TYPE ty_dot_abapgit.
 
     CLASS-METHODS:
       to_xml
@@ -113,7 +112,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     DATA: ls_data TYPE ty_dot_abapgit.
 
 
-    ls_data-master_language = iv_master_language.
+    ls_data-master_language = sy-langu.
     ls_data-starting_folder = '/'.
     ls_data-folder_logic    = c_folder_logic-prefix.
 
@@ -127,6 +126,10 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       EXPORTING
         is_data = ls_data.
 
+  ENDMETHOD.
+
+  METHOD get_data.
+    rs_data = ms_data.
   ENDMETHOD.
 
   METHOD to_xml.

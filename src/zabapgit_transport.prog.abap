@@ -30,12 +30,13 @@ CLASS lcl_transport IMPLEMENTATION.
 
   METHOD zip.
 
-    DATA: lt_requests   TYPE trwbo_requests,
-          lt_tadir      TYPE scts_tadir,
-          lv_package    TYPE devclass,
-          ls_data       TYPE lcl_persistence_repo=>ty_repo,
-          lo_repo       TYPE REF TO lcl_repo_offline,
-          lt_trkorr TYPE trwbo_request_headers.
+    DATA: lt_requests TYPE trwbo_requests,
+          lt_tadir    TYPE scts_tadir,
+          lv_package  TYPE devclass,
+          ls_data     TYPE lcl_persistence_repo=>ty_repo,
+          lo_repo     TYPE REF TO lcl_repo_offline,
+          lt_trkorr   TYPE trwbo_request_headers.
+
 
     lt_trkorr = popup( ).
     IF lines( lt_trkorr ) = 0.
@@ -53,15 +54,15 @@ CLASS lcl_transport IMPLEMENTATION.
       lcx_exception=>raise( 'error finding super package' ).
     ENDIF.
 
-    ls_data-key             = 'TZIP'.
-    ls_data-package         = lv_package.
-    ls_data-master_language = sy-langu.
+    ls_data-key         = 'TZIP'.
+    ls_data-package     = lv_package.
+    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
 
     CREATE OBJECT lo_repo
       EXPORTING
         is_data = ls_data.
 
-    lcl_zip=>export( io_repo = lo_repo
+    lcl_zip=>export( io_repo   = lo_repo
                      it_filter = lt_tadir ).
 
   ENDMETHOD.

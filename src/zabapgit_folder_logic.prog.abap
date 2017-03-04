@@ -37,6 +37,9 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
+    IF lv_length > strlen( lv_path ).
+      lcx_exception=>raise( 'unexpected folder structure' ).
+    ENDIF.
     lv_path    = iv_path+lv_length.
     lv_parent  = iv_top.
     rv_package = iv_top.
@@ -153,7 +156,7 @@ CLASS ltcl_folder_logic_helper IMPLEMENTATION.
           lo_dot     TYPE REF TO lcl_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( sy-langu ).
+    lo_dot = lcl_dot_abapgit=>build_default( ).
     lo_dot->set_starting_folder( iv_starting ).
     lo_dot->set_folder_logic( iv_logic ).
 

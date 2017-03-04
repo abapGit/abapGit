@@ -3,11 +3,15 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_migrations DEFINITION FINAL.
-  PUBLIC SECTION.
 
+  PUBLIC SECTION.
     CLASS-METHODS run
       RAISING lcx_exception.
+
+  PRIVATE SECTION.
     CLASS-METHODS rebuild_local_checksums_161112
+      RAISING lcx_exception.
+    CLASS-METHODS local_dot_abapgit
       RAISING lcx_exception.
 
 ENDCLASS. "lcl_migrations
@@ -15,13 +19,52 @@ ENDCLASS. "lcl_migrations
 CLASS lcl_migrations IMPLEMENTATION.
 
   METHOD run.
+
     " Migrate STDTEXT to TABLE
     lcl_persistence_migrate=>run( ).
 
     " Rebuild local file checksums
     rebuild_local_checksums_161112( ).
 
+    " local .abapgit.xml state, issue #630
+    local_dot_abapgit( ).
+
   ENDMETHOD.  " run.
+
+  METHOD local_dot_abapgit.
+
+    DATA: lt_repos       TYPE lcl_repo_srv=>ty_repo_tt,
+          lv_shown       TYPE abap_bool,
+          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit.
+
+    FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
+
+
+    lt_repos = lcl_app=>repo_srv( )->list( ).
+
+    LOOP AT lt_repos ASSIGNING <lo_repo>.
+      lo_dot_abapgit = <lo_repo>->get_dot_abapgit( ).
+      IF lo_dot_abapgit->get_data( ) IS INITIAL.
+        IF <lo_repo>->is_offline( ) = abap_true.
+          lo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
+        ELSE.
+          IF lv_shown = abap_false.
+            CALL FUNCTION 'POPUP_TO_INFORM'
+              EXPORTING
+                titel = 'Migration'
+                txt1  = '.abapgit.xml is migrated to local state'
+                txt2  = 'Login to remote repositories if needed'.
+            lv_shown = abap_true.
+          ENDIF.
+          <lo_repo>->refresh( ).
+          lo_dot_abapgit = <lo_repo>->find_remote_dot_abapgit( ).
+        ENDIF.
+        <lo_repo>->set_dot_abapgit( lo_dot_abapgit ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD rebuild_local_checksums_161112.
 
@@ -77,7 +120,7 @@ CLASS lcl_migrations IMPLEMENTATION.
       text_button_2         = 'Skip update'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false ).               "#EC NOTEXT
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RETURN.
