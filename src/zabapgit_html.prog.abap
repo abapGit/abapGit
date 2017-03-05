@@ -398,7 +398,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_label        TYPE string
           iv_right        TYPE abap_bool OPTIONAL
           iv_sort         TYPE abap_bool OPTIONAL
-          iv_as_angle     TYPE abap_bool OPTIONAL
+          iv_corner       TYPE abap_bool OPTIONAL
         RETURNING
           VALUE(ro_html)  TYPE REF TO lcl_html.
 
@@ -479,14 +479,12 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-*    IF iv_as_angle IS NOT INITIAL.
-*      lv_class = 'dropdown dropdown_angle' ##NO_TEXT.
-*    ELSE.
-*    ENDIF.
-
     lv_class = 'nav-container' ##NO_TEXT.
     IF iv_right = abap_true.
       lv_class = lv_class && ' float-right'.
+    ENDIF.
+    IF iv_corner = abap_true.
+      lv_class = lv_class && ' corner'.
     ENDIF.
 
     ro_html->add( |<div class="{ lv_class }">| ).
@@ -518,24 +516,15 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     " Check has icons
     LOOP AT mt_items ASSIGNING <item> WHERE ico IS NOT INITIAL.
       lv_has_icons = abap_true.
+      lv_class     = ' class="with-icons"'.
       EXIT.
     ENDLOOP.
 
-*    IF lv_has_icons = abap_true.
-*      ro_html->add( '<table>' ).
-*    ENDIF.
-
-    ro_html->add( '<ul>' ).
+    ro_html->add( |<ul{ lv_class }>| ).
 
     " Render items
     LOOP AT mt_items ASSIGNING <item>.
       CLEAR: lv_class, lv_icon.
-
-*        IF lv_has_icons = abap_true.
-*          ro_html->add( '<tr>' ).
-*          ro_html->add( |<td class="icon">{ lcl_html=>icon( <item>-ico ) }</td>| ).
-*          ro_html->add( '<td class="text">' ).
-*        ENDIF.
 
       IF lv_has_icons = abap_true.
         lv_icon = lcl_html=>icon( <item>-ico ).
@@ -560,19 +549,9 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
       ENDIF.
       ro_html->add( '</li>' ).
 
-*        IF lv_has_icons = abap_true.
-*          ro_html->add( '</td>' ).
-*          ro_html->add( '</tr>' ).
-*        ENDIF.
-
-
     ENDLOOP.
 
     ro_html->add( '</ul>' ).
-
-*    IF lv_has_icons = abap_true.
-*      ro_html->add( '</table>' ).
-*    ENDIF.
 
   ENDMETHOD.  "render_items
 

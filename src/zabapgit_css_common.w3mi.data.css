@@ -59,45 +59,45 @@ div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double lightgrey;
 }
-div#header td.headpad { padding-top: 11px; }
-div#header td.logo    { width: 164px; }
+div#header td.logo       { width: 164px; }
+div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header span.page_title {
+  font-weight: normal;
+  font-size: 18pt;
+  color: #bbb;
+  padding-left: 0.4em;
+}
 
 div#toc {
   padding:          0.5em 1em;
   background-color: #f2f2f2;
 }
-
-div#toc div.toc_grid { margin: -0.3em 0em; }
 div#toc .favorites a { opacity: 0.5; }
 div#toc .favorites:hover a { opacity: 1; }
-
-div#toc div.toc_row {
-  margin:           0.3em 0em;
-}
 
 div#footer {
   padding:          0.5em 1em;
   border-top:       3px double lightgrey;
   text-align:       center;
 }
-
-div.dummydiv {
-  background-color: #f2f2f2;
-  padding:          0.5em 1em;
-  text-align:       center;
-}
-
-span.version {
+div#footer span.version {
   display: block;
   color: grey;
   margin-top: 0.3em;
 }
 
-span.page_title {
-  font-weight: normal;
-  font-size: 18pt;
-  color: #bbb;
-  padding-left: 0.4em;
+#debug-output {
+  text-align: right;
+  padding-right: 0.5em;
+  color: #ccc;
+  font-style: italic;
+  font-size: small;
+}
+
+div.dummydiv {
+  background-color: #f2f2f2;
+  padding:          0.5em 1em;
+  text-align:       center;
 }
 
 /* ERROR LOG */
@@ -109,100 +109,8 @@ div.log {
   border: 1px #fdcece solid;
   border-radius: 4px;
 }
-
 div.log > span   { display:block; }
 div.log .octicon { padding-right: 6px; }
-
-/* MENU */
-div.menu           { display: inline; }
-div.menu .menu_end { border-right: 0px !important; }
-div.menu a {
-  padding-left: 0.5em;
-  padding-right: 0.5em;
-  font-size: 12pt;
-}
-
-div.menu > a {
-  border-right: 1px solid lightgrey;
-}
-div.menu > div.dropdown > a {
-  border-right: 1px solid lightgrey;
-}
-div.menu > a:last-child {
-  border-right: 0px !important;
-}
-div.menu > div.dropdown:last-child > a {
-  border-right: 0px !important;
-}
-
-div.menu_vertical   { display: inline; }
-div.menu_vertical a {
-  display: block;
-  font-size: 12pt;
-}
-
-/*DROP DOWN*/
-.dropdown {
-  position: relative;
-  display: inline;
-}
-.dropdown_angle {
-  position: absolute !important;
-  right: -4px;
-  top: -1px;
-}
-.dropbtn_angle {
-  width: 0;
-  height: 0;
-  border-left: 7px solid transparent;
-  border-right: 7px solid transparent;
-  border-bottom: 7px solid #4078c0;
-  transform: rotate(45deg);
-  -ms-transform: rotate(45deg);
-}
-.dropdown_content {
-  display: none;
-  z-index: 1;
-  position: absolute;
-  right: -12px;
-  top: 1em;
-  padding: 6px 10px 10px 10px;
-  white-space: nowrap;
-}
-.dropdown div.minizone {
-  display: none;
-  z-index: 1;
-  position: absolute;
-  padding: 0px;
-  width: 16px;
-  height: 100%;
-  bottom: 0px;
-  right: 100%;
-}
-.dropdown:hover .minizone { display: block; }
-.dropdown_angle .dropdown_content {
-  top: -1px;
-}
-.dropdown:hover .dropdown_content { display: block; }
-.dropdown_content a {
-  padding: 0.2em;
-  background-color: #f9f9f9;
-  text-decoration: none;
-  display: block;
-  border: none !important;
-}
-.dropdown_content div.box {
-  border-bottom: 1px solid #C0C0C0;
-  border-right: 1px solid #C0C0C0;
-  background-color: #f9f9f9;
-  padding: 2px;
-}
-.dropdown_content td      { text-align: left; padding: 2px; }
-.dropdown_content td a    { padding: 0em 0.2em; }
-.dropdown_content td.icon { padding: 0 3px 0 6px; }
-.dropdown_content td.text { width: 100%; }
-.dropdown_content a:hover { background-color: #f1f1f1 }
-.dropdown:hover .dropbtn  { color: #79a0d2; }
 
 /* REPOSITORY */
 div.repo {
@@ -263,14 +171,6 @@ div.repo {
   padding: 0;
   margin: 0;
   overflow: hidden;
-}
-
-#debug-output {
-  text-align: right;
-  padding-right: 0.5em;
-  color: #ccc;
-  font-style: italic;
-  font-size: small;
 }
 
 /* REPOSITORY TABLE*/
@@ -703,7 +603,9 @@ div.tutorial h2 {
 }
 
 /* NEW MENU */
-
+/* Special credits to example at https://codepen.io/philhoyt/pen/ujHzd */
+/* container div, aligned left, 
+   but with .float-right modifier alignes right */
 .nav-container ul
 {
   list-style: none;
@@ -711,24 +613,20 @@ div.tutorial h2 {
   float: left;
   margin: 0;
   padding: 0;
-  /*text-align: left;*/
 }
-
-.nav-container.float-right ul {
-  float: right;
-  /*text-align: right;*/
-}
+.nav-container.float-right ul { float: right; }
 
 .nav-container ul a
 {
   display: block;
-  color: #444;
   text-decoration: none;
   font-size: 11pt;
   line-height: 30px;
   padding: 0 12px;
 }
 
+/* submenues align to left or right border of the active item
+   depending on .float-right modifier */
 .nav-container ul li
 {
   position: relative;
@@ -736,22 +634,15 @@ div.tutorial h2 {
   margin: 0;
   padding: 0;
 }
+.nav-container.float-right ul ul { left: auto; right: 0; }
 
-.nav-container ul li.current-menu-item
-{
-  font-weight: 700;
-}
+.nav-container ul li.current-menu-item { font-weight: 700; }
+.nav-container ul li:hover > ul { display: block; }
+.nav-container ul ul li:hover { background-color: #f6f6f6; }
 
-.nav-container ul ul li:hover
-{
-  background: #f6f6f6;
-  /*color: #8cadd9;*/
-}
-
-.nav-container ul li:hover > a
-{
-  /*color: #8cadd9;*/
-  color: #6692cc;
+/* special selection style for 1st level items (see also .corner below) */
+.nav-container > ul > li:hover > a { 
+  background-color: rgba(255, 255, 255, 0.5); 
 }
 
 .nav-container ul ul
@@ -764,11 +655,6 @@ div.tutorial h2 {
   background: #fff;
   padding: 0;
   box-shadow: 1px 1px 3px 0px #bbb;
-}
-
-.nav-container.float-right ul ul {
-  left: auto;
-  right: 0;
 }
 
 .nav-container ul ul li
@@ -789,11 +675,9 @@ div.tutorial h2 {
   left: 100%;
 }
 
-.nav-container ul li:hover > ul
-{
-  display: block;
-}
-
+/* Minizone to extent hover area, 
+   aligned to the left or to the right of the selected item 
+   depending on .float-right modifier */
 .nav-container > ul > li > div.minizone {
   display: none;
   z-index: 1;
@@ -810,6 +694,22 @@ div.tutorial h2 {
   right: 100%;
 }
 
-.nav-container li a .octicon {
+/* icons - text-align strictly left - otherwise look ugly
+   + bite a bit of left padding for nicer look 
+   + forbids item text wrapping (maybe can be done differently) */
+.nav-container ul ul li a .octicon {
   padding-right: 12px;
+  margin-left: -3px;
 }
+.nav-container ul.with-icons li {
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Special .corner modifier - hangs menu at the top right corner
+   and cancels 1st level background coloring */
+.nav-container.corner {
+  position: absolute;
+  right: 0px;
+}
+.nav-container.corner > ul > li:hover > a { background-color: inherit; }

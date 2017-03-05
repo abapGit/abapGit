@@ -240,7 +240,10 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       lo_tab_menu->add( iv_txt = 'With folders' iv_act = c_actions-toggle_folders ).
     ENDIF.
 
-    ro_html = lo_tab_menu->render_as_droplist( iv_label = 'SET' iv_as_angle = abap_true ).
+    ro_html = lo_tab_menu->render_as_droplist(
+      iv_label  = lcl_html=>icon( iv_name = 'settings/grey' )
+      iv_right  = abap_true
+      iv_corner = abap_true ).
 
   ENDMETHOD. "render_grid_menu
 
