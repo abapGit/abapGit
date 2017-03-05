@@ -38,7 +38,7 @@ input:focus, textarea:focus {
 .darkgrey         { color: #808080    !important; }
 .attention        { color: red        !important; }
 .error            { color: #d41919    !important; }
-.warning          { color: #e4ae0d    !important; }
+.warning          { color: #efb301    !important; }
 .blue             { color: #5e8dc9    !important; }
 .red              { color: red        !important; }
 

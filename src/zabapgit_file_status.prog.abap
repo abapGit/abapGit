@@ -103,6 +103,7 @@ CLASS lcl_file_status IMPLEMENTATION.
                      iv_msgv2 = <ls_res1>-obj_type
                      iv_msgv3 = <ls_res1>-obj_name
                      iv_msgv4 = 'are not placed in the same folder'
+                     iv_msgty = 'W'
                      iv_rc    = '1' ) ##no_text.
       ENDIF.
     ENDLOOP.
@@ -117,6 +118,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         io_log->add( iv_msgv1 = 'Package and path does not match for object,'
                      iv_msgv2 = <ls_res1>-obj_type
                      iv_msgv3 = <ls_res1>-obj_name
+                     iv_msgty = 'W'
                      iv_rc    = '2' ) ##no_text.
       ENDIF.
     ENDLOOP.
@@ -128,6 +130,7 @@ CLASS lcl_file_status IMPLEMENTATION.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
         io_log->add( iv_msgv1 = 'Multiple files with same filename,'
                      iv_msgv2 = <ls_res1>-filename
+                     iv_msgty = 'W'
                      iv_rc    = '3' ) ##no_text.
       ENDIF.
 
@@ -135,6 +138,7 @@ CLASS lcl_file_status IMPLEMENTATION.
         io_log->add( iv_msgv1 = 'Filename is empty for object'
                      iv_msgv2 = <ls_res1>-obj_type
                      iv_msgv3 = <ls_res1>-obj_name
+                     iv_msgty = 'W'
                      iv_rc    = '4' ) ##no_text.
       ENDIF.
 
