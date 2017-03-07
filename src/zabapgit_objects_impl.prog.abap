@@ -484,6 +484,7 @@ CLASS lcl_objects IMPLEMENTATION.
         io_log->add( iv_msgv1 = 'Object type ignored, not supported:'
                      iv_msgv2 = is_item-obj_type
                      iv_msgv3 = '-'
+                     iv_msgty = 'E'
                      iv_msgv4 = is_item-obj_name ) ##no_text.
       ENDIF.
       RETURN.

@@ -1055,6 +1055,7 @@ CLASS lcl_log DEFINITION FINAL.
           iv_msgv2 TYPE csequence OPTIONAL
           iv_msgv3 TYPE csequence OPTIONAL
           iv_msgv4 TYPE csequence OPTIONAL
+          iv_msgty TYPE symsgty   DEFAULT 'E'
           iv_rc    TYPE balsort   OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
@@ -1075,7 +1076,9 @@ CLASS lcl_log IMPLEMENTATION.
 
   METHOD to_html.
 
-    DATA: lv_string TYPE string.
+    DATA: lv_class  TYPE string,
+          lv_icon   TYPE string,
+          lv_string TYPE string.
 
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
@@ -1086,10 +1089,23 @@ CLASS lcl_log IMPLEMENTATION.
     ENDIF.
 
     LOOP AT mt_log ASSIGNING <ls_log>.
+      CASE <ls_log>-msgty.
+        WHEN 'W'.
+          lv_icon  = 'alert'.
+          lv_class = 'warning'.
+        WHEN 'E'.
+          lv_icon  = 'flame'.
+          lv_class = 'error'.
+        WHEN OTHERS. " ??? unexpected
+          lv_icon  = 'flame'.
+          lv_class = 'error'.
+      ENDCASE.
+
       CONCATENATE <ls_log>-msgv1 <ls_log>-msgv2 <ls_log>-msgv3 <ls_log>-msgv4
         INTO lv_string SEPARATED BY space.
-      ro_html->add( '<span class="error">' ).
-      ro_html->add_icon( iv_name = 'alert' iv_class = 'error' ). " warning CSS exists too
+
+      ro_html->add( |<span class="{ lv_class }">| ).
+      ro_html->add_icon( iv_name = lv_icon ).
       ro_html->add( lv_string ).
       ro_html->add( '</span>' ).
     ENDLOOP.
@@ -1101,7 +1117,7 @@ CLASS lcl_log IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msgty  = 'W'.
+    <ls_log>-msgty  = iv_msgty. " Error by default
     <ls_log>-msgid  = '00'.
     <ls_log>-msgno  = '001'.
     <ls_log>-msgv1  = iv_msgv1.
