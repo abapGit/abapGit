@@ -1111,7 +1111,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
       IF strlen( is_progdir-name ) > 30.
-        " special treatment for extenstions
+        " special treatment for extensions
         " if the program name exceeds 30 characters it is not a usual
         " ABAP program but might be some extension, which requires the internal
         " addition EXTENSION TYPE, see
