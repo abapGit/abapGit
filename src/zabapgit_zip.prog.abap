@@ -432,13 +432,14 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lo_repo TYPE REF TO lcl_repo_offline,
           ls_data TYPE lcl_persistence_repo=>ty_repo.
 
+
     ls_data-package = lcl_popups=>popup_package_export( ).
     IF ls_data-package IS INITIAL.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    ls_data-key             = 'DUMMY'.
-    ls_data-master_language = sy-langu.
+    ls_data-key = 'DUMMY'.
+    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
 
     CREATE OBJECT lo_repo
       EXPORTING

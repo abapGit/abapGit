@@ -40,6 +40,9 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING lcx_exception,
       get_dot_abapgit
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
+      set_dot_abapgit
+        IMPORTING io_dot_abapgit TYPE REF TO lcl_dot_abapgit
+        RAISING lcx_exception,
       deserialize
         RAISING lcx_exception,
       refresh
@@ -47,26 +50,25 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING lcx_exception,
       refresh_local, " For testing purposes, maybe removed later
       update_local_checksums
-        IMPORTING it_files            TYPE ty_file_signatures_tt
+        IMPORTING it_files TYPE ty_file_signatures_tt
         RAISING   lcx_exception,
       rebuild_local_checksums
         RAISING   lcx_exception,
+      find_remote_dot_abapgit
+        RETURNING VALUE(ro_dot) TYPE REF TO lcl_dot_abapgit
+        RAISING lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-
     DATA: mt_local              TYPE ty_files_item_tt,
           mt_remote             TYPE ty_files_tt,
-          mo_dot_abapgit        TYPE REF TO lcl_dot_abapgit,
           mv_do_local_refresh   TYPE abap_bool,
           mv_last_serialization TYPE timestamp,
           ms_data               TYPE lcl_persistence_repo=>ty_repo.
 
     METHODS:
-      find_dot_abapgit
-        RAISING lcx_exception,
       set
         IMPORTING iv_sha1        TYPE ty_sha1 OPTIONAL
                   it_checksums   TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
@@ -74,6 +76,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
                   iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
                   iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
+                  is_dot_abapgit TYPE lcl_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION

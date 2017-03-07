@@ -184,7 +184,7 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 * todo, offline projects should have an dot abapgit too
     lt_tadir = lcl_tadir=>read(
       iv_package = mo_repo->get_package( )
-      io_dot     = lcl_dot_abapgit=>build_default( sy-langu ) ).
+      io_dot     = lcl_dot_abapgit=>build_default( ) ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
