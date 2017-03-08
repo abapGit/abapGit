@@ -302,7 +302,6 @@ input.stage-filter { width: 18em; }
 
 /* COMMIT */
 div.form-container {
-  margin: 0.5em 0em;
   background-color: #F8F8F8;
   padding: 1em 1em;
 }
@@ -626,6 +625,9 @@ div.tutorial h2 {
   line-height: 30px;
   padding: 0 12px;
 }
+
+/* clearfix https://css-tricks.com/snippets/css/clear-fix/ */
+.nav-container:after { clear: both; display: block; content: ""; } 
 
 /* submenues align to left or right border of the active item
    depending on .float-right modifier */
