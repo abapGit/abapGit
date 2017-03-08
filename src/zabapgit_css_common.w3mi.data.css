@@ -35,6 +35,8 @@ input:focus, textarea:focus {
 
 /* COLOR PALETTE */
 .grey             { color: lightgrey  !important; }
+.grey70           { color: #b3b3b3    !important; }
+.bgorange         { background-color: orange; }
 .darkgrey         { color: #808080    !important; }
 .attention        { color: red        !important; }
 .error            { color: #d41919    !important; }
@@ -698,7 +700,7 @@ div.tutorial h2 {
    + bite a bit of left padding for nicer look 
    + forbids item text wrapping (maybe can be done differently) */
 .nav-container ul ul li a .octicon {
-  padding-right: 12px;
+  padding-right: 10px;
   margin-left: -3px;
 }
 .nav-container ul.with-icons li {
@@ -713,3 +715,17 @@ div.tutorial h2 {
   right: 0px;
 }
 .nav-container.corner > ul > li:hover > a { background-color: inherit; }
+
+/* Toolbar separator style */
+.nav-container ul ul li.separator
+{
+  font-size: x-small;
+  text-align: center;
+  padding: 4px 0;
+  text-transform: uppercase;
+  color: #bbb;
+  border-bottom: 1px solid #eee;
+  border-top: 1px solid #eee;
+}
+.nav-container ul ul li.separator:first-child { border-top: none; }
+.nav-container ul ul li.separator:hover { background-color: inherit; }

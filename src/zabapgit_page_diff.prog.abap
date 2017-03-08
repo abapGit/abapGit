@@ -33,7 +33,9 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
+    METHODS:
+      render_content REDEFINITION,
+      scripts REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
@@ -42,7 +44,8 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     DATA: mt_diff_files    TYPE tt_file_diff,
           mt_delayed_lines TYPE lcl_diff=>ty_diffs_tt,
-          mv_unified       TYPE abap_bool VALUE abap_true.
+          mv_unified       TYPE abap_bool VALUE abap_true,
+          mv_ts            TYPE timestamp.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
@@ -90,6 +93,8 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'DIFF'.
     mv_unified            = lcl_app=>user( )->get_diff_unified( ).
+
+    GET TIME STAMP FIELD mv_ts.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
@@ -197,6 +202,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       <ls_diff>-type = 'other'.
     ENDIF.
 
+    " Diff data
     IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
       CREATE OBJECT <ls_diff>-o_diff
         EXPORTING
@@ -220,6 +226,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <diff> LIKE LINE OF mt_diff_files,
                    <i>    TYPE string.
 
+    " Get unique
     LOOP AT mt_diff_files ASSIGNING <diff>.
       APPEND <diff>-type TO lt_types.
       APPEND <diff>-changed_by TO lt_users.
@@ -230,27 +237,32 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    IF lines( lt_types ) > 1.
-      CREATE OBJECT lo_sub.
-      LOOP AT lt_types ASSIGNING <i>.
-        lo_sub->add( iv_txt = <i>
-                     iv_typ = gc_action_type-onclick
-                     iv_ico = 'check/blue'
-                     iv_act = 'diffFilterType(event);' ).
-      ENDLOOP.
-      ro_menu->add( iv_txt = 'Filter type'
-                    io_sub = lo_sub ) ##NO_TEXT.
-    ENDIF.
+    IF lines( lt_types ) + lines( lt_users ) > 1.
+      CREATE OBJECT lo_sub EXPORTING iv_id = 'diff-filter'.
 
-    IF lines( lt_users ) > 1.
-      CREATE OBJECT lo_sub.
-      LOOP AT lt_users ASSIGNING <i>.
-        lo_sub->add( iv_txt = <i>
-                     iv_typ = gc_action_type-onclick
-                     iv_ico = 'check/blue'
-                     iv_act = 'diffFilterUser(event);' ).
-      ENDLOOP.
-      ro_menu->add( iv_txt = 'Filter user'
+      " File types
+      IF lines( lt_types ) > 1.
+        lo_sub->add( iv_txt = 'TYPE' iv_typ = gc_action_type-separator ).
+        LOOP AT lt_types ASSIGNING <i>.
+          lo_sub->add( iv_txt = <i>
+                       iv_typ = gc_action_type-onclick
+                       iv_aux = 'type'
+                       iv_chk = abap_true ).
+        ENDLOOP.
+      ENDIF.
+
+      " Changed by
+      IF lines( lt_users ) > 1.
+        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = gc_action_type-separator ).
+        LOOP AT lt_users ASSIGNING <i>.
+          lo_sub->add( iv_txt = <i>
+                       iv_typ = gc_action_type-onclick
+                       iv_aux = 'changed-by'
+                       iv_chk = abap_true ).
+        ENDLOOP.
+      ENDIF.
+
+      ro_menu->add( iv_txt = 'Filter'
                     io_sub = lo_sub ) ##NO_TEXT.
     ENDIF.
 
@@ -284,6 +296,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="diff-list">' ).
+    ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       lcl_progress=>show( iv_key     = 'Diff'
                           iv_current = sy-tabix
@@ -553,4 +566,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD. "render_line_unified
 
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'var gHelper = new DiffHelper({' ).
+    ro_html->add( |  seed:         "diff{ mv_ts }",| ).
+    ro_html->add( '  ids: {' ).
+    ro_html->add( '    diffList:   "diff-list",' ).
+    ro_html->add( '    filterMenu: "diff-filter" ' ).
+    ro_html->add( '  }' ).
+    ro_html->add( '});' ).
+
+  ENDMETHOD.  "scripts
 ENDCLASS. "lcl_gui_page_diff

@@ -30,13 +30,18 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL.
           mv_changes_only TYPE abap_bool.
 
     METHODS:
-      render_head_menu
+      render_head_line
         IMPORTING iv_lstate      TYPE char1
                   iv_rstate      TYPE char1
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
-      render_grid_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      build_head_menu
+        IMPORTING iv_lstate      TYPE char1
+                  iv_rstate      TYPE char1
+        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
+        RAISING   lcx_exception,
+      build_grid_menu
+        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
         RAISING   lcx_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_browser=>ty_repo_item
@@ -150,7 +155,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           _reduce_state lv_rstate <ls_item>-rstate.
         ENDLOOP.
 
-        ro_html->add( render_head_menu( iv_lstate = lv_lstate
+        ro_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
         lo_log = lo_browser->get_log( ).
@@ -161,7 +166,6 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ENDIF.
 
         ro_html->add( '<div class="repo_container">' ).
-        ro_html->add( render_grid_menu( ) ).
 
         " Repo content table
         ro_html->add( '<table class="repo_tab">' ).
@@ -203,62 +207,67 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
         ro_html->add( '</div>' ).
 
       CATCH lcx_exception INTO lx_error.
-        ro_html->add( render_head_menu( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
 
-  METHOD render_grid_menu.
+  METHOD render_head_line.
 
-    DATA lo_tab_menu TYPE REF TO lcl_html_toolbar.
+    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
 
-    CREATE OBJECT lo_tab_menu.
+    CREATE OBJECT ro_html.
+    lo_toolbar = build_head_menu( iv_lstate = iv_lstate iv_rstate = iv_rstate ).
+
+    ro_html->add( '<div class="paddings">' ).
+    ro_html->add( '<table class="w100"><tr>' ).
+
+    IF mv_show_folders = abap_true.
+      ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+    ENDIF.
+
+    ro_html->add( '<td class="right">' ).
+    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr></table>' ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD. "render_head_line
+
+  METHOD build_grid_menu.
+
+    CREATE OBJECT ro_toolbar.
 
     IF mo_repo->is_offline( ) = abap_false.
+      ro_toolbar->add(  " Show/Hide files
+        iv_txt = 'Show files'
+        iv_chk = boolc( NOT mv_hide_files = abap_true )
+        iv_act = c_actions-toggle_hide_files ).
 
-      " Show/Hide files
-      IF mv_hide_files = abap_true.
-        lo_tab_menu->add( iv_txt = 'Show files' iv_act = c_actions-toggle_hide_files ).
-      ELSE.
-        lo_tab_menu->add( iv_txt = 'Hide files' iv_act = c_actions-toggle_hide_files ).
-      ENDIF.
-
-      " Show changes only
-      IF mv_changes_only = abap_true.
-        lo_tab_menu->add( iv_txt = 'All objects' iv_act = c_actions-toggle_changes ).
-      ELSE.
-        lo_tab_menu->add( iv_txt = 'Changed only' iv_act = c_actions-toggle_changes ).
-      ENDIF.
-
+      ro_toolbar->add(  " Show changes only
+        iv_txt = 'Show changes only'
+        iv_chk = mv_changes_only
+        iv_act = c_actions-toggle_changes ).
     ENDIF.
 
-    " Show/Hide folders
-    IF mv_show_folders = abap_true.
-      lo_tab_menu->add( iv_txt = 'Plain list' iv_act = c_actions-toggle_folders ).
-    ELSE.
-      lo_tab_menu->add( iv_txt = 'With folders' iv_act = c_actions-toggle_folders ).
-    ENDIF.
+    ro_toolbar->add(  " Show/Hide folders
+      iv_txt = 'Show folders'
+      iv_chk = mv_show_folders
+      iv_act = c_actions-toggle_folders ).
 
-    ro_html = lo_tab_menu->render_as_droplist(
-      iv_label  = lcl_html=>icon( iv_name = 'settings/grey' )
-      iv_right  = abap_true
-      iv_corner = abap_true ).
+  ENDMETHOD. "build_grid_menu
 
-  ENDMETHOD. "render_grid_menu
+  METHOD build_head_menu.
 
-  METHOD render_head_menu.
-
-    DATA: lo_toolbar     TYPE REF TO lcl_html_toolbar,
-          lo_tb_advanced TYPE REF TO lcl_html_toolbar,
+    DATA: lo_tb_advanced TYPE REF TO lcl_html_toolbar,
           lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
           lv_pull_opt    LIKE gc_html_opt-crossout,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_toolbar.
+    CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
 
@@ -316,17 +325,17 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       TRY.
           IF iv_rstate IS NOT INITIAL. " Something new at remote
-            lo_toolbar->add( iv_txt = 'Pull'
+            ro_toolbar->add( iv_txt = 'Pull'
                              iv_act = |{ gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ENDIF.
           IF iv_lstate IS NOT INITIAL. " Something new at local
-            lo_toolbar->add( iv_txt = 'Stage'
+            ro_toolbar->add( iv_txt = 'Stage'
                              iv_act = |{ gc_action-go_stage }?{ lv_key }|
                              iv_opt = gc_html_opt-strong ).
           ENDIF.
           IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
-            lo_toolbar->add( iv_txt = 'Show diff'
+            ro_toolbar->add( iv_txt = 'Show diff'
                              iv_act = |{ gc_action-go_diff }?key={ lv_key }|
                              iv_opt = gc_html_opt-strong ).
           ENDIF.
@@ -334,38 +343,25 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           " authorization error or repository does not exist
           " ignore error
       ENDTRY.
-      lo_toolbar->add( iv_txt = 'Branch'
+      ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
     ELSE.
-      lo_toolbar->add( iv_txt = 'Import ZIP'
+      ro_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |{ gc_action-zip_import }?{ lv_key }|
                        iv_opt = gc_html_opt-strong ).
-      lo_toolbar->add( iv_txt = 'Export ZIP'
+      ro_toolbar->add( iv_txt = 'Export ZIP'
                        iv_act = |{ gc_action-zip_export }?{ lv_key }|
                        iv_opt = gc_html_opt-strong ).
     ENDIF.
 
-    lo_toolbar->add( iv_txt = 'Advanced'
+    ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
-    lo_toolbar->add( iv_txt = 'Refresh'
+    ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ gc_action-repo_refresh }?{ lv_key }| ).
+    ro_toolbar->add( iv_txt = lcl_html=>icon( iv_name = 'settings/grey70' )
+                     io_sub = build_grid_menu( ) ).
 
-    " Render ==========================================
-    ro_html->add( '<div class="paddings">' ).
-    ro_html->add( '<table class="w100"><tr>' ).
-
-    IF mv_show_folders = abap_true.
-      ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
-    ENDIF.
-
-    ro_html->add( '<td class="right">' ).
-    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr></table>' ).
-    ro_html->add( '</div>' ).
-
-
-  ENDMETHOD.  "render_head_menu
+  ENDMETHOD.  "build_head_menu
 
   METHOD get_item_class.
 

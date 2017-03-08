@@ -368,55 +368,81 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
  * Diff page logic
  **********************************************************/
 
-function diffProcessFilterClick(e) {
-  var target = event.target || event.srcElement;
-
-  if (!target) return;
-  if (target.tagName !== "A") return;
-  if (target.parentNode.tagName !== "TD") return;
-
-  var iconTd = target.parentNode.parentNode.children[0];
-
-  if (!iconTd) return;
-  if (iconTd.tagName !== "TD") return;
-
-  var icon = iconTd.firstChild;
-  if (icon.tagName !== "I") return;
-  if (!icon.classList.contains("octicon")) return;
-
-  var state;
-  if (icon.classList.contains("blue")) {
-    icon.classList.remove("blue");
-    icon.classList.add("grey");
-    state = false;
-  } else {
-    icon.classList.add("blue");
-    icon.classList.remove("grey");
-    state = true;
-  }
-
-  return { filter: target.innerText, state: state };
+function CheckListWrapper(id, cbAction) {
+  this.id         = document.getElementById(id);
+  this.cbAction   = cbAction;
+  this.id.onclick = this.onClick.bind(this);
 }
 
-function diffApplyFilter(param, action) {
-  var diffList = document.getElementById("diff-list");
-  // console.log("Action:", param, action.filter, action.state);
+CheckListWrapper.prototype.onClick = function(e) {
+  // Get nodes
+  var target = event.target || event.srcElement;
+  if (!target) return;
+  if (target.tagName !== "A") { target = target.parentNode; } // icon clicked
+  if (target.tagName !== "A") return;
+  if (target.parentNode.tagName !== "LI") return;
+
+  var nodeA    = target;
+  var nodeLi   = target.parentNode;
+  var nodeIcon = target.children[0];
+  if (!nodeIcon.classList.contains("octicon")) return;
+
+  // Node updates
+  var option   = nodeA.innerText;
+  var oldState = nodeLi.getAttribute("data-check");
+  if (oldState === null) return; // no data-check attribute - non-checkbox
+  var newState = oldState === "X" ? false : true;
+
+  if (newState) {
+    nodeIcon.classList.remove("grey");
+    nodeIcon.classList.add("blue");
+    nodeLi.setAttribute("data-check", "X");
+  } else {
+    nodeIcon.classList.remove("blue");
+    nodeIcon.classList.add("grey");
+    nodeLi.setAttribute("data-check", "");
+  }
+
+  // Action callback
+  this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
+}
+
+function DiffHelper(params) {
+  this.pageSeed = params.seed;
+  this.counter  = 0;
+
+  // DOM nodes
+  this.dom = {
+    diffList:     document.getElementById(params.ids.diffList),
+    filterButton: document.getElementById(params.ids.filterMenu).parentNode
+  };
+
+  // Checklist wrapper
+  this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
+}
+
+DiffHelper.prototype.onFilter = function(attr, target, state) {
+  this.applyFilter(attr, target, state);
+  this.highlightButton(state);
+};
+
+DiffHelper.prototype.applyFilter = function (attr, target, state) {
+  var diffList = this.dom.diffList;
   for (var i = diffList.children.length - 1; i >= 0; i--) {
     var div = diffList.children[i];
-    if (div.className !== "diff") return; // Unexpected error !
-    var attr = div.getAttribute("data-"+param);
-    if (attr === action.filter) {
-      div.style.display = action.state ? "" : "none";
+    if (div.className !== "diff") continue;
+    if (div.getAttribute("data-"+attr) === target) {
+      div.style.display = state ? "" : "none";
     }
   }
 }
 
-function diffFilterType(e) {
-  var action = diffProcessFilterClick(e);
-  diffApplyFilter("type", action);
-}
-
-function diffFilterUser(e) {
-  var action = diffProcessFilterClick(e);
-  diffApplyFilter("changed-by", action);
-}
+DiffHelper.prototype.highlightButton = function(state) {
+  this.counter += state ? -1 : 1;
+  console.log(this.counter, this.dom.filterButton);
+  if (this.counter > 0) {
+    this.dom.filterButton.classList.add("bgorange");
+  } else {
+    this.dom.filterButton.classList.remove("bgorange");
+  }
+};
