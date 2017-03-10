@@ -44,9 +44,9 @@ function debugOutput(text, dstID) {
 }
 
 // Create hidden form and submit with sapevent
-function submitSapeventForm(params, action) {
+function submitSapeventForm(params, action, method) {
   var form = document.createElement("form");
-  form.setAttribute("method", "post");
+  form.setAttribute("method", method || "post");
   form.setAttribute("action", "sapevent:" + action);
   
   for(var key in params) {
@@ -248,6 +248,7 @@ StageHelper.prototype.onSearch = function (e) {
   }
 }
 
+// Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
   var td      = row.cells[this.col.name];
   var origTxt = td.innerText; // without tags
@@ -365,7 +366,7 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
 }
 
 /**********************************************************
- * Diff page logic
+ * Check list wrapper
  **********************************************************/
 
 function CheckListWrapper(id, cbAction) {
@@ -407,39 +408,91 @@ CheckListWrapper.prototype.onClick = function(e) {
   this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
 }
 
+/**********************************************************
+ * Diff page logic
+ **********************************************************/
+
+// Diff helper constructor
 function DiffHelper(params) {
-  this.pageSeed = params.seed;
-  this.counter  = 0;
+  this.pageSeed    = params.seed;
+  this.counter     = 0;
+  this.stageAction = params.stageAction;
 
   // DOM nodes
   this.dom = {
-    diffList:     document.getElementById(params.ids.diffList),
-    filterButton: document.getElementById(params.ids.filterMenu).parentNode
+    diffList:    document.getElementById(params.ids.diffList),
+    stageButton: document.getElementById(params.ids.stageButton)
   };
 
+  this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
+  if (!this.repoKey) return; // Unexpected
+
   // Checklist wrapper
-  this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
+  if (document.getElementById(params.ids.filterMenu)) {
+    this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
+    this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
+  } 
+
+  // Hijack stage command
+  if (this.dom.stageButton) {
+    this.dom.stageButton.href    = "#";
+    this.dom.stageButton.onclick = this.onStage.bind(this);
+  }
 }
 
+// Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
   this.highlightButton(state);
 };
 
+// Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
-  var diffList = this.dom.diffList;
-  for (var i = diffList.children.length - 1; i >= 0; i--) {
-    var div = diffList.children[i];
-    if (div.className !== "diff") continue;
+  this.iterateDiffList(function(div) {
     if (div.getAttribute("data-"+attr) === target) {
       div.style.display = state ? "" : "none";
     }
+  });
+}
+
+// Action on stage -> save visible diffs as state for stage page
+DiffHelper.prototype.onStage = function (e) {
+  if (window.sessionStorage) {
+    var data = this.buildStageCache();
+    window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
+  }
+  var getParams = {key: this.repoKey, seed: this.pageSeed};
+  submitSapeventForm(getParams, this.stageAction, "get");
+}
+
+// Collect visible diffs
+DiffHelper.prototype.buildStageCache = function () {
+  var list = {};
+  this.iterateDiffList(function(div) {
+    var filename = div.getAttribute("data-file");
+    if (!div.style.display && filename) { // No display override - visible !!
+      list[filename] = "A"; // Add
+    }
+  });
+  return list;
+}
+
+// Table iterator
+DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
+  var restArgs = Array.prototype.slice.call(arguments, 1);
+  var diffList = this.dom.diffList;
+
+  for (var i = 0, iN = diffList.children.length; i < iN; i++) {
+    var div = diffList.children[i];
+    if (div.className !== "diff") continue;
+    args = [div].concat(restArgs);
+    cb.apply(this, args); // callback
   }
 }
 
+// Highlight Filter button if filter is activate
 DiffHelper.prototype.highlightButton = function(state) {
   this.counter += state ? -1 : 1;
-  console.log(this.counter, this.dom.filterButton);
   if (this.counter > 0) {
     this.dom.filterButton.classList.add("bgorange");
   } else {

@@ -48,6 +48,7 @@ input:focus, textarea:focus {
 .emphasis         { font-weight: bold !important; }
 .crossout         { text-decoration: line-through !important; }
 .right            { text-align:right; }
+.center           { text-align:center; }
 .paddings         { padding: 0.5em 0.5em; }
 .pad-sides        { padding-left: 0.3em; padding-right: 0.3em; }
 .margin-v5        { margin-top: 0.5em; margin-bottom: 0.5em; }

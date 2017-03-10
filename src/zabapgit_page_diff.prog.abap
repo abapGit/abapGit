@@ -14,6 +14,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       END OF c_fstate.
 
     TYPES: BEGIN OF ty_file_diff,
+             path       TYPE string,
              filename   TYPE string,
              lstate     TYPE char1,
              rstate     TYPE char1,
@@ -26,9 +27,10 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       constructor
-        IMPORTING iv_key    TYPE lcl_persistence_repo=>ty_repo-key
-                  is_file   TYPE ty_file OPTIONAL
-                  is_object TYPE ty_item OPTIONAL
+        IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+                  is_file          TYPE ty_file OPTIONAL
+                  is_object        TYPE ty_item OPTIONAL
+                  iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   lcx_exception,
       lif_gui_page~on_event REDEFINITION.
 
@@ -45,7 +47,8 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
     DATA: mt_diff_files    TYPE tt_file_diff,
           mt_delayed_lines TYPE lcl_diff=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
-          mv_ts            TYPE timestamp.
+          mv_repo_key      TYPE lcl_persistence_repo=>ty_repo-key,
+          mv_seed          TYPE string.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
@@ -75,7 +78,12 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
                 is_status TYPE ty_result
       RAISING   lcx_exception.
     METHODS build_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+      IMPORTING iv_supress_stage TYPE abap_bool
+      RETURNING VALUE(ro_menu)   TYPE REF TO lcl_html_toolbar.
+    METHODS is_binary
+      IMPORTING iv_d1         TYPE xstring
+                iv_d2         TYPE xstring
+      RETURNING VALUE(rv_yes) TYPE abap_bool.
 
 ENDCLASS. "lcl_gui_page_diff
 
@@ -86,15 +94,18 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA: lt_remote TYPE ty_files_tt,
           lt_local  TYPE ty_files_item_tt,
           lt_status TYPE ty_results_tt,
-          lo_repo   TYPE REF TO lcl_repo_online.
+          lo_repo   TYPE REF TO lcl_repo_online,
+          lv_ts     TYPE timestamp.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
     super->constructor( ).
     ms_control-page_title = 'DIFF'.
     mv_unified            = lcl_app=>user( )->get_diff_unified( ).
+    mv_repo_key           = iv_key.
 
-    GET TIME STAMP FIELD mv_ts.
+    GET TIME STAMP FIELD lv_ts.
+    mv_seed = |diff{ lv_ts }|.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
@@ -137,7 +148,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       lcx_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
     ENDIF.
 
-    ms_control-page_menu  = build_menu( ).
+    ms_control-page_menu  = build_menu( iv_supress_stage ).
 
   ENDMETHOD.
 
@@ -172,6 +183,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     APPEND INITIAL LINE TO mt_diff_files ASSIGNING <ls_diff>.
+    <ls_diff>-path     = is_status-path.
     <ls_diff>-filename = is_status-filename.
     <ls_diff>-lstate   = is_status-lstate.
     <ls_diff>-rstate   = is_status-rstate.
@@ -202,20 +214,64 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       <ls_diff>-type = 'other'.
     ENDIF.
 
+    IF <ls_diff>-type = 'other'
+       AND is_binary( iv_d1 = <ls_remote>-data iv_d2 = <ls_local>-file-data ) = abap_true.
+      <ls_diff>-type = 'binary'.
+    ENDIF.
+
     " Diff data
-    IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
-      CREATE OBJECT <ls_diff>-o_diff
-        EXPORTING
-          iv_new = <ls_remote>-data
-          iv_old = <ls_local>-file-data.
-    ELSE.             " Local leading changes or both were modified
-      CREATE OBJECT <ls_diff>-o_diff
-        EXPORTING
-          iv_new = <ls_local>-file-data
-          iv_old = <ls_remote>-data.
+    IF <ls_diff>-type <> 'binary'.
+      IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
+        CREATE OBJECT <ls_diff>-o_diff
+          EXPORTING
+            iv_new = <ls_remote>-data
+            iv_old = <ls_local>-file-data.
+      ELSE.             " Local leading changes or both were modified
+        CREATE OBJECT <ls_diff>-o_diff
+          EXPORTING
+            iv_new = <ls_local>-file-data
+            iv_old = <ls_remote>-data.
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.  "append_diff
+
+  METHOD is_binary.
+
+    DATA: lv_len TYPE i,
+          lv_idx TYPE i,
+          lv_x   TYPE x.
+
+    FIELD-SYMBOLS <data> LIKE iv_d1.
+
+    IF iv_d1 IS NOT INITIAL. " One of them might be new and so empty
+      ASSIGN iv_d1 TO <data>.
+    ELSE.
+      ASSIGN iv_d2 TO <data>.
+    ENDIF.
+
+    lv_len = xstrlen( <data> ).
+    IF lv_len = 0.
+      RETURN.
+    ENDIF.
+
+    IF lv_len > 100.
+      lv_len = 100.
+    ENDIF.
+
+    " Simple char range test
+    " stackoverflow.com/questions/277521/how-to-identify-the-file-content-as-ascii-or-binary
+    DO lv_len TIMES. " I'm sure there is more efficient way ...
+      lv_idx = sy-index - 1.
+      lv_x = <data>+lv_idx(1).
+
+      IF NOT ( lv_x BETWEEN 9 AND 13 OR lv_x BETWEEN 32 AND 126 ).
+        rv_yes = abap_true.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.  " is_binary.
 
   METHOD build_menu.
 
@@ -237,7 +293,14 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    IF lines( lt_types ) + lines( lt_users ) > 1.
+    IF iv_supress_stage = abap_false.
+      ro_menu->add( iv_txt = 'Stage'
+                    iv_act = |{ gc_action-go_stage }?{ mv_repo_key }|
+                    iv_id  = 'stage-button'
+                    iv_opt = gc_html_opt-strong ).
+    ENDIF.
+
+    IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub EXPORTING iv_id = 'diff-filter'.
 
       " File types
@@ -295,7 +358,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="diff-list">' ).
+    ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       lcl_progress=>show( iv_key     = 'Diff'
@@ -314,16 +377,24 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<div class="diff" data-type="{ is_diff-type
-      }" data-changed-by="{ is_diff-changed_by }">| ).       "#EC NOTEXT
+      }" data-changed-by="{ is_diff-changed_by
+      }" data-file="{ is_diff-path && is_diff-filename }">| ). "#EC NOTEXT
     ro_html->add( render_diff_head( is_diff ) ).
 
     " Content
-    ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-    ro_html->add( '<table class="diff_tab syntax-hl">' ).   "#EC NOTEXT
-    ro_html->add( render_table_head( ) ).
-    ro_html->add( render_lines( is_diff ) ).
-    ro_html->add( '</table>' ).                             "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    IF is_diff-type <> 'binary'.
+      ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
+      ro_html->add( '<table class="diff_tab syntax-hl">' ).   "#EC NOTEXT
+      ro_html->add( render_table_head( ) ).
+      ro_html->add( render_lines( is_diff ) ).
+      ro_html->add( '</table>' ).                             "#EC NOTEXT
+      ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ELSE.
+      ro_html->add( '<div class="diff_content paddings center grey">' ). "#EC NOTEXT
+      ro_html->add( 'The content seems to be binary.' ).      "#EC NOTEXT
+      ro_html->add( 'Cannot display as diff.' ).              "#EC NOTEXT
+      ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ENDIF.
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
@@ -338,21 +409,25 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     DATA: ls_stats TYPE lcl_diff=>ty_count.
 
     CREATE OBJECT ro_html.
-    ls_stats = is_diff-o_diff->stats( ).
-
-    IF is_diff-fstate = c_fstate-both. " Merge stats into 'update' if both were changed
-      ls_stats-update = ls_stats-update + ls_stats-insert + ls_stats-delete.
-      CLEAR: ls_stats-insert, ls_stats-delete.
-    ENDIF.
 
     ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
 
-    ro_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
-    ro_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
-    ro_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
+    IF is_diff-type <> 'binary'.
+      ls_stats = is_diff-o_diff->stats( ).
+      IF is_diff-fstate = c_fstate-both. " Merge stats into 'update' if both were changed
+        ls_stats-update = ls_stats-update + ls_stats-insert + ls_stats-delete.
+        CLEAR: ls_stats-insert, ls_stats-delete.
+      ENDIF.
+
+      ro_html->add( |<span class="diff_banner diff_ins">+ { ls_stats-insert }</span>| ).
+      ro_html->add( |<span class="diff_banner diff_del">- { ls_stats-delete }</span>| ).
+      ro_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
+    ENDIF.
+
     ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_diff-lstate
-                                                        iv2 = is_diff-rstate ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_item_state(
+      iv1 = is_diff-lstate
+      iv2 = is_diff-rstate ) ).
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
@@ -571,10 +646,12 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( 'var gHelper = new DiffHelper({' ).
-    ro_html->add( |  seed:         "diff{ mv_ts }",| ).
+    ro_html->add( |  seed:        "{ mv_seed }",| ).
+    ro_html->add( |  stageAction: "{ gc_action-go_stage }",| ).
     ro_html->add( '  ids: {' ).
-    ro_html->add( '    diffList:   "diff-list",' ).
-    ro_html->add( '    filterMenu: "diff-filter" ' ).
+    ro_html->add( '    diffList:    "diff-list",' ).
+    ro_html->add( '    filterMenu:  "diff-filter",' ).
+    ro_html->add( '    stageButton: "stage-button"' ).
     ro_html->add( '  }' ).
     ro_html->add( '});' ).
 

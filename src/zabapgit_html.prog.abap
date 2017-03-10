@@ -389,7 +389,8 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
           iv_cur TYPE abap_bool OPTIONAL
           iv_opt TYPE c         OPTIONAL
           iv_chk TYPE abap_bool DEFAULT abap_undefined
-          iv_aux TYPE string    OPTIONAL,
+          iv_aux TYPE string    OPTIONAL
+          iv_id  TYPE string    OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
       render
@@ -419,6 +420,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
         cur TYPE abap_bool,
         chk TYPE abap_bool,
         aux TYPE string,
+        id  TYPE string,
       END OF ty_item.
 
     TYPES tt_items TYPE STANDARD TABLE OF ty_item.
@@ -468,6 +470,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ls_item-cur = iv_cur.
     ls_item-chk = iv_chk.
     ls_item-aux = iv_aux.
+    ls_item-id  = iv_id.
 
     APPEND ls_item TO mt_items.
 
@@ -580,11 +583,13 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
         ro_html->add_a( iv_txt   = lv_icon && <item>-txt
                         iv_typ   = <item>-typ
                         iv_act   = <item>-act
+                        iv_id    = <item>-id
                         iv_opt   = <item>-opt ).
       ELSE.
         ro_html->add_a( iv_txt   = lv_icon && <item>-txt
                         iv_typ   = gc_action_type-dummy
                         iv_act   = ''
+                        iv_id    = <item>-id
                         iv_opt   = <item>-opt ).
         ro_html->add( <item>-sub->render_items( iv_sort = iv_sort ) ).
       ENDIF.
