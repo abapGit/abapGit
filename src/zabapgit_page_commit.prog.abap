@@ -193,7 +193,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     ro_html->add( render_text_input( iv_name       = 'comment'
                                      iv_label      = 'comment'
-                                     iv_max_length = '50' ) ).
+                                     iv_max_length = '72' ) ).
 
     ro_html->add( '<div class="row">' ).
     ro_html->add( '<label for="c-body">body</label>' ).
