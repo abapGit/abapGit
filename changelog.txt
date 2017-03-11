@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-03-07 v1.32.0
+------------------
++ user interface changed for diff and staging pages
+* body length in commit page
+! refactored lcl_log
+
 2017-03-07 v1.31.1
 ------------------
 ! local .abapgit.xml state, note migration is triggered automatically when executing abapGit
