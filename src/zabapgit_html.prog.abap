@@ -288,6 +288,7 @@ CLASS lcl_html IMPLEMENTATION.
 
     DATA: lv_class TYPE string,
           lv_href  TYPE string,
+          lv_click TYPE string,
           lv_id    TYPE string,
           lv_style TYPE string.
 
@@ -307,14 +308,18 @@ CLASS lcl_html IMPLEMENTATION.
       lv_class = | class="{ lv_class }"|.
     ENDIF.
 
-    IF iv_act IS NOT INITIAL.
+    lv_href  = ' href="#"'. " Default, dummy
+    IF iv_act IS NOT INITIAL OR iv_typ = gc_action_type-dummy.
       CASE iv_typ.
         WHEN gc_action_type-url.
-          lv_href = | href="{ iv_act }"|.
+          lv_href  = | href="{ iv_act }"|.
         WHEN gc_action_type-sapevent.
-          lv_href = | href="sapevent:{ iv_act }"|.
+          lv_href  = | href="sapevent:{ iv_act }"|.
         WHEN gc_action_type-onclick.
-          lv_href = | onclick="{ iv_act }"|.
+          lv_href  = ' href="#"'.
+          lv_click = | onclick="{ iv_act }"|.
+        WHEN gc_action_type-dummy.
+          lv_href  = ' href="#"'.
       ENDCASE.
     ENDIF.
 
@@ -326,7 +331,7 @@ CLASS lcl_html IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_style }>{ iv_txt }</a>|.
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }</a>|.
 
   ENDMETHOD. "a
 
@@ -371,41 +376,64 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS:
+      constructor
+        IMPORTING
+          iv_id TYPE string OPTIONAL,
       add
         IMPORTING
           iv_txt TYPE string
           io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
+          iv_typ TYPE c         DEFAULT gc_action_type-sapevent
           iv_act TYPE string    OPTIONAL
           iv_ico TYPE string    OPTIONAL
+          iv_cur TYPE abap_bool OPTIONAL
           iv_opt TYPE c         OPTIONAL
-          iv_typ TYPE c         DEFAULT gc_action_type-sapevent,
+          iv_chk TYPE abap_bool DEFAULT abap_undefined
+          iv_aux TYPE string    OPTIONAL
+          iv_id  TYPE string    OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
       render
         IMPORTING
-          iv_as_droplist_with_label TYPE string OPTIONAL
-          iv_no_separator           TYPE abap_bool OPTIONAL
-          iv_vertical               TYPE abap_bool OPTIONAL
+          iv_right                  TYPE abap_bool OPTIONAL
           iv_sort                   TYPE abap_bool OPTIONAL
-          iv_as_angle               TYPE abap_bool OPTIONAL
-          iv_with_icons             TYPE abap_bool OPTIONAL
-          iv_add_minizone           TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html.
+          VALUE(ro_html)            TYPE REF TO lcl_html,
+      render_as_droplist
+        IMPORTING
+          iv_label        TYPE string
+          iv_right        TYPE abap_bool OPTIONAL
+          iv_sort         TYPE abap_bool OPTIONAL
+          iv_corner       TYPE abap_bool OPTIONAL
+        RETURNING
+          VALUE(ro_html)  TYPE REF TO lcl_html.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_item,
-             txt TYPE string,
-             act TYPE string,
-             ico TYPE string,
-             sub TYPE REF TO lcl_html_toolbar,
-             opt TYPE char1,
-             typ TYPE char1,
-           END OF ty_item.
+    TYPES:
+      BEGIN OF ty_item,
+        txt TYPE string,
+        act TYPE string,
+        ico TYPE string,
+        sub TYPE REF TO lcl_html_toolbar,
+        opt TYPE char1,
+        typ TYPE char1,
+        cur TYPE abap_bool,
+        chk TYPE abap_bool,
+        aux TYPE string,
+        id  TYPE string,
+      END OF ty_item.
 
     TYPES tt_items TYPE STANDARD TABLE OF ty_item.
 
-    DATA mt_items TYPE tt_items.
+    DATA: mt_items TYPE tt_items,
+          mv_id    TYPE string.
+
+    METHODS:
+      render_items
+        IMPORTING
+          iv_sort                   TYPE abap_bool OPTIONAL
+        RETURNING
+          VALUE(ro_html)            TYPE REF TO lcl_html.
 
 ENDCLASS. "lcl_html_toolbar DEFINITION
 
@@ -414,6 +442,10 @@ ENDCLASS. "lcl_html_toolbar DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_html_toolbar IMPLEMENTATION.
 
+  METHOD constructor.
+    mv_id = iv_id.
+  ENDMETHOD. "constructor
+
   METHOD count.
     rv_count = lines( mt_items ).
   ENDMETHOD.
@@ -421,8 +453,13 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
-    ASSERT iv_act IS INITIAL AND io_sub IS NOT INITIAL
-      OR   iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
+    ASSERT iv_typ = gc_action_type-separator  " sep doesn't have action
+      OR iv_typ = gc_action_type-onclick      " click may have no action (assigned in JS)
+      OR iv_typ = gc_action_type-dummy        " dummy may have no action
+      OR iv_act IS INITIAL AND io_sub IS NOT INITIAL
+      OR iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
+
+    ASSERT NOT ( iv_chk <> abap_undefined AND io_sub IS NOT INITIAL ).
 
     ls_item-txt = iv_txt.
     ls_item-act = iv_act.
@@ -430,96 +467,139 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ls_item-sub = io_sub.
     ls_item-opt = iv_opt.
     ls_item-typ = iv_typ.
+    ls_item-cur = iv_cur.
+    ls_item-chk = iv_chk.
+    ls_item-aux = iv_aux.
+    ls_item-id  = iv_id.
+
     APPEND ls_item TO mt_items.
+
   ENDMETHOD.  "add
 
-  METHOD render. "TODO refactor
+  METHOD render.
 
-    DATA: lv_class   TYPE string,
-          lv_is_drop TYPE abap_bool.
-
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
-
+    DATA: lv_class TYPE string.
 
     CREATE OBJECT ro_html.
-    lv_is_drop = boolc( iv_as_droplist_with_label IS NOT INITIAL OR iv_as_angle IS NOT INITIAL ).
 
-    IF lv_is_drop = abap_false. " Normal menu
-      IF iv_vertical = abap_true.
-        lv_class = 'menu_vertical' ##NO_TEXT.
-      ELSE.
-        lv_class = 'menu' ##NO_TEXT.
-      ENDIF.
-    ELSEIF iv_as_angle IS NOT INITIAL.
-      lv_class = 'dropdown dropdown_angle' ##NO_TEXT.
-    ELSE.
-      lv_class = 'dropdown' ##NO_TEXT.
+    lv_class = 'nav-container' ##NO_TEXT.
+    IF iv_right = abap_true.
+      lv_class = lv_class && ' float-right'.
     ENDIF.
 
     ro_html->add( |<div class="{ lv_class }">| ).
+    ro_html->add( render_items( iv_sort = iv_sort ) ).
+    ro_html->add( '</div>' ).
 
-    IF lv_is_drop = abap_true. " Dropdown
-      IF iv_as_angle = abap_true.
-        ro_html->add( '<div class="dropbtn_angle"></div>' ).
-      ELSE.
-        ro_html->add_a( iv_txt   = iv_as_droplist_with_label
-                        iv_class = 'dropbtn'
-                        iv_act   = '' ).
-      ENDIF.
+  ENDMETHOD.  "render
 
-      IF iv_add_minizone = abap_true.
-        ro_html->add( '<div class="minizone"></div>' ).
-      ENDIF.
+  METHOD render_as_droplist.
 
-      ro_html->add( '<div class="dropdown_content">' ).
-      ro_html->add( '<div class="box">' ).
+    DATA: lv_class TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    lv_class = 'nav-container' ##NO_TEXT.
+    IF iv_right = abap_true.
+      lv_class = lv_class && ' float-right'.
     ENDIF.
+    IF iv_corner = abap_true.
+      lv_class = lv_class && ' corner'.
+    ENDIF.
+
+    ro_html->add( |<div class="{ lv_class }">| ).
+    ro_html->add( '<ul><li>' ).
+    ro_html->add_a( iv_txt = iv_label
+                    iv_typ = gc_action_type-dummy
+                    iv_act = '' ).
+    ro_html->add( '<div class="minizone"></div>' ).
+    ro_html->add( render_items( iv_sort = iv_sort ) ).
+    ro_html->add( '</li></ul>' ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD. "render_as_droplist
+
+  METHOD render_items.
+
+    DATA: lv_class     TYPE string,
+          lv_icon      TYPE string,
+          lv_id        TYPE string,
+          lv_check     TYPE string,
+          lv_aux       TYPE string,
+          lv_has_icons TYPE abap_bool.
+
+    FIELD-SYMBOLS <item> LIKE LINE OF mt_items.
+
+    CREATE OBJECT ro_html.
 
     IF iv_sort = abap_true.
       SORT mt_items BY txt ASCENDING AS TEXT.
     ENDIF.
 
-    IF iv_with_icons = abap_true.
-      ro_html->add( '<table>' ).
+    " Check has icons or check boxes
+    LOOP AT mt_items ASSIGNING <item> WHERE ico IS NOT INITIAL OR chk <> abap_undefined.
+      lv_has_icons = abap_true.
+      lv_class     = ' class="with-icons"'.
+      EXIT.
+    ENDLOOP.
+
+    IF mv_id IS NOT INITIAL.
+      lv_id = | id="{ mv_id }"|.
     ENDIF.
 
-    LOOP AT mt_items ASSIGNING <ls_item>.
+    ro_html->add( |<ul{ lv_id }{ lv_class }>| ).
 
-      IF <ls_item>-sub IS INITIAL.
+    " Render items
+    LOOP AT mt_items ASSIGNING <item>.
+      CLEAR: lv_class, lv_icon.
 
-        IF iv_with_icons = abap_true.
-          ro_html->add( '<tr>' ).
-          ro_html->add( |<td class="icon">{ lcl_html=>icon( <ls_item>-ico ) }</td>| ).
-          ro_html->add( '<td class="text">' ).
-        ENDIF.
-
-        ro_html->add_a( iv_txt   = <ls_item>-txt
-                        iv_act   = <ls_item>-act
-                        iv_opt   = <ls_item>-opt
-                        iv_typ   = <ls_item>-typ ).
-
-        IF iv_with_icons = abap_true.
-          ro_html->add( '</td>' ).
-          ro_html->add( '</tr>' ).
-        ENDIF.
-
-      ELSE.
-        ro_html->add( <ls_item>-sub->render( iv_as_droplist_with_label = <ls_item>-txt ) ).
+      IF <item>-typ = gc_action_type-separator.
+        ro_html->add( |<li class="separator">{ <item>-txt }</li>| ).
+        CONTINUE.
       ENDIF.
+
+      IF lv_has_icons = abap_true.
+        IF <item>-chk = abap_true.
+          lv_icon  = lcl_html=>icon( 'check/blue' ).
+          lv_check = ' data-check="X"'.
+        ELSEIF <item>-chk = abap_false.
+          lv_icon = lcl_html=>icon( 'check/grey' ).
+          lv_check = ' data-check=""'.
+        ELSE. " abap_undefined -> not a check box
+          lv_icon = lcl_html=>icon( <item>-ico ).
+        ENDIF.
+      ENDIF.
+
+      IF <item>-cur = abap_true.
+        lv_class = ' class="current-menu-item"'.
+      ENDIF.
+
+      IF <item>-aux IS NOT INITIAL.
+        lv_aux = | data-aux="{ <item>-aux }"|.
+      ENDIF.
+
+      ro_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
+      IF <item>-sub IS INITIAL.
+        ro_html->add_a( iv_txt   = lv_icon && <item>-txt
+                        iv_typ   = <item>-typ
+                        iv_act   = <item>-act
+                        iv_id    = <item>-id
+                        iv_opt   = <item>-opt ).
+      ELSE.
+        ro_html->add_a( iv_txt   = lv_icon && <item>-txt
+                        iv_typ   = gc_action_type-dummy
+                        iv_act   = ''
+                        iv_id    = <item>-id
+                        iv_opt   = <item>-opt ).
+        ro_html->add( <item>-sub->render_items( iv_sort = iv_sort ) ).
+      ENDIF.
+      ro_html->add( '</li>' ).
 
     ENDLOOP.
 
-    IF iv_with_icons = abap_true.
-      ro_html->add( '</table>' ).
-    ENDIF.
+    ro_html->add( '</ul>' ).
 
-    IF lv_is_drop = abap_true. " Dropdown
-      ro_html->add( '</div>' ).
-      ro_html->add( '</div>' ).
-    ENDIF.
+  ENDMETHOD.  "render_items
 
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.  "render
 
 ENDCLASS. "lcl_html_toolbar IMPLEMENTATION

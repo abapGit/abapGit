@@ -94,13 +94,13 @@ CLASS lcl_gui_page IMPLEMENTATION.
                                iv_act = gc_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
-    ro_html->add( |<td class="headpad"><span class="page_title"> &#x25BA; {
+    ro_html->add( |<td><span class="page_title"> &#x25BA; {
                   ms_control-page_title
                   }</span></td>| ).                         "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
-      ro_html->add( '<td class="headpad right">' ).         "#EC NOTEXT
-      ro_html->add( ms_control-page_menu->render( ) ).
+      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
+      ro_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
       ro_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
 

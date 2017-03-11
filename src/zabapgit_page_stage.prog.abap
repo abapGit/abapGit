@@ -13,7 +13,8 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING
-          io_repo         TYPE REF TO lcl_repo_online
+          io_repo TYPE REF TO lcl_repo_online
+          iv_seed TYPE string OPTIONAL
         RAISING   lcx_exception,
       lif_gui_page~on_event REDEFINITION.
 
@@ -25,8 +26,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           ms_files TYPE ty_stage_files,
-          mo_stage TYPE REF TO lcl_stage,
-          mv_ts    TYPE timestamp.
+          mv_seed  TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS:
       render_list
@@ -47,6 +47,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
       process_stage_list
         IMPORTING it_postdata TYPE cnht_post_data_tab
+                  io_stage    TYPE REF TO lcl_stage
         RAISING   lcx_exception,
 
       build_menu
@@ -58,18 +59,19 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA lv_ts TYPE timestamp.
+
     super->constructor( ).
 
     ms_control-page_title = 'STAGE'.
     mo_repo               = io_repo.
     ms_files              = lcl_stage_logic=>get( mo_repo ).
+    mv_seed               = iv_seed.
 
-    CREATE OBJECT mo_stage
-      EXPORTING
-        iv_branch_name = io_repo->get_branch_name( )
-        iv_branch_sha1 = io_repo->get_sha1_remote( ).
-
-    GET TIME STAMP FIELD mv_ts.
+    IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
+      GET TIME STAMP FIELD lv_ts.
+      mv_seed = |stage{ lv_ts }|.
+    ENDIF.
 
     ms_control-page_menu  = build_menu( ).
 
@@ -88,19 +90,24 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
+    DATA lo_stage TYPE REF TO lcl_stage.
+
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
+
+    CREATE OBJECT lo_stage
+      EXPORTING
+        iv_branch_name = mo_repo->get_branch_name( )
+        iv_branch_sha1 = mo_repo->get_sha1_remote( ).
 
     CASE iv_action.
       WHEN c_action-stage_all.
-        mo_stage->reset_all( ).
         LOOP AT ms_files-local ASSIGNING <ls_file>.
-          mo_stage->add( iv_path     = <ls_file>-file-path
+          lo_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename
                          iv_data     = <ls_file>-file-data ).
         ENDLOOP.
       WHEN c_action-stage_commit.
-        mo_stage->reset_all( ).
-        process_stage_list( it_postdata ).
+        process_stage_list( it_postdata = it_postdata io_stage = lo_stage ).
       WHEN OTHERS.
         RETURN.
     ENDCASE.
@@ -108,7 +115,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ei_page TYPE lcl_gui_page_commit
       EXPORTING
         io_repo  = mo_repo
-        io_stage = mo_stage.
+        io_stage = lo_stage.
 
     ev_state = gc_event_state-new_page.
 
@@ -141,14 +148,14 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
             WITH KEY file-path     = ls_file-path
                      file-filename = ls_file-filename.
           ASSERT sy-subrc = 0.
-          mo_stage->add(    iv_path     = <ls_file>-file-path
+          io_stage->add(    iv_path     = <ls_file>-file-path
                             iv_filename = <ls_file>-file-filename
                             iv_data     = <ls_file>-file-data ).
         WHEN lcl_stage=>c_method-ignore.
-          mo_stage->ignore( iv_path     = ls_file-path
+          io_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
         WHEN lcl_stage=>c_method-rm.
-          mo_stage->rm(     iv_path     = ls_file-path
+          io_stage->rm(     iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
         WHEN lcl_stage=>c_method-skip.
           " Do nothing
@@ -311,7 +318,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( 'var gStageParams = {' ).
-    ro_html->add( |  seed:            "stage{ mv_ts }",| ).
+    ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
     ro_html->add( '  formAction:      "stage_commit",' ).
 
     ro_html->add( '  ids: {' ).

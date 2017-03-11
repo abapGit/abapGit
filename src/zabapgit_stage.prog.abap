@@ -86,8 +86,8 @@ ENDCLASS.   "lcl_stage DEFINITION
 CLASS lcl_stage IMPLEMENTATION.
 
   METHOD constructor.
-    mv_branch_name = iv_branch_name.
-    mv_branch_sha1 = iv_branch_sha1.
+    mv_branch_name  = iv_branch_name.
+    mv_branch_sha1  = iv_branch_sha1.
     mv_merge_source = iv_merge_source.
   ENDMETHOD.
 
