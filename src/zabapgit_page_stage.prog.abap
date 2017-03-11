@@ -26,7 +26,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
           ms_files TYPE ty_stage_files,
-          mv_seed  TYPE string.
+          mv_seed  TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS:
       render_list
@@ -68,7 +68,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     ms_files              = lcl_stage_logic=>get( mo_repo ).
     mv_seed               = iv_seed.
 
-    IF mv_seed IS INITIAL.
+    IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
       GET TIME STAMP FIELD lv_ts.
       mv_seed = |stage{ lv_ts }|.
     ENDIF.
@@ -318,7 +318,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( 'var gStageParams = {' ).
-    ro_html->add( |  seed:            "{ mv_seed }",| ).
+    ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
     ro_html->add( '  formAction:      "stage_commit",' ).
 
     ro_html->add( '  ids: {' ).

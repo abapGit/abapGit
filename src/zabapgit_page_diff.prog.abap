@@ -48,7 +48,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
           mt_delayed_lines TYPE lcl_diff=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
           mv_repo_key      TYPE lcl_persistence_repo=>ty_repo-key,
-          mv_seed          TYPE string.
+          mv_seed          TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
@@ -105,7 +105,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     mv_repo_key           = iv_key.
 
     GET TIME STAMP FIELD lv_ts.
-    mv_seed = |diff{ lv_ts }|.
+    mv_seed = |diff{ lv_ts }|. " Generate based on time
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
