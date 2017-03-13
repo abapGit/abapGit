@@ -32,7 +32,6 @@ CLASS lcl_object_susc IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
@@ -61,9 +60,6 @@ CLASS lcl_object_susc IMPLEMENTATION.
     SELECT SINGLE * FROM tobct INTO ls_tobct
       WHERE oclss = ms_item-obj_name
       AND langu = mv_language.
-*    IF sy-subrc <> 0.
-*     lcx_exception=>raise( 'TOBCT no english description' ).
-*    ENDIF.
 
     io_xml->add( iv_name = 'TOBC'
                  ig_data = ls_tobc ).
@@ -84,6 +80,8 @@ CLASS lcl_object_susc IMPLEMENTATION.
                   CHANGING cg_data = ls_tobc ).
     io_xml->read( EXPORTING iv_name = 'TOBCT'
                   CHANGING cg_data = ls_tobct ).
+
+    tadir_insert( iv_package ).
 
     lv_objectname = ms_item-obj_name.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'

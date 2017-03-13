@@ -734,35 +734,51 @@ CLASS lcl_diff IMPLEMENTATION.
       APPEND lo_regex TO lt_regex_set.
     END-OF-DEFINITION.
 
-    DATA: lv_beacon    TYPE i,
-          lv_offs      TYPE i,
-          lv_code_line TYPE string,
-          lo_regex     TYPE REF TO cl_abap_regex,
-          lt_regex_set TYPE TABLE OF REF TO cl_abap_regex.
+    DATA: lv_beacon_idx  TYPE i,
+          lv_offs        TYPE i,
+          lv_beacon_str  TYPE string,
+          lv_beacon_2lev TYPE string,
+          lv_submatch    TYPE string,
+          lo_regex       TYPE REF TO cl_abap_regex,
+          lt_regex_set   TYPE TABLE OF REF TO cl_abap_regex.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
 
-    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT)\s'.
+    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s'.
     _add_regex '^\s*START-OF-'.
     _add_regex '^\s*INITIALIZATION(\s|\.)'.
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
-      <ls_diff>-beacon = lv_beacon.
-      LOOP AT lt_regex_set INTO lo_regex.
-        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new.
-        IF sy-subrc = 0. " Match
-          lv_code_line = <ls_diff>-new.
 
-          " Get rid of comments
-          FIND FIRST OCCURRENCE OF '.' IN lv_code_line MATCH OFFSET lv_offs.
-          IF sy-subrc = 0.
-            lv_code_line = lv_code_line(lv_offs).
+      CLEAR lv_offs.
+      <ls_diff>-beacon = lv_beacon_idx.
+
+      LOOP AT lt_regex_set INTO lo_regex. "
+        FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch.
+        IF sy-subrc = 0. " Match
+          lv_beacon_str = <ls_diff>-new.
+          lv_submatch = to_upper( lv_submatch ).
+
+          " Get rid of comments and end of line
+          FIND FIRST OCCURRENCE OF '.' IN lv_beacon_str MATCH OFFSET lv_offs.
+          IF sy-subrc <> 0.
+            FIND FIRST OCCURRENCE OF '"' IN lv_beacon_str MATCH OFFSET lv_offs.
           ENDIF.
 
-          APPEND lv_code_line TO mt_beacons.
-          lv_beacon        = sy-tabix.
-          <ls_diff>-beacon = lv_beacon.
+          IF lv_offs > 0.
+            lv_beacon_str = lv_beacon_str(lv_offs).
+          ENDIF.
+
+          IF lv_submatch = 'CLASS'.
+            lv_beacon_2lev = lv_beacon_str.
+          ELSEIF lv_submatch = 'METHOD'.
+            lv_beacon_str = lv_beacon_2lev && ` => ` && lv_beacon_str.
+          ENDIF.
+
+          APPEND lv_beacon_str TO mt_beacons.
+          lv_beacon_idx    = sy-tabix.
+          <ls_diff>-beacon = lv_beacon_idx.
           EXIT. "Loop
         ENDIF.
       ENDLOOP.

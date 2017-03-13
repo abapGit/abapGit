@@ -33,7 +33,15 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    rv_user = get( )->get_header_data( )-changedby.
+    DATA: ls_data TYPE sfw_bf.
+
+    ls_data = get( )->get_header_data( ).
+
+    rv_user = ls_data-changedby.
+
+    IF rv_user IS INITIAL.
+      rv_user = ls_data-author.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -200,7 +208,10 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
         im_sfw_bfc_tc = ls_sfw_bfc_tc ).
     lo_bf->set_parent_bfs( lt_parent_bfs ).
 
+* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
+    SET PARAMETER ID 'EUK' FIELD iv_package.
     lo_bf->save_all( ).
+    SET PARAMETER ID 'EUK' FIELD ''.
 
     lcl_objects_activation=>add_item( ms_item ).
 
@@ -208,18 +219,21 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_bf TYPE sfw_bfunction,
-          lo_bf TYPE REF TO cl_sfw_bf.
+    DATA: lv_bf     TYPE sfw_bfunction,
+          lt_delete TYPE sfw_bftab,
+          lt_msgtab TYPE sprot_u_tab.
 
 
     lv_bf = ms_item-obj_name.
-    TRY.
-        lo_bf = cl_sfw_bf=>get_bf( lv_bf ).
-        lo_bf->set_delete_flag( lv_bf ).
-        lo_bf->save_all( ).
-      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error deleting BF' ).
-    ENDTRY.
+    APPEND lv_bf TO lt_delete.
+
+    cl_sfw_activate=>delete_sfbf( EXPORTING p_bfuncts = lt_delete
+                                  IMPORTING p_msgtab = lt_msgtab ).
+
+    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      lcx_exception=>raise( 'Error deleting SFBF' ).
+    ENDIF.
 
   ENDMETHOD.                    "delete
 

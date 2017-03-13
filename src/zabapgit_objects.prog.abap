@@ -570,6 +570,9 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       corr_insert
         IMPORTING iv_package TYPE devclass
         RAISING   lcx_exception,
+      tadir_insert
+        IMPORTING iv_package TYPE devclass
+        RAISING   lcx_exception,
       jump_se11
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
@@ -873,8 +876,9 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       RAISING   lcx_exception.
 
     METHODS deserialize_textpool
-      IMPORTING iv_program TYPE programm
-                it_tpool   TYPE textpool_table
+      IMPORTING iv_program  TYPE programm
+                it_tpool    TYPE textpool_table
+                iv_language TYPE langu OPTIONAL
       RAISING   lcx_exception.
 
     METHODS deserialize_cua
@@ -1410,6 +1414,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
   METHOD deserialize_textpool.
 
+    DATA lv_language TYPE langu.
+
+    IF iv_language IS INITIAL.
+      lv_language = mv_language.
+    ELSE.
+      lv_language = iv_language.
+    ENDIF.
+
     READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
     IF ( sy-subrc = 0 AND lines( it_tpool ) = 1 ) OR lines( it_tpool ) = 0.
       RETURN. " no action for includes
@@ -1417,14 +1429,15 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     INSERT TEXTPOOL iv_program
       FROM it_tpool
-      LANGUAGE mv_language
-      STATE 'I'.
+      LANGUAGE lv_language.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
-    lcl_objects_activation=>add( iv_type = 'REPT'
-                                 iv_name = iv_program ).
+    IF lv_language = mv_language. " Add just once
+      lcl_objects_activation=>add( iv_type = 'REPT'
+                                   iv_name = iv_program ).
+    ENDIF.
 
   ENDMETHOD.                    "deserialize_textpool
 
@@ -1606,6 +1619,25 @@ CLASS lcl_objects_super IMPLEMENTATION.
     rs_metadata-version = 'v1.0.0' ##no_text.
   ENDMETHOD.                    "get_metadata
 
+  METHOD tadir_insert.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_test_modus       = abap_false
+        wi_tadir_pgmid      = 'R3TR'
+        wi_tadir_object     = ms_item-obj_type
+        wi_tadir_obj_name   = ms_item-obj_name
+        wi_tadir_author     = sy-uname
+        wi_tadir_devclass   = iv_package
+        wi_tadir_masterlang = mv_language
+      EXCEPTIONS
+        OTHERS              = 1.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD corr_insert.
 
     DATA: ls_object TYPE ddenqs.
@@ -1718,14 +1750,6 @@ CLASS lcl_objects DEFINITION FINAL.
       prioritize_deser
         IMPORTING it_results        TYPE ty_results_tt
         RETURNING VALUE(rt_results) TYPE ty_results_tt.
-
-    CLASS-METHODS
-      path_to_package
-        IMPORTING iv_top            TYPE devclass
-                  iv_start          TYPE string
-                  iv_path           TYPE string
-        RETURNING VALUE(rv_package) TYPE devclass
-        RAISING   lcx_exception.
 
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE ty_item

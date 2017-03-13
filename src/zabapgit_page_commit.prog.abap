@@ -101,10 +101,13 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     lt_stage = mo_stage->get_all( ).
 
     ro_html->add( '<table class="stage_tab">' ).
-    ro_html->add( '<tr class="title firstrow">').
-    ro_html->add( '<td colspan="2">Staged files</td>').
+    ro_html->add( '<thead>' ).
+    ro_html->add( '<tr>').
+    ro_html->add( '<th colspan="2">Staged files</th>').
     ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
 
+    ro_html->add( '<tbody>' ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
       ro_html->add( '<td class="method">' ).
@@ -115,6 +118,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
       ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
+    ro_html->add( '</tbody>' ).
 
     ro_html->add( '</table>' ).
 

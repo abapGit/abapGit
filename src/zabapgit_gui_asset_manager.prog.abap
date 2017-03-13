@@ -51,9 +51,10 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
         lcx_exception=>raise( |Improper resource name: { iv_asset_name }| ).
     ENDCASE.
 
-    rv_data = get_mime_asset( lv_mime_name ).
-    IF rv_data IS INITIAL. " Fallback to inline asset
-      rv_data = get_inline_asset( lv_asset_name ).
+    " Inline is default (for older AG snapshots to work)
+    rv_data = get_inline_asset( lv_asset_name ).
+    IF rv_data IS INITIAL.
+      rv_data = get_mime_asset( lv_mime_name ). " Get MIME object
     ENDIF.
 
     IF rv_data IS INITIAL.
@@ -143,7 +144,6 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
     DATA: lt_data TYPE ty_string_tt,
           lv_str  TYPE string.
-
 
     CASE iv_asset_name.
       WHEN 'CSS_COMMON'.

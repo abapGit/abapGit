@@ -140,6 +140,8 @@ CLASS lcl_object_wdya IMPLEMENTATION.
           li_prop->set_value( <ls_property>-value ).
         ENDLOOP.
 
+        tadir_insert( iv_package ).
+
         lo_app->if_wdy_md_lockable_object~save_to_database( ).
       CATCH cx_wdy_md_exception.
         lcx_exception=>raise( 'error saving WDYA' ).

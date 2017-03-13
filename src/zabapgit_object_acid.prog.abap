@@ -92,6 +92,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
     lo_aab = create_object( ).
     lo_aab->enqueue( ).
     lo_aab->set_descript( lv_description ).
+    tadir_insert( iv_package ).
     lo_aab->save( ).
 
   ENDMETHOD.                    "lif_object~deserialize

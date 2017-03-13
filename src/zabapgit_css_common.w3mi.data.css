@@ -24,12 +24,12 @@ img               { border: 0px; vertical-align: middle; }
 table             { border-collapse: collapse; }
 pre               { display: inline; }
 
-form input, textarea, select {
-  border: 1px solid #DDD;
+input, textarea, select {
   padding: 3px 6px;
+  border: 1px solid #ddd;
 }
 
-form input:focus, textarea:focus {
+input:focus, textarea:focus {
   border: 1px solid #8cadd9;
 }
 
@@ -47,7 +47,9 @@ form input:focus, textarea:focus {
 .crossout         { text-decoration: line-through !important; }
 .right            { text-align:right; }
 .paddings         { padding: 0.5em 0.5em; }
-.pad-sides        { padding: 0 0.3em; }
+.pad-sides        { padding-left: 0.3em; padding-right: 0.3em; }
+.margin-v5        { margin-top: 0.5em; margin-bottom: 0.5em; }
+.indent5em        { padding-left: 0.5em; }
 .pad4px           { padding: 4px; }
 .w100             { width: 100%; }
 .w40              { width: 40%; }
@@ -360,6 +362,9 @@ table.repo_tab {
 }
 
 /* STAGE */
+div.stage-container { width: 850px; }
+input.stage-filter { width: 18em; }
+
 .stage_tab {
   border: 1px solid #DDD;
   background: #fff;
@@ -373,7 +378,6 @@ table.repo_tab {
 }
 .stage_tab th {
   color: #BBB;
-  font-size: 10pt;
   text-align: left;
   font-weight: normal;
   background-color: #edf2f9;
@@ -382,22 +386,25 @@ table.repo_tab {
 .stage_tab td.status {
   width: 2em;
   text-align: center;
+  color: #ccc;
+  background-color: #fafafa;
 }
+.stage_tab td.highlight {
+  color: #444 !important;
+  font-weight: bold;
+}
+
+.stage_tab td.cmd {  cursor: pointer; }
+.stage_tab td.cmd a { padding: 0px 4px; }
+.stage_tab th.cmd a { padding: 0px 4px; }
+.stage_tab td.method { color: #ccc; }
+.stage_tab td.user { color: #aaa; }
+.stage_tab td.type { color: #aaa; }
 .stage_tab tbody tr:first-child td { padding-top: 0.5em; }
 .stage_tab tbody tr:last-child td { padding-bottom: 0.5em; }
-.stage_tab td.cmd a { padding: 0px 4px; }
-
-/* STAGE */
-.stage_tab td.method {
-  color: #ccc;
-}
-.stage_tab tr.firstrow td { border-top: 0px; }
-.stage_tab tr.title td {
-  color: #BBB;
-  font-size: 10pt;
-  background-color: #edf2f9;
-  padding: 4px 0.5em;
-  text-align: center;
+.stage_tab mark {
+  color: white;
+  background-color: #79a0d2;
 }
 
 /* COMMIT */

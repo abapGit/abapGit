@@ -1956,16 +1956,16 @@ CLASS ltcl_file_status IMPLEMENTATION.
 
 ENDCLASS.   "ltcl_file_status
 
-CLASS ltcl_sap_package DEFINITION
+CLASS ltcl_file_status2 DEFINITION
   FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS check FOR TESTING.
+    METHODS check FOR TESTING RAISING lcx_exception.
 
 ENDCLASS.   "ltcl_sap_package
 
-CLASS ltcl_sap_package IMPLEMENTATION.
+CLASS ltcl_file_status2 IMPLEMENTATION.
 
   METHOD check.
 
@@ -1984,10 +1984,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
 
-    lcl_sap_package=>check( io_log     = lo_log
-                            it_results = lt_results
-                            iv_start   = '/'
-                            iv_top     = '$Z$' ).
+    lcl_file_status=>run_checks( io_log     = lo_log
+                                 it_results = lt_results
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 0 ).
 
@@ -2002,10 +2002,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
 
-    lcl_sap_package=>check( io_log     = lo_log
-                            it_results = lt_results
-                            iv_start   = '/'
-                            iv_top     = '$Z$' ).
+    lcl_file_status=>run_checks( io_log     = lo_log
+                                 it_results = lt_results
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
     assert_equals( act = lo_log->count( ) exp = 2 ).
@@ -2022,10 +2022,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' '$$zdoma1.doma.xml'.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma2.doma.xml'.
 
-    lcl_sap_package=>check( io_log     = lo_log
-                            it_results = lt_results
-                            iv_start   = '/'
-                            iv_top     = '$Z$' ).
+    lcl_file_status=>run_checks( io_log     = lo_log
+                                 it_results = lt_results
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
     assert_equals( act = lo_log->has_rc( '2' ) exp = abap_true ).
@@ -2041,10 +2041,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
 
-    lcl_sap_package=>check( io_log     = lo_log
-                            it_results = lt_results
-                            iv_start   = '/'
-                            iv_top     = '$Z$' ).
+    lcl_file_status=>run_checks( io_log     = lo_log
+                                 it_results = lt_results
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
     assert_equals( act = lo_log->has_rc( '3' ) exp = abap_true ).
@@ -2059,13 +2059,16 @@ CLASS ltcl_sap_package IMPLEMENTATION.
     _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
 
-    lcl_sap_package=>check( io_log     = lo_log
-                            it_results = lt_results
-                            iv_start   = '/'
-                            iv_top     = '$Z$' ).
+    lcl_file_status=>run_checks( io_log     = lo_log
+                                 it_results = lt_results
+                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 iv_top     = '$Z$' ).
 
-    assert_equals( act = lo_log->count( ) exp = 1 ).
-    assert_equals( act = lo_log->has_rc( '4' ) exp = abap_true ).
+    assert_equals( act = lo_log->count( )
+                   exp = 1 ).
+
+    assert_equals( act = lo_log->has_rc( '4' )
+                   exp = abap_true ).
 
   ENDMETHOD.  " check.
 
@@ -2239,4 +2242,4 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
 ENDCLASS.
 
-INCLUDE ZABAPGIT_UNIT_TEST_CLAS_INTF.
+INCLUDE zabapgit_unit_test_clas_intf.

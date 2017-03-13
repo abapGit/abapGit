@@ -30,7 +30,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
     SELECT SINGLE chgname1 FROM tsp1d INTO rv_user
       WHERE papart = ms_item-obj_name.
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 OR rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
 
@@ -95,12 +95,14 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
     lv_obj_name = ms_item-obj_name.
 
-    CALL FUNCTION 'TR_TADIR_POPUP_ENTRY_E071'
-      EXPORTING
-        wi_e071_pgmid     = 'R3TR'
-        wi_e071_object    = ms_item-obj_type
-        wi_e071_obj_name  = lv_obj_name
-        wi_tadir_devclass = iv_package.
+    tadir_insert( iv_package ).
+
+*    CALL FUNCTION 'TR_TADIR_POPUP_ENTRY_E071'
+*      EXPORTING
+*        wi_e071_pgmid     = 'R3TR'
+*        wi_e071_object    = ms_item-obj_type
+*        wi_e071_obj_name  = lv_obj_name
+*        wi_tadir_devclass = iv_package.
 
   ENDMETHOD.                    "lif_object~deserialize
 
