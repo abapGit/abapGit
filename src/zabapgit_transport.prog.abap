@@ -1,17 +1,24 @@
 *&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_TRANSPORT
 *&---------------------------------------------------------------------*
+CLASS lcl_transport_popup DEFINITION.
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      show
+        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
+ENDCLASS.
 
 CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      zip RAISING lcx_exception.
+      zip RAISING lcx_exception,
+      to_tadir IMPORTING it_transport_headers TYPE trwbo_request_headers
+               RETURNING VALUE(rt_tadir)      TYPE scts_tadir
+               RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
-      popup
-        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       read_requests
         IMPORTING it_trkorr          TYPE trwbo_request_headers
         RETURNING VALUE(rt_requests) TYPE trwbo_requests
@@ -38,7 +45,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = popup( ).
+    lt_trkorr = lcl_transport_popup=>show( ).
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -65,6 +72,22 @@ CLASS lcl_transport IMPLEMENTATION.
     lcl_zip=>export( io_repo   = lo_repo
                      it_filter = lt_tadir ).
 
+  ENDMETHOD.
+
+  METHOD to_tadir.
+    DATA: lt_requests TYPE trwbo_requests,
+          lt_tadir    TYPE scts_tadir,
+          lv_package  TYPE devclass,
+          lt_trkorr   TYPE trwbo_request_headers.
+
+
+    lt_trkorr = lcl_transport_popup=>show( ).
+    IF lines( lt_trkorr ) = 0.
+      RETURN.
+    ENDIF.
+
+    lt_requests = read_requests( lt_trkorr ).
+    lt_tadir = resolve( lt_requests ).
   ENDMETHOD.
 
   METHOD find_top_package.
@@ -97,41 +120,6 @@ CLASS lcl_transport IMPLEMENTATION.
 
     SORT lt_super.
     READ TABLE lt_super INDEX 1 INTO rv_package.
-
-  ENDMETHOD.
-
-  METHOD popup.
-    DATA: lrs_trfunction TYPE trsel_trs_function,
-          lv_types       TYPE string,
-          ls_ranges      TYPE trsel_ts_ranges.
-
-    " Fill all request types
-    lv_types = 'KWTCOEMPDRSXQFG'.
-    lrs_trfunction-sign   = 'I'.
-    lrs_trfunction-option = 'EQ'.
-    WHILE lv_types NE space.
-      lrs_trfunction-low = lv_types(1).
-      APPEND lrs_trfunction TO ls_ranges-request_funcs.
-      SHIFT lv_types.
-    ENDWHILE.
-
-    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
-      EXPORTING
-        iv_username_pattern    = sy-uname
-        iv_via_selscreen       = 'X'
-        iv_complete_projects   = ''
-*       is_popup               =
-        iv_title               = 'abapGit: Transport Request Selection'
-      IMPORTING
-        et_requests            = rt_trkorr
-      CHANGING
-        cs_ranges              = ls_ranges
-      EXCEPTIONS
-        action_aborted_by_user = 1
-        OTHERS                 = 2.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -204,4 +192,39 @@ CLASS lcl_transport IMPLEMENTATION.
     DELETE rt_tadir WHERE table_line IS INITIAL.
   ENDMETHOD.
 
+ENDCLASS.
+CLASS lcl_transport_popup IMPLEMENTATION.
+  METHOD show.
+    DATA: lrs_trfunction TYPE trsel_trs_function,
+          lv_types       TYPE string,
+          ls_ranges      TYPE trsel_ts_ranges.
+
+    " Fill all request types
+    lv_types = 'KWTCOEMPDRSXQFG'.
+    lrs_trfunction-sign   = 'I'.
+    lrs_trfunction-option = 'EQ'.
+    WHILE lv_types NE space.
+      lrs_trfunction-low = lv_types(1).
+      APPEND lrs_trfunction TO ls_ranges-request_funcs.
+      SHIFT lv_types.
+    ENDWHILE.
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = sy-uname
+        iv_via_selscreen       = 'X'
+        iv_complete_projects   = ''
+*       is_popup               =
+        iv_title               = 'abapGit: Transport Request Selection'
+      IMPORTING
+        et_requests            = rt_trkorr
+      CHANGING
+        cs_ranges              = ls_ranges
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.

@@ -64,10 +64,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: lv_url     TYPE string,
-          lv_key     TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_db      TYPE lcl_persistence_db=>ty_content,
-          ls_item    TYPE ty_item.
+    DATA: lv_url               TYPE string,
+          lv_key               TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_db                TYPE lcl_persistence_db=>ty_content,
+          ls_item              TYPE ty_item,
+          lt_transport_headers TYPE trwbo_request_headers,
+          lt_tadir             TYPE scts_tadir.
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor
@@ -170,6 +172,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_toggle_fav.                 " Toggle repo as favorite
         lcl_services_repo=>toggle_favorite( lv_key ).
+        ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_transport_to_pull_reqst.
+        lt_transport_headers = lcl_transport_popup=>show( ).
+        lt_tadir = lcl_transport=>to_tadir( lt_transport_headers ).
+        "lcl_services_repo=>transport_to_pull_request( lv_key ).
         ev_state = gc_event_state-re_render.
 
         " ZIP services actions
