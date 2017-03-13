@@ -23,6 +23,12 @@ a:hover, a:active {
 img               { border: 0px; vertical-align: middle; }
 table             { border-collapse: collapse; }
 pre               { display: inline; }
+sup {
+  vertical-align: baseline;
+  position: relative;
+  top: -0.5em;
+  font-size: 75%;
+}
 
 input, textarea, select {
   padding: 3px 6px;
@@ -676,6 +682,12 @@ div.tutorial h2 {
 {
   top: 0;
   left: 100%;
+}
+
+.nav-container.float-right ul ul ul
+{
+  left: auto;
+  right: 100%;
 }
 
 /* Minizone to extent hover area, 
