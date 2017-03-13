@@ -8,6 +8,10 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS: constructor
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
 
+    CLASS-METHODS: render_record_banner
+      IMPORTING is_key TYPE lcl_persistence_db=>ty_content
+      RETURNING VALUE(rv_html) TYPE string.
+
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
@@ -24,10 +28,19 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     ms_control-page_title = 'CONFIG DISPLAY'.
   ENDMETHOD.
 
+  METHOD render_record_banner.
+    rv_html = |<table class="tag"><tr><td class="label">Type:</td>|
+           && | <td>{ is_key-type }</td></tr></table>|
+           && gc_newline
+           && |<table class="tag"><tr><td class="label">Key:</td>|
+           && |  <td>{ is_key-value }</td></tr></table>|.
+  ENDMETHOD. "render_record_banner
+
   METHOD render_content.
 
     DATA:
       lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
+      lo_toolbar      TYPE REF TO lcl_html_toolbar,
       lv_data         TYPE lcl_persistence_db=>ty_content-data_str,
       ls_action       TYPE lcl_persistence_db=>ty_content,
       lv_action       TYPE string.
@@ -48,17 +61,15 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
     lv_data         = lo_highlighter->process_line( lcl_xml_pretty=>print( lv_data ) ).
 
     CREATE OBJECT ro_html.
+    CREATE OBJECT lo_toolbar.
+    lo_toolbar->add( iv_act = |{ gc_action-db_edit }?{ lv_action }|
+                     iv_txt = 'Edit' ) ##NO_TEXT.
 
     ro_html->add( '<div class="db_entry">' ).
     ro_html->add( '<table class="toolbar"><tr><td>' ).
-
-    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
-                  |  <td>{ ms_key-type }</td></tr></table>| ).
-    ro_html->add( |<table class="tag"><tr><td class="label">Key:</td>| &&
-                  |  <td>{ ms_key-value }</td></tr></table>| ).
-
-    ro_html->add( '</td><td class="right">' ).
-    ro_html->add_a( iv_txt = 'Edit' iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
+    ro_html->add( render_record_banner( ms_key ) ).
+    ro_html->add( '</td><td>' ).
+    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
     ro_html->add( '</td></tr></table>' ).
 
     ro_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
@@ -111,32 +122,26 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
-
-    ro_html->add( '<div class="db_entry">' ).
-
-    " Banners
-    ro_html->add( |<table class="tag"><tr><td class="label">Type:</td>| &&
-                  |  <td>{ ms_key-type }</td></tr></table>| ).
-    ro_html->add( |<table class="tag"><tr><td class="label">Key:</td>| &&
-                  |  <td>{ ms_key-value }</td></tr></table>| ).
-
-    " Form
-    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ gc_action-db_update }">| ).
-    ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
-    ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
-    ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data
-                     }</textarea>| ).
-    ro_html->add( '</form>' ).
-
-    " Menu
     lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
                      iv_txt = 'Save'
                      iv_typ = gc_action_type-onclick
                      iv_opt = gc_html_opt-strong ) ##NO_TEXT.
 
-    ro_html->add( '<div class="paddings">' ).
-    ro_html->add( lo_toolbar->render( ) ).
-    ro_html->add( '</div>' ).
+    ro_html->add( '<div class="db_entry">' ).
+
+    " Banners & Toolbar
+    ro_html->add( '<table class="toolbar"><tr><td>' ).
+    ro_html->add( lcl_gui_page_db_display=>render_record_banner( ms_key ) ).
+    ro_html->add( '</td><td>' ).
+    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
+    ro_html->add( '</td></tr></table>' ).
+
+    " Form
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ gc_action-db_update }">| ).
+    ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
+    ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
+    ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
+    ro_html->add( '</form>' ).
 
     ro_html->add( '</div>' ). "db_entry
 
@@ -214,7 +219,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       ro_html->add( |<td>{ <ls_data>-value }</td>| ).
       ro_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
       ro_html->add( '<td>' ).
-      ro_html->add( lo_toolbar->render( iv_vertical = abap_false ) ).
+      ro_html->add( lo_toolbar->render( ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '</tr>' ).
     ENDLOOP.

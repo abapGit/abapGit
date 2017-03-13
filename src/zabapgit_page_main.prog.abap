@@ -209,7 +209,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_toc.
 
     DATA: lo_pback      TYPE REF TO lcl_persistence_background,
-          lv_opt        TYPE char1,
+          lv_current    TYPE abap_bool,
           lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
           lv_icon       TYPE string,
           lo_repo       LIKE LINE OF it_repo_list,
@@ -227,11 +227,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lt_favorites = lcl_app=>user( )->get_favorites( ).
 
     LOOP AT it_repo_list INTO lo_repo.
-      lv_key = lo_repo->get_key( ).
+      lv_key     = lo_repo->get_key( ).
+      lv_current = abap_false.
       IF lv_key = mv_show.
-        lv_opt = gc_html_opt-strong.
-      ELSE.
-        CLEAR lv_opt.
+        lv_current = abap_true.
       ENDIF.
 
       lv_repo_title = lo_repo->get_name( ).
@@ -246,7 +245,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         DELETE lt_favorites INDEX sy-tabix. " for later cleanup
         lo_favbar->add( iv_txt = lv_repo_title
                         iv_act = |{ c_actions-show }?{ lv_key }|
-                        iv_opt = lv_opt ).
+                        iv_cur = lv_current ).
       ENDIF.
 
       IF lo_repo->is_offline( ) = abap_true.
@@ -258,7 +257,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       lo_allbar->add( iv_txt = lv_repo_title
                       iv_act = |{ c_actions-show }?{ lv_key }|
                       iv_ico = lv_icon
-                      iv_opt = lv_opt ).
+                      iv_cur = lv_current ).
     ENDLOOP.
 
     " Cleanup orphan favorites (for removed repos)
@@ -278,7 +277,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
                   lcl_html=>icon( iv_name = 'star/blue' iv_alt = 'Favs' iv_hint = 'Favorites' )
                   }</td>| ).
 
-    ro_html->add( '<td class="pad-sides w100">' ). " Maximize width
+    ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
     IF lo_favbar->count( ) > 0.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
@@ -288,12 +287,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</td>' ).
 
-    ro_html->add( '<td class="right">' ).
-    ro_html->add( lo_allbar->render(
-      iv_as_droplist_with_label = lcl_html=>icon( iv_name = 'three-bars/blue' iv_class = 'pad4px' )
-      iv_sort                   = abap_true
-      iv_with_icons             = abap_true
-      iv_add_minizone           = abap_true ) ).
+    ro_html->add( '<td>' ).
+    ro_html->add( lo_allbar->render_as_droplist(
+      iv_label = lcl_html=>icon( iv_name = 'three-bars/blue' )
+      iv_right = abap_true
+      iv_sort  = abap_true ) ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
 

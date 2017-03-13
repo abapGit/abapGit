@@ -397,7 +397,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           ls_after  TYPE lcl_dot_abapgit=>ty_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
+    lo_dot = lcl_dot_abapgit=>build_default( ).
     ls_before = lo_dot->ms_data.
 
     lo_dot = lcl_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
@@ -418,7 +418,7 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
           lo_dot     TYPE REF TO lcl_dot_abapgit.
 
 
-    lo_dot = lcl_dot_abapgit=>build_default( gc_english ).
+    lo_dot = lcl_dot_abapgit=>build_default( ).
 
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
@@ -1986,7 +1986,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 io_dot     = lcl_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 0 ).
@@ -2004,7 +2004,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 io_dot     = lcl_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
@@ -2024,7 +2024,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 io_dot     = lcl_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -2043,7 +2043,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 io_dot     = lcl_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -2061,7 +2061,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( sy-langu )
+                                 io_dot     = lcl_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( )

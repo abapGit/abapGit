@@ -390,7 +390,13 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       REPLACE FIRST OCCURRENCE OF lv_head_suffix IN <ls_sel>-varoption WITH ''.
       READ TABLE lt_branches WITH KEY display_name = <ls_sel>-varoption ASSIGNING <ls_branch>.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+* branch name longer than 65 characters
+        LOOP AT lt_branches ASSIGNING <ls_branch> WHERE display_name CS <ls_sel>-varoption.
+          EXIT. " current loop
+        ENDLOOP.
+      ENDIF.
+      ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
     ENDIF.
 

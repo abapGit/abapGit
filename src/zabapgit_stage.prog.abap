@@ -56,10 +56,10 @@ CLASS lcl_stage DEFINITION FINAL.
         IMPORTING iv_path     TYPE ty_file-path
                   iv_filename TYPE ty_file-filename
         RAISING   lcx_exception,
-*      lookup
-*        IMPORTING iv_path          TYPE ty_file-path
-*                  iv_filename      TYPE ty_file-filename
-*        RETURNING VALUE(rv_method) TYPE ty_method,
+      lookup
+        IMPORTING iv_path          TYPE ty_file-path
+                  iv_filename      TYPE ty_file-filename
+        RETURNING VALUE(rv_method) TYPE ty_method,
       get_merge_source
         RETURNING VALUE(rv_source) TYPE ty_sha1,
       count
@@ -86,8 +86,8 @@ ENDCLASS.   "lcl_stage DEFINITION
 CLASS lcl_stage IMPLEMENTATION.
 
   METHOD constructor.
-    mv_branch_name = iv_branch_name.
-    mv_branch_sha1 = iv_branch_sha1.
+    mv_branch_name  = iv_branch_name.
+    mv_branch_sha1  = iv_branch_sha1.
     mv_merge_source = iv_merge_source.
   ENDMETHOD.
 
@@ -103,19 +103,19 @@ CLASS lcl_stage IMPLEMENTATION.
     rv_branch = mv_branch_sha1.
   ENDMETHOD.
 
-*  METHOD lookup.
-*
-*    DATA ls_stage LIKE LINE OF mt_stage.
-*
-*
-*    READ TABLE mt_stage INTO ls_stage
-*      WITH KEY file-path     = iv_path
-*               file-filename = iv_filename.
-*    IF sy-subrc = 0.
-*      rv_method = ls_stage-method.
-*    ENDIF.
-*
-*  ENDMETHOD.        "lookup
+  METHOD lookup.
+
+    DATA ls_stage LIKE LINE OF mt_stage.
+
+
+    READ TABLE mt_stage INTO ls_stage
+      WITH KEY file-path     = iv_path
+               file-filename = iv_filename.
+    IF sy-subrc = 0.
+      rv_method = ls_stage-method.
+    ENDIF.
+
+  ENDMETHOD.        "lookup
 
   METHOD get_all.
     rt_stage = mt_stage.

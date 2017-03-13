@@ -44,9 +44,9 @@ function debugOutput(text, dstID) {
 }
 
 // Create hidden form and submit with sapevent
-function submitSapeventForm(params, action) {
+function submitSapeventForm(params, action, method) {
   var form = document.createElement("form");
-  form.setAttribute("method", "post");
+  form.setAttribute("method", method || "post");
   form.setAttribute("action", "sapevent:" + action);
   
   for(var key in params) {
@@ -248,6 +248,7 @@ StageHelper.prototype.onSearch = function (e) {
   }
 }
 
+// Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
   var td      = row.cells[this.col.name];
   var origTxt = td.innerText; // without tags
@@ -363,3 +364,138 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
     window.scrollTo(0, scrollOffset);
   }
 }
+
+/**********************************************************
+ * Check list wrapper
+ **********************************************************/
+
+function CheckListWrapper(id, cbAction) {
+  this.id         = document.getElementById(id);
+  this.cbAction   = cbAction;
+  this.id.onclick = this.onClick.bind(this);
+}
+
+CheckListWrapper.prototype.onClick = function(e) {
+  // Get nodes
+  var target = event.target || event.srcElement;
+  if (!target) return;
+  if (target.tagName !== "A") { target = target.parentNode; } // icon clicked
+  if (target.tagName !== "A") return;
+  if (target.parentNode.tagName !== "LI") return;
+
+  var nodeA    = target;
+  var nodeLi   = target.parentNode;
+  var nodeIcon = target.children[0];
+  if (!nodeIcon.classList.contains("octicon")) return;
+
+  // Node updates
+  var option   = nodeA.innerText;
+  var oldState = nodeLi.getAttribute("data-check");
+  if (oldState === null) return; // no data-check attribute - non-checkbox
+  var newState = oldState === "X" ? false : true;
+
+  if (newState) {
+    nodeIcon.classList.remove("grey");
+    nodeIcon.classList.add("blue");
+    nodeLi.setAttribute("data-check", "X");
+  } else {
+    nodeIcon.classList.remove("blue");
+    nodeIcon.classList.add("grey");
+    nodeLi.setAttribute("data-check", "");
+  }
+
+  // Action callback
+  this.cbAction(nodeLi.getAttribute("data-aux"), option, newState);
+}
+
+/**********************************************************
+ * Diff page logic
+ **********************************************************/
+
+// Diff helper constructor
+function DiffHelper(params) {
+  this.pageSeed    = params.seed;
+  this.counter     = 0;
+  this.stageAction = params.stageAction;
+
+  // DOM nodes
+  this.dom = {
+    diffList:    document.getElementById(params.ids.diffList),
+    stageButton: document.getElementById(params.ids.stageButton)
+  };
+
+  this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
+  if (!this.repoKey) return; // Unexpected
+
+  // Checklist wrapper
+  if (document.getElementById(params.ids.filterMenu)) {
+    this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
+    this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
+  } 
+
+  // Hijack stage command
+  if (this.dom.stageButton) {
+    this.dom.stageButton.href    = "#";
+    this.dom.stageButton.onclick = this.onStage.bind(this);
+  }
+}
+
+// Action on filter click
+DiffHelper.prototype.onFilter = function(attr, target, state) {
+  this.applyFilter(attr, target, state);
+  this.highlightButton(state);
+};
+
+// Hide/show diff based on params
+DiffHelper.prototype.applyFilter = function (attr, target, state) {
+  this.iterateDiffList(function(div) {
+    if (div.getAttribute("data-"+attr) === target) {
+      div.style.display = state ? "" : "none";
+    }
+  });
+}
+
+// Action on stage -> save visible diffs as state for stage page
+DiffHelper.prototype.onStage = function (e) {
+  if (window.sessionStorage) {
+    var data = this.buildStageCache();
+    window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
+  }
+  var getParams = {key: this.repoKey, seed: this.pageSeed};
+  submitSapeventForm(getParams, this.stageAction, "get");
+}
+
+// Collect visible diffs
+DiffHelper.prototype.buildStageCache = function () {
+  var list = {};
+  this.iterateDiffList(function(div) {
+    var filename = div.getAttribute("data-file");
+    if (!div.style.display && filename) { // No display override - visible !!
+      list[filename] = "A"; // Add
+    }
+  });
+  return list;
+}
+
+// Table iterator
+DiffHelper.prototype.iterateDiffList = function (cb /*, ...*/) {
+  var restArgs = Array.prototype.slice.call(arguments, 1);
+  var diffList = this.dom.diffList;
+
+  for (var i = 0, iN = diffList.children.length; i < iN; i++) {
+    var div = diffList.children[i];
+    if (div.className !== "diff") continue;
+    args = [div].concat(restArgs);
+    cb.apply(this, args); // callback
+  }
+}
+
+// Highlight Filter button if filter is activate
+DiffHelper.prototype.highlightButton = function(state) {
+  this.counter += state ? -1 : 1;
+  if (this.counter > 0) {
+    this.dom.filterButton.classList.add("bgorange");
+  } else {
+    this.dom.filterButton.classList.remove("bgorange");
+  }
+};

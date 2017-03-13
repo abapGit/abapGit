@@ -23,17 +23,17 @@ CLASS lcl_file_status DEFINITION FINAL
 
     CLASS-METHODS:
       calculate_status
-        IMPORTING iv_devclass        TYPE devclass
-                  it_local           TYPE ty_files_item_tt
-                  it_remote          TYPE ty_files_tt
-                  it_cur_state       TYPE ty_file_signatures_tt
-        RETURNING VALUE(rt_results)  TYPE ty_results_tt,
+        IMPORTING iv_devclass       TYPE devclass
+                  it_local          TYPE ty_files_item_tt
+                  it_remote         TYPE ty_files_tt
+                  it_cur_state      TYPE ty_file_signatures_tt
+        RETURNING VALUE(rt_results) TYPE ty_results_tt,
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE ty_results_tt
                   io_dot     TYPE REF TO lcl_dot_abapgit
                   iv_top     TYPE devclass
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
       build_existing
         IMPORTING is_local         TYPE ty_file_item
                   is_remote        TYPE ty_file
@@ -49,9 +49,9 @@ CLASS lcl_file_status DEFINITION FINAL
                   it_state         TYPE ty_file_signatures_ts
         RETURNING VALUE(rs_result) TYPE ty_result,
       identify_object
-        IMPORTING iv_filename      TYPE string
-        EXPORTING es_item          TYPE ty_item
-                  ev_is_xml        TYPE abap_bool.
+        IMPORTING iv_filename TYPE string
+        EXPORTING es_item     TYPE ty_item
+                  ev_is_xml   TYPE abap_bool.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 
@@ -99,10 +99,9 @@ CLASS lcl_file_status IMPLEMENTATION.
         BINARY SEARCH. " Sorted above
 
       IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
-        io_log->add( iv_msgv1 = 'Files for object'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
-                     iv_msgv4 = 'are not placed in the same folder'
+        io_log->add( iv_msg = |Files for object { <ls_res1>-obj_type }{
+                       <ls_res1>-obj_name }are not placed in the same folder|
+                     iv_type = 'W'
                      iv_rc    = '1' ) ##no_text.
       ENDIF.
     ENDLOOP.
@@ -114,9 +113,9 @@ CLASS lcl_file_status IMPLEMENTATION.
                                                    io_dot     = io_dot
                                                    iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
-        io_log->add( iv_msgv1 = 'Package and path does not match for object,'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
+        io_log->add( iv_msg = |Package and path does not match for object, {
+                       <ls_res1>-obj_type } { <ls_res1>-obj_name }|
+                     iv_type = 'W'
                      iv_rc    = '2' ) ##no_text.
       ENDIF.
     ENDLOOP.
@@ -126,16 +125,15 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     LOOP AT lt_res_sort ASSIGNING <ls_res1>.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
-        io_log->add( iv_msgv1 = 'Multiple files with same filename,'
-                     iv_msgv2 = <ls_res1>-filename
-                     iv_rc    = '3' ) ##no_text.
+        io_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
+                     iv_type = 'W'
+                     iv_rc   = '3' ) ##no_text.
       ENDIF.
 
       IF <ls_res1>-filename IS INITIAL.
-        io_log->add( iv_msgv1 = 'Filename is empty for object'
-                     iv_msgv2 = <ls_res1>-obj_type
-                     iv_msgv3 = <ls_res1>-obj_name
-                     iv_rc    = '4' ) ##no_text.
+        io_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
+                     iv_type = 'W'
+                     iv_rc   = '4' ) ##no_text.
       ENDIF.
 
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
@@ -254,9 +252,9 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD identify_object.
 
-    DATA: lv_name   TYPE tadir-obj_name,
-          lv_type   TYPE string,
-          lv_ext    TYPE string.
+    DATA: lv_name TYPE tadir-obj_name,
+          lv_type TYPE string,
+          lv_ext  TYPE string.
 
     " Guess object type and name
     SPLIT to_upper( iv_filename ) AT '.' INTO lv_name lv_type lv_ext.

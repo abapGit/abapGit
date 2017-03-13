@@ -481,10 +481,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF is_supported( is_item ) = abap_false.
       IF NOT io_log IS INITIAL.
-        io_log->add( iv_msgv1 = 'Object type ignored, not supported:'
-                     iv_msgv2 = is_item-obj_type
-                     iv_msgv3 = '-'
-                     iv_msgv4 = is_item-obj_name ) ##no_text.
+        io_log->add( iv_msg = |Object type ignored, not supported: { is_item-obj_type
+                       }-{ is_item-obj_name }|
+                     iv_type = 'E' ).
       ENDIF.
       RETURN.
     ENDIF.

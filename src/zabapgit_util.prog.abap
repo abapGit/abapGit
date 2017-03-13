@@ -444,7 +444,7 @@ CLASS lcl_path IMPLEMENTATION.
           lv_index TYPE i,
           lt_split TYPE TABLE OF string.
 
-" filename | c:\filename | /dir/filename | \\server\filename
+    " filename | c:\filename | /dir/filename | \\server\filename
     IF iv_path CA '/'.
       lv_split = '/'.
     ELSE.
@@ -1051,11 +1051,9 @@ CLASS lcl_log DEFINITION FINAL.
     METHODS:
       add
         IMPORTING
-          iv_msgv1 TYPE csequence
-          iv_msgv2 TYPE csequence OPTIONAL
-          iv_msgv3 TYPE csequence OPTIONAL
-          iv_msgv4 TYPE csequence OPTIONAL
-          iv_rc    TYPE balsort   OPTIONAL,
+          iv_msg  TYPE csequence
+          iv_type TYPE symsgty   DEFAULT 'E'
+          iv_rc   TYPE balsort   OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
       to_html
@@ -1067,7 +1065,13 @@ CLASS lcl_log DEFINITION FINAL.
       show.
 
   PRIVATE SECTION.
-    DATA: mt_log TYPE rs_t_msg.
+    TYPES: BEGIN OF ty_log,
+             msg  TYPE string,
+             type TYPE symsgty,
+             rc   TYPE balsort,
+           END OF ty_log.
+
+    DATA: mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY.
 
 ENDCLASS.
 
@@ -1075,7 +1079,8 @@ CLASS lcl_log IMPLEMENTATION.
 
   METHOD to_html.
 
-    DATA: lv_string TYPE string.
+    DATA: lv_class TYPE string,
+          lv_icon  TYPE string.
 
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
@@ -1086,11 +1091,21 @@ CLASS lcl_log IMPLEMENTATION.
     ENDIF.
 
     LOOP AT mt_log ASSIGNING <ls_log>.
-      CONCATENATE <ls_log>-msgv1 <ls_log>-msgv2 <ls_log>-msgv3 <ls_log>-msgv4
-        INTO lv_string SEPARATED BY space.
-      ro_html->add( '<span class="error">' ).
-      ro_html->add_icon( iv_name = 'alert' iv_class = 'error' ). " warning CSS exists too
-      ro_html->add( lv_string ).
+      CASE <ls_log>-type.
+        WHEN 'W'.
+          lv_icon  = 'alert'.
+          lv_class = 'warning'.
+        WHEN 'E'.
+          lv_icon  = 'flame'.
+          lv_class = 'error'.
+        WHEN OTHERS. " ??? unexpected
+          lv_icon  = 'flame'.
+          lv_class = 'error'.
+      ENDCASE.
+
+      ro_html->add( |<span class="{ lv_class }">| ).
+      ro_html->add_icon( iv_name = lv_icon ).
+      ro_html->add( <ls_log>-msg ).
       ro_html->add( '</span>' ).
     ENDLOOP.
 
@@ -1101,26 +1116,35 @@ CLASS lcl_log IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msgty  = 'W'.
-    <ls_log>-msgid  = '00'.
-    <ls_log>-msgno  = '001'.
-    <ls_log>-msgv1  = iv_msgv1.
-    <ls_log>-msgv2  = iv_msgv2.
-    <ls_log>-msgv3  = iv_msgv3.
-    <ls_log>-msgv4  = iv_msgv4.
-    <ls_log>-alsort = iv_rc. " Error code for unit test, not sure about better field
+    <ls_log>-msg  = iv_msg.
+    <ls_log>-type = iv_type.
+    <ls_log>-rc   = iv_rc.
 
   ENDMETHOD.
 
   METHOD show.
-    CALL FUNCTION 'RSDC_SHOW_MESSAGES_POPUP'
+* only supports showing 4 errors, but I guess this is okay
+* alternatively refactor to use method TO_HTML instead
+
+    DATA: ls_log1 LIKE LINE OF mt_log,
+          ls_log2 LIKE LINE OF mt_log,
+          ls_log3 LIKE LINE OF mt_log,
+          ls_log4 LIKE LINE OF mt_log.
+
+
+    READ TABLE mt_log INDEX 1 INTO ls_log1.
+    READ TABLE mt_log INDEX 1 INTO ls_log2.
+    READ TABLE mt_log INDEX 1 INTO ls_log3.
+    READ TABLE mt_log INDEX 1 INTO ls_log4.
+
+    CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
-        i_t_msg           = mt_log
-        i_txt             = 'Warning'
-        i_with_s_on_empty = abap_false
-        i_one_msg_direct  = abap_false
-        i_one_msg_type_s  = abap_false
-        ##no_text.
+        titel = 'Log'
+        txt1  = ls_log1-msg
+        txt2  = ls_log2-msg
+        txt3  = ls_log3-msg
+        txt4  = ls_log4-msg.
+
   ENDMETHOD.
 
   METHOD count.
@@ -1132,7 +1156,7 @@ CLASS lcl_log IMPLEMENTATION.
   ENDMETHOD.  " clear.
 
   METHOD has_rc.
-    READ TABLE mt_log WITH KEY alsort = iv_rc TRANSPORTING NO FIELDS.
+    READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
   ENDMETHOD. "has_rc
 

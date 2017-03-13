@@ -26,6 +26,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
+                iv_prev_page   TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
@@ -35,8 +36,8 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   lcx_exception.
 
     METHODS get_page_stage
-      IMPORTING iv_key          TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(ri_page)  TYPE REF TO lif_gui_page
+      IMPORTING iv_getdata     TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
       RAISING   lcx_exception.
 
     METHODS get_page_db_by_name
@@ -72,7 +73,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     lv_url = iv_getdata. " TODO refactor
 
     CASE iv_action.
-        " General routing
+        " General PAGE routing
       WHEN gc_action-go_main                          " Go Main page
           OR gc_action-go_explore                     " Go Explore page
           OR gc_action-go_db                          " Go DB util page
@@ -85,11 +86,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_background( lv_key ).
         ev_state = gc_event_state-new_page.
       WHEN gc_action-go_diff.                         " Go Diff page
-        ei_page  = get_page_diff( iv_getdata ).
-        ev_state = gc_event_state-new_page.
-      WHEN gc_action-go_stage.                        " Go Staging page
-        ei_page  = get_page_stage( lv_key ).
+        ei_page  = get_page_diff(
+          iv_getdata   = iv_getdata
+          iv_prev_page = iv_prev_page ).
         ev_state = gc_event_state-new_page_w_bookmark.
+      WHEN gc_action-go_stage.                        " Go Staging page
+        ei_page  = get_page_stage( iv_getdata ).
+        IF iv_prev_page = 'PAGE_DIFF'.
+          ev_state = gc_event_state-new_page.
+        ELSE.
+          ev_state = gc_event_state-new_page_w_bookmark.
+        ENDIF.
       WHEN gc_action-go_branch_overview.              " Go repo branch overview
         ei_page  = get_page_branch_overview( iv_getdata ).
         ev_state = gc_event_state-new_page.
@@ -102,12 +109,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " SAP GUI actions
       WHEN gc_action-jump.                          " Open object editor
-        lcl_html_action_utils=>jump_decode( EXPORTING iv_string   = iv_getdata
-                                            IMPORTING ev_obj_type = ls_item-obj_type
-                                                      ev_obj_name = ls_item-obj_name ).
+        lcl_html_action_utils=>jump_decode(
+          EXPORTING iv_string   = iv_getdata
+          IMPORTING ev_obj_type = ls_item-obj_type
+                    ev_obj_name = ls_item-obj_name ).
         lcl_objects=>jump( ls_item ).
         ev_state = gc_event_state-no_more_act.
-
       WHEN gc_action-jump_pkg.                      " Open SE80
         lcl_services_repo=>open_se80( |{ iv_getdata }| ).
         ev_state = gc_event_state-no_more_act.
@@ -128,7 +135,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_db=>update( ls_db ).
         ev_state = gc_event_state-go_back.
 
-        " Abapgit services actions
+        " ABAPGIT services actions
       WHEN gc_action-abapgit_home.                    " Go abapGit homepage
         lcl_services_abapgit=>open_abapgit_homepage( ).
         ev_state = gc_event_state-no_more_act.
@@ -142,7 +149,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_abapgit=>install_abapgit_pi( ).
         ev_state = gc_event_state-re_render.
 
-        " Repository services actions
+        " REPOSITORY services actions
       WHEN gc_action-repo_newoffline.                 " New offline repo
         lcl_services_repo=>new_offline( ).
         ev_state = gc_event_state-re_render.
@@ -182,7 +189,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_zip=>export_object( ).
         ev_state = gc_event_state-no_more_act.
 
-        " Remote origin manipulations
+        " Remote ORIGIN manipulations
       WHEN gc_action-repo_remote_attach.            " Remote attach
         lcl_services_repo=>remote_attach( lv_key ).
         ev_state = gc_event_state-re_render.
@@ -193,7 +200,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>remote_change( lv_key ).
         ev_state = gc_event_state-re_render.
 
-        " Git actions
+        " GIT actions
       WHEN gc_action-git_pull.                      " GIT Pull
         lcl_services_git=>pull( lv_key ).
         ev_state = gc_event_state-re_render.
@@ -203,10 +210,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-git_branch_create.             " GIT Create new branch
         lcl_services_git=>create_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_delete.             " Delete remote branch
+      WHEN gc_action-git_branch_delete.             " GIT Delete remote branch
         lcl_services_git=>delete_branch( lv_key ).
         ev_state = gc_event_state-re_render.
-      WHEN gc_action-git_branch_switch.             " Switch branch
+      WHEN gc_action-git_branch_switch.             " GIT Switch branch
         lcl_services_git=>switch_branch( lv_key ).
         ev_state = gc_event_state-re_render.
 
@@ -289,9 +296,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key    = lv_key
-        is_file   = ls_file
-        is_object = ls_object.
+        iv_key           = lv_key
+        is_file          = ls_file
+        is_object        = ls_object
+        iv_supress_stage = boolc( iv_prev_page = 'PAGE_STAGE' ).
 
     ri_page = lo_page.
 
@@ -300,17 +308,29 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_stage.
 
     DATA: lo_repo       TYPE REF TO lcl_repo_online,
+          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_seed       TYPE string,
           lo_stage_page TYPE REF TO lcl_gui_page_stage.
 
+    FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
+    IF sy-subrc <> 0. " Not found ? -> just repo key in params
+      lv_key = iv_getdata.
+    ELSE.
+      lcl_html_action_utils=>stage_decode(
+        EXPORTING iv_getdata = iv_getdata
+        IMPORTING ev_key     = lv_key
+                  ev_seed    = lv_seed ).
+    ENDIF.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_app=>repo_srv( )->get( lv_key ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
 
     CREATE OBJECT lo_stage_page
       EXPORTING
-        io_repo         = lo_repo.
+        io_repo = lo_repo
+        iv_seed = lv_seed.
 
     ri_page = lo_stage_page.
 

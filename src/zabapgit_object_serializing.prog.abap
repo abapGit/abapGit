@@ -29,6 +29,8 @@ INCLUDE zabapgit_object_pinf.
 INCLUDE zabapgit_object_prog.
 INCLUDE zabapgit_object_sfbf.
 INCLUDE zabapgit_object_sfbs.
+INCLUDE zabapgit_object_sfpf.
+INCLUDE zabapgit_object_sfpi.
 INCLUDE zabapgit_object_sfsw.
 INCLUDE zabapgit_object_shi3.
 INCLUDE zabapgit_object_shlp.
