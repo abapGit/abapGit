@@ -137,6 +137,14 @@ FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
   ENDIF.
 ENDFORM.                    "package_popup
 
+FORM pull_request_popup TABLES   tt_fields TYPE ty_sval_tt
+                        USING    pv_code TYPE clike
+                        CHANGING cs_error TYPE svale
+                                 cv_show_popup TYPE c
+                        RAISING  lcx_exception ##called ##needed.
+* called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
+ENDFORM.
+
 FORM output.
   DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.

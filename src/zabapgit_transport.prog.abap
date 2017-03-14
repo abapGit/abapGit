@@ -81,13 +81,12 @@ CLASS lcl_transport IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = lcl_transport_popup=>show( ).
-    IF lines( lt_trkorr ) = 0.
+    IF lines( it_transport_headers ) = 0.
       RETURN.
     ENDIF.
 
-    lt_requests = read_requests( lt_trkorr ).
-    lt_tadir = resolve( lt_requests ).
+    lt_requests = read_requests( it_transport_headers ).
+    rt_tadir = resolve( lt_requests ).
   ENDMETHOD.
 
   METHOD find_top_package.
@@ -214,7 +213,7 @@ CLASS lcl_transport_popup IMPLEMENTATION.
         iv_username_pattern    = sy-uname
         iv_via_selscreen       = 'X'
         iv_complete_projects   = ''
-*       is_popup               =
+        "is_popup               = ''
         iv_title               = 'abapGit: Transport Request Selection'
       IMPORTING
         et_requests            = rt_trkorr
@@ -226,5 +225,9 @@ CLASS lcl_transport_popup IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+
+    break copat.
+    "LEAVE TO SCREEN 1001.
+
   ENDMETHOD.
 ENDCLASS.

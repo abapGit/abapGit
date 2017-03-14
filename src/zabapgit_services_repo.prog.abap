@@ -47,6 +47,12 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_package TYPE devclass
       RAISING   lcx_exception.
 
+    CLASS-METHODS transport_to_pull_request
+      IMPORTING
+        iv_repository_key      TYPE lcl_persistence_db=>ty_value
+        is_branch_pull_request TYPE ty_branch_pull_request
+        it_transport_objects   TYPE scts_tadir.
+
 ENDCLASS. "lcl_services_repo
 
 CLASS lcl_services_repo IMPLEMENTATION.
@@ -313,5 +319,57 @@ CLASS lcl_services_repo IMPLEMENTATION.
         with_objectlist = 'X'.
 
   ENDMETHOD.  " open_se80.
+
+
+  METHOD transport_to_pull_request.
+    DATA:
+      lo_repo             TYPE REF TO lcl_repo_online,
+      ls_transport_object LIKE LINE OF it_transport_objects,
+                lt_zip   TYPE ty_files_item_tt,
+                ls_zip like line of lt_zip,
+                lv_branch_name type string.
+
+
+
+break copat.
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
+
+    lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
+        lcl_git_branch_list=>normalize_branch_name( is_branch_pull_request-branch_name ) ).
+
+    ASSERT lv_branch_name CP 'refs/heads/+*'.
+
+    lcl_git_porcelain=>create_branch(
+      io_repo = lo_repo
+      iv_name = lv_branch_name
+      iv_from = lo_repo->get_sha1_local( ) ).
+
+    " automatically switch to new branch
+    lo_repo->set_branch_name( lv_branch_name ).
+    "lo_repo->
+
+    DATA lo_stage TYPE REF TO lcl_stage.
+    CREATE OBJECT lo_stage
+      EXPORTING
+        iv_branch_name = lv_branch_name
+        iv_branch_sha1 = lo_repo->get_sha1_local( ).
+
+    lo_repo->refresh( ).
+    lt_zip = lo_repo->get_files_local( it_filter = it_transport_objects ).
+
+
+    LOOP AT lt_zip INTO ls_zip.
+      lo_stage->add(
+        iv_path       = ls_zip-file-path
+        iv_filename   = ls_zip-file-filename
+        iv_data       = ls_zip-file-data
+      ).
+      endloop.
+*        CATCH lcx_exception.    "
+
+
+
+      "lo_repo->push
+    endmethod.
 
 ENDCLASS. "lcl_services_repo

@@ -62,13 +62,19 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   lcx_exception,
       popup_to_inform
         IMPORTING
-                  titlebar              TYPE clike
-                  text_message          TYPE clike
+                  titlebar     TYPE clike
+                  text_message TYPE clike
         RAISING   lcx_exception,
       popup_to_create_package
-        EXPORTING es_package_data        TYPE scompkdtln
-                  ev_create              TYPE boolean
-        RAISING lcx_exception.
+        EXPORTING es_package_data TYPE scompkdtln
+                  ev_create       TYPE boolean
+        RAISING   lcx_exception,
+      popup_to_create_pull_request
+        IMPORTING it_transport_headers          TYPE trwbo_request_headers
+                  it_transport_objects          TYPE scts_tadir
+        RETURNING VALUE(rs_branch_pull_request) TYPE ty_branch_pull_request
+        RAISING   lcx_exception
+                  lcx_cancel.
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
@@ -543,5 +549,73 @@ CLASS lcl_popups IMPLEMENTATION.
       ev_create = abap_false.
     ENDIF.
   ENDMETHOD.  " popup_to_create_package
+
+  METHOD popup_to_create_pull_request.
+    DATA: lv_returncode          TYPE c,
+          lt_fields              TYPE TABLE OF sval,
+          lv_icon_ok             TYPE icon-name,
+          lv_button_pull_request TYPE svalbutton-buttontext,
+          lv_icon_pull_request   TYPE icon-name,
+          lv_transports_as_text  TYPE string,
+          ls_transport_header    LIKE LINE OF it_transport_headers.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lv_transports_as_text = 'Transport(s)'.
+    LOOP AT it_transport_headers INTO ls_transport_header.
+      CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
+    ENDLOOP.
+
+    "               TAB           FLD     LABEL          DEF  ATTR
+    _add_dialog_fld 'TEXTL'      'LINE'  'Branch name'   lv_transports_as_text  ''.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'  'Commit text'   lv_transports_as_text  ''.
+    _add_dialog_fld 'SAPPARAM'   'SNAME' 'Pull request'  lv_transports_as_text  ''.
+    "_add_dialog_fld 'ABAPTXT255' 'LINE' 'TODO: Tadir Items?'  ''   ''.
+
+    lv_icon_ok             = icon_okay.
+    lv_button_pull_request = 'Create pull request' ##NO_TEXT.
+    lv_icon_pull_request   = icon_import_all_requests.
+
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+      EXPORTING
+        popup_title       = 'Transport to Pull Request'
+        programname       = sy-repid
+        formname          = 'PULL_REQUEST_POPUP'
+        ok_pushbuttontext = ''
+        icon_ok_push      = ''
+        first_pushbutton  = lv_button_pull_request
+        icon_button_1     = lv_icon_pull_request
+        second_pushbutton = ''
+        icon_button_2     = ''
+      IMPORTING
+        returncode        = lv_returncode
+      TABLES
+        fields            = lt_fields
+      EXCEPTIONS
+        error_in_fields   = 1
+        OTHERS            = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_returncode = 'A'.
+      RAISE exception type lcx_cancel.
+    ENDIF.
+
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rs_branch_pull_request-branch_name = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rs_branch_pull_request-commit_text = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rs_branch_pull_request-pull_request_title = <ls_field>-value.
+
+
+  ENDMETHOD.
 
 ENDCLASS.

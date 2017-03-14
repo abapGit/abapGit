@@ -140,6 +140,13 @@ TYPES: BEGIN OF ty_sotr,
 
 TYPES: ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY.
 
+TYPES:
+  BEGIN OF ty_branch_pull_request,
+    branch_name        TYPE string,
+    commit_text        TYPE string,
+    pull_request_title TYPE string,
+  END OF ty_branch_pull_request.
+
 CONSTANTS: BEGIN OF gc_state, " https://git-scm.com/docs/git-status
              unchanged TYPE char1 VALUE '',
              added     TYPE char1 VALUE 'A',

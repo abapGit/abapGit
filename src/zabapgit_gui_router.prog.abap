@@ -64,12 +64,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: lv_url               TYPE string,
-          lv_key               TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_db                TYPE lcl_persistence_db=>ty_content,
-          ls_item              TYPE ty_item,
-          lt_transport_headers TYPE trwbo_request_headers,
-          lt_tadir             TYPE scts_tadir.
+    DATA: lv_url                 TYPE string,
+          lv_key                 TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_db                  TYPE lcl_persistence_db=>ty_content,
+          ls_item                TYPE ty_item,
+          lt_transport_headers   TYPE trwbo_request_headers,
+          lt_tadir               TYPE scts_tadir,
+          ls_branch_pull_request TYPE ty_branch_pull_request.
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor
@@ -176,7 +177,15 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-repo_transport_to_pull_reqst.
         lt_transport_headers = lcl_transport_popup=>show( ).
         lt_tadir = lcl_transport=>to_tadir( lt_transport_headers ).
-        "lcl_services_repo=>transport_to_pull_request( lv_key ).
+        ls_branch_pull_request = lcl_popups=>popup_to_create_pull_request(
+          it_transport_headers = lt_transport_headers
+          it_transport_objects = lt_tadir
+        ).
+        lcl_services_repo=>transport_to_pull_request(
+          iv_repository_key      = lv_key
+          is_branch_pull_request = ls_branch_pull_request
+          it_transport_objects   = lt_tadir
+        ).
         ev_state = gc_event_state-re_render.
 
         " ZIP services actions
