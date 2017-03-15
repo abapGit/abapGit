@@ -574,11 +574,11 @@ CLASS lcl_popups IMPLEMENTATION.
     lv_button_transport = 'Transport(s)->Branch' ##NO_TEXT.
     lv_icon_transport   = icon_import_all_requests.
 
-    call FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
       EXPORTING
         popup_title       = 'Transport to new Branch'
         programname       = sy-repid
-        formname          = 'PULL_REQUEST_POPUP'
+        formname          = 'BRANCH_TO_TRANSPORT_POPUP'
         ok_pushbuttontext = ''
         icon_ok_push      = ''
         first_pushbutton  = lv_button_transport
