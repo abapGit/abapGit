@@ -225,9 +225,5 @@ CLASS lcl_transport_popup IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
-
-    break copat.
-    "LEAVE TO SCREEN 1001.
-
   ENDMETHOD.
 ENDCLASS.

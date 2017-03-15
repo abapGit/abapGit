@@ -47,11 +47,11 @@ CLASS lcl_services_repo DEFINITION FINAL.
       IMPORTING iv_package TYPE devclass
       RAISING   lcx_exception.
 
-    CLASS-METHODS transport_to_pull_request
-      IMPORTING
-        iv_repository_key      TYPE lcl_persistence_db=>ty_value
-        is_branch_pull_request TYPE ty_branch_pull_request
-        it_transport_objects   TYPE scts_tadir.
+    CLASS-METHODS transport_to_branch
+      IMPORTING iv_repository_key      TYPE lcl_persistence_db=>ty_value
+                is_transport_to_branch TYPE ty_transport_to_branch
+                it_transport_objects   TYPE scts_tadir
+      RAISING   lcx_exception.
 
 ENDCLASS. "lcl_services_repo
 
@@ -321,77 +321,17 @@ CLASS lcl_services_repo IMPLEMENTATION.
   ENDMETHOD.  " open_se80.
 
 
-  METHOD transport_to_pull_request.
+  METHOD transport_to_branch.
     DATA:
-      lo_repo             TYPE REF TO lcl_repo_online,
-      ls_transport_object LIKE LINE OF it_transport_objects,
-      lt_items            TYPE ty_files_item_tt,
-      ls_file             LIKE LINE OF lt_items,
-      ls_item             TYPE string,
-      lv_branch_name      TYPE string,
-      ls_comment          TYPE ty_comment.
+      lo_repository          TYPE REF TO lcl_repo_online,
+      lo_transport_to_branch TYPE REF TO lcl_transport_to_branch.
 
-    BREAK copat.
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
-
-    lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
-        lcl_git_branch_list=>normalize_branch_name( is_branch_pull_request-branch_name ) ).
-
-    ASSERT lv_branch_name CP 'refs/heads/+*'.
-
-    lcl_git_porcelain=>create_branch(
-      io_repo = lo_repo
-      iv_name = lv_branch_name
-      iv_from = lo_repo->get_sha1_local( ) ).
-
-    lo_repo->set_branch_name( lv_branch_name ).
-
-    DATA lo_stage TYPE REF TO lcl_stage.
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = lv_branch_name
-        iv_branch_sha1 = lo_repo->get_sha1_remote( ).
-
-    DATA:         ls_stage_files   TYPE ty_stage_files.
-
-
-    ls_stage_files = lcl_stage_logic=>get( lo_repo ).
-
-    LOOP AT ls_stage_files-local INTO ls_file.
-      lo_stage->add(
-        iv_path       = ls_file-file-path
-        iv_filename   = ls_file-file-filename
-        iv_data       = ls_file-file-data
-      ).
-    ENDLOOP.
-
-    DATA ls_remote_file LIKE line of ls_stage_files-remote.
-
-    LOOP AT ls_stage_files-remote INTO ls_remote_file.
-      lo_stage->rm(
-        iv_path       = ls_remote_file-path
-        iv_filename   = ls_remote_file-filename
-      ).
-    endloop.
-*        CATCH lcx_exception.    "
-
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_stage_files-local.
-
-    READ TABLE ls_stage_files-local INDEX 1 ASSIGNING <ls_local>.
-    IF sy-subrc <> 0.
-      EXIT.
-    ENDIF.
-
-    CLEAR ls_comment.
-    ls_comment-committer-name  = lcl_objects=>changed_by( <ls_local>-item ).
-    ls_comment-committer-email = |{ ls_comment-committer-name }@localhost|.
-    ls_comment-comment        = is_branch_pull_request-commit_text.
-
-    lo_repo->push( is_comment = ls_comment
-                   io_stage   = lo_stage ).
-
-
-    "lo_repo->push
+    lo_repository ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
+    CREATE OBJECT lo_transport_to_branch.
+    lo_transport_to_branch->create(
+      io_repository          = lo_repository
+      is_transport_to_branch = is_transport_to_branch
+      it_transport_objects   = it_transport_objects ).
   ENDMETHOD.
 
 ENDCLASS. "lcl_services_repo
