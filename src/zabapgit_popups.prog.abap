@@ -569,7 +569,6 @@ CLASS lcl_popups IMPLEMENTATION.
     "               TAB           FLD     LABEL          DEF  ATTR
     _add_dialog_fld 'TEXTL'      'LINE'  'Branch name'   lv_transports_as_text  ''.
     _add_dialog_fld 'ABAPTXT255' 'LINE'  'Commit text'   lv_transports_as_text  ''.
-    "_add_dialog_fld 'ABAPTXT255' 'LINE' 'TODO: Tadir Items?'  ''   ''.
 
     lv_icon_ok          = icon_okay.
     lv_button_transport = 'Transport(s)->Branch' ##NO_TEXT.
