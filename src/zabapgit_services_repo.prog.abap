@@ -325,13 +325,13 @@ CLASS lcl_services_repo IMPLEMENTATION.
     DATA:
       lo_repo             TYPE REF TO lcl_repo_online,
       ls_transport_object LIKE LINE OF it_transport_objects,
-                lt_zip   TYPE ty_files_item_tt,
-                ls_zip like line of lt_zip,
-                lv_branch_name type string.
+      lt_items            TYPE ty_files_item_tt,
+      ls_file             LIKE LINE OF lt_items,
+      ls_item             TYPE string,
+      lv_branch_name      TYPE string,
+      ls_comment          TYPE ty_comment.
 
-
-
-break copat.
+    BREAK copat.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
@@ -344,32 +344,54 @@ break copat.
       iv_name = lv_branch_name
       iv_from = lo_repo->get_sha1_local( ) ).
 
-    " automatically switch to new branch
     lo_repo->set_branch_name( lv_branch_name ).
-    "lo_repo->
 
     DATA lo_stage TYPE REF TO lcl_stage.
     CREATE OBJECT lo_stage
       EXPORTING
         iv_branch_name = lv_branch_name
-        iv_branch_sha1 = lo_repo->get_sha1_local( ).
+        iv_branch_sha1 = lo_repo->get_sha1_remote( ).
 
-    lo_repo->refresh( ).
-    lt_zip = lo_repo->get_files_local( it_filter = it_transport_objects ).
+    DATA:         ls_stage_files   TYPE ty_stage_files.
 
 
-    LOOP AT lt_zip INTO ls_zip.
+    ls_stage_files = lcl_stage_logic=>get( lo_repo ).
+
+    LOOP AT ls_stage_files-local INTO ls_file.
       lo_stage->add(
-        iv_path       = ls_zip-file-path
-        iv_filename   = ls_zip-file-filename
-        iv_data       = ls_zip-file-data
+        iv_path       = ls_file-file-path
+        iv_filename   = ls_file-file-filename
+        iv_data       = ls_file-file-data
       ).
-      endloop.
+    ENDLOOP.
+
+    DATA ls_remote_file LIKE line of ls_stage_files-remote.
+
+    LOOP AT ls_stage_files-remote INTO ls_remote_file.
+      lo_stage->rm(
+        iv_path       = ls_remote_file-path
+        iv_filename   = ls_remote_file-filename
+      ).
+    endloop.
 *        CATCH lcx_exception.    "
 
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_stage_files-local.
+
+    READ TABLE ls_stage_files-local INDEX 1 ASSIGNING <ls_local>.
+    IF sy-subrc <> 0.
+      EXIT.
+    ENDIF.
+
+    CLEAR ls_comment.
+    ls_comment-committer-name  = lcl_objects=>changed_by( <ls_local>-item ).
+    ls_comment-committer-email = |{ ls_comment-committer-name }@localhost|.
+    ls_comment-comment        = is_branch_pull_request-commit_text.
+
+    lo_repo->push( is_comment = ls_comment
+                   io_stage   = lo_stage ).
 
 
-      "lo_repo->push
-    endmethod.
+    "lo_repo->push
+  ENDMETHOD.
 
 ENDCLASS. "lcl_services_repo
