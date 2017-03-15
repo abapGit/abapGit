@@ -11,7 +11,7 @@ CLASS lcl_transport_to_branch DEFINITION.
         RAISING   lcx_exception.
   PRIVATE SECTION.
 
-    METHODS craete_new_branch
+    METHODS create_new_branch
       IMPORTING
         io_repository  TYPE REF TO lcl_repo_online
         iv_branch_name TYPE string
@@ -43,12 +43,13 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
       lv_branch_name      TYPE string,
       ls_comment          TYPE ty_comment,
       lo_stage            TYPE REF TO lcl_stage,
-      ls_stage_objects    TYPE ty_stage_files.
+      ls_stage_objects    TYPE ty_stage_files,
+      ls_branch_to_delete TYPE lcl_git_branch_list=>ty_git_branch.
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
         lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
 
-    craete_new_branch(
+    create_new_branch(
       io_repository  = io_repository
       iv_branch_name = lv_branch_name ).
 
@@ -77,9 +78,7 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
                          io_stage   = lo_stage ).
   ENDMETHOD.
 
-
-  METHOD craete_new_branch.
-
+  METHOD create_new_branch.
     ASSERT iv_branch_name CP 'refs/heads/+*'.
     TRY.
         lcl_git_porcelain=>create_branch(
@@ -91,7 +90,6 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
       CATCH lcx_exception.
         lcx_exception=>raise( 'Error when creating new branch').
     ENDTRY.
-
   ENDMETHOD.
 
 
@@ -110,6 +108,9 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
             iv_filename   = ls_local_file-file-filename
             iv_data       = ls_local_file-file-data ).
         ENDLOOP.
+        IF sy-subrc = 4.
+          lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
+        ENDIF.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
