@@ -557,7 +557,10 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     APPEND cl_oo_classname_service=>get_prisec_name( lv_class_name ) TO rt_includes.
     APPEND cl_oo_classname_service=>get_classpool_name( lv_class_name ) TO rt_includes.
     APPEND cl_oo_classname_service=>get_ct_name( lv_class_name ) TO rt_includes.
-    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
+
+* skip the CS include, as it is sometimes generated on the fly instead of
+* when the methods are changed
+*    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
 
     lt_methods = cl_oo_classname_service=>get_all_method_includes( lv_class_name ).
     LOOP AT lt_methods ASSIGNING <ls_method>.

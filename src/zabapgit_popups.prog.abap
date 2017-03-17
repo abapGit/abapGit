@@ -62,13 +62,24 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   lcx_exception,
       popup_to_inform
         IMPORTING
-                  titlebar              TYPE clike
-                  text_message          TYPE clike
+                  titlebar     TYPE clike
+                  text_message TYPE clike
         RAISING   lcx_exception,
       popup_to_create_package
-        EXPORTING es_package_data        TYPE scompkdtln
-                  ev_create              TYPE boolean
-        RAISING lcx_exception.
+        EXPORTING es_package_data TYPE scompkdtln
+                  ev_create       TYPE boolean
+        RAISING   lcx_exception,
+      popup_to_create_transp_branch
+        IMPORTING it_transport_headers       TYPE trwbo_request_headers
+                  it_transport_objects       TYPE scts_tadir
+        RETURNING VALUE(rs_transport_branch) TYPE ty_transport_to_branch
+        RAISING   lcx_exception
+                  lcx_cancel,
+      popup_to_select_transports
+        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
+  PRIVATE SECTION.
+
+
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
@@ -543,5 +554,93 @@ CLASS lcl_popups IMPLEMENTATION.
       ev_create = abap_false.
     ENDIF.
   ENDMETHOD.  " popup_to_create_package
+
+  METHOD popup_to_select_transports.
+    DATA: lrs_trfunction TYPE trsel_trs_function,
+          lv_types       TYPE string,
+          ls_ranges      TYPE trsel_ts_ranges.
+
+    " Fill all request types
+    lv_types = 'KWTCOEMPDRSXQFG'.
+    lrs_trfunction-sign   = 'I'.
+    lrs_trfunction-option = 'EQ'.
+    WHILE lv_types NE space.
+      lrs_trfunction-low = lv_types(1).
+      APPEND lrs_trfunction TO ls_ranges-request_funcs.
+      SHIFT lv_types.
+    ENDWHILE.
+
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = sy-uname
+        iv_via_selscreen       = 'X'
+        iv_complete_projects   = ''
+        "is_popup               = ''
+        iv_title               = 'abapGit: Transport Request Selection'
+      IMPORTING
+        et_requests            = rt_trkorr
+      CHANGING
+        cs_ranges              = ls_ranges
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD popup_to_create_transp_branch.
+    DATA: lv_returncode         TYPE c,
+          lt_fields             TYPE TABLE OF sval,
+          lv_icon_ok            TYPE icon-name,
+          lv_button_transport   TYPE svalbutton-buttontext,
+          lv_icon_transport     TYPE icon-name,
+          lv_transports_as_text TYPE string,
+          ls_transport_header   LIKE LINE OF it_transport_headers.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    lv_transports_as_text = 'Transport(s)'.
+    LOOP AT it_transport_headers INTO ls_transport_header.
+      CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
+    ENDLOOP.
+
+    "               TAB           FLD     LABEL          DEF  ATTR
+    _add_dialog_fld 'TEXTL'      'LINE'  'Branch name'   lv_transports_as_text  ''.
+    _add_dialog_fld 'ABAPTXT255' 'LINE'  'Commit text'   lv_transports_as_text  ''.
+
+    lv_icon_ok          = icon_okay.
+    lv_button_transport = 'Transport(s)->Branch' ##NO_TEXT.
+    lv_icon_transport   = icon_import_all_requests.
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+*       no_value_check  = SPACE    " Deactivates data type check
+        popup_title     = 'Transport to new Branch'
+*       start_column    = '5'    " Start column of the dialog box
+*       start_row       = '5'    " Start line of the dialog box
+      IMPORTING
+        returncode      = lv_returncode
+      TABLES
+        fields          = lt_fields  " Table fields, values and attributes
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2.
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_returncode = 'A'.
+      RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rs_transport_branch-branch_name = <ls_field>-value.
+
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    rs_transport_branch-commit_text = <ls_field>-value.
+  ENDMETHOD.
 
 ENDCLASS.
