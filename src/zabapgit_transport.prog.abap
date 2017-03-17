@@ -1,13 +1,6 @@
 *&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_TRANSPORT
 *&---------------------------------------------------------------------*
-CLASS lcl_transport_popup DEFINITION.
-  PUBLIC SECTION.
-    CLASS-METHODS:
-      show
-        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
-ENDCLASS.
-
 CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -45,7 +38,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = lcl_transport_popup=>show( ).
+    lt_trkorr = lcl_popups=>popup_to_select_transports( ).
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -190,40 +183,140 @@ CLASS lcl_transport IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_tadir COMPARING object obj_name.
     DELETE rt_tadir WHERE table_line IS INITIAL.
   ENDMETHOD.
-
 ENDCLASS.
-CLASS lcl_transport_popup IMPLEMENTATION.
-  METHOD show.
-    DATA: lrs_trfunction TYPE trsel_trs_function,
-          lv_types       TYPE string,
-          ls_ranges      TYPE trsel_ts_ranges.
 
-    " Fill all request types
-    lv_types = 'KWTCOEMPDRSXQFG'.
-    lrs_trfunction-sign   = 'I'.
-    lrs_trfunction-option = 'EQ'.
-    WHILE lv_types NE space.
-      lrs_trfunction-low = lv_types(1).
-      APPEND lrs_trfunction TO ls_ranges-request_funcs.
-      SHIFT lv_types.
-    ENDWHILE.
+CLASS lcl_transport_to_branch DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      create
+        IMPORTING io_repository          TYPE REF TO lcl_repo_online
+                  is_transport_to_branch TYPE ty_transport_to_branch
+                  it_transport_objects   TYPE scts_tadir
+        RAISING   lcx_exception.
+  PRIVATE SECTION.
 
-    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
-      EXPORTING
-        iv_username_pattern    = sy-uname
-        iv_via_selscreen       = 'X'
-        iv_complete_projects   = ''
-        "is_popup               = ''
-        iv_title               = 'abapGit: Transport Request Selection'
+    METHODS create_new_branch
       IMPORTING
-        et_requests            = rt_trkorr
-      CHANGING
-        cs_ranges              = ls_ranges
-      EXCEPTIONS
-        action_aborted_by_user = 1
-        OTHERS                 = 2.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+        io_repository  TYPE REF TO lcl_repo_online
+        iv_branch_name TYPE string
+      RAISING
+        lcx_exception.
+    METHODS generate_commit_message
+      IMPORTING
+        is_transport_to_branch TYPE ty_transport_to_branch
+      RETURNING
+        VALUE(rs_comment)      TYPE ty_comment.
+    METHODS stage_transport_objects
+      IMPORTING
+        it_transport_objects TYPE scts_tadir
+        io_stage             TYPE REF TO lcl_stage
+        is_stage_objects     TYPE ty_stage_files
+        it_object_statuses   TYPE ty_results_tt
+      RAISING
+        lcx_exception.
+ENDCLASS.
+
+CLASS lcl_transport_to_branch IMPLEMENTATION.
+
+  METHOD create.
+    DATA:
+      ls_transport_object TYPE LINE OF scts_tadir,
+      lt_items            TYPE ty_files_item_tt,
+      ls_local_file       TYPE LINE OF ty_files_item_tt,
+      ls_remote_file      TYPE LINE OF ty_files_tt,
+      ls_item             TYPE string,
+      lv_branch_name      TYPE string,
+      ls_comment          TYPE ty_comment,
+      lo_stage            TYPE REF TO lcl_stage,
+      ls_stage_objects    TYPE ty_stage_files,
+      lt_object_statuses  TYPE ty_results_tt,
+      ls_object_status    TYPE LINE OF ty_results_tt.
+
+    lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
+        lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
+
+    create_new_branch(
+      io_repository  = io_repository
+      iv_branch_name = lv_branch_name ).
+
+    CREATE OBJECT lo_stage
+      EXPORTING
+        iv_branch_name = lv_branch_name
+        iv_branch_sha1 = io_repository->get_sha1_remote( ).
+
+    ls_stage_objects = lcl_stage_logic=>get( io_repository ).
+
+    lt_object_statuses = io_repository->status( ).
+
+    stage_transport_objects(
+       it_transport_objects = it_transport_objects
+       io_stage             = lo_stage
+       is_stage_objects     = ls_stage_objects
+       it_object_statuses   = lt_object_statuses ).
+
+    ls_comment = generate_commit_message( is_transport_to_branch ).
+
+    io_repository->push( is_comment = ls_comment
+                         io_stage   = lo_stage ).
+  ENDMETHOD.
+
+  METHOD create_new_branch.
+    ASSERT iv_branch_name CP 'refs/heads/+*'.
+    TRY.
+        lcl_git_porcelain=>create_branch(
+          io_repo = io_repository
+          iv_name = iv_branch_name
+          iv_from = io_repository->get_sha1_local( ) ).
+
+        io_repository->set_branch_name( iv_branch_name ).
+      CATCH lcx_exception.
+        lcx_exception=>raise( 'Error when creating new branch').
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD generate_commit_message.
+    rs_comment-committer-name  = sy-uname.
+    rs_comment-committer-email = |{ rs_comment-committer-name }@localhost|.
+    rs_comment-comment         = is_transport_to_branch-commit_text.
+  ENDMETHOD.
+
+
+  METHOD stage_transport_objects.
+
+    DATA ls_transport_object TYPE tadir.
+    DATA ls_local_file TYPE ty_file_item.
+    DATA ls_object_status TYPE ty_result.
+
+    LOOP AT it_transport_objects INTO ls_transport_object.
+      READ TABLE it_object_statuses INTO ls_object_status
+        WITH KEY obj_name = ls_transport_object-obj_name
+                 obj_type = ls_transport_object-object.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
+      ENDIF.
+
+      CASE ls_object_status-lstate.
+        WHEN gc_state-added OR gc_state-modified.
+          ASSERT ls_transport_object-delflag = abap_false.
+
+          READ TABLE is_stage_objects-local
+                INTO ls_local_file
+            WITH KEY item-obj_name = ls_transport_object-obj_name
+                     item-obj_type = ls_transport_object-object.
+          IF sy-subrc <> 0.
+            lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
+          ENDIF.
+
+          io_stage->add(
+            iv_path     = ls_local_file-file-path
+            iv_filename = ls_local_file-file-filename
+            iv_data     = ls_local_file-file-data ).
+        WHEN gc_state-deleted.
+          ASSERT ls_transport_object-delflag = abap_true.
+          io_stage->rm(
+            iv_path     = ls_object_status-path
+            iv_filename = ls_object_status-filename ).
+      ENDCASE.
+    ENDLOOP.
   ENDMETHOD.
 ENDCLASS.

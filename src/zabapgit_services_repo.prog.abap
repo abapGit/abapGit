@@ -48,10 +48,8 @@ CLASS lcl_services_repo DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS transport_to_branch
-      IMPORTING iv_repository_key      TYPE lcl_persistence_db=>ty_value
-                is_transport_to_branch TYPE ty_transport_to_branch
-                it_transport_objects   TYPE scts_tadir
-      RAISING   lcx_exception.
+      IMPORTING iv_repository_key TYPE lcl_persistence_db=>ty_value
+      RAISING   lcx_exception lcx_cancel.
 
 ENDCLASS. "lcl_services_repo
 
@@ -324,14 +322,27 @@ CLASS lcl_services_repo IMPLEMENTATION.
   METHOD transport_to_branch.
     DATA:
       lo_repository          TYPE REF TO lcl_repo_online,
-      lo_transport_to_branch TYPE REF TO lcl_transport_to_branch.
+      lo_transport_to_branch TYPE REF TO lcl_transport_to_branch,
+      lt_transport_headers   TYPE trwbo_request_headers,
+      lt_transport_objects               TYPE scts_tadir,
+      ls_transport_to_branch TYPE ty_transport_to_branch.
 
     lo_repository ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
+
+    lt_transport_headers = lcl_popups=>popup_to_select_transports( ).
+    lt_transport_objects = lcl_transport=>to_tadir( lt_transport_headers ).
+    IF lt_transport_objects IS INITIAL.
+      lcx_exception=>raise( 'Canceled or List of objects is empty ' ).
+    ENDIF.
+    ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(
+      it_transport_headers = lt_transport_headers
+      it_transport_objects = lt_transport_objects ).
+
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(
       io_repository          = lo_repository
-      is_transport_to_branch = is_transport_to_branch
-      it_transport_objects   = it_transport_objects ).
+      is_transport_to_branch = ls_transport_to_branch
+      it_transport_objects   = lt_transport_objects ).
   ENDMETHOD.
 
 ENDCLASS. "lcl_services_repo

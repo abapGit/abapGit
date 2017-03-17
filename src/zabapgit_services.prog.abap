@@ -3,7 +3,6 @@
 *&---------------------------------------------------------------------*
 
 INCLUDE zabapgit_services_git.
-INCLUDE zabapgit_services_trans_branch.
 INCLUDE zabapgit_services_repo.
 INCLUDE zabapgit_services_abapgit.
 INCLUDE zabapgit_services_db.

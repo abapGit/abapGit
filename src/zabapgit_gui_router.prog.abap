@@ -67,10 +67,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lv_url                 TYPE string,
           lv_key                 TYPE lcl_persistence_repo=>ty_repo-key,
           ls_db                  TYPE lcl_persistence_db=>ty_content,
-          ls_item                TYPE ty_item,
-          lt_transport_headers   TYPE trwbo_request_headers,
-          lt_tadir               TYPE scts_tadir,
-          ls_transport_to_branch TYPE ty_transport_to_branch.
+          ls_item                TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor
@@ -175,20 +172,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>toggle_favorite( lv_key ).
         ev_state = gc_event_state-re_render.
       WHEN gc_action-repo_transport_to_branch.
+        lcl_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
         ev_state = gc_event_state-re_render.
-
-        lt_transport_headers = lcl_transport_popup=>show( ).
-        lt_tadir = lcl_transport=>to_tadir( lt_transport_headers ).
-        IF lt_tadir IS INITIAL.
-          lcx_exception=>raise( 'Canceled or List of objects is empty ' ).
-        ENDIF.
-        ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(
-          it_transport_headers = lt_transport_headers
-          it_transport_objects = lt_tadir ).
-        lcl_services_repo=>transport_to_branch(
-          iv_repository_key      = lv_key
-          is_transport_to_branch = ls_transport_to_branch
-          it_transport_objects   = lt_tadir ).
 
         " ZIP services actions
       WHEN gc_action-zip_import.                      " Import repo from ZIP
