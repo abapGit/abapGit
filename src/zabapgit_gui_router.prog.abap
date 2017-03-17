@@ -64,10 +64,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD on_event.
 
-    DATA: lv_url                 TYPE string,
-          lv_key                 TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_db                  TYPE lcl_persistence_db=>ty_content,
-          ls_item                TYPE ty_item.
+    DATA: lv_url  TYPE string,
+          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          ls_db   TYPE lcl_persistence_db=>ty_content,
+          ls_item TYPE ty_item.
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor

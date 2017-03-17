@@ -316,6 +316,8 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
           io_stage->rm(
             iv_path     = ls_object_status-path
             iv_filename = ls_object_status-filename ).
+        WHEN OTHERS.
+          ASSERT 0 = 1. "Unexpected state
       ENDCASE.
     ENDLOOP.
   ENDMETHOD.
