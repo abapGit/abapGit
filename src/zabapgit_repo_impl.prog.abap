@@ -491,7 +491,9 @@ CLASS lcl_repo IMPLEMENTATION.
 
       " Check if requirements are met
       lt_requirements = lo_dot_abapgit->get_data( )-requirements.
-      lcl_requirement_helper=>check_requirements( lt_requirements ).
+      IF lt_requirements IS NOT INITIAL.
+        lcl_requirement_helper=>check_requirements( lt_requirements ).
+      ENDIF.
     ENDIF.
 
     lt_updated_files = lcl_objects=>deserialize( me ).
