@@ -142,6 +142,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
   METHOD to_xml.
 
     CALL TRANSFORMATION id
+      OPTIONS initial_components = 'suppress'
       SOURCE data = is_data
       RESULT XML rv_xml.
 
