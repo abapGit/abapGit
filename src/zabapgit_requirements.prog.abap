@@ -133,24 +133,19 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD show_requirement_popup.
-    CONSTANTS: lc_color_column_name TYPE lvc_fname VALUE 'COLOR'.
-    DATA: lo_alv              TYPE REF TO cl_salv_table,
-          lo_column           TYPE REF TO cl_salv_column,
-          lr_colored_table    TYPE REF TO data,
-          lo_tab_descr        TYPE REF TO cl_abap_tabledescr,
-          lo_struct_descr     TYPE REF TO cl_abap_structdescr,
-          lo_enh_struct_descr TYPE REF TO cl_abap_structdescr,
-          lo_enh_tab_descr    TYPE REF TO cl_abap_tabledescr,
-          lt_comps            TYPE cl_abap_structdescr=>component_table,
-          lt_color_neg        TYPE lvc_t_scol,
-          lt_color_pos        TYPE lvc_t_scol,
-          ls_color            TYPE lvc_s_scol,
-          lx_ex               TYPE REF TO cx_root.
-    FIELD-SYMBOLS: <ls_comp>    TYPE abap_componentdescr,
-                   <lt_pointer> TYPE STANDARD TABLE,
-                   <lg_line>    TYPE data,
-                   <lt_color>   TYPE lvc_t_scol,
-                   <lv_met>     TYPE abap_bool.
+    TYPES: BEGIN OF lty_color_line,
+             color TYPE lvc_t_scol.
+        INCLUDE TYPE gty_status.
+    TYPES: END OF lty_color_line,
+    lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+    DATA: lo_alv         TYPE REF TO cl_salv_table,
+          lo_column      TYPE REF TO cl_salv_column,
+          lt_color_table TYPE lty_color_tab,
+          lt_color_neg   TYPE lvc_t_scol,
+          lt_color_pos   TYPE lvc_t_scol,
+          ls_color       TYPE lvc_s_scol,
+          lx_ex          TYPE REF TO cx_root.
+    FIELD-SYMBOLS: <ls_line> TYPE lty_color_line.
 
     ls_color-color-col = col_negative.
     APPEND ls_color TO lt_color_neg.
@@ -160,47 +155,28 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
     CLEAR ls_color.
 
-    lo_tab_descr ?= cl_abap_typedescr=>describe_by_data( it_requirements ).
-    lo_struct_descr ?= lo_tab_descr->get_table_line_type( ).
-    lt_comps = lo_struct_descr->get_components( ).
-    APPEND INITIAL LINE TO lt_comps ASSIGNING <ls_comp>.
-    <ls_comp>-name = lc_color_column_name.
-    <ls_comp>-type ?= cl_abap_typedescr=>describe_by_name( 'LVC_T_SCOL' ).
-    lo_enh_struct_descr = cl_abap_structdescr=>get( lt_comps ).
-    lo_enh_tab_descr = cl_abap_tabledescr=>get( lo_enh_struct_descr ).
+    MOVE-CORRESPONDING it_requirements TO lt_color_table.
 
-    CREATE DATA lr_colored_table TYPE HANDLE lo_enh_tab_descr.
-    ASSERT lr_colored_table IS BOUND.
-    ASSIGN lr_colored_table->* TO <lt_pointer>.
-    ASSERT <lt_pointer> IS ASSIGNED.
-
-    MOVE-CORRESPONDING it_requirements TO <lt_pointer>.
-
-    LOOP AT <lt_pointer> ASSIGNING <lg_line>.
-      ASSIGN COMPONENT 'MET' OF STRUCTURE <lg_line> TO <lv_met>.
-      ASSERT <lv_met> IS ASSIGNED.
-      ASSIGN COMPONENT lc_color_column_name OF STRUCTURE <lg_line> TO <lt_color>.
-      ASSERT <lt_color> IS ASSIGNED.
-      IF <lv_met> = abap_false.
-        <lt_color> = lt_color_neg.
+    LOOP AT lt_color_table ASSIGNING <ls_line>.
+      IF <ls_line>-met = abap_false.
+        <ls_line>-color = lt_color_neg.
       ELSE.
-        <lt_color> = lt_color_pos.
+        <ls_line>-color = lt_color_pos.
       ENDIF.
-      UNASSIGN: <lt_color>, <lv_met>.
     ENDLOOP.
-    UNASSIGN <lg_line>.
+    UNASSIGN <ls_line>.
 
     TRY.
         cl_salv_table=>factory(
           IMPORTING
             r_salv_table   = lo_alv
           CHANGING
-            t_table        = <lt_pointer>
+            t_table        = lt_color_table
         ).
 
         lo_alv->get_columns(:
           )->get_column( 'MET' )->set_short_text( 'Met' ),
-          )->set_color_column( lc_color_column_name ),
+          )->set_color_column( 'COLOR' ),
           )->set_optimize( ),
         ).
 
