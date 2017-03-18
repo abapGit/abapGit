@@ -168,12 +168,8 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
     UNASSIGN <ls_line>.
 
     TRY.
-        cl_salv_table=>factory(
-          IMPORTING
-            r_salv_table   = lo_alv
-          CHANGING
-            t_table        = lt_color_table
-        ).
+        cl_salv_table=>factory( IMPORTING r_salv_table = lo_alv
+                                CHANGING t_table       = lt_color_table ).
 
         lo_columns = lo_alv->get_columns( ).
         lo_columns->get_column( 'MET' )->set_short_text( 'Met' ).
