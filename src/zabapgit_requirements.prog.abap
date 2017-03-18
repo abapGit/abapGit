@@ -140,6 +140,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
     DATA: lo_alv         TYPE REF TO cl_salv_table,
           lo_column      TYPE REF TO cl_salv_column,
+          lo_columns     TYPE REF TO cl_salv_columns_table,
           lt_color_table TYPE lty_color_tab,
           lt_color_neg   TYPE lvc_t_scol,
           lt_color_pos   TYPE lvc_t_scol,
@@ -174,17 +175,16 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
             t_table        = lt_color_table
         ).
 
-        lo_alv->get_columns(:
-          )->get_column( 'MET' )->set_short_text( 'Met' ),
-          )->set_color_column( 'COLOR' ),
-          )->set_optimize( ),
-        ).
+        lo_columns = lo_alv->get_columns( ).
+        lo_columns->get_column( 'MET' )->set_short_text( 'Met' ).
+        lo_columns->set_color_column( 'COLOR' ).
+        lo_columns->set_optimize( ).
 
-        lo_column = lo_alv->get_columns( )->get_column( 'REQUIRED_RELEASE' ).
+        lo_column = lo_columns->get_column( 'REQUIRED_RELEASE' ).
         lo_column->set_fixed_header_text( 'S').
         lo_column->set_short_text( 'Req. Rel.' ).
 
-        lo_column = lo_alv->get_columns( )->get_column( 'REQUIRED_PATCH' ).
+        lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
         lo_column->set_fixed_header_text( 'S').
         lo_column->set_short_text( 'Req. SP L.' ).
 
