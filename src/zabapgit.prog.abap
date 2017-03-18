@@ -49,6 +49,7 @@ INCLUDE zabapgit_dot_abapgit.
 INCLUDE zabapgit_persistence.
 INCLUDE zabapgit_sap_package.
 INCLUDE zabapgit_folder_logic.
+INCLUDE zabapgit_requirements.
 
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.
