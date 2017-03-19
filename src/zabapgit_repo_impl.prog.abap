@@ -489,10 +489,10 @@ CLASS lcl_repo IMPLEMENTATION.
     IF lo_dot_abapgit IS BOUND.
       set_dot_abapgit( lo_dot_abapgit ).
 
-      " Check if requirements are met
       lt_requirements = lo_dot_abapgit->get_data( )-requirements.
       IF lt_requirements IS NOT INITIAL.
-        lcl_requirement_helper=>check_requirements( lt_requirements ).
+        lcl_requirement_helper=>check_requirements( it_requirements = lt_requirements
+                                                    iv_show_popup   = abap_true ).
       ENDIF.
     ENDIF.
 

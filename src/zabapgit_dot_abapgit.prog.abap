@@ -17,13 +17,13 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
              min_release TYPE saprelease,
              min_patch TYPE sappatchlv,
            END OF ty_requirement,
-           ty_requirement_tab TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY,
+           ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY,
            BEGIN OF ty_dot_abapgit,
              master_language TYPE spras,
              starting_folder TYPE string,
              folder_logic    TYPE string,
              ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-             requirements    TYPE ty_requirement_tab,
+             requirements    TYPE ty_requirement_tt,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:

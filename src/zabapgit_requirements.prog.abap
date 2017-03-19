@@ -6,7 +6,7 @@
 CLASS lcl_requirement_helper DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES:
-      BEGIN OF gty_status,
+      BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
         component         TYPE dlvunit,
         description       TYPE text80,
@@ -14,8 +14,8 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
         required_patch    TYPE sappatchlv,
-      END OF gty_status,
-      gty_status_tab TYPE STANDARD TABLE OF gty_status WITH DEFAULT KEY.
+      END OF ty_requirement_status,
+      ty_requirement_status_tt TYPE STANDARD TABLE OF ty_requirement_status WITH DEFAULT KEY.
     CLASS-METHODS:
       "! Check if the given requirements are met with user interaction
       "! <p>
@@ -25,28 +25,28 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       "! @parameter it_requirements | The requirements to check
       "! @parameter iv_show_popup | Show popup with requirements
       "! @raising lcx_exception | Cancelled by user or internal error
-      check_requirements IMPORTING it_requirements TYPE lcl_dot_abapgit=>ty_requirement_tab
+      check_requirements IMPORTING it_requirements TYPE lcl_dot_abapgit=>ty_requirement_tt
                                    iv_show_popup   TYPE abap_bool DEFAULT abap_true
                          RAISING   lcx_exception,
       "! Get a table with information about each requirement
       "! @parameter it_requirements | Requirements
       "! @parameter rt_status | Result
       "! @raising lcx_exception | Internal error
-      get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tab
-                                 RETURNING VALUE(rt_status) TYPE gty_status_tab
+      get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tt
+                                 RETURNING VALUE(rt_status) TYPE ty_requirement_status_tt
                                  RAISING   lcx_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS:
-      show_requirement_popup IMPORTING it_requirements TYPE gty_status_tab
+      show_requirement_popup IMPORTING it_requirements TYPE ty_requirement_status_tt
                              RAISING   lcx_exception,
-      version_greater_or_equal IMPORTING is_status      TYPE gty_status
+      version_greater_or_equal IMPORTING is_status      TYPE ty_requirement_status
                                RETURNING VALUE(rv_true) TYPE abap_bool.
 ENDCLASS.
 
 CLASS lcl_requirement_helper IMPLEMENTATION.
   METHOD check_requirements.
-    DATA: lt_met_status TYPE gty_status_tab,
+    DATA: lt_met_status TYPE ty_requirement_status_tt,
           lv_answer     TYPE c LENGTH 1.
 
     lt_met_status = get_requirement_met_status( it_requirements ).
@@ -62,7 +62,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
     IF sy-subrc = 0.
       CALL FUNCTION 'POPUP_TO_CONFIRM'
         EXPORTING
-          text_question = 'The project has unmet requirements. Install anyways?'
+          text_question = 'The project has unmet requirements. Do you want to continue?'
         IMPORTING
           answer        = lv_answer.
       IF lv_answer <> '1'.
@@ -74,7 +74,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
   METHOD get_requirement_met_status.
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
     FIELD-SYMBOLS: <ls_requirement>    TYPE lcl_dot_abapgit=>ty_requirement,
-                   <ls_status>         TYPE gty_status,
+                   <ls_status>         TYPE ty_requirement_status,
                    <ls_installed_comp> TYPE cvers_sdu.
 
     CALL FUNCTION 'DELIVERY_GET_INSTALLED_COMPS'
@@ -96,11 +96,15 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
       READ TABLE lt_installed WITH KEY component = <ls_requirement>-component
                               ASSIGNING <ls_installed_comp>.
       IF sy-subrc = 0.
+        " Component is installed, requirement is met if the installed version is greater or equal
+        " to the required one.
         <ls_status>-installed_release = <ls_installed_comp>-release.
         <ls_status>-installed_patch = <ls_installed_comp>-extrelease.
         <ls_status>-description = <ls_installed_comp>-desc_text.
-
         <ls_status>-met = version_greater_or_equal( <ls_status> ).
+      ELSE.
+        " Component is not installed at all
+        <ls_status>-met = abap_false.
       ENDIF.
 
       UNASSIGN <ls_installed_comp>.
@@ -122,7 +126,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    " Check if versions are comparable by number
+    " Versions are comparable by number, compare release and if necessary patch level
     IF is_status-installed_release > is_status-required_release
        OR ( is_status-installed_release = is_status-required_release
             AND ( is_status-required_patch IS INITIAL OR
@@ -135,24 +139,24 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
   METHOD show_requirement_popup.
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-        INCLUDE TYPE gty_status.
+        INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line,
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
-    DATA: lo_alv         TYPE REF TO cl_salv_table,
-          lo_column      TYPE REF TO cl_salv_column,
-          lo_columns     TYPE REF TO cl_salv_columns_table,
-          lt_color_table TYPE lty_color_tab,
-          lt_color_neg   TYPE lvc_t_scol,
-          lt_color_pos   TYPE lvc_t_scol,
-          ls_color       TYPE lvc_s_scol,
-          lx_ex          TYPE REF TO cx_root.
+    DATA: lo_alv            TYPE REF TO cl_salv_table,
+          lo_column         TYPE REF TO cl_salv_column,
+          lo_columns        TYPE REF TO cl_salv_columns_table,
+          lt_color_table    TYPE lty_color_tab,
+          lt_color_negative TYPE lvc_t_scol,
+          lt_color_positive TYPE lvc_t_scol,
+          ls_color          TYPE lvc_s_scol,
+          lx_ex             TYPE REF TO cx_root.
     FIELD-SYMBOLS: <ls_line> TYPE lty_color_line.
 
     ls_color-color-col = col_negative.
-    APPEND ls_color TO lt_color_neg.
+    APPEND ls_color TO lt_color_negative.
 
     ls_color-color-col = col_positive.
-    APPEND ls_color TO lt_color_pos.
+    APPEND ls_color TO lt_color_positive.
 
     CLEAR ls_color.
 
@@ -160,9 +164,9 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
     LOOP AT lt_color_table ASSIGNING <ls_line>.
       IF <ls_line>-met = abap_false.
-        <ls_line>-color = lt_color_neg.
+        <ls_line>-color = lt_color_negative.
       ELSE.
-        <ls_line>-color = lt_color_pos.
+        <ls_line>-color = lt_color_positive.
       ENDIF.
     ENDLOOP.
     UNASSIGN <ls_line>.
