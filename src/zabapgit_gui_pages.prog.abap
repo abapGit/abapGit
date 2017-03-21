@@ -29,3 +29,4 @@ INCLUDE zabapgit_page_main.
 INCLUDE zabapgit_page_stage.
 INCLUDE zabapgit_page_debug.
 INCLUDE zabapgit_page_settings.
+INCLUDE zabapgit_page_repo_settings.
