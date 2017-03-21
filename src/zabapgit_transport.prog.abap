@@ -29,7 +29,6 @@ ENDCLASS.
 CLASS lcl_transport IMPLEMENTATION.
 
   METHOD zip.
-
     DATA: lt_requests TYPE trwbo_requests,
           lt_tadir    TYPE scts_tadir,
           lv_package  TYPE devclass,
@@ -64,7 +63,6 @@ CLASS lcl_transport IMPLEMENTATION.
 
     lcl_zip=>export( io_repo   = lo_repo
                      it_filter = lt_tadir ).
-
   ENDMETHOD.
 
   METHOD to_tadir.
@@ -112,11 +110,9 @@ CLASS lcl_transport IMPLEMENTATION.
 
     SORT lt_super.
     READ TABLE lt_super INDEX 1 INTO rv_package.
-
   ENDMETHOD.
 
   METHOD read_requests.
-
     DATA lt_requests LIKE rt_requests.
     FIELD-SYMBOLS <fs_trkorr> LIKE LINE OF it_trkorr.
 
@@ -135,11 +131,9 @@ CLASS lcl_transport IMPLEMENTATION.
 
       APPEND LINES OF lt_requests TO rt_requests.
     ENDLOOP.
-
   ENDMETHOD.
 
   METHOD resolve.
-
     DATA: lv_object     TYPE tadir-object,
           lv_obj_name   TYPE tadir-obj_name,
           lv_trobj_name TYPE trobj_name,
@@ -320,5 +314,262 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
           ASSERT 0 = 1. "Unexpected state
       ENDCASE.
     ENDLOOP.
+  ENDMETHOD.
+ENDCLASS.
+
+CLASS lcl_transport_objects DEFINITION.
+  "Under test at ltcl_transport_objects
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING
+        it_transport_objects TYPE scts_tadir.
+    METHODS to_stage
+      IMPORTING
+        io_stage           TYPE REF TO lcl_stage
+        is_stage_objects   TYPE ty_stage_files
+        it_object_statuses TYPE ty_results_tt
+      RAISING
+        lcx_exception.
+  PRIVATE SECTION.
+    DATA mt_transport_objects TYPE scts_tadir.
+ENDCLASS.
+
+CLASS lcl_transport_objects IMPLEMENTATION.
+  METHOD constructor.
+    mt_transport_objects = it_transport_objects.
+  ENDMETHOD.
+
+  METHOD to_stage.
+    DATA ls_transport_object TYPE tadir.
+    DATA ls_local_file TYPE ty_file_item.
+    DATA ls_object_status TYPE ty_result.
+
+    LOOP AT mt_transport_objects INTO ls_transport_object.
+      READ TABLE it_object_statuses INTO ls_object_status
+        WITH KEY obj_name = ls_transport_object-obj_name
+                 obj_type = ls_transport_object-object.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files| ).
+      ENDIF.
+
+      CASE ls_object_status-lstate.
+        WHEN gc_state-added OR gc_state-modified.
+*          ASSERT ls_transport_object-delflag = abap_false.
+
+          READ TABLE is_stage_objects-local
+                INTO ls_local_file
+            WITH KEY item-obj_name = ls_transport_object-obj_name
+                     item-obj_type = ls_transport_object-object.
+          IF sy-subrc <> 0.
+            lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
+          ENDIF.
+
+          io_stage->add(
+            iv_path     = ls_local_file-file-path
+            iv_filename = ls_local_file-file-filename
+            iv_data     = ls_local_file-file-data ).
+*        WHEN gc_state-deleted.
+*          ASSERT ls_transport_object-delflag = abap_true.
+*          io_stage->rm(
+*            iv_path     = ls_object_status-path
+*            iv_filename = ls_object_status-filename ).
+*        WHEN OTHERS.
+*          ASSERT 0 = 1. "Unexpected state
+      ENDCASE.
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_transport_objects DEFINITION FOR TESTING.
+  PRIVATE SECTION.
+    METHODS:
+      add_new_to_local_files FOR TESTING RAISING cx_static_check,
+      modified_to_new_local_files FOR TESTING RAISING cx_static_check,
+      transport_not_in_repository FOR TESTING RAISING cx_static_check,
+      object_not_in_local_files   FOR TESTING RAISING cx_static_check,
+      setup,
+      given_the_transport_object
+        IMPORTING iv_obj_name TYPE string
+                  iv_obj_type TYPE string,
+      given_the_object_status
+        IMPORTING
+          iv_obj_name TYPE string
+          iv_obj_type TYPE string
+          iv_lstate   TYPE char1,
+      given_the_local_file
+        IMPORTING iv_obj_name          TYPE string
+                  iv_obj_type          TYPE string
+                  iv_filename          TYPE string
+                  iv_path              TYPE string
+                  iv_data              TYPE string
+        RETURNING VALUE(rs_local_file) TYPE ty_file_item,
+      when_staging
+        RAISING lcx_exception,
+      then_file_should_be_added
+        IMPORTING
+          is_local_file TYPE ty_file_item,
+      then_it_should_raise_exception
+        IMPORTING
+          with_text TYPE string.
+
+    DATA: mo_transport_objects TYPE REF TO lcl_transport_objects,
+          mt_transport_objects TYPE scts_tadir,
+          mt_object_statuses   TYPE ty_results_tt,
+          ms_stage_objects     TYPE ty_stage_files,
+          mo_stage             TYPE REF TO lcl_stage.
+ENDCLASS.
+
+CLASS ltcl_transport_objects IMPLEMENTATION.
+  METHOD setup.
+    CREATE OBJECT mo_stage
+      EXPORTING
+        iv_branch_name = 'A_branch_name'
+        iv_branch_sha1 = 'Branch_SH1'.
+  ENDMETHOD.
+  METHOD add_new_to_local_files.
+    DATA ls_local_file TYPE ty_file_item.
+
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS' ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-added ).
+
+    ls_local_file = given_the_local_file(
+      iv_obj_name = 'CL_FOO'
+      iv_obj_type = 'CLAS'
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/path'
+      iv_data     = 'data' ).
+
+    when_staging( ).
+
+    then_file_should_be_added( ls_local_file ).
+  ENDMETHOD.
+  METHOD modified_to_new_local_files.
+    DATA ls_local_file TYPE ty_file_item.
+
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS' ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-modified ).
+
+    ls_local_file = given_the_local_file(
+      iv_obj_name = 'CL_FOO'
+      iv_obj_type = 'CLAS'
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/path'
+      iv_data     = 'data' ).
+
+    when_staging( ).
+
+    then_file_should_be_added( ls_local_file ).
+  ENDMETHOD.
+  METHOD transport_not_in_repository.
+    given_the_transport_object(
+      iv_obj_name   = 'CL_A_CLASS_NOT_IN_REPO'
+      iv_obj_type   = 'CLAS' ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-added ).
+
+    then_it_should_raise_exception(
+      with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
+  ENDMETHOD.
+
+  METHOD object_not_in_local_files.
+    DATA ls_local_file TYPE ty_file_item.
+
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS' ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-added ).
+
+    given_the_local_file(
+      iv_obj_name = 'CL_ANOTHER_LOCAL_FILE'
+      iv_obj_type = 'CLAS'
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/path'
+      iv_data     = 'data' ).
+
+    then_it_should_raise_exception(
+      with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
+  ENDMETHOD.
+
+  METHOD given_the_transport_object.
+    DATA ls_transport_object TYPE tadir.
+    ls_transport_object-obj_name = iv_obj_name.
+    ls_transport_object-object   = iv_obj_type.
+    APPEND ls_transport_object TO mt_transport_objects.
+  ENDMETHOD.
+
+
+  METHOD given_the_object_status.
+    DATA ls_object_status TYPE ty_result.
+    ls_object_status-obj_name = iv_obj_name.
+    ls_object_status-obj_type = iv_obj_type.
+    ls_object_status-lstate   = iv_lstate.
+    APPEND ls_object_status  TO mt_object_statuses.
+  ENDMETHOD.
+
+
+  METHOD given_the_local_file.
+    rs_local_file-item-obj_name = iv_obj_name.
+    rs_local_file-item-obj_type = iv_obj_type.
+    rs_local_file-file-filename = iv_filename.
+    rs_local_file-file-path     = iv_path.
+    rs_local_file-file-data     = iv_data.
+    APPEND rs_local_file TO ms_stage_objects-local.
+  ENDMETHOD.
+
+
+  METHOD when_staging.
+    CREATE OBJECT mo_transport_objects
+      EXPORTING
+        it_transport_objects = mt_transport_objects.
+    mo_transport_objects->to_stage(
+      io_stage           = mo_stage
+      is_stage_objects   = ms_stage_objects
+      it_object_statuses = mt_object_statuses ).
+  ENDMETHOD.
+
+  METHOD then_file_should_be_added.
+    DATA: lt_staged_objects TYPE lcl_stage=>ty_stage_tt.
+    lt_staged_objects = mo_stage->get_all( ).
+
+    READ TABLE lt_staged_objects TRANSPORTING NO FIELDS
+    WITH KEY file-filename = is_local_file-file-filename
+            file-path      = is_local_file-file-path
+            file-data      = is_local_file-file-data
+            method         = lcl_stage=>c_method-add.
+    IF sy-subrc <> 0.
+      cl_abap_unit_assert=>fail( |Object { is_local_file-file-filename } not added to stage| ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD then_it_should_raise_exception.
+    DATA: lo_exception TYPE REF TO lcx_exception.
+    TRY.
+        when_staging( ).
+        cl_abap_unit_assert=>fail( 'Should have raised exception').
+      CATCH lcx_exception INTO lo_exception.
+        cl_abap_unit_assert=>assert_equals(
+          act = lo_exception->mv_text
+          exp = with_text ).
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
