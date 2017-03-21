@@ -1630,6 +1630,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         wi_tadir_author     = sy-uname
         wi_tadir_devclass   = iv_package
         wi_tadir_masterlang = mv_language
+        iv_delflag          = abap_false
       EXCEPTIONS
         OTHERS              = 1.
     IF sy-subrc <> 0.
