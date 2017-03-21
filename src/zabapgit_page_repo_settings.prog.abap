@@ -53,9 +53,11 @@ CLASS lcl_gui_page_repo_settings IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="settings_container">' ).
-    ro_html->add( '<form id="settings_form" method="post" action="sapevent:' && c_action-save_settings && '">' ).
+    ro_html->add( '<form id="settings_form" method="post" action="sapevent:' &&
+      c_action-save_settings && '">' ).
     ro_html->add( '<br>' ).
-    ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' && ls_dot-folder_logic && '">' ).
+    ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' &&
+      ls_dot-folder_logic && '">' ).
     ro_html->add( '<br>' ).
     ro_html->add( '<input type="submit" value="Save" class="submit">' ).
     ro_html->add( '</form>' ).
