@@ -179,6 +179,76 @@ CLASS lcl_transport IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+CLASS lcl_transport_objects DEFINITION.
+  "Under test at ltcl_transport_objects
+  PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING
+        it_transport_objects TYPE scts_tadir.
+    METHODS to_stage
+      IMPORTING
+        io_stage           TYPE REF TO lcl_stage
+        is_stage_objects   TYPE ty_stage_files
+        it_object_statuses TYPE ty_results_tt
+      RAISING
+        lcx_exception.
+  PRIVATE SECTION.
+    DATA mt_transport_objects TYPE scts_tadir.
+ENDCLASS.
+
+CLASS lcl_transport_objects IMPLEMENTATION.
+  METHOD constructor.
+    mt_transport_objects = it_transport_objects.
+  ENDMETHOD.
+
+  METHOD to_stage.
+    DATA: ls_transport_object TYPE tadir,
+          ls_local_file       TYPE ty_file_item,
+          ls_object_status    TYPE ty_result.
+
+    LOOP AT mt_transport_objects INTO ls_transport_object.
+      LOOP AT it_object_statuses INTO ls_object_status
+        WHERE obj_name = ls_transport_object-obj_name
+          AND obj_type = ls_transport_object-object.
+
+        CASE ls_object_status-lstate.
+          WHEN gc_state-added OR gc_state-modified.
+            IF ls_transport_object-delflag = abap_true.
+              lcx_exception=>raise( |Object { ls_transport_object-obj_name } should be added/modified, but has deletion flag in transport| ).
+            ENDIF.
+
+            READ TABLE is_stage_objects-local
+                  INTO ls_local_file
+              WITH KEY item-obj_name = ls_transport_object-obj_name
+                       item-obj_type = ls_transport_object-object
+                       file-filename = ls_object_status-filename.
+            IF sy-subrc <> 0.
+              lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files| ).
+            ENDIF.
+
+            io_stage->add(
+              iv_path     = ls_local_file-file-path
+              iv_filename = ls_local_file-file-filename
+              iv_data     = ls_local_file-file-data ).
+          WHEN gc_state-deleted.
+            IF ls_transport_object-delflag = abap_false.
+              lcx_exception=>raise( |Object { ls_transport_object-obj_name } should be removed, but has NO deletion flag in transport| ).
+            ENDIF.
+            io_stage->rm(
+              iv_path     = ls_object_status-path
+              iv_filename = ls_object_status-filename ).
+          WHEN OTHERS.
+            ASSERT 0 = 1. "Unexpected state
+        ENDCASE.
+      ENDLOOP.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files| ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_transport_to_branch DEFINITION.
   PUBLIC SECTION.
     METHODS:
@@ -276,126 +346,42 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
 
 
   METHOD stage_transport_objects.
+   DATA lo_transport_objects type ref to lcl_transport_objects.
+   CREATE OBJECT lo_transport_objects
+    EXPORTING it_transport_objects = it_transport_objects.
 
-    DATA ls_transport_object TYPE tadir.
-    DATA ls_local_file TYPE ty_file_item.
-    DATA ls_object_status TYPE ty_result.
-
-    LOOP AT it_transport_objects INTO ls_transport_object.
-      READ TABLE it_object_statuses INTO ls_object_status
-        WITH KEY obj_name = ls_transport_object-obj_name
-                 obj_type = ls_transport_object-object.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
-      ENDIF.
-
-      CASE ls_object_status-lstate.
-        WHEN gc_state-added OR gc_state-modified.
-          ASSERT ls_transport_object-delflag = abap_false.
-
-          READ TABLE is_stage_objects-local
-                INTO ls_local_file
-            WITH KEY item-obj_name = ls_transport_object-obj_name
-                     item-obj_type = ls_transport_object-object.
-          IF sy-subrc <> 0.
-            lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
-          ENDIF.
-
-          io_stage->add(
-            iv_path     = ls_local_file-file-path
-            iv_filename = ls_local_file-file-filename
-            iv_data     = ls_local_file-file-data ).
-        WHEN gc_state-deleted.
-          ASSERT ls_transport_object-delflag = abap_true.
-          io_stage->rm(
-            iv_path     = ls_object_status-path
-            iv_filename = ls_object_status-filename ).
-        WHEN OTHERS.
-          ASSERT 0 = 1. "Unexpected state
-      ENDCASE.
-    ENDLOOP.
+    lo_transport_objects->to_stage(
+      io_stage           = io_stage
+      is_stage_objects   = is_stage_objects
+      it_object_statuses = it_object_statuses ).
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_transport_objects DEFINITION.
-  "Under test at ltcl_transport_objects
-  PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING
-        it_transport_objects TYPE scts_tadir.
-    METHODS to_stage
-      IMPORTING
-        io_stage           TYPE REF TO lcl_stage
-        is_stage_objects   TYPE ty_stage_files
-        it_object_statuses TYPE ty_results_tt
-      RAISING
-        lcx_exception.
-  PRIVATE SECTION.
-    DATA mt_transport_objects TYPE scts_tadir.
-ENDCLASS.
-
-CLASS lcl_transport_objects IMPLEMENTATION.
-  METHOD constructor.
-    mt_transport_objects = it_transport_objects.
-  ENDMETHOD.
-
-  METHOD to_stage.
-    DATA ls_transport_object TYPE tadir.
-    DATA ls_local_file TYPE ty_file_item.
-    DATA ls_object_status TYPE ty_result.
-
-    LOOP AT mt_transport_objects INTO ls_transport_object.
-      READ TABLE it_object_statuses INTO ls_object_status
-        WITH KEY obj_name = ls_transport_object-obj_name
-                 obj_type = ls_transport_object-object.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files| ).
-      ENDIF.
-
-      CASE ls_object_status-lstate.
-        WHEN gc_state-added OR gc_state-modified.
-*          ASSERT ls_transport_object-delflag = abap_false.
-
-          READ TABLE is_stage_objects-local
-                INTO ls_local_file
-            WITH KEY item-obj_name = ls_transport_object-obj_name
-                     item-obj_type = ls_transport_object-object.
-          IF sy-subrc <> 0.
-            lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
-          ENDIF.
-
-          io_stage->add(
-            iv_path     = ls_local_file-file-path
-            iv_filename = ls_local_file-file-filename
-            iv_data     = ls_local_file-file-data ).
-*        WHEN gc_state-deleted.
-*          ASSERT ls_transport_object-delflag = abap_true.
-*          io_stage->rm(
-*            iv_path     = ls_object_status-path
-*            iv_filename = ls_object_status-filename ).
-*        WHEN OTHERS.
-*          ASSERT 0 = 1. "Unexpected state
-      ENDCASE.
-    ENDLOOP.
-  ENDMETHOD.
-
-ENDCLASS.
 
 CLASS ltcl_transport_objects DEFINITION FOR TESTING.
   PRIVATE SECTION.
     METHODS:
-      add_new_to_local_files FOR TESTING RAISING cx_static_check,
-      modified_to_new_local_files FOR TESTING RAISING cx_static_check,
-      transport_not_in_repository FOR TESTING RAISING cx_static_check,
-      object_not_in_local_files   FOR TESTING RAISING cx_static_check,
+      add_new_to_local_files         FOR TESTING RAISING cx_static_check,
+      modified_to_new_local_files    FOR TESTING RAISING cx_static_check,
+      transport_not_in_repository    FOR TESTING RAISING cx_static_check,
+      object_not_in_local_files      FOR TESTING RAISING cx_static_check,
+      cant_be_added_with_del_flag    FOR TESTING RAISING cx_static_check,
+      cant_be_modified_with_del_flag FOR TESTING RAISING cx_static_check,
+      deleted_to_removed_files       FOR TESTING RAISING cx_static_check,
+      shouldnt_remove_no_delflag FOR TESTING RAISING cx_static_check,
+      should_add_all_local_files FOR TESTING RAISING cx_static_check,
+      should_delete_all_related  FOR TESTING RAISING cx_static_check,
       setup,
       given_the_transport_object
         IMPORTING iv_obj_name TYPE string
-                  iv_obj_type TYPE string,
+                  iv_obj_type TYPE string
+                  iv_delflag  TYPE abap_bool OPTIONAL,
       given_the_object_status
         IMPORTING
-          iv_obj_name TYPE string
-          iv_obj_type TYPE string
+          iv_obj_name TYPE string OPTIONAL
+          iv_obj_type TYPE string OPTIONAL
+          iv_filename TYPE string OPTIONAL
+          iv_path     TYPE string OPTIONAL
           iv_lstate   TYPE char1,
       given_the_local_file
         IMPORTING iv_obj_name          TYPE string
@@ -411,7 +397,11 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING.
           is_local_file TYPE ty_file_item,
       then_it_should_raise_exception
         IMPORTING
-          with_text TYPE string.
+          with_text TYPE string,
+    then_it_should_remove_at_stage
+      IMPORTING
+        iv_filename TYPE string
+          IV_PATH     TYPE STRING.
 
     DATA: mo_transport_objects TYPE REF TO lcl_transport_objects,
           mt_transport_objects TYPE scts_tadir,
@@ -437,6 +427,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
       iv_lstate     = gc_state-added ).
 
     ls_local_file = given_the_local_file(
@@ -452,7 +443,6 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
   METHOD modified_to_new_local_files.
     DATA ls_local_file TYPE ty_file_item.
-
     given_the_transport_object(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS' ).
@@ -460,6 +450,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
       iv_lstate     = gc_state-modified ).
 
     ls_local_file = given_the_local_file(
@@ -472,6 +463,46 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     when_staging( ).
 
     then_file_should_be_added( ls_local_file ).
+  ENDMETHOD.
+  METHOD should_add_all_local_files.
+    "Not only .abap, but also .xml and other includes
+    DATA ls_abap_local_file TYPE ty_file_item.
+    DATA ls_xml_local_file  TYPE ty_file_item.
+
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS' ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
+      iv_lstate     = gc_state-modified ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.xml'
+      iv_lstate     = gc_state-modified ).
+
+    ls_abap_local_file = given_the_local_file(
+      iv_obj_name = 'CL_FOO'
+      iv_obj_type = 'CLAS'
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/path'
+      iv_data     = 'data' ).
+
+    ls_xml_local_file = given_the_local_file(
+      iv_obj_name = 'CL_FOO'
+      iv_obj_type = 'CLAS'
+      iv_filename = 'CL_FOO.xml'
+      iv_path     = '/path'
+      iv_data     = 'data' ).
+
+    when_staging( ).
+
+    then_file_should_be_added( ls_abap_local_file ).
+    then_file_should_be_added( ls_xml_local_file ).
   ENDMETHOD.
   METHOD transport_not_in_repository.
     given_the_transport_object(
@@ -507,25 +538,124 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_data     = 'data' ).
 
     then_it_should_raise_exception(
-      with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
+      with_text = 'Object CL_FOO not found in the local repository files' ).
+  ENDMETHOD.
+
+  METHOD cant_be_added_with_del_flag.
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_delflag    = abap_true ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-added ).
+
+    then_it_should_raise_exception(
+      with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+  ENDMETHOD.
+
+  METHOD cant_be_modified_with_del_flag.
+    given_the_transport_object(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_delflag    = abap_true ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_lstate     = gc_state-modified ).
+
+    then_it_should_raise_exception(
+      with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+  ENDMETHOD.
+  METHOD deleted_to_removed_files.
+    given_the_transport_object(
+     iv_obj_name   = 'CL_FOO'
+     iv_obj_type   = 'CLAS'
+     iv_delflag    = abap_true ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
+      iv_path       = '/a_path'
+      iv_lstate     = gc_state-deleted ).
+
+    when_staging( ).
+
+    then_it_should_remove_at_stage(
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/a_path' ).
+  ENDMETHOD.
+
+  METHOD should_delete_all_related.
+  "i.e. Should also delete the XMLs related to the transport objects
+    given_the_transport_object(
+     iv_obj_name   = 'CL_FOO'
+     iv_obj_type   = 'CLAS'
+     iv_delflag    = abap_true ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
+      iv_path       = '/a_path'
+      iv_lstate     = gc_state-deleted ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.xml'
+      iv_path       = '/a_path'
+      iv_lstate     = gc_state-deleted ).
+
+    when_staging( ).
+
+    then_it_should_remove_at_stage(
+      iv_filename = 'CL_FOO.abap'
+      iv_path     = '/a_path' ).
+
+    then_it_should_remove_at_stage(
+      iv_filename = 'CL_FOO.xml'
+      iv_path     = '/a_path' ).
+  ENDMETHOD.
+
+  METHOD shouldnt_remove_no_delflag.
+    given_the_transport_object(
+       iv_obj_name   = 'CL_FOO'
+       iv_obj_type   = 'CLAS'
+       iv_delflag    = abap_false ).
+
+    given_the_object_status(
+      iv_obj_name   = 'CL_FOO'
+      iv_obj_type   = 'CLAS'
+      iv_filename   = 'CL_FOO.abap'
+      iv_path       = '/a_path'
+      iv_lstate     = gc_state-deleted ).
+
+    then_it_should_raise_exception(
+         with_text = 'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD given_the_transport_object.
     DATA ls_transport_object TYPE tadir.
     ls_transport_object-obj_name = iv_obj_name.
     ls_transport_object-object   = iv_obj_type.
+    ls_transport_object-delflag  = iv_delflag.
     APPEND ls_transport_object TO mt_transport_objects.
   ENDMETHOD.
-
 
   METHOD given_the_object_status.
     DATA ls_object_status TYPE ty_result.
     ls_object_status-obj_name = iv_obj_name.
     ls_object_status-obj_type = iv_obj_type.
+    ls_object_status-filename = iv_filename.
+    ls_object_status-path     = iv_path.
     ls_object_status-lstate   = iv_lstate.
     APPEND ls_object_status  TO mt_object_statuses.
   ENDMETHOD.
-
 
   METHOD given_the_local_file.
     rs_local_file-item-obj_name = iv_obj_name.
@@ -535,7 +665,6 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     rs_local_file-file-data     = iv_data.
     APPEND rs_local_file TO ms_stage_objects-local.
   ENDMETHOD.
-
 
   METHOD when_staging.
     CREATE OBJECT mo_transport_objects
@@ -572,4 +701,17 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
           exp = with_text ).
     ENDTRY.
   ENDMETHOD.
+
+  METHOD then_it_should_remove_at_stage.
+    DATA: lt_staged_objects TYPE lcl_stage=>ty_stage_tt.
+    lt_staged_objects = mo_stage->get_all( ).
+
+    READ TABLE lt_staged_objects TRANSPORTING NO FIELDS
+    WITH KEY file-filename  = iv_filename
+             file-path      = iv_path.
+    IF sy-subrc <> 0.
+      cl_abap_unit_assert=>fail( |Object { iv_filename } not removed in stage| ).
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
