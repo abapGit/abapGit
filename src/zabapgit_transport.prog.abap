@@ -280,45 +280,48 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
     rs_comment-comment         = is_transport_to_branch-commit_text.
   ENDMETHOD.
 
-
   METHOD stage_transport_objects.
 
-    DATA ls_transport_object TYPE tadir.
-    DATA ls_local_file TYPE ty_file_item.
-    DATA ls_object_status TYPE ty_result.
+    DATA: ls_transport_object TYPE tadir,
+          ls_local_file       TYPE ty_file_item,
+          ls_object_status    TYPE ty_result.
 
     LOOP AT it_transport_objects INTO ls_transport_object.
-      READ TABLE it_object_statuses INTO ls_object_status
-        WITH KEY obj_name = ls_transport_object-obj_name
-                 obj_type = ls_transport_object-object.
+      LOOP AT it_object_statuses INTO ls_object_status
+          WHERE obj_name = ls_transport_object-obj_name
+          AND obj_type = ls_transport_object-object.
+        CASE ls_object_status-lstate.
+          WHEN gc_state-added OR gc_state-modified.
+            ASSERT ls_transport_object-delflag = abap_false.
+
+            READ TABLE is_stage_objects-local
+                  INTO ls_local_file
+              WITH KEY item-obj_name = ls_transport_object-obj_name
+                       item-obj_type = ls_transport_object-object
+                       file-filename = ls_object_status-filename.
+            IF sy-subrc <> 0.
+              lcx_exception=>raise( |Object { ls_transport_object-obj_name
+                } not found in the local repository files | ).
+            ENDIF.
+
+            io_stage->add(
+              iv_path     = ls_local_file-file-path
+              iv_filename = ls_local_file-file-filename
+              iv_data     = ls_local_file-file-data ).
+          WHEN gc_state-deleted.
+            ASSERT ls_transport_object-delflag = abap_true.
+            io_stage->rm(
+              iv_path     = ls_object_status-path
+              iv_filename = ls_object_status-filename ).
+          WHEN OTHERS.
+            ASSERT 0 = 1. "Unexpected state
+        ENDCASE.
+      ENDLOOP.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
+        lcx_exception=>raise( |Object { ls_transport_object-obj_name
+          } not found in the local repository files | ).
       ENDIF.
 
-      CASE ls_object_status-lstate.
-        WHEN gc_state-added OR gc_state-modified.
-          ASSERT ls_transport_object-delflag = abap_false.
-
-          READ TABLE is_stage_objects-local
-                INTO ls_local_file
-            WITH KEY item-obj_name = ls_transport_object-obj_name
-                     item-obj_type = ls_transport_object-object.
-          IF sy-subrc <> 0.
-            lcx_exception=>raise( |Object { ls_transport_object-obj_name } not found in the local repository files | ).
-          ENDIF.
-
-          io_stage->add(
-            iv_path     = ls_local_file-file-path
-            iv_filename = ls_local_file-file-filename
-            iv_data     = ls_local_file-file-data ).
-        WHEN gc_state-deleted.
-          ASSERT ls_transport_object-delflag = abap_true.
-          io_stage->rm(
-            iv_path     = ls_object_status-path
-            iv_filename = ls_object_status-filename ).
-        WHEN OTHERS.
-          ASSERT 0 = 1. "Unexpected state
-      ENDCASE.
     ENDLOOP.
   ENDMETHOD.
 ENDCLASS.
