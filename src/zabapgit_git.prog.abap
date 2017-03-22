@@ -152,8 +152,8 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       CHANGING  cv_data   TYPE xstring.
 
     CLASS-METHODS zlib_compress_length
-        CHANGING cv_data TYPE xstring
-        RAISING lcx_exception.
+      CHANGING cv_data TYPE xstring
+      RAISING  lcx_exception.
 
 ENDCLASS.                    "lcl_pack DEFINITION
 
@@ -969,9 +969,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
           "Lets try with zlib before error in out for good
           "This fixes issues with TFS 2017 and visualstudio.com Git repos
-            zlib_compress_length( CHANGING cv_data = lv_data ).
+          zlib_compress_length( CHANGING cv_data = lv_data ).
         ELSE.
-            lv_data = lv_data+lv_compressed_len.
+          lv_data = lv_data+lv_compressed_len.
         ENDIF.
 
       ELSEIF lv_zlib = c_zlib_hmm.
