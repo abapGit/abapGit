@@ -164,10 +164,14 @@ CLASS lcl_object_smim IMPLEMENTATION.
     DATA: lv_url      TYPE string,
           lv_folder   TYPE abap_bool,
           lv_filename TYPE string,
+          lv_class    TYPE smimloio-lo_class,
           ls_file     TYPE ty_file,
           lv_content  TYPE xstring,
-          li_api      TYPE REF TO if_mr_api.
+          li_api      TYPE REF TO if_mr_api,
+          lv_loio     TYPE sdok_docid.
 
+
+    lv_loio = ms_item-obj_name.
 
     TRY.
         get_url_for_io(
@@ -201,12 +205,16 @@ CLASS lcl_object_smim IMPLEMENTATION.
       ls_file-path     = '/'.
       ls_file-data     = lv_content.
       mo_files->add( ls_file ).
+
+      SELECT SINGLE lo_class FROM smimloio INTO lv_class WHERE loio_id = lv_loio.
     ENDIF.
 
     io_xml->add( iv_name = 'URL'
                  ig_data = lv_url ).
     io_xml->add( iv_name = 'FOLDER'
                  ig_data = lv_folder ).
+    io_xml->add( iv_name = 'CLASS'
+                 ig_data = lv_class ).
 
   ENDMETHOD.                    "serialize
 
@@ -217,6 +225,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           lv_content  TYPE xstring,
           lv_filename TYPE skwf_filnm,
           lv_io       TYPE sdok_docid,
+          lv_class    TYPE smimloio-lo_class,
           ls_skwf_io  TYPE skwf_io,
           li_api      TYPE REF TO if_mr_api.
 
@@ -228,6 +237,8 @@ CLASS lcl_object_smim IMPLEMENTATION.
                   CHANGING cg_data = lv_url ).
     io_xml->read( EXPORTING iv_name = 'FOLDER'
                   CHANGING cg_data = lv_folder ).
+    io_xml->read( EXPORTING iv_name = 'CLASS'
+                  CHANGING cg_data = lv_class ).
 
     ls_skwf_io-objid = lv_io.
 
@@ -250,12 +261,15 @@ CLASS lcl_object_smim IMPLEMENTATION.
       ENDIF.
     ELSE.
       lv_filename = get_filename( lv_url ).
-      cl_wb_mime_repository=>determine_io_class(
-        EXPORTING
-          filename = lv_filename
-        IMPORTING
-          io_class = ls_skwf_io-class ).
-      CONCATENATE ls_skwf_io-class '_L' INTO ls_skwf_io-class.
+      ls_skwf_io-class = lv_class.
+      IF ls_skwf_io-class IS INITIAL.
+        cl_wb_mime_repository=>determine_io_class(
+          EXPORTING
+            filename = lv_filename
+          IMPORTING
+            io_class = ls_skwf_io-class ).
+        CONCATENATE ls_skwf_io-class '_L' INTO ls_skwf_io-class.
+      ENDIF.
 
       lv_content = find_content( lv_url ).
 
