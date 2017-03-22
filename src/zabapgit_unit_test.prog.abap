@@ -2243,3 +2243,4 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 ENDCLASS.
 
 INCLUDE zabapgit_unit_test_clas_intf.
+INCLUDE zabapgit_unit_test_transport.
