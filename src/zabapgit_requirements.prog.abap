@@ -3,6 +3,11 @@
 *&---------------------------------------------------------------------*
 
 "! Helper class for checking requirements / dependencies
+*----------------------------------------------------------------------*
+*       CLASS lcl_requirement_helper DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_requirement_helper DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES:
@@ -33,7 +38,7 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       "! @parameter rt_status | Result
       "! @raising lcx_exception | Internal error
       get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tt
-                                 RETURNING VALUE(rt_status) TYPE ty_requirement_status_tt
+                                 RETURNING value(rt_status) TYPE ty_requirement_status_tt
                                  RAISING   lcx_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -41,9 +46,14 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       show_requirement_popup IMPORTING it_requirements TYPE ty_requirement_status_tt
                              RAISING   lcx_exception,
       version_greater_or_equal IMPORTING is_status      TYPE ty_requirement_status
-                               RETURNING VALUE(rv_true) TYPE abap_bool.
-ENDCLASS.
+                               RETURNING value(rv_true) TYPE abap_bool.
+ENDCLASS.                    "lcl_requirement_helper DEFINITION
 
+*----------------------------------------------------------------------*
+*       CLASS lcl_requirement_helper IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
 CLASS lcl_requirement_helper IMPLEMENTATION.
   METHOD check_requirements.
     DATA: lt_met_status TYPE ty_requirement_status_tt,
@@ -69,7 +79,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         lcx_exception=>raise( 'Cancelling because of unmet requirements.' ).
       ENDIF.
     ENDIF.
-  ENDMETHOD.
+  ENDMETHOD.                    "check_requirements
 
   METHOD get_requirement_met_status.
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
@@ -84,7 +94,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         no_release_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##NO_TEXT.
+      lcx_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##no_text.
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
@@ -109,7 +119,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
       UNASSIGN <ls_installed_comp>.
     ENDLOOP.
-  ENDMETHOD.
+  ENDMETHOD.                    "get_requirement_met_status
 
   METHOD version_greater_or_equal.
     DATA: lv_number TYPE numc4.
@@ -134,14 +144,16 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
       rv_true = abap_true.
     ENDIF.
-  ENDMETHOD.
+  ENDMETHOD.                    "version_greater_or_equal
 
   METHOD show_requirement_popup.
+
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-        INCLUDE TYPE ty_requirement_status.
+            INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line,
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+
     DATA: lo_alv            TYPE REF TO cl_salv_table,
           lo_column         TYPE REF TO cl_salv_column,
           lo_columns        TYPE REF TO cl_salv_columns_table,
@@ -150,7 +162,10 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
           lt_color_positive TYPE lvc_t_scol,
           ls_color          TYPE lvc_s_scol,
           lx_ex             TYPE REF TO cx_root.
-    FIELD-SYMBOLS: <ls_line> TYPE lty_color_line.
+
+    FIELD-SYMBOLS: <ls_line> TYPE lty_color_line,
+                   <ls_requirement> LIKE LINE OF it_requirements.
+
 
     ls_color-color-col = col_negative.
     APPEND ls_color TO lt_color_negative.
@@ -160,7 +175,10 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
     CLEAR ls_color.
 
-    MOVE-CORRESPONDING it_requirements TO lt_color_table.
+    LOOP AT it_requirements ASSIGNING <ls_requirement>.
+      APPEND INITIAL LINE TO lt_color_table ASSIGNING <ls_line>.
+      MOVE-CORRESPONDING <ls_requirement> TO <ls_line>.
+    ENDLOOP.
 
     LOOP AT lt_color_table ASSIGNING <ls_line>.
       IF <ls_line>-met = abap_false.
@@ -181,11 +199,11 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         lo_columns->set_optimize( ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_RELEASE' ).
-        lo_column->set_fixed_header_text( 'S').
+*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. Rel.' ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
-        lo_column->set_fixed_header_text( 'S').
+*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
         lo_alv->set_screen_popup( start_column = 30
@@ -201,5 +219,5 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
             iv_text     = lx_ex->get_text( )
             ix_previous = lx_ex.
     ENDTRY.
-  ENDMETHOD.
-ENDCLASS.
+  ENDMETHOD.                    "show_requirement_popup
+ENDCLASS.                    "lcl_requirement_helper IMPLEMENTATION
