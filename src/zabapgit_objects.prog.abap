@@ -1733,8 +1733,6 @@ CLASS lcl_objects DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    CLASS-DATA: mv_langs_installed TYPE scplangs.
-
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt
       RAISING   lcx_exception.

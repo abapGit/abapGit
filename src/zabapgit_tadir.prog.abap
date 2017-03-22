@@ -129,8 +129,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     DATA: lv_index    TYPE i,
           lt_tadir    TYPE ty_tadir_tt,
           lt_tdevc    TYPE STANDARD TABLE OF tdevc,
-          lv_len      TYPE i,
-          lv_message  TYPE string,
           lv_path     TYPE string.
 
     FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,

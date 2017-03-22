@@ -595,8 +595,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_line_unified.
 
-    DATA lv_line TYPE string.
-
     FIELD-SYMBOLS <diff_line> LIKE LINE OF mt_delayed_lines.
 
     CREATE OBJECT ro_html.

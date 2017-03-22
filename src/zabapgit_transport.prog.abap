@@ -66,10 +66,7 @@ CLASS lcl_transport IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD to_tadir.
-    DATA: lt_requests TYPE trwbo_requests,
-          lt_tadir    TYPE scts_tadir,
-          lv_package  TYPE devclass,
-          lt_trkorr   TYPE trwbo_request_headers.
+    DATA: lt_requests TYPE trwbo_requests.
 
 
     IF lines( it_transport_headers ) = 0.
@@ -288,17 +285,11 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
 
   METHOD create.
     DATA:
-      ls_transport_object TYPE LINE OF scts_tadir,
-      lt_items            TYPE ty_files_item_tt,
-      ls_local_file       TYPE LINE OF ty_files_item_tt,
-      ls_remote_file      TYPE LINE OF ty_files_tt,
-      ls_item             TYPE string,
       lv_branch_name      TYPE string,
       ls_comment          TYPE ty_comment,
       lo_stage            TYPE REF TO lcl_stage,
       ls_stage_objects    TYPE ty_stage_files,
-      lt_object_statuses  TYPE ty_results_tt,
-      ls_object_status    TYPE LINE OF ty_results_tt.
+      lt_object_statuses  TYPE ty_results_tt.
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
         lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).

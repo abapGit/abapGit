@@ -690,7 +690,6 @@ CLASS lcl_object_enho_interface IMPLEMENTATION.
   METHOD lif_object_enho~deserialize.
 
     DATA: lo_enh_intf  TYPE REF TO cl_enh_tool_intf,
-          lt_source    TYPE rswsourcet,
           li_tool      TYPE REF TO if_enh_tool,
           lv_shorttext TYPE string,
           lv_class     TYPE seoclsname,
