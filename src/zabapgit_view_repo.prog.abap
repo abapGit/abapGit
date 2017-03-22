@@ -315,6 +315,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
     ENDIF.
+    lo_tb_advanced->add( iv_txt = 'Repo settings'
+                         iv_act = |{ gc_action-repo_settings }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Update local checksums'
                          iv_act = |{ gc_action-repo_refresh_checksums }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Remove'
