@@ -164,7 +164,6 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD object_not_in_local_files.
-    DATA ls_local_file TYPE ty_file_item.
 
     given_the_transport_object(
       iv_obj_name   = 'CL_FOO'

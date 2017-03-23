@@ -108,8 +108,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
 
   METHOD interface_to_xstring.
 
-    DATA: lv_xstr         TYPE xstring,
-          li_fp_interface TYPE REF TO if_fp_interface,
+    DATA: li_fp_interface TYPE REF TO if_fp_interface,
           li_wb_interface TYPE REF TO if_fp_wb_interface.
 
 

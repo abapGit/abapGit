@@ -112,8 +112,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
 
   METHOD form_to_xstring.
 
-    DATA: lv_xstr    TYPE xstring,
-          li_fp_form TYPE REF TO if_fp_form,
+    DATA: li_fp_form TYPE REF TO if_fp_form,
           li_wb_form TYPE REF TO if_fp_wb_form.
 
 
@@ -130,8 +129,6 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
   METHOD fix_oref.
 
     DATA: li_iterator TYPE REF TO if_ixml_node_iterator,
-          lv_name     TYPE string,
-          lv_value    TYPE string,
           lv_new      TYPE n LENGTH 3,
           lv_old      TYPE string,
           lt_map      TYPE STANDARD TABLE OF string WITH DEFAULT KEY,

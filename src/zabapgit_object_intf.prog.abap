@@ -143,13 +143,9 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
   METHOD serialize_xml.
     DATA:
-      lt_tpool        TYPE textpool_table,
-      lv_object       TYPE dokhl-object,
-      lv_state        TYPE dokhl-dokstate,
       lt_descriptions TYPE ty_seocompotx_tt,
       ls_vseointerf   TYPE vseointerf,
       ls_clskey       TYPE seoclskey,
-      lt_sotr         TYPE ty_sotr_tt,
       lt_lines        TYPE tlinetab.
 
 

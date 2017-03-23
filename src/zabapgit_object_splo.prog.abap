@@ -76,8 +76,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lv_obj_name TYPE e071-obj_name,
-          ls_tsp1t    TYPE tsp1t,
+    DATA: ls_tsp1t    TYPE tsp1t,
           ls_tsp1d    TYPE tsp1d,
           ls_tsp0p    TYPE tsp0p.
 
@@ -93,16 +92,7 @@ CLASS lcl_object_splo IMPLEMENTATION.
     MODIFY tsp1d FROM ls_tsp1d.                           "#EC CI_SUBRC
     MODIFY tsp0p FROM ls_tsp0p.                           "#EC CI_SUBRC
 
-    lv_obj_name = ms_item-obj_name.
-
     tadir_insert( iv_package ).
-
-*    CALL FUNCTION 'TR_TADIR_POPUP_ENTRY_E071'
-*      EXPORTING
-*        wi_e071_pgmid     = 'R3TR'
-*        wi_e071_object    = ms_item-obj_type
-*        wi_e071_obj_name  = lv_obj_name
-*        wi_tadir_devclass = iv_package.
 
   ENDMETHOD.                    "lif_object~deserialize
 

@@ -92,7 +92,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: li_ddl    TYPE REF TO object,
-          lv_source TYPE string,
           lr_data   TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data>  TYPE any,

@@ -1247,9 +1247,7 @@ CLASS ltcl_html DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
       style1  FOR TESTING RAISING lcx_exception.
 
     METHODS:
-      setup,
-      last_line
-        RETURNING VALUE(rv_line) TYPE string.
+      setup.
 
 ENDCLASS. "ltcl_html
 
@@ -1328,15 +1326,6 @@ CLASS ltcl_html IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_html->render( )
       exp = lv_exp ).
-
-  ENDMETHOD.
-
-  METHOD last_line.
-
-    DATA: lt_strings TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
-
-    SPLIT mo_html->render( ) AT gc_newline INTO TABLE lt_strings.
-    READ TABLE lt_strings INDEX lines( lt_strings ) INTO rv_line.
 
   ENDMETHOD.
 
