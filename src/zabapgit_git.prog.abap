@@ -151,6 +151,10 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       EXPORTING ev_length TYPE i
       CHANGING  cv_data   TYPE xstring.
 
+    CLASS-METHODS zlib_decompress
+      CHANGING cv_data TYPE xstring
+      RAISING  lcx_exception.
+
 ENDCLASS.                    "lcl_pack DEFINITION
 
 *----------------------------------------------------------------------*
@@ -854,6 +858,34 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   ENDMETHOD.                    "decode_tree
 
+  METHOD zlib_decompress.
+    DATA: ls_data           TYPE lcl_zlib=>ty_decompress,
+          lv_compressed_len TYPE i,
+          lv_decompressed   TYPE xstring,
+          lv_adler32        TYPE lcl_hash=>ty_adler32.
+
+    ls_data = lcl_zlib=>decompress( cv_data ).
+    lv_compressed_len = ls_data-compressed_len.
+    lv_decompressed = ls_data-raw.
+
+    IF lv_compressed_len IS INITIAL.
+      lcx_exception=>raise( 'Decompression falied :o/' ).
+    ENDIF.
+
+    cv_data = cv_data+lv_compressed_len.
+
+    lv_adler32 = lcl_hash=>adler32( lv_decompressed ).
+    IF cv_data(4) <> lv_adler32.
+      cv_data = cv_data+1.
+    ENDIF.
+    IF cv_data(4) <> lv_adler32.
+      cv_data = cv_data+1.
+    ENDIF.
+    IF cv_data(4) <> lv_adler32.
+      lcx_exception=>raise( 'Wrong Adler checksum' ).
+    ENDIF.
+  ENDMETHOD.
+
   METHOD decode.
 
     DATA: lv_x              TYPE x,
@@ -864,15 +896,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_len            TYPE i,
           lv_sha1           TYPE ty_sha1,
           lv_ref_delta      TYPE ty_sha1,
-          lv_adler32        TYPE lcl_hash=>ty_adler32,
-          lv_compressed     TYPE xstring,
           lv_compressed_len TYPE i,
-          lv_decompress_len TYPE i,
+          lv_compressed     TYPE xstring,
           lv_decompressed   TYPE xstring,
+          lv_decompress_len TYPE i,
           lv_xstring        TYPE xstring,
           lv_expected       TYPE i,
-          ls_object         LIKE LINE OF rt_objects,
-          ls_data           TYPE lcl_zlib=>ty_decompress.
+          ls_object         LIKE LINE OF rt_objects.
 
 
     lv_data = iv_data.
@@ -937,37 +967,19 @@ CLASS lcl_git_pack IMPLEMENTATION.
             gzip_out_len   = lv_compressed_len ).
 
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
-          lcx_exception=>raise( 'Compressed data doesnt match' ).
+          "Lets try with zlib before error in out for good
+          "This fixes issues with TFS 2017 and visualstudio.com Git repos
+          zlib_decompress( CHANGING cv_data = lv_data ).
+        ELSE.
+          lv_data = lv_data+lv_compressed_len.
         ENDIF.
-
-        lv_data = lv_data+lv_compressed_len.
 
       ELSEIF lv_zlib = c_zlib_hmm.
 * cl_abap_gzip copmression works for header '789C', but does not work for
 * '7801', call custom implementation of DEFLATE algorithm.
 * The custom implementation could handle both, but most likely the kernel
 * implementation runs faster than the custom ABAP.
-        ls_data = lcl_zlib=>decompress( lv_data ).
-        lv_compressed_len = ls_data-compressed_len.
-        lv_decompressed = ls_data-raw.
-
-        IF lv_compressed_len IS INITIAL.
-          lcx_exception=>raise( 'Decompression falied :o/' ).
-        ENDIF.
-
-        lv_data = lv_data+lv_compressed_len.
-
-        lv_adler32 = lcl_hash=>adler32( lv_decompressed ).
-        IF lv_data(4) <> lv_adler32.
-          lv_data = lv_data+1.
-        ENDIF.
-        IF lv_data(4) <> lv_adler32.
-          lv_data = lv_data+1.
-        ENDIF.
-        IF lv_data(4) <> lv_adler32.
-          lcx_exception=>raise( 'Wrong Adler checksum' ).
-        ENDIF.
-
+        zlib_decompress( CHANGING cv_data = lv_data ).
       ENDIF.
 
       lv_data = lv_data+4. " skip adler checksum
