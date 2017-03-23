@@ -151,7 +151,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       EXPORTING ev_length TYPE i
       CHANGING  cv_data   TYPE xstring.
 
-    CLASS-METHODS zlib_compress_length
+    CLASS-METHODS zlib_decompress
       CHANGING cv_data TYPE xstring
       RAISING  lcx_exception.
 
@@ -858,7 +858,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   ENDMETHOD.                    "decode_tree
 
-  METHOD zlib_compress_length.
+  METHOD zlib_decompress.
     DATA: ls_data           TYPE lcl_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
           lv_decompressed   TYPE xstring,
@@ -969,7 +969,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
           "Lets try with zlib before error in out for good
           "This fixes issues with TFS 2017 and visualstudio.com Git repos
-          zlib_compress_length( CHANGING cv_data = lv_data ).
+          zlib_decompress( CHANGING cv_data = lv_data ).
         ELSE.
           lv_data = lv_data+lv_compressed_len.
         ENDIF.
@@ -979,7 +979,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * '7801', call custom implementation of DEFLATE algorithm.
 * The custom implementation could handle both, but most likely the kernel
 * implementation runs faster than the custom ABAP.
-        zlib_compress_length( CHANGING cv_data = lv_data ).
+        zlib_decompress( CHANGING cv_data = lv_data ).
       ENDIF.
 
       lv_data = lv_data+4. " skip adler checksum
