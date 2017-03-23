@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2017-03-23 v1.33.2
+------------------
+* fix Microsoft TFS zlib decompression error
+* downport of new requirements feature
+* fix for SMIM document class
+
+2017-03-21 v1.33.1
+------------------
+* reset TADIR-DELFLAG resetting or pulling object again
+
 2017-03-20 v1.33.0
 ------------------
 + possibility to define software component requirements for repo
