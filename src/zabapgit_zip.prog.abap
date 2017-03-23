@@ -69,40 +69,42 @@ ENDCLASS.                    "lcl_zip DEFINITION
 CLASS lcl_zip IMPLEMENTATION.
 
   METHOD get_message.
+* method not in use?
+    ASSERT 0 = 1.
 
-    DATA: lv_returncode TYPE c,
-          lt_fields     TYPE TABLE OF sval.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname   = 'ABAPTXT255'.
-    <ls_field>-fieldname = 'LINE'.
-    <ls_field>-fieldtext = 'Commit message'.                "#EC NOTEXT
-    <ls_field>-field_obl = abap_true.
-
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        no_value_check  = abap_true
-        popup_title     = 'Enter commit message'            "#EC NOTEXT
-      IMPORTING
-        returncode      = lv_returncode
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
-    ENDIF.
-    IF lv_returncode = 'A'.
-      lcx_exception=>raise( 'cancelled' ).
-    ENDIF.
-
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rv_message = <ls_field>-value.
+*    DATA: lv_returncode TYPE c,
+*          lt_fields     TYPE TABLE OF sval.
+*
+*    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+*
+*
+*    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+*    <ls_field>-tabname   = 'ABAPTXT255'.
+*    <ls_field>-fieldname = 'LINE'.
+*    <ls_field>-fieldtext = 'Commit message'.                "#EC NOTEXT
+*    <ls_field>-field_obl = abap_true.
+*
+*    CALL FUNCTION 'POPUP_GET_VALUES'
+*      EXPORTING
+*        no_value_check  = abap_true
+*        popup_title     = 'Enter commit message'            "#EC NOTEXT
+*      IMPORTING
+*        returncode      = lv_returncode
+*      TABLES
+*        fields          = lt_fields
+*      EXCEPTIONS
+*        error_in_fields = 1
+*        OTHERS          = 2.
+*    IF sy-subrc <> 0.
+*      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+*    ENDIF.
+*    IF lv_returncode = 'A'.
+*      lcx_exception=>raise( 'cancelled' ).
+*    ENDIF.
+*
+*    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+*    ASSERT sy-subrc = 0.
+*    rv_message = <ls_field>-value.
 
   ENDMETHOD.                    "get_message
 
@@ -395,9 +397,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log   TYPE REF TO lcl_log,
-          lv_index TYPE i,
-          lt_zip   TYPE ty_files_item_tt.
+    DATA: lo_log TYPE REF TO lcl_log,
+          lt_zip TYPE ty_files_item_tt.
 
     FIELD-SYMBOLS: <ls_zip> LIKE LINE OF lt_zip.
 

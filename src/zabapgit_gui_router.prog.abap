@@ -174,6 +174,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN gc_action-repo_transport_to_branch.
         lcl_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
         ev_state = gc_event_state-re_render.
+      WHEN gc_action-repo_settings.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_repo_settings
+          EXPORTING
+            io_repo = lcl_app=>repo_srv( )->get( lv_key ).
+        ev_state = gc_event_state-new_page.
 
         " ZIP services actions
       WHEN gc_action-zip_import.                      " Import repo from ZIP

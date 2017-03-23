@@ -1630,6 +1630,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         wi_tadir_author     = sy-uname
         wi_tadir_devclass   = iv_package
         wi_tadir_masterlang = mv_language
+        iv_delflag          = abap_false
       EXCEPTIONS
         OTHERS              = 1.
     IF sy-subrc <> 0.
@@ -1731,8 +1732,6 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
   PRIVATE SECTION.
-
-    CLASS-DATA: mv_langs_installed TYPE scplangs.
 
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE ty_files_tt

@@ -446,20 +446,22 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD parse_repo_from_url.
-    CONSTANTS: lc_search_regex TYPE string VALUE 'https?:\/\/(www\.)?github.com\/(.*)$'.
-    DATA: lo_regex   TYPE REF TO cl_abap_regex,
-          lo_matcher TYPE REF TO cl_abap_matcher.
-
-    CREATE OBJECT lo_regex
-      EXPORTING
-        pattern = lc_search_regex.
-
-    lo_matcher = lo_regex->create_matcher( text = iv_url ).
-    IF lo_matcher->match( ) = abap_true.
-      rv_repo_name = lo_matcher->get_submatch( 1 ).
-    ELSE.
-      rv_repo_name = '???' ##NO_TEXT.
-    ENDIF.
+* method not used?
+    ASSERT 0 = 1.
+*    CONSTANTS: lc_search_regex TYPE string VALUE 'https?:\/\/(www\.)?github.com\/(.*)$'.
+*    DATA: lo_regex   TYPE REF TO cl_abap_regex,
+*          lo_matcher TYPE REF TO cl_abap_matcher.
+*
+*    CREATE OBJECT lo_regex
+*      EXPORTING
+*        pattern = lc_search_regex.
+*
+*    lo_matcher = lo_regex->create_matcher( text = iv_url ).
+*    IF lo_matcher->match( ) = abap_true.
+*      rv_repo_name = lo_matcher->get_submatch( 1 ).
+*    ELSE.
+*      rv_repo_name = '???' ##NO_TEXT.
+*    ENDIF.
   ENDMETHOD.
 
   METHOD get_service_id_from_url.
@@ -467,9 +469,8 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_2fa_required.
-    DATA: li_client       TYPE REF TO if_http_client,
-          lv_header_value TYPE string,
-          lo_settings     TYPE REF TO lcl_settings.
+    DATA: li_client   TYPE REF TO if_http_client,
+          lo_settings TYPE REF TO lcl_settings.
 
     lo_settings = lcl_app=>settings( )->read( ).
 
@@ -693,7 +694,7 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
     CLASS-METHODS:
       popup_token
         RETURNING VALUE(rv_token) TYPE string
-        RAISING lcx_exception.
+        RAISING   lcx_exception.
 ENDCLASS.
 
 CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.

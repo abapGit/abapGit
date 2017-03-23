@@ -202,8 +202,6 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass    TYPE vseoclass,
           lt_tpool        TYPE textpool_table,
-          lv_object       TYPE dokhl-object,
-          lv_state        TYPE dokhl-dokstate,
           lt_descriptions TYPE ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
           lt_sotr         TYPE ty_sotr_tt,
@@ -274,8 +272,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_sotr.
     "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE ty_sotr_tt,
-          lt_objects TYPE sotr_objects.
+    DATA: lt_sotr    TYPE ty_sotr_tt.
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
                   CHANGING cg_data = lt_sotr ).

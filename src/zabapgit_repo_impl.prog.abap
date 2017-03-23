@@ -477,7 +477,8 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE ty_file_signatures_tt,
-          lo_dot_abapgit   TYPE REF TO lcl_dot_abapgit.
+          lo_dot_abapgit   TYPE REF TO lcl_dot_abapgit,
+          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement.
 
 
     IF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
@@ -487,6 +488,12 @@ CLASS lcl_repo IMPLEMENTATION.
     lo_dot_abapgit = find_remote_dot_abapgit( ).
     IF lo_dot_abapgit IS BOUND.
       set_dot_abapgit( lo_dot_abapgit ).
+
+      lt_requirements = lo_dot_abapgit->get_data( )-requirements.
+      IF lt_requirements IS NOT INITIAL.
+        lcl_requirement_helper=>check_requirements( it_requirements = lt_requirements
+                                                    iv_show_popup   = abap_true ).
+      ENDIF.
     ENDIF.
 
     lt_updated_files = lcl_objects=>deserialize( me ).

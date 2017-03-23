@@ -264,17 +264,13 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
-          lv_pull_opt    LIKE gc_html_opt-crossout,
-          lo_repo_online TYPE REF TO lcl_repo_online.
+          lv_pull_opt    LIKE gc_html_opt-crossout.
 
     CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
 
     lv_key = mo_repo->get_key( ).
-    IF mo_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= mo_repo.
-    ENDIF.
 
     IF mo_repo->is_write_protected( ) = abap_true.
       lv_wp_opt   = gc_html_opt-crossout.
@@ -315,6 +311,8 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ gc_action-repo_remote_attach }?{ lv_key }| ).
     ENDIF.
+    lo_tb_advanced->add( iv_txt = 'Repo settings'
+                         iv_act = |{ gc_action-repo_settings }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Update local checksums'
                          iv_act = |{ gc_action-repo_refresh_checksums }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Remove'
