@@ -309,8 +309,6 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       set_new_token_request IMPORTING ii_request   TYPE REF TO if_http_request,
       get_token_from_response IMPORTING ii_response     TYPE REF TO if_http_response
                               RETURNING VALUE(rv_token) TYPE string,
-      parse_repo_from_url IMPORTING iv_url              TYPE string
-                          RETURNING VALUE(rv_repo_name) TYPE string,
       set_list_token_request IMPORTING ii_request TYPE REF TO if_http_request,
       get_tobedel_tokens_from_resp IMPORTING ii_response   TYPE REF TO if_http_response
                                    RETURNING VALUE(rt_ids) TYPE stringtab,
@@ -443,25 +441,6 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     WHILE lo_matcher->find_next( ) = abap_true.
       APPEND lo_matcher->get_submatch( 1 ) TO rt_ids.
     ENDWHILE.
-  ENDMETHOD.
-
-  METHOD parse_repo_from_url.
-* method not used?
-    ASSERT 0 = 1.
-*    CONSTANTS: lc_search_regex TYPE string VALUE 'https?:\/\/(www\.)?github.com\/(.*)$'.
-*    DATA: lo_regex   TYPE REF TO cl_abap_regex,
-*          lo_matcher TYPE REF TO cl_abap_matcher.
-*
-*    CREATE OBJECT lo_regex
-*      EXPORTING
-*        pattern = lc_search_regex.
-*
-*    lo_matcher = lo_regex->create_matcher( text = iv_url ).
-*    IF lo_matcher->match( ) = abap_true.
-*      rv_repo_name = lo_matcher->get_submatch( 1 ).
-*    ELSE.
-*      rv_repo_name = '???' ##NO_TEXT.
-*    ENDIF.
   ENDMETHOD.
 
   METHOD get_service_id_from_url.
@@ -689,7 +668,6 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
       "! All authenticators managed by the registry
       gt_registered_authenticators TYPE HASHED TABLE OF REF TO lif_2fa_authenticator
                                         WITH UNIQUE KEY table_line READ-ONLY.
-  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS:
       popup_token

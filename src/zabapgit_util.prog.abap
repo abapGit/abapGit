@@ -371,12 +371,10 @@ CLASS lcl_path IMPLEMENTATION.
   METHOD split_file_location.
 
     DATA: lv_cnt TYPE i,
-          lv_off TYPE i,
           lv_len TYPE i.
 
     FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
       MATCH COUNT lv_cnt
-      MATCH OFFSET lv_off
       MATCH LENGTH lv_len.
 
     IF lv_cnt > 0.
@@ -513,7 +511,7 @@ CLASS lcl_url IMPLEMENTATION.
 
   METHOD path_name.
 
-    DATA: lv_host TYPE string.
+    DATA: lv_host TYPE string ##NEEDED.
 
     FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
       SUBMATCHES lv_host rv_path_name.

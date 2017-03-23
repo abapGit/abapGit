@@ -71,7 +71,6 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   lcx_exception,
       popup_to_create_transp_branch
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
-                  it_transport_objects       TYPE scts_tadir
         RETURNING VALUE(rs_transport_branch) TYPE ty_transport_to_branch
         RAISING   lcx_exception
                   lcx_cancel,
@@ -592,9 +591,6 @@ CLASS lcl_popups IMPLEMENTATION.
   METHOD popup_to_create_transp_branch.
     DATA: lv_returncode         TYPE c,
           lt_fields             TYPE TABLE OF sval,
-          lv_icon_ok            TYPE icon-name,
-          lv_button_transport   TYPE svalbutton-buttontext,
-          lv_icon_transport     TYPE icon-name,
           lv_transports_as_text TYPE string,
           ls_transport_header   LIKE LINE OF it_transport_headers.
 
@@ -608,10 +604,6 @@ CLASS lcl_popups IMPLEMENTATION.
     "               TAB           FLD     LABEL          DEF  ATTR
     _add_dialog_fld 'TEXTL'      'LINE'  'Branch name'   lv_transports_as_text  ''.
     _add_dialog_fld 'ABAPTXT255' 'LINE'  'Commit text'   lv_transports_as_text  ''.
-
-    lv_icon_ok          = icon_okay.
-    lv_button_transport = 'Transport(s)->Branch' ##NO_TEXT.
-    lv_icon_transport   = icon_import_all_requests.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING

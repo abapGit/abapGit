@@ -135,7 +135,6 @@ CLASS lcl_oo_object_serializer DEFINITION.
       serialize_abap_clif_source
         IMPORTING
           is_class_key     TYPE seoclskey
-          iv_type          TYPE seop_include_ext_app OPTIONAL
         RETURNING
           VALUE(rt_source) TYPE ty_string_tt
         RAISING

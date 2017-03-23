@@ -335,8 +335,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       lcx_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
     ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(
-      it_transport_headers = lt_transport_headers
-      it_transport_objects = lt_transport_objects ).
+      lt_transport_headers ).
 
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(
