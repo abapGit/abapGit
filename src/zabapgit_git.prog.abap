@@ -152,7 +152,8 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       CHANGING  cv_data   TYPE xstring.
 
     CLASS-METHODS zlib_decompress
-      CHANGING cv_data TYPE xstring
+      CHANGING cv_data         TYPE xstring
+               cv_decompressed TYPE xstring
       RAISING  lcx_exception.
 
 ENDCLASS.                    "lcl_pack DEFINITION
@@ -859,14 +860,15 @@ CLASS lcl_git_pack IMPLEMENTATION.
   ENDMETHOD.                    "decode_tree
 
   METHOD zlib_decompress.
+
     DATA: ls_data           TYPE lcl_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
-          lv_decompressed   TYPE xstring,
           lv_adler32        TYPE lcl_hash=>ty_adler32.
+
 
     ls_data = lcl_zlib=>decompress( cv_data ).
     lv_compressed_len = ls_data-compressed_len.
-    lv_decompressed = ls_data-raw.
+    cv_decompressed = ls_data-raw.
 
     IF lv_compressed_len IS INITIAL.
       lcx_exception=>raise( 'Decompression falied :o/' ).
@@ -874,7 +876,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     cv_data = cv_data+lv_compressed_len.
 
-    lv_adler32 = lcl_hash=>adler32( lv_decompressed ).
+    lv_adler32 = lcl_hash=>adler32( cv_decompressed ).
     IF cv_data(4) <> lv_adler32.
       cv_data = cv_data+1.
     ENDIF.
@@ -969,7 +971,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
         IF lv_compressed(lv_compressed_len) <> lv_data(lv_compressed_len).
           "Lets try with zlib before error in out for good
           "This fixes issues with TFS 2017 and visualstudio.com Git repos
-          zlib_decompress( CHANGING cv_data = lv_data ).
+          zlib_decompress( CHANGING cv_data = lv_data
+                                    cv_decompressed = lv_decompressed ).
         ELSE.
           lv_data = lv_data+lv_compressed_len.
         ENDIF.
@@ -979,7 +982,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * '7801', call custom implementation of DEFLATE algorithm.
 * The custom implementation could handle both, but most likely the kernel
 * implementation runs faster than the custom ABAP.
-        zlib_decompress( CHANGING cv_data = lv_data ).
+        zlib_decompress( CHANGING cv_data = lv_data
+                                  cv_decompressed = lv_decompressed ).
       ENDIF.
 
       lv_data = lv_data+4. " skip adler checksum
