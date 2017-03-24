@@ -38,7 +38,6 @@ CLASS lcl_html DEFINITION FINAL.
       IMPORTING
         iv_name  TYPE string
         iv_hint  TYPE string OPTIONAL
-        iv_alt   TYPE string OPTIONAL
         iv_class TYPE string OPTIONAL.
 
     CLASS-METHODS a
@@ -56,7 +55,6 @@ CLASS lcl_html DEFINITION FINAL.
       IMPORTING
         iv_name               TYPE string
         iv_hint               TYPE string OPTIONAL
-        iv_alt                TYPE string OPTIONAL
         iv_class              TYPE string OPTIONAL
       RETURNING VALUE(rv_str) TYPE string.
 
@@ -108,8 +106,7 @@ CLASS lcl_html IMPLEMENTATION.
     DATA: lv_type TYPE c,
           lo_html TYPE REF TO lcl_html.
 
-    FIELD-SYMBOLS: <tab> TYPE string_table,
-                   <str> LIKE LINE OF <tab>.
+    FIELD-SYMBOLS: <tab> TYPE string_table.
 
     DESCRIBE FIELD iv_chunk TYPE lv_type. " Describe is faster than RTTI classes
 
@@ -339,7 +336,6 @@ CLASS lcl_html IMPLEMENTATION.
 
     add( icon( iv_name  = iv_name
                iv_class = iv_class
-               iv_alt   = iv_alt
                iv_hint  = iv_hint ) ).
 
   ENDMETHOD.                    "add_icon

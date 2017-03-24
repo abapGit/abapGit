@@ -86,7 +86,7 @@ CLASS lcl_object_view IMPLEMENTATION.
           IF lv_ddl_view = abap_true.
             rv_bool = abap_false.
           ENDIF.
-        CATCH cx_root.
+        CATCH cx_root ##NO_HANDLER.
       ENDTRY.
     ENDIF.
 

@@ -577,7 +577,6 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
 
     DATA:
       lv_index      TYPE sy-tabix,
-      lv_line_len   TYPE i,
       lv_prev_token TYPE c,
       lv_state      TYPE c VALUE 'O'. " O - for open tag; C - for closed tag;
 
@@ -585,9 +584,8 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
       <prev>  TYPE ty_match,
       <match> TYPE ty_match.
 
-    SORT ct_matches BY offset.
 
-    lv_line_len = strlen( iv_line ).
+    SORT ct_matches BY offset.
 
     LOOP AT ct_matches ASSIGNING <match>.
       lv_index = sy-tabix.

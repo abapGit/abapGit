@@ -126,8 +126,7 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lv_index    TYPE i,
-          lt_tadir    TYPE ty_tadir_tt,
+    DATA: lt_tadir    TYPE ty_tadir_tt,
           lt_tdevc    TYPE STANDARD TABLE OF tdevc,
           lv_path     TYPE string.
 
@@ -154,8 +153,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
-      lv_index = sy-tabix.
-
       <ls_tadir>-path = lv_path.
 
       CASE <ls_tadir>-object.

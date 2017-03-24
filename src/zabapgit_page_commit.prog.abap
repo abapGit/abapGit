@@ -157,7 +157,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     DATA: lo_user  TYPE REF TO lcl_persistence_user,
           lv_user  TYPE string,
-          lv_key   TYPE lcl_persistence_db=>ty_value,
           lv_email TYPE string.
 
 * see https://git-scm.com/book/ch5-2.html
@@ -165,7 +164,6 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * body should wrap at 72 characters
 
     lo_user  = lcl_app=>user( ).
-    lv_key   = mo_repo->get_key( ).
 
     lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.

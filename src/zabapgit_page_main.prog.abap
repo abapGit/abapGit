@@ -145,12 +145,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD retrieve_active_repo.
 
-    DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo     LIKE LINE OF lt_repos,
-          lv_show_old LIKE mv_show.
+    DATA: lv_show_old LIKE mv_show.
 
     TRY.
-        lt_repos = lcl_app=>repo_srv( )->list( ).
+        lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception.
         RETURN.
     ENDTRY.
@@ -160,7 +158,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
-          lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+          lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
           CLEAR mv_show.
           lcl_app=>user( )->set_repo_show( mv_show ).
@@ -274,7 +272,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  lcl_html=>icon( iv_name = 'star/blue' iv_alt = 'Favs' iv_hint = 'Favorites' )
+                  lcl_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width

@@ -274,7 +274,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
           iv_package  = '$FOOBAR'
           iv_path     = '/src/' ).
         cl_abap_unit_assert=>fail( 'Error expected' ).
-      CATCH lcx_exception.
+      CATCH lcx_exception ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 

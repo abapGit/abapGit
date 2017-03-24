@@ -395,8 +395,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
-          lt_includes TYPE rso_t_objnm,
+    DATA: lt_includes TYPE rso_t_objnm,
           lv_areat    TYPE tlibt-areat.
 
 
@@ -405,7 +404,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       WHERE spras = mv_language
       AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
 
-    lt_functab = functions( ).
     lt_includes = includes( ).
 
     io_xml->add( iv_name = 'AREAT'
