@@ -205,8 +205,9 @@ CLASS lcl_transport_objects IMPLEMENTATION.
 
     LOOP AT mt_transport_objects INTO ls_transport_object.
       LOOP AT it_object_statuses INTO ls_object_status
-        WHERE obj_name = ls_transport_object-obj_name
-          AND obj_type = ls_transport_object-object.
+          WHERE obj_name = ls_transport_object-obj_name
+          AND obj_type = ls_transport_object-object
+          AND NOT lstate IS INITIAL.
 
         CASE ls_object_status-lstate.
           WHEN gc_state-added OR gc_state-modified.
@@ -285,11 +286,11 @@ CLASS lcl_transport_to_branch IMPLEMENTATION.
 
   METHOD create.
     DATA:
-      lv_branch_name      TYPE string,
-      ls_comment          TYPE ty_comment,
-      lo_stage            TYPE REF TO lcl_stage,
-      ls_stage_objects    TYPE ty_stage_files,
-      lt_object_statuses  TYPE ty_results_tt.
+      lv_branch_name     TYPE string,
+      ls_comment         TYPE ty_comment,
+      lo_stage           TYPE REF TO lcl_stage,
+      ls_stage_objects   TYPE ty_stage_files,
+      lt_object_statuses TYPE ty_results_tt.
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
         lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
