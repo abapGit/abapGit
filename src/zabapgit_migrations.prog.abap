@@ -58,6 +58,10 @@ CLASS lcl_migrations IMPLEMENTATION.
           ENDIF.
           <lo_repo>->refresh( ).
           lo_dot_abapgit = <lo_repo>->find_remote_dot_abapgit( ).
+          IF lo_dot_abapgit IS INITIAL.
+* .abapgit.xml is not in the remote repo yet
+            lo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
+          ENDIF.
         ENDIF.
         <lo_repo>->set_dot_abapgit( lo_dot_abapgit ).
       ENDIF.
