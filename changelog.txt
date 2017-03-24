@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2017-03-24 v1.33.3
+------------------
+* fix dump in transport to branch
+* fix dump in migration of .abapgit.xml to local state
+
 2017-03-23 v1.33.2
 ------------------
 * fix Microsoft TFS zlib decompression error
