@@ -99,14 +99,35 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
+    DATA: lv_objname  TYPE rsedd0-ddobjname,
+          lv_tabclass TYPE dd02l-tabclass,
+          lv_foo      TYPE c LENGTH 1,
+          lv_no_ask   TYPE abap_bool,
+          lr_data     TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_data>  TYPE any.
 
 
     lv_objname = ms_item-obj_name.
 
+    lv_no_ask = abap_true.
+    SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+* it cannot delete table with table wihtout asking
+      CREATE DATA lr_data TYPE (lv_objname).
+      ASSIGN lr_data->* TO <ls_data>.
+      SELECT SINGLE * FROM (lv_objname) INTO <ls_data>.
+      IF sy-subrc = 0.
+        lv_no_ask = abap_false.
+      ENDIF.
+    ENDIF.
+
     CALL FUNCTION 'RS_DD_DELETE_OBJ'
       EXPORTING
-        no_ask               = abap_true
+        no_ask               = lv_no_ask
         objname              = lv_objname
         objtype              = 'T'
       EXCEPTIONS
