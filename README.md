@@ -24,4 +24,4 @@ See [Wiki](https://github.com/larshp/abapGit/wiki/)
 ## FAQ ##
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_17_17.png)
+![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_33_3.png)
