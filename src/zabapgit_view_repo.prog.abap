@@ -36,8 +36,8 @@ CLASS lcl_gui_view_repo_content DEFINITION FINAL.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       build_head_menu
-        IMPORTING iv_lstate      TYPE char1
-                  iv_rstate      TYPE char1
+        IMPORTING iv_lstate         TYPE char1
+                  iv_rstate         TYPE char1
         RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
         RAISING   lcx_exception,
       build_grid_menu
@@ -264,6 +264,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
           lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE gc_html_opt-crossout,
+          lv_crossout    LIKE gc_html_opt-crossout,
           lv_pull_opt    LIKE gc_html_opt-crossout.
 
     CREATE OBJECT ro_toolbar.
@@ -317,9 +318,15 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
                          iv_act = |{ gc_action-repo_refresh_checksums }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ gc_action-repo_remove }?{ lv_key }| ).
+
+    CLEAR lv_crossout.
+    IF mo_repo->is_write_protected( ) = abap_true
+        OR lcl_auth=>is_allowed( gc_activities-uninstall ) = abap_false.
+      lv_crossout = gc_html_opt-crossout.
+    ENDIF.
     lo_tb_advanced->add( iv_txt = 'Uninstall'
                          iv_act = |{ gc_action-repo_purge }?{ lv_key }|
-                         iv_opt = lv_wp_opt ).
+                         iv_opt = lv_crossout ).
 
     " Build main toolbar ==============================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
