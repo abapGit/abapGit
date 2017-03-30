@@ -99,8 +99,8 @@ CLASS lcl_file_status IMPLEMENTATION.
         BINARY SEARCH. " Sorted above
 
       IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
-        io_log->add( iv_msg = |Files for object { <ls_res1>-obj_type }{
-                       <ls_res1>-obj_name }are not placed in the same folder|
+        io_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
+                       <ls_res1>-obj_name } are not placed in the same folder|
                      iv_type = 'W'
                      iv_rc    = '1' ) ##no_text.
       ENDIF.
