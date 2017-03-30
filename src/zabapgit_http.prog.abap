@@ -2,20 +2,68 @@
 *&  Include           ZABAPGIT_HTTP
 *&---------------------------------------------------------------------*
 
+CLASS lcl_proxy_authentication DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      run
+        IMPORTING ii_client TYPE REF TO if_http_client
+        RAISING   lcx_exception.
+
+  PRIVATE SECTION.
+    CLASS-DATA: gv_username TYPE string,
+                gv_password TYPE string.
+
+    CLASS-METHODS: enter RAISING lcx_exception.
+
+ENDCLASS.
+
+CLASS lcl_proxy_authentication IMPLEMENTATION.
+
+  METHOD run.
+
+    IF gv_username IS INITIAL OR gv_password IS INITIAL.
+      enter( ).
+    ENDIF.
+
+    ii_client->authenticate(
+      proxy_authentication = abap_true
+      username             = gv_username
+      password             = gv_password ).
+
+  ENDMETHOD.
+
+  METHOD enter.
+
+    lcl_password_dialog=>popup(
+      EXPORTING
+        iv_repo_url = 'Proxy Authentication'
+      CHANGING
+        cv_user     = gv_username
+        cv_pass     = gv_password ).
+
+    IF gv_username IS INITIAL OR gv_password IS INITIAL.
+      lcx_exception=>raise( 'Proxy auth failed' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 CLASS lcl_http_digest DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING
-          ii_client TYPE REF TO if_http_client
-          iv_username TYPE string
-          iv_password TYPE string
-        RAISING lcx_exception,
+                  ii_client   TYPE REF TO if_http_client
+                  iv_username TYPE string
+                  iv_password TYPE string
+        RAISING   lcx_exception,
       run
         IMPORTING
-          ii_client TYPE REF TO if_http_client
-        RAISING lcx_exception.
+                  ii_client TYPE REF TO if_http_client
+        RAISING   lcx_exception.
 
   PRIVATE SECTION.
     DATA: mv_ha1      TYPE string,
@@ -29,22 +77,22 @@ CLASS lcl_http_digest DEFINITION FINAL.
     CLASS-METHODS:
       md5
         IMPORTING
-          iv_data        TYPE string
+                  iv_data        TYPE string
         RETURNING
-          VALUE(rv_hash) TYPE string
-        RAISING lcx_exception.
+                  VALUE(rv_hash) TYPE string
+        RAISING   lcx_exception.
 
     METHODS:
       hash
         IMPORTING
-          iv_qop             TYPE string
-          iv_nonce           TYPE string
-          iv_uri             TYPE string
-          iv_method          TYPE string
-          iv_cnonse          TYPE string
+                  iv_qop             TYPE string
+                  iv_nonce           TYPE string
+                  iv_uri             TYPE string
+                  iv_method          TYPE string
+                  iv_cnonse          TYPE string
         RETURNING
-          VALUE(rv_response) TYPE string
-        RAISING lcx_exception,
+                  VALUE(rv_response) TYPE string
+        RAISING   lcx_exception,
       parse
         IMPORTING
           ii_client TYPE REF TO if_http_client.
@@ -63,16 +111,16 @@ CLASS lcl_http_client DEFINITION FINAL.
         IMPORTING io_digest TYPE REF TO lcl_http_digest,
       send_receive_close
         IMPORTING
-          iv_data TYPE xstring
+                  iv_data        TYPE xstring
         RETURNING
-          VALUE(rv_data) TYPE xstring
-        RAISING lcx_exception,
+                  VALUE(rv_data) TYPE xstring
+        RAISING   lcx_exception,
       get_cdata
         RETURNING VALUE(rv_value) TYPE string,
       check_http_200
-        RAISING   lcx_exception,
+        RAISING lcx_exception,
       send_receive
-        RAISING   lcx_exception,
+        RAISING lcx_exception,
       set_headers
         IMPORTING iv_url     TYPE string
                   iv_service TYPE string
@@ -347,9 +395,9 @@ CLASS lcl_http DEFINITION FINAL.
         IMPORTING iv_url         TYPE string
         RETURNING VALUE(rv_bool) TYPE abap_bool,
       acquire_login_details
-        IMPORTING ii_client TYPE REF TO if_http_client
-                  io_client TYPE REF TO lcl_http_client
-                  iv_url    TYPE string
+        IMPORTING ii_client        TYPE REF TO if_http_client
+                  io_client        TYPE REF TO lcl_http_client
+                  iv_url           TYPE string
         RETURNING VALUE(rv_scheme) TYPE string
         RAISING   lcx_exception.
 
@@ -382,6 +430,10 @@ CLASS lcl_http IMPLEMENTATION.
         proxy_service = lo_settings->get_proxy_port( )
       IMPORTING
         client        = li_client ).
+
+    IF lo_settings->get_proxy_authentication( ) = abap_true.
+      lcl_proxy_authentication=>run( li_client ).
+    ENDIF.
 
     CREATE OBJECT ro_client
       EXPORTING
@@ -469,10 +521,10 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD acquire_login_details.
 
-    DATA: lv_default_user  TYPE string,
-          lv_user          TYPE string,
-          lv_pass          TYPE string,
-          lo_digest        TYPE REF TO lcl_http_digest.
+    DATA: lv_default_user TYPE string,
+          lv_user         TYPE string,
+          lv_pass         TYPE string,
+          lo_digest       TYPE REF TO lcl_http_digest.
 
 
     lv_default_user = lcl_app=>user( )->get_repo_login( iv_url ).
