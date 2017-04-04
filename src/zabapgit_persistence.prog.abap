@@ -1511,12 +1511,18 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS set_proxy_port
       IMPORTING
         iv_port TYPE string.
+    METHODS set_proxy_authentication
+      IMPORTING
+        iv_auth TYPE abap_bool.
     METHODS get_proxy_url
       RETURNING
         VALUE(rv_proxy_url) TYPE string.
     METHODS get_proxy_port
       RETURNING
         VALUE(rv_port) TYPE string.
+    METHODS get_proxy_authentication
+      RETURNING
+        VALUE(rv_auth) TYPE abap_bool.
     METHODS set_run_critical_tests
       IMPORTING
         iv_run TYPE abap_bool.
@@ -1530,15 +1536,23 @@ CLASS lcl_settings DEFINITION FINAL.
         VALUE(rv_lines) TYPE i.
 
   PRIVATE SECTION.
-    DATA mv_proxy_url TYPE string.
-    DATA mv_proxy_port TYPE string.
-    DATA mv_run_critical_tests TYPE abap_bool.
-    DATA mv_lines TYPE i.
+    DATA: mv_proxy_url          TYPE string,
+          mv_proxy_port         TYPE string,
+          mv_proxy_auth         TYPE string,
+          mv_run_critical_tests TYPE abap_bool,
+          mv_lines              TYPE i.
 
 ENDCLASS.
 
 CLASS lcl_settings IMPLEMENTATION.
 
+  METHOD set_proxy_authentication.
+    mv_proxy_auth = iv_auth.
+  ENDMETHOD.
+
+  METHOD get_proxy_authentication.
+    rv_auth = mv_proxy_auth.
+  ENDMETHOD.
 
   METHOD set_proxy_url.
     mv_proxy_url = iv_url.
@@ -1574,7 +1588,6 @@ CLASS lcl_settings IMPLEMENTATION.
 
 ENDCLASS.
 
-
 CLASS lcl_persistence_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -1590,9 +1603,10 @@ CLASS lcl_persistence_settings DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_persistence_settings IMPLEMENTATION.
-
+* todo, refactor this to use XML and only 1 row in the database?
 
   METHOD modify.
+
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_URL'
@@ -1602,6 +1616,11 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_PORT'
       iv_data       = io_settings->get_proxy_port( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_AUTH'
+      iv_data       = io_settings->get_proxy_authentication( ) ).
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
@@ -1615,14 +1634,17 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD read.
+
     DATA: lv_critical_tests_as_string  TYPE string,
           lv_critical_tests_as_boolean TYPE abap_bool,
           lv_max_lines_as_string       TYPE string,
+          lv_flag                      TYPE abap_bool,
           lv_max_lines_as_integer      TYPE i.
 
+
     CREATE OBJECT ro_settings.
+
     TRY.
         ro_settings->set_proxy_url(
           lcl_app=>db( )->read(
@@ -1631,6 +1653,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_proxy_url( '' ).
     ENDTRY.
+
     TRY.
         ro_settings->set_proxy_port(
           lcl_app=>db( )->read(
@@ -1639,6 +1662,16 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.
+
+    TRY.
+        lv_flag = lcl_app=>db( )->read(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_AUTH' ).
+        ro_settings->set_proxy_authentication( lv_flag ).
+      CATCH lcx_not_found.
+        ro_settings->set_proxy_authentication( abap_false ).
+    ENDTRY.
+
     TRY.
         lv_critical_tests_as_string = lcl_app=>db( )->read(
            iv_type  = 'SETTINGS'

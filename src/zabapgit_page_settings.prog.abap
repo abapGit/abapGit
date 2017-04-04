@@ -78,12 +78,22 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<h2>Proxy</h2>| ).
     ro_html->add( |<label for="proxy_url">Proxy URL</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( `<input name="proxy_url" type="text" size="50" value="` && mo_settings->get_proxy_url( ) && `">` ).
+    ro_html->add( `<input name="proxy_url" type="text" size="50" value="` &&
+      mo_settings->get_proxy_url( ) && `">` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<label for="proxy_port">Proxy Port</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( `<input name="proxy_port" type="text" size="5" value="` && mo_settings->get_proxy_port( ) && `">` ).
+    ro_html->add( `<input name="proxy_port" type="text" size="5" value="` &&
+      mo_settings->get_proxy_port( ) && `">` ).
     ro_html->add( |<br>| ).
+    ro_html->add( |<label for="proxy_auth">Proxy Authentication</label>| ).
+    IF mo_settings->get_proxy_authentication( ) = abap_true.
+      ro_html->add( `<input name="proxy_auth" type="checkbox" checked>` ).
+    ELSE.
+      ro_html->add( `<input name="proxy_auth" type="checkbox">` ).
+    ENDIF.
+    ro_html->add( |<br>| ).
+
     ro_html->add( |<br>| ).
 
   ENDMETHOD.
@@ -117,6 +127,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     DATA: ls_post_field           TYPE ihttpnvp,
           lv_max_lines_as_integer TYPE i.
 
+
     CREATE OBJECT mo_settings.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_url'.
     IF sy-subrc <> 0.
@@ -129,6 +140,13 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
       mv_error = abap_true.
     ENDIF.
     mo_settings->set_proxy_port( ls_post_field-value ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_auth'.
+    IF sy-subrc = 0.
+      mo_settings->set_proxy_authentication( abap_true ).
+    ELSE.
+      mo_settings->set_proxy_authentication( abap_false ).
+    ENDIF.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'critical_tests'.
     IF sy-subrc = 0.
