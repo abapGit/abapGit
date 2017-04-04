@@ -50,7 +50,6 @@ INCLUDE zabapgit_object_type.
 INCLUDE zabapgit_object_vcls.
 INCLUDE zabapgit_object_view.
 INCLUDE zabapgit_object_w3xx.
-INCLUDE zabapgit_object_wapa.
 INCLUDE zabapgit_object_wdya.
 INCLUDE zabapgit_object_wdyn.
 INCLUDE zabapgit_object_webi.
