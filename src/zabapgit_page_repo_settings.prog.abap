@@ -59,6 +59,9 @@ CLASS lcl_gui_page_repo_settings IMPLEMENTATION.
     ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' &&
       ls_dot-folder_logic && '">' ).
     ro_html->add( '<br>' ).
+    ro_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
+      ls_dot-starting_folder && '">' ).
+    ro_html->add( '<br>' ).
     ro_html->add( '<input type="submit" value="Save" class="submit">' ).
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
@@ -76,12 +79,18 @@ CLASS lcl_gui_page_repo_settings IMPLEMENTATION.
       WHEN c_action-save_settings.
         lt_post_fields = parse_post( it_postdata ).
 
+        lo_dot = mo_repo->get_dot_abapgit( ).
+
         READ TABLE lt_post_fields INTO ls_post_field WITH KEY name = 'folder_logic'.
         ASSERT sy-subrc = 0.
-
-        lo_dot = mo_repo->get_dot_abapgit( ).
         lo_dot->set_folder_logic( ls_post_field-value ).
+
+        READ TABLE lt_post_fields INTO ls_post_field WITH KEY name = 'starting_folder'.
+        ASSERT sy-subrc = 0.
+        lo_dot->set_starting_folder( ls_post_field-value ).
+
         mo_repo->set_dot_abapgit( lo_dot ).
+        mo_repo->refresh( ).
 
         ev_state = gc_event_state-go_back.
     ENDCASE.
