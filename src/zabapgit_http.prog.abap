@@ -369,7 +369,8 @@ CLASS lcl_http IMPLEMENTATION.
     DATA: lv_uri      TYPE string,
           lv_scheme   TYPE string,
           li_client   TYPE REF TO if_http_client,
-          lo_settings TYPE REF TO lcl_settings.
+          lo_settings TYPE REF TO lcl_settings,
+          lv_text     TYPE string.
 
 
     lo_settings = lcl_app=>settings( )->read( ).
@@ -381,8 +382,25 @@ CLASS lcl_http IMPLEMENTATION.
         proxy_host    = lo_settings->get_proxy_url( )
         proxy_service = lo_settings->get_proxy_port( )
       IMPORTING
-        client        = li_client ).
+        client        = li_client
+      EXCEPTIONS
+        argument_not_found = 1
+        plugin_not_active = 2
+        internal_error = 3
+        OTHERS = 4 ).
+    IF sy-subrc <> 0.
+      CASE sy-subrc.
+        WHEN 1.
+          " make sure:
+          " a) SSL is setup properly in STRUST
+          lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
+        WHEN OTHERS.
+          lv_text = 'While creating HTTP Client'.           "#EC NOTEXT
 
+      ENDCASE.
+      lcx_exception=>raise( lv_text ).
+    ENDIF.
+    
     CREATE OBJECT ro_client
       EXPORTING
         ii_client = li_client.
