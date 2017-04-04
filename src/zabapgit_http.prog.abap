@@ -400,7 +400,7 @@ CLASS lcl_http IMPLEMENTATION.
       ENDCASE.
       lcx_exception=>raise( lv_text ).
     ENDIF.
-    
+
     CREATE OBJECT ro_client
       EXPORTING
         ii_client = li_client.
