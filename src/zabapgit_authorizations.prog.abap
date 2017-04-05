@@ -2,16 +2,16 @@
 *&  Include           ZABAPGIT_AUTHORIZATIONS
 *&---------------------------------------------------------------------*
 
-TYPES: ty_activity TYPE string.
+TYPES: ty_authorization TYPE string.
 
-CONSTANTS: BEGIN OF gc_activities,
-             uninstall TYPE ty_activity VALUE 'UNINSTALL',
-           END OF gc_activities.
+CONSTANTS: BEGIN OF gc_authorization,
+             uninstall TYPE ty_authorization VALUE 'UNINSTALL',
+           END OF gc_authorization.
 
 INTERFACE lif_auth.
   METHODS:
     is_allowed
-      IMPORTING iv_activity       TYPE ty_activity
+      IMPORTING iv_authorization  TYPE ty_authorization
                 iv_param          TYPE string OPTIONAL
       RETURNING VALUE(rv_allowed) TYPE abap_bool.
 ENDINTERFACE.
@@ -27,7 +27,7 @@ CLASS lcl_auth DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       is_allowed
-        IMPORTING iv_activity       TYPE ty_activity
+        IMPORTING iv_authorization  TYPE ty_authorization
                   iv_param          TYPE string OPTIONAL
         RETURNING VALUE(rv_allowed) TYPE abap_bool.
 
@@ -41,8 +41,8 @@ CLASS lcl_auth IMPLEMENTATION.
 
     TRY.
         CREATE OBJECT li_auth TYPE ('LCL_AUTH_EXIT').
-        rv_allowed = li_auth->is_allowed( iv_activity = iv_activity
-                                          iv_param    = iv_param ).
+        rv_allowed = li_auth->is_allowed( iv_authorization = iv_authorization
+                                          iv_param         = iv_param ).
       CATCH cx_sy_create_object_error.
         rv_allowed = abap_true.
     ENDTRY.
