@@ -12,6 +12,7 @@ INTERFACE lif_auth.
   METHODS:
     is_allowed
       IMPORTING iv_activity       TYPE ty_activity
+                iv_param          TYPE string OPTIONAL
       RETURNING VALUE(rv_allowed) TYPE abap_bool.
 ENDINTERFACE.
 
@@ -27,6 +28,7 @@ CLASS lcl_auth DEFINITION FINAL.
     CLASS-METHODS:
       is_allowed
         IMPORTING iv_activity       TYPE ty_activity
+                  iv_param          TYPE string OPTIONAL
         RETURNING VALUE(rv_allowed) TYPE abap_bool.
 
 ENDCLASS.
@@ -39,7 +41,8 @@ CLASS lcl_auth IMPLEMENTATION.
 
     TRY.
         CREATE OBJECT li_auth TYPE ('LCL_AUTH_EXIT').
-        rv_allowed = li_auth->is_allowed( iv_activity ).
+        rv_allowed = li_auth->is_allowed( iv_activity = iv_activity
+                                          iv_param    = iv_param ).
       CATCH cx_sy_create_object_error.
         rv_allowed = abap_true.
     ENDTRY.
