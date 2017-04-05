@@ -54,6 +54,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
     SELECT * FROM o2pagdir INTO TABLE lt_pages WHERE applname = lv_name.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
+      RETURN.
     ENDIF.
 
     SORT lt_pages BY changedon DESCENDING changetime DESCENDING.
