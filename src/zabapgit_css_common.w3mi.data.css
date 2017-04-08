@@ -24,7 +24,7 @@ img               { border: 0px; vertical-align: middle; }
 table             { border-collapse: collapse; }
 pre               { display: inline; }
 sup {
-  vertical-align: baseline;
+  vertical-align: top;
   position: relative;
   top: -0.5em;
   font-size: 75%;
