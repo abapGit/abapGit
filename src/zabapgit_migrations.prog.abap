@@ -34,6 +34,7 @@ CLASS lcl_migrations IMPLEMENTATION.
   METHOD local_dot_abapgit.
 
     DATA: lt_repos       TYPE lcl_repo_srv=>ty_repo_tt,
+          lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
           lx_exception   TYPE REF TO lcx_exception.
@@ -64,19 +65,19 @@ CLASS lcl_migrations IMPLEMENTATION.
           TRY.
               <lo_repo>->refresh( ).
             CATCH lcx_exception INTO lx_exception.
+              lv_msg = |Please do not use the "{ <lo_repo>->get_name( ) }" repository until migrated|.
               CALL FUNCTION 'POPUP_TO_INFORM'
                 EXPORTING
                   titel = 'Migration has failed'
                   txt1  = lx_exception->mv_text
-                  txt2  = 'Please do not use the ''' && <lo_repo>->get_name( ) && ''' repository until migrated.'
+                  txt2  = lv_msg
                   txt3  = 'You will be prompted to migrate the repository every time you run abapGit.'
                   txt4  = 'You can safely remove the repository in its ''Advanced -> Remove'' menu.'.
               CONTINUE.
           ENDTRY.
 
           lo_dot_abapgit = <lo_repo>->find_remote_dot_abapgit( ).
-          IF lo_dot_abapgit IS INITIAL.
-* .abapgit.xml is not in the remote repo yet
+          IF lo_dot_abapgit IS INITIAL. " .abapgit.xml is not in the remote repo yet
             lo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
           ENDIF.
         ENDIF.
