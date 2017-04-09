@@ -742,3 +742,49 @@ div.tutorial h2 {
 }
 .nav-container ul ul li.separator:first-child { border-top: none; }
 .nav-container ul ul li.separator:hover { background-color: inherit; }
+
+/* News Announcement */
+.news { 
+  position: absolute;
+  z-index: 99;
+  top: 50%;
+  left: 50%;
+  width: 40em;
+  margin-top: -12em;
+  margin-left: -20em;
+  border: 1px solid #ccc;
+  background-color: white;
+  padding: 0.5em;
+}
+
+.news .title {
+  color: #888888;
+  font-weight: bold;
+  font-size: 16px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.news .attention {
+  background-color: #ff9800; 
+  color: white;
+  padding: 10px;
+}
+
+.news li {
+  margin: 4px;
+  padding-left: 10px;
+  font-size: 15px;
+  list-style-type: none;
+}
+
+.news p.versionHeader { 
+  font-size: 16px;
+  color: #888888;
+  font-weight: bold;
+  text-align: left;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px #ddd solid;
+  margin: 4px;
+}

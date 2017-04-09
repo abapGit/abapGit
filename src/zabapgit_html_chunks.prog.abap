@@ -7,9 +7,9 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS render_error
-        IMPORTING ix_error       TYPE REF TO lcx_exception OPTIONAL
-                  iv_error       TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+        IMPORTING ix_error            TYPE REF TO lcx_exception OPTIONAL
+                  iv_error            TYPE string OPTIONAL
+        RETURNING VALUE(ro_html)      TYPE REF TO lcl_html.
 
     CLASS-METHODS render_repo_top
       IMPORTING io_repo               TYPE REF TO lcl_repo
@@ -17,13 +17,14 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_show_branch        TYPE abap_bool DEFAULT abap_true
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
                 iv_branch             TYPE string OPTIONAL
+                io_news               TYPE REF TO lcl_news OPTIONAL
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
     CLASS-METHODS render_item_state
-        IMPORTING iv1            TYPE char1
-                  iv2            TYPE char1
-        RETURNING VALUE(rv_html) TYPE string.
+        IMPORTING iv1                 TYPE char1
+                  iv2                 TYPE char1
+        RETURNING VALUE(rv_html)      TYPE string.
 
     CLASS-METHODS render_branch_span
       IMPORTING iv_branch             TYPE string
@@ -33,6 +34,12 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS render_js_error_banner
+      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RAISING   lcx_exception.
+
+    CLASS-METHODS render_news
+      IMPORTING
+                io_news               TYPE REF TO lcl_news
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
@@ -71,6 +78,12 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
+
+    IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
+      ro_html->add_a( iv_act   = 'displayNews()'
+                      iv_typ   = gc_action_type-onclick
+                      iv_txt   = lcl_html=>icon( iv_name  = 'history/dark' ) ).
+    ENDIF.
 
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
       lv_icon = 'star/blue' ##NO_TEXT.
@@ -214,5 +227,51 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
   ENDMETHOD. "render_js_error_stub
+
+  METHOD render_news.
+
+    DATA lt_log TYPE lcl_news=>tt_log.
+
+    CREATE OBJECT ro_html.
+
+    IF io_news IS NOT BOUND.
+      RETURN.
+    ELSEIF io_news->has_news( ) = abap_true.
+      lt_log = io_news->get_log( ).
+    ELSE.
+      RETURN.
+    ENDIF.
+
+    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
+
+    ro_html->add( '<div id="news" class="news">' ).
+
+    ro_html->add( '<table class="w100"><tr>' ).
+    ro_html->add( '<td class="title">' ).
+    ro_html->add( 'Announcement of the latest changes' ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '<td class="right">' ).
+    ro_html->add( '<a onclick="displayNews()">close</a>' ).
+    ro_html->add( '</td>' ).
+    ro_html->add( '</tr></table>' ).
+
+    IF io_news->has_important_news( ) = abap_true.
+      ro_html->add( '<div class="attention">'
+        && 'Some changes mentioned in this announcement might be critical !'
+        && '</div>' ).
+    ENDIF.
+
+    " Generate news
+    LOOP AT lt_log ASSIGNING <line>.
+      IF <line>-header = 'X'.
+        ro_html->add( |<p class="versionHeader"> { <line>-text } </p>| ).
+      ELSE.
+        ro_html->add( |<li> { <line>-text } </li>| ).
+      ENDIF.
+    ENDLOOP.
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD. "render_news
 
 ENDCLASS. "lcl_gui_chunk_lib
