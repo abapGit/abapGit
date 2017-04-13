@@ -1131,9 +1131,9 @@ CLASS lcl_log IMPLEMENTATION.
 
 
     READ TABLE mt_log INDEX 1 INTO ls_log1.
-    READ TABLE mt_log INDEX 1 INTO ls_log2.
-    READ TABLE mt_log INDEX 1 INTO ls_log3.
-    READ TABLE mt_log INDEX 1 INTO ls_log4.
+    READ TABLE mt_log INDEX 2 INTO ls_log2.
+    READ TABLE mt_log INDEX 3 INTO ls_log3.
+    READ TABLE mt_log INDEX 4 INTO ls_log4.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
