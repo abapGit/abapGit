@@ -29,6 +29,9 @@ CLASS lcl_object_wapa DEFINITION INHERITING FROM lcl_objects_super FINAL.
       get_page_content
         IMPORTING io_page           TYPE REF TO cl_o2_api_pages
         RETURNING VALUE(rv_content) TYPE xstring,
+      to_page_content
+        IMPORTING iv_content        TYPE xstring
+        RETURNING VALUE(rt_content) TYPE o2pageline_table,
       read_page
         IMPORTING is_page        TYPE o2pagattr
         RETURNING VALUE(rs_page) TYPE ty_page
@@ -99,15 +102,154 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-* todo, not supported yet
-    ASSERT 0 = 1.
+    DATA: lv_name    TYPE o2applname,
+          lo_bsp     TYPE REF TO cl_o2_api_application,
+          ls_pagekey TYPE o2pagkey,
+          lv_object  TYPE seu_objkey,
+          lt_pages   TYPE o2pagelist.
+
+    FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
+
+
+    lv_name = ms_item-obj_name.
+
+    cl_o2_api_application=>load(
+      EXPORTING
+        p_application_name  = lv_name
+      IMPORTING
+        p_application       = lo_bsp
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        error_occured       = 3 ).
+    ASSERT sy-subrc = 0.
+
+    lo_bsp->set_changeable(
+      p_changeable           = abap_true
+      p_complete_application = abap_true ).
+
+    cl_o2_api_pages=>get_all_pages(
+      EXPORTING
+        p_applname = lv_name
+        p_version  = c_active
+      IMPORTING
+        p_pages    = lt_pages ).
+
+    LOOP AT lt_pages ASSIGNING <ls_page>.
+      CLEAR ls_pagekey.
+      ls_pagekey-applname = lv_name.
+      ls_pagekey-pagekey  = <ls_page>-pagekey.
+
+      cl_o2_page=>delete_page_for_application(
+        EXPORTING
+          p_pagekey           = ls_pagekey
+        EXCEPTIONS
+          object_not_existing = 1
+          error_occured       = 2 ).
+      ASSERT sy-subrc = 0.
+    ENDLOOP.
+
+    lo_bsp->delete( ).
+
+* release lock
+    lv_object = lv_name.
+    cl_o2_api_application=>call_access_permission(
+      p_mode                 = 'FREE'
+      p_object               = lv_object
+      p_complete_application = abap_true ).
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~deserialize.
 
-* todo, not supported yet
-    ASSERT 0 = 1.
+    DATA: lo_bsp        TYPE REF TO cl_o2_api_application,
+          lv_name       TYPE o2applname,
+          ls_attributes TYPE o2applattr,
+          lt_nodes      TYPE o2applnode_table,
+          lt_navgraph   TYPE o2applgrap_table,
+          lv_objkey     TYPE seu_objkey,
+          ls_item       LIKE ms_item,
+          lv_extra      TYPE string,
+          lv_content    TYPE xstring,
+          lv_ext        TYPE string,
+          lo_page       TYPE REF TO cl_o2_api_pages,
+          lt_pages_info TYPE ty_pages_tt.
+
+    FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages_info.
+
+
+    lv_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING cg_data = ls_attributes ).
+    io_xml->read( EXPORTING iv_name = 'NAVGRAPH'
+                  CHANGING cg_data = lt_navgraph ).
+    io_xml->read( EXPORTING iv_name = 'PAGES'
+                  CHANGING cg_data = lt_pages_info ).
+
+    ls_attributes-devclass = iv_package.
+
+* todo: overwrite existing
+    cl_o2_api_application=>create_new(
+      EXPORTING
+        p_application_data      = ls_attributes
+        p_nodes                 = lt_nodes
+        p_navgraph              = lt_navgraph
+      IMPORTING
+        p_application           = lo_bsp
+      EXCEPTIONS
+        object_already_existing = 1
+        object_just_created     = 2
+        not_authorized          = 3
+        undefined_name          = 4
+        author_not_existing     = 5
+        action_cancelled        = 6
+        error_occured           = 7
+        invalid_parameter       = 8 ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
+    ENDIF.
+
+    lo_bsp->save( ).
+
+    lo_bsp->set_changeable(
+      p_changeable           = abap_false
+      p_complete_application = abap_true ).
+
+    ls_item-obj_type = 'WAPD'.
+    ls_item-obj_name = ms_item-obj_name.
+    lcl_objects_activation=>add_item( ls_item ).
+
+    lv_objkey = ls_item-obj_name.
+* todo, hmm, the WAPD is not added to the worklist during activation
+    cl_o2_api_application=>activate( lv_objkey ).
+
+    LOOP AT lt_pages_info ASSIGNING <ls_page>.
+      cl_o2_api_pages=>create_new_page(
+        EXPORTING
+          p_pageattrs = <ls_page>-attributes
+        IMPORTING
+          p_page      = lo_page ).
+
+      SPLIT <ls_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
+      REPLACE ALL OCCURRENCES OF '_-' IN lv_extra WITH '/'.
+      lv_content = mo_files->read_raw( iv_extra = lv_extra
+                                       iv_ext   = lv_ext ).
+      lo_page->set_page( to_page_content( lv_content ) ).
+
+      lo_page->set_event_handlers( <ls_page>-event_handlers ).
+      lo_page->set_parameters( <ls_page>-parameters ).
+      lo_page->set_type_source( <ls_page>-types ).
+
+      lo_page->save( p_with_all_texts = abap_true ).
+
+      ls_item-obj_type = 'WAPP'.
+      ls_item-obj_name = cl_wb_object_type=>get_concatenated_key_from_id(
+        p_key_component1 = <ls_page>-attributes-applname
+        p_key_component2 = <ls_page>-attributes-pagekey
+        p_external_id    = 'WG ' ).
+      lcl_objects_activation=>add_item( ls_item ).
+    ENDLOOP.
 
   ENDMETHOD.                    "deserialize
 
@@ -127,9 +269,9 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     cl_o2_api_application=>load(
       EXPORTING
-        p_application_name = lv_name
+        p_application_name  = lv_name
       IMPORTING
-        p_application = lo_bsp
+        p_application       = lo_bsp
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -242,6 +384,17 @@ CLASS lcl_object_wapa IMPLEMENTATION.
            rs_page-attributes-implclass,
            rs_page-attributes-gendate,
            rs_page-attributes-gentime.
+
+  ENDMETHOD.
+
+  METHOD to_page_content.
+
+    DATA: lv_string TYPE string.
+
+
+    lv_string = lcl_convert=>xstring_to_string_utf8( iv_content ).
+
+    SPLIT lv_string AT gc_newline INTO TABLE rt_content.
 
   ENDMETHOD.
 
