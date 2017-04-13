@@ -15,7 +15,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
     TYPES: BEGIN OF ty_requirement,
              component   TYPE dlvunit,
              min_release TYPE saprelease,
-             min_patch TYPE sappatchlv,
+             min_patch   TYPE sappatchlv,
            END OF ty_requirement,
            ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY,
            BEGIN OF ty_dot_abapgit,
@@ -199,14 +199,26 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD is_ignored.
 
-    DATA: lv_name   TYPE string,
-          lv_ignore TYPE string.
+    DATA: lv_name     TYPE string,
+          lv_starting TYPE string,
+          lv_dot      TYPE string,
+          lv_count    TYPE i,
+          lv_ignore   TYPE string.
 
 
     lv_name = iv_path && iv_filename.
 
+    CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
+    CONCATENATE '/' gc_dot_abapgit INTO lv_dot.
+
     LOOP AT ms_data-ignore INTO lv_ignore.
-      IF lv_name CP lv_ignore.
+      FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.
+
+      IF lv_name CP lv_ignore
+          OR ( ms_data-starting_folder <> '/'
+          AND lv_count > 1
+          AND NOT lv_name CP lv_starting
+          AND NOT lv_name = lv_dot ).
         rv_ignored = abap_true.
         RETURN.
       ENDIF.
