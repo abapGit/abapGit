@@ -15,10 +15,15 @@ CLASS lcl_object_wapa DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_page,
-             attributes TYPE o2pagattr,
+             attributes     TYPE o2pagattr,
+             event_handlers TYPE o2pagevh_tabletype,
+             parameters     TYPE o2pagpar_tabletype,
+             types          TYPE rswsourcet,
            END OF ty_page.
 
     TYPES: ty_pages_tt TYPE STANDARD TABLE OF ty_page WITH DEFAULT KEY.
+
+    CONSTANTS: c_active TYPE so2_version VALUE 'A'.
 
     METHODS:
       get_page_content
@@ -135,7 +140,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     lo_bsp->get_attributes(
       EXPORTING
-        p_version    = 'A'
+        p_version    = c_active
       IMPORTING
         p_attributes = ls_attributes ).
 
@@ -150,7 +155,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     lo_bsp->get_navgraph(
       EXPORTING
-        p_version  = 'A'
+        p_version  = c_active
       IMPORTING
         p_navgraph = lt_navgraph ).
 
@@ -160,7 +165,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
     cl_o2_api_pages=>get_all_pages(
       EXPORTING
         p_applname = lv_name
-        p_version  = 'A'
+        p_version  = c_active
       IMPORTING
         p_pages    = lt_pages ).
 
@@ -193,10 +198,32 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         p_pagekey = ls_pagekey
       IMPORTING
         p_page    = lo_page ).
-* todo, add moar page data into rs_page:
-* event handlers
-* page parameters
-* type definitions
+
+    lo_page->get_event_handlers(
+      IMPORTING
+        p_ev_handler = rs_page-event_handlers
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2 ).
+    ASSERT sy-subrc = 0.
+
+    lo_page->get_parameters(
+      IMPORTING
+        p_parameters = rs_page-parameters
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2
+        OTHERS       = 3 ).
+    ASSERT sy-subrc = 0.
+
+    lo_page->get_type_source(
+      IMPORTING
+        p_source     = rs_page-types
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2
+        OTHERS       = 3 ).
+    ASSERT sy-subrc = 0.
 
     lv_content = get_page_content( lo_page ).
     SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
