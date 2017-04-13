@@ -80,9 +80,10 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<td class="repo_attr right">' ).
 
     IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
-      ro_html->add_a( iv_act   = 'displayNews()'
-                      iv_typ   = gc_action_type-onclick
-                      iv_txt   = lcl_html=>icon( iv_name  = 'history/dark' ) ).
+      ro_html->add_a( iv_act = 'displayNews()'
+                      iv_typ = gc_action_type-onclick
+                      iv_txt = lcl_html=>icon( iv_name = 'pulse/blue'
+                                               iv_hint = 'Display changelog' ) ).
     ENDIF.
 
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
@@ -231,44 +232,39 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_news.
 
     DATA lt_log TYPE lcl_news=>tt_log.
+    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
 
     CREATE OBJECT ro_html.
 
-    IF io_news IS NOT BOUND.
-      RETURN.
-    ELSEIF io_news->has_news( ) = abap_true.
-      lt_log = io_news->get_log( ).
-    ELSE.
+    IF io_news IS NOT BOUND OR io_news->has_news( ) = abap_false.
       RETURN.
     ENDIF.
 
-    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
+    lt_log = io_news->get_log( ).
 
-    ro_html->add( '<div id="news" class="news">' ).
+    ro_html->add( '<div id="news" class="news" style="display:none">' ).
 
-    ro_html->add( '<table class="w100"><tr>' ).
-    ro_html->add( '<td class="title">' ).
-    ro_html->add( 'Announcement of the latest changes' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '<td class="right">' ).
-    ro_html->add( '<a onclick="displayNews()">close</a>' ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr></table>' ).
+    ro_html->add( '<div class="headbar title">Announcement of the latest changes'
+               && '<div class="float-right"><a onclick="displayNews()">close</a></div>'
+               && '</div>' ).
 
     IF io_news->has_important_news( ) = abap_true.
-      ro_html->add( '<div class="attention">'
-        && 'Some changes mentioned in this announcement might be critical !'
+      ro_html->add( '<div class="headbar important">'
+        && lcl_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
+        && 'Please note changes marked with <b>"!"</b>'
         && '</div>' ).
     ENDIF.
 
     " Generate news
+    ro_html->add( |<div class="newslist">| ).
     LOOP AT lt_log ASSIGNING <line>.
       IF <line>-header = 'X'.
-        ro_html->add( |<p class="versionHeader"> { <line>-text } </p>| ).
+        ro_html->add( |<h1>{ <line>-text }</h1>| ).
       ELSE.
-        ro_html->add( |<li> { <line>-text } </li>| ).
+        ro_html->add( |<li>{ <line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
+    ro_html->add( '</div>' ).
 
     ro_html->add( '</div>' ).
 

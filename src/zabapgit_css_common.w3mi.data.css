@@ -62,6 +62,8 @@ input:focus, textarea:focus {
 .pad4px           { padding: 4px; }
 .w100             { width: 100%; }
 .w40              { width: 40%; }
+.float-right      { float: right; }
+.pad-right        { padding-right: 6px; }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header {
@@ -126,6 +128,7 @@ div.repo {
   margin-top:       3px;
   background-color: #f2f2f2;
   padding: 0.5em 1em 0.5em 1em;
+  position: relative;
 }
 .repo_name span.name {
   font-weight: bold;
@@ -744,47 +747,47 @@ div.tutorial h2 {
 .nav-container ul ul li.separator:hover { background-color: inherit; }
 
 /* News Announcement */
-.news { 
+
+div.news { 
   position: absolute;
   z-index: 99;
-  top: 50%;
+  top: 36px;
   left: 50%;
   width: 40em;
-  margin-top: -12em;
   margin-left: -20em;
-  border: 1px solid #ccc;
   background-color: white;
+  box-shadow: 1px 1px 3px 2px #dcdcdc;
+}
+
+div.news div.headbar {
+  text-transform: uppercase;
+  font-size: small;
+  padding: 4px 6px;
+}
+
+div.news div.title {
+  color: #f8f8f8;
+  background-color: #888;
+}
+
+div.news div.title a { color: #c6d6ec; }
+div.news div.important { color: #e8961b; }
+
+div.news div.newslist {
   padding: 0.5em;
+  color: #444;
 }
 
-.news .title {
-  color: #888888;
-  font-weight: bold;
-  font-size: 16px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
-.news .attention {
-  background-color: #ff9800; 
-  color: white;
-  padding: 10px;
-}
-
-.news li {
-  margin: 4px;
+div.news li {
   padding-left: 10px;
-  font-size: 15px;
   list-style-type: none;
 }
 
-.news p.versionHeader { 
-  font-size: 16px;
-  color: #888888;
-  font-weight: bold;
-  text-align: left;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px #ddd solid;
-  margin: 4px;
+div.news h1:first-child { margin: auto; }
+div.news h1 { 
+  font-size: inherit;
+  padding: 6px 4px;
+  margin: 4px auto auto;
+  text-decoration: underline;
+  font-weight: normal;
 }

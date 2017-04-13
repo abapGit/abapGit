@@ -21,12 +21,13 @@ CLASS lcl_news DEFINITION FRIENDS ltcl_news.
       tt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY.
 
     CONSTANTS:
-      c_log_filename TYPE string VALUE '/',
-      c_log_path     TYPE string VALUE 'changelog.txt'.
+      c_log_path     TYPE string VALUE '/',
+      c_log_filename TYPE string VALUE 'changelog.txt'.
 
     CLASS-METHODS create
       IMPORTING io_repo             TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_instance)  TYPE REF TO lcl_news.
+      RETURNING VALUE(ro_instance)  TYPE REF TO lcl_news
+      RAISING lcx_exception.
 
     METHODS:
       constructor
@@ -71,8 +72,8 @@ ENDCLASS.               "lcl_news
 CLASS lcl_news IMPLEMENTATION.
 
   METHOD constructor.
-    DATA:
-          lt_lines  TYPE string_table,
+
+    DATA: lt_lines  TYPE string_table,
           lv_string TYPE string.
 
     lv_string = lcl_convert=>xstring_to_string_utf8( iv_rawdata ).
@@ -83,8 +84,7 @@ CLASS lcl_news IMPLEMENTATION.
 
   METHOD create.
 
-    DATA:
-          lt_remote      TYPE ty_files_tt,
+    DATA: lt_remote      TYPE ty_files_tt,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
     FIELD-SYMBOLS <file> LIKE LINE OF lt_remote.
@@ -96,12 +96,14 @@ CLASS lcl_news IMPLEMENTATION.
       IF lo_repo_online->get_url( ) CS '/abapGit.git'.
         lt_remote = io_repo->get_files_remote( ).
 
-        READ TABLE lt_remote ASSIGNING <file> WITH KEY path = c_log_filename
-                                                   filename = c_log_path.
+        READ TABLE lt_remote ASSIGNING <file>
+          WITH KEY path = c_log_path filename = c_log_filename.
+
         IF sy-subrc = 0.
-        CREATE OBJECT ro_instance EXPORTING
-          iv_rawdata = <file>-data
-          iv_version = gc_abap_version.
+          CREATE OBJECT ro_instance EXPORTING
+            iv_rawdata = <file>-data
+            iv_version = gc_abap_version.
+*            iv_version = 'v1.30.0'. " for debug
         ENDIF.
       ENDIF.
     ENDIF.
@@ -360,13 +362,13 @@ CLASS ltcl_news IMPLEMENTATION.
     " Generate test data
     APPEND '======' TO lt_lines.
     APPEND '------' TO lt_lines.
-    APPEND '      ' TO lt_lines.
+    APPEND `      ` TO lt_lines.
     APPEND 'abapGit changelog' TO lt_lines.
     APPEND '2017-02-13 v1.28.0' TO lt_lines.
     APPEND '------------------' TO lt_lines.
     APPEND '+ Staging page redesigned' TO lt_lines.
     APPEND '! Support for core data services' TO lt_lines.
-    APPEND '      ' TO lt_lines.
+    APPEND `      ` TO lt_lines.
     APPEND '2017-01-25 v1.27.0' TO lt_lines.
     APPEND '------------------' TO lt_lines.
     APPEND '+ Two factor authentication with github.com' TO lt_lines.
