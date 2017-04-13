@@ -457,6 +457,10 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
         RAISING lcx_exception,
       root_empty FOR TESTING
         RAISING lcx_exception,
+      namespaces FOR TESTING
+        RAISING lcx_exception,
+      more_sub FOR TESTING
+        RAISING lcx_exception,
       sub FOR TESTING
         RAISING lcx_exception.
 
@@ -527,6 +531,50 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lines( mt_trees )
       exp = 2 ).
+
+  ENDMETHOD.
+
+  METHOD more_sub.
+
+    FIELD-SYMBOLS: <ls_tree> LIKE LINE OF mt_trees.
+
+    append( iv_path = '/src/foo_a/foo_a1/'
+            iv_name = 'a1.txt' ).
+
+    append( iv_path = '/src/foo_a/foo_a2/'
+            iv_name = 'a2.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 5 ).
+
+    LOOP AT mt_trees ASSIGNING <ls_tree>.
+      cl_abap_unit_assert=>assert_not_initial( <ls_tree>-data ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD namespaces.
+
+    FIELD-SYMBOLS: <ls_tree> LIKE LINE OF mt_trees.
+
+    append( iv_path = '/src/#foo#a/#foo#a1/'
+            iv_name = 'a1.txt' ).
+
+    append( iv_path = '/src/#foo#a/#foo#a2/'
+            iv_name = 'a2.txt' ).
+
+    mt_trees = lcl_git_porcelain=>build_trees( mt_expanded ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_trees )
+      exp = 5 ).
+
+    LOOP AT mt_trees ASSIGNING <ls_tree>.
+      cl_abap_unit_assert=>assert_not_initial( <ls_tree>-data ).
+    ENDLOOP.
 
   ENDMETHOD.
 
