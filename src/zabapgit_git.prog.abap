@@ -1510,7 +1510,6 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     DATA: lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
           ls_tree    LIKE LINE OF rt_trees,
-          lv_sub     TYPE string,
           lv_len     TYPE i,
           lt_folders TYPE ty_folders_tt.
 
@@ -1537,19 +1536,19 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       ENDLOOP.
 
 * folders
-      lv_sub = <ls_folder>-path && '+*'.
-      LOOP AT lt_folders ASSIGNING <ls_sub>
-          WHERE count = <ls_folder>-count + 1 AND path CP lv_sub.
-        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod-dir.
+      LOOP AT lt_folders ASSIGNING <ls_sub> WHERE count = <ls_folder>-count + 1.
+        lv_len = strlen( <ls_folder>-path ).
+        IF strlen( <ls_sub>-path ) > lv_len AND <ls_sub>-path(lv_len) = <ls_folder>-path.
+          APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+          <ls_node>-chmod = gc_chmod-dir.
 
 * extract folder name, this can probably be done easier using regular expressions
-        lv_len = strlen( <ls_folder>-path ).
-        <ls_node>-name = <ls_sub>-path+lv_len.
-        lv_len = strlen( <ls_node>-name ) - 1.
-        <ls_node>-name = <ls_node>-name(lv_len).
+          <ls_node>-name = <ls_sub>-path+lv_len.
+          lv_len = strlen( <ls_node>-name ) - 1.
+          <ls_node>-name = <ls_node>-name(lv_len).
 
-        <ls_node>-sha1 = <ls_sub>-sha1.
+          <ls_node>-sha1 = <ls_sub>-sha1.
+        ENDIF.
       ENDLOOP.
 
       CLEAR ls_tree.
