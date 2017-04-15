@@ -499,3 +499,13 @@ DiffHelper.prototype.highlightButton = function(state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 };
+
+/**********************************************************
+ * Other functions
+ **********************************************************/
+
+// News announcement
+function displayNews() {
+  var div = document.getElementById("news"); 
+  div.style.display = (div.style.display)?'':'none';  
+}

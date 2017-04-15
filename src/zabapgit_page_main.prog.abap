@@ -303,11 +303,19 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo.
 
+    DATA lo_news TYPE REF TO lcl_news.
+
     CREATE OBJECT ro_html.
+
+    lo_news = lcl_news=>create( io_repo ).
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( io_repo               = io_repo
+                                                      io_news               = lo_news
                                                       iv_interactive_branch = abap_true ) ).
+
+    ro_html->add( lcl_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
