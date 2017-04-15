@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-04-15 v1.34.0
+------------------
++ WAPA support
++ display abapGit changelog in abapGit
+* bugfix nested namespace folders 
+
 2017-03-24 v1.33.3
 ------------------
 * fix dump in transport to branch
