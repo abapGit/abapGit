@@ -97,7 +97,18 @@ CLASS lcl_object_wapa IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, jump, WAPA' ).
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation           = 'SHOW'    " Operation
+        object_name         = ms_item-obj_name     " Object Name
+        object_type         = ms_item-obj_type    " Object Type
+        in_new_window       = abap_true
+      EXCEPTIONS
+        not_executed        = 1
+        invalid_object_type = 2
+        OTHERS              = 3.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
