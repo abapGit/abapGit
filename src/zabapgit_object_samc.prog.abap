@@ -181,9 +181,7 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
         appl_obj_data->set_data( <ls_data> ).
 
-        get_persistence( )->save(
-          EXPORTING
-            p_object_data = appl_obj_data ).
+        get_persistence( )->save( p_object_data = appl_obj_data ).
 
         unlock( ).
 
@@ -203,9 +201,7 @@ CLASS lcl_object_samc IMPLEMENTATION.
     TRY.
         lock( ).
 
-        get_persistence( )->delete(
-          EXPORTING
-            p_object_key = object_key ).
+        get_persistence( )->delete( p_object_key = object_key ).
 
         unlock( ).
 
@@ -303,11 +299,9 @@ CLASS lcl_object_samc IMPLEMENTATION.
     object_key = ms_item-obj_name.
     objtype    = ms_item-obj_type.
 
-    get_persistence( )->unlock(
-      EXPORTING
-        p_objname_tr = objname
-        p_object_key = object_key
-        p_objtype_tr = objtype ).
+    get_persistence( )->unlock( p_objname_tr = objname
+                                p_object_key = object_key
+                                p_objtype_tr = objtype ).
 
   ENDMETHOD.
 
