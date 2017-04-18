@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v0.2-alpha">
+ <PROGDIR>
+  <NAME>ZABAPGIT_SAPLINK_OBJECTS</NAME>
+  <STATE>A</STATE>
+  <SQLX></SQLX>
+  <EDTX></EDTX>
+  <VARCL>X</VARCL>
+  <DBAPL>S</DBAPL>
+  <DBNA>D$</DBNA>
+  <CLAS></CLAS>
+  <TYPE></TYPE>
+  <OCCURS></OCCURS>
+  <SUBC>I</SUBC>
+  <APPL></APPL>
+  <SECU></SECU>
+  <CNAM></CNAM>
+  <CDAT>00000000</CDAT>
+  <UNAM></UNAM>
+  <UDAT>00000000</UDAT>
+  <VERN></VERN>
+  <LEVL></LEVL>
+  <RSTAT></RSTAT>
+  <RMAND></RMAND>
+  <RLOAD></RLOAD>
+  <FIXPT>X</FIXPT>
+  <SSET></SSET>
+  <SDATE>00000000</SDATE>
+  <STIME></STIME>
+  <IDATE>00000000</IDATE>
+  <ITIME></ITIME>
+  <LDBNAME>D$S</LDBNAME>
+  <UCCHECK>X</UCCHECK>
+ </PROGDIR>
+ <TEXTPOOL_TABLE>
+  <TEXTPOOL>
+   <ID>R</ID>
+   <KEY></KEY>
+   <ENTRY>SAPLINK plugins wrapped for ABAPGit</ENTRY>
+   <LENGTH>35 </LENGTH>
+  </TEXTPOOL>
+ </TEXTPOOL_TABLE>
+</abapGit>
