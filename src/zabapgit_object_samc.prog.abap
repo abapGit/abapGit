@@ -130,28 +130,36 @@ CLASS lcl_object_samc IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CHANGED_CLNT' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CREATED_ON' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     ASSIGN COMPONENT 'CREATED_CLNT' OF STRUCTURE <ls_header> TO <field>.
-    ASSERT sy-subrc = 0. CLEAR <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR <field>.
 
     io_xml->add( iv_name = 'SAMC'
                  ig_data = <ls_data> ).
