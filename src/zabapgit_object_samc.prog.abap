@@ -81,7 +81,6 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata.
 
@@ -109,9 +108,11 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lr_data TYPE REF TO data.
+    DATA: lr_data   TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_data>    TYPE any.
+    FIELD-SYMBOLS: <ls_data>   TYPE any,
+                   <ls_header> TYPE any,
+                   <field>     TYPE any.
 
     TRY.
         CREATE DATA lr_data TYPE ('AMC_APPLICATION_COMPLETE').
@@ -124,6 +125,33 @@ CLASS lcl_object_samc IMPLEMENTATION.
     get_data(
       IMPORTING
         p_data = <ls_data> ).
+
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <ls_data> TO <ls_header>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'CHANGED_ON' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CHANGED_AT' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CHANGED_CLNT' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CREATED_ON' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
+
+    ASSIGN COMPONENT 'CREATED_CLNT' OF STRUCTURE <ls_header> TO <field>.
+    ASSERT sy-subrc = 0. CLEAR <field>.
 
     io_xml->add( iv_name = 'SAMC'
                  ig_data = <ls_data> ).
