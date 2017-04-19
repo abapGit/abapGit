@@ -386,7 +386,8 @@ CLASS lcl_object_wapa IMPLEMENTATION.
            rs_page-attributes-changetime,
            rs_page-attributes-implclass,
            rs_page-attributes-gendate,
-           rs_page-attributes-gentime.
+           rs_page-attributes-gentime,
+           rs_page-attributes-devclass.
 
   ENDMETHOD.
 
