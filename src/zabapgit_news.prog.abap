@@ -8,59 +8,73 @@ CLASS ltcl_news DEFINITION DEFERRED.
 *&---------------------------------------------------------------------*
 * Class responsible for preparation of data for news announcements
 *----------------------------------------------------------------------*
-CLASS lcl_news DEFINITION FRIENDS ltcl_news.
+CLASS lcl_news DEFINITION CREATE PRIVATE FRIENDS ltcl_news.
 
   PUBLIC SECTION.
+
+    CONSTANTS: c_tail_length TYPE i VALUE 5. " Number of versions to display if no updates
+
     TYPES:
       BEGIN OF ty_log,
-        version     TYPE string,
-        header      TYPE abap_bool,
-        important   TYPE abap_bool,
-        text        TYPE string,
+        version      TYPE string,
+        pos_to_cur   TYPE i,
+        is_header    TYPE abap_bool,
+        is_important TYPE abap_bool,
+        text         TYPE string,
       END OF ty_log,
       tt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY.
 
-    CONSTANTS:
-      c_log_path     TYPE string VALUE '/',
-      c_log_filename TYPE string VALUE 'changelog.txt'.
+    CLASS-METHODS:
+      create " TODO REFACTOR
+        IMPORTING io_repo             TYPE REF TO lcl_repo
+        RETURNING VALUE(ro_instance)  TYPE REF TO lcl_news
+        RAISING lcx_exception.
 
-    CLASS-METHODS create
-      IMPORTING io_repo             TYPE REF TO lcl_repo
-      RETURNING VALUE(ro_instance)  TYPE REF TO lcl_news
-      RAISING lcx_exception.
+    METHODS:
+      get_log
+        RETURNING VALUE(rt_log)      TYPE tt_log,
+      latest_version
+        RETURNING VALUE(rv_version)  TYPE string,
+      has_news
+        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+      has_important
+        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+      has_updates
+        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+      has_unseen
+        RETURNING VALUE(rv_boolean)  TYPE abap_bool.
+
+  PRIVATE SECTION.
+    DATA: mt_log              TYPE tt_log,
+          mv_current_version  TYPE string,
+          mv_lastseen_version TYPE string,
+          mv_latest_version   TYPE string.
 
     METHODS:
       constructor
-        IMPORTING iv_rawdata        TYPE xstring
-                  iv_version        TYPE string,
-      has_news
-        RETURNING value(rv_boolean) TYPE abap_bool,
-      get_log
-        RETURNING value(rt_log)     TYPE tt_log,
-      has_important_news
-        RETURNING value(rv_boolean) TYPE abap_bool.
-
-  PRIVATE SECTION.
-    DATA mt_log TYPE tt_log.
+        IMPORTING iv_rawdata          TYPE xstring
+                  iv_lastseen_version TYPE string
+                  iv_current_version  TYPE string.
 
     CLASS-METHODS:
-      split_string
-        IMPORTING iv_string         TYPE string
-        RETURNING value(rt_lines)   TYPE string_table,
-
-      convert_version_to_numeric
+      version_to_numeric
         IMPORTING iv_version        TYPE string
         RETURNING value(rv_version) TYPE i,
-
-      parse_data
-        IMPORTING it_lines          TYPE string_table
-                  iv_version        TYPE string
-        RETURNING value(rt_log)     TYPE tt_log,
-
+      normalize_version
+        IMPORTING iv_version        TYPE string
+        RETURNING value(rv_version) TYPE string,
       compare_versions
         IMPORTING iv_a              TYPE string
                   iv_b              TYPE string
-        RETURNING value(rv_result)  TYPE i.
+        RETURNING value(rv_result)  TYPE i,
+      parse_line
+        IMPORTING iv_line            TYPE string
+                  iv_current_version TYPE string
+        RETURNING value(rs_log)      TYPE ty_log,
+      parse
+        IMPORTING it_lines           TYPE string_table
+                  iv_current_version TYPE string
+        RETURNING value(rt_log)      TYPE tt_log.
 
 ENDCLASS.               "lcl_news
 
@@ -71,18 +85,11 @@ ENDCLASS.               "lcl_news
 *----------------------------------------------------------------------*
 CLASS lcl_news IMPLEMENTATION.
 
-  METHOD constructor.
+  METHOD create. " TODO REFACTOR !
 
-    DATA: lt_lines  TYPE string_table,
-          lv_string TYPE string.
-
-    lv_string = lcl_convert=>xstring_to_string_utf8( iv_rawdata ).
-    lt_lines  = lcl_news=>split_string( lv_string ).
-    mt_log    = lcl_news=>parse_data( it_lines = lt_lines iv_version = iv_version ).
-
-  ENDMETHOD.                    "constructor
-
-  METHOD create.
+    CONSTANTS: " TODO refactor
+      lc_log_path     TYPE string VALUE '/',
+      lc_log_filename TYPE string VALUE 'changelog.txt'.
 
     DATA: lt_remote      TYPE ty_files_tt,
           lo_repo_online TYPE REF TO lcl_repo_online.
@@ -93,133 +100,153 @@ CLASS lcl_news IMPLEMENTATION.
       lo_repo_online ?= io_repo.
 
       " News announcement temporary restricted to abapGit only
-      IF lo_repo_online->get_url( ) CS '/abapGit.git'.
-        lt_remote = io_repo->get_files_remote( ).
+      IF lo_repo_online->get_url( ) NS '/abapGit.git'. " TODO refactor
+        RETURN.
+      ENDIF.
 
-        READ TABLE lt_remote ASSIGNING <file>
-          WITH KEY path = c_log_path filename = c_log_filename.
+      lt_remote = io_repo->get_files_remote( ).
 
-        IF sy-subrc = 0.
-          CREATE OBJECT ro_instance EXPORTING
-            iv_rawdata = <file>-data
-            iv_version = gc_abap_version.
-*            iv_version = 'v1.30.0'. " for debug
-        ENDIF.
+      READ TABLE lt_remote ASSIGNING <file>
+        WITH KEY path = lc_log_path filename = lc_log_filename.
+
+      IF sy-subrc = 0.
+        CREATE OBJECT ro_instance EXPORTING
+          iv_rawdata         = <file>-data
+          iv_current_version = gc_abap_version
+          iv_lastseen_version = gc_abap_version. " TODO refactor
       ENDIF.
     ENDIF.
 
   ENDMETHOD.                    "create
 
-  METHOD split_string.
+  METHOD constructor.
 
-    DATA ls_line LIKE LINE OF rt_lines.
+    DATA: lt_lines    TYPE string_table,
+          lv_string   TYPE string,
+          ls_log_line LIKE LINE OF mt_log.
 
-    FIND FIRST OCCURRENCE OF cl_abap_char_utilities=>cr_lf IN iv_string.
-
-    " Convert string into table depending on separator type CR_LF vs. LF
-    IF sy-subrc = 0.
-      SPLIT iv_string AT cl_abap_char_utilities=>cr_lf INTO TABLE rt_lines.
-    ELSE.
-      SPLIT iv_string AT cl_abap_char_utilities=>newline INTO TABLE rt_lines.
+    " Validate params
+    mv_current_version  = normalize_version( iv_current_version ).
+    mv_lastseen_version = normalize_version( iv_lastseen_version ).
+    IF mv_current_version IS INITIAL OR mv_lastseen_version IS INITIAL.
+      RETURN. " Internal format of program version is not correct -> abort parsing
     ENDIF.
 
-  ENDMETHOD.                    "split_string
+    lv_string = lcl_convert=>xstring_to_string_utf8( iv_rawdata ).
+    lt_lines  = lcl_convert=>split_string( lv_string ).
+    mt_log    = parse( it_lines = lt_lines iv_current_version = mv_current_version ).
 
-  METHOD parse_data.
+    READ TABLE mt_log INTO ls_log_line INDEX 1.
+    mv_latest_version = ls_log_line-version. " Empty if not found
 
-    CONSTANTS:
-      lc_changelog_version TYPE string
-        VALUE '^\d{4}-\d{2}-\d{2}\s+v(\d{1,3}\.\d{1,3}\.\d{1,3})\s*$',
-      lc_internal_version  TYPE string
-        VALUE '^v?(\d{1,3}\.\d{1,3}\.\d{1,3})\s*$'.
+  ENDMETHOD.                    "constructor
 
-    DATA:
+  METHOD parse.
+
+    DATA: lv_tail                 TYPE i,
           lv_first_version_found  TYPE abap_bool,
           lv_version              TYPE string,
-          lv_current_version      TYPE string,
           ls_log                  LIKE LINE OF rt_log.
 
     FIELD-SYMBOLS: <line> LIKE LINE OF it_lines.
 
-    " Internal program version should be in format "vXXX.XXX.XXX"
-    FIND FIRST OCCURRENCE OF REGEX lc_internal_version IN iv_version SUBMATCHES lv_current_version.
-
-    IF sy-subrc IS NOT INITIAL.
-      RETURN. " Internal format of program version is not correct. TODO implement error message
-    ENDIF.
-
     LOOP AT it_lines ASSIGNING <line>.
-      CLEAR: lv_version, ls_log-text, ls_log-important, ls_log-header.
+      ls_log = parse_line( iv_line = <line> iv_current_version = iv_current_version ).
 
-      IF <line> IS INITIAL OR <line> CO ' -='. " Skip empty and technical lines
-        CONTINUE.
-      ENDIF.
+      " Skip until first version head and Skip empty lines
+      CHECK ls_log IS NOT INITIAL AND
+            ( lv_first_version_found = abap_true OR ls_log-version IS NOT INITIAL ).
 
-      " Check if line is a header line
-      FIND FIRST OCCURRENCE OF REGEX lc_changelog_version IN <line> SUBMATCHES lv_version.
-
-      " Skip entries before first version found
       IF lv_first_version_found = abap_false.
-        IF sy-subrc IS NOT INITIAL.
-          CONTINUE.
-        ELSE.
-          lv_first_version_found = abap_true.
+        lv_first_version_found = abap_true.
+        IF compare_versions( iv_a = ls_log-version iv_b = iv_current_version ) <= 0.
+          lv_tail = c_tail_length. " Display some last versions if no updates
         ENDIF.
       ENDIF.
 
-      "Skip everything below current version
-      IF lv_version IS NOT INITIAL
-         AND lcl_news=>compare_versions( iv_a = lv_version iv_b = lv_current_version ) < 1.
-        EXIT.
-      ENDIF.
-
-      " Populate log
-      IF lv_version IS NOT INITIAL. " Version header
-        ls_log-version = lv_version. " ... stays for all subsequent non-version lines
-        ls_log-header  = abap_true.
-      ELSE.                         " Version line item
-        FIND FIRST OCCURRENCE OF REGEX '^\s*!' IN <line>.
-        IF sy-subrc IS INITIAL.
-          ls_log-important = abap_true. " Change is important
+      IF ls_log-is_header = abap_true.
+        "Skip everything below current version or show tail news
+        IF compare_versions( iv_a = ls_log-version iv_b = iv_current_version ) <= 0.
+          IF lv_tail > 0.
+            lv_tail = lv_tail - 1.
+          ELSE.
+            EXIT.
+          ENDIF.
         ENDIF.
+        lv_version = ls_log-version. " Save to fill news lines
+      ELSE.
+        ls_log-version = lv_version.
       ENDIF.
-
-      ls_log-text = <line>.
 
       APPEND ls_log TO rt_log.
     ENDLOOP.
 
-  ENDMETHOD.                    "parse_data
+  ENDMETHOD.                    "parse
 
-  METHOD has_news.
+  METHOD parse_line.
 
-    rv_boolean = boolc( lines( mt_log ) > 0 ).
+    CONSTANTS: lc_header_pattern TYPE string
+        VALUE '^\d{4}-\d{2}-\d{2}\s+v(\d{1,3}\.\d{1,3}\.\d{1,3})\s*$'.
 
-  ENDMETHOD.                    "has_news
+    DATA: lv_version TYPE string.
+
+    IF iv_line IS INITIAL OR iv_line CO ' -='.
+      RETURN. " Skip empty and markup lines
+    ENDIF.
+
+    " Check if line is a header line
+    FIND FIRST OCCURRENCE OF REGEX lc_header_pattern IN iv_line SUBMATCHES lv_version.
+    IF sy-subrc IS INITIAL.
+      lv_version        = normalize_version( lv_version ).
+      rs_log-version    = lv_version.
+      rs_log-is_header  = abap_true.
+      rs_log-pos_to_cur = compare_versions( iv_a = lv_version iv_b = iv_current_version ).
+    ELSE.
+      FIND FIRST OCCURRENCE OF REGEX '^\s*!' IN iv_line.
+      rs_log-is_important = boolc( sy-subrc IS INITIAL ). " Change is important
+    ENDIF.
+
+    rs_log-text = iv_line.
+
+  ENDMETHOD.                    "parse_line
 
   METHOD get_log.
-
     rt_log = me->mt_log.
-
   ENDMETHOD.                    "get_log
 
-  METHOD has_important_news.
+  METHOD latest_version.
+    rv_version = me->mv_latest_version.
+  ENDMETHOD.                    "latest_version
 
-    READ TABLE mt_log WITH KEY important = abap_true TRANSPORTING NO FIELDS.
+  METHOD has_news.
+    rv_boolean = boolc( lines( mt_log ) > 0 ).
+  ENDMETHOD.                    "has_news
 
+  METHOD has_important.
+    READ TABLE mt_log WITH KEY is_important = abap_true TRANSPORTING NO FIELDS.
     rv_boolean = boolc( sy-subrc IS INITIAL ).
-
   ENDMETHOD.                    "has_important_news
+
+  METHOD has_updates.
+    rv_boolean = boolc( compare_versions(
+      iv_a = mv_latest_version
+      iv_b = mv_current_version ) > 0 ).
+  ENDMETHOD.                    "has_updates
+
+  METHOD has_unseen.
+    rv_boolean = boolc( compare_versions(
+      iv_a = mv_latest_version
+      iv_b = mv_lastseen_version ) > 0 ).
+  ENDMETHOD.                    "has_unseen
 
   METHOD compare_versions.
 
-    DATA:
-          lv_version_a  TYPE i,
+    DATA: lv_version_a  TYPE i,
           lv_version_b  TYPE i.
 
     " Convert versions to numeric
-    lv_version_a = lcl_news=>convert_version_to_numeric( iv_a ).
-    lv_version_b = lcl_news=>convert_version_to_numeric( iv_b ).
+    lv_version_a = version_to_numeric( iv_a ).
+    lv_version_b = version_to_numeric( iv_b ).
 
     " Compare versions
     IF lv_version_a > lv_version_b.
@@ -232,7 +259,17 @@ CLASS lcl_news IMPLEMENTATION.
 
   ENDMETHOD.                    "compare_versions
 
-  METHOD convert_version_to_numeric.
+  METHOD normalize_version.
+
+    " Internal program version should be in format "XXX.XXX.XXX" or "vXXX.XXX.XXX"
+    CONSTANTS: lc_version_pattern TYPE string VALUE '^v?(\d{1,3}\.\d{1,3}\.\d{1,3})\s*$'.
+
+    FIND FIRST OCCURRENCE OF REGEX lc_version_pattern
+      IN iv_version SUBMATCHES rv_version.
+
+  ENDMETHOD.                    "normalize_version
+
+  METHOD version_to_numeric.
 
     DATA: lv_major   TYPE numc4,
           lv_minor   TYPE numc4,
@@ -240,7 +277,7 @@ CLASS lcl_news IMPLEMENTATION.
 
     SPLIT iv_version AT '.' INTO lv_major lv_minor lv_release.
 
-    " Calculated value of version number
+    " Calculated value of version number, empty version will become 0 which is OK
     rv_version = lv_major * 1000000 + lv_minor * 1000 + lv_release.
 
   ENDMETHOD.                    "convert_version_to_numeric
@@ -258,10 +295,11 @@ CLASS ltcl_news DEFINITION FINAL
   PRIVATE SECTION.
 
     METHODS:
-      split_string                FOR TESTING,
-      convert_version_to_numeric  FOR TESTING,
-      compare_versions            FOR TESTING,
-      parse_data                  FOR TESTING.
+      version_to_numeric FOR TESTING,
+      compare_versions   FOR TESTING,
+      normalize_version  FOR TESTING,
+      parse_line         FOR TESTING,
+      parse              FOR TESTING.
 
 ENDCLASS.                    "ltcl_news DEFINITION
 
@@ -272,38 +310,12 @@ ENDCLASS.                    "ltcl_news DEFINITION
 *----------------------------------------------------------------------*
 CLASS ltcl_news IMPLEMENTATION.
 
-  METHOD split_string.
-
-    DATA: lt_act TYPE string_table,
-          lt_exp TYPE string_table.
-
-    APPEND 'ABC' TO lt_exp.
-    APPEND '123' TO lt_exp.
-
-    " Case 1. String separated by CRLF
-    lt_act = lcl_news=>split_string( 'ABC' && cl_abap_char_utilities=>cr_lf && '123' ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_exp
-                                        act = lt_act
-                                        msg = ' Error during string split: CRLF' ).
-
-    CLEAR: lt_act.
-
-    " Case 2. String separated by LF
-    lt_act = lcl_news=>split_string( 'ABC' && cl_abap_char_utilities=>newline && '123' ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_exp
-                                        act = lt_act
-                                        msg = ' Error during string split: LF' ).
-
-  ENDMETHOD.                    "split_string.
-
-  METHOD convert_version_to_numeric.
+  METHOD version_to_numeric.
 
     DATA: lv_version_exp  TYPE i VALUE 1023010,
           lv_version_act  TYPE i.
 
-    lv_version_act = lcl_news=>convert_version_to_numeric( '1.23.10' ).
+    lv_version_act = lcl_news=>version_to_numeric( '1.23.10' ).
 
     cl_abap_unit_assert=>assert_equals( exp = lv_version_exp
                                         act = lv_version_act
@@ -342,16 +354,99 @@ CLASS ltcl_news IMPLEMENTATION.
 
   ENDMETHOD.                    "compare_versions
 
+  METHOD normalize_version.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_news=>normalize_version( '1.28.10' )
+      exp = '1.28.10' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_news=>normalize_version( 'v1.28.10' )
+      exp = '1.28.10' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_news=>normalize_version( 'b1.28.10' )
+      exp = '' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lcl_news=>normalize_version( 'x.y.z' )
+      exp = '' ).
+
+  ENDMETHOD.                    "normalize_version
+
+  METHOD parse_line.
+
+    DATA: ls_log TYPE lcl_news=>ty_log.
+
+    ls_log = lcl_news=>parse_line(
+      iv_line            = '======'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+
+    ls_log = lcl_news=>parse_line(
+      iv_line            = ''
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+
+    ls_log = lcl_news=>parse_line(
+      iv_line            = '------'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+
+    CLEAR ls_log.
+    ls_log = lcl_news=>parse_line(
+      iv_line            = '2017-02-13 v1.28.0'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version    exp = '1.28.0' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header  exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur exp = 1 ).
+
+    CLEAR ls_log.
+    ls_log = lcl_news=>parse_line(
+      iv_line            = '2017-02-13 v1.26.0'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version    exp = '1.26.0' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header  exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur exp = -1 ).
+
+    CLEAR ls_log.
+    ls_log = lcl_news=>parse_line(
+      iv_line            = 'news'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version      exp = '' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header    exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur   exp = 0 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = 'news' ).
+
+    CLEAR ls_log.
+    ls_log = lcl_news=>parse_line(
+      iv_line            = ' ! important news'
+      iv_current_version = '1.26.01' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version      exp = '' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header    exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur   exp = 0 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = ' ! important news' ).
+
+  ENDMETHOD.                    "parse_line
+
+
   DEFINE _add_news_log_entry.
     CLEAR: ls_log.
-    ls_log-version   = &1.
-    ls_log-header    = &2.
-    ls_log-important = &3.
-    ls_log-text      = &4.
+    ls_log-version      = &1.
+    ls_log-is_header    = &2.
+    ls_log-is_important = &3.
+    ls_log-pos_to_cur   = &4.
+    ls_log-text         = &5.
     APPEND ls_log TO lt_log_exp.
   END-OF-DEFINITION.
 
-  METHOD parse_data.
+  DEFINE _add_news_txt_entry.
+    APPEND &1 TO lt_lines.
+  END-OF-DEFINITION.
+
+  METHOD parse.
 
     DATA:
           lt_log_exp  TYPE lcl_news=>tt_log,
@@ -360,43 +455,64 @@ CLASS ltcl_news IMPLEMENTATION.
           lt_lines    TYPE string_table.
 
     " Generate test data
-    APPEND '======' TO lt_lines.
-    APPEND '------' TO lt_lines.
-    APPEND `      ` TO lt_lines.
-    APPEND 'abapGit changelog' TO lt_lines.
-    APPEND '2017-02-13 v1.28.0' TO lt_lines.
-    APPEND '------------------' TO lt_lines.
-    APPEND '+ Staging page redesigned' TO lt_lines.
-    APPEND '! Support for core data services' TO lt_lines.
-    APPEND `      ` TO lt_lines.
-    APPEND '2017-01-25 v1.27.0' TO lt_lines.
-    APPEND '------------------' TO lt_lines.
-    APPEND '+ Two factor authentication with github.com' TO lt_lines.
-    APPEND '2017-01-25 v1.26.0' TO lt_lines.
+    _add_news_txt_entry '======'.
+    _add_news_txt_entry '------'.
+    _add_news_txt_entry `      `.
+    _add_news_txt_entry 'abapGit changelog'.
+    _add_news_txt_entry '2017-02-13 v1.28.0'.
+    _add_news_txt_entry '------------------'.
+    _add_news_txt_entry '+ Staging page redesigned'.
+    _add_news_txt_entry '! Support for core data services'.
+    _add_news_txt_entry `      `.
+    _add_news_txt_entry '2017-01-25 v1.27.0'.
+    _add_news_txt_entry '------------------'.
+    _add_news_txt_entry '+ Two factor authentication with github.com'.
+    _add_news_txt_entry '2017-01-25 v1.26.0'.
 
+    " Case 1
     " Generate expected results
-    _add_news_log_entry '1.28.0' 'X'  ''  '2017-02-13 v1.28.0'.
-    _add_news_log_entry '1.28.0' ''   ''  '+ Staging page redesigned'.
-    _add_news_log_entry '1.28.0' ''   'X' '! Support for core data services'.
-    _add_news_log_entry '1.27.0' 'X'  ''  '2017-01-25 v1.27.0'.
-    _add_news_log_entry '1.27.0' ''   ''  '+ Two factor authentication with github.com'.
+    "                   VERSION  HEAD IMP POS TEXT
+    _add_news_log_entry '1.28.0' 'X'  ''  1   '2017-02-13 v1.28.0'.
+    _add_news_log_entry '1.28.0' ''   ''  0   '+ Staging page redesigned'.
+    _add_news_log_entry '1.28.0' ''   'X' 0   '! Support for core data services'.
+    _add_news_log_entry '1.27.0' 'X'  ''  1   '2017-01-25 v1.27.0'.
+    _add_news_log_entry '1.27.0' ''   ''  0   '+ Two factor authentication with github.com'.
 
-    " Case 1. Test parsing of data
-    lt_log_act = lcl_news=>parse_data( it_lines = lt_lines iv_version = '1.26.01' ).
-
+    lt_log_act = lcl_news=>parse( it_lines = lt_lines iv_current_version = '1.26.01' ).
     cl_abap_unit_assert=>assert_equals( exp = lt_log_exp
                                         act = lt_log_act
                                         msg = ' Error during parsing: Case 1.' ).
 
-    CLEAR: lt_log_act, lt_log_exp.
 
-    " Case 2. Negative test - format of version is not correct
-    lt_log_act = lcl_news=>parse_data( it_lines = lt_lines iv_version = 'version.1.27.00' ).
+    " Case 2 (exect version match)
+    CLEAR lt_log_exp.
+    "                   VERSION  HEAD IMP UPD TEXT
+    _add_news_log_entry '1.28.0' 'X'  ''  1   '2017-02-13 v1.28.0'.
+    _add_news_log_entry '1.28.0' ''   ''  0   '+ Staging page redesigned'.
+    _add_news_log_entry '1.28.0' ''   'X' 0   '! Support for core data services'.
 
+    " Case 1. Test parsing of data
+    lt_log_act = lcl_news=>parse( it_lines = lt_lines iv_current_version = '1.27.00' ).
     cl_abap_unit_assert=>assert_equals( exp = lt_log_exp
                                         act = lt_log_act
                                         msg = ' Error during parsing: Case 2.' ).
 
-  ENDMETHOD.                    "parse_data
+    " Case 3 (display tail)
+    CLEAR lt_log_exp.
+    "                   VERSION  HEAD IMP UPD TEXT
+    _add_news_log_entry '1.28.0' 'X'  ''  0   '2017-02-13 v1.28.0'.
+    _add_news_log_entry '1.28.0' ''   ''  0   '+ Staging page redesigned'.
+    _add_news_log_entry '1.28.0' ''   'X' 0   '! Support for core data services'.
+    _add_news_log_entry '1.27.0' 'X'  ''  -1  '2017-01-25 v1.27.0'.
+    _add_news_log_entry '1.27.0' ''   ''  0   '+ Two factor authentication with github.com'.
+    _add_news_log_entry '1.26.0' 'X'  ''  -1  '2017-01-25 v1.26.0'.
+
+    " Case 1. Test parsing of data
+    lt_log_act = lcl_news=>parse( it_lines = lt_lines iv_current_version = '1.28.00' ).
+    cl_abap_unit_assert=>assert_equals( exp = lt_log_exp
+                                        act = lt_log_act
+                                        msg = ' Error during parsing: Case 3.' ).
+
+  ENDMETHOD.                    "parse
 
 ENDCLASS.                    "ltcl_news IMPLEMENTATION

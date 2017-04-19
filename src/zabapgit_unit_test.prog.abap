@@ -50,6 +50,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
 
   PRIVATE SECTION.
     METHODS convert_int FOR TESTING RAISING lcx_exception.
+    METHODS split_string FOR TESTING.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
 
@@ -78,6 +79,32 @@ CLASS ltcl_convert IMPLEMENTATION.
     ENDDO.
 
   ENDMETHOD.                    "convert_int
+
+  METHOD split_string.
+
+    DATA: lt_act TYPE string_table,
+          lt_exp TYPE string_table.
+
+    APPEND 'ABC' TO lt_exp.
+    APPEND '123' TO lt_exp.
+
+    " Case 1. String separated by CRLF
+    lt_act = lcl_convert=>split_string( 'ABC' && cl_abap_char_utilities=>cr_lf && '123' ).
+
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp
+                                        act = lt_act
+                                        msg = ' Error during string split: CRLF' ).
+
+    CLEAR: lt_act.
+
+    " Case 2. String separated by LF
+    lt_act = lcl_convert=>split_string( 'ABC' && cl_abap_char_utilities=>newline && '123' ).
+
+    cl_abap_unit_assert=>assert_equals( exp = lt_exp
+                                        act = lt_act
+                                        msg = ' Error during string split: LF' ).
+
+  ENDMETHOD.                    "split_string.
 
 ENDCLASS.                    "ltcl_convert IMPLEMENTATION
 
