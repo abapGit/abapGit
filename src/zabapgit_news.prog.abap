@@ -92,29 +92,42 @@ CLASS lcl_news IMPLEMENTATION.
       lc_log_filename TYPE string VALUE 'changelog.txt'.
 
     DATA: lt_remote      TYPE ty_files_tt,
+          lv_last_seen   TYPE string,
+          lv_url         TYPE string,
           lo_repo_online TYPE REF TO lcl_repo_online.
 
     FIELD-SYMBOLS <file> LIKE LINE OF lt_remote.
 
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
+    IF io_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
 
-      " News announcement temporary restricted to abapGit only
-      IF lo_repo_online->get_url( ) NS '/abapGit.git'. " TODO refactor
-        RETURN.
-      ENDIF.
+    lo_repo_online ?= io_repo.
+    lv_url          = lo_repo_online->get_url( ).
 
-      lt_remote = io_repo->get_files_remote( ).
+    " News announcement temporary restricted to abapGit only
+    IF lv_url NS '/abapGit.git'. " TODO refactor
+      RETURN.
+    ENDIF.
 
-      READ TABLE lt_remote ASSIGNING <file>
-        WITH KEY path = lc_log_path filename = lc_log_filename.
+    lv_last_seen = lcl_app=>user( )->get_repo_last_change_seen( lv_url ).
 
-      IF sy-subrc = 0.
-        CREATE OBJECT ro_instance EXPORTING
-          iv_rawdata         = <file>-data
-          iv_current_version = gc_abap_version
-          iv_lastseen_version = gc_abap_version. " TODO refactor
-      ENDIF.
+    " Find changelog
+    lt_remote = io_repo->get_files_remote( ).
+    READ TABLE lt_remote ASSIGNING <file>
+      WITH KEY path = lc_log_path filename = lc_log_filename.
+
+    IF sy-subrc = 0.
+      CREATE OBJECT ro_instance EXPORTING
+        iv_rawdata          = <file>-data
+        iv_current_version  = gc_abap_version " TODO refactor
+        iv_lastseen_version = normalize_version( lv_last_seen ).
+    ENDIF.
+
+    IF ro_instance IS BOUND.
+      lcl_app=>user( )->set_repo_last_change_seen(
+        iv_url     = lv_url
+        iv_version = ro_instance->latest_version( ) ).
     ENDIF.
 
   ENDMETHOD.                    "create
@@ -128,7 +141,7 @@ CLASS lcl_news IMPLEMENTATION.
     " Validate params
     mv_current_version  = normalize_version( iv_current_version ).
     mv_lastseen_version = normalize_version( iv_lastseen_version ).
-    IF mv_current_version IS INITIAL OR mv_lastseen_version IS INITIAL.
+    IF mv_current_version IS INITIAL.
       RETURN. " Internal format of program version is not correct -> abort parsing
     ENDIF.
 

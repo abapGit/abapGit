@@ -286,11 +286,10 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     LOOP AT lt_log ASSIGNING <line>.
       IF <line>-is_header = abap_true.
         IF <line>-pos_to_cur > 0.
-          lv_text = <line>-text && '<span class="version-marker warning">&#x25cf;</span>'.
+          lv_text = <line>-text && '<span class="version-marker update">update</span>'.
         ELSEIF <line>-pos_to_cur = 0.
-          lv_text = <line>-text && '<span class="version-marker">&#x21e6;'
-                    && '<span class="version-tag">current</span></span>'.
-        ELSE.
+          lv_text = <line>-text && '<span class="version-marker">current</span>'.
+        ELSE. " < 0
           lv_text = <line>-text.
         ENDIF.
         ro_html->add( |<h1>{ lv_text }</h1>| ).
