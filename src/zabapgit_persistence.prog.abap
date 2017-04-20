@@ -668,6 +668,8 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     update( ls_user ).
 
+    COMMIT WORK AND WAIT.
+
   ENDMETHOD.  "update_repo_config
 
   METHOD set_repo_git_user_name.
