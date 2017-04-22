@@ -382,15 +382,19 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       iv_ext   = lv_ext
       iv_data  = lv_content ).
 
-    rs_page-attributes = is_page.
+    lo_page->get_attrs(
+      IMPORTING
+        p_attrs = rs_page-attributes ).
 
     CLEAR: rs_page-attributes-author,
            rs_page-attributes-createdon,
            rs_page-attributes-changedby,
            rs_page-attributes-changedon,
+           rs_page-attributes-changetime,
            rs_page-attributes-implclass,
            rs_page-attributes-gendate,
-           rs_page-attributes-gentime.
+           rs_page-attributes-gentime,
+           rs_page-attributes-devclass.
 
   ENDMETHOD.
 
