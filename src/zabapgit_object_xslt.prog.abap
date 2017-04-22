@@ -185,7 +185,13 @@ CLASS lcl_object_xslt IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'XSLT, jump, todo' ).
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation   = 'SHOW'
+        object_name = ms_item-obj_name
+        object_type = ms_item-obj_type.
+
   ENDMETHOD.                    "lif_object~jump
 
   METHOD lif_object~get_metadata.
