@@ -99,7 +99,6 @@ CLASS lcl_object_dcls IMPLEMENTATION.
           IMPORTING
             es_dclsrc  = <ls_data>.
 
-
         ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <ls_data> TO <field>.
         ASSERT sy-subrc = 0.
         CLEAR <field>.
