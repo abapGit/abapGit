@@ -67,7 +67,29 @@ CLASS lcl_object_ddls IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, DDLS jump' ).
+
+    CONSTANTS: c_tabname TYPE tabname VALUE 'DDLDEPENDENCY'.
+
+    DATA: viewname TYPE objectname.
+
+    SELECT SINGLE objectname
+           INTO viewname
+           FROM (c_tabname)
+           WHERE state      = 'A'
+           AND   objecttype = 'VIEW'
+           AND   ddlname    = ms_item-obj_name.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'DDLS error' ).
+    ENDIF.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = viewname
+        object_type   = 'VIEW'
+        in_new_window = abap_true.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
@@ -91,8 +113,8 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: li_ddl    TYPE REF TO object,
-          lr_data   TYPE REF TO data.
+    DATA: li_ddl  TYPE REF TO object,
+          lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data>  TYPE any,
                    <lv_field> TYPE any.
