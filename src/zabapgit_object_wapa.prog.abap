@@ -100,10 +100,10 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-        operation           = 'SHOW'    " Operation
-        object_name         = ms_item-obj_name     " Object Name
-        object_type         = ms_item-obj_type    " Object Type
-        in_new_window       = abap_true.
+        operation     = 'SHOW'    
+        object_name   = ms_item-obj_name    
+        object_type   = ms_item-obj_type    
+        in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
 
