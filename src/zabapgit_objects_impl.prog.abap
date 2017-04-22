@@ -671,8 +671,12 @@ CLASS lcl_objects IMPLEMENTATION.
                           iv_total   = lines( it_objects )
                           iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
 
+* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
+      SET PARAMETER ID 'EUK' FIELD <ls_obj>-package.
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
                                  io_xml     = <ls_obj>-xml ).
+      SET PARAMETER ID 'EUK' FIELD ''.
+
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
