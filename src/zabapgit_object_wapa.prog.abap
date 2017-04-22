@@ -103,11 +103,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         operation           = 'SHOW'    " Operation
         object_name         = ms_item-obj_name     " Object Name
         object_type         = ms_item-obj_type    " Object Type
-        in_new_window       = abap_true
-      EXCEPTIONS
-        not_executed        = 1
-        invalid_object_type = 2
-        OTHERS              = 3.
+        in_new_window       = abap_true.
 
   ENDMETHOD.                    "jump
 
