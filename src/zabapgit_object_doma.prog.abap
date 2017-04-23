@@ -239,11 +239,11 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages
+    " Collect additional languages, skip master lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
-      AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
+      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.

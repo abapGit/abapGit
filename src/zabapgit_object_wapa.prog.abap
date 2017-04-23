@@ -170,7 +170,6 @@ CLASS lcl_object_wapa IMPLEMENTATION.
   METHOD lif_object~deserialize.
 
     DATA: lo_bsp        TYPE REF TO cl_o2_api_application,
-          lv_name       TYPE o2applname,
           ls_attributes TYPE o2applattr,
           lt_nodes      TYPE o2applnode_table,
           lt_navgraph   TYPE o2applgrap_table,
@@ -184,8 +183,6 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages_info.
 
-
-    lv_name = ms_item-obj_name.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING cg_data = ls_attributes ).

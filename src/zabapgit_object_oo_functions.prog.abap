@@ -484,8 +484,8 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~update_descriptions.
-    DELETE FROM seocompotx WHERE clsname = is_key-clsname.
-    INSERT seocompotx FROM TABLE it_descriptions.
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
   METHOD lif_object_oriented_object_fnc~insert_text_pool.
@@ -598,7 +598,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 
   METHOD lif_object_oriented_object_fnc~read_descriptions.
     SELECT * FROM seocompotx INTO TABLE rt_descriptions
-      WHERE clsname = iv_obejct_name.
+      WHERE clsname = iv_obejct_name.                     "#EC CI_SUBRC
     DELETE rt_descriptions WHERE descript IS INITIAL.
   ENDMETHOD.
 

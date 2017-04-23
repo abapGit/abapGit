@@ -563,7 +563,7 @@ CLASS lcl_popups IMPLEMENTATION.
     lv_types = 'KWTCOEMPDRSXQFG'.
     lrs_trfunction-sign   = 'I'.
     lrs_trfunction-option = 'EQ'.
-    WHILE lv_types NE space.
+    WHILE lv_types <> space.
       lrs_trfunction-low = lv_types(1).
       APPEND lrs_trfunction TO ls_ranges-request_funcs.
       SHIFT lv_types.
@@ -583,9 +583,7 @@ CLASS lcl_popups IMPLEMENTATION.
       EXCEPTIONS
         action_aborted_by_user = 1
         OTHERS                 = 2.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
+
   ENDMETHOD.
 
   METHOD popup_to_create_transp_branch.

@@ -168,9 +168,8 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: error         TYPE REF TO cx_swb_exception,
-          appl_obj_data TYPE REF TO if_wb_object_data_model,
-          lr_data       TYPE REF TO data.
+    DATA: li_appl_obj_data TYPE REF TO if_wb_object_data_model,
+          lr_data          TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
 
@@ -188,11 +187,11 @@ CLASS lcl_object_samc IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-    IF lif_object~exists( ) = abap_true .
+    IF lif_object~exists( ) = abap_true.
       lif_object~delete( ).
     ENDIF.
 
-    appl_obj_data = get_data_object( ).
+    li_appl_obj_data = get_data_object( ).
 
     TRY.
         lock( ).
@@ -215,13 +214,13 @@ CLASS lcl_object_samc IMPLEMENTATION.
           lcx_exception=>raise( 'Error occured while creating SAMC' ).
         ENDIF.
 
-        appl_obj_data->set_data( <ls_data> ).
+        li_appl_obj_data->set_data( <ls_data> ).
 
-        get_persistence( )->save( p_object_data = appl_obj_data ).
+        get_persistence( )->save( p_object_data = li_appl_obj_data ).
 
         unlock( ).
 
-      CATCH cx_swb_exception INTO error.
+      CATCH cx_swb_exception.
         lcx_exception=>raise( 'Error occured while creating SAMC' ).
     ENDTRY.
 
@@ -229,8 +228,7 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: object_key TYPE seu_objkey,
-          error      TYPE REF TO cx_swb_exception.
+    DATA: object_key TYPE seu_objkey.
 
     object_key = ms_item-obj_name.
 
@@ -241,7 +239,7 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
         unlock( ).
 
-      CATCH cx_swb_exception INTO error.
+      CATCH cx_swb_exception.
         lcx_exception=>raise( 'Error occured while deleting SAMC' ).
     ENDTRY.
 

@@ -227,11 +227,11 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages
+    " Collect additional languages, skip master lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
-      AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
+      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.
@@ -241,7 +241,6 @@ CLASS lcl_object_dtel IMPLEMENTATION.
           langu         = <lang>
         IMPORTING
           dd04v_wa      = ls_dd04v
-*         tpara_wa      = ls_tpara
         EXCEPTIONS
           illegal_input = 1
           OTHERS        = 2.

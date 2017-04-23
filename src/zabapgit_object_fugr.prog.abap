@@ -156,19 +156,19 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         WHERE progname = <lv_include>
-        AND   r3state = 'A'.
+        AND   r3state = 'A'.                              "#EC CI_SUBRC
     ENDLOOP.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
@@ -542,7 +542,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       lt_source     TYPE TABLE OF rssource,
       lt_functab    TYPE ty_rs38l_incl_tt,
       lt_new_source TYPE rsfb_source,
-      ls_function        LIKE LINE OF rt_functions.
+      ls_function   LIKE LINE OF rt_functions.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
 

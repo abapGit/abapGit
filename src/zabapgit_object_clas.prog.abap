@@ -611,7 +611,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
       AND exposure = '2'
       AND attdecltyp = '2'
       AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
 

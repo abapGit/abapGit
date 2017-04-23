@@ -1189,7 +1189,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 * function module UPDATE_PROGDIR does not update VARCL
       UPDATE progdir SET varcl = is_progdir-varcl
         WHERE name = ls_progdir_new-name
-        AND state = ls_progdir_new-state.
+        AND state = ls_progdir_new-state.                 "#EC CI_SUBRC
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'
@@ -1539,7 +1539,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     SELECT dgen tgen FROM d020s           " Screens
       INTO CORRESPONDING FIELDS OF TABLE lt_screens
-      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.
+      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.     "#EC CI_SUBRC
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
       _object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
@@ -1549,7 +1549,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_eudb
       WHERE relid = 'CU'
       AND   name  = iv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.             "#EC CI_SUBRC
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
       _object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.

@@ -543,7 +543,7 @@ CLASS lcl_user IMPLEMENTATION.
 
     SELECT * FROM stxh INTO TABLE lt_stxh
       WHERE tdobject = 'TEXT'
-      AND tdname LIKE 'ZABAPGIT_USERNAME_%'.
+      AND tdname LIKE 'ZABAPGIT_USERNAME_%'.              "#EC CI_SUBRC
 
     LOOP AT lt_stxh ASSIGNING <ls_stxh>.
       APPEND INITIAL LINE TO rt_data ASSIGNING <ls_output>.

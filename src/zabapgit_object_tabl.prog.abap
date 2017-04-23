@@ -101,7 +101,6 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     DATA: lv_objname  TYPE rsedd0-ddobjname,
           lv_tabclass TYPE dd02l-tabclass,
-          lv_foo      TYPE c LENGTH 1,
           lv_no_ask   TYPE abap_bool,
           lr_data     TYPE REF TO data.
 

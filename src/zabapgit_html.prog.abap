@@ -42,25 +42,26 @@ CLASS lcl_html DEFINITION FINAL.
 
     CLASS-METHODS a
       IMPORTING
-        iv_txt                TYPE string
-        iv_act                TYPE string
-        iv_typ                TYPE char1  DEFAULT gc_action_type-sapevent
-        iv_opt                TYPE clike  OPTIONAL
-        iv_class              TYPE string OPTIONAL
-        iv_id                 TYPE string OPTIONAL
-        iv_style              TYPE string OPTIONAL
+                iv_txt        TYPE string
+                iv_act        TYPE string
+                iv_typ        TYPE char1  DEFAULT gc_action_type-sapevent
+                iv_opt        TYPE clike  OPTIONAL
+                iv_class      TYPE string OPTIONAL
+                iv_id         TYPE string OPTIONAL
+                iv_style      TYPE string OPTIONAL
       RETURNING VALUE(rv_str) TYPE string.
 
     CLASS-METHODS icon
       IMPORTING
-        iv_name               TYPE string
-        iv_hint               TYPE string OPTIONAL
-        iv_class              TYPE string OPTIONAL
+                iv_name       TYPE string
+                iv_hint       TYPE string OPTIONAL
+                iv_class      TYPE string OPTIONAL
       RETURNING VALUE(rv_str) TYPE string.
 
   PRIVATE SECTION.
-    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex.
-    DATA       mt_buffer         TYPE string_table.
+    CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
+
+    DATA: mt_buffer TYPE string_table.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -72,15 +73,15 @@ CLASS lcl_html DEFINITION FINAL.
       END OF ty_indent_context,
 
       BEGIN OF ty_study_result,
-        style_open    TYPE abap_bool,
-        style_close   TYPE abap_bool,
-        script_open   TYPE abap_bool,
-        script_close  TYPE abap_bool,
-        tag_close     TYPE abap_bool,
-        curly_close   TYPE abap_bool,
-        openings      TYPE i,
-        closings      TYPE i,
-        singles       TYPE i,
+        style_open   TYPE abap_bool,
+        style_close  TYPE abap_bool,
+        script_open  TYPE abap_bool,
+        script_close TYPE abap_bool,
+        tag_close    TYPE abap_bool,
+        curly_close  TYPE abap_bool,
+        openings     TYPE i,
+        closings     TYPE i,
+        singles      TYPE i,
       END OF ty_study_result.
 
     METHODS indent_line
@@ -89,9 +90,8 @@ CLASS lcl_html DEFINITION FINAL.
         cv_line    TYPE string.
 
     METHODS study_line
-      IMPORTING
-        iv_line                  TYPE string
-        is_context               TYPE ty_indent_context
+      IMPORTING iv_line          TYPE string
+                is_context       TYPE ty_indent_context
       RETURNING VALUE(rs_result) TYPE ty_study_result.
 
 ENDCLASS.                    "lcl_html DEFINITION
@@ -391,18 +391,18 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
         RETURNING VALUE(rv_count) TYPE i,
       render
         IMPORTING
-          iv_right                  TYPE abap_bool OPTIONAL
-          iv_sort                   TYPE abap_bool OPTIONAL
+          iv_right       TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html,
+          VALUE(ro_html) TYPE REF TO lcl_html,
       render_as_droplist
         IMPORTING
-          iv_label        TYPE string
-          iv_right        TYPE abap_bool OPTIONAL
-          iv_sort         TYPE abap_bool OPTIONAL
-          iv_corner       TYPE abap_bool OPTIONAL
+          iv_label       TYPE string
+          iv_right       TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
+          iv_corner      TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)  TYPE REF TO lcl_html.
+          VALUE(ro_html) TYPE REF TO lcl_html.
 
   PRIVATE SECTION.
     TYPES:
@@ -427,9 +427,9 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
     METHODS:
       render_items
         IMPORTING
-          iv_sort                   TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html.
+          VALUE(ro_html) TYPE REF TO lcl_html.
 
 ENDCLASS. "lcl_html_toolbar DEFINITION
 

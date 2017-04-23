@@ -163,7 +163,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA  lt_tpool_i18n TYPE tt_tpool_i18n.
+    DATA lt_tpool_i18n TYPE tt_tpool_i18n.
 
     FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -193,7 +193,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA lt_tpool_i18n  TYPE tt_tpool_i18n.
+    DATA lt_tpool_i18n TYPE tt_tpool_i18n.
     FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
     io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'

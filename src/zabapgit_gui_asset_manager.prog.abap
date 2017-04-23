@@ -136,6 +136,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_images.
 
+* used by abapmerge
   DEFINE _inline.
     APPEND &1 TO lt_data.
   END-OF-DEFINITION.

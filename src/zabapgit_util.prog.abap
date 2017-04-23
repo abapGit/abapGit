@@ -224,8 +224,6 @@ CLASS lcl_convert IMPLEMENTATION.
 
   METHOD split_string.
 
-    DATA ls_line LIKE LINE OF rt_lines.
-
     FIND FIRST OCCURRENCE OF cl_abap_char_utilities=>cr_lf IN iv_string.
 
     " Convert string into table depending on separator type CR_LF vs. LF
