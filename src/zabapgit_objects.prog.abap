@@ -578,8 +578,8 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
                   iv_field TYPE string
         RAISING   lcx_exception,
       jump_adt
-        IMPORTING i_obj_name like ms_item-obj_name OPTIONAL
-                  i_obj_type like ms_item-obj_type OPTIONAL
+        IMPORTING i_obj_name LIKE ms_item-obj_name OPTIONAL
+                  i_obj_type LIKE ms_item-obj_type OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
@@ -1011,7 +1011,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     lo_xml->add( iv_name = 'PROGDIR'
                  ig_data = ls_progdir ).
-    IF ls_progdir-subc = '1'.
+    IF ls_progdir-subc = '1' OR ls_progdir-subc = 'M'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
       lo_xml->add( iv_name = 'DYNPROS'
                    ig_data = lt_dynpros ).
