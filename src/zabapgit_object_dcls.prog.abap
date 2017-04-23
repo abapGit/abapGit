@@ -146,7 +146,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         CLEAR <field>.
 
         ASSIGN COMPONENT 'CREATED_BY'
-               OF STRUCTURE <ls_data> 
+               OF STRUCTURE <ls_data>
                TO <field>.
         ASSERT sy-subrc = 0.
         CLEAR <field>.
