@@ -14,23 +14,14 @@ CLASS lcl_object_styl DEFINITION INHERITING FROM lcl_objects_super FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    TYPES:
-      ty_thead_tt TYPE STANDARD TABLE OF thead WITH DEFAULT KEY,
-      ty_tline_tt TYPE STANDARD TABLE OF tline WITH DEFAULT KEY,
-      BEGIN OF ty_text,
-        head  TYPE thead,
-        lines TYPE ty_tline_tt,
-      END OF ty_text,
-      ty_texts_tt TYPE STANDARD TABLE OF ty_text WITH DEFAULT KEY.
+    TYPES: BEGIN OF ty_style,
+             header     TYPE itcda,
+             paragraphs TYPE STANDARD TABLE OF itcdp WITH DEFAULT KEY,
+             strings    TYPE STANDARD TABLE OF itcds WITH DEFAULT KEY,
+             tabs       TYPE STANDARD TABLE OF itcdq WITH DEFAULT KEY,
+           END OF ty_style.
 
-    METHODS:
-      list_texts
-        RETURNING VALUE(rt_headers) TYPE ty_thead_tt,
-      serialize_text
-        IMPORTING is_head        TYPE thead
-        RETURNING VALUE(rs_text) TYPE ty_text.
-
-ENDCLASS.                    "lcl_object_TRAN DEFINITION
+ENDCLASS.                    "lcl_object_styl DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_styl IMPLEMENTATION
@@ -44,105 +35,129 @@ CLASS lcl_object_styl IMPLEMENTATION.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA: ls_style TYPE ty_style,
+          lv_name  TYPE itcda-tdstyle.
+
+
+    lv_name = ms_item-obj_name.
+
+    CALL FUNCTION 'READ_STYLE'
+      EXPORTING
+        style        = lv_name
+      IMPORTING
+        style_header = ls_style-header
+      TABLES
+        paragraphs   = ls_style-paragraphs
+        strings      = ls_style-strings
+        tabs         = ls_style-tabs.
+
+    rv_user = ls_style-header-tdluser.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "lif_object~get_metadata
 
   METHOD lif_object~exists.
 
-    DATA: lt_texts TYPE ty_thead_tt.
+    DATA: ls_style TYPE ty_style,
+          lv_name  TYPE itcda-tdstyle,
+          lv_found TYPE abap_bool.
 
-    lt_texts = list_texts( ).
-    rv_bool = boolc( lines( lt_texts ) <> 0 ).
+
+    lv_name = ms_item-obj_name.
+
+    CALL FUNCTION 'READ_STYLE'
+      EXPORTING
+        style      = lv_name
+      IMPORTING
+        found      = lv_found
+      TABLES
+        paragraphs = ls_style-paragraphs
+        strings    = ls_style-strings
+        tabs       = ls_style-tabs.
+
+    rv_bool = boolc( lv_found = abap_true ).
 
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
 
-* todo
+    lcx_exception=>raise( 'todo, STYL jump' ).
 
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
 
-    DATA: lt_texts TYPE ty_thead_tt.
+    DATA: lv_style TYPE itcda-tdstyle.
 
-    lt_texts = list_texts( ).
 
-* todo
+    lv_style = ms_item-obj_name.
+
+    CALL FUNCTION 'DELETE_STYLE'
+      EXPORTING
+        style    = lv_style
+        language = '*'.
 
   ENDMETHOD.                    "delete
 
   METHOD lif_object~deserialize.
 
-* todo
+    DATA: ls_style TYPE ty_style.
+
+
+    io_xml->read( EXPORTING iv_name = 'STYLE'
+                  CHANGING cg_data = ls_style ).
+
+    CALL FUNCTION 'SAVE_STYLE'
+      EXPORTING
+        style_header = ls_style-header
+      TABLES
+        paragraphs   = ls_style-paragraphs
+        strings      = ls_style-strings
+        tabs         = ls_style-tabs.
+
+    tadir_insert( iv_package ).
 
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~serialize.
 
-    DATA: lt_texts  TYPE ty_thead_tt,
-          lt_result TYPE ty_texts_tt.
+    DATA: ls_style TYPE ty_style,
+          lv_name  TYPE itcda-tdstyle.
 
-    FIELD-SYMBOLS: <ls_text> LIKE LINE OF lt_texts.
-
-
-    lt_texts = list_texts( ).
-    LOOP AT lt_texts ASSIGNING <ls_text>.
-      APPEND serialize_text( <ls_text> ) TO lt_result.
-    ENDLOOP.
-
-    io_xml->add( iv_name = 'TEXTS'
-                 ig_data = lt_result ).
-
-  ENDMETHOD.                    "serialize
-
-  METHOD serialize_text.
-
-    rs_text-head = is_head.
-
-    CLEAR rs_text-head-tdfuser.
-    CLEAR rs_text-head-tdfreles.
-    CLEAR rs_text-head-tdfdate.
-    CLEAR rs_text-head-tdftime.
-    CLEAR rs_text-head-tdluser.
-    CLEAR rs_text-head-tdlreles.
-    CLEAR rs_text-head-tdldate.
-    CLEAR rs_text-head-tdltime.
-    CLEAR rs_text-head-mandt.
-
-    CALL FUNCTION 'READ_TEXT'
-      EXPORTING
-        id       = is_head-tdid
-        language = is_head-tdspras
-        name     = is_head-tdname
-        object   = is_head-tdobject
-      TABLES
-        lines    = rs_text-lines.
-
-  ENDMETHOD.
-
-  METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
-  ENDMETHOD.
-
-  METHOD list_texts.
-
-    DATA: lv_name TYPE thead-tdname.
 
     lv_name = ms_item-obj_name.
 
-    CALL FUNCTION 'SELECT_TEXT'
+    CALL FUNCTION 'READ_STYLE'
       EXPORTING
-        database_only = abap_true
-        name          = lv_name
-        object        = 'STYLE'
+        style        = lv_name
+      IMPORTING
+        style_header = ls_style-header
       TABLES
-        selections    = rt_headers.
+        paragraphs   = ls_style-paragraphs
+        strings      = ls_style-strings
+        tabs         = ls_style-tabs.
 
+    CLEAR: ls_style-header-tdfuser,
+           ls_style-header-tdfdate,
+           ls_style-header-tdftime,
+           ls_style-header-tdfreles,
+           ls_style-header-tdluser,
+           ls_style-header-tdldate,
+           ls_style-header-tdltime,
+           ls_style-header-tdlreles.
+
+    io_xml->add( iv_name = 'STYLE'
+                 ig_data = ls_style ).
+
+  ENDMETHOD.                    "serialize
+
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_styl IMPLEMENTATION
