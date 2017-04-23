@@ -50,43 +50,11 @@ CLASS lcl_object_dcls IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    DATA: adt_link          TYPE string,
-          obj_name          TYPE e071-obj_name,
-          li_object         TYPE REF TO cl_wb_object,
-          li_adt            TYPE REF TO object,
-          li_adt_uri_mapper TYPE REF TO object,
-          li_adt_objref     TYPE REF TO object.
-
-    FIELD-SYMBOLS: <uri> TYPE string.
-
     TRY.
 
-        obj_name = ms_item-obj_name.
+        jump_adt( ).
 
-        li_object = cl_wb_object=>create_from_transport_key( p_object = ms_item-obj_type p_obj_name = obj_name ).
-
-        CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
-          RECEIVING
-            result = li_adt.
-
-        CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
-          RECEIVING
-            result = li_adt_uri_mapper.
-
-        CALL METHOD li_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
-          EXPORTING
-            wb_object = li_object
-          RECEIVING
-            result    = li_adt_objref.
-
-        ASSIGN ('li_adt_objref->ref_data-uri') TO <uri>.
-
-        CONCATENATE 'adt://' sy-sysid <uri> INTO adt_link.
-
-        cl_gui_frontend_services=>execute( EXPORTING  document = adt_link
-                                           EXCEPTIONS OTHERS   = 1 ).
-
-      CATCH cx_root.
+      CATCH lcx_exception.
         lcx_exception=>raise( 'DCLS Jump Error' ).
     ENDTRY.
 
