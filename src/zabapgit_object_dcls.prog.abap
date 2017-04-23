@@ -63,8 +63,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
 
         obj_name = ms_item-obj_name.
 
-        li_object = cl_wb_object=>create_from_transport_key( p_object 	= ms_item-obj_type
-                                                             p_obj_name = obj_name ).
+        li_object = cl_wb_object=>create_from_transport_key( p_object = ms_item-obj_type p_obj_name = obj_name ).
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
           RECEIVING
@@ -146,6 +145,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         ASSERT sy-subrc = 0.
         CLEAR <field>.
 
+
         ASSIGN COMPONENT 'CREATED_BY'	OF STRUCTURE <ls_data> TO <field>.
         ASSERT sy-subrc = 0.
         CLEAR <field>.
@@ -157,8 +157,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <ls_data> TO <field>.
         ASSERT sy-subrc = 0.
 
-        mo_files->add_string( iv_ext 	 = 'asdcls'
-                              iv_string = <field> ).
+        mo_files->add_string( iv_ext = 'asdcls'  iv_string = <field> ).
 
         CLEAR <field>.
 
