@@ -69,23 +69,33 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).
 
     ro_html->add( '<td class="repo_name">' ).
+
+    " Repo type and name
     ro_html->add_icon( iv_name = lv_icon  iv_hint = lv_hint ).
     ro_html->add( |<span class="name">{ io_repo->get_name( ) }</span>| ).
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       ro_html->add( |<span class="url">{ lo_repo_online->get_url( ) }</span>| ).
     ENDIF.
+
+    " News
+    IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
+      IF io_news->has_updates( ) = abap_true.
+        lv_icon = 'arrow-up/warning'.
+      ELSE.
+        lv_icon = 'arrow-up/grey80'.
+      ENDIF.
+      ro_html->add_a( iv_act = 'displayNews()'
+                      iv_typ = gc_action_type-onclick
+                      iv_txt = lcl_html=>icon( iv_name  = lv_icon
+                                               iv_class = 'pad-sides'
+                                               iv_hint  = 'Display changelog' ) ).
+    ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
 
-    IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
-      ro_html->add_a( iv_act = 'displayNews()'
-                      iv_typ = gc_action_type-onclick
-                      iv_txt = lcl_html=>icon( iv_name = 'pulse/blue'
-                                               iv_hint = 'Display changelog' ) ).
-    ENDIF.
-
+    " Fav
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
       lv_icon = 'star/blue' ##NO_TEXT.
     ELSE.
@@ -96,14 +106,17 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
                                              iv_class = 'pad-sides'
                                              iv_hint  = 'Click to toggle favorite' ) ).
 
+    " BG
     IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
       ro_html->add( '<span class="bg_marker" title="background">BG</span>' ).
     ENDIF.
 
+    " Write protect
     IF io_repo->is_write_protected( ) = abap_true.
       ro_html->add_icon( iv_name = 'lock/darkgrey' iv_hint = 'Locked from pulls' ).
     ENDIF.
 
+    " Branch
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.
@@ -119,6 +132,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    " Package
     IF iv_show_package = abap_true.
       ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
@@ -231,7 +245,10 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_news.
 
-    DATA lt_log TYPE lcl_news=>tt_log.
+    DATA: lv_text    TYPE string,
+          lv_display TYPE string,
+          lt_log     TYPE lcl_news=>tt_log.
+
     FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
 
     CREATE OBJECT ro_html.
@@ -242,24 +259,40 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     lt_log = io_news->get_log( ).
 
-    ro_html->add( '<div id="news" class="news" style="display:none">' ).
+    IF io_news->has_unseen( ) = abap_false.
+      lv_display = 'display:none'.
+    ENDIF.
+
+    ro_html->add( |<div id="news" class="news" style="{ lv_display }">| ).
 
     ro_html->add( '<div class="headbar title">Announcement of the latest changes'
-               && '<div class="float-right"><a onclick="displayNews()">close</a></div>'
-               && '</div>' ).
+               && '<div class="float-right">'
+               && lcl_html=>a(
+                    iv_txt   = '&#x274c;'
+                    iv_typ   = gc_action_type-onclick
+                    iv_act   = 'displayNews()'
+                    iv_class = 'close-btn' )
+               && '</div></div>' ).
 
-    IF io_news->has_important_news( ) = abap_true.
+    IF io_news->has_important( ) = abap_true.
       ro_html->add( '<div class="headbar important">'
         && lcl_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
-        && 'Please note changes marked with <b>"!"</b>'
+        && 'Please note changes marked with "!"'
         && '</div>' ).
     ENDIF.
 
     " Generate news
     ro_html->add( |<div class="newslist">| ).
     LOOP AT lt_log ASSIGNING <line>.
-      IF <line>-header = 'X'.
-        ro_html->add( |<h1>{ <line>-text }</h1>| ).
+      IF <line>-is_header = abap_true.
+        IF <line>-pos_to_cur > 0.
+          lv_text = <line>-text && '<span class="version-marker update">update</span>'.
+        ELSEIF <line>-pos_to_cur = 0.
+          lv_text = <line>-text && '<span class="version-marker">current</span>'.
+        ELSE. " < 0
+          lv_text = <line>-text.
+        ENDIF.
+        ro_html->add( |<h1>{ lv_text }</h1>| ).
       ELSE.
         ro_html->add( |<li>{ <line>-text }</li>| ).
       ENDIF.

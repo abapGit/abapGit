@@ -424,6 +424,16 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
+    METHODS set_repo_last_change_seen
+      IMPORTING iv_url     TYPE lcl_persistence_repo=>ty_repo-url
+                iv_version TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_repo_last_change_seen
+      IMPORTING iv_url            TYPE lcl_persistence_repo=>ty_repo-url
+      RETURNING VALUE(rv_version) TYPE string
+      RAISING   lcx_exception.
+
     METHODS toggle_hide_files
       RETURNING VALUE(rv_hide) TYPE abap_bool
       RAISING   lcx_exception.
@@ -468,9 +478,10 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES:
       BEGIN OF ty_repo_config,
-        url      TYPE lcl_persistence_repo=>ty_repo-url,
-        login    TYPE string,
-        git_user TYPE ty_git_user,
+        url              TYPE lcl_persistence_repo=>ty_repo-url,
+        login            TYPE string,
+        git_user         TYPE ty_git_user,
+        last_change_seen TYPE string,
       END OF ty_repo_config.
 
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
@@ -479,11 +490,11 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       BEGIN OF ty_user,
         default_git_user TYPE ty_git_user,
         repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
-        repo_config      TYPE ty_repo_config_tt,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
+        repo_config      TYPE ty_repo_config_tt,
       END OF ty_user.
 
     METHODS constructor
@@ -657,6 +668,8 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     update( ls_user ).
 
+    COMMIT WORK AND WAIT.
+
   ENDMETHOD.  "update_repo_config
 
   METHOD set_repo_git_user_name.
@@ -706,6 +719,22 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_email = read_repo_config( iv_url )-git_user-email.
 
   ENDMETHOD.  "get_repo_email
+
+  METHOD set_repo_last_change_seen.
+
+    DATA: ls_repo_config TYPE ty_repo_config.
+
+    ls_repo_config                  = read_repo_config( iv_url ).
+    ls_repo_config-last_change_seen = iv_version.
+    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+
+  ENDMETHOD.  "set_last_change_seen
+
+  METHOD get_repo_last_change_seen.
+
+    rv_version = read_repo_config( iv_url )-last_change_seen.
+
+  ENDMETHOD.  "get_last_change_seen
 
   METHOD toggle_hide_files.
 
