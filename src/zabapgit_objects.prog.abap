@@ -559,8 +559,8 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name type ty_item-obj_name
-                  i_obj_type type ty_item-obj_type
+        IMPORTING i_obj_name TYPE ty_item-obj_name
+                  i_obj_type TYPE ty_item-obj_type
         RAISING   lcx_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
@@ -1631,17 +1631,8 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
     FIELD-SYMBOLS: <uri> TYPE string.
 
-*    IF i_obj_name IS SUPPLIED.
-      obj_name = i_obj_name.
-*    ELSE.
-*      obj_name = ms_item-obj_name.
-*    ENDIF.
-
-*    IF i_obj_type IS SUPPLIED.
-      obj_type = i_obj_type.
-*    ELSE.
-*      obj_type = ms_item-obj_type.
-*    ENDIF.
+    obj_name = i_obj_name.
+    obj_type = i_obj_type.
 
     TRY.
         li_object = cl_wb_object=>create_from_transport_key( p_object 	= obj_type
