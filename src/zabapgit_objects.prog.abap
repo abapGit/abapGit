@@ -557,6 +557,12 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
           is_item     TYPE ty_item
           iv_language TYPE spras.
 
+    CLASS-METHODS:
+      jump_adt
+        IMPORTING i_obj_name type ty_item-obj_name
+                  i_obj_type type ty_item-obj_type
+        RAISING   lcx_exception.
+
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
   PROTECTED SECTION.
@@ -576,10 +582,6 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       jump_se11
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
-        RAISING   lcx_exception,
-      jump_adt
-        IMPORTING i_obj_name LIKE ms_item-obj_name OPTIONAL
-                  i_obj_type LIKE ms_item-obj_type OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
@@ -1629,20 +1631,21 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
     FIELD-SYMBOLS: <uri> TYPE string.
 
-    IF i_obj_name IS SUPPLIED.
+*    IF i_obj_name IS SUPPLIED.
       obj_name = i_obj_name.
-    ELSE.
-      obj_name = ms_item-obj_name.
-    ENDIF.
+*    ELSE.
+*      obj_name = ms_item-obj_name.
+*    ENDIF.
 
-    IF i_obj_type IS SUPPLIED.
+*    IF i_obj_type IS SUPPLIED.
       obj_type = i_obj_type.
-    ELSE.
-      obj_type = ms_item-obj_type.
-    ENDIF.
+*    ELSE.
+*      obj_type = ms_item-obj_type.
+*    ENDIF.
 
     TRY.
-        li_object = cl_wb_object=>create_from_transport_key( p_object = obj_type p_obj_name = obj_name ).
+        li_object = cl_wb_object=>create_from_transport_key( p_object 	= obj_type
+                                                             p_obj_name = obj_name ).
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
           RECEIVING

@@ -52,7 +52,8 @@ CLASS lcl_object_dcls IMPLEMENTATION.
 
     TRY.
 
-        jump_adt( ).
+        jump_adt( i_obj_name = ms_item-obj_name
+                  i_obj_type = ms_item-obj_type ).
 
       CATCH lcx_exception.
         lcx_exception=>raise( 'DCLS Jump Error' ).

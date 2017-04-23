@@ -32,6 +32,8 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_max_lines
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+    METHODS render_adt_jump_enabled
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS build_settings
       IMPORTING
         it_post_fields TYPE tihttpnvp.
@@ -67,6 +69,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_development_internals( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_max_lines( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( render_form_end( ) ).
 
   ENDMETHOD.  "render_content
@@ -163,6 +167,13 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
       mo_settings->set_max_lines( 0 ).
     ENDIF.
 
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'adt_jump_enabled'.
+    IF sy-subrc = 0.
+      mo_settings->set_adt_jump_enanbled( abap_true ).
+    ELSE.
+      mo_settings->set_adt_jump_enanbled( abap_false ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -249,6 +260,23 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
+  ENDMETHOD.
+
+  METHOD render_adt_jump_enabled.
+
+    DATA lv_checked TYPE string.
+
+    IF mo_settings->get_adt_jump_enabled( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>ABAP Development Tools (ADT)</h2>| ).
+    ro_html->add( `<input type="checkbox" name="adt_jump_enabled" value="X" `
+                   && lv_checked && ` > Enable jump to ADT first` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
   ENDMETHOD.
 
 ENDCLASS.
