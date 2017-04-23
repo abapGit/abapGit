@@ -1642,8 +1642,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        li_object = cl_wb_object=>create_from_transport_key( p_object 	= obj_type
-                                                             p_obj_name = obj_name ).
+        li_object = cl_wb_object=>create_from_transport_key( p_object = obj_type p_obj_name = obj_name ).
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
           RECEIVING

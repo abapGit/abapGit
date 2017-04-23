@@ -212,7 +212,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD open_adt_stob.
 
-    .
     DATA: lr_data                   TYPE REF TO data.
     DATA: li_ddl                    TYPE REF TO object.
     FIELD-SYMBOLS: <lt_ddnames>     TYPE STANDARD TABLE.
