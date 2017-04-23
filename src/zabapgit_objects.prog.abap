@@ -576,6 +576,10 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       jump_se11
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
+        RAISING   lcx_exception,
+      jump_adt
+        IMPORTING i_obj_name like ms_item-obj_name OPTIONAL
+                  i_obj_type like ms_item-obj_type OPTIONAL
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
@@ -1612,6 +1616,65 @@ CLASS lcl_objects_super IMPLEMENTATION.
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
   ENDMETHOD.                                                "jump_se11
+
+  METHOD jump_adt.
+
+    DATA: adt_link          TYPE string,
+          obj_type          TYPE trobjtype,
+          obj_name          TYPE trobj_name,
+          li_object         TYPE REF TO cl_wb_object,
+          li_adt            TYPE REF TO object,
+          li_adt_uri_mapper TYPE REF TO object,
+          li_adt_objref     TYPE REF TO object.
+
+    FIELD-SYMBOLS: <uri> TYPE string.
+
+    IF i_obj_name IS SUPPLIED.
+      obj_name = i_obj_name.
+    ELSE.
+      obj_name = ms_item-obj_name.
+    ENDIF.
+
+    IF i_obj_type IS SUPPLIED.
+      obj_type = i_obj_type.
+    ELSE.
+      obj_type = ms_item-obj_type.
+    ENDIF.
+
+    TRY.
+        li_object = cl_wb_object=>create_from_transport_key( p_object = obj_type p_obj_name = obj_name ).
+
+        CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
+          RECEIVING
+            result = li_adt.
+
+        CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
+          RECEIVING
+            result = li_adt_uri_mapper.
+
+        CALL METHOD li_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
+          EXPORTING
+            wb_object = li_object
+          RECEIVING
+            result    = li_adt_objref.
+
+        ASSIGN ('li_adt_objref->ref_data-uri') TO <uri>.
+
+        CONCATENATE 'adt://' sy-sysid <uri> INTO adt_link.
+
+        cl_gui_frontend_services=>execute( EXPORTING  document = adt_link
+                                           EXCEPTIONS OTHERS   = 1 ).
+
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
 
   METHOD get_metadata.
     rs_metadata-class =

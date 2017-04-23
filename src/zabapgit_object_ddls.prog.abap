@@ -212,12 +212,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD open_adt_stob.
 
-    DATA: lv_adt_link               TYPE string.
-    DATA: lv_obj_name               TYPE e071-obj_name.
-    DATA: li_object                 TYPE REF TO cl_wb_object.
-    DATA: li_adt                    TYPE REF TO object.
-    DATA: li_adt_uri_mapper         TYPE REF TO object.
-    DATA: li_adt_objref             TYPE REF TO object.
     DATA: lr_data                   TYPE REF TO data.
     DATA: li_ddl                    TYPE REF TO object.
     FIELD-SYMBOLS: <lt_ddnames>     TYPE STANDARD TABLE.
@@ -226,8 +220,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_entity_view> TYPE any.
     FIELD-SYMBOLS: <lv_ddname>      TYPE any.
     FIELD-SYMBOLS: <lv_ddlname>     TYPE any.
-    FIELD-SYMBOLS: <ls_uri>         TYPE string.
-
     TRY.
 
         CREATE DATA lr_data TYPE ('IF_DD_DDL_TYPES=>TY_T_DDOBJ').
@@ -247,8 +239,6 @@ CLASS lcl_object_ddls IMPLEMENTATION.
         <lv_ddname> = iv_ddls_name.
         INSERT <ls_ddnames> INTO TABLE <lt_ddnames>.
 
-
-
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
             handler = li_ddl.
@@ -263,30 +253,8 @@ CLASS lcl_object_ddls IMPLEMENTATION.
         IF sy-subrc = 0.
           ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <ls_entity_view> TO <lv_ddlname>.
 
-          lv_obj_name = <lv_ddlname>.
-
-          li_object = cl_wb_object=>create_from_transport_key( p_object = 'DDLS' p_obj_name = lv_obj_name ).
-
-          CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
-            RECEIVING
-              result = li_adt.
-
-          CALL METHOD LI_ADT->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
-            RECEIVING
-              result = li_adt_uri_mapper.
-
-          CALL METHOD li_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
-            EXPORTING
-              wb_object = li_object
-            RECEIVING
-              result    = li_adt_objref.
-
-          ASSIGN ('li_adt_objref->ref_data-uri') TO <ls_uri>.
-
-          CONCATENATE 'adt://' sy-sysid <ls_uri> INTO lv_adt_link.
-
-          cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
-                                             EXCEPTIONS OTHERS   = 1 ).
+          jump_adt( i_obj_name = <lv_ddlname>
+                    i_obj_type = 'DDLS' ).
 
         ENDIF.
 
