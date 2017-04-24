@@ -155,9 +155,11 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_form.
 
-    DATA: lo_user  TYPE REF TO lcl_persistence_user,
-          lv_user  TYPE string,
-          lv_email TYPE string.
+    DATA: lo_user     TYPE REF TO lcl_persistence_user.
+    DATA: lv_user     TYPE string.
+    DATA: lv_email    TYPE string.
+    DATA: lv_s_param  TYPE string.
+    DATA: lo_settings TYPE REF TO lcl_settings.
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
@@ -189,13 +191,18 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                      iv_label = 'committer e-mail'
                                      iv_value = lv_email ) ).
 
+    lo_settings = lcl_app=>settings( )->read( ).
+
+    lv_s_param = lo_settings->get_commitmsg_comment_length( ).
+
     ro_html->add( render_text_input( iv_name       = 'comment'
                                      iv_label      = 'comment'
-                                     iv_max_length = '72' ) ).
+                                     iv_max_length = lv_s_param ) ).
 
     ro_html->add( '<div class="row">' ).
     ro_html->add( '<label for="c-body">body</label>' ).
-    ro_html->add( '<textarea id="c-body" name="body" rows="10" cols="50"></textarea>' ).
+
+    ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="{ lo_settings->get_commitmsg_body_size( ) }" wrap="hard"></textarea>| ).
     ro_html->add( '<input type="submit" class="hidden-submit">' ).
     ro_html->add( '</div>' ).
 
