@@ -202,7 +202,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ro_html->add( '<div class="row">' ).
     ro_html->add( '<label for="c-body">body</label>' ).
 
-    ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="{ lo_settings->get_commitmsg_body_size( ) }" wrap="hard"></textarea>| ).
+    ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
+                  |{ lo_settings->get_commitmsg_body_size( ) }" wrap="hard"></textarea>| ).
     ro_html->add( '<input type="submit" class="hidden-submit">' ).
     ro_html->add( '</div>' ).
 

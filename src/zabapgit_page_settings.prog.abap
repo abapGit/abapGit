@@ -300,11 +300,13 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<h2>Commit Message</h2>| ).
     ro_html->add( |<label for="comment_length">Max. length of comment</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( `<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50" max="100" value="` && mo_settings->get_commitmsg_comment_length( ) && `">` ).
+    ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50" max="100"| &&
+                  | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<label for="body_size">Max. line size of body</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( `<input name="body_size" type="number" step="10" size="3"  maxlength="3" min="50" max="100" value="` && mo_settings->get_commitmsg_body_size( ) && `">` ).
+    ro_html->add( |<input name="body_size" type="number" step="10" size="3" maxlength="3" min="50" max="100"| &&
+                  | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
   ENDMETHOD.
