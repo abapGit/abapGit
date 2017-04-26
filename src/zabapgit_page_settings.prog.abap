@@ -172,7 +172,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
       mo_settings->set_max_lines( 0 ).
     ENDIF.
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'adt_jump_enabled'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'adt_jump_enabled'.
     IF sy-subrc = 0.
       mo_settings->set_adt_jump_enanbled( abap_true ).
     ELSE.

@@ -1581,7 +1581,7 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS get_commitmsg_body_size
       RETURNING
         VALUE(rv_length) TYPE i.
-        
+
   PRIVATE SECTION.
     DATA: mv_proxy_url          TYPE string,
           mv_proxy_port         TYPE string,
@@ -1731,7 +1731,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
           lv_flag                        TYPE abap_bool,
           lv_max_lines_as_integer        TYPE i,
           lv_s_param_value             TYPE string,
-          lv_i_param_value             TYPE i,          
+          lv_i_param_value             TYPE i,
           lv_adt_jump_enabled_as_string  TYPE string,
           lv_adt_jump_enabled_as_boolean TYPE abap_bool.
 
