@@ -115,7 +115,14 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    lcx_exception=>raise( 'todo, AUTH jump' ).
+    DATA: field TYPE fieldname .
+
+    field = ms_item-obj_name.
+
+    CALL FUNCTION 'SU20_MAINTAIN_SNGL'
+      EXPORTING
+        id_field    = field
+        id_wbo_mode = abap_false.
 
   ENDMETHOD.                    "lif_object~jump
 
