@@ -37,10 +37,10 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
         RAISING   lcx_exception,
       render_text_input
-        IMPORTING iv_name        TYPE string
-                  iv_label       TYPE string
-                  iv_value       TYPE string OPTIONAL
-                  iv_max_length  TYPE string OPTIONAL
+        IMPORTING iv_name       TYPE string
+                  iv_label      TYPE string
+                  iv_value      TYPE string OPTIONAL
+                  iv_max_length TYPE string OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
 ENDCLASS.
