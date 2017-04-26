@@ -113,7 +113,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_repo,
              key TYPE lcl_persistence_db=>ty_value.
-            INCLUDE TYPE ty_repo_xml.
+        INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
     TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
@@ -230,7 +230,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_background,
              key TYPE lcl_persistence_db=>ty_value.
-            INCLUDE TYPE ty_xml.
+        INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
 
@@ -1566,6 +1566,11 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS get_max_lines
       RETURNING
         VALUE(rv_lines) TYPE i.
+    METHODS set_adt_jump_enanbled
+      IMPORTING iv_adt_jump_enabled TYPE abap_bool.
+    METHODS get_adt_jump_enabled
+      RETURNING
+        VALUE(rv_adt_jump_enabled) TYPE abap_bool.
     METHODS set_commitmsg_comment_length
       IMPORTING iv_length TYPE i.
     METHODS get_commitmsg_comment_length
@@ -1583,6 +1588,7 @@ CLASS lcl_settings DEFINITION FINAL.
           mv_proxy_auth               TYPE string,
           mv_run_critical_tests       TYPE abap_bool,
           mv_lines                    TYPE i,
+          mv_adt_jump_enabled         TYPE abap_bool,
           mv_commitmsg_comment_length TYPE i,
           mv_commitmsg_body_size      TYPE i.
 
@@ -1630,6 +1636,14 @@ CLASS lcl_settings IMPLEMENTATION.
     mv_lines = iv_lines.
   ENDMETHOD.
 
+  METHOD get_adt_jump_enabled.
+    rv_adt_jump_enabled = mv_adt_jump_enabled.
+  ENDMETHOD.
+
+  METHOD set_adt_jump_enanbled.
+    mv_adt_jump_enabled = iv_adt_jump_enabled.
+  ENDMETHOD.
+
   METHOD get_commitmsg_comment_length.
     rv_length = mv_commitmsg_comment_length.
   ENDMETHOD.
@@ -1645,6 +1659,7 @@ CLASS lcl_settings IMPLEMENTATION.
   METHOD set_commitmsg_body_size.
     mv_commitmsg_body_size = iv_length.
   ENDMETHOD.
+
 ENDCLASS.
 
 CLASS lcl_persistence_settings DEFINITION FINAL.
@@ -1693,6 +1708,11 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
+      iv_value      = 'ADT_JUMP'
+      iv_data       = io_settings->get_adt_jump_enabled( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
       iv_value      = 'COMMENT_LEN'
       iv_data       = |{ io_settings->get_commitmsg_comment_length( ) }| ).
 
@@ -1705,13 +1725,15 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lv_critical_tests_as_string  TYPE string,
-          lv_critical_tests_as_boolean TYPE abap_bool,
-          lv_max_lines_as_string       TYPE string,
-          lv_flag                      TYPE abap_bool,
-          lv_max_lines_as_integer      TYPE i,
-          lv_s_param_value             TYPE string,
-          lv_i_param_value             TYPE i.
+    DATA: lv_critical_tests_as_string    TYPE string,
+          lv_critical_tests_as_boolean   TYPE abap_bool,
+          lv_max_lines_as_string         TYPE string,
+          lv_flag                        TYPE abap_bool,
+          lv_max_lines_as_integer        TYPE i,
+          lv_s_param_value               TYPE string,
+          lv_i_param_value               TYPE i,
+          lv_adt_jump_enabled_as_string  TYPE string,
+          lv_adt_jump_enabled_as_boolean TYPE abap_bool.
 
 
     CREATE OBJECT ro_settings.
@@ -1764,6 +1786,16 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
     ENDTRY.
 
     TRY.
+        lv_adt_jump_enabled_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'ADT_JUMP' ).
+        lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
+        ro_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
+      CATCH lcx_not_found.
+        ro_settings->set_adt_jump_enanbled( abap_false ).
+    ENDTRY.
+
+    TRY.
         lv_s_param_value = lcl_app=>db( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'COMMENT_LEN' ).
@@ -1782,6 +1814,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found cx_sy_conversion_no_number.
         ro_settings->set_commitmsg_body_size( lcl_settings=>c_commitmsg_body_size_dft ). " default
     ENDTRY.
+
   ENDMETHOD.
 
 ENDCLASS.

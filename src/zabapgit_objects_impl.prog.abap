@@ -231,13 +231,31 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: li_obj TYPE REF TO lif_object.
-
+    DATA: li_obj           TYPE REF TO lif_object,
+          adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = gc_english ).
 
-    li_obj->jump( ).
+    adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+
+    IF adt_jump_enabled = abap_true.
+
+      TRY.
+          lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
+                                       i_obj_type = is_item-obj_type ).
+
+        CATCH lcx_exception.
+
+          li_obj->jump( ).
+
+      ENDTRY.
+
+    ELSE.
+
+      li_obj->jump( ).
+
+    ENDIF.
 
   ENDMETHOD.                    "jump
 
