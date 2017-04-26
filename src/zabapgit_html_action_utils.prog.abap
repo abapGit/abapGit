@@ -302,6 +302,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     CLEAR es_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
+    REPLACE ALL OCCURRENCES OF gc_crlf    IN lv_string WITH lc_replace.
     REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
     lt_fields = parse_fields( lv_string ).
 

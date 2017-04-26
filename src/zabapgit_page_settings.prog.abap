@@ -32,6 +32,8 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS render_max_lines
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+    METHODS render_commit_msg
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS build_settings
       IMPORTING
         it_post_fields TYPE tihttpnvp.
@@ -64,9 +66,11 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_form_begin( ) ).
     ro_html->add( render_proxy( ) ).
     ro_html->add( |<hr>| ).
-    ro_html->add( render_development_internals( ) ).
-    ro_html->add( |<hr>| ).
     ro_html->add( render_max_lines( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_commit_msg( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_development_internals( ) ).
     ro_html->add( render_form_end( ) ).
 
   ENDMETHOD.  "render_content
@@ -99,6 +103,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_gui_page~on_event.
+* todo, check input values eg INT
 
     DATA:
       lt_post_fields TYPE tihttpnvp.
@@ -124,43 +129,77 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD build_settings.
 
-    DATA: ls_post_field           TYPE ihttpnvp,
-          lv_max_lines_as_integer TYPE i.
+    DATA: lv_i_param_value         TYPE i.
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
 
 
     CREATE OBJECT mo_settings.
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_url'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_url'.
     IF sy-subrc <> 0.
       mv_error = abap_true.
     ENDIF.
-    mo_settings->set_proxy_url( ls_post_field-value ).
+    mo_settings->set_proxy_url( <ls_post_field>-value ).
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_port'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_port'.
     IF sy-subrc <> 0.
       mv_error = abap_true.
     ENDIF.
-    mo_settings->set_proxy_port( ls_post_field-value ).
+    mo_settings->set_proxy_port( <ls_post_field>-value ).
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'proxy_auth'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_auth'.
     IF sy-subrc = 0.
       mo_settings->set_proxy_authentication( abap_true ).
     ELSE.
       mo_settings->set_proxy_authentication( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'critical_tests'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'critical_tests'.
     IF sy-subrc = 0.
       mo_settings->set_run_critical_tests( abap_true ).
     ELSE.
       mo_settings->set_run_critical_tests( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'max_lines'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'max_lines'.
     IF sy-subrc = 0.
-      lv_max_lines_as_integer = ls_post_field-value.
-      mo_settings->set_max_lines( lv_max_lines_as_integer ).
+      lv_i_param_value = <ls_post_field>-value.
+      mo_settings->set_max_lines( lv_i_param_value ).
     ELSE.
       mo_settings->set_max_lines( 0 ).
+    ENDIF.
+
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
+    IF sy-subrc = 0.
+
+      lv_i_param_value = <ls_post_field>-value.
+
+      IF lv_i_param_value < lcl_settings=>c_commitmsg_comment_length_dft.
+        lv_i_param_value = lcl_settings=>c_commitmsg_comment_length_dft.
+      ENDIF.
+
+      mo_settings->set_commitmsg_comment_length( lv_i_param_value ).
+
+    ELSE.
+
+      mo_settings->set_commitmsg_comment_length( lcl_settings=>c_commitmsg_comment_length_dft ).
+
+    ENDIF.
+
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
+    IF sy-subrc = 0.
+
+      lv_i_param_value = <ls_post_field>-value.
+
+      IF lv_i_param_value < lcl_settings=>c_commitmsg_body_size_dft.
+        lv_i_param_value = lcl_settings=>c_commitmsg_body_size_dft.
+      ENDIF.
+
+      mo_settings->set_commitmsg_body_size( lv_i_param_value ).
+
+    ELSE.
+
+      mo_settings->set_commitmsg_body_size( lcl_settings=>c_commitmsg_body_size_dft ).
+
     ENDIF.
 
   ENDMETHOD.
@@ -247,6 +286,23 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<label for="max_lines">Max. # of objects listed (0 = all)</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+  ENDMETHOD.
+
+  METHOD render_commit_msg.
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<h2>Commit Message</h2>| ).
+    ro_html->add( |<label for="comment_length">Max. length of comment (recommendation 50)</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
+                  | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<label for="body_size">Max. line size of body (recommendation 72)</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input name="body_size" type="number" step="10" size="3" maxlength="3" min="50"| &&
+                  | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
   ENDMETHOD.
