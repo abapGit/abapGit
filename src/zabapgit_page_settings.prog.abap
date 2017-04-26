@@ -173,10 +173,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
       lv_i_param_value = <ls_post_field>-value.
 
-      IF     lv_i_param_value < lcl_settings=>c_commitmsg_comment_length_dft.
+      IF lv_i_param_value < lcl_settings=>c_commitmsg_comment_length_dft.
         lv_i_param_value = lcl_settings=>c_commitmsg_comment_length_dft.
-      ELSEIF lv_i_param_value > lcl_settings=>c_commitmsg_comment_length_max.
-        lv_i_param_value = lcl_settings=>c_commitmsg_comment_length_max.
       ENDIF.
 
       mo_settings->set_commitmsg_comment_length( lv_i_param_value ).
@@ -192,10 +190,8 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
       lv_i_param_value = <ls_post_field>-value.
 
-      IF     lv_i_param_value < lcl_settings=>c_commitmsg_body_size_dft.
+      IF lv_i_param_value < lcl_settings=>c_commitmsg_body_size_dft.
         lv_i_param_value = lcl_settings=>c_commitmsg_body_size_dft.
-      ELSEIF lv_i_param_value > lcl_settings=>c_commitmsg_body_size_max.
-        lv_i_param_value = lcl_settings=>c_commitmsg_body_size_max.
       ENDIF.
 
       mo_settings->set_commitmsg_body_size( lv_i_param_value ).
@@ -298,14 +294,14 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<h2>Commit Message</h2>| ).
-    ro_html->add( |<label for="comment_length">Max. length of comment</label>| ).
+    ro_html->add( |<label for="comment_length">Max. length of comment (recommendation 50)</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50" max="100"| &&
+    ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<label for="body_size">Max. line size of body</label>| ).
+    ro_html->add( |<label for="body_size">Max. line size of body (recommendation 72)</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<input name="body_size" type="number" step="10" size="3" maxlength="3" min="50" max="100"| &&
+    ro_html->add( |<input name="body_size" type="number" step="10" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).

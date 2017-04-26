@@ -1535,9 +1535,7 @@ CLASS lcl_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
-    CONSTANTS: c_commitmsg_comment_length_max TYPE i VALUE 100.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
-    CONSTANTS: c_commitmsg_body_size_max      TYPE i VALUE 100.
 
     METHODS set_proxy_url
       IMPORTING
