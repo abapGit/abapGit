@@ -1583,12 +1583,12 @@ CLASS lcl_settings DEFINITION FINAL.
         VALUE(rv_length) TYPE i.
 
   PRIVATE SECTION.
-    DATA: mv_proxy_url          TYPE string,
-          mv_proxy_port         TYPE string,
-          mv_proxy_auth         TYPE string,
-          mv_run_critical_tests TYPE abap_bool,
-          mv_lines              TYPE i,
-          mv_adt_jump_enabled   TYPE abap_bool,
+    DATA: mv_proxy_url                TYPE string,
+          mv_proxy_port               TYPE string,
+          mv_proxy_auth               TYPE string,
+          mv_run_critical_tests       TYPE abap_bool,
+          mv_lines                    TYPE i,
+          mv_adt_jump_enabled         TYPE abap_bool,
           mv_commitmsg_comment_length TYPE i,
           mv_commitmsg_body_size      TYPE i.
 
@@ -1730,8 +1730,8 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
           lv_max_lines_as_string         TYPE string,
           lv_flag                        TYPE abap_bool,
           lv_max_lines_as_integer        TYPE i,
-          lv_s_param_value             TYPE string,
-          lv_i_param_value             TYPE i,
+          lv_s_param_value               TYPE string,
+          lv_i_param_value               TYPE i,
           lv_adt_jump_enabled_as_string  TYPE string,
           lv_adt_jump_enabled_as_boolean TYPE abap_bool.
 
@@ -1815,6 +1815,6 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
         ro_settings->set_commitmsg_body_size( lcl_settings=>c_commitmsg_body_size_dft ). " default
     ENDTRY.
 
-ENDMETHOD.
+  ENDMETHOD.
 
 ENDCLASS.
