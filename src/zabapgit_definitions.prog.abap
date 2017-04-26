@@ -21,7 +21,7 @@ TYPES: ty_file_signatures_ts TYPE SORTED TABLE OF
          ty_file_signature WITH UNIQUE KEY path filename.
 
 TYPES: BEGIN OF ty_file.
-    INCLUDE TYPE ty_file_signature.
+        INCLUDE TYPE ty_file_signature.
 TYPES: data TYPE xstring,
        END OF ty_file.
 TYPES: ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY.
@@ -127,7 +127,7 @@ TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 TYPES: ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_tpool.
-    INCLUDE TYPE textpool.
+        INCLUDE TYPE textpool.
 TYPES:   split TYPE c LENGTH 8.
 TYPES: END OF ty_tpool.
 
@@ -185,6 +185,7 @@ CONSTANTS: BEGIN OF gc_action_type,
              dummy     TYPE c VALUE '_',
            END OF gc_action_type.
 
+CONSTANTS: gc_crlf    TYPE abap_cr_lf VALUE cl_abap_char_utilities=>cr_lf.
 CONSTANTS: gc_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline.
 
 CONSTANTS: gc_english TYPE spras VALUE 'E'.
