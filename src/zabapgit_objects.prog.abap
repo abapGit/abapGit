@@ -1625,6 +1625,8 @@ CLASS lcl_objects_super IMPLEMENTATION.
           obj_type          TYPE trobjtype,
           obj_name          TYPE trobj_name,
           li_object         TYPE REF TO cl_wb_object,
+          li_wb_manager     TYPE REF TO if_wb_manager,
+          li_wb_request     TYPE REF TO cl_wb_request,
           li_adt            TYPE REF TO object,
           li_adt_uri_mapper TYPE REF TO object,
           li_adt_objref     TYPE REF TO object.
@@ -1644,6 +1646,49 @@ CLASS lcl_objects_super IMPLEMENTATION.
         CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
           RECEIVING
             result = li_adt_uri_mapper.
+
+        cl_wb_manager=>get_instance(
+          IMPORTING
+            p_instance              = li_wb_manager
+          EXCEPTIONS
+            no_instance             = 1
+            OTHERS                  = 2 ).
+
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
+
+        cl_wb_request=>create_from_object_ref(
+          EXPORTING
+            p_wb_object       = li_object
+          RECEIVING
+            p_wb_request      = li_wb_request
+          EXCEPTIONS
+            illegal_operation = 1
+            cancelled         = 2
+            OTHERS            = 3 ).
+
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
+
+        li_wb_manager->request_tool_access(
+          EXPORTING
+            p_wb_request            = li_wb_request
+          EXCEPTIONS
+            action_cancelled        = 1
+            object_not_found        = 2
+            operation_not_supported = 3
+            wrong_program_state     = 4
+            error_occured           = 5
+            permission_failure      = 6
+            no_tool_found           = 7
+            internal_error          = 8
+            OTHERS                  = 9 ).
+
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
 
         CALL METHOD li_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
           EXPORTING
