@@ -316,7 +316,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<label for="body_size">Max. line size of body (recommendation 72)</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<input name="body_size" type="number" step="10" size="3" maxlength="3" min="50"| &&
+    ro_html->add( |<input name="body_size" type="number" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
