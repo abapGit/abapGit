@@ -584,6 +584,15 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
                   iv_field TYPE string
         RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+
+    CLASS-METHODS:
+      is_adt_jump_possible
+        IMPORTING io_object                     TYPE REF TO cl_wb_object
+                  io_adt                        TYPE REF TO object
+        RETURNING VALUE(r_is_adt_jump_possible) TYPE abap_bool
+        RAISING   lcx_exception.
+
 ENDCLASS.                    "lcl_objects_super DEFINITION
 
 **********************************************************************
@@ -1641,6 +1650,11 @@ CLASS lcl_objects_super IMPLEMENTATION.
           RECEIVING
             result = li_adt.
 
+        IF is_adt_jump_possible( io_object = li_object
+                                 io_adt    = li_adt ) = abap_false.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
+
         CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
           RECEIVING
             result = li_adt_uri_mapper.
@@ -1652,6 +1666,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
             result    = li_adt_objref.
 
         ASSIGN ('li_adt_objref->ref_data-uri') TO <uri>.
+        ASSERT sy-subrc = 0.
 
         CONCATENATE 'adt://' sy-sysid <uri> INTO adt_link.
 
@@ -1722,6 +1737,62 @@ CLASS lcl_objects_super IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "corr_insert
+
+
+  METHOD is_adt_jump_possible.
+
+    DATA: li_wb_manager         TYPE REF TO if_wb_manager,
+          li_wb_request         TYPE REF TO cl_wb_request,
+          li_adt_uri_mapper_vit TYPE REF TO object,
+          is_vit_wb_request     TYPE abap_bool.
+
+    cl_wb_manager=>get_instance(
+      IMPORTING
+        p_instance              = li_wb_manager
+      EXCEPTIONS
+        no_instance             = 1
+        OTHERS                  = 2 ).
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'ADT Jump Error' ).
+    ENDIF.
+
+    cl_wb_request=>create_from_object_ref(
+      EXPORTING
+        p_wb_object       = io_object
+      RECEIVING
+        p_wb_request      = li_wb_request
+      EXCEPTIONS
+        illegal_operation = 1
+        cancelled         = 2
+        OTHERS            = 3 ).
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'ADT Jump Error' ).
+    ENDIF.
+
+    TRY.
+        CALL METHOD io_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER_VIT')
+          RECEIVING
+            result = li_adt_uri_mapper_vit.
+
+        CALL METHOD li_adt_uri_mapper_vit->('IF_ADT_URI_MAPPER_VIT~IS_VIT_WB_REQUEST')
+          EXPORTING
+            wb_request = li_wb_request
+          RECEIVING
+            result     = is_vit_wb_request.
+
+        IF is_vit_wb_request = abap_true.
+          r_is_adt_jump_possible = abap_false.
+        ELSE.
+          r_is_adt_jump_possible = abap_true.
+        ENDIF.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_super IMPLEMENTATION
 
