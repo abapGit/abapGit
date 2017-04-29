@@ -388,13 +388,16 @@ CLASS lcl_zip IMPLEMENTATION.
           ls_data TYPE lcl_persistence_repo=>ty_repo.
 
 
-    ls_data-package = lcl_popups=>popup_package_export( ).
+    ls_data-key = 'DUMMY'.
+    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
+
+    lcl_popups=>popup_package_export(
+      IMPORTING
+        ev_package      = ls_data-package
+        ev_folder_logic = ls_data-dot_abapgit-folder_logic ).
     IF ls_data-package IS INITIAL.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
-
-    ls_data-key = 'DUMMY'.
-    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
 
     CREATE OBJECT lo_repo
       EXPORTING

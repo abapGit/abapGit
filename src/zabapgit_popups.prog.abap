@@ -17,7 +17,8 @@ CLASS lcl_popups DEFINITION FINAL.
 
     CLASS-METHODS:
       popup_package_export
-        RETURNING VALUE(rv_package) TYPE devclass
+        EXPORTING ev_package      TYPE devclass
+                  ev_folder_logic TYPE string
         RAISING   lcx_exception,
       popup_object
         RETURNING VALUE(rs_tadir) TYPE tadir
@@ -145,8 +146,9 @@ CLASS lcl_popups IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-    "               TAB           FLD       LABEL     DEF                 ATTR
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+    "               TAB     FLD        LABEL          DEF      ATTR
+    _add_dialog_fld 'TDEVC' 'DEVCLASS' 'Package'      ''       ''.
+    _add_dialog_fld 'TDEVC' 'INTSYS'   'Folder logic' 'PREFIX' ''.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -170,8 +172,12 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     TRANSLATE <ls_field>-value TO UPPER CASE.
+    ev_package = <ls_field>-value.
 
-    rv_package = <ls_field>-value.
+    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    TRANSLATE <ls_field>-value TO UPPER CASE.
+    ev_folder_logic = <ls_field>-value.
 
   ENDMETHOD.                    "popup_package_export
 
