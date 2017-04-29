@@ -16,14 +16,18 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
     CONSTANTS: c_tdid_default    TYPE thead-tdid     VALUE 'DEF' ##NO_TEXT.
 
     TYPES: tyt_header TYPE STANDARD TABLE OF thead WITH DEFAULT KEY.
+    TYPES: tys_header TYPE LINE OF tyt_header.
     TYPES: tyt_lines  TYPE tline_tab.
 
     METHODS _get_last_changes
-      IMPORTING iv_form_name           TYPE ty_item-obj_name
-      RETURNING VALUE(es_last_changed) TYPE thead.
+      IMPORTING
+        iv_form_name           TYPE ty_item-obj_name
+      RETURNING
+        VALUE(es_last_changed) TYPE thead.
+
     METHODS _build_extr_from_header
       IMPORTING
-        ls_header       TYPE LINE OF tyt_header
+        ls_header       TYPE tys_header
       RETURNING
         VALUE(r_result) TYPE string.
 
