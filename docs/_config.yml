@@ -1,2 +1,8 @@
 title: abapGit Documentation
 keep_files: [explore.html, repos.json]
+defaults:
+  -
+    scope:
+      path: "" # an empty string here means all files in the project
+    values:
+      layout: "default"
