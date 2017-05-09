@@ -16,15 +16,18 @@
         - title: Keeping code up to date
         - title: Uninstalling a repository
         - title: Your first abapGit project
-        - title: Moving existing package into git
+        - title: Moving package into git
         - title: Contributing to a project
     - title: Offline projects
       subitems:
-        - title: Installing a repository
-        - title: Exporting files
+        - title: Importing zip
+        - title: Exporting zip
+    - title: Regular backup
+      file: guide-regular-backup
 
 - title: Reference
   items:
+    - title: Global settings
     - file: foo
       title: foo
       subitems:
@@ -35,7 +38,13 @@
 
 - title: Other
   items:
+    - title: Articles and Presentations
+      file: other-articles
     - file: ZABAPGIT_TEST_SSL
       title: ZABAPGIT_TEST_SSL
-    - title: Articles and Presentations
     - title: XML mismatch
+      file: xml-mismatch
+    - title: Object File Formats
+      file: other-file-formats
+    - title: Technical Links
+      file: other-technical-links
