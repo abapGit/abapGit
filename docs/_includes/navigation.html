@@ -1,0 +1,36 @@
+<div class="nav">
+  <!-- Navigation -->
+  {% for section in site.data.navigation %}
+    <div class="nav-section">
+      {% if section.file %}
+        <a href="{{ section.file }}.html">
+      {% endif %}
+      <b>{{ section.title }}</b>
+      {% if section.file %}
+        </a>
+      {% endif %}
+      <ul>
+        {% for item in section.items %}
+          <li>
+            {% if item.file %}
+              <a href="{{ item.file }}.html">
+            {% endif %}
+            {{ item.title }}
+            {% if item.file %}
+              </a>
+            {% endif %}
+            {% if item.subitems %}
+              <ul>
+                {% for subitem in item.subitems %}
+                  <li>
+                    <a href="{{ subitem.file }}.html">{{ subitem.title }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</div>
