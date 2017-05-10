@@ -1,3 +1,44 @@
 body {
-  font-family: sans-serif;
+  font-family: Arial,Helvetica,sans-serif;
+  background:  #E8E8E8;
+}
+
+a, a:visited {
+  color:            #4078c0;
+  text-decoration:  none;
+}
+
+a:hover, a:active {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.container {
+  width: 1000px;
+  padding:          0.5em 1em;
+  background-color: #f2f2f2;
+}
+
+.container:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.nav {
+  float: left;
+  width: 300px;
+}
+
+.content {
+  float: right;
+  width: 100%;
+  max-width: 700px;
+}
+
+.page_title {
+  font-weight: bold;
+  font-size: 22pt;
+  color: #bbb;
+  padding-left: 0.4em;
 }
