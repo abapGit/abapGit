@@ -39,11 +39,11 @@
 - title: Other
   items:
     - title: Articles and Presentations
-      file: other-articles
-    - file: ZABAPGIT_TEST_SSL
-      title: ZABAPGIT_TEST_SSL
+      file: other-articles-and-presentations
+    - title: ZABAPGIT_TEST_SSL
+      file: other-test-ssl
     - title: XML mismatch
-      file: xml-mismatch
+      file: other-xml-mismatch
     - title: Object File Formats
       file: other-file-formats
     - title: Technical Links

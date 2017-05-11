@@ -1,5 +1,6 @@
 title: abapGit Docs
 keep_files: [explore.html, repos.json]
+highlighter: rouge
 defaults:
   -
     scope:
