@@ -4,11 +4,6 @@
 		"title": "abap2xlsx",
 		"description": "Generate your professional Excel spreadsheet from ABAP"
 	},
-  "https://github.com/larshp/Foobar.git": 
-	{ 
-		"title": "Foobar",
-		"description": "This is a test project, try installing it by clicking clone"
-	},
   "https://github.com/larshp/abapCov.git":
 	{ 
 		"title": "abapCov",
