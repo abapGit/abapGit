@@ -1,4 +1,9 @@
 {
+  "https://github.com/ivanfemia/abap2xlsx.git": 
+	{ 
+		"title": "abap2xlsx",
+		"description": "Generate your professional Excel spreadsheet from ABAP"
+	},
   "https://github.com/larshp/Foobar.git": 
 	{ 
 		"title": "Foobar",
