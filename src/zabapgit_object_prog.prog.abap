@@ -14,19 +14,19 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    TYPES:  BEGIN OF ty_tpool_i18n,
-              language TYPE langu,
-              textpool TYPE textpool_table,
-            END OF ty_tpool_i18n,
-            tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
+    TYPES: BEGIN OF ty_tpool_i18n,
+             language TYPE langu,
+             textpool TYPE ty_tpool_tt,
+           END OF ty_tpool_i18n,
+           tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
 
     METHODS:
-    serialize_texts
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING lcx_exception,
-    deserialize_texts
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
-      RAISING lcx_exception.
+      serialize_texts
+        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        RAISING   lcx_exception,
+      deserialize_texts
+        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_prog DEFINITION
 
@@ -163,7 +163,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD serialize_texts.
 
-    DATA lt_tpool_i18n TYPE tt_tpool_i18n.
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
@@ -181,7 +182,8 @@ CLASS lcl_object_prog IMPLEMENTATION.
     LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
       READ TEXTPOOL ms_item-obj_name
         LANGUAGE <tpool>-language
-        INTO <tpool>-textpool.
+        INTO lt_tpool.
+      <tpool>-textpool = add_tpool( lt_tpool ).
     ENDLOOP.
 
     IF lines( lt_tpool_i18n ) > 0.
@@ -193,16 +195,19 @@ CLASS lcl_object_prog IMPLEMENTATION.
 
   METHOD deserialize_texts.
 
-    DATA lt_tpool_i18n TYPE tt_tpool_i18n.
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
+
     FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
 
     io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
 
     LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
+      lt_tpool = read_tpool( <tpool>-textpool ).
       deserialize_textpool( iv_program  = ms_item-obj_name
                             iv_language = <tpool>-language
-                            it_tpool    = <tpool>-textpool ).
+                            it_tpool    = lt_tpool ).
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_texts
