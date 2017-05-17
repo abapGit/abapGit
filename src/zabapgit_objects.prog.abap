@@ -1513,7 +1513,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc <> 0.
-* if moving code from SAPlink, see https://github.com/larshp/abapGit/issues/562    
+* if moving code from SAPlink, see https://github.com/larshp/abapGit/issues/562
       lcx_exception=>raise( 'error from RS_CUA_INTERNAL_WRITE' ).
     ENDIF.
 
