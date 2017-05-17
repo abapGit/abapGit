@@ -9,6 +9,11 @@
 		"title": "abapCov",
 		"description": "Upload ABAP unit test code coverage to codecov.io"
 	},  
+  "https://github.com/koemaeda/abap-markdown.git": 
+	{ 
+		"title": "abap-markdown",
+		"description": "ABAP markdown parser"
+	},	
   "https://github.com/larshp/abapOpenChecks.git": 
 	{ 
 		"title": "abapOpenChecks",
