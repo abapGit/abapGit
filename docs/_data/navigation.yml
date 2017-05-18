@@ -21,7 +21,9 @@
     - title: Offline projects
       subitems:
         - title: Importing zip
+          file: guide-import-zip
         - title: Exporting zip
+          file: guide-export-zip
     - title: Regular backup
       file: guide-regular-backup
 
