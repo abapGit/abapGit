@@ -14,7 +14,7 @@ Steps:
 
 4. Clone the repository using abapGit, into the package that should be backed up. abapGit will not delete any objects in the package
 
-5. Enable write protection, see https://github.com/larshp/abapGit/wiki/Write-protected-repository
+5. [Enable write protection](ref-write-protect.html)
 
 6. Test backup by staging + commit + pushing from abapGit manually
 
