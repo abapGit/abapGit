@@ -3,7 +3,7 @@ title: XML Mismatch
 ---
 
 ### For end-users
-Make sure you have the latest version of abapGit installed, see https://github.com/larshp/abapGit/wiki/Updating-abapGit, after updating try again.
+Make sure you have the latest version of abapGit installed, see [upgrading](guide-upgrade.html), after updating try again.
 
 If the error persists, submit an issue to the maintainer of the repository requesting to update to latest version of abapGit serialized files pointing to the guide below.
 
@@ -26,5 +26,5 @@ This will overwrite the files in the repository to have the latest format, compa
 
 | abapGit       | Download | XML Serialization |
 | :------------- |:------------- |:-------------|
-| v1.0.0 to current | [Link](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.txt) | v1.0.0 |
+| v1.0.0 to current | [Link](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.abap) | v1.0.0 |
 | v0.0.0 to v0.113.0 | [Link](https://raw.githubusercontent.com/larshp/abapGit/v0.113.0/zabapgit.prog.abap) | v0.2-alpha |
