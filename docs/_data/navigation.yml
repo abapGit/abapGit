@@ -27,14 +27,12 @@
 
 - title: Reference
   items:
-    - title: Global settings
-    - file: foo
-      title: foo
-      subitems:
-        - file: bar
-          title: bar
-    - file: moo
-      title: moo
+    - title: .abapgit.xml
+      file: ref-dot-abapgit
+    - title: Write protect
+      file: ref-write-protect
+    - title: Supported object types
+      file: ref-supported
 
 - title: Other
   items:
