@@ -1,1 +1,14 @@
-guide upgrade
+---
+title: Upgrading abapGit
+---
+
+
+### Manually
+Copy the code from [zabapgit.abap](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.abap) into the ZABAPGIT report
+
+### Online project
+If the abapGit report is installed in a separate package(eg. $ABAPGIT), a online project can be created. Which will help updating the abapGit code, a "pull" link will appear under the project when there are updates to abapGit.
+
+### Offline project
+If the abapGit report is installed in a separate package(eg. $ABAPGIT), a offline project can be created.
+Download the zip file from https://github.com/larshp/abapGit/archive/master.zip, and click "Import Zip" under the project.

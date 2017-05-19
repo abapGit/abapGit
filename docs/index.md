@@ -2,8 +2,30 @@
 title: Welcome
 ---
 
-abapGit documentation goes here
 
-Bacon ipsum dolor amet kevin frankfurter short ribs, chuck ham pig tri-tip spare ribs bresaola shankle fatback ground round burgdoggen shoulder. Flank drumstick burgdoggen, ham turducken jerky turkey meatloaf sirloin hamburger prosciutto doner t-bone bacon. Shankle beef porchetta tri-tip. Tenderloin doner sirloin fatback, shankle bresaola boudin swine. Rump andouille capicola hamburger shoulder venison ball tip, shankle meatloaf short ribs turducken cow pork loin boudin. Ground round andouille tri-tip spare ribs kevin tenderloin shank porchetta jowl ham turkey salami flank. T-bone corned beef landjaeger bresaola, frankfurter tail spare ribs chicken kevin drumstick.
+# Guides
+* [Installing abapGit](guide-install.html)
+* [Updating abapGit](guide-upgrade.html)
+* [Uninstalling abapGit](guide-uninstall.html)
 
-Picanha t-bone chicken cow ground round turkey andouille ball tip meatball tenderloin bresaola. Andouille tongue jerky flank bresaola kielbasa, tenderloin t-bone prosciutto corned beef pork chop filet mignon spare ribs. Tri-tip jowl landjaeger shankle frankfurter meatball sirloin pork loin t-bone beef ribs tail rump. Turducken bresaola ball tip ground round flank, andouille shank tenderloin cow jerky pork shankle. Short ribs ribeye short loin pork chop corned beef capicola doner prosciutto meatball tongue tri-tip turkey bacon ham. Short loin meatloaf leberkas flank tri-tip strip steak.
+### Online Projects ###
+Requires SSL setup and access to the internet from the SAP system. This is the easiest way to keep the code up to date or contribute to existing projects.
+
+* [Installing a repository](guide-online-install.html)
+* [Keeping code up to date](guide-online-update.html)
+* [Uninstalling a repository](guide-online-uninstall.html)
+
+&nbsp;
+
+* [Your first abapGit project](guide-first-project.html)
+* [Moving existing package contents into git](guide-moving-package.html)
+* [Contributing to a project](guide-contributing.html)
+
+### Offline Projects ###
+No SSL or internet access required, will work if the SAP system is behind a firewall.
+
+* [Installing a repository offline](guide-import-zip.html)
+* [Exporting offline project to repository](guide-export-zip.html)
+
+# FAQ
+For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)

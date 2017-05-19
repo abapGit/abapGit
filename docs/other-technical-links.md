@@ -4,27 +4,27 @@ title: Technical Links
 
 Collection of links to various git related documentation,
 
-https://gist.github.com/schacon/6092633
+[https://gist.github.com/schacon/6092633](https://gist.github.com/schacon/6092633)
 
-https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt
+[https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt](https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt)
 
-https://github.com/git/git/blob/master/Documentation/technical/http-protocol.txt
+[https://github.com/git/git/blob/master/Documentation/technical/http-protocol.txt](https://github.com/git/git/blob/master/Documentation/technical/http-protocol.txt)
 
-https://github.com/git/git/blob/master/Documentation/technical/protocol-capabilities.txt
+[https://github.com/git/git/blob/master/Documentation/technical/protocol-capabilities.txt](https://github.com/git/git/blob/master/Documentation/technical/protocol-capabilities.txt)
 
-https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
+[https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt](https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt)
 
-https://github.com/git/git/tree/master/Documentation/technical
+[https://github.com/git/git/tree/master/Documentation/technical](https://github.com/git/git/tree/master/Documentation/technical)
 
-http://schacon.github.io/gitbook/7_the_packfile.html
+[http://schacon.github.io/gitbook/7_the_packfile.html](http://schacon.github.io/gitbook/7_the_packfile.html)
 
-http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html
+[http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html](http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html)
 
-https://git-scm.herokuapp.com/book/en/Git-Internals-Transfer-Protocols
+[https://git-scm.herokuapp.com/book/en/Git-Internals-Transfer-Protocols](https://git-scm.herokuapp.com/book/en/Git-Internals-Transfer-Protocols)
 
-https://github.com/git/git/blob/master/builtin/receive-pack.c
+[https://github.com/git/git/blob/master/builtin/receive-pack.c](https://github.com/git/git/blob/master/builtin/receive-pack.c)
 
-http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/
+[http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/](http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/)
 
 ```bash
 set GIT_CURL_VERBOSE=1

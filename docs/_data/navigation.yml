@@ -14,10 +14,15 @@
         - file: guide-online-install
           title: Installing a repository
         - title: Keeping code up to date
+          file: guide-online-update
         - title: Uninstalling a repository
+          file: guide-online-uninstall
         - title: Your first abapGit project
+          file: guide-first-project
         - title: Moving package into git
+          file: guide-moving-package
         - title: Contributing to a project
+          file: guide-contributing
     - title: Offline projects
       subitems:
         - title: Importing zip
