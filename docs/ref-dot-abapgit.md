@@ -50,6 +50,8 @@ Valid prefix:
   * **ZFOO**_BAR
     * **ZFOO_BAR**_QUX
 
+will give folder structure /foo/bar/qux/
+
 Invalid prefix:
 * ZFOO
   * ZBAR
@@ -57,6 +59,11 @@ Invalid prefix:
 ### FULL
 
 Any package name is accepted
+
+* ZSOMETHING
+  * ZHELLO
+
+will give folder structure /zsomething/zhello/
 
 ## Ignore
 

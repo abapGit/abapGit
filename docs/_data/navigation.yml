@@ -31,6 +31,8 @@
           file: guide-export-zip
     - title: Regular backup
       file: guide-regular-backup
+    - title: Migrating from SAPlink
+      file: guide-saplink
 
 - title: Reference
   items:
