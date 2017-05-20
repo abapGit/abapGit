@@ -685,82 +685,84 @@ CLASS lcl_git_pack IMPLEMENTATION.
     DATA: lv_delta   TYPE xstring,
           lv_base    TYPE xstring,
           lv_result  TYPE xstring,
-          lv_bitbyte TYPE ty_bitbyte,
+*          lv_bitbyte TYPE ty_bitbyte,
           lv_offset  TYPE i,
-          lv_message TYPE string,
           lv_sha1    TYPE ty_sha1,
           ls_object  LIKE LINE OF ct_objects,
           lv_len     TYPE i,
+          lv_org     TYPE x,
+*          lv_i       TYPE i,
           lv_x       TYPE x.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
 
+    DEFINE _eat_byte.
+      lv_x = lv_delta(1).
+      lv_delta = lv_delta+1.
+    END-OF-DEFINITION.
 
     lv_delta = is_object-data.
 
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      CONCATENATE 'Base not found,' is_object-sha1 INTO lv_message
-        SEPARATED BY space.                                 "#EC NOTEXT
-      lcx_exception=>raise( lv_message ).
-    ELSE.
-      lv_base = <ls_object>-data.
-    ENDIF.
-
+      lcx_exception=>raise( |Base not found, { is_object-sha1 }| ).
+    ELSEIF <ls_object>-type = gc_type-ref_d.
 * sanity check
-    IF <ls_object>-type = gc_type-ref_d.
       lcx_exception=>raise( 'Delta, base eq delta' ).
     ENDIF.
+
+    lv_base = <ls_object>-data.
 
 * skip the 2 headers
     delta_header( CHANGING cv_delta = lv_delta ).
     delta_header( CHANGING cv_delta = lv_delta ).
 
+    CONSTANTS: lc_1   TYPE x VALUE '01',
+               lc_2   TYPE x VALUE '02',
+               lc_4   TYPE x VALUE '04',
+               lc_8   TYPE x VALUE '08',
+               lc_16  TYPE x VALUE '10',
+               lc_32  TYPE x VALUE '20',
+               lc_64  TYPE x VALUE '40',
+               lc_128 TYPE x VALUE '80'.
+
     WHILE xstrlen( lv_delta ) > 0.
 
-      lv_x = lv_delta(1).
-      lv_delta = lv_delta+1.
-      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+      _eat_byte.
+      lv_org = lv_x.
 
-      IF lv_bitbyte(1) = '1'. " MSB
+      IF lv_x BIT-AND lc_128 = lc_128. " MSB = 1
 
         lv_offset = 0.
-        IF lv_bitbyte+7(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_1 = lc_1.
+          _eat_byte.
           lv_offset = lv_x.
         ENDIF.
-        IF lv_bitbyte+6(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_2 = lc_2.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 256.
         ENDIF.
-        IF lv_bitbyte+5(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_4 = lc_4.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 65536.
         ENDIF.
-        IF lv_bitbyte+4(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_8 = lc_8.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 16777216. " hmm, overflow?
         ENDIF.
 
         lv_len = 0.
-        IF lv_bitbyte+3(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_16 = lc_16.
+          _eat_byte.
           lv_len = lv_x.
         ENDIF.
-        IF lv_bitbyte+2(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_32 = lc_32.
+          _eat_byte.
           lv_len = lv_len + lv_x * 256.
         ENDIF.
-        IF lv_bitbyte+1(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_64 = lc_64.
+          _eat_byte.
           lv_len = lv_len + lv_x * 65536.
         ENDIF.
 
@@ -794,6 +796,11 @@ CLASS lcl_git_pack IMPLEMENTATION.
     DATA: ls_object LIKE LINE OF ct_objects,
           lt_deltas LIKE ct_objects.
 
+
+    lcl_progress=>show( iv_key     = 'Decode'
+                        iv_current = 1
+                        iv_total   = 1
+                        iv_text    = 'Deltas' ) ##NO_TEXT.
 
     LOOP AT ct_objects INTO ls_object WHERE type = gc_type-ref_d.
       DELETE ct_objects INDEX sy-tabix.
