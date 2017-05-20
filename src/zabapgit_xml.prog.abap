@@ -215,6 +215,10 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
     ASSERT NOT iv_name IS INITIAL.
 
+    IF ig_data IS INITIAL.
+      RETURN.
+    ENDIF.
+
     APPEND INITIAL LINE TO lt_stab ASSIGNING <ls_stab>.
     <ls_stab>-name = iv_name.
     GET REFERENCE OF ig_data INTO <ls_stab>-value.
