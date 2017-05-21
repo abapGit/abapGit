@@ -18,6 +18,7 @@ INCLUDE zabapgit_object_enho.
 INCLUDE zabapgit_object_enhs.
 INCLUDE zabapgit_object_enqu.
 INCLUDE zabapgit_object_ensc.
+INCLUDE zabapgit_object_form.
 INCLUDE zabapgit_object_fugr.
 INCLUDE zabapgit_object_iarp.
 INCLUDE zabapgit_object_iasp.

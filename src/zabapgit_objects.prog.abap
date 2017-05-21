@@ -1645,7 +1645,12 @@ CLASS lcl_objects_super IMPLEMENTATION.
     obj_type = i_obj_type.
 
     TRY.
-        li_object = cl_wb_object=>create_from_transport_key( p_object = obj_type p_obj_name = obj_name ).
+        cl_wb_object=>create_from_transport_key( EXPORTING  p_object = obj_type p_obj_name = obj_name
+                                                 RECEIVING  p_wb_object = li_object
+                                                 EXCEPTIONS OTHERS   = 1 ).
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
           RECEIVING
