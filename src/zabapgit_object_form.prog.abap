@@ -11,25 +11,78 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    CONSTANTS: c_objectname_form TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
-    CONSTANTS: c_extension_xml   TYPE string         VALUE 'xml' ##NO_TEXT.
-    CONSTANTS: c_tdid_default    TYPE thead-tdid     VALUE 'DEF' ##NO_TEXT.
+    CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
+    CONSTANTS: c_objectname_tdlines TYPE thead-tdobject VALUE 'TDLINES' ##NO_TEXT.
+    CONSTANTS: c_extension_xml      TYPE string         VALUE 'xml' ##NO_TEXT.
 
-    TYPES: tyt_header TYPE STANDARD TABLE OF thead WITH DEFAULT KEY.
-    TYPES: tys_header TYPE LINE OF tyt_header.
-    TYPES: tyt_lines  TYPE tline_tab.
+    TYPES: BEGIN OF tys_form_data,
+             form_header   TYPE itcta,
+             text_header   TYPE thead,
+             orig_language TYPE sy-langu,
+             pages         TYPE STANDARD TABLE OF itctg WITH DEFAULT KEY,
+             page_windows  TYPE STANDARD TABLE OF itcth WITH DEFAULT KEY,
+             paragraphs    TYPE STANDARD TABLE OF itcdp WITH DEFAULT KEY,
+             strings       TYPE STANDARD TABLE OF itcds WITH DEFAULT KEY,
+             tabs          TYPE STANDARD TABLE OF itcdq WITH DEFAULT KEY,
+             windows       TYPE STANDARD TABLE OF itctw WITH DEFAULT KEY,
+           END OF tys_form_data,
+           tyt_form_data   TYPE STANDARD TABLE OF tys_form_data WITH DEFAULT KEY,
+           tyt_form_header TYPE STANDARD TABLE OF itcta WITH DEFAULT KEY,
+           tys_form_header TYPE LINE OF tyt_form_header,
+           tyt_text_header TYPE STANDARD TABLE OF thead WITH DEFAULT KEY,
+           tys_text_header TYPE LINE OF tyt_text_header,
+           tyt_lines       TYPE tline_tab.
 
     METHODS _get_last_changes
       IMPORTING
         iv_form_name           TYPE ty_item-obj_name
       RETURNING
-        VALUE(es_last_changed) TYPE thead.
+        VALUE(es_last_changed) TYPE tys_form_header.
 
-    METHODS _build_extr_from_header
+    METHODS _build_extra_from_header
       IMPORTING
-        ls_header       TYPE tys_header
+        ls_header       TYPE tys_form_header
       RETURNING
         VALUE(r_result) TYPE string.
+
+    METHODS _save_form
+      IMPORTING
+        it_lines     TYPE lcl_object_form=>tyt_lines
+      CHANGING
+        cs_form_data TYPE lcl_object_form=>tys_form_data.
+
+    METHODS _extract_tdlines
+      IMPORTING
+        is_form_data    TYPE lcl_object_form=>tys_form_data
+      RETURNING
+        VALUE(et_lines) TYPE lcl_object_form=>tyt_lines
+      RAISING
+        lcx_exception.
+
+    METHODS _clear_changed_fields
+      CHANGING
+        cs_form_data TYPE lcl_object_form=>tys_form_data.
+
+    METHODS _compress_lines
+      IMPORTING
+        is_form_data TYPE lcl_object_form=>tys_form_data
+        it_lines     TYPE lcl_object_form=>tyt_lines
+      RAISING
+        lcx_exception.
+
+    METHODS _find_form
+      IMPORTING
+        iv_object_name        TYPE ty_item-obj_name
+      RETURNING
+        VALUE(et_text_header) TYPE lcl_object_form=>tyt_text_header.
+
+    METHODS _read_form
+      IMPORTING
+        is_text_header TYPE lcl_object_form=>tys_text_header
+      EXPORTING
+        ev_form_found  TYPE flag
+        es_form_data   TYPE lcl_object_form=>tys_form_data
+        et_lines       TYPE lcl_object_form=>tyt_lines.
 
 ENDCLASS.
 
@@ -40,7 +93,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
 
-    DATA: ls_last_changed TYPE thead.
+    DATA: ls_last_changed    TYPE tys_form_header.
     DATA: lv_last_changed_ts TYPE timestamp.
 
     ls_last_changed = _get_last_changes( ms_item-obj_name ).
@@ -54,7 +107,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    DATA: ls_last_changed TYPE thead.
+    DATA: ls_last_changed TYPE tys_form_header.
 
     ls_last_changed = _get_last_changes( ms_item-obj_name ).
 
@@ -81,9 +134,10 @@ CLASS lcl_object_form IMPLEMENTATION.
 
     CALL FUNCTION 'READ_FORM'
       EXPORTING
-        form  = lv_form_name
+        form             = lv_form_name
+        read_only_header = abap_true
       IMPORTING
-        found = rv_bool.
+        found            = rv_bool.
 
   ENDMETHOD.
 
@@ -121,156 +175,77 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_name TYPE thead-tdname.
+    DATA: lv_name TYPE itcta-tdform.
 
     lv_name = ms_item-obj_name.
 
-    CALL FUNCTION 'DELETE_TEXT'
+    CALL FUNCTION 'DELETE_FORM'
       EXPORTING
-        id       = 'TXT'
-        language = '*'
-        name     = lv_name
-        object   = c_objectname_form
-      EXCEPTIONS
-        OTHERS   = 1.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DELETE_TEXT TXT, FORM' ) ##NO_TEXT.
-    ENDIF.
-
-    lv_name+16(3) = '*  '.
-    CALL FUNCTION 'DELETE_TEXT'
-      EXPORTING
-        id       = c_tdid_default
-        language = '*'
-        name     = lv_name
-        object   = c_objectname_form
-      EXCEPTIONS
-        OTHERS   = 1.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DELETE_TEXT DEF, FORM' ) ##NO_TEXT.
-    ENDIF.
+        form     = lv_name
+        language = '*'.
 
   ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-    DATA: lt_form              TYPE tyt_header.
-    DATA: ls_header            TYPE LINE OF tyt_header.
-    DATA: lt_lines             TYPE tyt_lines.
-    DATA: lv_name              TYPE thead-tdname.
-    DATA: lt_header            TYPE tyt_header.
-    DATA: lv_string            TYPE string.
-    DATA: lo_xml               TYPE REF TO lcl_xml_output.
-    FIELD-SYMBOLS: <ls_header> TYPE LINE OF tyt_header.
+    DATA: lt_form_data              TYPE tyt_form_data.
+    DATA: ls_form_data              TYPE tys_form_data.
+    DATA: lt_text_header            TYPE tyt_text_header.
+    DATA: lt_lines                  TYPE tyt_lines.
+    DATA: lo_xml                    TYPE REF TO lcl_xml_output.
+    DATA: lv_form_found             TYPE flag.
+    FIELD-SYMBOLS: <ls_text_header> LIKE LINE OF lt_text_header.
 
-    lv_name = ms_item-obj_name.
+    lt_text_header = _find_form( ms_item-obj_name ).
 
-    CALL FUNCTION 'SELECT_TEXT'
-      EXPORTING
-        database_only = abap_true
-        id            = '*'
-        language      = '*'
-        name          = lv_name
-        object        = c_objectname_form
-      TABLES
-        selections    = lt_header
-      EXCEPTIONS
-        OTHERS        = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
-
-    LOOP AT lt_header ASSIGNING <ls_header>.
-      CLEAR ls_header.
+    LOOP AT lt_text_header ASSIGNING <ls_text_header>.
       CLEAR lt_lines.
+      CLEAR ls_form_data.
       FREE lo_xml.
 
-      CALL FUNCTION 'READ_TEXT'
-        EXPORTING
-          id       = <ls_header>-tdid
-          language = <ls_header>-tdspras
-          name     = <ls_header>-tdname
-          object   = <ls_header>-tdobject
-        IMPORTING
-          header   = ls_header
-        TABLES
-          lines    = lt_lines
-        EXCEPTIONS
-          OTHERS   = 1
-          ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+      _read_form( EXPORTING is_text_header = <ls_text_header>
+                  IMPORTING ev_form_found = lv_form_found
+                            es_form_data  = ls_form_data
+                            et_lines      = lt_lines ).
 
-      CLEAR: ls_header-tdfuser,
-             ls_header-tdfdate,
-             ls_header-tdftime,
-             ls_header-tdfreles,
-             ls_header-tdluser,
-             ls_header-tdldate,
-             ls_header-tdltime,
-             ls_header-tdlreles.
+      IF lv_form_found = abap_true.
 
-      CREATE OBJECT lo_xml.
-      lo_xml->add( iv_name = 'TLINES'
-                   ig_data = lt_lines ).
-      lv_string = lo_xml->render( ).
-      IF lv_string IS NOT INITIAL.
-        mo_files->add_string( iv_extra  = _build_extr_from_header( ls_header )
-                              iv_ext    = c_extension_xml
-                              iv_string = lv_string ).
+        _clear_changed_fields( CHANGING cs_form_data = ls_form_data ).
+
+        _compress_lines( is_form_data = ls_form_data
+                         it_lines     = lt_lines ).
+
+        INSERT ls_form_data INTO TABLE lt_form_data.
+
       ENDIF.
-
-      INSERT ls_header INTO TABLE lt_form.
 
     ENDLOOP.
 
-    IF lt_form IS NOT INITIAL.
+    IF lt_form_data IS NOT INITIAL.
+
       io_xml->add( iv_name = c_objectname_form
-                   ig_data = lt_form ).
+                   ig_data = lt_form_data ).
+
     ENDIF.
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-    DATA: lt_form              TYPE tyt_header.
-    DATA: lt_lines             TYPE tyt_lines.
-    DATA: lv_string            TYPE string.
-    DATA: lo_xml               TYPE REF TO lcl_xml_input.
-    FIELD-SYMBOLS: <ls_header> TYPE LINE OF tyt_header.
+    DATA: lt_form_data            TYPE tyt_form_data.
+    DATA: lt_lines                TYPE tyt_lines.
+    FIELD-SYMBOLS: <ls_form_data> TYPE LINE OF tyt_form_data.
 
     io_xml->read( EXPORTING iv_name = c_objectname_form
-                  CHANGING  cg_data = lt_form ).
+                  CHANGING  cg_data = lt_form_data ).
 
-    LOOP AT lt_form ASSIGNING <ls_header>.
+    LOOP AT lt_form_data ASSIGNING <ls_form_data>.
 
-      lv_string = mo_files->read_string( iv_extra = _build_extr_from_header( <ls_header> )
-                                         iv_ext   = c_extension_xml ).
+      lt_lines = _extract_tdlines( <ls_form_data> ).
 
-      CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
-      lo_xml->read( EXPORTING iv_name = 'TLINES'
-                    CHANGING  cg_data = lt_lines ).
 
-      IF <ls_header>-tdid = c_tdid_default.
-
-        CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
-          EXPORTING
-            forced    = abap_true
-            name      = <ls_header>-tdname
-            object    = <ls_header>-tdobject
-            olanguage = <ls_header>-tdspras
-          EXCEPTIONS
-            OTHERS    = 1
-            ##fm_subrc_ok.                                                   "#EC CI_SUBRC
-
-      ENDIF.
-      CALL FUNCTION 'SAVE_TEXT'
-        EXPORTING
-          header          = <ls_header>
-          savemode_direct = abap_true
-        TABLES
-          lines           = lt_lines
-        EXCEPTIONS
-          OTHERS          = 1.
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SAVE_TEXT, FORM' ) ##NO_TEXT.
-      ENDIF.
+      _save_form( EXPORTING it_lines     = lt_lines
+                  CHANGING  cs_form_data = <ls_form_data> ).
 
     ENDLOOP.
 
@@ -288,42 +263,156 @@ CLASS lcl_object_form IMPLEMENTATION.
     CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
   ENDMETHOD.
 
-  METHOD _build_extr_from_header.
-    r_result = ls_header-tdid && '_' && ls_header-tdspras.
+  METHOD _build_extra_from_header.
+    r_result = c_objectname_tdlines && '_' && ls_header-tdspras.
   ENDMETHOD.
 
   METHOD _get_last_changes.
 
-    DATA: lv_name              TYPE thead-tdname.
-    DATA: lt_header            TYPE tyt_header.
-    FIELD-SYMBOLS: <ls_header> TYPE LINE OF tyt_header.
+    DATA: lv_form_name         TYPE thead-tdform.
 
     CLEAR es_last_changed.
 
-    lv_name = ms_item-obj_name.
+    lv_form_name = iv_form_name.
+
+    CALL FUNCTION 'READ_FORM'
+      EXPORTING
+        form             = lv_form_name
+        read_only_header = abap_true
+      IMPORTING
+        form_header      = es_last_changed.
+
+  ENDMETHOD.
+
+
+  METHOD _save_form.
+
+    CALL FUNCTION 'SAVE_FORM'
+      EXPORTING
+        form_header  = cs_form_data-form_header
+      TABLES
+        form_lines   = it_lines
+        pages        = cs_form_data-pages
+        page_windows = cs_form_data-page_windows
+        paragraphs   = cs_form_data-paragraphs
+        strings      = cs_form_data-strings
+        tabs         = cs_form_data-tabs
+        windows      = cs_form_data-windows.
+
+    CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
+      EXPORTING
+        forced    = abap_true
+        name      = cs_form_data-text_header-tdname
+        object    = cs_form_data-text_header-tdobject
+        olanguage = cs_form_data-orig_language
+      EXCEPTIONS
+        OTHERS    = 1
+        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+
+  ENDMETHOD.
+
+
+  METHOD _extract_tdlines.
+
+    DATA lv_string TYPE string.
+    DATA lo_xml TYPE REF TO lcl_xml_input.
+
+    lv_string = mo_files->read_string( iv_extra =
+                               _build_extra_from_header( is_form_data-form_header )
+                                       iv_ext   = c_extension_xml ).
+
+    CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
+    lo_xml->read( EXPORTING iv_name = c_objectname_tdlines
+                  CHANGING  cg_data = et_lines ).
+
+  ENDMETHOD.
+
+
+  METHOD _clear_changed_fields.
+
+    CLEAR: cs_form_data-form_header-tdfuser,
+           cs_form_data-form_header-tdfdate,
+           cs_form_data-form_header-tdftime,
+           cs_form_data-form_header-tdfreles,
+           cs_form_data-form_header-tdluser,
+           cs_form_data-form_header-tdldate,
+           cs_form_data-form_header-tdltime,
+           cs_form_data-form_header-tdlreles.
+    CLEAR: cs_form_data-text_header-tdfuser,
+           cs_form_data-text_header-tdfdate,
+           cs_form_data-text_header-tdftime,
+           cs_form_data-text_header-tdfreles,
+           cs_form_data-text_header-tdluser,
+           cs_form_data-text_header-tdldate,
+           cs_form_data-text_header-tdltime,
+           cs_form_data-text_header-tdlreles.
+
+  ENDMETHOD.
+
+
+  METHOD _compress_lines.
+
+    DATA lv_string TYPE string.
+    DATA lo_xml TYPE REF TO lcl_xml_output.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->add( iv_name = c_objectname_tdlines
+                 ig_data = it_lines ).
+    lv_string = lo_xml->render( ).
+    IF lv_string IS NOT INITIAL.
+      mo_files->add_string( iv_extra  =
+                    _build_extra_from_header( is_form_data-form_header )
+                            iv_ext    = c_extension_xml
+                            iv_string = lv_string ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD _find_form.
+
+    DATA: lv_text_name TYPE thead-tdname.
+
+    lv_text_name = iv_object_name.
 
     CALL FUNCTION 'SELECT_TEXT'
       EXPORTING
         database_only = abap_true
-        id            = '*'
+        id            = 'TXT'
         language      = '*'
-        name          = lv_name
+        name          = lv_text_name
         object        = c_objectname_form
       TABLES
-        selections    = lt_header
+        selections    = et_text_header
       EXCEPTIONS
         OTHERS        = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+        ##fm_subrc_ok ##NO_TEXT.  "#EC CI_SUBRC
 
-    LOOP AT lt_header ASSIGNING <ls_header>.
+  ENDMETHOD.
 
-      IF <ls_header>-tdldate > es_last_changed-tdldate OR
-         <ls_header>-tdldate = es_last_changed-tdldate AND
-         <ls_header>-tdltime > es_last_changed-tdltime.
-        es_last_changed = <ls_header>.
-      ENDIF.
 
-    ENDLOOP.
+  METHOD _read_form.
+
+    CLEAR es_form_data.
+
+    CALL FUNCTION 'READ_FORM'
+      EXPORTING
+        form         = is_text_header-tdform
+        language     = is_text_header-tdspras
+        status       = ' '
+      IMPORTING
+        form_header  = es_form_data-form_header
+        found        = ev_form_found
+        header       = es_form_data-text_header
+        olanguage    = es_form_data-orig_language
+      TABLES
+        form_lines   = et_lines
+        pages        = es_form_data-pages
+        page_windows = es_form_data-page_windows
+        paragraphs   = es_form_data-paragraphs
+        strings      = es_form_data-strings
+        tabs         = es_form_data-tabs
+        windows      = es_form_data-windows.
 
   ENDMETHOD.
 
