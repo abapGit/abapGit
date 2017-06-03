@@ -415,7 +415,14 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD includes.
 
-    DATA: lv_program TYPE program,
+    TYPES: BEGIN OF ty_reposrc,
+             progname TYPE reposrc-progname,
+             cnam     TYPE reposrc-cnam,
+           END OF ty_reposrc.
+
+    DATA: lt_reposrc TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc LIKE LINE OF lt_reposrc,
+          lv_program TYPE program,
           lv_cnam    TYPE reposrc-cnam,
           lv_tabix   LIKE sy-tabix,
           lt_functab TYPE ty_rs38l_incl_tt.
@@ -450,26 +457,25 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
     <lv_include> = |L{ ms_item-obj_name }T00|.
 
+    IF lines( rt_includes ) > 0.
+      SELECT progname cnam FROM reposrc
+        INTO TABLE lt_reposrc
+        FOR ALL ENTRIES IN rt_includes
+        WHERE progname = rt_includes-table_line
+        AND r3state = 'A'.
+      SORT lt_reposrc BY progname ASCENDING.
+    ENDIF.
+
     LOOP AT rt_includes ASSIGNING <lv_include>.
       lv_tabix = sy-tabix.
 
-* skip SAP standard includes
-      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
-        WHERE progname = <lv_include>
-        AND r3state = 'A'
-        AND cnam = 'SAP'.
-      IF sy-subrc = 0.
+* skip SAP standard includes and also make sure the include exists
+      READ TABLE lt_reposrc INTO ls_reposrc
+        WITH KEY progname = <lv_include> BINARY SEARCH.
+      IF sy-subrc <> 0 OR ls_reposrc-cnam = 'SAP'.
         DELETE rt_includes INDEX lv_tabix.
-        CONTINUE.
       ENDIF.
 
-* also make sure the include exists
-      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
-        WHERE progname = <lv_include>
-        AND r3state = 'A'.
-      IF sy-subrc <> 0.
-        DELETE rt_includes INDEX lv_tabix.
-      ENDIF.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.

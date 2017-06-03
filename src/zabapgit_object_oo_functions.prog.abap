@@ -547,9 +547,11 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
         rt_source = lo_oo_serializer->serialize_abap_clif_source( is_class_key ).
     ENDCASE.
   ENDMETHOD.
+
   METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
     rv_skip = mv_skip_test_classes.
   ENDMETHOD.
+
   METHOD lif_object_oriented_object_fnc~get_class_properties.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.

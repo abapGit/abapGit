@@ -120,6 +120,8 @@ CLASS lcl_object_dtel IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~serialize.
+* fm DDIF_DTEL_GET bypasses buffer, so SELECTs are
+* done directly from here
 
     DATA: lv_name  TYPE ddobjname,
           ls_dd04v TYPE dd04v,
@@ -128,18 +130,29 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
 
-    CALL FUNCTION 'DDIF_DTEL_GET'
-      EXPORTING
-        name          = lv_name
-        langu         = mv_language
-      IMPORTING
-        dd04v_wa      = ls_dd04v
-        tpara_wa      = ls_tpara
-      EXCEPTIONS
-        illegal_input = 1
-        OTHERS        = 2.
+    SELECT SINGLE * FROM dd04l
+      INTO CORRESPONDING FIELDS OF ls_dd04v
+      WHERE rollname = lv_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      lcx_exception=>raise( 'Error from DDIF_DTEL_GET' ).
+      lcx_exception=>raise( 'Not found in DD04L' ).
+    ENDIF.
+
+    SELECT SINGLE * FROM dd04t
+      INTO CORRESPONDING FIELDS OF ls_dd04v
+      WHERE rollname = lv_name
+      AND ddlanguage = mv_language
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+
+    IF NOT ls_dd04v-memoryid IS INITIAL.
+      SELECT SINGLE tpara~paramid tparat~partext
+        FROM tpara LEFT JOIN tparat
+        ON tparat~paramid = tpara~paramid AND
+        tparat~sprache = mv_language
+        INTO ls_tpara
+        WHERE tpara~paramid = ls_dd04v-memoryid.
     ENDIF.
 
     CLEAR: ls_dd04v-as4user,
