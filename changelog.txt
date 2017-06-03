@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-06-03 v1.37.0
+------------------
++ FORM support
+* minor performance fixes
+! XML format changed, initial tables omitted
+
 2017-05-17 v1.36.1
 ------------------
 * fixed problem regarding translated texts, PROG I18N_TPOOL
