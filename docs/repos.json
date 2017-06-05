@@ -9,6 +9,11 @@
 		"title": "abapCov",
 		"description": "Upload ABAP unit test code coverage to codecov.io"
 	},  
+  "https://github.com/flaiker/abap-log.git":
+	{ 
+		"title": "abap-log",
+		"description": "Logging library for ABAP"
+	},  	
   "https://github.com/sbcgua/mockup_loader.git":
 	{ 
 		"title": "mockup_loader",
