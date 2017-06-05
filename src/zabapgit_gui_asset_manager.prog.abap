@@ -136,12 +136,12 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_images.
 
-* used by abapmerge
-  DEFINE _inline.
-    APPEND &1 TO lt_data.
-  END-OF-DEFINITION.
-
   METHOD get_inline_asset.
+
+* used by abapmerge
+    DEFINE _inline.
+      APPEND &1 TO lt_data.
+    END-OF-DEFINITION.
 
     DATA: lt_data TYPE ty_string_tt,
           lv_str  TYPE string.
@@ -263,7 +263,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
     rv_link = '<link rel="stylesheet"'
            && ' type="text/css" href="'
            && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
-           && '">'. "#EC NOTEXT
+           && '">'.                                         "#EC NOTEXT
 
   ENDMETHOD.  " get_webfont_link
 

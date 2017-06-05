@@ -26,23 +26,23 @@ CLASS lcl_news DEFINITION CREATE PRIVATE FRIENDS ltcl_news.
 
     CLASS-METHODS:
       create " TODO REFACTOR
-        IMPORTING io_repo             TYPE REF TO lcl_repo
-        RETURNING VALUE(ro_instance)  TYPE REF TO lcl_news
-        RAISING lcx_exception.
+        IMPORTING io_repo            TYPE REF TO lcl_repo
+        RETURNING VALUE(ro_instance) TYPE REF TO lcl_news
+        RAISING   lcx_exception.
 
     METHODS:
       get_log
-        RETURNING VALUE(rt_log)      TYPE tt_log,
+        RETURNING VALUE(rt_log) TYPE tt_log,
       latest_version
-        RETURNING VALUE(rv_version)  TYPE string,
+        RETURNING VALUE(rv_version) TYPE string,
       has_news
-        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+        RETURNING VALUE(rv_boolean) TYPE abap_bool,
       has_important
-        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+        RETURNING VALUE(rv_boolean) TYPE abap_bool,
       has_updates
-        RETURNING VALUE(rv_boolean)  TYPE abap_bool,
+        RETURNING VALUE(rv_boolean) TYPE abap_bool,
       has_unseen
-        RETURNING VALUE(rv_boolean)  TYPE abap_bool.
+        RETURNING VALUE(rv_boolean) TYPE abap_bool.
 
   PRIVATE SECTION.
     DATA: mt_log              TYPE tt_log,
@@ -59,22 +59,22 @@ CLASS lcl_news DEFINITION CREATE PRIVATE FRIENDS ltcl_news.
     CLASS-METHODS:
       version_to_numeric
         IMPORTING iv_version        TYPE string
-        RETURNING value(rv_version) TYPE i,
+        RETURNING VALUE(rv_version) TYPE i,
       normalize_version
         IMPORTING iv_version        TYPE string
-        RETURNING value(rv_version) TYPE string,
+        RETURNING VALUE(rv_version) TYPE string,
       compare_versions
-        IMPORTING iv_a              TYPE string
-                  iv_b              TYPE string
-        RETURNING value(rv_result)  TYPE i,
+        IMPORTING iv_a             TYPE string
+                  iv_b             TYPE string
+        RETURNING VALUE(rv_result) TYPE i,
       parse_line
         IMPORTING iv_line            TYPE string
                   iv_current_version TYPE string
-        RETURNING value(rs_log)      TYPE ty_log,
+        RETURNING VALUE(rs_log)      TYPE ty_log,
       parse
         IMPORTING it_lines           TYPE string_table
                   iv_current_version TYPE string
-        RETURNING value(rt_log)      TYPE tt_log.
+        RETURNING VALUE(rt_log)      TYPE tt_log.
 
 ENDCLASS.               "lcl_news
 
@@ -118,10 +118,11 @@ CLASS lcl_news IMPLEMENTATION.
       WITH KEY path = lc_log_path filename = lc_log_filename.
 
     IF sy-subrc = 0.
-      CREATE OBJECT ro_instance EXPORTING
-        iv_rawdata          = <file>-data
-        iv_current_version  = gc_abap_version " TODO refactor
-        iv_lastseen_version = normalize_version( lv_last_seen ).
+      CREATE OBJECT ro_instance
+        EXPORTING
+          iv_rawdata          = <file>-data
+          iv_current_version  = gc_abap_version " TODO refactor
+          iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
 
     IF ro_instance IS BOUND.
@@ -156,10 +157,10 @@ CLASS lcl_news IMPLEMENTATION.
 
   METHOD parse.
 
-    DATA: lv_tail                 TYPE i,
-          lv_first_version_found  TYPE abap_bool,
-          lv_version              TYPE string,
-          ls_log                  LIKE LINE OF rt_log.
+    DATA: lv_tail                TYPE i,
+          lv_first_version_found TYPE abap_bool,
+          lv_version             TYPE string,
+          ls_log                 LIKE LINE OF rt_log.
 
     FIELD-SYMBOLS: <line> LIKE LINE OF it_lines.
 
@@ -254,8 +255,8 @@ CLASS lcl_news IMPLEMENTATION.
 
   METHOD compare_versions.
 
-    DATA: lv_version_a  TYPE i,
-          lv_version_b  TYPE i.
+    DATA: lv_version_a TYPE i,
+          lv_version_b TYPE i.
 
     " Convert versions to numeric
     lv_version_a = version_to_numeric( iv_a ).
@@ -325,8 +326,8 @@ CLASS ltcl_news IMPLEMENTATION.
 
   METHOD version_to_numeric.
 
-    DATA: lv_version_exp  TYPE i VALUE 1023010,
-          lv_version_act  TYPE i.
+    DATA: lv_version_exp TYPE i VALUE 1023010,
+          lv_version_act TYPE i.
 
     lv_version_act = lcl_news=>version_to_numeric( '1.23.10' ).
 
@@ -444,28 +445,26 @@ CLASS ltcl_news IMPLEMENTATION.
 
   ENDMETHOD.                    "parse_line
 
-
-  DEFINE _add_news_log_entry.
-    CLEAR: ls_log.
-    ls_log-version      = &1.
-    ls_log-is_header    = &2.
-    ls_log-is_important = &3.
-    ls_log-pos_to_cur   = &4.
-    ls_log-text         = &5.
-    APPEND ls_log TO lt_log_exp.
-  END-OF-DEFINITION.
-
-  DEFINE _add_news_txt_entry.
-    APPEND &1 TO lt_lines.
-  END-OF-DEFINITION.
-
   METHOD parse.
 
-    DATA:
-          lt_log_exp  TYPE lcl_news=>tt_log,
-          lt_log_act  TYPE lcl_news=>tt_log,
-          ls_log      LIKE LINE OF lt_log_exp,
-          lt_lines    TYPE string_table.
+    DEFINE _add_news_log_entry.
+      CLEAR: ls_log.
+      ls_log-version      = &1.
+      ls_log-is_header    = &2.
+      ls_log-is_important = &3.
+      ls_log-pos_to_cur   = &4.
+      ls_log-text         = &5.
+      APPEND ls_log TO lt_log_exp.
+    END-OF-DEFINITION.
+
+    DEFINE _add_news_txt_entry.
+      APPEND &1 TO lt_lines.
+    END-OF-DEFINITION.
+
+    DATA: lt_log_exp TYPE lcl_news=>tt_log,
+          lt_log_act TYPE lcl_news=>tt_log,
+          ls_log     LIKE LINE OF lt_log_exp,
+          lt_lines   TYPE string_table.
 
     " Generate test data
     _add_news_txt_entry '======'.
