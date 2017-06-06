@@ -257,7 +257,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD scripts.
 
     CREATE OBJECT ro_html.
-    _add 'setInitialFocus("comment");'.
+    ro_html->add( 'setInitialFocus("comment");' ).
 
   ENDMETHOD.    "scripts
 

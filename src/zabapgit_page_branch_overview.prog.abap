@@ -432,30 +432,30 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     ro_html->add( build_menu( )->render( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
-    _add '<canvas id="gitGraph"></canvas>'.
+    ro_html->add( '<canvas id="gitGraph"></canvas>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
       'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js">' &&
       '</script>' ) ##NO_TEXT.
 
-    _add '<script type="text/javascript">'.
-    _add 'var myTemplateConfig = {'.
+    ro_html->add( '<script type="text/javascript">' ).
+    ro_html->add( 'var myTemplateConfig = {' ).
     ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
       && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ) ##NO_TEXT.
-    _add 'branch: {'.
-    _add '  lineWidth: 8,'.
-    _add '  spacingX: 50'.
-    _add '},'.
-    _add 'commit: {'.
-    _add '  spacingY: -40,'.
-    _add '  dot: { size: 12 },'.
-    _add '  message: { font: "normal 14pt Arial" }'.
-    _add '}'.
-    _add '};'.
-    _add 'var gitgraph = new GitGraph({'.
-    _add '  template: myTemplateConfig,'.
-    _add '  orientation: "vertical-reverse"'.
-    _add '});'.
+    ro_html->add( 'branch: {' ).
+    ro_html->add( '  lineWidth: 8,' ).
+    ro_html->add( '  spacingX: 50' ).
+    ro_html->add( '},' ).
+    ro_html->add( 'commit: {' ).
+    ro_html->add( '  spacingY: -40,' ).
+    ro_html->add( '  dot: { size: 12 },' ).
+    ro_html->add( '  message: { font: "normal 14pt Arial" }' ).
+    ro_html->add( '}' ).
+    ro_html->add( '};' ).
+    ro_html->add( 'var gitgraph = new GitGraph({' ).
+    ro_html->add( '  template: myTemplateConfig,' ).
+    ro_html->add( '  orientation: "vertical-reverse"' ).
+    ro_html->add( '});' ).
 
     LOOP AT mt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
@@ -490,7 +490,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     ENDLOOP.
 
-    _add '</script>'.
+    ro_html->add( '</script>' ).
 
   ENDMETHOD.
 

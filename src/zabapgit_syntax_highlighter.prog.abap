@@ -635,8 +635,8 @@ ENDCLASS.                       " lcl_syntax_xml IMPLEMENTATION
 *----------------------------------------------------------------------*
 *       CLASS ltcl_syntax_cases definition
 *----------------------------------------------------------------------*
-CLASS ltcl_syntax_cases DEFINITION FINAL
-  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
+    DURATION SHORT.
 
   PRIVATE SECTION.
 
@@ -1150,8 +1150,8 @@ ENDCLASS.                       " ltcl_syntax_cases IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS ltcl_syntax_basic_logic DEFINITION FINAL
-  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+CLASS ltcl_syntax_basic_logic DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
+    DURATION SHORT.
 
   PRIVATE SECTION.
 

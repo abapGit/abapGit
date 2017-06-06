@@ -420,25 +420,25 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
       iv_show_package = abap_false
       iv_show_branch  = abap_false ) ).
 
-    _add '<table>'.
-    _add '<tr>'.
-    _add '<td>Source:</td>'.
-    _add '<td>'.
-    _add ms_merge-source-name.
-    _add '</td></tr>'.
-    _add '<tr>'.
-    _add '<td>Target:</td>'.
-    _add '<td>'.
-    _add ms_merge-target-name.
-    _add '</td></tr>'.
-    _add '<tr>'.
-    _add '<td>Ancestor:</td>'.
-    _add '<td>'.
-    _add ms_merge-common-commit.
-    _add '</td></tr>'.
-    _add '</table>'.
+    ro_html->add( '<table>' ).
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td>Source:</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( ms_merge-source-name ).
+    ro_html->add( '</td></tr>' ).
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td>Target:</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( ms_merge-target-name ).
+    ro_html->add( '</td></tr>' ).
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<td>Ancestor:</td>' ).
+    ro_html->add( '<td>' ).
+    ro_html->add( ms_merge-common-commit ).
+    ro_html->add( '</td></tr>' ).
+    ro_html->add( '</table>' ).
 
-    _add '<br>'.
+    ro_html->add( '<br>' ).
 
     APPEND LINES OF ms_merge-stree TO lt_files.
     APPEND LINES OF ms_merge-ttree TO lt_files.
