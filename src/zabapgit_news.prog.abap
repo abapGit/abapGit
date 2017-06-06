@@ -303,8 +303,7 @@ ENDCLASS.               "lcl_news
 *----------------------------------------------------------------------*
 * Definition of test class for news announcement
 *----------------------------------------------------------------------*
-CLASS ltcl_news DEFINITION FINAL
-  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+CLASS ltcl_news DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
 
   PRIVATE SECTION.
 
