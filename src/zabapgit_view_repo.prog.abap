@@ -321,7 +321,7 @@ CLASS lcl_gui_view_repo_content IMPLEMENTATION.
 
     CLEAR lv_crossout.
     IF mo_repo->is_write_protected( ) = abap_true
-        OR lcl_auth=>is_allowed( gc_authorization-uninstall ) = abap_false.
+        OR lcl_auth=>is_allowed( lif_auth=>gc_authorization-uninstall ) = abap_false.
       lv_crossout = lif_defs=>gc_html_opt-crossout.
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Uninstall'

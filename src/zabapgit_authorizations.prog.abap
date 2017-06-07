@@ -2,13 +2,13 @@
 *&  Include           ZABAPGIT_AUTHORIZATIONS
 *&---------------------------------------------------------------------*
 
-TYPES: ty_authorization TYPE string.
-
-CONSTANTS: BEGIN OF gc_authorization,
-             uninstall TYPE ty_authorization VALUE 'UNINSTALL',
-           END OF gc_authorization.
-
 INTERFACE lif_auth.
+  TYPES: ty_authorization TYPE string.
+
+  CONSTANTS: BEGIN OF gc_authorization,
+               uninstall TYPE ty_authorization VALUE 'UNINSTALL',
+             END OF gc_authorization.
+
   METHODS:
     is_allowed
       IMPORTING iv_authorization  TYPE ty_authorization
@@ -27,7 +27,7 @@ CLASS lcl_auth DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       is_allowed
-        IMPORTING iv_authorization  TYPE ty_authorization
+        IMPORTING iv_authorization  TYPE lif_auth=>ty_authorization
                   iv_param          TYPE string OPTIONAL
         RETURNING VALUE(rv_allowed) TYPE abap_bool.
 
