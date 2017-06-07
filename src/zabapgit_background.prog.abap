@@ -12,7 +12,7 @@ CLASS lcl_background DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS:
       build_comment
-        IMPORTING is_files          TYPE ty_stage_files
+        IMPORTING is_files          TYPE lif_defs=>ty_stage_files
         RETURNING VALUE(rv_comment) TYPE string,
       push
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
@@ -51,8 +51,8 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_fixed.
 
-    DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE ty_stage_files,
+    DATA: ls_comment TYPE lif_defs=>ty_comment,
+          ls_files   TYPE lif_defs=>ty_stage_files,
           lo_stage   TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
@@ -105,7 +105,7 @@ CLASS lcl_background IMPLEMENTATION.
     ELSE.
       rv_comment = 'BG: Multiple objects'.
       LOOP AT lt_objects INTO lv_str.
-        CONCATENATE rv_comment gc_newline lv_str INTO rv_comment.
+        CONCATENATE rv_comment lif_defs=>gc_newline lv_str INTO rv_comment.
       ENDLOOP.
     ENDIF.
 
@@ -113,8 +113,8 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_auto.
 
-    DATA: ls_comment    TYPE ty_comment,
-          ls_files      TYPE ty_stage_files,
+    DATA: ls_comment    TYPE lif_defs=>ty_comment,
+          ls_files      TYPE lif_defs=>ty_stage_files,
           ls_user_files LIKE ls_files,
           lo_stage      TYPE REF TO lcl_stage.
 

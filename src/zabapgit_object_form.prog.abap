@@ -35,7 +35,7 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS _get_last_changes
       IMPORTING
-        iv_form_name           TYPE ty_item-obj_name
+        iv_form_name           TYPE lif_defs=>ty_item-obj_name
       RETURNING
         VALUE(es_last_changed) TYPE tys_form_header.
 
@@ -72,7 +72,7 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS _find_form
       IMPORTING
-        iv_object_name        TYPE ty_item-obj_name
+        iv_object_name        TYPE lif_defs=>ty_item-obj_name
       RETURNING
         VALUE(et_text_header) TYPE lcl_object_form=>tyt_text_header.
 

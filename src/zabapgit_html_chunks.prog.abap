@@ -86,7 +86,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
         lv_icon = 'arrow-up/grey80'.
       ENDIF.
       ro_html->add_a( iv_act = 'displayNews()'
-                      iv_typ = gc_action_type-onclick
+                      iv_typ = lif_defs=>gc_action_type-onclick
                       iv_txt = lcl_html=>icon( iv_name  = lv_icon
                                                iv_class = 'pad-sides'
                                                iv_hint  = 'Display changelog' ) ).
@@ -101,7 +101,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ELSE.
       lv_icon = 'star/grey' ##NO_TEXT.
     ENDIF.
-    ro_html->add_a( iv_act = |{ gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+    ro_html->add_a( iv_act = |{ lif_defs=>gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
                     iv_txt = lcl_html=>icon( iv_name  = lv_icon
                                              iv_class = 'pad-sides'
                                              iv_hint  = 'Click to toggle favorite' ) ).
@@ -137,7 +137,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
       ro_html->add_a( iv_txt = io_repo->get_package( )
-                      iv_act = |{ gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
+                      iv_act = |{ lif_defs=>gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
       ro_html->add( '</span>' ).
     ENDIF.
 
@@ -166,19 +166,19 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ENDCASE.
 
       CASE <state>.
-        WHEN gc_state-unchanged.  "None or unchanged
-          IF iv1 = gc_state-added OR iv2 = gc_state-added.
+        WHEN lif_defs=>gc_state-unchanged.  "None or unchanged
+          IF iv1 = lif_defs=>gc_state-added OR iv2 = lif_defs=>gc_state-added.
             rv_html = rv_html && |<span class="none" title="{ lv_system } Not exists">X</span>|.
           ELSE.
             rv_html = rv_html && |<span class="none" title="{ lv_system } No changes">&nbsp;</span>|.
           ENDIF.
-        WHEN gc_state-modified.   "Changed
+        WHEN lif_defs=>gc_state-modified.   "Changed
           rv_html = rv_html && |<span class="changed" title="{ lv_system } Modified">M</span>|.
-        WHEN gc_state-added.      "Added new
+        WHEN lif_defs=>gc_state-added.      "Added new
           rv_html = rv_html && |<span class="added" title="{ lv_system } Added new">A</span>|.
-        WHEN gc_state-mixed.      "Multiple changes (multifile)
+        WHEN lif_defs=>gc_state-mixed.      "Multiple changes (multifile)
           rv_html = rv_html && |<span class="mixed" title="{ lv_system } Multiple changes">&#x25A0;</span>|.
-        WHEN gc_state-deleted.    "Deleted
+        WHEN lif_defs=>gc_state-deleted.    "Deleted
           rv_html = rv_html && |<span class="deleted" title="{ lv_system } Deleted">D</span>|.
       ENDCASE.
     ENDDO.
@@ -207,7 +207,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |<span class="{ lv_class }">| ).
     ro_html->add_icon( iv_name = 'git-branch/darkgrey' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ro_html->add_a( iv_act = |{ gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ro_html->add_a( iv_act = |{ lif_defs=>gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ro_html->add( lv_text ).
@@ -269,7 +269,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
                && '<div class="float-right">'
                && lcl_html=>a(
                     iv_txt   = '&#x274c;'
-                    iv_typ   = gc_action_type-onclick
+                    iv_typ   = lif_defs=>gc_action_type-onclick
                     iv_act   = 'displayNews()'
                     iv_class = 'close-btn' )
                && '</div></div>' ).

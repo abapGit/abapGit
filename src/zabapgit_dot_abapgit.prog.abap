@@ -65,7 +65,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 *      set_master_language
 *        IMPORTING iv_language TYPE spras,
       get_signature
-        RETURNING VALUE(rs_signature) TYPE ty_file_signature
+        RETURNING VALUE(rs_signature) TYPE lif_defs=>ty_file_signature
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -209,7 +209,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     lv_name = iv_path && iv_filename.
 
     CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
-    CONCATENATE '/' gc_dot_abapgit INTO lv_dot.
+    CONCATENATE '/' lif_defs=>gc_dot_abapgit INTO lv_dot.
 
     LOOP AT ms_data-ignore INTO lv_ignore.
       FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.
@@ -263,9 +263,9 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD get_signature.
 
-    rs_signature-path     = gc_root_dir.
-    rs_signature-filename = gc_dot_abapgit.
-    rs_signature-sha1     = lcl_hash=>sha1( iv_type = gc_type-blob
+    rs_signature-path     = lif_defs=>gc_root_dir.
+    rs_signature-filename = lif_defs=>gc_dot_abapgit.
+    rs_signature-sha1     = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob
                                             iv_data = serialize( ) ).
 
   ENDMETHOD. "get_signature

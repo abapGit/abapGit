@@ -67,7 +67,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lt_objects TYPE STANDARD TABLE OF ko100,
           lv_list    TYPE string,
-          ls_item    TYPE ty_item.
+          ls_item    TYPE lif_defs=>ty_item.
 
     FIELD-SYMBOLS <object> LIKE LINE OF lt_objects.
 

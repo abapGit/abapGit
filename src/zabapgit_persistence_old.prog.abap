@@ -17,7 +17,7 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
     TYPES: BEGIN OF ty_repo_persi,
              url         TYPE string,
              branch_name TYPE string,
-             sha1        TYPE ty_sha1,
+             sha1        TYPE lif_defs=>ty_sha1,
              package     TYPE devclass,
              offline     TYPE sap_bool,
            END OF ty_repo_persi.
@@ -30,13 +30,13 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
     METHODS update
       IMPORTING iv_url         TYPE ty_repo_persi-url
                 iv_branch_name TYPE ty_repo_persi-branch_name
-                iv_branch      TYPE ty_sha1
+                iv_branch      TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     METHODS add
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
-                iv_branch      TYPE ty_sha1 OPTIONAL
+                iv_branch      TYPE lif_defs=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
       RAISING   lcx_exception.
@@ -109,14 +109,14 @@ CLASS lcl_persistence IMPLEMENTATION.
 
   METHOD header_online.
     rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = gc_english.
+    rs_header-tdspras  = lif_defs=>gc_english.
     rs_header-tdname   = 'ZABAPGIT'.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header
 
   METHOD header_offline.
     rs_header-tdid     = 'ST'.
-    rs_header-tdspras  = gc_english.
+    rs_header-tdspras  = lif_defs=>gc_english.
     rs_header-tdname   = 'ZABAPGIT_OFFLINE'.
     rs_header-tdobject = 'TEXT'.
   ENDMETHOD.                    "header_offline
@@ -437,7 +437,7 @@ CLASS lcl_user IMPLEMENTATION.
     CALL FUNCTION 'READ_TEXT'
       EXPORTING
         id                      = 'ST'
-        language                = gc_english
+        language                = lif_defs=>gc_english
         name                    = iv_name
         object                  = 'TEXT'
       TABLES
@@ -474,7 +474,7 @@ CLASS lcl_user IMPLEMENTATION.
     APPEND ls_line TO lt_lines.
 
     ls_header-tdid       = 'ST'.
-    ls_header-tdspras    = gc_english.
+    ls_header-tdspras    = lif_defs=>gc_english.
     ls_header-tdname     = iv_name.
     ls_header-tdobject   = 'TEXT'.
 

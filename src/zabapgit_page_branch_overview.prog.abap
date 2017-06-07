@@ -11,9 +11,9 @@ CLASS lcl_branch_overview DEFINITION FINAL.
            END OF ty_create.
 
     TYPES: BEGIN OF ty_commit,
-             sha1       TYPE ty_sha1,
-             parent1    TYPE ty_sha1,
-             parent2    TYPE ty_sha1,
+             sha1       TYPE lif_defs=>ty_sha1,
+             parent1    TYPE lif_defs=>ty_sha1,
+             parent2    TYPE lif_defs=>ty_sha1,
              author     TYPE string,
              email      TYPE string,
              time       TYPE string,
@@ -43,7 +43,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
 
     CLASS-METHODS:
       parse_commits
-        IMPORTING it_objects TYPE ty_objects_tt
+        IMPORTING it_objects TYPE lif_defs=>ty_objects_tt
         RAISING   lcx_exception,
       determine_branch
         RAISING lcx_exception,
@@ -53,7 +53,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING lcx_exception,
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
-        RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+        RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
         RAISING   lcx_exception.
 
     CLASS-DATA:
@@ -131,7 +131,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lt_objects TYPE ty_objects_tt.
+    DATA: lt_objects TYPE lif_defs=>ty_objects_tt.
 
 
     CLEAR gt_branches.
@@ -169,7 +169,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
                                               it_branches = gt_branches
                                     IMPORTING et_objects = rt_objects ).
 
-    DELETE rt_objects WHERE type = gc_type-blob.
+    DELETE rt_objects WHERE type = lif_defs=>gc_type-blob.
 
   ENDMETHOD.
 
@@ -182,7 +182,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_type-commit.
+    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = lif_defs=>gc_type-commit.
       ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
@@ -190,10 +190,10 @@ CLASS lcl_branch_overview IMPLEMENTATION.
       ls_commit-parent1 = ls_raw-parent.
       ls_commit-parent2 = ls_raw-parent2.
 
-      SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
+      SPLIT ls_raw-body AT lif_defs=>gc_newline INTO ls_commit-message lv_trash.
 
 * unix time stamps are in same time zone, so ignore the zone,
-      FIND REGEX gc_author_regex IN ls_raw-author
+      FIND REGEX lif_defs=>gc_author_regex IN ls_raw-author
         SUBMATCHES
         ls_commit-author
         ls_commit-email
@@ -561,15 +561,15 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-refresh.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-merge.
         ls_merge = decode_merge( it_postdata ).
         CREATE OBJECT lo_merge
@@ -578,7 +578,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
             iv_source = ls_merge-source
             iv_target = ls_merge-target.
         ei_page = lo_merge.
-        ev_state = gc_event_state-new_page.
+        ev_state = lif_defs=>gc_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.

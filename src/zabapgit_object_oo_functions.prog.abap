@@ -28,7 +28,7 @@ INTERFACE lif_object_oriented_object_fnc.
     deserialize_source
       IMPORTING
         is_key    TYPE seoclskey
-        it_source TYPE ty_string_tt
+        it_source TYPE lif_defs=>ty_string_tt
       RAISING
         lcx_exception
         cx_sy_dyn_call_error,
@@ -42,16 +42,16 @@ INTERFACE lif_object_oriented_object_fnc.
     update_descriptions
       IMPORTING
         is_key          TYPE seoclskey
-        it_descriptions TYPE ty_seocompotx_tt,
+        it_descriptions TYPE lif_defs=>ty_seocompotx_tt,
     add_to_activation_list
       IMPORTING
-        is_item TYPE ty_item
+        is_item TYPE lif_defs=>ty_item
       RAISING
         lcx_exception,
     create_sotr
       IMPORTING
         iv_package TYPE devclass
-        it_sotr    TYPE ty_sotr_tt
+        it_sotr    TYPE lif_defs=>ty_sotr_tt
       RAISING
         lcx_exception,
     create_documentation
@@ -76,7 +76,7 @@ INTERFACE lif_object_oriented_object_fnc.
         is_class_key     TYPE seoclskey
         iv_type          TYPE seop_include_ext_app OPTIONAL
       RETURNING
-        VALUE(rt_source) TYPE ty_string_tt
+        VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING
         lcx_exception
         cx_sy_dyn_call_error,
@@ -113,14 +113,14 @@ INTERFACE lif_object_oriented_object_fnc.
       IMPORTING
         iv_object_name TYPE sobj_name
       RETURNING
-        VALUE(rt_sotr) TYPE ty_sotr_tt
+        VALUE(rt_sotr) TYPE lif_defs=>ty_sotr_tt
       RAISING
         lcx_exception,
     read_descriptions
       IMPORTING
         iv_obejct_name         TYPE seoclsname
       RETURNING
-        VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
+        VALUE(rt_descriptions) TYPE lif_defs=>ty_seocompotx_tt,
     delete
       IMPORTING
         is_deletion_key TYPE seoclskey
@@ -136,7 +136,7 @@ CLASS lcl_oo_object_serializer DEFINITION.
         IMPORTING
           is_class_key     TYPE seoclskey
         RETURNING
-          VALUE(rt_source) TYPE ty_string_tt
+          VALUE(rt_source) TYPE lif_defs=>ty_string_tt
         RAISING
           lcx_exception
           cx_sy_dyn_call_error,
@@ -145,37 +145,37 @@ CLASS lcl_oo_object_serializer DEFINITION.
           VALUE(rv_return) TYPE abap_bool.
     METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
     METHODS serialize_testclasses
       IMPORTING
                 is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_abap_new
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception
                 cx_sy_dyn_call_error.
     METHODS remove_signatures
-      CHANGING ct_source TYPE ty_string_tt.
+      CHANGING ct_source TYPE lif_defs=>ty_string_tt.
 
     METHODS read_include
       IMPORTING is_clskey        TYPE seoclskey
@@ -184,7 +184,7 @@ CLASS lcl_oo_object_serializer DEFINITION.
 
 
     METHODS reduce
-      CHANGING ct_source TYPE ty_string_tt.
+      CHANGING ct_source TYPE lif_defs=>ty_string_tt.
 ENDCLASS.
 
 CLASS lcl_oo_object_serializer IMPLEMENTATION.
@@ -390,12 +390,12 @@ CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
     DATA mv_skip_test_classes TYPE abap_bool.
     METHODS deserialize_abap_source_old
       IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
+                it_source TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS deserialize_abap_source_new
       IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
+                it_source TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception
                 cx_sy_dyn_call_error.
 ENDCLASS.
@@ -611,10 +611,11 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 ENDCLASS.
 
 "Backdoor injection for test purposes
-CLASS lth_oo_factory_injector DEFINITION DEFERRED.
+CLASS ltcl_oo_factory_injector DEFINITION DEFERRED.
 
 CLASS lcl_object_oriented_factory DEFINITION
-  FRIENDS lth_oo_factory_injector.
+  FRIENDS ltcl_oo_factory_injector.
+
   PUBLIC SECTION.
     CLASS-METHODS:
       make

@@ -181,7 +181,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD commit.
 
-    DATA: ls_comment TYPE ty_comment,
+    DATA: ls_comment TYPE lif_defs=>ty_comment,
           lo_user    TYPE REF TO lcl_persistence_user.
 
     lo_user = lcl_app=>user( ).
@@ -208,7 +208,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     IF NOT is_commit-body IS INITIAL.
       CONCATENATE ls_comment-comment '' is_commit-body
-        INTO ls_comment-comment SEPARATED BY gc_newline.
+        INTO ls_comment-comment SEPARATED BY lif_defs=>gc_newline.
     ENDIF.
 
     io_repo->push( is_comment = ls_comment

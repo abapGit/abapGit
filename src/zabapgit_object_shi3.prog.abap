@@ -13,7 +13,7 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE ty_item
+        is_item     TYPE lif_defs=>ty_item
         iv_language TYPE spras.
 
 
