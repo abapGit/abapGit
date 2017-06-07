@@ -108,13 +108,13 @@ CLASS ltcl_convert IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_convert IMPLEMENTATION
 
-CLASS lth_critical_tests DEFINITION FINAL.
+CLASS ltcl_critical_tests DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
     CLASS-METHODS:
       check_run_permission.
 ENDCLASS.
 
-CLASS lth_critical_tests IMPLEMENTATION.
+CLASS ltcl_critical_tests IMPLEMENTATION.
 
   METHOD check_run_permission.
     DATA: lo_settings TYPE REF TO lcl_settings.
@@ -162,7 +162,7 @@ ENDCLASS.                    "ltcl_dangerous DEFINITION
 CLASS ltcl_dangerous IMPLEMENTATION.
 
   METHOD class_setup.
-    lth_critical_tests=>check_run_permission( ).
+    ltcl_critical_tests=>check_run_permission( ).
   ENDMETHOD.                    "class_setup
 
   METHOD run.
@@ -2164,9 +2164,11 @@ CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 CLASS ltcl_persistence_settings IMPLEMENTATION.
+
   METHOD class_setup.
-    lth_critical_tests=>check_run_permission( ).
+    ltcl_critical_tests=>check_run_permission( ).
   ENDMETHOD.
+
   METHOD setup.
     CREATE OBJECT mo_persistence_settings.
     CREATE OBJECT mo_settings.

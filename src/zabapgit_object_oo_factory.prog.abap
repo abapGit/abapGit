@@ -15,14 +15,15 @@ CLASS lcl_object_oriented_factory IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lth_oo_factory_injector DEFINITION FOR TESTING.
+CLASS ltcl_oo_factory_injector DEFINITION FOR TESTING.
   PUBLIC SECTION.
     CLASS-METHODS:
       inject
         IMPORTING
           io_object_oriented_object TYPE REF TO lif_object_oriented_object_fnc.
 ENDCLASS.
-CLASS lth_oo_factory_injector IMPLEMENTATION.
+
+CLASS ltcl_oo_factory_injector IMPLEMENTATION.
   METHOD inject.
     lcl_object_oriented_factory=>go_object_oriented_object = io_object_oriented_object.
   ENDMETHOD.

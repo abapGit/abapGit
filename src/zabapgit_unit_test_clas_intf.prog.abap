@@ -342,7 +342,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -544,7 +544,7 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -648,7 +648,7 @@ CLASS ltcl_class_changed IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -695,7 +695,7 @@ CLASS ltcl_interface_changed IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -743,7 +743,7 @@ CLASS ltcl_exists_test IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
   ENDMETHOD.
 
   METHOD class_exists.
@@ -809,7 +809,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -1126,7 +1126,7 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -1272,7 +1272,7 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
   ENDMETHOD.
 
   METHOD class_delete.

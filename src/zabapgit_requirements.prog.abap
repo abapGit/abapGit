@@ -2,7 +2,6 @@
 *&  Include  zabapgit_requirements
 *&---------------------------------------------------------------------*
 
-"! Helper class for checking requirements / dependencies
 *----------------------------------------------------------------------*
 *       CLASS lcl_requirement_helper DEFINITION
 *----------------------------------------------------------------------*

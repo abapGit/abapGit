@@ -611,10 +611,11 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
 ENDCLASS.
 
 "Backdoor injection for test purposes
-CLASS lth_oo_factory_injector DEFINITION DEFERRED.
+CLASS ltcl_oo_factory_injector DEFINITION DEFERRED.
 
 CLASS lcl_object_oriented_factory DEFINITION
-  FRIENDS lth_oo_factory_injector.
+  FRIENDS ltcl_oo_factory_injector.
+
   PUBLIC SECTION.
     CLASS-METHODS:
       make
