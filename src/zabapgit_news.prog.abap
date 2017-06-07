@@ -91,7 +91,7 @@ CLASS lcl_news IMPLEMENTATION.
       lc_log_path     TYPE string VALUE '/',
       lc_log_filename TYPE string VALUE 'changelog.txt'.
 
-    DATA: lt_remote      TYPE ty_files_tt,
+    DATA: lt_remote      TYPE lif_defs=>ty_files_tt,
           lv_last_seen   TYPE string,
           lv_url         TYPE string,
           lo_repo_online TYPE REF TO lcl_repo_online.

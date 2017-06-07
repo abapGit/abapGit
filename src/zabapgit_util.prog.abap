@@ -89,7 +89,7 @@ CLASS lcl_convert DEFINITION FINAL.
 
     CLASS-METHODS x_to_bitbyte
       IMPORTING iv_x              TYPE x
-      RETURNING VALUE(rv_bitbyte) TYPE ty_bitbyte.
+      RETURNING VALUE(rv_bitbyte) TYPE lif_defs=>ty_bitbyte.
 
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING iv_string         TYPE string
@@ -252,14 +252,14 @@ CLASS lcl_hash DEFINITION FINAL.
       RETURNING VALUE(rv_checksum) TYPE ty_adler32.
 
     CLASS-METHODS sha1
-      IMPORTING iv_type        TYPE ty_type
+      IMPORTING iv_type        TYPE lif_defs=>ty_type
                 iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
@@ -578,7 +578,7 @@ CLASS lcl_diff DEFINITION FINAL.
              update TYPE i,
            END OF ty_count.
 
-    DATA mt_beacons TYPE ty_string_tt READ-ONLY.
+    DATA mt_beacons TYPE lif_defs=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -643,8 +643,8 @@ CLASS lcl_diff IMPLEMENTATION.
     lv_new = lcl_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = lcl_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_new AT gc_newline INTO TABLE et_new.
-    SPLIT lv_old AT gc_newline INTO TABLE et_old.
+    SPLIT lv_new AT lif_defs=>gc_newline INTO TABLE et_new.
+    SPLIT lv_old AT lif_defs=>gc_newline INTO TABLE et_old.
 
   ENDMETHOD.                    "unpack
 

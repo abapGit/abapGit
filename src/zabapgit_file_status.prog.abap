@@ -16,7 +16,7 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO lcl_repo
                 io_log            TYPE REF TO lcl_log OPTIONAL
-      RETURNING VALUE(rt_results) TYPE ty_results_tt
+      RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
       RAISING   lcx_exception.
 
   PRIVATE SECTION.
@@ -24,33 +24,33 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS:
       calculate_status
         IMPORTING iv_devclass       TYPE devclass
-                  it_local          TYPE ty_files_item_tt
-                  it_remote         TYPE ty_files_tt
-                  it_cur_state      TYPE ty_file_signatures_tt
-        RETURNING VALUE(rt_results) TYPE ty_results_tt,
+                  it_local          TYPE lif_defs=>ty_files_item_tt
+                  it_remote         TYPE lif_defs=>ty_files_tt
+                  it_cur_state      TYPE lif_defs=>ty_file_signatures_tt
+        RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt,
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
-                  it_results TYPE ty_results_tt
+                  it_results TYPE lif_defs=>ty_results_tt
                   io_dot     TYPE REF TO lcl_dot_abapgit
                   iv_top     TYPE devclass
         RAISING   lcx_exception,
       build_existing
-        IMPORTING is_local         TYPE ty_file_item
-                  is_remote        TYPE ty_file
-                  it_state         TYPE ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE ty_result,
+        IMPORTING is_local         TYPE lif_defs=>ty_file_item
+                  is_remote        TYPE lif_defs=>ty_file
+                  it_state         TYPE lif_defs=>ty_file_signatures_ts
+        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
       build_new_local
-        IMPORTING is_local         TYPE ty_file_item
-        RETURNING VALUE(rs_result) TYPE ty_result,
+        IMPORTING is_local         TYPE lif_defs=>ty_file_item
+        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
       build_new_remote
         IMPORTING iv_devclass      TYPE devclass
-                  is_remote        TYPE ty_file
-                  it_items         TYPE ty_items_ts
-                  it_state         TYPE ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE ty_result,
+                  is_remote        TYPE lif_defs=>ty_file
+                  it_items         TYPE lif_defs=>ty_items_ts
+                  it_state         TYPE lif_defs=>ty_file_signatures_ts
+        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
       identify_object
         IMPORTING iv_filename TYPE string
-        EXPORTING es_item     TYPE ty_item
+        EXPORTING es_item     TYPE lif_defs=>ty_item
                   ev_is_xml   TYPE abap_bool.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
@@ -63,8 +63,8 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD run_checks.
 
     DATA: lv_path     TYPE string,
-          ls_item     TYPE ty_item,
-          ls_file     TYPE ty_file_signature,
+          ls_item     TYPE lif_defs=>ty_item,
+          ls_file     TYPE lif_defs=>ty_file_signature,
           lt_res_sort LIKE it_results,
           lt_item_idx LIKE it_results.
 
@@ -179,11 +179,11 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD calculate_status.
 
     DATA: lt_remote    LIKE it_remote,
-          lt_items     TYPE ty_items_tt,
+          lt_items     TYPE lif_defs=>ty_items_tt,
           ls_item      LIKE LINE OF lt_items,
           lv_is_xml    TYPE abap_bool,
-          lt_items_idx TYPE ty_items_ts,
-          lt_state_idx TYPE ty_file_signatures_ts. " Sorted by path+filename
+          lt_items_idx TYPE lif_defs=>ty_items_ts,
+          lt_state_idx TYPE lif_defs=>ty_file_signatures_ts. " Sorted by path+filename
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -292,10 +292,10 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     IF sy-subrc = 0.
       IF ls_file_sig-sha1 <> is_local-file-sha1.
-        rs_result-lstate = gc_state-modified.
+        rs_result-lstate = lif_defs=>gc_state-modified.
       ENDIF.
       IF ls_file_sig-sha1 <> is_remote-sha1.
-        rs_result-rstate = gc_state-modified.
+        rs_result-rstate = lif_defs=>gc_state-modified.
       ENDIF.
       rs_result-match = boolc( rs_result-lstate IS INITIAL
         AND rs_result-rstate IS INITIAL ).
@@ -306,8 +306,8 @@ CLASS lcl_file_status IMPLEMENTATION.
       " the user will presumably decide what to do after checking the actual diff
       rs_result-match = boolc( is_local-file-sha1 = is_remote-sha1 ).
       IF rs_result-match = abap_false.
-        rs_result-lstate = gc_state-modified.
-        rs_result-rstate = gc_state-modified.
+        rs_result-lstate = lif_defs=>gc_state-modified.
+        rs_result-rstate = lif_defs=>gc_state-modified.
       ENDIF.
     ENDIF.
 
@@ -326,7 +326,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     " Match
     rs_result-match    = abap_false.
-    rs_result-lstate   = gc_state-added.
+    rs_result-lstate   = lif_defs=>gc_state-added.
 
   ENDMETHOD.  "build_new_local
 
@@ -339,7 +339,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     rs_result-path     = is_remote-path.
     rs_result-filename = is_remote-filename.
     rs_result-match    = abap_false.
-    rs_result-rstate   = gc_state-added.
+    rs_result-rstate   = lif_defs=>gc_state-added.
 
     identify_object( EXPORTING iv_filename = is_remote-filename
                      IMPORTING es_item     = ls_item ).
@@ -367,14 +367,14 @@ CLASS lcl_file_status IMPLEMENTATION.
           rs_result-match = abap_true.
           CLEAR rs_result-rstate.
         ELSE.
-          rs_result-rstate = gc_state-modified.
+          rs_result-rstate = lif_defs=>gc_state-modified.
         ENDIF.
 
         " Item is in state and in cache but with no package - it was deleted
         " OR devclass is the same as repo package (see #532)
         IF ls_item-devclass IS INITIAL OR ls_item-devclass = iv_devclass.
           rs_result-match  = abap_false.
-          rs_result-lstate = gc_state-deleted.
+          rs_result-lstate = lif_defs=>gc_state-deleted.
         ENDIF.
       ENDIF.
 

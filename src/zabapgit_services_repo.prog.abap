@@ -123,7 +123,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD purge.
 
-    DATA: lt_tadir    TYPE ty_tadir_tt,
+    DATA: lt_tadir    TYPE lif_defs=>ty_tadir_tt,
           lv_answer   TYPE c LENGTH 1,
           lo_repo     TYPE REF TO lcl_repo,
           lv_package  TYPE devclass,
@@ -325,7 +325,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       lo_transport_to_branch TYPE REF TO lcl_transport_to_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects               TYPE scts_tadir,
-      ls_transport_to_branch TYPE ty_transport_to_branch.
+      ls_transport_to_branch TYPE lif_defs=>ty_transport_to_branch.
 
     lo_repository ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
 

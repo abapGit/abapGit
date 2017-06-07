@@ -91,7 +91,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
 
     ro_html->add( |<td class="logo">{
                   lcl_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                               iv_act = gc_action-abapgit_home )
+                               iv_act = lif_defs=>gc_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
     ro_html->add( |<td><span class="page_title"> &#x25BA; {
@@ -146,7 +146,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
   ENDMETHOD. "scripts
 
   METHOD lif_gui_page~on_event.
-    ev_state = gc_event_state-not_handled.
+    ev_state = lif_defs=>gc_event_state-not_handled.
   ENDMETHOD. "lif_gui_page~on_event
 
   METHOD lif_gui_page~render.

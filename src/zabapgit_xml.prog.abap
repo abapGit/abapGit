@@ -16,7 +16,7 @@ CLASS lcl_xml DEFINITION ABSTRACT.
   PROTECTED SECTION.
     DATA: mi_ixml     TYPE REF TO if_ixml,
           mi_xml_doc  TYPE REF TO if_ixml_document,
-          ms_metadata TYPE ty_metadata.
+          ms_metadata TYPE lif_defs=>ty_metadata.
 
     CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit' ##NO_TEXT,
                c_attr_version            TYPE string VALUE 'version' ##NO_TEXT,
@@ -185,7 +185,7 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
                   ii_xml  TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
-                  is_metadata   TYPE ty_metadata OPTIONAL
+                  is_metadata   TYPE lif_defs=>ty_metadata OPTIONAL
         RETURNING VALUE(rv_xml) TYPE string.
 
   PRIVATE SECTION.
@@ -301,7 +301,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_document,
 * todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
-        RETURNING VALUE(rs_metadata) TYPE ty_metadata.
+        RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata.
 
   PRIVATE SECTION.
     METHODS: fix_xml.

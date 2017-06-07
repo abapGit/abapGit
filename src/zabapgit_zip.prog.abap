@@ -32,11 +32,11 @@ CLASS lcl_zip DEFINITION FINAL.
 
     CLASS-METHODS unzip_file
       IMPORTING iv_xstr         TYPE xstring
-      RETURNING VALUE(rt_files) TYPE ty_files_tt
+      RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS normalize_path
-      CHANGING ct_files TYPE ty_files_tt
+      CHANGING ct_files TYPE lif_defs=>ty_files_tt
       RAISING  lcx_exception.
 
     CLASS-METHODS filename
@@ -51,7 +51,7 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   lcx_exception.
 
     CLASS-METHODS encode_files
-      IMPORTING it_files       TYPE ty_files_item_tt
+      IMPORTING it_files       TYPE lif_defs=>ty_files_item_tt
       RETURNING VALUE(rv_xstr) TYPE xstring
       RAISING   lcx_exception.
 
@@ -342,7 +342,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
       <ls_file>-data = lv_data.
 
-      <ls_file>-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob
+      <ls_file>-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob
                                        iv_data = <ls_file>-data ).
 
     ENDLOOP.
@@ -354,7 +354,7 @@ CLASS lcl_zip IMPLEMENTATION.
   METHOD export.
 
     DATA: lo_log TYPE REF TO lcl_log,
-          lt_zip TYPE ty_files_item_tt.
+          lt_zip TYPE lif_defs=>ty_files_item_tt.
 
 
     CREATE OBJECT lo_log.
@@ -410,12 +410,12 @@ CLASS lcl_zip IMPLEMENTATION.
   METHOD export_object.
 
     DATA: ls_tadir    TYPE tadir,
-          ls_item     TYPE ty_item,
+          ls_item     TYPE lif_defs=>ty_item,
           lv_folder   TYPE string,
           lv_fullpath TYPE string,
           lt_rawdata  TYPE solix_tab,
           lv_sep      TYPE c LENGTH 1,
-          lt_files    TYPE ty_files_tt.
+          lt_files    TYPE lif_defs=>ty_files_tt.
 
     STATICS: lv_prev TYPE string.
 

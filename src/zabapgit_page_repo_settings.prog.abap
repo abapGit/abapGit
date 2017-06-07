@@ -92,7 +92,7 @@ CLASS lcl_gui_page_repo_settings IMPLEMENTATION.
         mo_repo->set_dot_abapgit( lo_dot ).
         mo_repo->refresh( ).
 
-        ev_state = gc_event_state-go_back.
+        ev_state = lif_defs=>gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

@@ -72,7 +72,7 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   lcx_exception,
       popup_to_create_transp_branch
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
-        RETURNING VALUE(rs_transport_branch) TYPE ty_transport_to_branch
+        RETURNING VALUE(rs_transport_branch) TYPE lif_defs=>ty_transport_to_branch
         RAISING   lcx_exception
                   lcx_cancel,
       popup_to_select_transports
