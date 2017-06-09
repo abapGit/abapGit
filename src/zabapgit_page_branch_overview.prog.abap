@@ -302,7 +302,7 @@ ENDCLASS.
 
 ***********************
 
-CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
@@ -358,7 +358,7 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
 
 ENDCLASS.                       "lcl_gui_page_explore DEFINITION
 
-CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
+CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).

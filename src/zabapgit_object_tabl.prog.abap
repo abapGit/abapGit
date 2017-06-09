@@ -426,7 +426,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~compare_to_remote_version.
-    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_validation,
+    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_valid,
           lo_local_version_output TYPE REF TO lcl_xml_output,
           lo_local_version_input  TYPE REF TO lcl_xml_input,
           lv_validation_text      TYPE string.
@@ -445,11 +445,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       io_local_version  = lo_local_version_input ).
     IF lv_validation_text IS NOT INITIAL.
       lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
-      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
+      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_valid_dialog
         EXPORTING
           iv_message = lv_validation_text.
     ELSE.
-      CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+      CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
     ENDIF.
   ENDMETHOD.
 

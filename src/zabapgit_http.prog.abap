@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_HTTP
 *&---------------------------------------------------------------------*
 
-CLASS lcl_proxy_authentication DEFINITION FINAL.
+CLASS lcl_proxy_auth DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -18,7 +18,7 @@ CLASS lcl_proxy_authentication DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_proxy_authentication IMPLEMENTATION.
+CLASS lcl_proxy_auth IMPLEMENTATION.
 
   METHOD run.
 
@@ -450,7 +450,7 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lo_settings->get_proxy_authentication( ) = abap_true.
-      lcl_proxy_authentication=>run( li_client ).
+      lcl_proxy_auth=>run( li_client ).
     ENDIF.
 
     CREATE OBJECT ro_client
@@ -565,7 +565,7 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     " Offer two factor authentication if it is available and required
-    lcl_2fa_authenticator_registry=>use_2fa_if_required(
+    lcl_2fa_auth_registry=>use_2fa_if_required(
       EXPORTING
         iv_url      = iv_url
       CHANGING

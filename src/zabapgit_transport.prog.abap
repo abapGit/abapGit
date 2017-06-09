@@ -251,7 +251,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_transport_to_branch DEFINITION.
+CLASS lcl_transport_2_branch DEFINITION.
   PUBLIC SECTION.
     METHODS:
       create
@@ -282,7 +282,7 @@ CLASS lcl_transport_to_branch DEFINITION.
         lcx_exception.
 ENDCLASS.
 
-CLASS lcl_transport_to_branch IMPLEMENTATION.
+CLASS lcl_transport_2_branch IMPLEMENTATION.
 
   METHOD create.
     DATA:

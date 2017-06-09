@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_DB
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -20,7 +20,7 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_display IMPLEMENTATION.
+CLASS lcl_gui_page_db_dis IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -131,7 +131,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
     " Banners & Toolbar
     ro_html->add( '<table class="toolbar"><tr><td>' ).
-    ro_html->add( lcl_gui_page_db_display=>render_record_banner( ms_key ) ).
+    ro_html->add( lcl_gui_page_db_dis=>render_record_banner( ms_key ) ).
     ro_html->add( '</td><td>' ).
     ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
     ro_html->add( '</td></tr></table>' ).

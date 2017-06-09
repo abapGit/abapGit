@@ -1,7 +1,7 @@
 
 CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
   PUBLIC SECTION.
-    INTERFACES: lif_object_oriented_object_fnc.
+    INTERFACES: lif_oo_object_fnc.
     DATA:
       mv_package               TYPE devclass,
       mv_overwrite             TYPE seox_boolean,
@@ -37,7 +37,7 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
 
 ENDCLASS.
 CLASS ltd_spy_oo_object IMPLEMENTATION.
-  METHOD lif_object_oriented_object_fnc~create.
+  METHOD lif_oo_object_fnc~create.
     DATA lv_properties_structure_name TYPE string.
     lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( is_properties )->absolute_name.
     IF lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( ms_interface_properties )->absolute_name.
@@ -48,7 +48,8 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mv_package                = iv_package.
     mv_overwrite              = iv_overwrite.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~generate_locals.
+
+  METHOD lif_oo_object_fnc~generate_locals.
     ms_locals_key            = is_key.
     mt_local_definitions     = it_local_definitions.
     mt_local_implementations = it_local_implementations.
@@ -57,21 +58,21 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mv_force                 = iv_force.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~deserialize_source.
+  METHOD lif_oo_object_fnc~deserialize_source.
     ms_deserialize_key = is_key.
     mt_source          = it_source.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~add_to_activation_list.
+  METHOD lif_oo_object_fnc~add_to_activation_list.
     ms_item_to_activate = is_item.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~update_descriptions.
+  METHOD lif_oo_object_fnc~update_descriptions.
     ms_description_key = is_key.
     mt_descriptions    = it_descriptions.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~insert_text_pool.
+  METHOD lif_oo_object_fnc~insert_text_pool.
     mv_text_pool_inserted   = abap_true.
     mv_text_pool_class_name = iv_class_name.
     mt_text_pool            = it_text_pool.
@@ -80,28 +81,28 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
       exp = sy-langu ).
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_sotr.
+  METHOD lif_oo_object_fnc~create_sotr.
     mt_sotr = it_sotr.
     mt_sotr_package = iv_package.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_documentation.
+  METHOD lif_oo_object_fnc~create_documentation.
     mv_docu_object_name = iv_object_name.
     mv_docu_language    = iv_language.
     mt_docu_lines       = it_lines.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_includes.
+  METHOD lif_oo_object_fnc~get_includes.
     APPEND 'dummy' TO rt_includes.
     mv_get_includes_called = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~exists.
+  METHOD lif_oo_object_fnc~exists.
     mv_exists_called = abap_true.
     rv_exists = mv_exists.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~serialize_abap.
+  METHOD lif_oo_object_fnc~serialize_abap.
     ms_serialize_key = is_class_key.
     CASE iv_type.
       WHEN seop_ext_class_locals_def.
@@ -117,35 +118,35 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     ENDCASE.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_class_properties.
+  METHOD lif_oo_object_fnc~get_class_properties.
     rs_class_properties = ms_class_properties.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_interface_properties.
+  METHOD lif_oo_object_fnc~get_interface_properties.
     rs_interface_properties = ms_interface_properties.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_text_pool.
+  METHOD lif_oo_object_fnc~read_text_pool.
     rt_text_pool = mt_text_pool.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_sotr.
+  METHOD lif_oo_object_fnc~read_sotr.
     rt_sotr = mt_sotr.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_documentation.
+  METHOD lif_oo_object_fnc~read_documentation.
     rt_lines = mt_docu_lines.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_descriptions.
+  METHOD lif_oo_object_fnc~read_descriptions.
     rt_descriptions = mt_descriptions.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
+  METHOD lif_oo_object_fnc~get_skip_test_classes.
     rv_skip = mv_skip_test_classes.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~delete.
+  METHOD lif_oo_object_fnc~delete.
     ms_delete_key = is_deletion_key.
   ENDMETHOD.
 

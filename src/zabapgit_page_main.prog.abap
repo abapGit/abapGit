@@ -20,7 +20,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
                END OF c_actions.
 
     DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
-          mo_repo_content TYPE REF TO lcl_gui_view_repo_content.
+          mo_repo_content TYPE REF TO lcl_gui_view_repo.
 
     METHODS:
       test_changed_by
@@ -206,7 +206,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_toc.
 
-    DATA: lo_pback      TYPE REF TO lcl_persistence_background,
+    DATA: lo_pback      TYPE REF TO lcl_persist_background,
           lv_current    TYPE abap_bool,
           lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
           lv_icon       TYPE string,

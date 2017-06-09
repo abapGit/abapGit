@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_REPO_SETTINGS
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_repo_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
@@ -25,9 +25,9 @@ CLASS lcl_gui_page_repo_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING
           VALUE(rt_post_fields) TYPE tihttpnvp.
 
-ENDCLASS.                       "lcl_gui_page_debuginfo
+ENDCLASS.
 
-CLASS lcl_gui_page_repo_settings IMPLEMENTATION.
+CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).

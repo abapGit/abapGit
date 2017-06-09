@@ -23,7 +23,7 @@ ENDINTERFACE.                    "lif_object_enho
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_wdyconf DEFINITION.
+CLASS lcl_object_enho_wdyc DEFINITION.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -43,7 +43,7 @@ ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
+CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
@@ -633,7 +633,7 @@ ENDCLASS.                    "lcl_object_enho_hook IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_interface DEFINITION.
+CLASS lcl_object_enho_intf DEFINITION.
 
   PUBLIC SECTION.
     METHODS:
@@ -654,7 +654,7 @@ ENDCLASS.                    "lcl_object_enho_interface DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_interface IMPLEMENTATION.
+CLASS lcl_object_enho_intf IMPLEMENTATION.
 
   METHOD constructor.
     ms_item  = is_item.
@@ -979,12 +979,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
             is_item  = ms_item
             io_files = mo_files.
       WHEN cl_enh_tool_intf=>tooltype.
-        CREATE OBJECT ri_enho TYPE lcl_object_enho_interface
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_intf
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
       WHEN cl_wdr_cfg_enhancement=>tooltype.
-        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyconf
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyc
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
@@ -1051,7 +1051,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.                    "lif_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION

@@ -80,7 +80,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
-      RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background.
+      RETURNING VALUE(rs_fields) TYPE lcl_persist_background=>ty_background.
 
     CLASS-METHODS stage_decode
       IMPORTING iv_getdata TYPE clike

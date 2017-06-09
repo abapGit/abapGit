@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_REPO_BROWSER_UTIL
 *&---------------------------------------------------------------------*
 
-CLASS lcl_repo_content_browser DEFINITION FINAL.
+CLASS lcl_repo_content_list DEFINITION FINAL.
 
   PUBLIC SECTION.
 
@@ -73,7 +73,7 @@ DEFINE _reduce_state.
   ENDIF.
 END-OF-DEFINITION.
 
-CLASS lcl_repo_content_browser IMPLEMENTATION.
+CLASS lcl_repo_content_list IMPLEMENTATION.
 
   METHOD constructor.
     mo_repo = io_repo.
