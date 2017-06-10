@@ -86,10 +86,6 @@ ENDCLASS.                    "lcl_object_fugr DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_fugr IMPLEMENTATION.
 
-* function group SEUF
-* function group SIFP
-* function group SUNI
-
   METHOD lif_object~has_changed_since.
 
     DATA: lt_functab  TYPE ty_rs38l_incl_tt,
@@ -661,6 +657,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~serialize.
+
+* function group SEUF
+* function group SIFP
+* function group SUNI
 
     DATA: lt_functions    TYPE ty_function_tt,
           ls_progdir      TYPE ty_progdir,
