@@ -426,9 +426,9 @@ ENDCLASS.                    "lcl_user DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_user IMPLEMENTATION.
 
-* this class is obsolete, use LCL_PERSISTENCE_USER instead
-
   METHOD read.
+
+* this class is obsolete, use LCL_PERSISTENCE_USER instead
 
     DATA: lt_lines TYPE TABLE OF tline,
           ls_line  LIKE LINE OF lt_lines.
