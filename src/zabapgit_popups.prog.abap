@@ -77,32 +77,52 @@ CLASS lcl_popups DEFINITION FINAL.
                   lcx_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
-  PRIVATE SECTION.
 
+  PRIVATE SECTION.
+    TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
+
+    CLASS-METHODS: add_field
+      IMPORTING iv_tabname    TYPE sval-tabname
+                iv_fieldname  TYPE sval-fieldname
+                iv_fieldtext  TYPE sval-fieldtext
+                iv_value      TYPE clike DEFAULT ''
+                iv_field_attr TYPE sval-field_attr DEFAULT ''
+      CHANGING  ct_fields     TYPE ty_sval_tt.
 
 ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
 
-  METHOD popup_object.
+  METHOD add_field.
 
-    DEFINE _add_dialog_fld.
-      APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-      <ls_field>-tabname    = &1.                           "#EC NOTEXT
-      <ls_field>-fieldname  = &2.                           "#EC NOTEXT
-      <ls_field>-fieldtext  = &3.                           "#EC NOTEXT
-      <ls_field>-value      = &4.                           "#EC NOTEXT
-      <ls_field>-field_attr = &5.                           "#EC NOTEXT
-    END-OF-DEFINITION.
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF ct_fields.
+
+    APPEND INITIAL LINE TO ct_fields ASSIGNING <ls_field>.
+    <ls_field>-tabname    = iv_tabname.
+    <ls_field>-fieldname  = iv_fieldname.
+    <ls_field>-fieldtext  = iv_fieldtext.
+    <ls_field>-value      = iv_value.
+    <ls_field>-field_attr = iv_field_attr.
+
+  ENDMETHOD.
+
+  METHOD popup_object.
 
     DATA: lv_returncode TYPE c,
           lt_fields     TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-    "               TAB           FLD       LABEL     DEF                 ATTR
-    _add_dialog_fld 'TADIR'      'OBJECT'   'Type'    ''                  ''.
-    _add_dialog_fld 'TADIR'      'OBJ_NAME' 'Name'    ''                  ''.
+
+    add_field( EXPORTING iv_tabname   = 'TADIR'
+                         iv_fieldname = 'OBJECT'
+                         iv_fieldtext = 'Type'
+               CHANGING ct_fields     = lt_fields ).
+
+    add_field( EXPORTING iv_tabname   = 'TADIR'
+                         iv_fieldname = 'OBJ_NAME'
+                         iv_fieldtext = 'Name'
+               CHANGING ct_fields     = lt_fields ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -145,9 +165,17 @@ CLASS lcl_popups IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-    "               TAB     FLD        LABEL          DEF      ATTR
-    _add_dialog_fld 'TDEVC' 'DEVCLASS' 'Package'      ''       ''.
-    _add_dialog_fld 'TDEVC' 'INTSYS'   'Folder logic' 'PREFIX' ''.
+
+    add_field( EXPORTING iv_tabname   = 'TDEVC'
+                         iv_fieldname = 'DEVCLASS'
+                         iv_fieldtext = 'Package'
+               CHANGING ct_fields     = lt_fields ).
+
+    add_field( EXPORTING iv_tabname   = 'TDEVC'
+                         iv_fieldname = 'INTSYS'
+                         iv_fieldtext = 'Folder logic'
+                         iv_value     = 'PREFIX'
+               CHANGING ct_fields     = lt_fields ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -190,8 +218,11 @@ CLASS lcl_popups IMPLEMENTATION.
 
     CLEAR: ev_name, ev_cancel.
 
-*                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'new-branch-name'         ''.
+    add_field( EXPORTING iv_tabname   = 'TEXTL'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Name'
+                         iv_value     = 'new-branch-name'
+               CHANGING ct_fields     = lt_fields ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -228,8 +259,11 @@ CLASS lcl_popups IMPLEMENTATION.
 
     CLEAR: ev_name, ev_cancel.
 
-*                   TAB     FLD   LABEL   DEF                       ATTR
-    _add_dialog_fld 'TEXTL' 'LINE' 'Name' 'lcl_gui_page_'          ''.
+    add_field( EXPORTING iv_tabname   = 'TEXTL'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Name'
+                         iv_value     = 'lcl_gui_page_'
+               CHANGING ct_fields     = lt_fields ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
@@ -266,9 +300,15 @@ CLASS lcl_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    "               TAB           FLD       LABEL     DEF                 ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Name'    ''                  ''.
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Package' ''                  ''.
+    add_field( EXPORTING iv_tabname   = 'ABAPTXT255'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Name'
+               CHANGING ct_fields     = lt_fields ).
+
+    add_field( EXPORTING iv_tabname   = 'TDEVC'
+                         iv_fieldname = 'DEVCLASS'
+                         iv_fieldtext = 'Package'
+               CHANGING ct_fields     = lt_fields ).
 
     lv_icon_ok  = icon_okay.
     lv_button1 = 'Create package' ##NO_TEXT.
@@ -443,10 +483,26 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_icon2   = icon_folder.
     ENDIF.
 
-*                   TAB           FLD       LABEL            DEF        ATTR
-    _add_dialog_fld 'ABAPTXT255' 'LINE'     'Git clone URL'  iv_url     lv_uattr.
-    _add_dialog_fld 'TDEVC'      'DEVCLASS' 'Target package' iv_package lv_pattr.
-    _add_dialog_fld 'TEXTL'      'LINE'     'Branch'         iv_branch  '05'.
+    add_field( EXPORTING iv_tabname    = 'ABAPTXT255'
+                         iv_fieldname  = 'LINE'
+                         iv_fieldtext  = 'Git clone URL'
+                         iv_value      = iv_url
+                         iv_field_attr = lv_uattr
+               CHANGING ct_fields      = lt_fields ).
+
+    add_field( EXPORTING iv_tabname    = 'TDEVC'
+                         iv_fieldname  = 'DEVCLASS'
+                         iv_fieldtext  = 'Target package'
+                         iv_value      = iv_package
+                         iv_field_attr = lv_pattr
+               CHANGING ct_fields      = lt_fields ).
+
+    add_field( EXPORTING iv_tabname    = 'TEXTL'
+                         iv_fieldname  = 'LINE'
+                         iv_fieldtext  = 'Branch'
+                         iv_value      = iv_branch
+                         iv_field_attr = '05'
+               CHANGING ct_fields      = lt_fields ).
 
     lv_icon_ok  = icon_okay.
     lv_icon_br  = icon_workflow_fork.
@@ -604,20 +660,25 @@ CLASS lcl_popups IMPLEMENTATION.
       CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
     ENDLOOP.
 
-    "               TAB           FLD     LABEL          DEF  ATTR
-    _add_dialog_fld 'TEXTL'      'LINE'  'Branch name'   lv_transports_as_text  ''.
-    _add_dialog_fld 'ABAPTXT255' 'LINE'  'Commit text'   lv_transports_as_text  ''.
+    add_field( EXPORTING iv_tabname   = 'TEXTL'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Branch name'
+                         iv_value     = lv_transports_as_text
+               CHANGING ct_fields     = lt_fields ).
+
+    add_field( EXPORTING iv_tabname   = 'ABAPTXT255'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Commit text'
+                         iv_value     = lv_transports_as_text
+               CHANGING ct_fields     = lt_fields ).
 
     CALL FUNCTION 'POPUP_GET_VALUES'
       EXPORTING
-*       no_value_check  = SPACE    " Deactivates data type check
         popup_title     = 'Transport to new Branch'
-*       start_column    = '5'    " Start column of the dialog box
-*       start_row       = '5'    " Start line of the dialog box
       IMPORTING
         returncode      = lv_returncode
       TABLES
-        fields          = lt_fields  " Table fields, values and attributes
+        fields          = lt_fields
       EXCEPTIONS
         error_in_fields = 1
         OTHERS          = 2.
