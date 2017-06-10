@@ -666,6 +666,8 @@ CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
     METHODS:
       up FOR TESTING
         RAISING lcx_exception,
+      empty FOR TESTING
+        RAISING lcx_exception,
       down FOR TESTING
         RAISING lcx_exception.
 
@@ -683,6 +685,38 @@ CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 ENDCLASS.
 
 CLASS ltcl_xml IMPLEMENTATION.
+
+  METHOD empty.
+
+    DATA: ls_old    TYPE st_old,
+          ls_new    TYPE st_new,
+          lv_xml    TYPE string,
+          lo_input  TYPE REF TO lcl_xml_input,
+          lo_output TYPE REF TO lcl_xml_output.
+
+
+    CLEAR ls_old.
+
+    CREATE OBJECT lo_output.
+    lo_output->add( iv_name = 'DATA'
+                    ig_data = ls_old ).
+    lv_xml = lo_output->render( ).
+
+    CREATE OBJECT lo_input
+      EXPORTING
+        iv_xml = lv_xml.
+    lo_input->read( EXPORTING iv_name = 'DATA'
+                    CHANGING cg_data = ls_new ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_new-foo
+      exp = ls_old-foo ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_new-bar
+      exp = ls_old-bar ).
+
+  ENDMETHOD.
 
   METHOD up.
 
