@@ -17,12 +17,12 @@ CLASS lcl_syntax_highlighter DEFINITION ABSTRACT
   PUBLIC SECTION.
 
     CLASS-METHODS create
-      IMPORTING iv_filename TYPE string
+      IMPORTING iv_filename        TYPE string
       RETURNING VALUE(ro_instance) TYPE REF TO lcl_syntax_highlighter.
 
     METHODS process_line
-        IMPORTING iv_line        TYPE string
-        RETURNING VALUE(rv_line) TYPE string.
+      IMPORTING iv_line        TYPE string
+      RETURNING VALUE(rv_line) TYPE string.
 
   PROTECTED SECTION.
 
@@ -39,14 +39,20 @@ CLASS lcl_syntax_highlighter DEFINITION ABSTRACT
 
     TYPES:
       BEGIN OF ty_rule,
-        regex     TYPE REF TO cl_abap_regex,
-        token     TYPE char1,
-        style     TYPE string,
+        regex TYPE REF TO cl_abap_regex,
+        token TYPE char1,
+        style TYPE string,
       END OF ty_rule.
 
     CONSTANTS c_token_none TYPE c VALUE '.'.
 
     DATA mt_rules TYPE STANDARD TABLE OF ty_rule.
+
+    METHODS add_rule
+      IMPORTING
+        iv_regex TYPE string
+        iv_token TYPE c
+        iv_style TYPE string.
 
     METHODS parse_line
       IMPORTING iv_line    TYPE string
@@ -84,21 +90,21 @@ CLASS lcl_syntax_abap DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
 
     CONSTANTS:
       BEGIN OF c_css,
-        keyword  TYPE string VALUE 'keyword',                "#EC NOTEXT
-        text     TYPE string VALUE 'text',                   "#EC NOTEXT
-        comment  TYPE string VALUE 'comment',                "#EC NOTEXT
+        keyword TYPE string VALUE 'keyword',                "#EC NOTEXT
+        text    TYPE string VALUE 'text',                   "#EC NOTEXT
+        comment TYPE string VALUE 'comment',                "#EC NOTEXT
       END OF c_css,
 
       BEGIN OF c_token,
-        keyword  TYPE c VALUE 'K',                           "#EC NOTEXT
-        text     TYPE c VALUE 'T',                           "#EC NOTEXT
-        comment  TYPE c VALUE 'C',                           "#EC NOTEXT
+        keyword TYPE c VALUE 'K',                           "#EC NOTEXT
+        text    TYPE c VALUE 'T',                           "#EC NOTEXT
+        comment TYPE c VALUE 'C',                           "#EC NOTEXT
       END OF c_token,
 
       BEGIN OF c_regex,
-        comment  TYPE string VALUE '##|"|^\*',
-        text     TYPE string VALUE '`|''|\||\{|\}',
-        keyword  TYPE string VALUE '&&|\b[-_a-z0-9]+\b',
+        comment TYPE string VALUE '##|"|^\*',
+        text    TYPE string VALUE '`|''|\||\{|\}',
+        keyword TYPE string VALUE '&&|\b[-_a-z0-9]+\b',
       END OF c_regex.
 
   PROTECTED SECTION.
@@ -126,21 +132,21 @@ CLASS lcl_syntax_xml DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
 
     CONSTANTS:
       BEGIN OF c_css,
-        xml_tag  TYPE string VALUE 'xml_tag',                "#EC NOTEXT
-        attr     TYPE string VALUE 'attr',                   "#EC NOTEXT
-        attr_val TYPE string VALUE 'attr_val',               "#EC NOTEXT
+        xml_tag  TYPE string VALUE 'xml_tag',               "#EC NOTEXT
+        attr     TYPE string VALUE 'attr',                  "#EC NOTEXT
+        attr_val TYPE string VALUE 'attr_val',              "#EC NOTEXT
       END OF c_css,
 
       BEGIN OF c_token,
-        xml_tag  TYPE c VALUE 'X',                           "#EC NOTEXT
-        attr     TYPE c VALUE 'A',                           "#EC NOTEXT
-        attr_val TYPE c VALUE 'V',                           "#EC NOTEXT
+        xml_tag  TYPE c VALUE 'X',                          "#EC NOTEXT
+        attr     TYPE c VALUE 'A',                          "#EC NOTEXT
+        attr_val TYPE c VALUE 'V',                          "#EC NOTEXT
       END OF c_token,
 
       BEGIN OF c_regex,
-        xml_tag  TYPE string VALUE '[<>]',                   "#EC NOTEXT
+        xml_tag  TYPE string VALUE '[<>]',                  "#EC NOTEXT
         attr     TYPE string VALUE '\s[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
-        attr_val TYPE string VALUE '["''][^''"]+[''"]',      "#EC NOTEXT
+        attr_val TYPE string VALUE '["''][^''"]+[''"]',     "#EC NOTEXT
       END OF c_regex.
 
   PROTECTED SECTION.
@@ -148,23 +154,6 @@ CLASS lcl_syntax_xml DEFINITION INHERITING FROM lcl_syntax_highlighter FINAL.
     METHODS order_matches REDEFINITION.
 
 ENDCLASS.                       " lcl_syntax_xml DEFINITION
-
-*----------------------------------------------------------------------*
-* Macros to fill table with a regular expressions to be parsed
-*----------------------------------------------------------------------*
-
-DEFINE _add_rule.
-
-  CREATE OBJECT ls_rule-regex
-    EXPORTING
-      pattern     = c_regex-&1
-      ignore_case = abap_true.
-
-  ls_rule-token = c_token-&1.
-  ls_rule-style = c_css-&1.
-  APPEND ls_rule TO mt_rules.
-
-END-OF-DEFINITION.           " _add_rule
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_syntax_highlighter IMPLEMENTATION
@@ -186,6 +175,21 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    " create.
+
+  METHOD add_rule.
+
+    DATA ls_rule LIKE LINE OF mt_rules.
+
+    CREATE OBJECT ls_rule-regex
+      EXPORTING
+        pattern     = iv_regex
+        ignore_case = abap_true.
+
+    ls_rule-token = iv_token.
+    ls_rule-style = iv_style.
+    APPEND ls_rule TO mt_rules.
+
+  ENDMETHOD.
 
   METHOD parse_line.
 
@@ -222,10 +226,10 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
   METHOD extend_matches.
 
     DATA:
-      lv_line_len   TYPE i,
-      lv_last_pos   TYPE i VALUE 0,
-      lv_length     TYPE i,
-      ls_match      TYPE ty_match.
+      lv_line_len TYPE i,
+      lv_last_pos TYPE i VALUE 0,
+      lv_length   TYPE i,
+      ls_match    TYPE ty_match.
 
     FIELD-SYMBOLS <match> TYPE ty_match.
 
@@ -259,8 +263,8 @@ CLASS lcl_syntax_highlighter IMPLEMENTATION.
   METHOD format_line.
 
     DATA:
-      lv_chunk  TYPE string,
-      ls_rule   LIKE LINE OF mt_rules.
+      lv_chunk TYPE string,
+      ls_rule  LIKE LINE OF mt_rules.
 
     FIELD-SYMBOLS <match> TYPE ty_match.
 
@@ -341,14 +345,21 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA ls_rule LIKE LINE OF mt_rules.
-
     super->constructor( ).
 
     " Initialize instances of regular expression
-    _add_rule keyword.
-    _add_rule comment.
-    _add_rule text.
+
+    add_rule( iv_regex = c_regex-keyword
+              iv_token = c_token-keyword
+              iv_style = c_css-keyword ).
+
+    add_rule( iv_regex = c_regex-comment
+              iv_token = c_token-comment
+              iv_style = c_css-comment ).
+
+    add_rule( iv_regex = c_regex-text
+              iv_token = c_token-text
+              iv_style = c_css-text ).
 
   ENDMETHOD.                    " constructor
 
@@ -562,14 +573,21 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA ls_rule LIKE LINE OF mt_rules.
-
     super->constructor( ).
 
     " Initialize instances of regular expressions
-    _add_rule xml_tag.
-    _add_rule attr.
-    _add_rule attr_val.
+
+    add_rule( iv_regex = c_regex-xml_tag
+              iv_token = c_token-xml_tag
+              iv_style = c_css-xml_tag ).
+
+    add_rule( iv_regex = c_regex-attr
+              iv_token = c_token-attr
+              iv_style = c_css-attr ).
+
+    add_rule( iv_regex = c_regex-attr_val
+              iv_token = c_token-attr_val
+              iv_style = c_css-attr_val ).
 
   ENDMETHOD.
 
@@ -603,7 +621,7 @@ CLASS lcl_syntax_xml IMPLEMENTATION.
             DELETE ct_matches INDEX lv_index.
             CONTINUE.
 
-          " Adjust length and offset of closing tag
+            " Adjust length and offset of closing tag
           ELSEIF <match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
             lv_state = 'C'.
             <match>-length = <match>-offset - <prev>-offset - <prev>-length + <match>-length.
@@ -673,7 +691,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-token    = &1.
     ms_match-offset   = &2.
     ms_match-length   = &3.
-    append ms_match to mt_after_parse.
+    APPEND ms_match TO mt_after_parse.
   END-OF-DEFINITION.           " _generate_parse
 
   DEFINE _generate_order.
@@ -681,7 +699,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-offset   = &2.
     ms_match-length   = &3.
     ms_match-text_tag = &4.
-    append ms_match to mt_after_order.
+    APPEND ms_match TO mt_after_order.
   END-OF-DEFINITION.           " _generate_order
 
   DEFINE _generate_extend.
@@ -689,7 +707,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-offset   = &2.
     ms_match-length   = &3.
     ms_match-text_tag = &4.
-    append ms_match to mt_after_extend.
+    APPEND ms_match TO mt_after_extend.
   END-OF-DEFINITION.           " _generate_extend
 
   METHOD do_test.
@@ -1002,7 +1020,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag>Text</tag>'.    "#EC NOTEXT
+    lv_line = '<tag>Text</tag>'.                            "#EC NOTEXT
 
     " Generate table with expected values after parsing
     _generate_parse 'X' 0  1.
@@ -1027,7 +1045,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag/>'.    "#EC NOTEXT
+    lv_line = '<tag/>'.                                     "#EC NOTEXT
 
     " Generate table with expected values after parsing
     _generate_parse 'X' 0  1.
@@ -1047,7 +1065,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag attribute="value"/>'.    "#EC NOTEXT
+    lv_line = '<tag attribute="value"/>'.                   "#EC NOTEXT
 
     " Generate table with expected values after parsing
     _generate_parse 'X' 0  1.
@@ -1076,7 +1094,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<?xml version="1.0"?>'.    "#EC NOTEXT
+    lv_line = '<?xml version="1.0"?>'.                      "#EC NOTEXT
 
     " Generate table with expected values after parsing
     _generate_parse 'X' 0  1.
@@ -1105,7 +1123,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<ns:tag ns:a1="v1" ns:a2=''v2''>"text"</ns:tag>'.    "#EC NOTEXT
+    lv_line = '<ns:tag ns:a1="v1" ns:a2=''v2''>"text"</ns:tag>'. "#EC NOTEXT
 
     " Generate table with expected values after parsing
     _generate_parse 'X' 0  1.
@@ -1207,8 +1225,8 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
-      exp = '<span class="keyword">CALL FUNCTION</span>' "#EC NOTEXT
-      msg = 'Failure during applying of style.' ). "#EC NOTEXT
+      exp = '<span class="keyword">CALL FUNCTION</span>'    "#EC NOTEXT
+      msg = 'Failure during applying of style.' ).          "#EC NOTEXT
 
   ENDMETHOD.                    " apply_style
 
@@ -1222,15 +1240,15 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
       exp = ''
-      msg = 'Failure in method process_line.' ). "#EC NOTEXT
+      msg = 'Failure in method process_line.' ).            "#EC NOTEXT
 
     " Call the method with non-empty line and compare results
     lv_line_act = mo->process_line( iv_line  = '* CALL FUNCTION' ). "#EC NOTEXT
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
-      exp = '<span class="comment">* CALL FUNCTION</span>' "#EC NOTEXT
-      msg = 'Failure in method process_line.' ). "#EC NOTEXT
+      exp = '<span class="comment">* CALL FUNCTION</span>'  "#EC NOTEXT
+      msg = 'Failure in method process_line.' ).            "#EC NOTEXT
 
   ENDMETHOD.                    " process_line
 

@@ -18,16 +18,7 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
 
   PRIVATE SECTION.
-
-    TYPES: BEGIN OF ty_id_map,
-             old TYPE ttree-id,
-             new TYPE ttree-id,
-           END OF ty_id_map.
-    TYPES  tt_id_map TYPE STANDARD TABLE OF ty_id_map.
-    TYPES  ts_id_map TYPE SORTED TABLE OF ty_id_map WITH UNIQUE KEY old.
-
-    DATA: mv_tree_id TYPE ttree-id,
-          mt_map     TYPE ts_id_map. " SORTED !
+    DATA: mv_tree_id TYPE ttree-id.
 
     METHODS jump_se43
       RAISING lcx_exception.

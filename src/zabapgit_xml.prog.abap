@@ -293,8 +293,7 @@ CLASS lcl_xml_output IMPLEMENTATION.
       name   = 'abap'
       prefix = 'asx' ).
 
-    li_attr = mi_xml_doc->create_attribute_ns(
-      name = 'version' ).
+    li_attr = mi_xml_doc->create_attribute_ns( 'version' ).
     li_attr->if_ixml_node~set_value( '1.0' ).
     ri_element->set_attribute_node_ns( li_attr ).
 

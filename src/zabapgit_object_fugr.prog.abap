@@ -419,7 +419,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     DATA: lt_reposrc TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
           ls_reposrc LIKE LINE OF lt_reposrc,
           lv_program TYPE program,
-          lv_cnam    TYPE reposrc-cnam,
           lv_tabix   LIKE sy-tabix,
           lt_functab TYPE ty_rs38l_incl_tt.
 

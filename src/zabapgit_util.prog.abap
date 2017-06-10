@@ -110,8 +110,8 @@ CLASS lcl_convert DEFINITION FINAL.
       RETURNING VALUE(rv_xstring) TYPE xstring.
 
     CLASS-METHODS split_string
-        IMPORTING iv_string         TYPE string
-        RETURNING value(rt_lines)   TYPE string_table.
+      IMPORTING iv_string       TYPE string
+      RETURNING VALUE(rt_lines) TYPE string_table.
 
 ENDCLASS.                    "lcl_convert DEFINITION
 
@@ -423,8 +423,8 @@ CLASS lcl_path IMPLEMENTATION.
 
   METHOD change_dir.
 
-    DATA lv_last TYPE i.
-    DATA lv_temp TYPE string.
+    DATA: lv_last TYPE i,
+          lv_temp TYPE string.
 
     lv_last = strlen( iv_cur_dir ) - 1.
 

@@ -558,7 +558,7 @@ CLASS lcl_repo IMPLEMENTATION.
       io_dot                = get_dot_abapgit( ) ).
 
     lt_filter = it_filter.
-    lv_filter_exist = boolc( lines( lt_filter ) > 0 ) .
+    lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF lv_filter_exist = abap_true.
