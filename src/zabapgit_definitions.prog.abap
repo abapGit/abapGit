@@ -194,7 +194,7 @@ INTERFACE lif_defs.
 
   CONSTANTS: gc_root_dir     TYPE string VALUE '/',
              gc_dot_abapgit  TYPE string VALUE '.abapgit.xml' ##NO_TEXT,
-             gc_author_regex TYPE string VALUE '^([\w\s\.@\-_1-9]+) <(.*)> (\d{10}).\d{4}$' ##NO_TEXT.
+             gc_author_regex TYPE string VALUE '^([\w\s\.@\-_1-9]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
 
   CONSTANTS: BEGIN OF gc_action,
                repo_clone               TYPE string VALUE 'repo_clone',
