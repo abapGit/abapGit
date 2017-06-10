@@ -14,9 +14,6 @@ CLASS lcl_persist_settings DEFINITION DEFERRED.
 CLASS lcl_app DEFINITION FINAL.
   PUBLIC SECTION.
 
-    CLASS-METHODS run
-      RAISING lcx_exception.
-
     CLASS-METHODS gui
       RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
       RAISING   lcx_exception.
