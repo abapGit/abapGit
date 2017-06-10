@@ -109,10 +109,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   ENDMETHOD.
 
-**********************************************************************
-* RENDERING
-**********************************************************************
-
   METHOD render_content.
 
     DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
