@@ -571,6 +571,13 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
           mv_language TYPE spras.
 
     METHODS:
+      check_timestamp
+        IMPORTING
+          iv_timestamp      TYPE timestamp
+          iv_date           TYPE datum
+          iv_time           TYPE uzeit
+        RETURNING
+          VALUE(rv_changed) TYPE abap_bool,
       get_metadata
         RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata,
       corr_insert
@@ -1539,7 +1546,11 @@ CLASS lcl_objects_program IMPLEMENTATION.
       WHERE progname = iv_program
       AND   r3state = 'A'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
+    CHECK rv_changed = abap_false.
 
     SELECT SINGLE udat utime FROM repotext " Program text pool
       INTO (lv_date, lv_time)
@@ -1547,7 +1558,11 @@ CLASS lcl_objects_program IMPLEMENTATION.
       AND   r3state = 'A'.
 
     IF sy-subrc = 0. " Text not found ? Assuming no changes, see #404
-      _object_check_timestamp lv_date lv_time.
+      rv_changed = check_timestamp(
+        iv_timestamp = iv_timestamp
+        iv_date      = lv_date
+        iv_time      = lv_time ).
+      CHECK rv_changed = abap_false.
     ENDIF.
 
     IF iv_skip_gui = abap_true.
@@ -1559,7 +1574,11 @@ CLASS lcl_objects_program IMPLEMENTATION.
       WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.     "#EC CI_SUBRC
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
-      _object_check_timestamp <ls_screen>-dgen <ls_screen>-tgen.
+      rv_changed = check_timestamp(
+        iv_timestamp = iv_timestamp
+        iv_date      = <ls_screen>-dgen
+        iv_time      = <ls_screen>-tgen ).
+      CHECK rv_changed = abap_false.
     ENDLOOP.
 
     SELECT vdatum vzeit FROM eudb         " GUI
@@ -1569,7 +1588,11 @@ CLASS lcl_objects_program IMPLEMENTATION.
       AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.             "#EC CI_SUBRC
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
-      _object_check_timestamp <ls_eudb>-vdatum <ls_eudb>-vzeit.
+      rv_changed = check_timestamp(
+        iv_timestamp = iv_timestamp
+        iv_date      = <ls_eudb>-vdatum
+        iv_time      = <ls_eudb>-vzeit ).
+      CHECK rv_changed = abap_false.
     ENDLOOP.
 
   ENDMETHOD.  "check_prog_changed_since
@@ -1690,6 +1713,25 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD check_timestamp.
+
+    DATA: lv_ts TYPE timestamp.
+
+    IF sy-subrc = 0 AND iv_date IS NOT INITIAL AND iv_time IS NOT INITIAL.
+      cl_abap_tstmp=>systemtstmp_syst2utc(
+        EXPORTING syst_date = iv_date
+                  syst_time = iv_time
+        IMPORTING utc_tstmp = lv_ts ).
+      IF lv_ts < iv_timestamp.
+        rv_changed = abap_false. " Unchanged
+      ELSE.
+        rv_changed = abap_true.
+      ENDIF.
+    ELSE. " Not found? => changed
+      rv_changed = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD get_metadata.
     rs_metadata-class =

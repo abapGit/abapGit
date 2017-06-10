@@ -33,7 +33,10 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
       WHERE typename = ms_item-obj_name
       AND as4local = 'A'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
 
   ENDMETHOD.  "lif_object~has_changed_since
 

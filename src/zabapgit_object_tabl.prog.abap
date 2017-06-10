@@ -38,7 +38,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
+    CHECK rv_changed = abap_false.
 
     SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
       INTO (lv_date, lv_time)
@@ -46,7 +50,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
+    CHECK rv_changed = abap_false.
 
     SELECT as4date as4time FROM dd12l " Table tech settings
       INTO CORRESPONDING FIELDS OF TABLE lt_indexes
@@ -55,7 +63,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_indexes ASSIGNING <ls_index>.
-      _object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+      rv_changed = check_timestamp(
+        iv_timestamp = iv_timestamp
+        iv_date      = <ls_index>-as4date
+        iv_time      = <ls_index>-as4time ).
+      CHECK rv_changed = abap_false.
     ENDLOOP.
 
   ENDMETHOD.  "lif_object~has_changed_since
