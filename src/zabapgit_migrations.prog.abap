@@ -21,7 +21,7 @@ CLASS lcl_migrations IMPLEMENTATION.
   METHOD run.
 
     " Migrate STDTEXT to TABLE
-    lcl_persistence_migrate=>run( ).
+    lcl_persist_migrate=>run( ).
 
     " Rebuild local file checksums
     rebuild_local_checksums_161112( ).

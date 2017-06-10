@@ -2159,7 +2159,7 @@ CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
       read_run_critical_tests       FOR TESTING RAISING cx_static_check,
       read_not_found_critical_tests FOR TESTING RAISING cx_static_check.
     DATA:
-      mo_persistence_settings TYPE REF TO lcl_persistence_settings,
+      mo_persistence_settings TYPE REF TO lcl_persist_settings,
       mo_settings             TYPE REF TO lcl_settings.
 ENDCLASS.
 

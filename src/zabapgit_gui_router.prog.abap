@@ -77,10 +77,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN lif_defs=>gc_action-go_main                          " Go Main page
           OR lif_defs=>gc_action-go_explore                     " Go Explore page
           OR lif_defs=>gc_action-go_db                          " Go DB util page
-          OR lif_defs=>gc_action-go_background_run              " Go background run page
           OR lif_defs=>gc_action-go_debuginfo                   " Go debug info page
           OR lif_defs=>gc_action-go_settings.                   " Go settings page
         ei_page  = get_page_by_name( iv_action ).
+        ev_state = lif_defs=>gc_event_state-new_page.
+      WHEN lif_defs=>gc_action-go_background_run.              " Go background run page
+        CREATE OBJECT ei_page TYPE lcl_gui_page_bkg_run.
         ev_state = lif_defs=>gc_event_state-new_page.
       WHEN lif_defs=>gc_action-go_background.                   " Go Background page
         ei_page  = get_page_background( lv_key ).
@@ -121,9 +123,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " DB actions
       WHEN lif_defs=>gc_action-db_display OR lif_defs=>gc_action-db_edit. " DB Display/Edit
-        ei_page  = get_page_db_by_name( iv_name = iv_action  iv_getdata = iv_getdata ).
+        ei_page = get_page_db_by_name( iv_name    = 'DB_DIS'
+                                       iv_getdata = iv_getdata ).
         ev_state = lif_defs=>gc_event_state-new_page.
-        IF iv_prev_page = 'PAGE_DB_DISPLAY'.
+        IF iv_prev_page = 'PAGE_DB_DIS'.
           ev_state = lif_defs=>gc_event_state-new_page_replacing.
         ENDIF.
       WHEN lif_defs=>gc_action-db_delete.                       " DB Delete
@@ -175,7 +178,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
         ev_state = lif_defs=>gc_event_state-re_render.
       WHEN lif_defs=>gc_action-repo_settings.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_repo_settings
+        CREATE OBJECT ei_page TYPE lcl_gui_page_repo_sett
           EXPORTING
             io_repo = lcl_app=>repo_srv( )->get( lv_key ).
         ev_state = lif_defs=>gc_event_state-new_page.
@@ -273,7 +276,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_branch_overview.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
-          lo_page TYPE REF TO lcl_gui_page_branch_overview,
+          lo_page TYPE REF TO lcl_gui_page_boverview,
           lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
 
 
@@ -346,7 +349,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_background.
 
-    CREATE OBJECT ri_page TYPE lcl_gui_page_background
+    CREATE OBJECT ri_page TYPE lcl_gui_page_bkg
       EXPORTING
         iv_key = iv_key.
 

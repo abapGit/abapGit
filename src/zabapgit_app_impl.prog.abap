@@ -7,17 +7,6 @@
 *----------------------------------------------------------------------*
 CLASS lcl_app IMPLEMENTATION.
 
-  METHOD run.
-
-    IF sy-batch = abap_true.
-      lcl_background=>run( ).
-    ELSE.
-      gui( )->go_home( ).
-      CALL SELECTION-SCREEN 1001. " trigger screen
-    ENDIF.
-
-  ENDMETHOD.      "run
-
   METHOD gui.
 
     IF go_gui IS NOT BOUND.

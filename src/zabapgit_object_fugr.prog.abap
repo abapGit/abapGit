@@ -86,10 +86,6 @@ ENDCLASS.                    "lcl_object_fugr DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_fugr IMPLEMENTATION.
 
-* function group SEUF
-* function group SIFP
-* function group SUNI
-
   METHOD lif_object~has_changed_since.
 
     DATA: lt_functab  TYPE ty_rs38l_incl_tt,
@@ -662,6 +658,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
+* function group SEUF
+* function group SIFP
+* function group SUNI
+
     DATA: lt_functions    TYPE ty_function_tt,
           ls_progdir      TYPE ty_progdir,
           lv_program_name TYPE programm,
@@ -769,7 +769,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_fugr IMPLEMENTATION

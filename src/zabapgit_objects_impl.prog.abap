@@ -702,7 +702,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: ls_remote_file       TYPE lif_defs=>ty_file,
           lo_remote_version    TYPE REF TO lcl_xml_input,
-          lo_comparison_result TYPE REF TO lif_object_comparison_result.
+          lo_comparison_result TYPE REF TO lif_comparison_result.
 
 
     IF is_result-filename CS '.XML'.

@@ -257,10 +257,6 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     rv_language = ms_data-master_language.
   ENDMETHOD.
 
-*  METHOD set_master_language.
-*    ms_data-master_language = iv_language.
-*  ENDMETHOD.
-
   METHOD get_signature.
 
     rs_signature-path     = lif_defs=>gc_root_dir.

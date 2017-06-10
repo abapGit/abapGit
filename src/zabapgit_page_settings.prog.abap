@@ -226,7 +226,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD persist_settings.
 
-    DATA lo_settings_persistence TYPE REF TO lcl_persistence_settings.
+    DATA lo_settings_persistence TYPE REF TO lcl_persist_settings.
 
     lo_settings_persistence = lcl_app=>settings( ).
     lo_settings_persistence->modify( mo_settings ).
@@ -254,7 +254,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD read_settings.
 
-    DATA lo_settings_persistence TYPE REF TO lcl_persistence_settings.
+    DATA lo_settings_persistence TYPE REF TO lcl_persist_settings.
 
     lo_settings_persistence = lcl_app=>settings( ).
     mo_settings = lo_settings_persistence->read( ).

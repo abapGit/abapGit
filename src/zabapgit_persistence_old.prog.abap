@@ -2,14 +2,14 @@
 *&  Include           ZABAPGIT_PERSISTENCE_OLD
 *&---------------------------------------------------------------------*
 
-CLASS lcl_persistence_migrate DEFINITION DEFERRED.
+CLASS lcl_persist_migrate DEFINITION DEFERRED.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_persistence DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persistence_migrate.
+CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persist_migrate.
 
 * this class is obsolete, use LCL_PERSISTENCE_REPO instead
 
@@ -370,7 +370,7 @@ ENDCLASS.                    "lcl_persistence IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persistence_migrate.
+CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persist_migrate.
 
 * this class is obsolete, use LCL_PERSISTENCE_USER instead
 
@@ -426,9 +426,9 @@ ENDCLASS.                    "lcl_user DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_user IMPLEMENTATION.
 
-* this class is obsolete, use LCL_PERSISTENCE_USER instead
-
   METHOD read.
+
+* this class is obsolete, use LCL_PERSISTENCE_USER instead
 
     DATA: lt_lines TYPE TABLE OF tline,
           ls_line  LIKE LINE OF lt_lines.

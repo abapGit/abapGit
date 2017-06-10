@@ -22,12 +22,23 @@ FORM run.
 
   TRY.
       lcl_migrations=>run( ).
-      lcl_app=>run( ).
+      PERFORM open_gui.
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
 
 ENDFORM.                    "run
+
+FORM open_gui RAISING lcx_exception.
+
+  IF sy-batch = abap_true.
+    lcl_background=>run( ).
+  ELSE.
+    lcl_app=>gui( )->go_home( ).
+    CALL SELECTION-SCREEN 1001. " trigger screen
+  ENDIF.
+
+ENDFORM.
 
 *&---------------------------------------------------------------------*
 *&      Form  branch_popup

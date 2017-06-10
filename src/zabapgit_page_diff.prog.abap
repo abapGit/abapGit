@@ -334,10 +334,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.  " build_menu.
 
-**********************************************************************
-* EVENT HANDLING
-**********************************************************************
-
   METHOD lif_gui_page~on_event.
 
     CASE iv_action.
@@ -347,10 +343,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event
-
-**********************************************************************
-* RENDER LOGIC
-**********************************************************************
 
   METHOD render_content.
 
@@ -399,10 +391,6 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.  " render_diff
-
-**********************************************************************
-* CHUNKS
-**********************************************************************
 
   METHOD render_diff_head.
 

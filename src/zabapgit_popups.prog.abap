@@ -84,17 +84,16 @@ ENDCLASS.
 
 CLASS lcl_popups IMPLEMENTATION.
 
-  DEFINE _add_dialog_fld.
-    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-tabname    = &1.                             "#EC NOTEXT
-    <ls_field>-fieldname  = &2.                             "#EC NOTEXT
-    <ls_field>-fieldtext  = &3.                             "#EC NOTEXT
-    <ls_field>-value      = &4.                             "#EC NOTEXT
-    <ls_field>-field_attr = &5.                             "#EC NOTEXT
-  END-OF-DEFINITION.
-
-
   METHOD popup_object.
+
+    DEFINE _add_dialog_fld.
+      APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+      <ls_field>-tabname    = &1.                           "#EC NOTEXT
+      <ls_field>-fieldname  = &2.                           "#EC NOTEXT
+      <ls_field>-fieldtext  = &3.                           "#EC NOTEXT
+      <ls_field>-value      = &4.                           "#EC NOTEXT
+      <ls_field>-field_attr = &5.                           "#EC NOTEXT
+    END-OF-DEFINITION.
 
     DATA: lv_returncode TYPE c,
           lt_fields     TYPE TABLE OF sval.

@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_BACKGROUND
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_background_run DEFINITION FINAL
+CLASS lcl_gui_page_bkg_run DEFINITION FINAL
     INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
@@ -19,7 +19,7 @@ CLASS lcl_gui_page_background_run DEFINITION FINAL
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background_run IMPLEMENTATION.
+CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -72,16 +72,16 @@ CLASS lcl_gui_page_background_run IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background DEFINITION FINAL
+CLASS lcl_gui_page_bkg DEFINITION FINAL
     INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
-      constructor IMPORTING  iv_key TYPE lcl_persistence_repo=>ty_repo-key,
+      constructor IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS render_content        REDEFINITION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA:
@@ -96,7 +96,7 @@ CLASS lcl_gui_page_background DEFINITION FINAL
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background IMPLEMENTATION.
+CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -116,13 +116,13 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
   METHOD lif_gui_page~on_event.
 
-    DATA ls_bg_task     TYPE lcl_persistence_background=>ty_background.
+    DATA ls_bg_task TYPE lcl_persist_background=>ty_background.
 
     CASE iv_action.
       WHEN lif_defs=>gc_action-bg_update.
         ls_bg_task     = lcl_html_action_utils=>decode_bg_update( iv_getdata ).
         ls_bg_task-key = mv_key.
-        lcl_services_background=>update_task( ls_bg_task ).
+        lcl_services_bkg=>update_task( ls_bg_task ).
         ev_state = lif_defs=>gc_event_state-re_render.
     ENDCASE.
 
@@ -131,8 +131,8 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
   METHOD render_data.
 
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
-          lo_per     TYPE REF TO lcl_persistence_background,
-          lt_per     TYPE lcl_persistence_background=>tt_background,
+          lo_per     TYPE REF TO lcl_persist_background,
+          lt_per     TYPE lcl_persist_background=>tt_background,
           ls_per     LIKE LINE OF lt_per,
           lv_nothing TYPE string,
           lv_push    TYPE string,
@@ -163,16 +163,16 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ENDIF.
 
     CASE ls_per-method.
-      WHEN lcl_persistence_background=>c_method-push.
+      WHEN lcl_persist_background=>c_method-push.
         lv_push = ' checked' ##NO_TEXT.
-      WHEN lcl_persistence_background=>c_method-pull.
+      WHEN lcl_persist_background=>c_method-pull.
         lv_pull = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_nothing = ' checked' ##NO_TEXT.
     ENDCASE.
 
     CASE ls_per-amethod.
-      WHEN lcl_persistence_background=>c_amethod-auto.
+      WHEN lcl_persist_background=>c_amethod-auto.
         lv_aauto = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_afixed = ' checked' ##NO_TEXT.

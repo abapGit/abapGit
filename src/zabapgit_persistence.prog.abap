@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PERSISTENCE
 *&---------------------------------------------------------------------*
 
-CLASS lcl_persistence_migrate DEFINITION FINAL.
+CLASS lcl_persist_migrate DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: run RAISING lcx_exception.
@@ -204,7 +204,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_background DEFINITION FINAL.
+CLASS lcl_persist_background DEFINITION FINAL.
 
   PUBLIC SECTION.
 
@@ -270,7 +270,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
 ENDCLASS.     "lcl_persistence_background DEFINITION
 
-CLASS lcl_persistence_background IMPLEMENTATION.
+CLASS lcl_persist_background IMPLEMENTATION.
 
   METHOD constructor.
     mo_db = lcl_app=>db( ).
@@ -1010,7 +1010,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lo_background TYPE REF TO lcl_persistence_background.
+    DATA: lo_background TYPE REF TO lcl_persist_background.
 
     CREATE OBJECT lo_background.
     lo_background->delete( iv_key ).
@@ -1271,7 +1271,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_persistence_migrate IMPLEMENTATION.
+CLASS lcl_persist_migrate IMPLEMENTATION.
 
   METHOD run.
 
@@ -1662,7 +1662,7 @@ CLASS lcl_settings IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_persistence_settings DEFINITION FINAL.
+CLASS lcl_persist_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS modify
@@ -1676,10 +1676,11 @@ CLASS lcl_persistence_settings DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_settings IMPLEMENTATION.
-* todo, refactor this to use XML and only 1 row in the database?
+CLASS lcl_persist_settings IMPLEMENTATION.
 
   METHOD modify.
+
+* todo, refactor this class to use XML and only 1 row in the database?
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
