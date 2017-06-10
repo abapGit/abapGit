@@ -115,7 +115,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    DATA: field TYPE fieldname .
+    DATA: field TYPE fieldname.
 
     field = ms_item-obj_name.
 

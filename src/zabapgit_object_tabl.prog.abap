@@ -27,7 +27,6 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     DATA: lv_date    TYPE dats,
           lv_time    TYPE tims,
-          lv_ts      TYPE timestamp,
           lt_indexes TYPE STANDARD TABLE OF dd09l.
 
     FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
@@ -42,7 +41,9 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       iv_timestamp = iv_timestamp
       iv_date      = lv_date
       iv_time      = lv_time ).
-    CHECK rv_changed = abap_false.
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
       INTO (lv_date, lv_time)
@@ -54,7 +55,9 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       iv_timestamp = iv_timestamp
       iv_date      = lv_date
       iv_time      = lv_time ).
-    CHECK rv_changed = abap_false.
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT as4date as4time FROM dd12l " Table tech settings
       INTO CORRESPONDING FIELDS OF TABLE lt_indexes
@@ -67,7 +70,9 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         iv_timestamp = iv_timestamp
         iv_date      = <ls_index>-as4date
         iv_time      = <ls_index>-as4time ).
-      CHECK rv_changed = abap_false.
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.  "lif_object~has_changed_since

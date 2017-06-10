@@ -37,7 +37,9 @@ CLASS lcl_object_view IMPLEMENTATION.
       iv_timestamp = iv_timestamp
       iv_date      = lv_date
       iv_time      = lv_time ).
-    CHECK rv_changed = abap_false.
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT SINGLE as4date as4time FROM dd09l
       INTO (lv_date, lv_time)
@@ -49,7 +51,9 @@ CLASS lcl_object_view IMPLEMENTATION.
       iv_timestamp = iv_timestamp
       iv_date      = lv_date
       iv_time      = lv_time ).
-    CHECK rv_changed = abap_false.
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
   ENDMETHOD.  "lif_object~has_changed_since
 

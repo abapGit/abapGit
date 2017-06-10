@@ -345,8 +345,6 @@ CLASS lcl_syntax_abap IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA ls_rule LIKE LINE OF mt_rules.
-
     super->constructor( ).
 
     " Initialize instances of regular expression
@@ -574,8 +572,6 @@ ENDCLASS.                       " lcl_syntax_abap IMPLEMENTATION
 CLASS lcl_syntax_xml IMPLEMENTATION.
 
   METHOD constructor.
-
-    DATA ls_rule LIKE LINE OF mt_rules.
 
     super->constructor( ).
 

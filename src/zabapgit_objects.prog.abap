@@ -1534,7 +1534,6 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     DATA: lv_date    TYPE dats,
           lv_time    TYPE tims,
-          lv_ts      TYPE timestamp,
           lt_screens TYPE STANDARD TABLE OF d020s,
           lt_eudb    TYPE STANDARD TABLE OF eudb.
 
@@ -1550,7 +1549,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
       iv_timestamp = iv_timestamp
       iv_date      = lv_date
       iv_time      = lv_time ).
-    CHECK rv_changed = abap_false.
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT SINGLE udat utime FROM repotext " Program text pool
       INTO (lv_date, lv_time)
@@ -1562,7 +1563,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         iv_timestamp = iv_timestamp
         iv_date      = lv_date
         iv_time      = lv_time ).
-      CHECK rv_changed = abap_false.
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
     ENDIF.
 
     IF iv_skip_gui = abap_true.
@@ -1578,7 +1581,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         iv_timestamp = iv_timestamp
         iv_date      = <ls_screen>-dgen
         iv_time      = <ls_screen>-tgen ).
-      CHECK rv_changed = abap_false.
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
     SELECT vdatum vzeit FROM eudb         " GUI
@@ -1592,7 +1597,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         iv_timestamp = iv_timestamp
         iv_date      = <ls_eudb>-vdatum
         iv_time      = <ls_eudb>-vzeit ).
-      CHECK rv_changed = abap_false.
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.  "check_prog_changed_since

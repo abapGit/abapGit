@@ -394,17 +394,17 @@ CLASS ltcl_news IMPLEMENTATION.
     ls_log = lcl_news=>parse_line(
       iv_line            = '======'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+    cl_abap_unit_assert=>assert_initial( ls_log ).
 
     ls_log = lcl_news=>parse_line(
       iv_line            = ''
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+    cl_abap_unit_assert=>assert_initial( ls_log ).
 
     ls_log = lcl_news=>parse_line(
       iv_line            = '------'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_initial( act = ls_log ).
+    cl_abap_unit_assert=>assert_initial( ls_log ).
 
     CLEAR ls_log.
     ls_log = lcl_news=>parse_line(

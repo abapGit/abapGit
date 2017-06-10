@@ -262,7 +262,7 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
 
-    io_clif->set_enhattributes( tab_attributes = lt_tab_attributes ).
+    io_clif->set_enhattributes( lt_tab_attributes ).
 
 * todo: deserialize includes
 
