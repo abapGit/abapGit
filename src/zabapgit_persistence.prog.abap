@@ -1677,9 +1677,10 @@ CLASS lcl_persist_settings DEFINITION FINAL.
 ENDCLASS.
 
 CLASS lcl_persist_settings IMPLEMENTATION.
-* todo, refactor this to use XML and only 1 row in the database?
 
   METHOD modify.
+
+* todo, refactor this class to use XML and only 1 row in the database?
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
