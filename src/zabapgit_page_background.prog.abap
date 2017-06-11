@@ -181,18 +181,18 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>Method</u><br>' )  ##NO_TEXT.
+    ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
     ro_html->add( |<form method="get" action="sapevent:{ lif_defs=>gc_action-bg_update }">| ).
     ro_html->add( '<input type="radio" name="method" value="nothing"' &&
-      lv_nothing && '>Do nothing<br>' )  ##NO_TEXT.
+      lv_nothing && '>Do nothing<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="push"' &&
-      lv_push && '>Automatic push<br>' )  ##NO_TEXT.
+      lv_push && '>Automatic push<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="pull"' &&
-      lv_pull && '>Automatic pull<br>' )  ##NO_TEXT.
+      lv_pull && '>Automatic pull<br>' ) ##NO_TEXT.
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>HTTP Authentication, optional</u><br>' )  ##NO_TEXT.
-    ro_html->add( '(password will be saved in clear text)<br>' )  ##NO_TEXT.
+    ro_html->add( '<u>HTTP Authentication, optional</u><br>' ) ##NO_TEXT.
+    ro_html->add( '(password will be saved in clear text)<br>' ) ##NO_TEXT.
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td>Username:</td>' ).
@@ -210,9 +210,9 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
     ro_html->add( '<u>Commit author</u><br>' ).
     ro_html->add( '<input type="radio" name="amethod" value="fixed"' &&
-      lv_afixed && '>Fixed<br>' )  ##NO_TEXT.
+      lv_afixed && '>Fixed<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="amethod" value="auto"' &&
-      lv_aauto && '>Automatic<br>' )  ##NO_TEXT.
+      lv_aauto && '>Automatic<br>' ) ##NO_TEXT.
     ro_html->add( '<br>' ).
 
     ro_html->add( '<table>' ).

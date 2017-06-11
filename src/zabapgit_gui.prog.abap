@@ -186,7 +186,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    DATA: ls_stack  TYPE ty_page_stack.
+    DATA: ls_stack TYPE ty_page_stack.
 
     IF iv_replacing = abap_false AND NOT mi_cur_page IS INITIAL.
       ls_stack-page     = mi_cur_page.
@@ -281,11 +281,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
       CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
         EXPORTING
-          text      = iv_text
+          text   = iv_text
         IMPORTING
-          buffer    = lv_xstr
+          buffer = lv_xstr
         EXCEPTIONS
-          OTHERS    = 1.
+          OTHERS = 1.
       ASSERT sy-subrc = 0.
 
     ELSE. " Raw input
