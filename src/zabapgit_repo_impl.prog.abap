@@ -72,6 +72,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD refresh.
 
+    DATA: lx_exception TYPE REF TO lcx_exception.
+
     super->refresh( iv_drop_cache ).
     reset_status( ).
 
@@ -80,10 +82,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
                         iv_total   = 1
                         iv_text    = 'Remote files' ) ##NO_TEXT.
 
-    lcl_git_porcelain=>pull( EXPORTING io_repo    = me
-                             IMPORTING et_files   = mt_remote
-                                       et_objects = mt_objects
-                                       ev_branch  = mv_branch ).
+    TRY.
+
+        lcl_git_porcelain=>pull( EXPORTING io_repo    = me
+                                 IMPORTING et_files   = mt_remote
+                                           et_objects = mt_objects
+                                           ev_branch  = mv_branch ).
+
+      CATCH lcx_exception INTO lx_exception.
+
+        delete_initial_online_repo( abap_true ).
+
+        lcx_exception=>raise( iv_text = lx_exception->mv_text ).
+
+    ENDTRY.
 
     mo_branches = lcl_git_transport=>branches( get_url( ) ).
     actualize_head_branch( ).
@@ -295,7 +307,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " rebuild_local_checksums.
 
- METHOD delete_initial_online_repo.
+  METHOD delete_initial_online_repo.
 
     IF me->is_offline( ) = abap_false AND me->get_sha1_local( ) IS INITIAL.
 
