@@ -295,6 +295,20 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " rebuild_local_checksums.
 
+ METHOD delete_initial_online_repo.
+
+    IF me->is_offline( ) = abap_false AND me->get_sha1_local( ) IS INITIAL.
+
+      lcl_app=>repo_srv( )->delete( me ).
+
+      IF iv_commit = abap_true.
+        COMMIT WORK.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.  " delete_initial_online_repo
+
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
 *----------------------------------------------------------------------*

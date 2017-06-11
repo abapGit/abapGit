@@ -147,6 +147,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       initialize
         RAISING lcx_exception,
       actualize_head_branch
+        RAISING lcx_exception,
+      delete_initial_online_repo
+        importing iv_commit type flag
         RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
