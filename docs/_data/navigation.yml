@@ -1,6 +1,3 @@
-- title: Welcome
-  file: index
-
 - title: Guides
   items:
     - file: guide-install
