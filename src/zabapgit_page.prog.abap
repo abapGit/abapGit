@@ -119,7 +119,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ro_html->add( |<td><span class="version">{ lif_defs=>gc_abap_version }</span></td>| ). "#EC NOTEXT
     ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
 
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
