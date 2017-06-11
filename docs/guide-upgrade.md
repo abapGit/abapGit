@@ -1,5 +1,7 @@
 ---
-title: Upgrading abapGit
+title: Upgrading
+category: getting-started
+order: 20
 ---
 
 

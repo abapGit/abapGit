@@ -1,5 +1,7 @@
 ---
 title: Installing online repo
+category: online projects
+order: 10
 ---
 
 * Start ZABAPGIT

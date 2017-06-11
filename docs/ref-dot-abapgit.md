@@ -1,5 +1,7 @@
 ---
 title: .abapgit.xml
+category: reference
+order: 10
 ---
 
 **.abapgit.xml** is a special abapGit file. It contains meta information of the abapGit project.

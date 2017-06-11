@@ -1,5 +1,7 @@
 ---
 title: Keeping code up to date
+category: online projects
+order: 20
 ---
 
 * Start ZABAPGIT, it will automatically compare local and remote code. If code is updated in the remote repository a "pull" link will appear

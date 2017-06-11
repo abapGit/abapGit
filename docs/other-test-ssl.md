@@ -1,5 +1,7 @@
 ---
 title: ZABAPGIT_TEST_SSL
+category: other
+order: 60
 ---
 
 Following report can be used to test SSL connection to github,

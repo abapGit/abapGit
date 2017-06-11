@@ -1,5 +1,7 @@
 ---
 title: Technical Links
+category: other
+order: 50
 ---
 
 Collection of links to various git related documentation,

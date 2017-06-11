@@ -1,5 +1,7 @@
 ---
 title: Migrating from SAPlink
+category: other
+order: 20
 ---
 
 1: Install the slinkee/nuggets into the ABAP system using saplink

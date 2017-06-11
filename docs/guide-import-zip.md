@@ -1,5 +1,7 @@
 ---
 title: Import zip
+category: offline projects
+order: 10
 ---
 
 1: Run report ZABAPGIT via SE38 or SA38

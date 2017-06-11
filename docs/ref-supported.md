@@ -1,5 +1,7 @@
 ---
 title: Supported object types
+category: reference
+order: 20
 ---
 
 

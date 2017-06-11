@@ -1,5 +1,7 @@
 ---
-title: Uinstalling abapGit
+title: Uninstalling
+category: getting-started
+order: 30
 ---
 
 * Delete ABAP reports ZABAPGIT* using SE38 or SE80

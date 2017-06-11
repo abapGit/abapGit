@@ -1,5 +1,7 @@
 ---
 title: Installation
+category: getting-started
+order: 10
 ---
 
 ## ABAP Report ##

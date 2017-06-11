@@ -1,34 +1,50 @@
-  <!-- Navigation -->
-  {% for section in site.data.navigation %}
-    <div class="nav-section">
-      {% if section.file %}
-        <a href="{{ section.file }}.html">
+<!-- Navigation -->
+<h3>Getting Started</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "getting-started" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
       {% endif %}
-      <b>{{ section.title }}</b>
-      {% if section.file %}
-        </a>
+    {% endfor %}
+</ul>
+
+<h3>Online Projects</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "online projects" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
       {% endif %}
-      <ul>
-        {% for item in section.items %}
-          <li>
-            {% if item.file %}
-              <a href="{{ item.file }}.html">
-            {% endif %}
-            {{ item.title }}
-            {% if item.file %}
-              </a>
-            {% endif %}
-            {% if item.subitems %}
-              <ul>
-                {% for subitem in item.subitems %}
-                  <li>
-                    <a href="{{ subitem.file }}.html">{{ subitem.title }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endfor %}
+    {% endfor %}
+</ul>
+
+<h3>Offline Projects</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "offline projects" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+</ul>
+
+<h3>Reference</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "reference" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+</ul>
+
+<h3>Other</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "other" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+</ul>

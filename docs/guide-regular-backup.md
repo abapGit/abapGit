@@ -1,5 +1,7 @@
 ---
 title: Regular backup
+category: other
+order: 10
 ---
 
 Editing Using abapGit and abapGitServer for regular backup

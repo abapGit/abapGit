@@ -1,5 +1,7 @@
 ---
 title: Contributing to a project
+category: online projects
+order: 60
 ---
 
 * Fork the repository

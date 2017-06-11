@@ -1,5 +1,7 @@
 ---
 title: XML Mismatch
+category: other
+order: 70
 ---
 
 ### For end-users

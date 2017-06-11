@@ -1,5 +1,7 @@
 ---
-title: Moving existing package contents into git
+title: Moving package into git
+category: online projects
+order: 50
 ---
 
 You have an existing package in your system that you want to copy to a new git repository,

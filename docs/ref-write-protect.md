@@ -1,5 +1,7 @@
 ---
 title: Write protect
+category: reference
+order: 30
 ---
 
 The write protected repository feature will make sure users cannot overwrite objects in the SAP system with objects from the git repository. So it helps enforcing that data can only go from the SAP system to the Git repository.

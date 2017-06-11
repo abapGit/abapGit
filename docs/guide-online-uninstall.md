@@ -1,5 +1,7 @@
 ---
 title: Uninstall repository
+category: online projects
+order: 30
 ---
 
 * Start ZABAPGIT

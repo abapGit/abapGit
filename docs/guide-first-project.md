@@ -1,5 +1,7 @@
 ---
 title: First project
+category: online projects
+order: 40
 ---
 
 ## Repository Setup ##

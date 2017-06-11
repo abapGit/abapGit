@@ -1,5 +1,7 @@
 ---
 title: Export zip
+category: offline projects
+order: 20
 ---
 
 Assuming the offline project has been created.

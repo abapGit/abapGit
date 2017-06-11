@@ -1,5 +1,7 @@
 ---
 title: Articles and Presentations
+category: other
+order: 30
 ---
 
 ### 2014
