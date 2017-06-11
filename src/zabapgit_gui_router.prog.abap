@@ -122,13 +122,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = lif_defs=>gc_event_state-no_more_act.
 
         " DB actions
-      WHEN lif_defs=>gc_action-db_display OR lif_defs=>gc_action-db_edit. " DB Display/Edit
-        ei_page = get_page_db_by_name( iv_name    = 'DB_DIS'
+      WHEN lif_defs=>gc_action-db_edit.
+        ei_page = get_page_db_by_name( iv_name    = iv_action
                                        iv_getdata = iv_getdata ).
         ev_state = lif_defs=>gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DIS'.
           ev_state = lif_defs=>gc_event_state-new_page_replacing.
         ENDIF.
+      WHEN lif_defs=>gc_action-db_display.
+        ei_page = get_page_db_by_name( iv_name    = 'DB_DIS'
+                                       iv_getdata = iv_getdata ).
+        ev_state = lif_defs=>gc_event_state-new_page.
       WHEN lif_defs=>gc_action-db_delete.                       " DB Delete
         ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
         lcl_services_db=>delete( ls_db ).
