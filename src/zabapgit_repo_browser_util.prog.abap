@@ -62,17 +62,6 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
 
 ENDCLASS. "lcl_repo_content_browser
 
-DEFINE _reduce_state.
-  " &1 - prev, &2 - cur
-  IF &1 = &2 OR &2 IS INITIAL.
-    ASSERT 1 = 1. " No change
-  ELSEIF &1 IS INITIAL.
-    &1 = &2.
-  ELSE.
-    &1 = lif_defs=>gc_state-mixed.
-  ENDIF.
-END-OF-DEFINITION.
-
 CLASS lcl_repo_content_list IMPLEMENTATION.
 
   METHOD constructor.
@@ -146,8 +135,11 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
       ENDAT.
 
       ls_folder-changes = ls_folder-changes + <item>-changes.
-      _reduce_state ls_folder-lstate <item>-lstate.
-      _reduce_state ls_folder-rstate <item>-rstate.
+
+      lcl_state=>reduce( EXPORTING iv_cur = <item>-lstate
+                         CHANGING cv_prev = ls_folder-lstate ).
+      lcl_state=>reduce( EXPORTING iv_cur = <item>-rstate
+                         CHANGING cv_prev = ls_folder-rstate ).
 
       AT END OF path.
         APPEND ls_folder TO ct_repo_items.
@@ -229,8 +221,11 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
-          _reduce_state <ls_repo_item>-lstate ls_file-lstate.
-          _reduce_state <ls_repo_item>-rstate ls_file-rstate.
+
+          lcl_state=>reduce( EXPORTING iv_cur = ls_file-lstate
+                             CHANGING cv_prev = <ls_repo_item>-lstate ).
+          lcl_state=>reduce( EXPORTING iv_cur = <ls_repo_item>-rstate
+                             CHANGING cv_prev = ls_file-rstate ).
         ENDIF.
       ENDIF.
 
