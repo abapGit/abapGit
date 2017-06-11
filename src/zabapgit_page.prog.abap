@@ -47,14 +47,14 @@ CLASS lcl_gui_page DEFINITION ABSTRACT.
   PRIVATE SECTION.
 
     METHODS html_head
-      RETURNING VALUE(ro_html)   TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
     METHODS title
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
 
     METHODS footer
-      RETURNING VALUE(ro_html)    TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
 
     METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
@@ -119,7 +119,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ro_html->add( |<td><span class="version">{ lif_defs=>gc_abap_version }</span></td>| ). "#EC NOTEXT
     ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
 
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
@@ -131,13 +131,13 @@ CLASS lcl_gui_page IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<!DOCTYPE html>' ).                "#EC NOTEXT
-    ro_html->add( '<html>' ).                         "#EC NOTEXT
-    ro_html->add( '<head>' ).                         "#EC NOTEXT
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html>' ).                               "#EC NOTEXT
+    ro_html->add( '<head>' ).                               "#EC NOTEXT
     ro_html->add( |<meta http-equiv="refresh" content="0; url={
-                  ms_control-redirect_url }">| ). "#EC NOTEXT
-    ro_html->add( '</head>').                         "#EC NOTEXT
-    ro_html->add( '</html>').                         "#EC NOTEXT
+                  ms_control-redirect_url }">| ).           "#EC NOTEXT
+    ro_html->add( '</head>' ).                              "#EC NOTEXT
+    ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
 
@@ -180,7 +180,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
       ro_html->add( '</script>' ).
     ENDIF.
 
-    ro_html->add( '</html>').                               "#EC NOTEXT
+    ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.  " lif_gui_page~render.
 

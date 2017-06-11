@@ -81,7 +81,7 @@ CLASS lcl_xml IMPLEMENTATION.
     li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
-    IF li_version->get_value( ) <> gc_xml_version.
+    IF li_version->get_value( ) <> lif_defs=>gc_xml_version.
       display_xml_error( ).
     ENDIF.
 
@@ -96,7 +96,7 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_version TYPE string.
 
 
-    lv_version = |abapGit version: { gc_abap_version }|.
+    lv_version = |abapGit version: { lif_defs=>gc_abap_version }|.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -270,7 +270,7 @@ CLASS lcl_xml_output IMPLEMENTATION.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = c_attr_version value = gc_xml_version ).
+    li_git->set_attribute( name = c_attr_version value = lif_defs=>gc_xml_version ).
     IF NOT is_metadata IS INITIAL.
       li_git->set_attribute( name  = c_attr_serializer
                              value = is_metadata-class ).

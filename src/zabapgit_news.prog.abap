@@ -121,7 +121,7 @@ CLASS lcl_news IMPLEMENTATION.
       CREATE OBJECT ro_instance
         EXPORTING
           iv_rawdata          = <file>-data
-          iv_current_version  = gc_abap_version " TODO refactor
+          iv_current_version  = lif_defs=>gc_abap_version " TODO refactor
           iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
 

@@ -408,7 +408,7 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD get_agent.
 
 * bitbucket require agent prefix = "git/"
-    rv_agent = 'git/abapGit-' && gc_abap_version.
+    rv_agent = 'git/abapGit-' && lif_defs=>gc_abap_version.
 
   ENDMETHOD.
 

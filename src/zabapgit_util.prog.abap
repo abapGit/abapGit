@@ -2,6 +2,35 @@
 *&  Include           ZABAPGIT_UTIL
 *&---------------------------------------------------------------------*
 
+CLASS lcl_state DEFINITION.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS:
+      reduce
+        IMPORTING
+          iv_cur  TYPE char1
+        CHANGING
+          cv_prev TYPE char1.
+
+ENDCLASS.
+
+CLASS lcl_state IMPLEMENTATION.
+
+  METHOD reduce.
+
+    IF cv_prev = iv_cur OR iv_cur IS INITIAL.
+      RETURN. " No change
+    ELSEIF cv_prev IS INITIAL.
+      cv_prev = iv_cur.
+    ELSE.
+      cv_prev = lif_defs=>gc_state-mixed.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_time DEFINITION
 *----------------------------------------------------------------------*
