@@ -93,7 +93,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
         delete_initial_online_repo( abap_true ).
 
-        lcx_exception=>raise( iv_text = lx_exception->mv_text ).
+        RAISE EXCEPTION lx_exception.
 
     ENDTRY.
 
