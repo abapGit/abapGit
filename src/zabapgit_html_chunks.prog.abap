@@ -7,9 +7,9 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS render_error
-        IMPORTING ix_error       TYPE REF TO lcx_exception OPTIONAL
-                  iv_error       TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+        IMPORTING ix_error            TYPE REF TO lcx_exception OPTIONAL
+                  iv_error            TYPE string OPTIONAL
+        RETURNING VALUE(ro_html)      TYPE REF TO lcl_html.
 
     CLASS-METHODS render_repo_top
       IMPORTING io_repo               TYPE REF TO lcl_repo
@@ -17,13 +17,14 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_show_branch        TYPE abap_bool DEFAULT abap_true
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
                 iv_branch             TYPE string OPTIONAL
+                io_news               TYPE REF TO lcl_news OPTIONAL
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
     CLASS-METHODS render_item_state
-        IMPORTING iv1            TYPE char1
-                  iv2            TYPE char1
-        RETURNING VALUE(rv_html) TYPE string.
+        IMPORTING iv1                 TYPE char1
+                  iv2                 TYPE char1
+        RETURNING VALUE(rv_html)      TYPE string.
 
     CLASS-METHODS render_branch_span
       IMPORTING iv_branch             TYPE string
@@ -36,6 +37,12 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
       RAISING   lcx_exception.
 
+    CLASS-METHODS render_news
+      IMPORTING
+                io_news               TYPE REF TO lcl_news
+      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RAISING   lcx_exception.
+
 ENDCLASS. "lcl_gui_chunk_lib
 
 CLASS lcl_gui_chunk_lib IMPLEMENTATION.
@@ -43,7 +50,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_repo_top.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          lo_pback       TYPE REF TO lcl_persistence_background,
+          lo_pback       TYPE REF TO lcl_persist_background,
           lv_hint        TYPE string,
           lv_icon        TYPE string.
 
@@ -62,34 +69,54 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).
 
     ro_html->add( '<td class="repo_name">' ).
+
+    " Repo type and name
     ro_html->add_icon( iv_name = lv_icon  iv_hint = lv_hint ).
     ro_html->add( |<span class="name">{ io_repo->get_name( ) }</span>| ).
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       ro_html->add( |<span class="url">{ lo_repo_online->get_url( ) }</span>| ).
     ENDIF.
+
+    " News
+    IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
+      IF io_news->has_updates( ) = abap_true.
+        lv_icon = 'arrow-up/warning'.
+      ELSE.
+        lv_icon = 'arrow-up/grey80'.
+      ENDIF.
+      ro_html->add_a( iv_act = 'displayNews()'
+                      iv_typ = lif_defs=>gc_action_type-onclick
+                      iv_txt = lcl_html=>icon( iv_name  = lv_icon
+                                               iv_class = 'pad-sides'
+                                               iv_hint  = 'Display changelog' ) ).
+    ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td class="repo_attr right">' ).
 
+    " Fav
     IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
       lv_icon = 'star/blue' ##NO_TEXT.
     ELSE.
       lv_icon = 'star/grey' ##NO_TEXT.
     ENDIF.
-    ro_html->add_a( iv_act = |{ gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+    ro_html->add_a( iv_act = |{ lif_defs=>gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
                     iv_txt = lcl_html=>icon( iv_name  = lv_icon
                                              iv_class = 'pad-sides'
                                              iv_hint  = 'Click to toggle favorite' ) ).
 
+    " BG
     IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
       ro_html->add( '<span class="bg_marker" title="background">BG</span>' ).
     ENDIF.
 
+    " Write protect
     IF io_repo->is_write_protected( ) = abap_true.
       ro_html->add_icon( iv_name = 'lock/darkgrey' iv_hint = 'Locked from pulls' ).
     ENDIF.
 
+    " Branch
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.
@@ -105,11 +132,12 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    " Package
     IF iv_show_package = abap_true.
       ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
       ro_html->add_a( iv_txt = io_repo->get_package( )
-                      iv_act = |{ gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
+                      iv_act = |{ lif_defs=>gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
       ro_html->add( '</span>' ).
     ENDIF.
 
@@ -138,19 +166,19 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ENDCASE.
 
       CASE <state>.
-        WHEN gc_state-unchanged.  "None or unchanged
-          IF iv1 = gc_state-added OR iv2 = gc_state-added.
+        WHEN lif_defs=>gc_state-unchanged.  "None or unchanged
+          IF iv1 = lif_defs=>gc_state-added OR iv2 = lif_defs=>gc_state-added.
             rv_html = rv_html && |<span class="none" title="{ lv_system } Not exists">X</span>|.
           ELSE.
             rv_html = rv_html && |<span class="none" title="{ lv_system } No changes">&nbsp;</span>|.
           ENDIF.
-        WHEN gc_state-modified.   "Changed
+        WHEN lif_defs=>gc_state-modified.   "Changed
           rv_html = rv_html && |<span class="changed" title="{ lv_system } Modified">M</span>|.
-        WHEN gc_state-added.      "Added new
+        WHEN lif_defs=>gc_state-added.      "Added new
           rv_html = rv_html && |<span class="added" title="{ lv_system } Added new">A</span>|.
-        WHEN gc_state-mixed.      "Multiple changes (multifile)
+        WHEN lif_defs=>gc_state-mixed.      "Multiple changes (multifile)
           rv_html = rv_html && |<span class="mixed" title="{ lv_system } Multiple changes">&#x25A0;</span>|.
-        WHEN gc_state-deleted.    "Deleted
+        WHEN lif_defs=>gc_state-deleted.    "Deleted
           rv_html = rv_html && |<span class="deleted" title="{ lv_system } Deleted">D</span>|.
       ENDCASE.
     ENDDO.
@@ -179,7 +207,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |<span class="{ lv_class }">| ).
     ro_html->add_icon( iv_name = 'git-branch/darkgrey' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ro_html->add_a( iv_act = |{ gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ro_html->add_a( iv_act = |{ lif_defs=>gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ro_html->add( lv_text ).
@@ -214,5 +242,65 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
   ENDMETHOD. "render_js_error_stub
+
+  METHOD render_news.
+
+    DATA: lv_text    TYPE string,
+          lv_display TYPE string,
+          lt_log     TYPE lcl_news=>tt_log.
+
+    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
+
+    CREATE OBJECT ro_html.
+
+    IF io_news IS NOT BOUND OR io_news->has_news( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lt_log = io_news->get_log( ).
+
+    IF io_news->has_unseen( ) = abap_false.
+      lv_display = 'display:none'.
+    ENDIF.
+
+    ro_html->add( |<div id="news" class="news" style="{ lv_display }">| ).
+
+    ro_html->add( '<div class="headbar title">Announcement of the latest changes'
+               && '<div class="float-right">'
+               && lcl_html=>a(
+                    iv_txt   = '&#x274c;'
+                    iv_typ   = lif_defs=>gc_action_type-onclick
+                    iv_act   = 'displayNews()'
+                    iv_class = 'close-btn' )
+               && '</div></div>' ).
+
+    IF io_news->has_important( ) = abap_true.
+      ro_html->add( '<div class="headbar important">'
+        && lcl_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
+        && 'Please note changes marked with "!"'
+        && '</div>' ).
+    ENDIF.
+
+    " Generate news
+    ro_html->add( |<div class="newslist">| ).
+    LOOP AT lt_log ASSIGNING <line>.
+      IF <line>-is_header = abap_true.
+        IF <line>-pos_to_cur > 0.
+          lv_text = <line>-text && '<span class="version-marker update">update</span>'.
+        ELSEIF <line>-pos_to_cur = 0.
+          lv_text = <line>-text && '<span class="version-marker">current</span>'.
+        ELSE. " < 0
+          lv_text = <line>-text.
+        ENDIF.
+        ro_html->add( |<h1>{ lv_text }</h1>| ).
+      ELSE.
+        ro_html->add( |<li>{ <line>-text }</li>| ).
+      ENDIF.
+    ENDLOOP.
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD. "render_news
 
 ENDCLASS. "lcl_gui_chunk_lib

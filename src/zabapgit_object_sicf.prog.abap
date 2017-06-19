@@ -168,7 +168,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from get_info_from_serv' ).
+      lcx_exception=>raise( 'SICF - error from get_info_from_serv' ).
     ENDIF.
 
     ASSERT lines( lt_serv_info ) = 1.
@@ -255,7 +255,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority          = 5
         OTHERS                = 6 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from service_from_url' ).
+      lcx_exception=>raise( 'SICF - error from service_from_url' ).
     ENDIF.
 
   ENDMETHOD.                    "find_parent
@@ -316,7 +316,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from insert_node' ).
+      lcx_exception=>raise( |SICF - error from insert_node: { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.                    "insert_sicf
@@ -382,7 +382,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from change_node' ).
+      lcx_exception=>raise( 'SICF - error from change_node' ).
     ENDIF.
 
   ENDMETHOD.                    "change_sicf
@@ -413,7 +413,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority                = 11
         OTHERS                      = 12 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from delete_node' ).
+      lcx_exception=>raise( 'SICF - error from delete_node' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -423,7 +423,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_sicf IMPLEMENTATION

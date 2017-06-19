@@ -20,7 +20,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
                END OF c_actions.
 
     DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
-          mo_repo_content TYPE REF TO lcl_gui_view_repo_content.
+          mo_repo_content TYPE REF TO lcl_gui_view_repo.
 
     METHODS:
       test_changed_by
@@ -65,7 +65,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ei_page      = ei_page
           ev_state     = ev_state ).
 
-      IF ev_state <> gc_event_state-not_handled.
+      IF ev_state <> lif_defs=>gc_event_state-not_handled.
         RETURN.
       ENDIF.
     ENDIF.
@@ -80,10 +80,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           CATCH lcx_exception ##NO_HANDLER.
         ENDTRY.
 
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
-        ev_state = gc_event_state-no_more_act.
+        ev_state = lif_defs=>gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.  "on_event
@@ -92,7 +92,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: ls_tadir TYPE tadir,
           lv_user  TYPE xubname,
-          ls_item  TYPE ty_item.
+          ls_item  TYPE lif_defs=>ty_item.
 
 
     ls_tadir = lcl_popups=>popup_object( ).
@@ -108,10 +108,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     MESSAGE lv_user TYPE 'S'.
 
   ENDMETHOD.
-
-**********************************************************************
-* RENDERING
-**********************************************************************
 
   METHOD render_content.
 
@@ -145,12 +141,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD retrieve_active_repo.
 
-    DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
-          lo_repo     LIKE LINE OF lt_repos,
-          lv_show_old LIKE mv_show.
+    DATA: lv_show_old LIKE mv_show.
 
     TRY.
-        lt_repos = lcl_app=>repo_srv( )->list( ).
+        lcl_app=>repo_srv( )->list( ).
       CATCH lcx_exception.
         RETURN.
     ENDTRY.
@@ -160,7 +154,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
-          lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+          lcl_app=>repo_srv( )->get( mv_show ).
         CATCH lcx_exception.
           CLEAR mv_show.
           lcl_app=>user( )->set_repo_show( mv_show ).
@@ -185,21 +179,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.
 
-    lo_advsub->add( iv_txt = 'Database util'    iv_act = gc_action-go_db ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = gc_action-zip_package ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = gc_action-zip_transport ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Object to files'  iv_act = gc_action-zip_object ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Database util'    iv_act = lif_defs=>gc_action-go_db ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = lif_defs=>gc_action-zip_package ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = lif_defs=>gc_action-zip_transport ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Object to files'  iv_act = lif_defs=>gc_action-zip_object ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Page playground'  iv_act = gc_action-go_playground ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Debug info'       iv_act = gc_action-go_debuginfo ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Settings'         iv_act = gc_action-go_settings ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Page playground'  iv_act = lif_defs=>gc_action-go_playground ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Debug info'       iv_act = lif_defs=>gc_action-go_debuginfo ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Settings'         iv_act = lif_defs=>gc_action-go_settings ) ##NO_TEXT.
 
-    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = gc_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = gc_action-abapgit_wiki ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = lif_defs=>gc_action-go_tutorial ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = lif_defs=>gc_action-abapgit_wiki ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = '+ Clone'            iv_act = gc_action-repo_clone ) ##NO_TEXT.
-    ro_menu->add( iv_txt = '+ Offline'          iv_act = gc_action-repo_newoffline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'            iv_act = gc_action-go_explore ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Clone'            iv_act = lif_defs=>gc_action-repo_clone ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Offline'          iv_act = lif_defs=>gc_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'            iv_act = lif_defs=>gc_action-go_explore ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Advanced'           io_sub = lo_advsub ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Help'               io_sub = lo_helpsub ) ##NO_TEXT.
@@ -208,7 +202,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_toc.
 
-    DATA: lo_pback      TYPE REF TO lcl_persistence_background,
+    DATA: lo_pback      TYPE REF TO lcl_persist_background,
           lv_current    TYPE abap_bool,
           lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
           lv_icon       TYPE string,
@@ -274,7 +268,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  lcl_html=>icon( iv_name = 'star/blue' iv_alt = 'Favs' iv_hint = 'Favorites' )
+                  lcl_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
@@ -282,7 +276,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    lcl_html=>a( iv_txt = 'tutorial' iv_act = gc_action-go_tutorial )
+                    lcl_html=>a( iv_txt = 'tutorial' iv_act = lif_defs=>gc_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
@@ -305,11 +299,20 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo.
 
+    DATA lo_news TYPE REF TO lcl_news.
+
     CREATE OBJECT ro_html.
 
+    lo_news = lcl_news=>create( io_repo ).
+
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( io_repo               = io_repo
-                                                      iv_interactive_branch = abap_true ) ).
+    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
+      io_repo               = io_repo
+      io_news               = lo_news
+      iv_interactive_branch = abap_true ) ).
+
+    ro_html->add( lcl_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 

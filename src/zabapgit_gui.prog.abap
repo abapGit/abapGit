@@ -115,19 +115,19 @@ CLASS lcl_gui IMPLEMENTATION.
         ENDIF.
 
         CASE lv_state.
-          WHEN gc_event_state-re_render.
+          WHEN lif_defs=>gc_event_state-re_render.
             render( ).
-          WHEN gc_event_state-new_page.
+          WHEN lif_defs=>gc_event_state-new_page.
             call_page( li_page ).
-          WHEN gc_event_state-new_page_w_bookmark.
+          WHEN lif_defs=>gc_event_state-new_page_w_bookmark.
             call_page( ii_page = li_page iv_with_bookmark = abap_true ).
-          WHEN gc_event_state-new_page_replacing.
+          WHEN lif_defs=>gc_event_state-new_page_replacing.
             call_page( ii_page = li_page iv_replacing = abap_true ).
-          WHEN gc_event_state-go_back.
+          WHEN lif_defs=>gc_event_state-go_back.
             back( ).
-          WHEN gc_event_state-go_back_to_bookmark.
+          WHEN lif_defs=>gc_event_state-go_back_to_bookmark.
             back( iv_to_bookmark = abap_true ).
-          WHEN gc_event_state-no_more_act.
+          WHEN lif_defs=>gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
             lcx_exception=>raise( |Unknown action: { action }| ).
@@ -186,7 +186,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD call_page.
 
-    DATA: ls_stack  TYPE ty_page_stack.
+    DATA: ls_stack TYPE ty_page_stack.
 
     IF iv_replacing = abap_false AND NOT mi_cur_page IS INITIAL.
       ls_stack-page     = mi_cur_page.
@@ -201,7 +201,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = |{ gc_action-go_main }| ). " doesn't accept strings directly
+    on_event( action = |{ lif_defs=>gc_action-go_main }| ). " doesn't accept strings directly
 
   ENDMETHOD.                "go_home
 
@@ -209,7 +209,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events,
-          lt_assets TYPE tt_web_assets.
+          lt_assets TYPE lif_defs=>tt_web_assets.
 
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
@@ -281,11 +281,11 @@ CLASS lcl_gui IMPLEMENTATION.
 
       CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
         EXPORTING
-          text      = iv_text
+          text   = iv_text
         IMPORTING
-          buffer    = lv_xstr
+          buffer = lv_xstr
         EXCEPTIONS
-          OTHERS    = 1.
+          OTHERS = 1.
       ASSERT sy-subrc = 0.
 
     ELSE. " Raw input

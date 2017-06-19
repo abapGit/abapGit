@@ -50,13 +50,13 @@ CLASS lcx_2fa_auth_failed IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_token_gen_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_gen_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
 ENDCLASS.
 
-CLASS lcx_2fa_token_gen_failed IMPLEMENTATION.
+CLASS lcx_2fa_gen_failed IMPLEMENTATION.
   METHOD get_default_text.
     rv_text = 'Two factor access token generation failed.' ##NO_TEXT.
   ENDMETHOD.
@@ -74,25 +74,25 @@ CLASS lcx_2fa_unsupported IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_token_del_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_del_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
 ENDCLASS.
 
-CLASS lcx_2fa_token_del_failed IMPLEMENTATION.
+CLASS lcx_2fa_del_failed IMPLEMENTATION.
   METHOD get_default_text.
     rv_text = 'Deleting previous access tokens failed.' ##NO_TEXT.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_communication_error DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_comm_error DEFINITION INHERITING FROM lcx_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
 ENDCLASS.
 
-CLASS lcx_2fa_communication_error IMPLEMENTATION.
+CLASS lcx_2fa_comm_error IMPLEMENTATION.
   METHOD get_default_text.
     rv_text = 'Communication error.' ##NO_TEXT.
   ENDMETHOD.
@@ -143,8 +143,8 @@ INTERFACE lif_2fa_authenticator.
                            iv_2fa_token           TYPE string
                  RETURNING VALUE(rv_access_token) TYPE string
                  RAISING   lcx_2fa_auth_failed
-                           lcx_2fa_token_gen_failed
-                           lcx_2fa_communication_error,
+                           lcx_2fa_gen_failed
+                           lcx_2fa_comm_error,
     "! Check if this authenticator instance supports the give repository url
     "! @parameter iv_url | Repository url
     "! @parameter rv_supported | Is supported
@@ -166,7 +166,7 @@ INTERFACE lif_2fa_authenticator.
                               iv_username        TYPE string
                               iv_password        TYPE string
                     RETURNING VALUE(rv_required) TYPE abap_bool
-                    RAISING   lcx_2fa_communication_error,
+                    RAISING   lcx_2fa_comm_error,
     "! Delete all previously created access tokens for abapGit
     "! @parameter iv_url | Repository url
     "! @parameter iv_username | Username
@@ -178,8 +178,8 @@ INTERFACE lif_2fa_authenticator.
                                    iv_username  TYPE string
                                    iv_password  TYPE string
                                    iv_2fa_token TYPE string
-                         RAISING   lcx_2fa_token_del_failed
-                                   lcx_2fa_communication_error
+                         RAISING   lcx_2fa_del_failed
+                                   lcx_2fa_comm_error
                                    lcx_2fa_auth_failed,
     "! Begin an authenticator session that uses internal caching for authorizations
     "! @raising lcx_2fa_illegal_state | Session already started
@@ -190,7 +190,7 @@ INTERFACE lif_2fa_authenticator.
 ENDINTERFACE.
 
 "! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
-CLASS lcl_2fa_authenticator_base DEFINITION
+CLASS lcl_2fa_auth_base DEFINITION
   ABSTRACT
   CREATE PUBLIC.
 
@@ -216,7 +216,7 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       "! <p>
       "! <em>sy-msg...</em> must be set right before calling!
       "! </p>
-      raise_comm_error_from_sy RAISING lcx_2fa_communication_error.
+      raise_comm_error_from_sy RAISING lcx_2fa_comm_error.
     METHODS:
       "! @parameter rv_running | Internal session is currently active
       is_session_running RETURNING VALUE(rv_running) TYPE abap_bool.
@@ -226,7 +226,7 @@ CLASS lcl_2fa_authenticator_base DEFINITION
       mv_session_running TYPE abap_bool.
 ENDCLASS.
 
-CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
+CLASS lcl_2fa_auth_base IMPLEMENTATION.
   METHOD constructor.
     CREATE OBJECT mo_url_regex
       EXPORTING
@@ -251,7 +251,7 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD delete_access_tokens.
-    RAISE EXCEPTION TYPE lcx_2fa_token_del_failed. " Needs to be overwritten in subclasses
+    RAISE EXCEPTION TYPE lcx_2fa_del_failed. " Needs to be overwritten in subclasses
   ENDMETHOD.
 
   METHOD raise_comm_error_from_sy.
@@ -260,7 +260,7 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
             WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
             INTO lv_error_msg.
-    RAISE EXCEPTION TYPE lcx_2fa_communication_error
+    RAISE EXCEPTION TYPE lcx_2fa_comm_error
       EXPORTING
         iv_error_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
   ENDMETHOD.
@@ -286,10 +286,8 @@ CLASS lcl_2fa_authenticator_base IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcl_2fa_github_authenticator DEFINITION
-  INHERITING FROM lcl_2fa_authenticator_base
-  FINAL
-  CREATE PUBLIC.
+CLASS lcl_2fa_github_auth DEFINITION INHERITING FROM lcl_2fa_auth_base
+    FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
     METHODS:
@@ -309,8 +307,6 @@ CLASS lcl_2fa_github_authenticator DEFINITION
       set_new_token_request IMPORTING ii_request   TYPE REF TO if_http_request,
       get_token_from_response IMPORTING ii_response     TYPE REF TO if_http_response
                               RETURNING VALUE(rv_token) TYPE string,
-      parse_repo_from_url IMPORTING iv_url              TYPE string
-                          RETURNING VALUE(rv_repo_name) TYPE string,
       set_list_token_request IMPORTING ii_request TYPE REF TO if_http_request,
       get_tobedel_tokens_from_resp IMPORTING ii_response   TYPE REF TO if_http_response
                                    RETURNING VALUE(rt_ids) TYPE stringtab,
@@ -322,12 +318,12 @@ CLASS lcl_2fa_github_authenticator DEFINITION
                                          iv_2fa_token     TYPE string
                                RETURNING VALUE(ri_client) TYPE REF TO if_http_client
                                RAISING   lcx_2fa_auth_failed
-                                         lcx_2fa_communication_error.
+                                         lcx_2fa_comm_error.
     DATA:
       mi_authenticated_session TYPE REF TO if_http_client.
 ENDCLASS.
 
-CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
+CLASS lcl_2fa_github_auth IMPLEMENTATION.
   METHOD constructor.
     super->constructor( '^https?://(www\.)?github.com.*$' ).
   ENDMETHOD.
@@ -362,14 +358,14 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
         code   = lv_http_code
         reason = lv_http_code_description ).
     IF lv_http_code <> 201.
-      RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed
+      RAISE EXCEPTION TYPE lcx_2fa_gen_failed
         EXPORTING
           iv_error_text = |Token generation failed: { lv_http_code } { lv_http_code_description }|.
     ENDIF.
 
     rv_access_token = get_token_from_response( li_http_client->response ).
     IF rv_access_token IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_2fa_token_gen_failed
+      RAISE EXCEPTION TYPE lcx_2fa_gen_failed
         EXPORTING
           iv_error_text = 'Token generation failed: parser error' ##NO_TEXT.
     ENDIF.
@@ -443,25 +439,6 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
     WHILE lo_matcher->find_next( ) = abap_true.
       APPEND lo_matcher->get_submatch( 1 ) TO rt_ids.
     ENDWHILE.
-  ENDMETHOD.
-
-  METHOD parse_repo_from_url.
-* method not used?
-    ASSERT 0 = 1.
-*    CONSTANTS: lc_search_regex TYPE string VALUE 'https?:\/\/(www\.)?github.com\/(.*)$'.
-*    DATA: lo_regex   TYPE REF TO cl_abap_regex,
-*          lo_matcher TYPE REF TO cl_abap_matcher.
-*
-*    CREATE OBJECT lo_regex
-*      EXPORTING
-*        pattern = lc_search_regex.
-*
-*    lo_matcher = lo_regex->create_matcher( text = iv_url ).
-*    IF lo_matcher->match( ) = abap_true.
-*      rv_repo_name = lo_matcher->get_submatch( 1 ).
-*    ELSE.
-*      rv_repo_name = '???' ##NO_TEXT.
-*    ENDIF.
   ENDMETHOD.
 
   METHOD get_service_id_from_url.
@@ -546,7 +523,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
         code   = lv_http_code
         reason = lv_http_code_description ).
     IF lv_http_code <> 200.
-      RAISE EXCEPTION TYPE lcx_2fa_token_del_failed
+      RAISE EXCEPTION TYPE lcx_2fa_del_failed
         EXPORTING
           iv_error_text = |Could not fetch current 2FA authorizations: | &&
                           |{ lv_http_code } { lv_http_code_description }|.
@@ -571,7 +548,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
           code   = lv_http_code
           reason = lv_http_code_description ).
       IF lv_http_code <> 204.
-        RAISE EXCEPTION TYPE lcx_2fa_token_del_failed
+        RAISE EXCEPTION TYPE lcx_2fa_del_failed
           EXPORTING
             iv_error_text = |Could not delete token '{ <lv_id> }': | &&
                             |{ lv_http_code } { lv_http_code_description }|.
@@ -651,7 +628,7 @@ CLASS lcl_2fa_github_authenticator IMPLEMENTATION.
 ENDCLASS.
 
 "! Static registry class to find <em>LIF_2FA_AUTHENTICATOR</em> instances
-CLASS lcl_2fa_authenticator_registry DEFINITION
+CLASS lcl_2fa_auth_registry DEFINITION
   FINAL
   CREATE PRIVATE.
 
@@ -689,7 +666,6 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
       "! All authenticators managed by the registry
       gt_registered_authenticators TYPE HASHED TABLE OF REF TO lif_2fa_authenticator
                                         WITH UNIQUE KEY table_line READ-ONLY.
-  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS:
       popup_token
@@ -697,9 +673,9 @@ CLASS lcl_2fa_authenticator_registry DEFINITION
         RAISING   lcx_exception.
 ENDCLASS.
 
-CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
+CLASS lcl_2fa_auth_registry IMPLEMENTATION.
   METHOD class_constructor.
-    DEFINE register.
+    DEFINE _register.
       CREATE OBJECT li_authenticator TYPE &1.
       INSERT li_authenticator INTO TABLE gt_registered_authenticators.
     END-OF-DEFINITION.
@@ -709,7 +685,7 @@ CLASS lcl_2fa_authenticator_registry IMPLEMENTATION.
     " If there are new authenticators these need to be added here manually.
     " I do not think there is an equivalent to SEO_INTERFACE_IMPLEM_GET_ALL for local classes
     " without invoking the compiler directly.
-    register: lcl_2fa_github_authenticator.
+    _register: lcl_2fa_github_auth.
   ENDMETHOD.
 
   METHOD get_authenticator_for_url.

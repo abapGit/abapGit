@@ -2,10 +2,6 @@
 *&  Include           ZABAPGIT_HTML
 *&---------------------------------------------------------------------*
 
-DEFINE _add.
-  ro_html->add( &1 ) ##NO_TEXT.
-END-OF-DEFINITION.
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_html DEFINITION
 *----------------------------------------------------------------------*
@@ -28,7 +24,7 @@ CLASS lcl_html DEFINITION FINAL.
       IMPORTING
         iv_txt   TYPE string
         iv_act   TYPE string
-        iv_typ   TYPE char1  DEFAULT gc_action_type-sapevent
+        iv_typ   TYPE char1  DEFAULT lif_defs=>gc_action_type-sapevent
         iv_opt   TYPE clike  OPTIONAL
         iv_class TYPE string OPTIONAL
         iv_id    TYPE string OPTIONAL
@@ -38,31 +34,30 @@ CLASS lcl_html DEFINITION FINAL.
       IMPORTING
         iv_name  TYPE string
         iv_hint  TYPE string OPTIONAL
-        iv_alt   TYPE string OPTIONAL
         iv_class TYPE string OPTIONAL.
 
     CLASS-METHODS a
       IMPORTING
-        iv_txt                TYPE string
-        iv_act                TYPE string
-        iv_typ                TYPE char1  DEFAULT gc_action_type-sapevent
-        iv_opt                TYPE clike  OPTIONAL
-        iv_class              TYPE string OPTIONAL
-        iv_id                 TYPE string OPTIONAL
-        iv_style              TYPE string OPTIONAL
+                iv_txt        TYPE string
+                iv_act        TYPE string
+                iv_typ        TYPE char1  DEFAULT lif_defs=>gc_action_type-sapevent
+                iv_opt        TYPE clike  OPTIONAL
+                iv_class      TYPE string OPTIONAL
+                iv_id         TYPE string OPTIONAL
+                iv_style      TYPE string OPTIONAL
       RETURNING VALUE(rv_str) TYPE string.
 
     CLASS-METHODS icon
       IMPORTING
-        iv_name               TYPE string
-        iv_hint               TYPE string OPTIONAL
-        iv_alt                TYPE string OPTIONAL
-        iv_class              TYPE string OPTIONAL
+                iv_name       TYPE string
+                iv_hint       TYPE string OPTIONAL
+                iv_class      TYPE string OPTIONAL
       RETURNING VALUE(rv_str) TYPE string.
 
   PRIVATE SECTION.
-    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex.
-    DATA       mt_buffer         TYPE string_table.
+    CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
+
+    DATA: mt_buffer TYPE string_table.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -74,15 +69,15 @@ CLASS lcl_html DEFINITION FINAL.
       END OF ty_indent_context,
 
       BEGIN OF ty_study_result,
-        style_open    TYPE abap_bool,
-        style_close   TYPE abap_bool,
-        script_open   TYPE abap_bool,
-        script_close  TYPE abap_bool,
-        tag_close     TYPE abap_bool,
-        curly_close   TYPE abap_bool,
-        openings      TYPE i,
-        closings      TYPE i,
-        singles       TYPE i,
+        style_open   TYPE abap_bool,
+        style_close  TYPE abap_bool,
+        script_open  TYPE abap_bool,
+        script_close TYPE abap_bool,
+        tag_close    TYPE abap_bool,
+        curly_close  TYPE abap_bool,
+        openings     TYPE i,
+        closings     TYPE i,
+        singles      TYPE i,
       END OF ty_study_result.
 
     METHODS indent_line
@@ -91,9 +86,8 @@ CLASS lcl_html DEFINITION FINAL.
         cv_line    TYPE string.
 
     METHODS study_line
-      IMPORTING
-        iv_line                  TYPE string
-        is_context               TYPE ty_indent_context
+      IMPORTING iv_line          TYPE string
+                is_context       TYPE ty_indent_context
       RETURNING VALUE(rs_result) TYPE ty_study_result.
 
 ENDCLASS.                    "lcl_html DEFINITION
@@ -108,8 +102,7 @@ CLASS lcl_html IMPLEMENTATION.
     DATA: lv_type TYPE c,
           lo_html TYPE REF TO lcl_html.
 
-    FIELD-SYMBOLS: <tab> TYPE string_table,
-                   <str> LIKE LINE OF <tab>.
+    FIELD-SYMBOLS: <tab> TYPE string_table.
 
     DESCRIBE FIELD iv_chunk TYPE lv_type. " Describe is faster than RTTI classes
 
@@ -268,7 +261,7 @@ CLASS lcl_html IMPLEMENTATION.
       indent_line( CHANGING cs_context = ls_context cv_line = <line_c> ).
     ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY gc_newline.
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY lif_defs=>gc_newline.
 
   ENDMETHOD.                    "render
 
@@ -294,13 +287,13 @@ CLASS lcl_html IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt CA gc_html_opt-strong.
+    IF iv_opt CA lif_defs=>gc_html_opt-strong.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA gc_html_opt-cancel.
+    IF iv_opt CA lif_defs=>gc_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA gc_html_opt-crossout.
+    IF iv_opt CA lif_defs=>gc_html_opt-crossout.
       lv_class = lv_class && ' crossout grey' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.
@@ -309,16 +302,16 @@ CLASS lcl_html IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = gc_action_type-dummy.
+    IF iv_act IS NOT INITIAL OR iv_typ = lif_defs=>gc_action_type-dummy.
       CASE iv_typ.
-        WHEN gc_action_type-url.
+        WHEN lif_defs=>gc_action_type-url.
           lv_href  = | href="{ iv_act }"|.
-        WHEN gc_action_type-sapevent.
+        WHEN lif_defs=>gc_action_type-sapevent.
           lv_href  = | href="sapevent:{ iv_act }"|.
-        WHEN gc_action_type-onclick.
+        WHEN lif_defs=>gc_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
-        WHEN gc_action_type-dummy.
+        WHEN lif_defs=>gc_action_type-dummy.
           lv_href  = ' href="#"'.
       ENDCASE.
     ENDIF.
@@ -339,7 +332,6 @@ CLASS lcl_html IMPLEMENTATION.
 
     add( icon( iv_name  = iv_name
                iv_class = iv_class
-               iv_alt   = iv_alt
                iv_hint  = iv_hint ) ).
 
   ENDMETHOD.                    "add_icon
@@ -383,7 +375,7 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
         IMPORTING
           iv_txt TYPE string
           io_sub TYPE REF TO lcl_html_toolbar OPTIONAL
-          iv_typ TYPE c         DEFAULT gc_action_type-sapevent
+          iv_typ TYPE c         DEFAULT lif_defs=>gc_action_type-sapevent
           iv_act TYPE string    OPTIONAL
           iv_ico TYPE string    OPTIONAL
           iv_cur TYPE abap_bool OPTIONAL
@@ -395,18 +387,18 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
         RETURNING VALUE(rv_count) TYPE i,
       render
         IMPORTING
-          iv_right                  TYPE abap_bool OPTIONAL
-          iv_sort                   TYPE abap_bool OPTIONAL
+          iv_right       TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html,
+          VALUE(ro_html) TYPE REF TO lcl_html,
       render_as_droplist
         IMPORTING
-          iv_label        TYPE string
-          iv_right        TYPE abap_bool OPTIONAL
-          iv_sort         TYPE abap_bool OPTIONAL
-          iv_corner       TYPE abap_bool OPTIONAL
+          iv_label       TYPE string
+          iv_right       TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
+          iv_corner      TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)  TYPE REF TO lcl_html.
+          VALUE(ro_html) TYPE REF TO lcl_html.
 
   PRIVATE SECTION.
     TYPES:
@@ -431,9 +423,9 @@ CLASS lcl_html_toolbar DEFINITION FINAL.
     METHODS:
       render_items
         IMPORTING
-          iv_sort                   TYPE abap_bool OPTIONAL
+          iv_sort        TYPE abap_bool OPTIONAL
         RETURNING
-          VALUE(ro_html)            TYPE REF TO lcl_html.
+          VALUE(ro_html) TYPE REF TO lcl_html.
 
 ENDCLASS. "lcl_html_toolbar DEFINITION
 
@@ -453,9 +445,9 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
-    ASSERT iv_typ = gc_action_type-separator  " sep doesn't have action
-      OR iv_typ = gc_action_type-onclick      " click may have no action (assigned in JS)
-      OR iv_typ = gc_action_type-dummy        " dummy may have no action
+    ASSERT iv_typ = lif_defs=>gc_action_type-separator  " sep doesn't have action
+      OR iv_typ = lif_defs=>gc_action_type-onclick      " click may have no action (assigned in JS)
+      OR iv_typ = lif_defs=>gc_action_type-dummy        " dummy may have no action
       OR iv_act IS INITIAL AND io_sub IS NOT INITIAL
       OR iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
@@ -510,7 +502,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     ro_html->add( |<div class="{ lv_class }">| ).
     ro_html->add( '<ul><li>' ).
     ro_html->add_a( iv_txt = iv_label
-                    iv_typ = gc_action_type-dummy
+                    iv_typ = lif_defs=>gc_action_type-dummy
                     iv_act = '' ).
     ro_html->add( '<div class="minizone"></div>' ).
     ro_html->add( render_items( iv_sort = iv_sort ) ).
@@ -553,7 +545,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
     LOOP AT mt_items ASSIGNING <item>.
       CLEAR: lv_class, lv_icon.
 
-      IF <item>-typ = gc_action_type-separator.
+      IF <item>-typ = lif_defs=>gc_action_type-separator.
         ro_html->add( |<li class="separator">{ <item>-txt }</li>| ).
         CONTINUE.
       ENDIF.
@@ -587,7 +579,7 @@ CLASS lcl_html_toolbar IMPLEMENTATION.
                         iv_opt   = <item>-opt ).
       ELSE.
         ro_html->add_a( iv_txt   = lv_icon && <item>-txt
-                        iv_typ   = gc_action_type-dummy
+                        iv_typ   = lif_defs=>gc_action_type-dummy
                         iv_act   = ''
                         iv_id    = <item>-id
                         iv_opt   = <item>-opt ).

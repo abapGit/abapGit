@@ -10,7 +10,7 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
-        RETURNING VALUE(rs_files) TYPE ty_stage_files
+        RETURNING VALUE(rs_files) TYPE lif_defs=>ty_stage_files
         RAISING   lcx_exception,
       count
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
@@ -21,9 +21,9 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       remove_ignored
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
-        CHANGING  cs_files TYPE ty_stage_files,
+        CHANGING  cs_files TYPE lif_defs=>ty_stage_files,
       remove_identical
-        CHANGING cs_files TYPE ty_stage_files.
+        CHANGING cs_files TYPE lif_defs=>ty_stage_files.
 
 ENDCLASS.
 
@@ -41,7 +41,7 @@ CLASS lcl_stage_logic IMPLEMENTATION.
 
   METHOD count.
 
-    DATA: ls_files TYPE ty_stage_files.
+    DATA: ls_files TYPE lif_defs=>ty_stage_files.
 
     ls_files = get( io_repo ).
 
@@ -63,7 +63,7 @@ CLASS lcl_stage_logic IMPLEMENTATION.
           iv_path     = <ls_remote>-path
           iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE cs_files-remote INDEX lv_index.
-      ELSEIF <ls_remote>-path = gc_root_dir AND <ls_remote>-filename = gc_dot_abapgit.
+      ELSEIF <ls_remote>-path = lif_defs=>gc_root_dir AND <ls_remote>-filename = lif_defs=>gc_dot_abapgit.
         " Remove .abapgit from remotes - it cannot be removed or ignored
         DELETE cs_files-remote INDEX lv_index.
       ENDIF.

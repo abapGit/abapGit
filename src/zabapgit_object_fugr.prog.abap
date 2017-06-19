@@ -86,10 +86,6 @@ ENDCLASS.                    "lcl_object_fugr DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_fugr IMPLEMENTATION.
 
-* function group SEUF
-* function group SIFP
-* function group SUNI
-
   METHOD lif_object~has_changed_since.
 
     DATA: lt_functab  TYPE ty_rs38l_incl_tt,
@@ -156,19 +152,19 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         WHERE progname = <lv_include>
-        AND   r3state = 'A'.
+        AND   r3state = 'A'.                              "#EC CI_SUBRC
     ENDLOOP.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
@@ -293,7 +289,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           ls_progdir   TYPE ty_progdir,
           lt_includes  TYPE rso_t_objnm,
           lt_tpool     TYPE textpool_table,
-          lt_tpool_ext TYPE ty_tpool_tt,
+          lt_tpool_ext TYPE lif_defs=>ty_tpool_tt,
           lt_source    TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
@@ -395,8 +391,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
-          lt_includes TYPE rso_t_objnm,
+    DATA: lt_includes TYPE rso_t_objnm,
           lv_areat    TYPE tlibt-areat.
 
 
@@ -405,7 +400,6 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       WHERE spras = mv_language
       AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
 
-    lt_functab = functions( ).
     lt_includes = includes( ).
 
     io_xml->add( iv_name = 'AREAT'
@@ -417,8 +411,14 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD includes.
 
-    DATA: lv_program TYPE program,
-          lv_cnam    TYPE reposrc-cnam,
+    TYPES: BEGIN OF ty_reposrc,
+             progname TYPE reposrc-progname,
+             cnam     TYPE reposrc-cnam,
+           END OF ty_reposrc.
+
+    DATA: lt_reposrc TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc LIKE LINE OF lt_reposrc,
+          lv_program TYPE program,
           lv_tabix   LIKE sy-tabix,
           lt_functab TYPE ty_rs38l_incl_tt.
 
@@ -452,26 +452,25 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
     <lv_include> = |L{ ms_item-obj_name }T00|.
 
+    IF lines( rt_includes ) > 0.
+      SELECT progname cnam FROM reposrc
+        INTO TABLE lt_reposrc
+        FOR ALL ENTRIES IN rt_includes
+        WHERE progname = rt_includes-table_line
+        AND r3state = 'A'.
+      SORT lt_reposrc BY progname ASCENDING.
+    ENDIF.
+
     LOOP AT rt_includes ASSIGNING <lv_include>.
       lv_tabix = sy-tabix.
 
-* skip SAP standard includes
-      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
-        WHERE progname = <lv_include>
-        AND r3state = 'A'
-        AND cnam = 'SAP'.
-      IF sy-subrc = 0.
+* skip SAP standard includes and also make sure the include exists
+      READ TABLE lt_reposrc INTO ls_reposrc
+        WITH KEY progname = <lv_include> BINARY SEARCH.
+      IF sy-subrc <> 0 OR ls_reposrc-cnam = 'SAP'.
         DELETE rt_includes INDEX lv_tabix.
-        CONTINUE.
       ENDIF.
 
-* also make sure the include exists
-      SELECT SINGLE cnam FROM reposrc INTO lv_cnam
-        WHERE progname = <lv_include>
-        AND r3state = 'A'.
-      IF sy-subrc <> 0.
-        DELETE rt_includes INDEX lv_tabix.
-      ENDIF.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
@@ -544,7 +543,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       lt_source     TYPE TABLE OF rssource,
       lt_functab    TYPE ty_rs38l_incl_tt,
       lt_new_source TYPE rsfb_source,
-      ls_function        LIKE LINE OF rt_functions.
+      ls_function   LIKE LINE OF rt_functions.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
 
@@ -658,6 +657,10 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
+* function group SEUF
+* function group SIFP
+* function group SUNI
+
     DATA: lt_functions    TYPE ty_function_tt,
           ls_progdir      TYPE ty_progdir,
           lv_program_name TYPE programm,
@@ -765,7 +768,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_fugr IMPLEMENTATION

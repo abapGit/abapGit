@@ -14,7 +14,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     ALIASES mo_files FOR lif_object~mo_files.
     METHODS constructor
       IMPORTING
-        is_item     TYPE ty_item
+        is_item     TYPE lif_defs=>ty_item
         iv_language TYPE spras.
 
   PROTECTED SECTION.
@@ -26,7 +26,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     METHODS deserialize_docu
       IMPORTING io_xml TYPE REF TO lcl_xml_input
       RAISING   lcx_exception.
-    DATA mo_object_oriented_object_fct TYPE REF TO lif_object_oriented_object_fnc.
+    DATA mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
 
@@ -202,9 +202,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass    TYPE vseoclass,
           lt_tpool        TYPE textpool_table,
-          lt_descriptions TYPE ty_seocompotx_tt,
+          lt_descriptions TYPE lif_defs=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
-          lt_sotr         TYPE ty_sotr_tt,
+          lt_sotr         TYPE lif_defs=>ty_sotr_tt,
           lt_lines        TYPE tlinetab.
 
 
@@ -272,7 +272,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_sotr.
     "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE ty_sotr_tt.
+    DATA: lt_sotr    TYPE lif_defs=>ty_sotr_tt.
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
                   CHANGING cg_data = lt_sotr ).
@@ -309,7 +309,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD deserialize_tpool.
 
     DATA: lv_clsname   TYPE seoclsname,
-          lt_tpool_ext TYPE ty_tpool_tt,
+          lt_tpool_ext TYPE lif_defs=>ty_tpool_tt,
           lt_tpool     TYPE textpool_table.
 
 
@@ -338,7 +338,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_local_implementations TYPE seop_source_string,
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
-          lt_descriptions          TYPE ty_seocompotx_tt,
+          lt_descriptions          TYPE lif_defs=>ty_seocompotx_tt,
           ls_class_key             TYPE seoclskey.
 
 
@@ -389,36 +389,36 @@ CLASS lcl_object_clas IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
   METHOD constructor.
     super->constructor(
       is_item     = is_item
       iv_language = iv_language ).
-    mo_object_oriented_object_fct = lcl_object_oriented_factory=>make( iv_object_type = ms_item-obj_type ).
+    mo_object_oriented_object_fct = lcl_oo_factory=>make( iv_object_type = ms_item-obj_type ).
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
 
+CLASS lcl_oo_class DEFINITION INHERITING FROM lcl_oo_base.
 
-CLASS lcl_object_oriented_class DEFINITION
-  INHERITING FROM lcl_object_oriented_base.
   PUBLIC SECTION.
     METHODS:
-      lif_object_oriented_object_fnc~create REDEFINITION,
-      lif_object_oriented_object_fnc~generate_locals REDEFINITION,
-      lif_object_oriented_object_fnc~insert_text_pool REDEFINITION,
-      lif_object_oriented_object_fnc~create_sotr REDEFINITION,
-      lif_object_oriented_object_fnc~get_includes REDEFINITION,
-      lif_object_oriented_object_fnc~get_class_properties REDEFINITION,
-      lif_object_oriented_object_fnc~read_text_pool REDEFINITION,
-      lif_object_oriented_object_fnc~read_sotr REDEFINITION,
-      lif_object_oriented_object_fnc~delete REDEFINITION.
+      lif_oo_object_fnc~create REDEFINITION,
+      lif_oo_object_fnc~generate_locals REDEFINITION,
+      lif_oo_object_fnc~insert_text_pool REDEFINITION,
+      lif_oo_object_fnc~create_sotr REDEFINITION,
+      lif_oo_object_fnc~get_includes REDEFINITION,
+      lif_oo_object_fnc~get_class_properties REDEFINITION,
+      lif_oo_object_fnc~read_text_pool REDEFINITION,
+      lif_oo_object_fnc~read_sotr REDEFINITION,
+      lif_oo_object_fnc~delete REDEFINITION.
 
 ENDCLASS.
-CLASS lcl_object_oriented_class IMPLEMENTATION.
-  METHOD lif_object_oriented_object_fnc~create.
+
+CLASS lcl_oo_class IMPLEMENTATION.
+  METHOD lif_oo_object_fnc~create.
     CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
       EXPORTING
         devclass        = iv_package
@@ -437,7 +437,8 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
       lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~generate_locals.
+
+  METHOD lif_oo_object_fnc~generate_locals.
     CALL FUNCTION 'SEO_CLASS_GENERATE_LOCALS'
       EXPORTING
         clskey                 = is_key
@@ -456,7 +457,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
       lcx_exception=>raise( 'error from generate_locals' ).
     ENDIF.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~insert_text_pool.
+  METHOD lif_oo_object_fnc~insert_text_pool.
     DATA: lv_cp        TYPE program.
 
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
@@ -473,8 +474,8 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
                                  iv_name = lv_cp ).
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_sotr.
-    DATA: lt_sotr    TYPE ty_sotr_tt,
+  METHOD lif_oo_object_fnc~create_sotr.
+    DATA: lt_sotr    TYPE lif_defs=>ty_sotr_tt,
           lt_objects TYPE sotr_objects,
           ls_paket   TYPE sotr_pack,
           lv_object  LIKE LINE OF lt_objects.
@@ -533,7 +534,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_includes.
+  METHOD lif_oo_object_fnc~get_includes.
 * note: includes returned might not exist
 * method cl_oo_classname_service=>GET_ALL_CLASS_INCLUDES does not exist in 702
 
@@ -566,7 +567,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_class_properties.
+  METHOD lif_oo_object_fnc~get_class_properties.
     CALL FUNCTION 'SEO_CLIF_GET'
       EXPORTING
         cifkey       = is_class_key
@@ -585,7 +586,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_text_pool.
+  METHOD lif_oo_object_fnc~read_text_pool.
     DATA:
      lv_cp TYPE program.
 
@@ -593,7 +594,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_sotr.
+  METHOD lif_oo_object_fnc~read_sotr.
     DATA: lv_concept    TYPE sotr_head-concept,
           lt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY,
           ls_header     TYPE sotr_head,
@@ -611,7 +612,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
       AND exposure = '2'
       AND attdecltyp = '2'
       AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
     LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
 
@@ -652,7 +653,7 @@ CLASS lcl_object_oriented_class IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~delete.
+  METHOD lif_oo_object_fnc~delete.
     CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
       EXPORTING
         clskey       = is_deletion_key

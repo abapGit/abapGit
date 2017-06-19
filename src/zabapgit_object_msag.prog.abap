@@ -15,18 +15,18 @@ CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_t100_texts,
-           sprsl TYPE t100-sprsl,
-           msgnr TYPE t100-msgnr,
-           text  TYPE t100-text,
+             sprsl TYPE t100-sprsl,
+             msgnr TYPE t100-msgnr,
+             text  TYPE t100-text,
            END OF ty_t100_texts,
-           tt_t100_texts  TYPE STANDARD TABLE OF ty_t100_texts.
+           tt_t100_texts TYPE STANDARD TABLE OF ty_t100_texts.
 
     METHODS:
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
         RAISING   lcx_exception,
       deserialize_texts
-        IMPORTING io_xml        TYPE REF TO lcl_xml_input
+        IMPORTING io_xml TYPE REF TO lcl_xml_input
         RAISING   lcx_exception.
 
 
@@ -47,7 +47,8 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     SELECT SINGLE lastuser FROM t100a INTO rv_user
       WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
+    IF sy-subrc <> 0 OR
+       rv_user EQ ''.
       rv_user = c_user_unknown.
     ENDIF.
 
@@ -167,12 +168,14 @@ CLASS lcl_object_msag IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_before INTO ls_t100u.
-      DELETE FROM t100 WHERE arbgb = ls_t100u-arbgb AND msgnr = ls_t100u-msgnr.
-      DELETE FROM t100u WHERE arbgb = ls_t100u-arbgb AND msgnr = ls_t100u-msgnr.
+      DELETE FROM t100 WHERE arbgb = ls_t100u-arbgb
+        AND msgnr = ls_t100u-msgnr.                       "#EC CI_SUBRC
+
+      DELETE FROM t100u WHERE arbgb = ls_t100u-arbgb
+        AND msgnr = ls_t100u-msgnr.                       "#EC CI_SUBRC
     ENDLOOP.
 
     deserialize_texts( io_xml = io_xml ).
-
 
   ENDMETHOD.                    "deserialize
 
@@ -195,7 +198,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     SELECT * FROM t100 INTO TABLE lt_source
       WHERE sprsl = mv_language
       AND arbgb = lv_msg_id
-      ORDER BY PRIMARY KEY.      "#EC CI_SUBRC "#EC CI_GENBUFF
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
     CLEAR: ls_inf-lastuser,
            ls_inf-ldate,
@@ -214,7 +217,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     DATA: lv_msg_id     TYPE rglif-message_id,
           lt_t100_texts TYPE tt_t100_texts,
-          lt_t100t      TYPE table of t100t,
+          lt_t100t      TYPE TABLE OF t100t,
           lt_i18n_langs TYPE TABLE OF langu.
 
     lv_msg_id = ms_item-obj_name.
@@ -224,21 +227,21 @@ CLASS lcl_object_msag IMPLEMENTATION.
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND   sprsl <> mv_language. "#EC CI_BYPASS "#EC CI_GENBUFF.
+      AND   sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF.
 
     SORT lt_i18n_langs ASCENDING.
 
-    IF LINES( lt_i18n_langs ) > 0.
+    IF lines( lt_i18n_langs ) > 0.
 
       SELECT * FROM t100t INTO CORRESPONDING FIELDS OF TABLE lt_t100t
         WHERE sprsl <> mv_language
-        AND arbgb = lv_msg_id.  "#EC CI_GENBUFF
+        AND arbgb = lv_msg_id.                          "#EC CI_GENBUFF
 
       SELECT * FROM t100 INTO CORRESPONDING FIELDS OF TABLE lt_t100_texts
         FOR ALL ENTRIES IN lt_i18n_langs
         WHERE sprsl = lt_i18n_langs-table_line
         AND arbgb = lv_msg_id
-        ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
+        ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
 
       SORT lt_t100t BY sprsl ASCENDING.
       SORT lt_t100_texts BY sprsl msgnr ASCENDING.
@@ -260,7 +263,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     DATA: lv_msg_id     TYPE rglif-message_id,
           ls_t100       TYPE t100,
-          lt_t100t      TYPE table of t100t,
+          lt_t100t      TYPE TABLE OF t100t,
           lt_t100_texts TYPE tt_t100_texts,
           lt_t100u      TYPE TABLE OF t100u.
 
@@ -270,7 +273,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     lv_msg_id = ms_item-obj_name.
 
     SELECT * FROM t100u INTO TABLE lt_t100u
-      WHERE arbgb = lv_msg_id ORDER BY PRIMARY KEY. "#EC CI_GENBUFF
+      WHERE arbgb = lv_msg_id ORDER BY PRIMARY KEY.     "#EC CI_GENBUFF
 
     io_xml->read( EXPORTING iv_name = 'T100_TEXTS'
                   CHANGING  cg_data = lt_t100_texts ).
@@ -278,7 +281,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'T100T'
                   CHANGING  cg_data = lt_t100t ).
 
-    MODIFY t100t FROM TABLE lt_t100t.                    "#EC CI_SUBRC
+    MODIFY t100t FROM TABLE lt_t100t.                     "#EC CI_SUBRC
 
     LOOP AT lt_t100_texts ASSIGNING <ls_t100_text>.
       "check if message exists
@@ -288,7 +291,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
       MOVE-CORRESPONDING <ls_t100_text> TO ls_t100.
       ls_t100-arbgb = lv_msg_id.
-      MODIFY t100 FROM ls_t100.                         "#EC CI_SUBRC
+      MODIFY t100 FROM ls_t100.                           "#EC CI_SUBRC
       IF sy-subrc <> 0.
         lcx_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
@@ -297,7 +300,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_msag IMPLEMENTATION

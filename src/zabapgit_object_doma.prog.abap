@@ -53,8 +53,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
   METHOD lif_object~has_changed_since.
 
     DATA: lv_date TYPE dats,
-          lv_time TYPE tims,
-          lv_ts   TYPE timestamp.
+          lv_time TYPE tims.
 
     SELECT SINGLE as4date as4time FROM dd01l
       INTO (lv_date, lv_time)
@@ -62,7 +61,10 @@ CLASS lcl_object_doma IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
 
   ENDMETHOD.  "lif_object~has_changed_since
 
@@ -239,11 +241,11 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages
+    " Collect additional languages, skip master lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
-      AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
+      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.
@@ -360,7 +362,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
   ENDMETHOD.  "deserialize_texts
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_doma IMPLEMENTATION

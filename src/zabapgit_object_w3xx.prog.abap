@@ -24,7 +24,7 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE ty_item
+        is_item     TYPE lif_defs=>ty_item
         iv_language TYPE spras.
 
   PROTECTED SECTION.
@@ -36,7 +36,7 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
     DATA ms_key TYPE wwwdatatab.
 
     METHODS get_ext
-      IMPORTING it_params TYPE ty_wwwparams_tt
+      IMPORTING it_params     TYPE ty_wwwparams_tt
       RETURNING VALUE(rv_ext) TYPE string
       RAISING   lcx_exception.
 
@@ -46,12 +46,12 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
       RAISING   lcx_exception.
 
     METHODS strip_params
-      CHANGING  ct_params TYPE ty_wwwparams_tt
-      RAISING   lcx_exception.
+      CHANGING ct_params TYPE ty_wwwparams_tt
+      RAISING  lcx_exception.
 
     METHODS find_param
-      IMPORTING it_params TYPE ty_wwwparams_tt
-                iv_name   TYPE w3_name
+      IMPORTING it_params       TYPE ty_wwwparams_tt
+                iv_name         TYPE w3_name
       RETURNING VALUE(rv_value) TYPE string
       RAISING   lcx_exception.
 
@@ -75,7 +75,17 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    SELECT SINGLE chname INTO rv_user
+      FROM wwwdata
+      WHERE relid = ms_key-relid
+      AND   objid = ms_key-objid
+      AND   srtf2 = 0.
+
+    IF sy-subrc IS NOT INITIAL OR rv_user IS INITIAL.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~jump.
@@ -424,7 +434,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   ENDMETHOD.  " find_param.
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
@@ -437,6 +447,9 @@ ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
 CLASS lcl_object_w3mi DEFINITION INHERITING FROM lcl_object_w3super FINAL.
 ENDCLASS.                    "lcl_object_W3MI DEFINITION
 
+CLASS lcl_object_w3mi IMPLEMENTATION.
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_W3HT DEFINITION
 *----------------------------------------------------------------------*
@@ -444,3 +457,6 @@ ENDCLASS.                    "lcl_object_W3MI DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
 ENDCLASS.                    "lcl_object_W3HT DEFINITION
+
+CLASS lcl_object_w3ht IMPLEMENTATION.
+ENDCLASS.

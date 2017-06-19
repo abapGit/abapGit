@@ -123,7 +123,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD purge.
 
-    DATA: lt_tadir    TYPE ty_tadir_tt,
+    DATA: lt_tadir    TYPE lif_defs=>ty_tadir_tt,
           lv_answer   TYPE c LENGTH 1,
           lo_repo     TYPE REF TO lcl_repo,
           lv_package  TYPE devclass,
@@ -311,21 +311,20 @@ CLASS lcl_services_repo IMPLEMENTATION.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation       = 'SHOW'
-        in_new_window   = 'X'
+        in_new_window   = abap_true
         object_name     = iv_package
         object_type     = 'DEVC'
-        with_objectlist = 'X'.
+        with_objectlist = abap_true.
 
   ENDMETHOD.  " open_se80.
-
 
   METHOD transport_to_branch.
     DATA:
       lo_repository          TYPE REF TO lcl_repo_online,
-      lo_transport_to_branch TYPE REF TO lcl_transport_to_branch,
+      lo_transport_to_branch TYPE REF TO lcl_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
-      lt_transport_objects               TYPE scts_tadir,
-      ls_transport_to_branch TYPE ty_transport_to_branch.
+      lt_transport_objects   TYPE scts_tadir,
+      ls_transport_to_branch TYPE lif_defs=>ty_transport_to_branch.
 
     lo_repository ?= lcl_app=>repo_srv( )->get( iv_repository_key ).
 
@@ -334,9 +333,9 @@ CLASS lcl_services_repo IMPLEMENTATION.
     IF lt_transport_objects IS INITIAL.
       lcx_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
+
     ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(
-      it_transport_headers = lt_transport_headers
-      it_transport_objects = lt_transport_objects ).
+      lt_transport_headers ).
 
     CREATE OBJECT lo_transport_to_branch.
     lo_transport_to_branch->create(

@@ -2,7 +2,7 @@
 *&  Include  zabapgit_object_tabl_valid
 *&---------------------------------------------------------------------*
 
-CLASS lcl_object_tabl_validation DEFINITION FINAL.
+CLASS lcl_object_tabl_valid DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS validate
       IMPORTING
@@ -14,20 +14,20 @@ CLASS lcl_object_tabl_validation DEFINITION FINAL.
         lcx_exception.
 ENDCLASS.
 
-CLASS lcl_tabl_validation_dialog DEFINITION FINAL.
+CLASS lcl_tabl_valid_dialog DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING
           iv_message TYPE string.
-    INTERFACES: lif_object_comparison_result.
+    INTERFACES: lif_comparison_result.
+
   PRIVATE SECTION.
     DATA mv_message TYPE string.
     DATA mv_halt TYPE string.
-
 ENDCLASS.
 
-CLASS lcl_object_tabl_validation IMPLEMENTATION.
+CLASS lcl_object_tabl_valid IMPLEMENTATION.
 
   METHOD validate.
     DATA: lt_previous_table_fields TYPE TABLE OF dd03p,
@@ -60,15 +60,16 @@ CLASS lcl_object_tabl_validation IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_tabl_validation_dialog IMPLEMENTATION.
+CLASS lcl_tabl_valid_dialog IMPLEMENTATION.
   METHOD constructor.
     mv_message = iv_message.
   ENDMETHOD.
-  METHOD lif_object_comparison_result~is_result_complete_halt.
+
+  METHOD lif_comparison_result~is_result_complete_halt.
     rv_response = mv_halt.
   ENDMETHOD.
 
-  METHOD lif_object_comparison_result~show_confirmation_dialog.
+  METHOD lif_comparison_result~show_confirmation_dialog.
     DATA lv_answer TYPE string.
     TRY.
         lv_answer = lcl_popups=>popup_to_confirm(
@@ -102,7 +103,8 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
       create_xmls
         RAISING
           lcx_exception.
-    DATA: mo_table_validator            TYPE REF TO lcl_object_tabl_validation,
+
+    DATA: mo_table_validator            TYPE REF TO lcl_object_tabl_valid,
           mo_previous_version_out_xml   TYPE REF TO lcl_xml_output,
           mo_previous_version_input_xml TYPE REF TO lcl_xml_input,
           mo_current_version_out_xml    TYPE REF TO lcl_xml_output,

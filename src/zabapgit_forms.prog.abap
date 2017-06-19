@@ -22,12 +22,23 @@ FORM run.
 
   TRY.
       lcl_migrations=>run( ).
-      lcl_app=>run( ).
+      PERFORM open_gui.
     CATCH lcx_exception INTO lx_exception.
       MESSAGE lx_exception->mv_text TYPE 'E'.
   ENDTRY.
 
 ENDFORM.                    "run
+
+FORM open_gui RAISING lcx_exception.
+
+  IF sy-batch = abap_true.
+    lcl_background=>run( ).
+  ELSE.
+    lcl_app=>gui( )->go_home( ).
+    CALL SELECTION-SCREEN 1001. " trigger screen
+  ENDIF.
+
+ENDFORM.
 
 *&---------------------------------------------------------------------*
 *&      Form  branch_popup
@@ -43,7 +54,7 @@ ENDFORM.                    "run
 *      -->##CALLED       text
 *      -->##NEEDED       text
 *----------------------------------------------------------------------*
-FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
+FORM branch_popup TABLES   tt_fields TYPE lif_defs=>ty_sval_tt
                   USING    pv_code TYPE clike
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c
@@ -105,7 +116,7 @@ FORM branch_popup TABLES   tt_fields TYPE ty_sval_tt
 
 ENDFORM.                    "branch_popup
 
-FORM package_popup TABLES   tt_fields TYPE ty_sval_tt
+FORM package_popup TABLES   tt_fields TYPE lif_defs=>ty_sval_tt
                    USING    pv_code TYPE clike
                    CHANGING cs_error TYPE svale
                             cv_show_popup TYPE c

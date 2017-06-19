@@ -13,39 +13,19 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE ty_item
+        is_item     TYPE lif_defs=>ty_item
         iv_language TYPE spras.
 
 
   PRIVATE SECTION.
-
-    TYPES: BEGIN OF ty_id_map,
-             old TYPE ttree-id,
-             new TYPE ttree-id,
-           END OF ty_id_map.
-    TYPES  tt_id_map TYPE STANDARD TABLE OF ty_id_map.
-    TYPES  ts_id_map TYPE SORTED TABLE OF ty_id_map WITH UNIQUE KEY old.
-
-    DATA: mv_tree_id TYPE ttree-id,
-          mt_map     TYPE ts_id_map. " SORTED !
+    DATA: mv_tree_id TYPE ttree-id.
 
     METHODS jump_se43
       RAISING lcx_exception.
 
-    METHODS strip_stamps
+    METHODS clear_fields
       CHANGING cs_head  TYPE ttree
                ct_nodes TYPE hier_iface_t.
-
-    METHODS regenerate_ids
-      CHANGING ct_nodes TYPE hier_iface_t
-               ct_refs  TYPE hier_ref_t
-               ct_texts TYPE hier_texts_t
-      RAISING  lcx_exception.
-
-    METHODS replace_id
-      IMPORTING iv_id            TYPE clike
-      RETURNING VALUE(rv_new_id) TYPE ttree-id
-      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_shi3 DEFINITION
 
@@ -59,7 +39,17 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
   ENDMETHOD.  "lif_object~has_changed_since
 
   METHOD lif_object~changed_by.
-    rv_user = c_user_unknown. " todo
+
+    DATA: ls_head TYPE ttree.
+
+    CALL FUNCTION 'STREE_STRUCTURE_READ'
+      EXPORTING
+        structure_id     = mv_tree_id
+      IMPORTING
+        structure_header = ls_head.
+
+    rv_user = ls_head-luser.
+
   ENDMETHOD.
 
   METHOD constructor.
@@ -142,7 +132,6 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         no_authority       = 2
         canceled           = 3
         OTHERS             = 4.
-
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'error from BMENU_DELETE_TREE, SHI3' ).
     ENDIF.
@@ -180,7 +169,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         list_of_references = lt_refs
         list_of_texts      = lt_texts.
 
-    strip_stamps( CHANGING cs_head  = ls_head
+    clear_fields( CHANGING cs_head  = ls_head
                            ct_nodes = lt_nodes ).
 
     io_xml->add( iv_name = 'TREE_HEAD'
@@ -196,81 +185,22 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD strip_stamps.
+  METHOD clear_fields.
 
     FIELD-SYMBOLS <ls_node> LIKE LINE OF ct_nodes.
 
     CLEAR: cs_head-luser, cs_head-ldate, cs_head-ltime.
     CLEAR: cs_head-fuser, cs_head-fdate, cs_head-ftime.
+    CLEAR: cs_head-frelease, cs_head-lrelease.
     CLEAR: cs_head-responsibl.
 
     LOOP AT ct_nodes ASSIGNING <ls_node>.
       CLEAR: <ls_node>-luser, <ls_node>-ldate, <ls_node>-ltime.
       CLEAR: <ls_node>-fuser, <ls_node>-fdate, <ls_node>-ftime.
+      CLEAR: <ls_node>-frelease, <ls_node>-lrelease.
     ENDLOOP.
 
   ENDMETHOD.                    "strip_stamps
-
-  METHOD regenerate_ids.
-
-    DATA: ls_uid TYPE sys_uid,
-          lt_map TYPE tt_id_map.
-
-    FIELD-SYMBOLS: <ls_node> LIKE LINE OF ct_nodes,
-                   <ls_ref>  LIKE LINE OF ct_refs,
-                   <ls_text> LIKE LINE OF ct_texts,
-                   <ls_map>  LIKE LINE OF mt_map.
-
-    "Build map
-    LOOP AT ct_nodes ASSIGNING <ls_node>.
-      APPEND INITIAL LINE TO lt_map ASSIGNING <ls_map>.
-      IF <ls_node>-parent_id IS INITIAL.
-        <ls_map>-old = <ls_node>-node_id.
-        <ls_map>-new = <ls_node>-node_id. "Root node
-      ELSE.
-        CALL FUNCTION 'STREE_GET_UNIQUE_ID'
-          IMPORTING
-            unique_id = ls_uid.
-
-        <ls_map>-old = <ls_node>-node_id.
-        <ls_map>-new = ls_uid-id.
-      ENDIF.
-      <ls_node>-node_id = <ls_map>-new. "Replace id
-    ENDLOOP.
-
-    mt_map = lt_map. "Sort
-
-    LOOP AT ct_nodes ASSIGNING <ls_node>.
-      <ls_node>-parent_id  = replace_id( <ls_node>-parent_id ).
-      <ls_node>-brother_id = replace_id( <ls_node>-brother_id ).
-    ENDLOOP.
-
-    LOOP AT ct_refs ASSIGNING <ls_ref>.
-      <ls_ref>-node_id = replace_id( <ls_ref>-node_id ).
-    ENDLOOP.
-
-    LOOP AT ct_texts ASSIGNING <ls_text>.
-      <ls_text>-node_id = replace_id( <ls_text>-node_id ).
-    ENDLOOP.
-
-  ENDMETHOD.                    "regenerate_ids
-
-  METHOD replace_id.
-
-    DATA ls_map LIKE LINE OF mt_map.
-
-    IF iv_id IS INITIAL.
-      RETURN. "No substitution for empty values
-    ENDIF.
-
-    READ TABLE mt_map WITH TABLE KEY old = iv_id INTO ls_map.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Cannot replace id, SHI3' ).
-    ENDIF.
-
-    rv_new_id = ls_map-new.
-
-  ENDMETHOD.                    "replace_id
 
   METHOD lif_object~deserialize.
 
@@ -291,10 +221,6 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
                   CHANGING  cg_data = lt_refs ).
     io_xml->read( EXPORTING iv_name = 'TREE_TEXTS'
                   CHANGING  cg_data = lt_texts ).
-
-    regenerate_ids( CHANGING ct_nodes = lt_nodes
-                             ct_refs  = lt_refs
-                             ct_texts = lt_texts ).
 
     IF lif_object~exists( ) = abap_true.
       lif_object~delete( ).
@@ -325,7 +251,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_shi3 IMPLEMENTATION

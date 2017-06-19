@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_REPO_BROWSER_UTIL
 *&---------------------------------------------------------------------*
 
-CLASS lcl_repo_content_browser DEFINITION FINAL.
+CLASS lcl_repo_content_list DEFINITION FINAL.
 
   PUBLIC SECTION.
 
@@ -23,7 +23,7 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
              changes  TYPE i,
              lstate   TYPE char1,
              rstate   TYPE char1,
-             files    TYPE tt_repo_files,
+             files    TYPE lif_defs=>tt_repo_files,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
@@ -62,18 +62,7 @@ CLASS lcl_repo_content_browser DEFINITION FINAL.
 
 ENDCLASS. "lcl_repo_content_browser
 
-DEFINE _reduce_state.
-  " &1 - prev, &2 - cur
-  IF &1 = &2 OR &2 IS INITIAL.
-    ASSERT 1 = 1. " No change
-  ELSEIF &1 IS INITIAL.
-    &1 = &2.
-  ELSE.
-    &1 = gc_state-mixed.
-  ENDIF.
-END-OF-DEFINITION.
-
-CLASS lcl_repo_content_browser IMPLEMENTATION.
+CLASS lcl_repo_content_list IMPLEMENTATION.
 
   METHOD constructor.
     mo_repo = io_repo.
@@ -146,8 +135,11 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       ENDAT.
 
       ls_folder-changes = ls_folder-changes + <item>-changes.
-      _reduce_state ls_folder-lstate <item>-lstate.
-      _reduce_state ls_folder-rstate <item>-rstate.
+
+      lcl_state=>reduce( EXPORTING iv_cur = <item>-lstate
+                         CHANGING cv_prev = ls_folder-lstate ).
+      lcl_state=>reduce( EXPORTING iv_cur = <item>-rstate
+                         CHANGING cv_prev = ls_folder-rstate ).
 
       AT END OF path.
         APPEND ls_folder TO ct_repo_items.
@@ -175,7 +167,7 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
 
   METHOD build_repo_items_offline.
 
-    DATA: lt_tadir TYPE ty_tadir_tt.
+    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_repo_item> LIKE LINE OF rt_repo_items,
                    <ls_tadir>     LIKE LINE OF lt_tadir.
@@ -198,8 +190,8 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
   METHOD build_repo_items_online.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          ls_file        TYPE ty_repo_file,
-          lt_status      TYPE ty_results_tt.
+          ls_file        TYPE lif_defs=>ty_repo_file,
+          lt_status      TYPE lif_defs=>ty_results_tt.
 
     FIELD-SYMBOLS: <status>       LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
@@ -219,18 +211,21 @@ CLASS lcl_repo_content_browser IMPLEMENTATION.
       ENDAT.
 
       IF <status>-filename IS NOT INITIAL.
-        ls_file-path        = <status>-path.
-        ls_file-filename    = <status>-filename.
-        ls_file-is_changed  = boolc( <status>-match = abap_false ). " TODO refactor
-        ls_file-rstate      = <status>-rstate.
-        ls_file-lstate      = <status>-lstate.
+        ls_file-path       = <status>-path.
+        ls_file-filename   = <status>-filename.
+        ls_file-is_changed = boolc( <status>-match = abap_false ). " TODO refactor
+        ls_file-rstate     = <status>-rstate.
+        ls_file-lstate     = <status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
 
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
-          _reduce_state <ls_repo_item>-lstate ls_file-lstate.
-          _reduce_state <ls_repo_item>-rstate ls_file-rstate.
+
+          lcl_state=>reduce( EXPORTING iv_cur = ls_file-lstate
+                             CHANGING cv_prev = <ls_repo_item>-lstate ).
+          lcl_state=>reduce( EXPORTING iv_cur = ls_file-rstate
+                             CHANGING cv_prev = <ls_repo_item>-rstate ).
         ENDIF.
       ENDIF.
 

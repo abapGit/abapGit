@@ -12,15 +12,15 @@ CLASS lcl_background DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS:
       build_comment
-        IMPORTING is_files          TYPE ty_stage_files
+        IMPORTING is_files          TYPE lif_defs=>ty_stage_files
         RETURNING VALUE(rv_comment) TYPE string,
       push
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                  is_settings TYPE lcl_persistence_background=>ty_background
+                  is_settings TYPE lcl_persist_background=>ty_background
         RAISING   lcx_exception,
       push_fixed
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                  is_settings TYPE lcl_persistence_background=>ty_background
+                  is_settings TYPE lcl_persist_background=>ty_background
         RAISING   lcx_exception,
       push_auto
         IMPORTING io_repo TYPE REF TO lcl_repo_online
@@ -38,10 +38,10 @@ CLASS lcl_background IMPLEMENTATION.
     ENDIF.
 
     CASE is_settings-amethod.
-      WHEN lcl_persistence_background=>c_amethod-fixed.
+      WHEN lcl_persist_background=>c_amethod-fixed.
         push_fixed( io_repo     = io_repo
                     is_settings = is_settings ).
-      WHEN lcl_persistence_background=>c_amethod-auto.
+      WHEN lcl_persist_background=>c_amethod-auto.
         push_auto( io_repo ).
       WHEN OTHERS.
         lcx_exception=>raise( 'unknown push method' ).
@@ -51,8 +51,8 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_fixed.
 
-    DATA: ls_comment TYPE ty_comment,
-          ls_files   TYPE ty_stage_files,
+    DATA: ls_comment TYPE lif_defs=>ty_comment,
+          ls_files   TYPE lif_defs=>ty_stage_files,
           lo_stage   TYPE REF TO lcl_stage.
 
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
@@ -105,7 +105,7 @@ CLASS lcl_background IMPLEMENTATION.
     ELSE.
       rv_comment = 'BG: Multiple objects'.
       LOOP AT lt_objects INTO lv_str.
-        CONCATENATE rv_comment gc_newline lv_str INTO rv_comment.
+        CONCATENATE rv_comment lif_defs=>gc_newline lv_str INTO rv_comment.
       ENDLOOP.
     ENDIF.
 
@@ -113,8 +113,8 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_auto.
 
-    DATA: ls_comment    TYPE ty_comment,
-          ls_files      TYPE ty_stage_files,
+    DATA: ls_comment    TYPE lif_defs=>ty_comment,
+          ls_files      TYPE lif_defs=>ty_stage_files,
           ls_user_files LIKE ls_files,
           lo_stage      TYPE REF TO lcl_stage.
 
@@ -171,9 +171,9 @@ CLASS lcl_background IMPLEMENTATION.
 
     CONSTANTS: c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 
-    DATA: lo_per       TYPE REF TO lcl_persistence_background,
+    DATA: lo_per       TYPE REF TO lcl_persist_background,
           lo_repo      TYPE REF TO lcl_repo_online,
-          lt_list      TYPE lcl_persistence_background=>tt_background,
+          lt_list      TYPE lcl_persist_background=>tt_background,
           lv_repo_name TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
@@ -209,9 +209,9 @@ CLASS lcl_background IMPLEMENTATION.
         iv_password = <ls_list>-password ).
 
       CASE <ls_list>-method.
-        WHEN lcl_persistence_background=>c_method-pull.
+        WHEN lcl_persist_background=>c_method-pull.
           lo_repo->deserialize( ).
-        WHEN lcl_persistence_background=>c_method-push.
+        WHEN lcl_persist_background=>c_method-push.
           push( io_repo     = lo_repo
                 is_settings = <ls_list> ).
         WHEN OTHERS.

@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_BACKGROUND
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_background_run DEFINITION FINAL
+CLASS lcl_gui_page_bkg_run DEFINITION FINAL
     INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
@@ -19,7 +19,7 @@ CLASS lcl_gui_page_background_run DEFINITION FINAL
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background_run IMPLEMENTATION.
+CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -72,16 +72,16 @@ CLASS lcl_gui_page_background_run IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background DEFINITION FINAL
+CLASS lcl_gui_page_bkg DEFINITION FINAL
     INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
-      constructor IMPORTING  iv_key TYPE lcl_persistence_repo=>ty_repo-key,
+      constructor IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS render_content        REDEFINITION.
+    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA:
@@ -96,7 +96,7 @@ CLASS lcl_gui_page_background DEFINITION FINAL
 
 ENDCLASS.
 
-CLASS lcl_gui_page_background IMPLEMENTATION.
+CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -111,19 +111,19 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
   METHOD build_menu.
     CREATE OBJECT ro_menu.
     ro_menu->add( iv_txt = 'Run background logic'
-                  iv_act = gc_action-go_background_run ) ##NO_TEXT.
+                  iv_act = lif_defs=>gc_action-go_background_run ) ##NO_TEXT.
   ENDMETHOD. "build_menu
 
   METHOD lif_gui_page~on_event.
 
-    DATA ls_bg_task     TYPE lcl_persistence_background=>ty_background.
+    DATA ls_bg_task TYPE lcl_persist_background=>ty_background.
 
     CASE iv_action.
-      WHEN gc_action-bg_update.
+      WHEN lif_defs=>gc_action-bg_update.
         ls_bg_task     = lcl_html_action_utils=>decode_bg_update( iv_getdata ).
         ls_bg_task-key = mv_key.
-        lcl_services_background=>update_task( ls_bg_task ).
-        ev_state = gc_event_state-re_render.
+        lcl_services_bkg=>update_task( ls_bg_task ).
+        ev_state = lif_defs=>gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -131,8 +131,8 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
   METHOD render_data.
 
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
-          lo_per     TYPE REF TO lcl_persistence_background,
-          lt_per     TYPE lcl_persistence_background=>tt_background,
+          lo_per     TYPE REF TO lcl_persist_background,
+          lt_per     TYPE lcl_persist_background=>tt_background,
           ls_per     LIKE LINE OF lt_per,
           lv_nothing TYPE string,
           lv_push    TYPE string,
@@ -163,16 +163,16 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ENDIF.
 
     CASE ls_per-method.
-      WHEN lcl_persistence_background=>c_method-push.
+      WHEN lcl_persist_background=>c_method-push.
         lv_push = ' checked' ##NO_TEXT.
-      WHEN lcl_persistence_background=>c_method-pull.
+      WHEN lcl_persist_background=>c_method-pull.
         lv_pull = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_nothing = ' checked' ##NO_TEXT.
     ENDCASE.
 
     CASE ls_per-amethod.
-      WHEN lcl_persistence_background=>c_amethod-auto.
+      WHEN lcl_persist_background=>c_amethod-auto.
         lv_aauto = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_afixed = ' checked' ##NO_TEXT.
@@ -181,18 +181,18 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>Method</u><br>' )  ##NO_TEXT.
-    ro_html->add( |<form method="get" action="sapevent:{ gc_action-bg_update }">| ).
+    ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
+    ro_html->add( |<form method="get" action="sapevent:{ lif_defs=>gc_action-bg_update }">| ).
     ro_html->add( '<input type="radio" name="method" value="nothing"' &&
-      lv_nothing && '>Do nothing<br>' )  ##NO_TEXT.
+      lv_nothing && '>Do nothing<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="push"' &&
-      lv_push && '>Automatic push<br>' )  ##NO_TEXT.
+      lv_push && '>Automatic push<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="pull"' &&
-      lv_pull && '>Automatic pull<br>' )  ##NO_TEXT.
+      lv_pull && '>Automatic pull<br>' ) ##NO_TEXT.
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>HTTP Authentication, optional</u><br>' )  ##NO_TEXT.
-    ro_html->add( '(password will be saved in clear text)<br>' )  ##NO_TEXT.
+    ro_html->add( '<u>HTTP Authentication, optional</u><br>' ) ##NO_TEXT.
+    ro_html->add( '(password will be saved in clear text)<br>' ) ##NO_TEXT.
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td>Username:</td>' ).
@@ -210,9 +210,9 @@ CLASS lcl_gui_page_background IMPLEMENTATION.
 
     ro_html->add( '<u>Commit author</u><br>' ).
     ro_html->add( '<input type="radio" name="amethod" value="fixed"' &&
-      lv_afixed && '>Fixed<br>' )  ##NO_TEXT.
+      lv_afixed && '>Fixed<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="amethod" value="auto"' &&
-      lv_aauto && '>Automatic<br>' )  ##NO_TEXT.
+      lv_aauto && '>Automatic<br>' ) ##NO_TEXT.
     ro_html->add( '<br>' ).
 
     ro_html->add( '<table>' ).

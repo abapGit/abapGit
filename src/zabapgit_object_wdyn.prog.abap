@@ -42,6 +42,7 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
         RAISING   lcx_exception,
       recover_definition
         IMPORTING is_definition TYPE wdy_md_component_meta_data
+                  iv_package    TYPE devclass
         RAISING   lcx_exception,
       recover_view
         IMPORTING is_view TYPE wdy_md_view_meta_data
@@ -51,8 +52,9 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   lcx_exception,
       delta_definition
-        IMPORTING is_definition   TYPE wdy_md_component_meta_data
-        RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
+        IMPORTING is_definition     TYPE wdy_md_component_meta_data
+                  VALUE(iv_package) TYPE devclass
+        RETURNING VALUE(rs_delta)   TYPE svrs2_xversionable_object
         RAISING   lcx_exception,
       delta_view
         IMPORTING is_view         TYPE wdy_md_view_meta_data
@@ -123,7 +125,9 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
             EXPORTING
               name      = ls_key-component_name
             IMPORTING
-              component = li_component ).
+              component = li_component
+            CHANGING
+              devclass  = iv_package ).
           li_component->save_to_database( ).
           li_component->unlock( ).
         CATCH cx_wdy_md_exception.
@@ -333,7 +337,10 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           ls_delta  TYPE svrs2_xversionable_object.
 
 
-    ls_delta = delta_definition( is_definition ).
+    ls_delta = delta_definition(
+      is_definition = is_definition
+      iv_package    = iv_package ).
+
     ls_key-component_name = is_definition-definition-component_name.
 
     cl_wdy_md_component=>recover_version(
@@ -745,11 +752,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name  = 'SOURCES'
                   CHANGING cg_data = mt_sources ).
 
-    tadir_insert( iv_package ).
+*    tadir_insert( iv_package ).
 
     ls_component-comp_metadata-definition-author = sy-uname.
     ls_component-comp_metadata-definition-createdon = sy-datum.
-    recover_definition( ls_component-comp_metadata ).
+    recover_definition( is_definition = ls_component-comp_metadata
+                        iv_package    = iv_package ).
 
     LOOP AT ls_component-ctlr_metadata ASSIGNING <ls_controller>.
       <ls_controller>-definition-author = sy-uname.
@@ -801,7 +809,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.                    "lif_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION

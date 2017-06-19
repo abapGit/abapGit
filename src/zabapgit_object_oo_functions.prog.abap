@@ -1,6 +1,6 @@
 "This interface contains SAP object oriented functions that can't be put under test
 "(i.e. creating a Class in the system)
-INTERFACE lif_object_oriented_object_fnc.
+INTERFACE lif_oo_object_fnc.
   TYPES: BEGIN OF ty_includes,
            programm TYPE programm,
          END OF ty_includes,
@@ -28,7 +28,7 @@ INTERFACE lif_object_oriented_object_fnc.
     deserialize_source
       IMPORTING
         is_key    TYPE seoclskey
-        it_source TYPE ty_string_tt
+        it_source TYPE lif_defs=>ty_string_tt
       RAISING
         lcx_exception
         cx_sy_dyn_call_error,
@@ -42,16 +42,16 @@ INTERFACE lif_object_oriented_object_fnc.
     update_descriptions
       IMPORTING
         is_key          TYPE seoclskey
-        it_descriptions TYPE ty_seocompotx_tt,
+        it_descriptions TYPE lif_defs=>ty_seocompotx_tt,
     add_to_activation_list
       IMPORTING
-        is_item TYPE ty_item
+        is_item TYPE lif_defs=>ty_item
       RAISING
         lcx_exception,
     create_sotr
       IMPORTING
         iv_package TYPE devclass
-        it_sotr    TYPE ty_sotr_tt
+        it_sotr    TYPE lif_defs=>ty_sotr_tt
       RAISING
         lcx_exception,
     create_documentation
@@ -76,7 +76,7 @@ INTERFACE lif_object_oriented_object_fnc.
         is_class_key     TYPE seoclskey
         iv_type          TYPE seop_include_ext_app OPTIONAL
       RETURNING
-        VALUE(rt_source) TYPE ty_string_tt
+        VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING
         lcx_exception
         cx_sy_dyn_call_error,
@@ -113,14 +113,14 @@ INTERFACE lif_object_oriented_object_fnc.
       IMPORTING
         iv_object_name TYPE sobj_name
       RETURNING
-        VALUE(rt_sotr) TYPE ty_sotr_tt
+        VALUE(rt_sotr) TYPE lif_defs=>ty_sotr_tt
       RAISING
         lcx_exception,
     read_descriptions
       IMPORTING
         iv_obejct_name         TYPE seoclsname
       RETURNING
-        VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
+        VALUE(rt_descriptions) TYPE lif_defs=>ty_seocompotx_tt,
     delete
       IMPORTING
         is_deletion_key TYPE seoclskey
@@ -128,16 +128,15 @@ INTERFACE lif_object_oriented_object_fnc.
         lcx_exception.
 ENDINTERFACE.
 
-CLASS lcl_oo_object_serializer DEFINITION.
+CLASS lcl_oo_serializer DEFINITION.
   PUBLIC SECTION.
 
     METHODS:
       serialize_abap_clif_source
         IMPORTING
           is_class_key     TYPE seoclskey
-          iv_type          TYPE seop_include_ext_app OPTIONAL
         RETURNING
-          VALUE(rt_source) TYPE ty_string_tt
+          VALUE(rt_source) TYPE lif_defs=>ty_string_tt
         RAISING
           lcx_exception
           cx_sy_dyn_call_error,
@@ -146,37 +145,37 @@ CLASS lcl_oo_object_serializer DEFINITION.
           VALUE(rv_return) TYPE abap_bool.
     METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
     METHODS serialize_testclasses
       IMPORTING
                 is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS serialize_abap_new
       IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE ty_string_tt
+      RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception
                 cx_sy_dyn_call_error.
     METHODS remove_signatures
-      CHANGING ct_source TYPE ty_string_tt.
+      CHANGING ct_source TYPE lif_defs=>ty_string_tt.
 
     METHODS read_include
       IMPORTING is_clskey        TYPE seoclskey
@@ -185,10 +184,10 @@ CLASS lcl_oo_object_serializer DEFINITION.
 
 
     METHODS reduce
-      CHANGING ct_source TYPE ty_string_tt.
+      CHANGING ct_source TYPE lif_defs=>ty_string_tt.
 ENDCLASS.
 
-CLASS lcl_oo_object_serializer IMPLEMENTATION.
+CLASS lcl_oo_serializer IMPLEMENTATION.
   METHOD serialize_abap_clif_source.
     TRY.
         rt_source = serialize_abap_new( is_class_key ).
@@ -196,6 +195,7 @@ CLASS lcl_oo_object_serializer IMPLEMENTATION.
         rt_source = serialize_abap_old( is_class_key ).
     ENDTRY.
   ENDMETHOD.
+
   METHOD serialize_abap_old.
 * for old ABAP AS versions
     DATA: lo_source TYPE REF TO cl_oo_source.
@@ -384,30 +384,32 @@ CLASS lcl_oo_object_serializer IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_object_oriented_base DEFINITION ABSTRACT.
+CLASS lcl_oo_base DEFINITION ABSTRACT.
   PUBLIC SECTION.
-    INTERFACES: lif_object_oriented_object_fnc.
+    INTERFACES: lif_oo_object_fnc.
+
   PRIVATE SECTION.
     DATA mv_skip_test_classes TYPE abap_bool.
+
     METHODS deserialize_abap_source_old
       IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
+                it_source TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception.
 
     METHODS deserialize_abap_source_new
       IMPORTING is_clskey TYPE seoclskey
-                it_source TYPE ty_string_tt
+                it_source TYPE lif_defs=>ty_string_tt
       RAISING   lcx_exception
                 cx_sy_dyn_call_error.
 ENDCLASS.
 
-CLASS lcl_object_oriented_base IMPLEMENTATION.
+CLASS lcl_oo_base IMPLEMENTATION.
 
-  METHOD lif_object_oriented_object_fnc~create.
+  METHOD lif_oo_object_fnc~create.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~deserialize_source.
+  METHOD lif_oo_object_fnc~deserialize_source.
     TRY.
         deserialize_abap_source_new(
           is_clskey = is_key
@@ -419,7 +421,7 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~generate_locals.
+  METHOD lif_oo_object_fnc~generate_locals.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
@@ -480,24 +482,25 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
 
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~add_to_activation_list.
+
+  METHOD lif_oo_object_fnc~add_to_activation_list.
     lcl_objects_activation=>add_item( is_item ).
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~update_descriptions.
-    DELETE FROM seocompotx WHERE clsname = is_key-clsname.
-    INSERT seocompotx FROM TABLE it_descriptions.
+  METHOD lif_oo_object_fnc~update_descriptions.
+    DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
+    INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~insert_text_pool.
+  METHOD lif_oo_object_fnc~insert_text_pool.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_sotr.
+  METHOD lif_oo_object_fnc~create_sotr.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_documentation.
+  METHOD lif_oo_object_fnc~create_documentation.
     CALL FUNCTION 'DOCU_UPD'
       EXPORTING
         id       = 'CL'
@@ -513,11 +516,11 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_includes.
+  METHOD lif_oo_object_fnc~get_includes.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~exists.
+  METHOD lif_oo_object_fnc~exists.
     CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
       EXPORTING
         clskey        = iv_object_name
@@ -531,8 +534,8 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     rv_exists = boolc( sy-subrc <> 2 ).
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~serialize_abap.
-    DATA lo_oo_serializer TYPE REF TO lcl_oo_object_serializer.
+  METHOD lif_oo_object_fnc~serialize_abap.
+    DATA lo_oo_serializer TYPE REF TO lcl_oo_serializer.
     CREATE OBJECT lo_oo_serializer.
     CASE iv_type.
       WHEN seop_ext_class_locals_def.
@@ -548,30 +551,31 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
         rt_source = lo_oo_serializer->serialize_abap_clif_source( is_class_key ).
     ENDCASE.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
+
+  METHOD lif_oo_object_fnc~get_skip_test_classes.
     rv_skip = mv_skip_test_classes.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~get_class_properties.
+
+  METHOD lif_oo_object_fnc~get_class_properties.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_interface_properties.
+  METHOD lif_oo_object_fnc~get_interface_properties.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_text_pool.
+  METHOD lif_oo_object_fnc~read_text_pool.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_sotr.
+  METHOD lif_oo_object_fnc~read_sotr.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_documentation.
-    DATA:
-      lv_state  TYPE dokstate,
-      lv_object TYPE dokhl-object,
-      lt_lines  TYPE tlinetab.
+  METHOD lif_oo_object_fnc~read_documentation.
+    DATA: lv_state  TYPE dokstate,
+          lv_object TYPE dokhl-object,
+          lt_lines  TYPE tlinetab.
 
     lv_object = iv_class_name.
 
@@ -597,33 +601,34 @@ CLASS lcl_object_oriented_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_descriptions.
+  METHOD lif_oo_object_fnc~read_descriptions.
     SELECT * FROM seocompotx INTO TABLE rt_descriptions
-      WHERE clsname = iv_obejct_name.
+      WHERE clsname = iv_obejct_name.                     "#EC CI_SUBRC
     DELETE rt_descriptions WHERE descript IS INITIAL.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~delete.
+  METHOD lif_oo_object_fnc~delete.
     ASSERT 0 = 1. "Subclass responsibility
   ENDMETHOD.
 
 ENDCLASS.
 
 "Backdoor injection for test purposes
-CLASS lth_oo_factory_injector DEFINITION DEFERRED.
+CLASS ltcl_oo_factory_injector DEFINITION DEFERRED.
 
-CLASS lcl_object_oriented_factory DEFINITION
-  FRIENDS lth_oo_factory_injector.
+CLASS lcl_oo_factory DEFINITION
+  FRIENDS ltcl_oo_factory_injector.
+
   PUBLIC SECTION.
     CLASS-METHODS:
       make
         IMPORTING
           iv_object_type                   TYPE tadir-object
         RETURNING
-          VALUE(ro_object_oriented_object) TYPE REF TO lif_object_oriented_object_fnc.
+          VALUE(ro_object_oriented_object) TYPE REF TO lif_oo_object_fnc.
   PRIVATE SECTION.
     CLASS-DATA:
-        go_object_oriented_object TYPE REF TO lif_object_oriented_object_fnc.
+        go_object_oriented_object TYPE REF TO lif_oo_object_fnc.
 ENDCLASS.
 "lcl_object_oriented_factory implementation is in include ZABAPGIT_OBJECT_OO_FACTORY.
 "Reason: In this way, clas and intf specific OO functions implementations can be done

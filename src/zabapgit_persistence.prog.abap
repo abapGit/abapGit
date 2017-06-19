@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PERSISTENCE
 *&---------------------------------------------------------------------*
 
-CLASS lcl_persistence_migrate DEFINITION FINAL.
+CLASS lcl_persist_migrate DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: run RAISING lcx_exception.
@@ -92,8 +92,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_local_checksum,
-             item  TYPE ty_item,
-             files TYPE ty_file_signatures_tt,
+             item  TYPE lif_defs=>ty_item,
+             files TYPE lif_defs=>ty_file_signatures_tt,
            END OF ty_local_checksum.
 
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
@@ -101,7 +101,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: BEGIN OF ty_repo_xml,
              url                TYPE string,
              branch_name        TYPE string,
-             sha1               TYPE ty_sha1,
+             sha1               TYPE lif_defs=>ty_sha1,
              package            TYPE devclass,
              offline            TYPE sap_bool,
              local_checksums    TYPE ty_local_checksum_tt,
@@ -113,7 +113,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_repo,
              key TYPE lcl_persistence_db=>ty_value.
-            INCLUDE TYPE ty_repo_xml.
+        INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
     TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
@@ -162,7 +162,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS add
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
-                iv_branch      TYPE ty_sha1 OPTIONAL
+                iv_branch      TYPE lif_defs=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
@@ -204,7 +204,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_background DEFINITION FINAL.
+CLASS lcl_persist_background DEFINITION FINAL.
 
   PUBLIC SECTION.
 
@@ -230,7 +230,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_background,
              key TYPE lcl_persistence_db=>ty_value.
-            INCLUDE TYPE ty_xml.
+        INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
 
@@ -270,7 +270,7 @@ CLASS lcl_persistence_background DEFINITION FINAL.
 
 ENDCLASS.     "lcl_persistence_background DEFINITION
 
-CLASS lcl_persistence_background IMPLEMENTATION.
+CLASS lcl_persist_background IMPLEMENTATION.
 
   METHOD constructor.
     mo_db = lcl_app=>db( ).
@@ -424,6 +424,16 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_email) TYPE string
       RAISING   lcx_exception.
 
+    METHODS set_repo_last_change_seen
+      IMPORTING iv_url     TYPE lcl_persistence_repo=>ty_repo-url
+                iv_version TYPE string
+      RAISING   lcx_exception.
+
+    METHODS get_repo_last_change_seen
+      IMPORTING iv_url            TYPE lcl_persistence_repo=>ty_repo-url
+      RETURNING VALUE(rv_version) TYPE string
+      RAISING   lcx_exception.
+
     METHODS toggle_hide_files
       RETURNING VALUE(rv_hide) TYPE abap_bool
       RAISING   lcx_exception.
@@ -468,22 +478,23 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES:
       BEGIN OF ty_repo_config,
-        url      TYPE lcl_persistence_repo=>ty_repo-url,
-        login    TYPE string,
-        git_user TYPE ty_git_user,
+        url              TYPE lcl_persistence_repo=>ty_repo-url,
+        login            TYPE string,
+        git_user         TYPE lif_defs=>ty_git_user,
+        last_change_seen TYPE string,
       END OF ty_repo_config.
 
     TYPES: ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY.
 
     TYPES:
       BEGIN OF ty_user,
-        default_git_user TYPE ty_git_user,
+        default_git_user TYPE lif_defs=>ty_git_user,
         repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
-        repo_config      TYPE ty_repo_config_tt,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
+        repo_config      TYPE ty_repo_config_tt,
       END OF ty_user.
 
     METHODS constructor
@@ -657,6 +668,8 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     update( ls_user ).
 
+    COMMIT WORK AND WAIT.
+
   ENDMETHOD.  "update_repo_config
 
   METHOD set_repo_git_user_name.
@@ -706,6 +719,22 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     rv_email = read_repo_config( iv_url )-git_user-email.
 
   ENDMETHOD.  "get_repo_email
+
+  METHOD set_repo_last_change_seen.
+
+    DATA: ls_repo_config TYPE ty_repo_config.
+
+    ls_repo_config                  = read_repo_config( iv_url ).
+    ls_repo_config-last_change_seen = iv_version.
+    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+
+  ENDMETHOD.  "set_last_change_seen
+
+  METHOD get_repo_last_change_seen.
+
+    rv_version = read_repo_config( iv_url )-last_change_seen.
+
+  ENDMETHOD.  "get_last_change_seen
 
   METHOD toggle_hide_files.
 
@@ -981,7 +1010,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lo_background TYPE REF TO lcl_persistence_background.
+    DATA: lo_background TYPE REF TO lcl_persist_background.
 
     CREATE OBJECT lo_background.
     lo_background->delete( iv_key ).
@@ -1242,7 +1271,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_persistence_migrate IMPLEMENTATION.
+CLASS lcl_persist_migrate IMPLEMENTATION.
 
   METHOD run.
 
@@ -1324,7 +1353,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     ls_dd25v-viewname   = lcl_persistence_db=>c_lock.
     ls_dd25v-aggtype    = 'E'.
     ls_dd25v-roottab    = lcl_persistence_db=>c_tabname.
-    ls_dd25v-ddlanguage = gc_english.
+    ls_dd25v-ddlanguage = lif_defs=>gc_english.
     ls_dd25v-ddtext     = c_text.
 
     APPEND INITIAL LINE TO lt_dd26e ASSIGNING <ls_dd26e>.
@@ -1417,7 +1446,7 @@ CLASS lcl_persistence_migrate IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
     ls_dd02v-tabname    = lcl_persistence_db=>c_tabname.
-    ls_dd02v-ddlanguage = gc_english.
+    ls_dd02v-ddlanguage = lif_defs=>gc_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
     ls_dd02v-contflag   = 'A'.
@@ -1505,18 +1534,27 @@ ENDCLASS.
 CLASS lcl_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
+    CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
+    CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
+
     METHODS set_proxy_url
       IMPORTING
         iv_url TYPE string.
     METHODS set_proxy_port
       IMPORTING
         iv_port TYPE string.
+    METHODS set_proxy_authentication
+      IMPORTING
+        iv_auth TYPE abap_bool.
     METHODS get_proxy_url
       RETURNING
         VALUE(rv_proxy_url) TYPE string.
     METHODS get_proxy_port
       RETURNING
         VALUE(rv_port) TYPE string.
+    METHODS get_proxy_authentication
+      RETURNING
+        VALUE(rv_auth) TYPE abap_bool.
     METHODS set_run_critical_tests
       IMPORTING
         iv_run TYPE abap_bool.
@@ -1528,17 +1566,43 @@ CLASS lcl_settings DEFINITION FINAL.
     METHODS get_max_lines
       RETURNING
         VALUE(rv_lines) TYPE i.
+    METHODS set_adt_jump_enanbled
+      IMPORTING iv_adt_jump_enabled TYPE abap_bool.
+    METHODS get_adt_jump_enabled
+      RETURNING
+        VALUE(rv_adt_jump_enabled) TYPE abap_bool.
+    METHODS set_commitmsg_comment_length
+      IMPORTING iv_length TYPE i.
+    METHODS get_commitmsg_comment_length
+      RETURNING
+        VALUE(rv_length) TYPE i.
+    METHODS set_commitmsg_body_size
+      IMPORTING iv_length TYPE i.
+    METHODS get_commitmsg_body_size
+      RETURNING
+        VALUE(rv_length) TYPE i.
 
   PRIVATE SECTION.
-    DATA mv_proxy_url TYPE string.
-    DATA mv_proxy_port TYPE string.
-    DATA mv_run_critical_tests TYPE abap_bool.
-    DATA mv_lines TYPE i.
+    DATA: mv_proxy_url                TYPE string,
+          mv_proxy_port               TYPE string,
+          mv_proxy_auth               TYPE string,
+          mv_run_critical_tests       TYPE abap_bool,
+          mv_lines                    TYPE i,
+          mv_adt_jump_enabled         TYPE abap_bool,
+          mv_commitmsg_comment_length TYPE i,
+          mv_commitmsg_body_size      TYPE i.
 
 ENDCLASS.
 
 CLASS lcl_settings IMPLEMENTATION.
 
+  METHOD set_proxy_authentication.
+    mv_proxy_auth = iv_auth.
+  ENDMETHOD.
+
+  METHOD get_proxy_authentication.
+    rv_auth = mv_proxy_auth.
+  ENDMETHOD.
 
   METHOD set_proxy_url.
     mv_proxy_url = iv_url.
@@ -1572,10 +1636,33 @@ CLASS lcl_settings IMPLEMENTATION.
     mv_lines = iv_lines.
   ENDMETHOD.
 
+  METHOD get_adt_jump_enabled.
+    rv_adt_jump_enabled = mv_adt_jump_enabled.
+  ENDMETHOD.
+
+  METHOD set_adt_jump_enanbled.
+    mv_adt_jump_enabled = iv_adt_jump_enabled.
+  ENDMETHOD.
+
+  METHOD get_commitmsg_comment_length.
+    rv_length = mv_commitmsg_comment_length.
+  ENDMETHOD.
+
+  METHOD set_commitmsg_comment_length.
+    mv_commitmsg_comment_length = iv_length.
+  ENDMETHOD.
+
+  METHOD get_commitmsg_body_size.
+    rv_length = mv_commitmsg_body_size.
+  ENDMETHOD.
+
+  METHOD set_commitmsg_body_size.
+    mv_commitmsg_body_size = iv_length.
+  ENDMETHOD.
+
 ENDCLASS.
 
-
-CLASS lcl_persistence_settings DEFINITION FINAL.
+CLASS lcl_persist_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
     METHODS modify
@@ -1589,10 +1676,12 @@ CLASS lcl_persistence_settings DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_settings IMPLEMENTATION.
-
+CLASS lcl_persist_settings IMPLEMENTATION.
 
   METHOD modify.
+
+* todo, refactor this class to use XML and only 1 row in the database?
+
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_URL'
@@ -1605,6 +1694,11 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
 
     lcl_app=>db( )->modify(
       iv_type       = 'SETTINGS'
+      iv_value      = 'PROXY_AUTH'
+      iv_data       = io_settings->get_proxy_authentication( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
       iv_value      = 'CRIT_TESTS'
       iv_data       = io_settings->get_run_critical_tests( ) ).
 
@@ -1613,16 +1707,38 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       iv_value      = 'MAX_LINES'
       iv_data       = |{ io_settings->get_max_lines( ) }| ).
 
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'ADT_JUMP'
+      iv_data       = io_settings->get_adt_jump_enabled( ) ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'COMMENT_LEN'
+      iv_data       = |{ io_settings->get_commitmsg_comment_length( ) }| ).
+
+    lcl_app=>db( )->modify(
+      iv_type       = 'SETTINGS'
+      iv_value      = 'BODY_SIZE'
+      iv_data       = |{ io_settings->get_commitmsg_body_size( ) }| ).
+
   ENDMETHOD.
 
-
   METHOD read.
-    DATA: lv_critical_tests_as_string  TYPE string,
-          lv_critical_tests_as_boolean TYPE abap_bool,
-          lv_max_lines_as_string       TYPE string,
-          lv_max_lines_as_integer      TYPE i.
+
+    DATA: lv_critical_tests_as_string    TYPE string,
+          lv_critical_tests_as_boolean   TYPE abap_bool,
+          lv_max_lines_as_string         TYPE string,
+          lv_flag                        TYPE abap_bool,
+          lv_max_lines_as_integer        TYPE i,
+          lv_s_param_value               TYPE string,
+          lv_i_param_value               TYPE i,
+          lv_adt_jump_enabled_as_string  TYPE string,
+          lv_adt_jump_enabled_as_boolean TYPE abap_bool.
+
 
     CREATE OBJECT ro_settings.
+
     TRY.
         ro_settings->set_proxy_url(
           lcl_app=>db( )->read(
@@ -1631,6 +1747,7 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_proxy_url( '' ).
     ENDTRY.
+
     TRY.
         ro_settings->set_proxy_port(
           lcl_app=>db( )->read(
@@ -1639,6 +1756,16 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_proxy_port( '' ).
     ENDTRY.
+
+    TRY.
+        lv_flag = lcl_app=>db( )->read(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_AUTH' ).
+        ro_settings->set_proxy_authentication( lv_flag ).
+      CATCH lcx_not_found.
+        ro_settings->set_proxy_authentication( abap_false ).
+    ENDTRY.
+
     TRY.
         lv_critical_tests_as_string = lcl_app=>db( )->read(
            iv_type  = 'SETTINGS'
@@ -1648,15 +1775,47 @@ CLASS lcl_persistence_settings IMPLEMENTATION.
       CATCH lcx_not_found.
         ro_settings->set_run_critical_tests( abap_false ).
     ENDTRY.
+
     TRY.
         lv_max_lines_as_string = lcl_app=>db( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'MAX_LINES' ).
         lv_max_lines_as_integer = lv_max_lines_as_string.
         ro_settings->set_max_lines( lv_max_lines_as_integer ).
-      CATCH lcx_not_found.
+      CATCH lcx_not_found cx_sy_conversion_no_number.
         ro_settings->set_max_lines( 500 ). " default
     ENDTRY.
+
+    TRY.
+        lv_adt_jump_enabled_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'ADT_JUMP' ).
+        lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
+        ro_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
+      CATCH lcx_not_found.
+        ro_settings->set_adt_jump_enanbled( abap_false ).
+    ENDTRY.
+
+    TRY.
+        lv_s_param_value = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'COMMENT_LEN' ).
+        lv_i_param_value = lv_s_param_value.
+        ro_settings->set_commitmsg_comment_length( lv_i_param_value ).
+      CATCH lcx_not_found cx_sy_conversion_no_number.
+        ro_settings->set_commitmsg_comment_length( lcl_settings=>c_commitmsg_comment_length_dft ). " default
+    ENDTRY.
+
+    TRY.
+        lv_s_param_value = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'BODY_SIZE' ).
+        lv_i_param_value = lv_s_param_value.
+        ro_settings->set_commitmsg_body_size( lv_i_param_value ).
+      CATCH lcx_not_found cx_sy_conversion_no_number.
+        ro_settings->set_commitmsg_body_size( lcl_settings=>c_commitmsg_body_size_dft ). " default
+    ENDTRY.
+
   ENDMETHOD.
 
 ENDCLASS.

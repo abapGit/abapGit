@@ -15,7 +15,7 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
                   io_dot                TYPE REF TO lcl_dot_abapgit OPTIONAL
-        RETURNING VALUE(rt_tadir)       TYPE ty_tadir_tt
+        RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
         RAISING   lcx_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
@@ -31,15 +31,15 @@ CLASS lcl_tadir DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-METHODS:
       check_exists
-        IMPORTING it_tadir        TYPE ty_tadir_tt
-        RETURNING VALUE(rt_tadir) TYPE ty_tadir_tt
+        IMPORTING it_tadir        TYPE lif_defs=>ty_tadir_tt
+        RETURNING VALUE(rt_tadir) TYPE lif_defs=>ty_tadir_tt
         RAISING   lcx_exception,
       build
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_top                TYPE tadir-devclass
                   io_dot                TYPE REF TO lcl_dot_abapgit
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-        RETURNING VALUE(rt_tadir)       TYPE ty_tadir_tt
+        RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_tadir DEFINITION
@@ -88,7 +88,7 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD check_exists.
 
     DATA: lv_exists TYPE abap_bool,
-          ls_item   TYPE ty_item.
+          ls_item   TYPE lif_defs=>ty_item.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -126,8 +126,7 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lv_index    TYPE i,
-          lt_tadir    TYPE ty_tadir_tt,
+    DATA: lt_tadir    TYPE lif_defs=>ty_tadir_tt,
           lt_tdevc    TYPE STANDARD TABLE OF tdevc,
           lv_path     TYPE string.
 
@@ -154,8 +153,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
-      lv_index = sy-tabix.
-
       <ls_tadir>-path = lv_path.
 
       CASE <ls_tadir>-object.

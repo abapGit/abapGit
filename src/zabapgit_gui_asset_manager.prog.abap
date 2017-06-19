@@ -11,7 +11,7 @@ CLASS lcl_gui_asset_manager DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_gui.
       RAISING   lcx_exception.
 
     METHODS get_images
-      RETURNING VALUE(rt_images) TYPE tt_web_assets.
+      RETURNING VALUE(rt_images) TYPE lif_defs=>tt_web_assets.
 
     CLASS-METHODS get_webfont_link
       RETURNING VALUE(rv_link) TYPE string.
@@ -29,7 +29,7 @@ CLASS lcl_gui_asset_manager DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_gui.
       RAISING   lcx_exception.
 
     METHODS get_inline_images
-      RETURNING VALUE(rt_images) TYPE tt_web_assets.
+      RETURNING VALUE(rt_images) TYPE lif_defs=>tt_web_assets.
 
 ENDCLASS. "lcl_gui_asset_manager
 
@@ -136,13 +136,14 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   ENDMETHOD.  " get_images.
 
-  DEFINE _inline.
-    APPEND &1 TO lt_data.
-  END-OF-DEFINITION.
-
   METHOD get_inline_asset.
 
-    DATA: lt_data TYPE ty_string_tt,
+* used by abapmerge
+    DEFINE _inline.
+      APPEND &1 TO lt_data.
+    END-OF-DEFINITION.
+
+    DATA: lt_data TYPE lif_defs=>ty_string_tt,
           lv_str  TYPE string.
 
     CASE iv_asset_name.
@@ -154,7 +155,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
         lcx_exception=>raise( |No inline resource: { iv_asset_name }| ).
     ENDCASE.
 
-    CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY gc_newline.
+    CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY lif_defs=>gc_newline.
 
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
       EXPORTING
@@ -169,7 +170,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
 
   METHOD get_inline_images.
 
-    DATA ls_image TYPE ty_web_asset.
+    DATA ls_image TYPE lif_defs=>ty_web_asset.
 
 * see https://github.com/larshp/abapGit/issues/201 for source SVG
     ls_image-url     = 'img/logo' ##NO_TEXT.
@@ -262,7 +263,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
     rv_link = '<link rel="stylesheet"'
            && ' type="text/css" href="'
            && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
-           && '">'. "#EC NOTEXT
+           && '">'.                                         "#EC NOTEXT
 
   ENDMETHOD.  " get_webfont_link
 

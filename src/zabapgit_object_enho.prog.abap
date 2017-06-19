@@ -23,17 +23,17 @@ ENDINTERFACE.                    "lif_object_enho
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_wdyconf DEFINITION.
+CLASS lcl_object_enho_wdyc DEFINITION.
 
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ty_item
+        is_item  TYPE lif_defs=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ty_item,
+    DATA: ms_item  TYPE lif_defs=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
@@ -43,7 +43,7 @@ ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_wdyconf IMPLEMENTATION.
+CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
@@ -262,7 +262,7 @@ CLASS lcl_object_enho_clif IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
 
-    io_clif->set_enhattributes( tab_attributes = lt_tab_attributes ).
+    io_clif->set_enhattributes( lt_tab_attributes ).
 
 * todo: deserialize includes
 
@@ -308,12 +308,12 @@ CLASS lcl_object_enho_badi DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ty_item
+        is_item  TYPE lif_defs=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ty_item,
+    DATA: ms_item  TYPE lif_defs=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_badi DEFINITION
@@ -431,7 +431,7 @@ CLASS lcl_object_enho_hook DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ty_item
+        is_item  TYPE lif_defs=>ty_item
         io_files TYPE REF TO lcl_objects_files.
 
     INTERFACES: lif_object_enho.
@@ -444,7 +444,7 @@ CLASS lcl_object_enho_hook DEFINITION.
 
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
-    DATA: ms_item TYPE ty_item.
+    DATA: ms_item TYPE lif_defs=>ty_item.
     DATA: mo_files TYPE REF TO lcl_objects_files.
 
     METHODS hook_impl_deserialize
@@ -633,18 +633,18 @@ ENDCLASS.                    "lcl_object_enho_hook IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_interface DEFINITION.
+CLASS lcl_object_enho_intf DEFINITION.
 
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING
-          is_item  TYPE ty_item
+          is_item  TYPE lif_defs=>ty_item
           io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ty_item,
+    DATA: ms_item  TYPE lif_defs=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_interface DEFINITION
@@ -654,7 +654,7 @@ ENDCLASS.                    "lcl_object_enho_interface DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_enho_interface IMPLEMENTATION.
+CLASS lcl_object_enho_intf IMPLEMENTATION.
 
   METHOD constructor.
     ms_item  = is_item.
@@ -744,12 +744,12 @@ CLASS lcl_object_enho_class DEFINITION.
     METHODS:
       constructor
         IMPORTING
-          is_item  TYPE ty_item
+          is_item  TYPE lif_defs=>ty_item
           io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item TYPE ty_item.
+    DATA: ms_item TYPE lif_defs=>ty_item.
     DATA: mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_class DEFINITION
@@ -979,12 +979,12 @@ CLASS lcl_object_enho IMPLEMENTATION.
             is_item  = ms_item
             io_files = mo_files.
       WHEN cl_enh_tool_intf=>tooltype.
-        CREATE OBJECT ri_enho TYPE lcl_object_enho_interface
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_intf
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
       WHEN cl_wdr_cfg_enhancement=>tooltype.
-        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyconf
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyc
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
@@ -1051,7 +1051,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.                    "lif_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION

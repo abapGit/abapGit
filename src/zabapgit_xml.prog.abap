@@ -16,7 +16,7 @@ CLASS lcl_xml DEFINITION ABSTRACT.
   PROTECTED SECTION.
     DATA: mi_ixml     TYPE REF TO if_ixml,
           mi_xml_doc  TYPE REF TO if_ixml_document,
-          ms_metadata TYPE ty_metadata.
+          ms_metadata TYPE lif_defs=>ty_metadata.
 
     CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit' ##NO_TEXT,
                c_attr_version            TYPE string VALUE 'version' ##NO_TEXT,
@@ -81,7 +81,7 @@ CLASS lcl_xml IMPLEMENTATION.
     li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
-    IF li_version->get_value( ) <> gc_xml_version.
+    IF li_version->get_value( ) <> lif_defs=>gc_xml_version.
       display_xml_error( ).
     ENDIF.
 
@@ -96,7 +96,7 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_version TYPE string.
 
 
-    lv_version = |abapGit version: { gc_abap_version }|.
+    lv_version = |abapGit version: { lif_defs=>gc_abap_version }|.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -183,9 +183,11 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
       add_xml
         IMPORTING iv_name TYPE clike
                   ii_xml  TYPE REF TO if_ixml_element,
+      build_asx_node
+        RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
-                  is_metadata   TYPE ty_metadata OPTIONAL
+                  is_metadata   TYPE lif_defs=>ty_metadata OPTIONAL
         RETURNING VALUE(rv_xml) TYPE string.
 
   PRIVATE SECTION.
@@ -214,6 +216,10 @@ CLASS lcl_xml_output IMPLEMENTATION.
 
 
     ASSERT NOT iv_name IS INITIAL.
+
+    IF ig_data IS INITIAL.
+      RETURN.
+    ENDIF.
 
     APPEND INITIAL LINE TO lt_stab ASSIGNING <ls_stab>.
     <ls_stab>-name = iv_name.
@@ -256,17 +262,20 @@ CLASS lcl_xml_output IMPLEMENTATION.
     IF mi_raw IS INITIAL.
       li_abap ?= mi_xml_doc->get_root( )->get_first_child( ).
       mi_xml_doc->get_root( )->remove_child( li_abap ).
+      IF li_abap IS INITIAL.
+        li_abap = build_asx_node( ).
+      ENDIF.
     ELSE.
       li_abap = mi_raw.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = c_attr_version value = gc_xml_version ). "#EC NOTEXT
+    li_git->set_attribute( name = c_attr_version value = lif_defs=>gc_xml_version ).
     IF NOT is_metadata IS INITIAL.
       li_git->set_attribute( name  = c_attr_serializer
-                             value = is_metadata-class ).   "#EC NOTEXT
+                             value = is_metadata-class ).
       li_git->set_attribute( name  = c_attr_serializer_version
-                             value = is_metadata-version ). "#EC NOTEXT
+                             value = is_metadata-version ).
     ENDIF.
     li_git->append_child( li_abap ).
     mi_xml_doc->get_root( )->append_child( li_git ).
@@ -274,6 +283,27 @@ CLASS lcl_xml_output IMPLEMENTATION.
     rv_xml = to_xml( iv_normalize ).
 
   ENDMETHOD.                    "render
+
+  METHOD build_asx_node.
+
+    DATA: li_attr TYPE REF TO if_ixml_attribute.
+
+
+    ri_element = mi_xml_doc->create_element_ns(
+      name   = 'abap'
+      prefix = 'asx' ).
+
+    li_attr = mi_xml_doc->create_attribute_ns( 'version' ).
+    li_attr->if_ixml_node~set_value( '1.0' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+    li_attr = mi_xml_doc->create_attribute_ns(
+      name   = 'asx'
+      prefix = 'xmlns' ).
+    li_attr->if_ixml_node~set_value( 'http://www.sap.com/abapxml' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_xml_output IMPLEMENTATION
 
@@ -297,7 +327,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_document,
 * todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
-        RETURNING VALUE(rs_metadata) TYPE ty_metadata.
+        RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata.
 
   PRIVATE SECTION.
     METHODS: fix_xml.

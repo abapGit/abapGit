@@ -46,8 +46,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
   METHOD lif_object~has_changed_since.
 
     DATA: lv_date TYPE dats,
-          lv_time TYPE tims,
-          lv_ts   TYPE timestamp.
+          lv_time TYPE tims.
 
     SELECT SINGLE as4date as4time FROM dd04l
       INTO (lv_date, lv_time)
@@ -55,7 +54,10 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
 
   ENDMETHOD.  "lif_object~has_changed_since
 
@@ -120,6 +122,8 @@ CLASS lcl_object_dtel IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~serialize.
+* fm DDIF_DTEL_GET bypasses buffer, so SELECTs are
+* done directly from here
 
     DATA: lv_name  TYPE ddobjname,
           ls_dd04v TYPE dd04v,
@@ -128,18 +132,29 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
 
-    CALL FUNCTION 'DDIF_DTEL_GET'
-      EXPORTING
-        name          = lv_name
-        langu         = mv_language
-      IMPORTING
-        dd04v_wa      = ls_dd04v
-        tpara_wa      = ls_tpara
-      EXCEPTIONS
-        illegal_input = 1
-        OTHERS        = 2.
+    SELECT SINGLE * FROM dd04l
+      INTO CORRESPONDING FIELDS OF ls_dd04v
+      WHERE rollname = lv_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      lcx_exception=>raise( 'Error from DDIF_DTEL_GET' ).
+      lcx_exception=>raise( 'Not found in DD04L' ).
+    ENDIF.
+
+    SELECT SINGLE * FROM dd04t
+      INTO CORRESPONDING FIELDS OF ls_dd04v
+      WHERE rollname = lv_name
+      AND ddlanguage = mv_language
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+
+    IF NOT ls_dd04v-memoryid IS INITIAL.
+      SELECT SINGLE tpara~paramid tparat~partext
+        FROM tpara LEFT JOIN tparat
+        ON tparat~paramid = tpara~paramid AND
+        tparat~sprache = mv_language
+        INTO ls_tpara
+        WHERE tpara~paramid = ls_dd04v-memoryid.
     ENDIF.
 
     CLEAR: ls_dd04v-as4user,
@@ -227,11 +242,11 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    " Collect additional languages
+    " Collect additional languages, skip master lang - it was serialized already
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
-      AND   ddlanguage <> mv_language. " Skip master lang - it was serialized already
+      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.
@@ -241,7 +256,6 @@ CLASS lcl_object_dtel IMPLEMENTATION.
           langu         = <lang>
         IMPORTING
           dd04v_wa      = ls_dd04v
-*         tpara_wa      = ls_tpara
         EXCEPTIONS
           illegal_input = 1
           OTHERS        = 2.
@@ -316,7 +330,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_dtel IMPLEMENTATION

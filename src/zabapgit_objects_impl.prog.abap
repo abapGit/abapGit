@@ -24,8 +24,8 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_index = sy-tabix.
 
       IF <ls_result>-lstate IS NOT INITIAL
-          AND <ls_result>-lstate <> gc_state-deleted
-          AND NOT ( <ls_result>-lstate = gc_state-added
+          AND <ls_result>-lstate <> lif_defs=>gc_state-deleted
+          AND NOT ( <ls_result>-lstate = lif_defs=>gc_state-added
           AND <ls_result>-rstate IS INITIAL ).
         lv_question = |It looks like object {
           <ls_result>-obj_type } { <ls_result>-obj_name
@@ -164,7 +164,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     rv_changed = create_object(
       is_item     = is_item
-      iv_language = gc_english )->has_changed_since( iv_timestamp ).
+      iv_language = lif_defs=>gc_english )->has_changed_since( iv_timestamp ).
 
   ENDMETHOD.  "has_changed_since
 
@@ -172,7 +172,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     TRY.
         create_object( is_item        = is_item
-                       iv_language    = gc_english
+                       iv_language    = lif_defs=>gc_english
                        iv_native_only = iv_native_only ).
         rv_bool = abap_true.
       CATCH lcx_exception.
@@ -214,7 +214,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     TRY.
         li_obj = create_object( is_item = is_item
-                                iv_language = gc_english ).
+                                iv_language = lif_defs=>gc_english ).
         rv_bool = li_obj->exists( ).
       CATCH lcx_exception.
 * ignore all errors and assume the object exists
@@ -231,13 +231,31 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: li_obj TYPE REF TO lif_object.
-
+    DATA: li_obj           TYPE REF TO lif_object,
+          adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
-                            iv_language = gc_english ).
+                            iv_language = lif_defs=>gc_english ).
 
-    li_obj->jump( ).
+    adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+
+    IF adt_jump_enabled = abap_true.
+
+      TRY.
+          lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
+                                       i_obj_type = is_item-obj_type ).
+
+        CATCH lcx_exception.
+
+          li_obj->jump( ).
+
+      ENDTRY.
+
+    ELSE.
+
+      li_obj->jump( ).
+
+    ENDIF.
 
   ENDMETHOD.                    "jump
 
@@ -251,7 +269,7 @@ CLASS lcl_objects IMPLEMENTATION.
       rv_user = lcl_objects_super=>c_user_unknown.
     ELSE.
       li_obj = create_object( is_item     = is_item
-                              iv_language = gc_english ).
+                              iv_language = lif_defs=>gc_english ).
       rv_user = li_obj->changed_by( ).
     ENDIF.
 
@@ -263,7 +281,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: ls_item     TYPE ty_item,
+    DATA: ls_item     TYPE lif_defs=>ty_item,
           lv_tabclass TYPE dd02l-tabclass,
           lt_tadir    LIKE it_tadir.
 
@@ -339,11 +357,11 @@ CLASS lcl_objects IMPLEMENTATION.
 * in case they have dependencies with .INCLUDE
 
     TYPES: BEGIN OF ty_edge,
-             from TYPE ty_item,
-             to   TYPE ty_item,
+             from TYPE lif_defs=>ty_item,
+             to   TYPE lif_defs=>ty_item,
            END OF ty_edge.
 
-    DATA: lt_nodes        TYPE TABLE OF ty_item,
+    DATA: lt_nodes        TYPE TABLE OF lif_defs=>ty_item,
           lt_edges        TYPE TABLE OF ty_edge,
           lt_findstrings  TYPE TABLE OF rsfind,
           lv_plus         TYPE i VALUE 1,
@@ -455,7 +473,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF is_supported( is_item ) = abap_true.
       li_obj = create_object( is_item     = is_item
-                              iv_language = gc_english ).
+                              iv_language = lif_defs=>gc_english ).
 
       li_obj->delete( ).
 
@@ -508,7 +526,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD check_duplicates.
 
-    DATA: lt_files TYPE ty_files_tt.
+    DATA: lt_files TYPE lif_defs=>ty_files_tt.
 
 
     lt_files[] = it_files[].
@@ -550,19 +568,19 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item    TYPE ty_item,
+    DATA: ls_item    TYPE lif_defs=>ty_item,
           lv_cancel  TYPE abap_bool,
           li_obj     TYPE REF TO lif_object,
-          lt_remote  TYPE ty_files_tt,
+          lt_remote  TYPE lif_defs=>ty_files_tt,
           lv_package TYPE devclass,
           lo_files   TYPE REF TO lcl_objects_files,
           lo_xml     TYPE REF TO lcl_xml_input,
-          lt_results TYPE ty_results_tt,
+          lt_results TYPE lif_defs=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,
           lt_rest    TYPE TABLE OF ty_deserialization,
           lt_late    TYPE TABLE OF ty_deserialization.
 
-    FIELD-SYMBOLS: <ls_result> TYPE ty_result,
+    FIELD-SYMBOLS: <ls_result> TYPE lif_defs=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
 
@@ -582,7 +600,7 @@ CLASS lcl_objects IMPLEMENTATION.
     warning_overwrite( CHANGING ct_results = lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
-        AND NOT ( lstate = gc_state-added AND rstate IS INITIAL ).
+        AND NOT ( lstate = lif_defs=>gc_state-added AND rstate IS INITIAL ).
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_results )
@@ -682,9 +700,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD compare_remote_to_local.
 
-    DATA: ls_remote_file       TYPE ty_file,
+    DATA: ls_remote_file       TYPE lif_defs=>ty_file,
           lo_remote_version    TYPE REF TO lcl_xml_input,
-          lo_comparison_result TYPE REF TO lif_object_comparison_result.
+          lo_comparison_result TYPE REF TO lif_comparison_result.
 
 
     IF is_result-filename CS '.XML'.

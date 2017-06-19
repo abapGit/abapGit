@@ -72,10 +72,10 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                   io_repo     = mo_repo
                                   io_stage    = mo_stage ).
 
-        ev_state = gc_event_state-go_back_to_bookmark.
+        ev_state = lif_defs=>gc_event_state-go_back_to_bookmark.
 
       WHEN c_action-commit_cancel.
-        ev_state = gc_event_state-go_back.
+        ev_state = lif_defs=>gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
@@ -155,17 +155,20 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_form.
 
-    DATA: lo_user  TYPE REF TO lcl_persistence_user,
-          lv_user  TYPE string,
-          lv_key   TYPE lcl_persistence_db=>ty_value,
-          lv_email TYPE string.
+    CONSTANTS: lc_body_col_max TYPE i VALUE 150.
+
+    DATA: lo_user      TYPE REF TO lcl_persistence_user.
+    DATA: lv_user      TYPE string.
+    DATA: lv_email     TYPE string.
+    DATA: lv_s_param   TYPE string.
+    DATA: lo_settings  TYPE REF TO lcl_settings.
+    data: lv_body_size type i.
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
     lo_user  = lcl_app=>user( ).
-    lv_key   = mo_repo->get_key( ).
 
     lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.
@@ -191,13 +194,24 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                      iv_label = 'committer e-mail'
                                      iv_value = lv_email ) ).
 
+    lo_settings = lcl_app=>settings( )->read( ).
+
+    lv_s_param = lo_settings->get_commitmsg_comment_length( ).
+
     ro_html->add( render_text_input( iv_name       = 'comment'
                                      iv_label      = 'comment'
-                                     iv_max_length = '72' ) ).
+                                     iv_max_length = lv_s_param ) ).
 
     ro_html->add( '<div class="row">' ).
     ro_html->add( '<label for="c-body">body</label>' ).
-    ro_html->add( '<textarea id="c-body" name="body" rows="10" cols="50"></textarea>' ).
+
+    lv_body_size = lo_settings->get_commitmsg_body_size( ).
+    IF lv_body_size > lc_body_col_max.
+      lv_body_size = lc_body_col_max.
+    ENDIF.
+    ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
+                  |{ lv_body_size }"></textarea>| ).
+
     ro_html->add( '<input type="submit" class="hidden-submit">' ).
     ro_html->add( '</div>' ).
 
@@ -227,12 +241,12 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
-                     iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-strong ) ##NO_TEXT.
+                     iv_typ = lif_defs=>gc_action_type-onclick
+                     iv_opt = lif_defs=>gc_html_opt-strong ) ##NO_TEXT.
 
     lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
-                     iv_opt = gc_html_opt-cancel ) ##NO_TEXT.
+                     iv_opt = lif_defs=>gc_html_opt-cancel ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -243,7 +257,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
   METHOD scripts.
 
     CREATE OBJECT ro_html.
-    _add 'setInitialFocus("comment");'.
+    ro_html->add( 'setInitialFocus("comment");' ).
 
   ENDMETHOD.    "scripts
 

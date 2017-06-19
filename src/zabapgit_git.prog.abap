@@ -16,15 +16,15 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING io_repo     TYPE REF TO lcl_repo_online
                 iv_deepen   TYPE abap_bool DEFAULT abap_true
                 it_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt OPTIONAL
-      EXPORTING et_objects  TYPE ty_objects_tt
-                ev_branch   TYPE ty_sha1
+      EXPORTING et_objects  TYPE lif_defs=>ty_objects_tt
+                ev_branch   TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
 * local to remote
     CLASS-METHODS receive_pack
       IMPORTING iv_url         TYPE string
-                iv_old         TYPE ty_sha1
-                iv_new         TYPE ty_sha1
+                iv_old         TYPE lif_defs=>ty_sha1
+                iv_new         TYPE lif_defs=>ty_sha1
                 iv_branch_name TYPE string
                 iv_pack        TYPE xstring
       RAISING   lcx_exception.
@@ -52,7 +52,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_service     TYPE string
                 iv_branch_name TYPE string
       EXPORTING eo_client      TYPE REF TO lcl_http_client
-                ev_branch      TYPE ty_sha1
+                ev_branch      TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS parse
@@ -71,16 +71,16 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_node,
-             chmod TYPE ty_chmod,
+             chmod TYPE lif_defs=>ty_chmod,
              name  TYPE string,
-             sha1  TYPE ty_sha1,
+             sha1  TYPE lif_defs=>ty_sha1,
            END OF ty_node.
     TYPES: ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_commit,
-             tree      TYPE ty_sha1,
-             parent    TYPE ty_sha1,
-             parent2   TYPE ty_sha1,
+             tree      TYPE lif_defs=>ty_sha1,
+             parent    TYPE lif_defs=>ty_sha1,
+             parent2   TYPE lif_defs=>ty_sha1,
              author    TYPE string,
              committer TYPE string,
              body      TYPE string,
@@ -88,7 +88,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
 
     CLASS-METHODS decode
       IMPORTING iv_data           TYPE xstring
-      RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+      RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS decode_tree
@@ -102,7 +102,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       RAISING   lcx_exception.
 
     CLASS-METHODS encode
-      IMPORTING it_objects     TYPE ty_objects_tt
+      IMPORTING it_objects     TYPE lif_defs=>ty_objects_tt
       RETURNING VALUE(rv_data) TYPE xstring
       RAISING   lcx_exception.
 
@@ -121,17 +121,17 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
                c_version    TYPE x LENGTH 4 VALUE '00000002'.
 
     CLASS-METHODS decode_deltas
-      CHANGING ct_objects TYPE ty_objects_tt
+      CHANGING ct_objects TYPE lif_defs=>ty_objects_tt
       RAISING  lcx_exception.
 
     CLASS-METHODS type_and_length
-      IMPORTING is_object         TYPE ty_object
+      IMPORTING is_object         TYPE lif_defs=>ty_object
       RETURNING VALUE(rv_xstring) TYPE xstring
       RAISING   lcx_exception.
 
     CLASS-METHODS delta
-      IMPORTING is_object  TYPE ty_object
-      CHANGING  ct_objects TYPE ty_objects_tt
+      IMPORTING is_object  TYPE lif_defs=>ty_object
+      CHANGING  ct_objects TYPE lif_defs=>ty_objects_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS delta_header
@@ -144,7 +144,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
 
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
-      RETURNING VALUE(rv_type) TYPE ty_type
+      RETURNING VALUE(rv_type) TYPE lif_defs=>ty_type
       RAISING   lcx_exception.
 
     CLASS-METHODS get_length
@@ -251,7 +251,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
               lcl_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              gc_newline.                                   "#EC NOTEXT
+              lif_defs=>gc_newline.                                   "#EC NOTEXT
     lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -347,22 +347,22 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_capa = 'side-band-64k no-progress multi_ack agent='
           && lcl_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && gc_newline.                  "#EC NOTEXT
+          && ` ` && lv_capa && lif_defs=>gc_newline.                  "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && gc_newline.                                    "#EC NOTEXT
+          && lif_defs=>gc_newline.                                    "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1'
-        && gc_newline ).                                    "#EC NOTEXT
+        && lif_defs=>gc_newline ).                                    "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
              && '0000'
-             && '0009done' && gc_newline.
+             && '0009done' && lif_defs=>gc_newline.
 
     lv_xstring = lo_client->send_receive_close(
       lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
@@ -402,7 +402,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     LOOP AT it_nodes ASSIGNING <ls_node>.
       APPEND INITIAL LINE TO lt_sort ASSIGNING <ls_sort>.
-      IF <ls_node>-chmod = gc_chmod-dir.
+      IF <ls_node>-chmod = lif_defs=>gc_chmod-dir.
         CONCATENATE <ls_node>-name '/' INTO <ls_sort>-sort.
       ELSE.
         <ls_sort>-sort = <ls_node>-name.
@@ -431,13 +431,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 
     CASE is_object-type.
-      WHEN gc_type-commit.
+      WHEN lif_defs=>gc_type-commit.
         lv_type = '001'.
-      WHEN gc_type-tree.
+      WHEN lif_defs=>gc_type-tree.
         lv_type = '010'.
-      WHEN gc_type-blob.
+      WHEN lif_defs=>gc_type-blob.
         lv_type = '011'.
-      WHEN gc_type-ref_d.
+      WHEN lif_defs=>gc_type-ref_d.
         lv_type = '111'.
       WHEN OTHERS.
         lcx_exception=>raise( 'Unexpected object type while encoding pack' ).
@@ -487,7 +487,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     DATA: lv_x           TYPE x,
           lv_length_bits TYPE string,
-          lv_bitbyte     TYPE ty_bitbyte.
+          lv_bitbyte     TYPE lif_defs=>ty_bitbyte.
 
 
     lv_x = cv_data(1).
@@ -549,7 +549,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     lv_string = ''.
 
     CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp lif_defs=>gc_newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
       lv_parent_lower = is_commit-parent.
@@ -557,7 +557,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
-      CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp lif_defs=>gc_newline INTO lv_string.
     ENDIF.
 
     IF NOT is_commit-parent2 IS INITIAL.
@@ -566,18 +566,18 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
-      CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp lif_defs=>gc_newline INTO lv_string.
     ENDIF.
 
     CONCATENATE 'author' is_commit-author
       INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp lif_defs=>gc_newline INTO lv_string.
 
     CONCATENATE 'committer' is_commit-committer
       INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp lif_defs=>gc_newline INTO lv_string.
 
-    CONCATENATE lv_string gc_newline is_commit-body INTO lv_string.
+    CONCATENATE lv_string lif_defs=>gc_newline is_commit-body INTO lv_string.
 
     rv_data = lcl_convert=>string_to_xstring_utf8( lv_string ).
 
@@ -586,7 +586,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
   METHOD get_type.
 
     DATA: lv_char3   TYPE c LENGTH 3,
-          lv_bitbyte TYPE ty_bitbyte.
+          lv_bitbyte TYPE lif_defs=>ty_bitbyte.
 
 
     lv_bitbyte = lcl_convert=>x_to_bitbyte( iv_x ).
@@ -594,13 +594,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     CASE lv_char3.
       WHEN '001'.
-        rv_type = gc_type-commit.
+        rv_type = lif_defs=>gc_type-commit.
       WHEN '010'.
-        rv_type = gc_type-tree.
+        rv_type = lif_defs=>gc_type-tree.
       WHEN '011'.
-        rv_type = gc_type-blob.
+        rv_type = lif_defs=>gc_type-blob.
       WHEN '111'.
-        rv_type = gc_type-ref_d.
+        rv_type = lif_defs=>gc_type-ref_d.
       WHEN OTHERS.
         lcx_exception=>raise( 'Todo, unknown type' ).
     ENDCASE.
@@ -619,12 +619,12 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     lv_string = lcl_convert=>xstring_to_string_utf8( iv_data ).
 
-    SPLIT lv_string AT gc_newline INTO TABLE lt_string.
+    SPLIT lv_string AT lif_defs=>gc_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
       IF NOT rs_commit-committer IS INITIAL.
         CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
-          SEPARATED BY gc_newline.
+          SEPARATED BY lif_defs=>gc_newline.
       ELSE.
         SPLIT <lv_string> AT space INTO lv_word lv_trash.
         CASE lv_word.
@@ -661,7 +661,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   METHOD delta_header.
 
-    DATA: lv_bitbyte TYPE ty_bitbyte,
+    DATA: lv_bitbyte TYPE lif_defs=>ty_bitbyte,
           lv_bits    TYPE string,
           lv_x       TYPE x.
 
@@ -685,82 +685,84 @@ CLASS lcl_git_pack IMPLEMENTATION.
     DATA: lv_delta   TYPE xstring,
           lv_base    TYPE xstring,
           lv_result  TYPE xstring,
-          lv_bitbyte TYPE ty_bitbyte,
+*          lv_bitbyte TYPE ty_bitbyte,
           lv_offset  TYPE i,
-          lv_message TYPE string,
-          lv_sha1    TYPE ty_sha1,
+          lv_sha1    TYPE lif_defs=>ty_sha1,
           ls_object  LIKE LINE OF ct_objects,
           lv_len     TYPE i,
+          lv_org     TYPE x,
+*          lv_i       TYPE i,
           lv_x       TYPE x.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
 
+    DEFINE _eat_byte.
+      lv_x = lv_delta(1).
+      lv_delta = lv_delta+1.
+    END-OF-DEFINITION.
 
     lv_delta = is_object-data.
 
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      CONCATENATE 'Base not found,' is_object-sha1 INTO lv_message
-        SEPARATED BY space.                                 "#EC NOTEXT
-      lcx_exception=>raise( lv_message ).
-    ELSE.
-      lv_base = <ls_object>-data.
-    ENDIF.
-
+      lcx_exception=>raise( |Base not found, { is_object-sha1 }| ).
+    ELSEIF <ls_object>-type = lif_defs=>gc_type-ref_d.
 * sanity check
-    IF <ls_object>-type = gc_type-ref_d.
       lcx_exception=>raise( 'Delta, base eq delta' ).
     ENDIF.
+
+    lv_base = <ls_object>-data.
 
 * skip the 2 headers
     delta_header( CHANGING cv_delta = lv_delta ).
     delta_header( CHANGING cv_delta = lv_delta ).
 
+    CONSTANTS: lc_1   TYPE x VALUE '01',
+               lc_2   TYPE x VALUE '02',
+               lc_4   TYPE x VALUE '04',
+               lc_8   TYPE x VALUE '08',
+               lc_16  TYPE x VALUE '10',
+               lc_32  TYPE x VALUE '20',
+               lc_64  TYPE x VALUE '40',
+               lc_128 TYPE x VALUE '80'.
+
     WHILE xstrlen( lv_delta ) > 0.
 
-      lv_x = lv_delta(1).
-      lv_delta = lv_delta+1.
-      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+      _eat_byte.
+      lv_org = lv_x.
 
-      IF lv_bitbyte(1) = '1'. " MSB
+      IF lv_x BIT-AND lc_128 = lc_128. " MSB = 1
 
         lv_offset = 0.
-        IF lv_bitbyte+7(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_1 = lc_1.
+          _eat_byte.
           lv_offset = lv_x.
         ENDIF.
-        IF lv_bitbyte+6(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_2 = lc_2.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 256.
         ENDIF.
-        IF lv_bitbyte+5(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_4 = lc_4.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 65536.
         ENDIF.
-        IF lv_bitbyte+4(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_8 = lc_8.
+          _eat_byte.
           lv_offset = lv_offset + lv_x * 16777216. " hmm, overflow?
         ENDIF.
 
         lv_len = 0.
-        IF lv_bitbyte+3(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_16 = lc_16.
+          _eat_byte.
           lv_len = lv_x.
         ENDIF.
-        IF lv_bitbyte+2(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_32 = lc_32.
+          _eat_byte.
           lv_len = lv_len + lv_x * 256.
         ENDIF.
-        IF lv_bitbyte+1(1) = '1'.
-          lv_x = lv_delta(1).
-          lv_delta = lv_delta+1.
+        IF lv_org BIT-AND lc_64 = lc_64.
+          _eat_byte.
           lv_len = lv_len + lv_x * 65536.
         ENDIF.
 
@@ -795,7 +797,12 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lt_deltas LIKE ct_objects.
 
 
-    LOOP AT ct_objects INTO ls_object WHERE type = gc_type-ref_d.
+    lcl_progress=>show( iv_key     = 'Decode'
+                        iv_current = 1
+                        iv_total   = 1
+                        iv_text    = 'Deltas' ) ##NO_TEXT.
+
+    LOOP AT ct_objects INTO ls_object WHERE type = lif_defs=>gc_type-ref_d.
       DELETE ct_objects INDEX sy-tabix.
       APPEND ls_object TO lt_deltas.
     ENDLOOP.
@@ -813,7 +820,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
                lc_null       TYPE x VALUE '00'.
 
     DATA: lv_xstring TYPE xstring,
-          lv_chmod   TYPE ty_chmod,
+          lv_chmod   TYPE lif_defs=>ty_chmod,
           lv_name    TYPE string,
           lv_string  TYPE string,
           lv_len     TYPE i,
@@ -839,9 +846,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
         CLEAR ls_node.
         ls_node-chmod = lv_chmod.
-        IF ls_node-chmod <> gc_chmod-dir
-            AND ls_node-chmod <> gc_chmod-file
-            AND ls_node-chmod <> gc_chmod-executable.
+        IF ls_node-chmod <> lif_defs=>gc_chmod-dir
+            AND ls_node-chmod <> lif_defs=>gc_chmod-file
+            AND ls_node-chmod <> lif_defs=>gc_chmod-executable.
           lcx_exception=>raise( 'Unknown chmod' ).
         ENDIF.
 
@@ -896,8 +903,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_zlib           TYPE x LENGTH 2,
           lv_objects        TYPE i,
           lv_len            TYPE i,
-          lv_sha1           TYPE ty_sha1,
-          lv_ref_delta      TYPE ty_sha1,
+          lv_sha1           TYPE lif_defs=>ty_sha1,
+          lv_ref_delta      TYPE lif_defs=>ty_sha1,
           lv_compressed_len TYPE i,
           lv_compressed     TYPE xstring,
           lv_decompressed   TYPE xstring,
@@ -935,7 +942,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       get_length( IMPORTING ev_length = lv_expected
                   CHANGING cv_data = lv_data ).
 
-      IF lv_type = gc_type-ref_d.
+      IF lv_type = lif_defs=>gc_type-ref_d.
         lv_ref_delta = lv_data(20).
         lv_data = lv_data+20.
       ENDIF.
@@ -991,7 +998,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 *************************
 
       CLEAR ls_object.
-      IF lv_type = gc_type-ref_d.
+      IF lv_type = lif_defs=>gc_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
@@ -1074,31 +1081,31 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
     TYPES: BEGIN OF ty_expanded,
              path  TYPE string,
              name  TYPE string,
-             sha1  TYPE ty_sha1,
-             chmod TYPE ty_chmod,
+             sha1  TYPE lif_defs=>ty_sha1,
+             chmod TYPE lif_defs=>ty_chmod,
            END OF ty_expanded.
 
     TYPES: ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY.
 
     CLASS-METHODS pull
       IMPORTING io_repo    TYPE REF TO lcl_repo_online
-      EXPORTING et_files   TYPE ty_files_tt
-                et_objects TYPE ty_objects_tt
-                ev_branch  TYPE ty_sha1
+      EXPORTING et_files   TYPE lif_defs=>ty_files_tt
+                et_objects TYPE lif_defs=>ty_objects_tt
+                ev_branch  TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS push
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
-                is_comment       TYPE ty_comment
+                is_comment       TYPE lif_defs=>ty_comment
                 io_stage         TYPE REF TO lcl_stage
-      EXPORTING ev_branch        TYPE ty_sha1
-                et_updated_files TYPE ty_file_signatures_tt
+      EXPORTING ev_branch        TYPE lif_defs=>ty_sha1
+                et_updated_files TYPE lif_defs=>ty_file_signatures_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS create_branch
       IMPORTING io_repo TYPE REF TO lcl_repo_online
                 iv_name TYPE string
-                iv_from TYPE ty_sha1
+                iv_from TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS delete_branch
@@ -1107,8 +1114,8 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       RAISING   lcx_exception.
 
     CLASS-METHODS full_tree
-      IMPORTING it_objects         TYPE ty_objects_tt
-                iv_branch          TYPE ty_sha1
+      IMPORTING it_objects         TYPE lif_defs=>ty_objects_tt
+                iv_branch          TYPE lif_defs=>ty_sha1
       RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
       RAISING   lcx_exception.
 
@@ -1117,7 +1124,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
     TYPES: BEGIN OF ty_tree,
              path TYPE string,
              data TYPE xstring,
-             sha1 TYPE ty_sha1,
+             sha1 TYPE lif_defs=>ty_sha1,
            END OF ty_tree.
 
     TYPES: ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY.
@@ -1125,12 +1132,12 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
     TYPES: BEGIN OF ty_folder,
              path  TYPE string,
              count TYPE i,
-             sha1  TYPE ty_sha1,
+             sha1  TYPE lif_defs=>ty_sha1,
            END OF ty_folder.
 
     TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
 
-    CONSTANTS: c_zero TYPE ty_sha1 VALUE '0000000000000000000000000000000000000000'.
+    CONSTANTS: c_zero TYPE lif_defs=>ty_sha1 VALUE '0000000000000000000000000000000000000000'.
 
     CLASS-METHODS build_trees
       IMPORTING it_expanded     TYPE ty_expanded_tt
@@ -1142,26 +1149,26 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       RETURNING VALUE(rt_folders) TYPE ty_folders_tt.
 
     CLASS-METHODS walk
-      IMPORTING it_objects TYPE ty_objects_tt
-                iv_sha1    TYPE ty_sha1
+      IMPORTING it_objects TYPE lif_defs=>ty_objects_tt
+                iv_sha1    TYPE lif_defs=>ty_sha1
                 iv_path    TYPE string
-      CHANGING  ct_files   TYPE ty_files_tt
+      CHANGING  ct_files   TYPE lif_defs=>ty_files_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS walk_tree
-      IMPORTING it_objects         TYPE ty_objects_tt
-                iv_tree            TYPE ty_sha1
+      IMPORTING it_objects         TYPE lif_defs=>ty_objects_tt
+                iv_tree            TYPE lif_defs=>ty_sha1
                 iv_base            TYPE string
       RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
       RAISING   lcx_exception.
 
     CLASS-METHODS receive_pack
-      IMPORTING is_comment       TYPE ty_comment
+      IMPORTING is_comment       TYPE lif_defs=>ty_comment
                 io_repo          TYPE REF TO lcl_repo_online
                 it_trees         TYPE ty_trees_tt
-                it_blobs         TYPE ty_files_tt
+                it_blobs         TYPE lif_defs=>ty_files_tt
                 io_stage         TYPE REF TO lcl_stage
-      RETURNING VALUE(rv_branch) TYPE ty_sha1
+      RETURNING VALUE(rv_branch) TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_porcelain DEFINITION
@@ -1177,7 +1184,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     DATA: lv_time    TYPE lcl_time=>ty_unixtime,
           lv_commit  TYPE xstring,
-          lt_objects TYPE ty_objects_tt,
+          lt_objects TYPE lif_defs=>ty_objects_tt,
           lv_pack    TYPE xstring,
           ls_object  LIKE LINE OF lt_objects,
           ls_commit  TYPE lcl_git_pack=>ty_commit.
@@ -1208,31 +1215,31 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     lv_commit = lcl_git_pack=>encode_commit( ls_commit ).
 
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-commit iv_data = lv_commit ).
-    ls_object-type = gc_type-commit.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-commit iv_data = lv_commit ).
+    ls_object-type = lif_defs=>gc_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO lt_objects.
 
     LOOP AT it_trees ASSIGNING <ls_tree>.
       CLEAR ls_object.
       ls_object-sha1 = <ls_tree>-sha1.
-      ls_object-type = gc_type-tree.
+      ls_object-type = lif_defs=>gc_type-tree.
       ls_object-data = <ls_tree>-data.
       APPEND ls_object TO lt_objects.
     ENDLOOP.
 
     LOOP AT it_blobs ASSIGNING <ls_blob>.
       CLEAR ls_object.
-      ls_object-sha1 = lcl_hash=>sha1( iv_type = gc_type-blob iv_data = <ls_blob>-data ).
+      ls_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob iv_data = <ls_blob>-data ).
 
-      READ TABLE lt_objects WITH KEY type = gc_type-blob sha1 = ls_object-sha1
+      READ TABLE lt_objects WITH KEY type = lif_defs=>gc_type-blob sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 * two identical files added at the same time, only add one blob to the pack
         CONTINUE.
       ENDIF.
 
-      ls_object-type = gc_type-blob.
+      ls_object-type = lif_defs=>gc_type-blob.
       ASSERT NOT <ls_blob>-data IS INITIAL.
       ls_object-data = <ls_blob>-data.
       APPEND ls_object TO lt_objects.
@@ -1241,7 +1248,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     lv_pack = lcl_git_pack=>encode( lt_objects ).
 
     rv_branch = lcl_hash=>sha1(
-      iv_type = gc_type-commit
+      iv_type = lif_defs=>gc_type-commit
       iv_data = lv_commit ).
 
     lcl_git_transport=>receive_pack(
@@ -1255,7 +1262,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD delete_branch.
 
-    DATA: lt_objects TYPE ty_objects_tt,
+    DATA: lt_objects TYPE lif_defs=>ty_objects_tt,
           lv_pack    TYPE xstring.
 
 
@@ -1274,7 +1281,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lt_objects TYPE ty_objects_tt,
+    DATA: lt_objects TYPE lif_defs=>ty_objects_tt,
           lv_pack    TYPE xstring.
 
     IF iv_name CS ` `.
@@ -1297,10 +1304,10 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
   METHOD push.
 
     DATA: lt_expanded TYPE ty_expanded_tt,
-          lt_blobs    TYPE ty_files_tt,
-          lv_sha1     TYPE ty_sha1,
+          lt_blobs    TYPE lif_defs=>ty_files_tt,
+          lv_sha1     TYPE lif_defs=>ty_sha1,
           lt_trees    TYPE ty_trees_tt,
-          lt_objects  TYPE ty_objects_tt,
+          lt_objects  TYPE lif_defs=>ty_objects_tt,
           lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
           lt_stage    TYPE lcl_stage=>ty_stage_tt.
 
@@ -1347,10 +1354,10 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             APPEND INITIAL LINE TO lt_expanded ASSIGNING <ls_exp>.
             <ls_exp>-name  = <ls_stage>-file-filename.
             <ls_exp>-path  = <ls_stage>-file-path.
-            <ls_exp>-chmod = gc_chmod-file.
+            <ls_exp>-chmod = lif_defs=>gc_chmod-file.
           ENDIF.
 
-          lv_sha1 = lcl_hash=>sha1( iv_type = gc_type-blob
+          lv_sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob
                                     iv_data = <ls_stage>-file-data ).
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
@@ -1393,7 +1400,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object
       WITH KEY sha1 = iv_tree
-      type = gc_type-tree.
+      type = lif_defs=>gc_type-tree.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'tree not found' ).
     ENDIF.
@@ -1401,14 +1408,14 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       CASE <ls_node>-chmod.
-        WHEN gc_chmod-file
-            OR gc_chmod-executable.
+        WHEN lif_defs=>gc_chmod-file
+            OR lif_defs=>gc_chmod-executable.
           APPEND INITIAL LINE TO rt_expanded ASSIGNING <ls_exp>.
           <ls_exp>-path  = iv_base.
           <ls_exp>-name  = <ls_node>-name.
           <ls_exp>-sha1  = <ls_node>-sha1.
           <ls_exp>-chmod = <ls_node>-chmod.
-        WHEN gc_chmod-dir.
+        WHEN lif_defs=>gc_chmod-dir.
           lt_expanded = walk_tree(
             it_objects = it_objects
             iv_tree    = <ls_node>-sha1
@@ -1427,7 +1434,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           ls_commit TYPE lcl_git_pack=>ty_commit.
 
 
-    READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = gc_type-commit.
+    READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = lif_defs=>gc_type-commit.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'commit not found' ).
     ENDIF.
@@ -1453,7 +1460,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                                     IMPORTING et_objects = et_objects
                                               ev_branch = ev_branch ).
 
-    READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = gc_type-commit.
+    READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = lif_defs=>gc_type-commit.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Commit/branch not found' ).
     ENDIF.
@@ -1510,7 +1517,6 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     DATA: lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
           ls_tree    LIKE LINE OF rt_trees,
-          lv_sub     TYPE string,
           lv_len     TYPE i,
           lt_folders TYPE ty_folders_tt.
 
@@ -1537,25 +1543,25 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       ENDLOOP.
 
 * folders
-      lv_sub = <ls_folder>-path && '+*'.
-      LOOP AT lt_folders ASSIGNING <ls_sub>
-          WHERE count = <ls_folder>-count + 1 AND path CP lv_sub.
-        APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
-        <ls_node>-chmod = gc_chmod-dir.
+      LOOP AT lt_folders ASSIGNING <ls_sub> WHERE count = <ls_folder>-count + 1.
+        lv_len = strlen( <ls_folder>-path ).
+        IF strlen( <ls_sub>-path ) > lv_len AND <ls_sub>-path(lv_len) = <ls_folder>-path.
+          APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+          <ls_node>-chmod = lif_defs=>gc_chmod-dir.
 
 * extract folder name, this can probably be done easier using regular expressions
-        lv_len = strlen( <ls_folder>-path ).
-        <ls_node>-name = <ls_sub>-path+lv_len.
-        lv_len = strlen( <ls_node>-name ) - 1.
-        <ls_node>-name = <ls_node>-name(lv_len).
+          <ls_node>-name = <ls_sub>-path+lv_len.
+          lv_len = strlen( <ls_node>-name ) - 1.
+          <ls_node>-name = <ls_node>-name(lv_len).
 
-        <ls_node>-sha1 = <ls_sub>-sha1.
+          <ls_node>-sha1 = <ls_sub>-sha1.
+        ENDIF.
       ENDLOOP.
 
       CLEAR ls_tree.
       ls_tree-path = <ls_folder>-path.
       ls_tree-data = lcl_git_pack=>encode_tree( lt_nodes ).
-      ls_tree-sha1 = lcl_hash=>sha1( iv_type = gc_type-tree iv_data = ls_tree-data ).
+      ls_tree-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-tree iv_data = ls_tree-data ).
       APPEND ls_tree TO rt_trees.
 
       <ls_folder>-sha1 = ls_tree-sha1.
@@ -1574,7 +1580,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                    <ls_node> LIKE LINE OF lt_nodes.
 
 
-    READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = gc_type-tree.
+    READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = lif_defs=>gc_type-tree.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'Walk, tree not found' ).
     ENDIF.
@@ -1582,9 +1588,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     lt_nodes = lcl_git_pack=>decode_tree( <ls_tree>-data ).
 
     LOOP AT lt_nodes ASSIGNING <ls_node>.
-      IF <ls_node>-chmod = gc_chmod-file.
+      IF <ls_node>-chmod = lif_defs=>gc_chmod-file.
         READ TABLE it_objects ASSIGNING <ls_blob>
-          WITH KEY sha1 = <ls_node>-sha1 type = gc_type-blob.
+          WITH KEY sha1 = <ls_node>-sha1 type = lif_defs=>gc_type-blob.
         IF sy-subrc <> 0.
           lcx_exception=>raise( 'Walk, blob not found' ).
         ENDIF.
@@ -1598,7 +1604,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = gc_chmod-dir.
+    LOOP AT lt_nodes ASSIGNING <ls_node> WHERE chmod = lif_defs=>gc_chmod-dir.
       CONCATENATE iv_path <ls_node>-name '/' INTO lv_path.
       walk( EXPORTING it_objects = it_objects
                       iv_sha1 = <ls_node>-sha1

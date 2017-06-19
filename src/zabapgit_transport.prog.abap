@@ -185,8 +185,8 @@ CLASS lcl_transport_objects DEFINITION.
     METHODS to_stage
       IMPORTING
         io_stage           TYPE REF TO lcl_stage
-        is_stage_objects   TYPE ty_stage_files
-        it_object_statuses TYPE ty_results_tt
+        is_stage_objects   TYPE lif_defs=>ty_stage_files
+        it_object_statuses TYPE lif_defs=>ty_results_tt
       RAISING
         lcx_exception.
   PRIVATE SECTION.
@@ -200,16 +200,17 @@ CLASS lcl_transport_objects IMPLEMENTATION.
 
   METHOD to_stage.
     DATA: ls_transport_object TYPE tadir,
-          ls_local_file       TYPE ty_file_item,
-          ls_object_status    TYPE ty_result.
+          ls_local_file       TYPE lif_defs=>ty_file_item,
+          ls_object_status    TYPE lif_defs=>ty_result.
 
     LOOP AT mt_transport_objects INTO ls_transport_object.
       LOOP AT it_object_statuses INTO ls_object_status
-        WHERE obj_name = ls_transport_object-obj_name
-          AND obj_type = ls_transport_object-object.
+          WHERE obj_name = ls_transport_object-obj_name
+          AND obj_type = ls_transport_object-object
+          AND NOT lstate IS INITIAL.
 
         CASE ls_object_status-lstate.
-          WHEN gc_state-added OR gc_state-modified.
+          WHEN lif_defs=>gc_state-added OR lif_defs=>gc_state-modified.
             IF ls_transport_object-delflag = abap_true.
               lcx_exception=>raise( |Object { ls_transport_object-obj_name
               } should be added/modified, but has deletion flag in transport| ).
@@ -229,7 +230,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
               iv_path     = ls_local_file-file-path
               iv_filename = ls_local_file-file-filename
               iv_data     = ls_local_file-file-data ).
-          WHEN gc_state-deleted.
+          WHEN lif_defs=>gc_state-deleted.
             IF ls_transport_object-delflag = abap_false.
               lcx_exception=>raise( |Object { ls_transport_object-obj_name
               } should be removed, but has NO deletion flag in transport| ).
@@ -250,12 +251,12 @@ CLASS lcl_transport_objects IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_transport_to_branch DEFINITION.
+CLASS lcl_transport_2_branch DEFINITION.
   PUBLIC SECTION.
     METHODS:
       create
         IMPORTING io_repository          TYPE REF TO lcl_repo_online
-                  is_transport_to_branch TYPE ty_transport_to_branch
+                  is_transport_to_branch TYPE lif_defs=>ty_transport_to_branch
                   it_transport_objects   TYPE scts_tadir
         RAISING   lcx_exception.
   PRIVATE SECTION.
@@ -268,28 +269,28 @@ CLASS lcl_transport_to_branch DEFINITION.
         lcx_exception.
     METHODS generate_commit_message
       IMPORTING
-        is_transport_to_branch TYPE ty_transport_to_branch
+        is_transport_to_branch TYPE lif_defs=>ty_transport_to_branch
       RETURNING
-        VALUE(rs_comment)      TYPE ty_comment.
+        VALUE(rs_comment)      TYPE lif_defs=>ty_comment.
     METHODS stage_transport_objects
       IMPORTING
         it_transport_objects TYPE scts_tadir
         io_stage             TYPE REF TO lcl_stage
-        is_stage_objects     TYPE ty_stage_files
-        it_object_statuses   TYPE ty_results_tt
+        is_stage_objects     TYPE lif_defs=>ty_stage_files
+        it_object_statuses   TYPE lif_defs=>ty_results_tt
       RAISING
         lcx_exception.
 ENDCLASS.
 
-CLASS lcl_transport_to_branch IMPLEMENTATION.
+CLASS lcl_transport_2_branch IMPLEMENTATION.
 
   METHOD create.
     DATA:
-      lv_branch_name      TYPE string,
-      ls_comment          TYPE ty_comment,
-      lo_stage            TYPE REF TO lcl_stage,
-      ls_stage_objects    TYPE ty_stage_files,
-      lt_object_statuses  TYPE ty_results_tt.
+      lv_branch_name     TYPE string,
+      ls_comment         TYPE lif_defs=>ty_comment,
+      lo_stage           TYPE REF TO lcl_stage,
+      ls_stage_objects   TYPE lif_defs=>ty_stage_files,
+      lt_object_statuses TYPE lif_defs=>ty_results_tt.
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
         lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).

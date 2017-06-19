@@ -125,7 +125,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
   METHOD find_content.
 
     DATA: lv_filename TYPE string,
-          lt_files    TYPE ty_files_tt.
+          lt_files    TYPE lif_defs=>ty_files_tt.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
@@ -165,7 +165,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           lv_folder   TYPE abap_bool,
           lv_filename TYPE string,
           lv_class    TYPE smimloio-lo_class,
-          ls_file     TYPE ty_file,
+          ls_file     TYPE lif_defs=>ty_file,
           lv_content  TYPE xstring,
           li_api      TYPE REF TO if_mr_api,
           lv_loio     TYPE sdok_docid.
@@ -332,7 +332,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_smim IMPLEMENTATION

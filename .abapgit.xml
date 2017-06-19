@@ -12,6 +12,7 @@
     <item>/README.md</item>
     <item>/package.json</item>
     <item>/changelog.txt</item>
+    <item>/.gitignore</item>
    </IGNORE>
   </DATA>
  </asx:values>

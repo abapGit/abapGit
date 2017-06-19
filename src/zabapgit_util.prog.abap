@@ -2,6 +2,35 @@
 *&  Include           ZABAPGIT_UTIL
 *&---------------------------------------------------------------------*
 
+CLASS lcl_state DEFINITION.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS:
+      reduce
+        IMPORTING
+          iv_cur  TYPE char1
+        CHANGING
+          cv_prev TYPE char1.
+
+ENDCLASS.
+
+CLASS lcl_state IMPLEMENTATION.
+
+  METHOD reduce.
+
+    IF cv_prev = iv_cur OR iv_cur IS INITIAL.
+      RETURN. " No change
+    ELSEIF cv_prev IS INITIAL.
+      cv_prev = iv_cur.
+    ELSE.
+      cv_prev = lif_defs=>gc_state-mixed.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_time DEFINITION
 *----------------------------------------------------------------------*
@@ -89,7 +118,7 @@ CLASS lcl_convert DEFINITION FINAL.
 
     CLASS-METHODS x_to_bitbyte
       IMPORTING iv_x              TYPE x
-      RETURNING VALUE(rv_bitbyte) TYPE ty_bitbyte.
+      RETURNING VALUE(rv_bitbyte) TYPE lif_defs=>ty_bitbyte.
 
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING iv_string         TYPE string
@@ -108,6 +137,10 @@ CLASS lcl_convert DEFINITION FINAL.
       IMPORTING iv_i              TYPE i
                 iv_length         TYPE i
       RETURNING VALUE(rv_xstring) TYPE xstring.
+
+    CLASS-METHODS split_string
+      IMPORTING iv_string       TYPE string
+      RETURNING VALUE(rt_lines) TYPE string_table.
 
 ENDCLASS.                    "lcl_convert DEFINITION
 
@@ -218,6 +251,19 @@ CLASS lcl_convert IMPLEMENTATION.
 
   ENDMETHOD.                    "x_to_bitbyte
 
+  METHOD split_string.
+
+    FIND FIRST OCCURRENCE OF cl_abap_char_utilities=>cr_lf IN iv_string.
+
+    " Convert string into table depending on separator type CR_LF vs. LF
+    IF sy-subrc = 0.
+      SPLIT iv_string AT cl_abap_char_utilities=>cr_lf INTO TABLE rt_lines.
+    ELSE.
+      SPLIT iv_string AT cl_abap_char_utilities=>newline INTO TABLE rt_lines.
+    ENDIF.
+
+  ENDMETHOD.                    "split_string
+
 ENDCLASS.                    "lcl_convert IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -235,14 +281,14 @@ CLASS lcl_hash DEFINITION FINAL.
       RETURNING VALUE(rv_checksum) TYPE ty_adler32.
 
     CLASS-METHODS sha1
-      IMPORTING iv_type        TYPE ty_type
+      IMPORTING iv_type        TYPE lif_defs=>ty_type
                 iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
       RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
@@ -371,12 +417,10 @@ CLASS lcl_path IMPLEMENTATION.
   METHOD split_file_location.
 
     DATA: lv_cnt TYPE i,
-          lv_off TYPE i,
           lv_len TYPE i.
 
     FIND FIRST OCCURRENCE OF REGEX '^/(.*/)?' IN iv_fullpath
       MATCH COUNT lv_cnt
-      MATCH OFFSET lv_off
       MATCH LENGTH lv_len.
 
     IF lv_cnt > 0.
@@ -408,8 +452,8 @@ CLASS lcl_path IMPLEMENTATION.
 
   METHOD change_dir.
 
-    DATA lv_last TYPE i.
-    DATA lv_temp TYPE string.
+    DATA: lv_last TYPE i,
+          lv_temp TYPE string.
 
     lv_last = strlen( iv_cur_dir ) - 1.
 
@@ -513,7 +557,7 @@ CLASS lcl_url IMPLEMENTATION.
 
   METHOD path_name.
 
-    DATA: lv_host TYPE string.
+    DATA: lv_host TYPE string ##NEEDED.
 
     FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
       SUBMATCHES lv_host rv_path_name.
@@ -563,7 +607,7 @@ CLASS lcl_diff DEFINITION FINAL.
              update TYPE i,
            END OF ty_count.
 
-    DATA mt_beacons TYPE ty_string_tt READ-ONLY.
+    DATA mt_beacons TYPE lif_defs=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -628,8 +672,8 @@ CLASS lcl_diff IMPLEMENTATION.
     lv_new = lcl_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = lcl_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_new AT gc_newline INTO TABLE et_new.
-    SPLIT lv_old AT gc_newline INTO TABLE et_old.
+    SPLIT lv_new AT lif_defs=>gc_newline INTO TABLE et_new.
+    SPLIT lv_old AT lif_defs=>gc_newline INTO TABLE et_old.
 
   ENDMETHOD.                    "unpack
 
@@ -1133,9 +1177,9 @@ CLASS lcl_log IMPLEMENTATION.
 
 
     READ TABLE mt_log INDEX 1 INTO ls_log1.
-    READ TABLE mt_log INDEX 1 INTO ls_log2.
-    READ TABLE mt_log INDEX 1 INTO ls_log3.
-    READ TABLE mt_log INDEX 1 INTO ls_log4.
+    READ TABLE mt_log INDEX 2 INTO ls_log2.
+    READ TABLE mt_log INDEX 3 INTO ls_log3.
+    READ TABLE mt_log INDEX 4 INTO ls_log4.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING

@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_DB
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -20,7 +20,7 @@ CLASS lcl_gui_page_db_display DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_display IMPLEMENTATION.
+CLASS lcl_gui_page_db_dis IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -31,7 +31,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
   METHOD render_record_banner.
     rv_html = |<table class="tag"><tr><td class="label">Type:</td>|
            && | <td>{ is_key-type }</td></tr></table>|
-           && gc_newline
+           && lif_defs=>gc_newline
            && |<table class="tag"><tr><td class="label">Key:</td>|
            && |  <td>{ is_key-value }</td></tr></table>|.
   ENDMETHOD. "render_record_banner
@@ -62,7 +62,7 @@ CLASS lcl_gui_page_db_display IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
-    lo_toolbar->add( iv_act = |{ gc_action-db_edit }?{ lv_action }|
+    lo_toolbar->add( iv_act = |{ lif_defs=>gc_action-db_edit }?{ lv_action }|
                      iv_txt = 'Edit' ) ##NO_TEXT.
 
     ro_html->add( '<div class="db_entry">' ).
@@ -124,20 +124,20 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     CREATE OBJECT lo_toolbar.
     lo_toolbar->add( iv_act = 'submitFormById(''db_form'');'
                      iv_txt = 'Save'
-                     iv_typ = gc_action_type-onclick
-                     iv_opt = gc_html_opt-strong ) ##NO_TEXT.
+                     iv_typ = lif_defs=>gc_action_type-onclick
+                     iv_opt = lif_defs=>gc_html_opt-strong ) ##NO_TEXT.
 
     ro_html->add( '<div class="db_entry">' ).
 
     " Banners & Toolbar
     ro_html->add( '<table class="toolbar"><tr><td>' ).
-    ro_html->add( lcl_gui_page_db_display=>render_record_banner( ms_key ) ).
+    ro_html->add( lcl_gui_page_db_dis=>render_record_banner( ms_key ) ).
     ro_html->add( '</td><td>' ).
     ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
     ro_html->add( '</td></tr></table>' ).
 
     " Form
-    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ gc_action-db_update }">| ).
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ lif_defs=>gc_action-db_update }">| ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
@@ -210,9 +210,9 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
       lv_action  = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ gc_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ gc_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ gc_action-db_delete }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ lif_defs=>gc_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ lif_defs=>gc_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ lif_defs=>gc_action-db_delete }?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).

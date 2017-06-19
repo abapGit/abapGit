@@ -11,9 +11,9 @@ CLASS lcl_branch_overview DEFINITION FINAL.
            END OF ty_create.
 
     TYPES: BEGIN OF ty_commit,
-             sha1       TYPE ty_sha1,
-             parent1    TYPE ty_sha1,
-             parent2    TYPE ty_sha1,
+             sha1       TYPE lif_defs=>ty_sha1,
+             parent1    TYPE lif_defs=>ty_sha1,
+             parent2    TYPE lif_defs=>ty_sha1,
              author     TYPE string,
              email      TYPE string,
              time       TYPE string,
@@ -43,7 +43,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
 
     CLASS-METHODS:
       parse_commits
-        IMPORTING it_objects TYPE ty_objects_tt
+        IMPORTING it_objects TYPE lif_defs=>ty_objects_tt
         RAISING   lcx_exception,
       determine_branch
         RAISING lcx_exception,
@@ -53,7 +53,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING lcx_exception,
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
-        RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+        RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
         RAISING   lcx_exception.
 
     CLASS-DATA:
@@ -131,7 +131,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lt_objects TYPE ty_objects_tt.
+    DATA: lt_objects TYPE lif_defs=>ty_objects_tt.
 
 
     CLEAR gt_branches.
@@ -169,7 +169,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
                                               it_branches = gt_branches
                                     IMPORTING et_objects = rt_objects ).
 
-    DELETE rt_objects WHERE type = gc_type-blob.
+    DELETE rt_objects WHERE type = lif_defs=>gc_type-blob.
 
   ENDMETHOD.
 
@@ -182,7 +182,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = gc_type-commit.
+    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = lif_defs=>gc_type-commit.
       ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
@@ -190,10 +190,10 @@ CLASS lcl_branch_overview IMPLEMENTATION.
       ls_commit-parent1 = ls_raw-parent.
       ls_commit-parent2 = ls_raw-parent2.
 
-      SPLIT ls_raw-body AT gc_newline INTO ls_commit-message lv_trash.
+      SPLIT ls_raw-body AT lif_defs=>gc_newline INTO ls_commit-message lv_trash.
 
 * unix time stamps are in same time zone, so ignore the zone,
-      FIND REGEX gc_author_regex IN ls_raw-author
+      FIND REGEX lif_defs=>gc_author_regex IN ls_raw-author
         SUBMATCHES
         ls_commit-author
         ls_commit-email
@@ -302,7 +302,7 @@ ENDCLASS.
 
 ***********************
 
-CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS:
@@ -358,7 +358,7 @@ CLASS lcl_gui_page_branch_overview DEFINITION FINAL INHERITING FROM lcl_gui_page
 
 ENDCLASS.                       "lcl_gui_page_explore DEFINITION
 
-CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
+CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
@@ -432,30 +432,30 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     ro_html->add( build_menu( )->render( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
-    _add '<canvas id="gitGraph"></canvas>'.
+    ro_html->add( '<canvas id="gitGraph"></canvas>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
       'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js">' &&
       '</script>' ) ##NO_TEXT.
 
-    _add '<script type="text/javascript">'.
-    _add 'var myTemplateConfig = {'.
+    ro_html->add( '<script type="text/javascript">' ).
+    ro_html->add( 'var myTemplateConfig = {' ).
     ro_html->add( 'colors: [ "#979797", "#008fb5", "#f1c109", "'
       && '#095256", "#087F8C", "#5AAA95", "#86A873", "#BB9F06" ],' ) ##NO_TEXT.
-    _add 'branch: {'.
-    _add '  lineWidth: 8,'.
-    _add '  spacingX: 50'.
-    _add '},'.
-    _add 'commit: {'.
-    _add '  spacingY: -40,'.
-    _add '  dot: { size: 12 },'.
-    _add '  message: { font: "normal 14pt Arial" }'.
-    _add '}'.
-    _add '};'.
-    _add 'var gitgraph = new GitGraph({'.
-    _add '  template: myTemplateConfig,'.
-    _add '  orientation: "vertical-reverse"'.
-    _add '});'.
+    ro_html->add( 'branch: {' ).
+    ro_html->add( '  lineWidth: 8,' ).
+    ro_html->add( '  spacingX: 50' ).
+    ro_html->add( '},' ).
+    ro_html->add( 'commit: {' ).
+    ro_html->add( '  spacingY: -40,' ).
+    ro_html->add( '  dot: { size: 12 },' ).
+    ro_html->add( '  message: { font: "normal 14pt Arial" }' ).
+    ro_html->add( '}' ).
+    ro_html->add( '};' ).
+    ro_html->add( 'var gitgraph = new GitGraph({' ).
+    ro_html->add( '  template: myTemplateConfig,' ).
+    ro_html->add( '  orientation: "vertical-reverse"' ).
+    ro_html->add( '});' ).
 
     LOOP AT mt_commits ASSIGNING <ls_commit>.
       IF sy-tabix = 1.
@@ -490,7 +490,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
 
     ENDLOOP.
 
-    _add '</script>'.
+    ro_html->add( '</script>' ).
 
   ENDMETHOD.
 
@@ -561,15 +561,15 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-refresh.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
         refresh( ).
-        ev_state = gc_event_state-re_render.
+        ev_state = lif_defs=>gc_event_state-re_render.
       WHEN c_actions-merge.
         ls_merge = decode_merge( it_postdata ).
         CREATE OBJECT lo_merge
@@ -578,7 +578,7 @@ CLASS lcl_gui_page_branch_overview IMPLEMENTATION.
             iv_source = ls_merge-source
             iv_target = ls_merge-target.
         ei_page = lo_merge.
-        ev_state = gc_event_state-new_page.
+        ev_state = lif_defs=>gc_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.

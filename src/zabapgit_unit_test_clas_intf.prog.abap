@@ -1,7 +1,7 @@
 
 CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
   PUBLIC SECTION.
-    INTERFACES: lif_object_oriented_object_fnc.
+    INTERFACES: lif_oo_object_fnc.
     DATA:
       mv_package               TYPE devclass,
       mv_overwrite             TYPE seox_boolean,
@@ -14,14 +14,14 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
       mt_local_test_classes    TYPE rswsourcet,
       mv_force                 TYPE seoflag,
       ms_deserialize_key       TYPE seoclskey,
-      mt_source                TYPE ty_string_tt,
-      ms_item_to_activate      TYPE ty_item,
-      mt_descriptions          TYPE ty_seocompotx_tt,
+      mt_source                TYPE lif_defs=>ty_string_tt,
+      ms_item_to_activate      TYPE lif_defs=>ty_item,
+      mt_descriptions          TYPE lif_defs=>ty_seocompotx_tt,
       ms_description_key       TYPE seoclskey,
       mv_text_pool_class_name  TYPE seoclsname,
       mt_text_pool             TYPE textpool_table,
       mv_text_pool_inserted    TYPE abap_bool,
-      mt_sotr                  TYPE ty_sotr_tt,
+      mt_sotr                  TYPE lif_defs=>ty_sotr_tt,
       mt_sotr_package          TYPE devclass,
       mv_docu_object_name      TYPE dokhl-object,
       mv_docu_language         TYPE spras,
@@ -37,7 +37,7 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
 
 ENDCLASS.
 CLASS ltd_spy_oo_object IMPLEMENTATION.
-  METHOD lif_object_oriented_object_fnc~create.
+  METHOD lif_oo_object_fnc~create.
     DATA lv_properties_structure_name TYPE string.
     lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( is_properties )->absolute_name.
     IF lv_properties_structure_name = cl_abap_typedescr=>describe_by_data( ms_interface_properties )->absolute_name.
@@ -48,7 +48,8 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mv_package                = iv_package.
     mv_overwrite              = iv_overwrite.
   ENDMETHOD.
-  METHOD lif_object_oriented_object_fnc~generate_locals.
+
+  METHOD lif_oo_object_fnc~generate_locals.
     ms_locals_key            = is_key.
     mt_local_definitions     = it_local_definitions.
     mt_local_implementations = it_local_implementations.
@@ -57,21 +58,21 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     mv_force                 = iv_force.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~deserialize_source.
+  METHOD lif_oo_object_fnc~deserialize_source.
     ms_deserialize_key = is_key.
     mt_source          = it_source.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~add_to_activation_list.
+  METHOD lif_oo_object_fnc~add_to_activation_list.
     ms_item_to_activate = is_item.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~update_descriptions.
+  METHOD lif_oo_object_fnc~update_descriptions.
     ms_description_key = is_key.
     mt_descriptions    = it_descriptions.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~insert_text_pool.
+  METHOD lif_oo_object_fnc~insert_text_pool.
     mv_text_pool_inserted   = abap_true.
     mv_text_pool_class_name = iv_class_name.
     mt_text_pool            = it_text_pool.
@@ -80,28 +81,28 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
       exp = sy-langu ).
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_sotr.
+  METHOD lif_oo_object_fnc~create_sotr.
     mt_sotr = it_sotr.
     mt_sotr_package = iv_package.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~create_documentation.
+  METHOD lif_oo_object_fnc~create_documentation.
     mv_docu_object_name = iv_object_name.
     mv_docu_language    = iv_language.
     mt_docu_lines       = it_lines.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_includes.
+  METHOD lif_oo_object_fnc~get_includes.
     APPEND 'dummy' TO rt_includes.
     mv_get_includes_called = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~exists.
+  METHOD lif_oo_object_fnc~exists.
     mv_exists_called = abap_true.
     rv_exists = mv_exists.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~serialize_abap.
+  METHOD lif_oo_object_fnc~serialize_abap.
     ms_serialize_key = is_class_key.
     CASE iv_type.
       WHEN seop_ext_class_locals_def.
@@ -117,35 +118,35 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     ENDCASE.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_class_properties.
+  METHOD lif_oo_object_fnc~get_class_properties.
     rs_class_properties = ms_class_properties.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_interface_properties.
+  METHOD lif_oo_object_fnc~get_interface_properties.
     rs_interface_properties = ms_interface_properties.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_text_pool.
+  METHOD lif_oo_object_fnc~read_text_pool.
     rt_text_pool = mt_text_pool.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_sotr.
+  METHOD lif_oo_object_fnc~read_sotr.
     rt_sotr = mt_sotr.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_documentation.
+  METHOD lif_oo_object_fnc~read_documentation.
     rt_lines = mt_docu_lines.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~read_descriptions.
+  METHOD lif_oo_object_fnc~read_descriptions.
     rt_descriptions = mt_descriptions.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~get_skip_test_classes.
+  METHOD lif_oo_object_fnc~get_skip_test_classes.
     rv_skip = mv_skip_test_classes.
   ENDMETHOD.
 
-  METHOD lif_object_oriented_object_fnc~delete.
+  METHOD lif_oo_object_fnc~delete.
     ms_delete_key = is_deletion_key.
   ENDMETHOD.
 
@@ -184,7 +185,7 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
                                         exp = abap_false ).
   ENDMETHOD.
   METHOD constructor.
-    DATA ls_empty_item TYPE ty_item.
+    DATA ls_empty_item TYPE lif_defs=>ty_item.
     super->constructor( ls_empty_item ).
     APPEND 'source'         TO me->mt_sources.
     APPEND 'definition'     TO me->mt_local_definitions.
@@ -217,19 +218,19 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       mo_xml_input               TYPE REF TO lcl_xml_input,
       mo_xml_out                 TYPE REF TO lcl_xml_output,
       mo_oo_object               TYPE REF TO lif_object,
-      ms_item                    TYPE ty_item.
+      ms_item                    TYPE lif_defs=>ty_item.
     METHODS: when_deserializing
       RAISING
         lcx_exception,
       then_should_deserialize_source,
       given_the_descriptions
         IMPORTING
-          it_descriptions TYPE ty_seocompotx_tt
+          it_descriptions TYPE lif_defs=>ty_seocompotx_tt
         RAISING
           lcx_exception,
       then_shuld_update_descriptions
         IMPORTING
-          it_descriptions TYPE ty_seocompotx_tt,
+          it_descriptions TYPE lif_defs=>ty_seocompotx_tt,
       then_it_should_add_activation,
       given_documentation_in_xml_as
         IMPORTING
@@ -342,7 +343,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -384,7 +385,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
   METHOD should_update_descriptions.
     DATA:
       ls_description  TYPE seocompotx,
-      lt_descriptions TYPE ty_seocompotx_tt.
+      lt_descriptions TYPE lif_defs=>ty_seocompotx_tt.
 
     given_a_class_properties( ).
 
@@ -461,7 +462,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
 
   METHOD insert_text_pool.
     DATA: lt_pool_external TYPE textpool_table,
-          ls_pool_external TYPE ty_tpool.
+          ls_pool_external TYPE lif_defs=>ty_tpool.
     ls_pool_external-id = 'ID'.
     ls_pool_external-key = 'KEY'.
     APPEND ls_pool_external TO lt_pool_external.
@@ -485,7 +486,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
 
   METHOD create_stor_from_xml.
     DATA:
-      lt_sotr TYPE ty_sotr_tt,
+      lt_sotr TYPE lif_defs=>ty_sotr_tt,
       ls_sotr LIKE LINE OF lt_sotr.
 
     given_a_class_properties( ).
@@ -544,7 +545,7 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -569,7 +570,7 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
   METHOD update_descriptions.
     DATA:
       ls_description  TYPE seocompotx,
-      lt_descriptions TYPE ty_seocompotx_tt.
+      lt_descriptions TYPE lif_defs=>ty_seocompotx_tt.
 
     given_an_interface_properties( ).
 
@@ -648,7 +649,7 @@ CLASS ltcl_class_changed IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -695,7 +696,7 @@ CLASS ltcl_interface_changed IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     CREATE OBJECT mo_xml_out.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -743,7 +744,7 @@ CLASS ltcl_exists_test IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
   ENDMETHOD.
 
   METHOD class_exists.
@@ -809,7 +810,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zcl_class'.
@@ -824,7 +825,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_abap.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
 
     APPEND 'a_source_line' TO  me->mo_spy_oo_object_functions->mt_source.
 
@@ -839,7 +840,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_definitions.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
 
     APPEND 'a_local_definition' TO  me->mo_spy_oo_object_functions->mt_local_definitions.
 
@@ -855,7 +856,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_implementation.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
 
     APPEND 'a_local_implementation' TO  me->mo_spy_oo_object_functions->mt_local_implementations.
 
@@ -871,7 +872,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_macros.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
     APPEND 'a_local_macro' TO  me->mo_spy_oo_object_functions->mt_local_macros.
 
     mo_oo_object->serialize( mo_xml_out ).
@@ -886,7 +887,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_test_classes.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
     APPEND 'a_local_test' TO  me->mo_spy_oo_object_functions->mt_local_test_classes.
 
     mo_oo_object->serialize( mo_xml_out ).
@@ -999,8 +1000,8 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD read_sotr_if_exception_class.
     DATA:
-      lt_sotr        TYPE ty_sotr_tt,
-      lt_actual_sotr TYPE ty_sotr_tt,
+      lt_sotr        TYPE lif_defs=>ty_sotr_tt,
+      lt_actual_sotr TYPE lif_defs=>ty_sotr_tt,
       ls_sotr        LIKE LINE OF lt_sotr.
 
     me->mo_spy_oo_object_functions->ms_class_properties-category = seoc_category_exception.
@@ -1028,7 +1029,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD do_not_read_sotr_regular_class.
     DATA:
-      lt_actual_sotr TYPE ty_sotr_tt.
+      lt_actual_sotr TYPE lif_defs=>ty_sotr_tt.
 
     CLEAR: me->mo_spy_oo_object_functions->ms_class_properties-category.
 
@@ -1075,9 +1076,9 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD should_serialize_descriptions.
     DATA:
-      lt_descriptions        TYPE ty_seocompotx_tt,
-      lt_actual_descriptions TYPE ty_seocompotx_tt,
-      ls_description         TYPE LINE OF ty_seocompotx_tt.
+      lt_descriptions        TYPE lif_defs=>ty_seocompotx_tt,
+      lt_actual_descriptions TYPE lif_defs=>ty_seocompotx_tt,
+      ls_description         TYPE LINE OF lif_defs=>ty_seocompotx_tt.
 
     ls_description-clsname = 'class'.
     APPEND ls_description TO lt_descriptions.
@@ -1126,7 +1127,7 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
     CREATE OBJECT mo_fake_object_files.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
 
     ms_item-devclass = 'package_name'.
     ms_item-obj_name = 'zif_interface'.
@@ -1141,7 +1142,7 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_abap.
-    DATA lt_abap_source TYPE ty_string_tt.
+    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
 
     APPEND 'a_source_line' TO  me->mo_spy_oo_object_functions->mt_source.
 
@@ -1227,9 +1228,9 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
 
   METHOD should_serialize_descriptions.
     DATA:
-      lt_descriptions        TYPE ty_seocompotx_tt,
-      lt_actual_descriptions TYPE ty_seocompotx_tt,
-      ls_description         TYPE LINE OF ty_seocompotx_tt.
+      lt_descriptions        TYPE lif_defs=>ty_seocompotx_tt,
+      lt_actual_descriptions TYPE lif_defs=>ty_seocompotx_tt,
+      ls_description         TYPE LINE OF lif_defs=>ty_seocompotx_tt.
 
     ls_description-clsname = 'class'.
     APPEND ls_description TO lt_descriptions.
@@ -1272,7 +1273,7 @@ CLASS ltcl_delete_oo_test IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_spy_oo_object_functions.
     me->mo_spy_oo_object_functions->mv_exists = abap_true.
-    lth_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
+    ltcl_oo_factory_injector=>inject( mo_spy_oo_object_functions ).
   ENDMETHOD.
 
   METHOD class_delete.

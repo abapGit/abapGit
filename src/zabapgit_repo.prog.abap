@@ -19,14 +19,14 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       get_files_local
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
                   it_filter       TYPE scts_tadir OPTIONAL
-        RETURNING VALUE(rt_files) TYPE ty_files_item_tt
+        RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_item_tt
         RAISING   lcx_exception,
       get_local_checksums
         RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt,
       get_local_checksums_per_file
-        RETURNING VALUE(rt_checksums) TYPE ty_file_signatures_tt,
+        RETURNING VALUE(rt_checksums) TYPE lif_defs=>ty_file_signatures_tt,
       get_files_remote
-        RETURNING VALUE(rt_files) TYPE ty_files_tt
+        RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt
         RAISING   lcx_exception,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
@@ -50,7 +50,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING lcx_exception,
       refresh_local, " For testing purposes, maybe removed later
       update_local_checksums
-        IMPORTING it_files TYPE ty_file_signatures_tt
+        IMPORTING it_files TYPE lif_defs=>ty_file_signatures_tt
         RAISING   lcx_exception,
       rebuild_local_checksums
         RAISING   lcx_exception,
@@ -62,15 +62,15 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   lcx_exception.
 
   PROTECTED SECTION.
-    DATA: mt_local              TYPE ty_files_item_tt,
-          mt_remote             TYPE ty_files_tt,
+    DATA: mt_local              TYPE lif_defs=>ty_files_item_tt,
+          mt_remote             TYPE lif_defs=>ty_files_tt,
           mv_do_local_refresh   TYPE abap_bool,
           mv_last_serialization TYPE timestamp,
           ms_data               TYPE lcl_persistence_repo=>ty_repo.
 
     METHODS:
       set
-        IMPORTING iv_sha1        TYPE ty_sha1 OPTIONAL
+        IMPORTING iv_sha1        TYPE lif_defs=>ty_sha1 OPTIONAL
                   it_checksums   TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
                   iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
@@ -118,27 +118,27 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   lcx_exception,
       get_files_remote REDEFINITION,
       get_objects
-        RETURNING VALUE(rt_objects) TYPE ty_objects_tt
+        RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
         RAISING   lcx_exception,
       deserialize REDEFINITION,
       status
         IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
-        RETURNING VALUE(rt_results) TYPE ty_results_tt
+        RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
         RAISING   lcx_exception,
       reset_status,
       rebuild_local_checksums REDEFINITION,
       push
-        IMPORTING is_comment TYPE ty_comment
+        IMPORTING is_comment TYPE lif_defs=>ty_comment
                   io_stage   TYPE REF TO lcl_stage
         RAISING   lcx_exception.
 
   PRIVATE SECTION.
     DATA:
-      mt_objects     TYPE ty_objects_tt,
-      mv_branch      TYPE ty_sha1,
+      mt_objects     TYPE lif_defs=>ty_objects_tt,
+      mv_branch      TYPE lif_defs=>ty_sha1,
       mv_initialized TYPE abap_bool,
       mo_branches    TYPE REF TO lcl_git_branch_list,
-      mt_status      TYPE ty_results_tt.
+      mt_status      TYPE lif_defs=>ty_results_tt.
 
     METHODS:
       handle_stage_ignore
@@ -147,6 +147,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       initialize
         RAISING lcx_exception,
       actualize_head_branch
+        RAISING lcx_exception,
+      delete_initial_online_repo
+        importing iv_commit type flag
         RAISING lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
@@ -159,7 +162,7 @@ CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
   PUBLIC SECTION.
     METHODS:
       set_files_remote
-        IMPORTING it_files TYPE ty_files_tt
+        IMPORTING it_files TYPE lif_defs=>ty_files_tt
         RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_offline DEFINITION

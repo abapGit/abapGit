@@ -10,7 +10,7 @@ Works with: [GitHub](https://github.com/), [GitLab](https://gitlab.com/), [Assem
 
 ABAP Version: 702 or higher
 
-Latest build: [zabapgit.abap](http://larshp.github.io/abapGit/build/zabapgit.txt)
+Latest build: [zabapgit.abap](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.abap)
 
 ## Design Goals ##
 - Easy installation
@@ -19,9 +19,9 @@ Latest build: [zabapgit.abap](http://larshp.github.io/abapGit/build/zabapgit.txt
 - Code readable in git repository
 
 ## Documentation/Guides ##
-See [Wiki](https://github.com/larshp/abapGit/wiki/)
+http://larshp.github.io/abapGit/
 
 ## FAQ ##
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_17_17.png)
+![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_33_3.png)

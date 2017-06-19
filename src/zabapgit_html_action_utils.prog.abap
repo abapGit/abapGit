@@ -80,7 +80,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
-      RETURNING VALUE(rs_fields) TYPE lcl_persistence_background=>ty_background.
+      RETURNING VALUE(rs_fields) TYPE lcl_persist_background=>ty_background.
 
     CLASS-METHODS stage_decode
       IMPORTING iv_getdata TYPE clike
@@ -302,7 +302,8 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     CLEAR es_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-    REPLACE ALL OCCURRENCES OF gc_newline IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF lif_defs=>gc_crlf    IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF lif_defs=>gc_newline IN lv_string WITH lc_replace.
     lt_fields = parse_fields( lv_string ).
 
     get_field( EXPORTING name = 'COMMITTER_NAME'  it = lt_fields CHANGING cv = es_fields ).
@@ -314,7 +315,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <body>.
     ASSERT <body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH gc_newline.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH lif_defs=>gc_newline.
 
     ASSERT es_fields IS NOT INITIAL.
 

@@ -86,7 +86,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       lv_parentcl = lcl_sap_package=>get( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
-        lcx_exception=>raise( 'error, expected parent package' ).
+        lcx_exception=>raise( |error, expected parent package, { iv_package }| ).
       ELSE.
         CASE io_dot->get_folder_logic( ).
           WHEN lcl_dot_abapgit=>c_folder_logic-full.
@@ -274,7 +274,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
           iv_package  = '$FOOBAR'
           iv_path     = '/src/' ).
         cl_abap_unit_assert=>fail( 'Error expected' ).
-      CATCH lcx_exception.
+      CATCH lcx_exception ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 

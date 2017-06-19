@@ -27,7 +27,6 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     DATA: lv_date    TYPE dats,
           lv_time    TYPE tims,
-          lv_ts      TYPE timestamp,
           lt_indexes TYPE STANDARD TABLE OF dd09l.
 
     FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
@@ -38,7 +37,13 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
       INTO (lv_date, lv_time)
@@ -46,7 +51,13 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers  = '0000'.
 
-    _object_check_timestamp lv_date lv_time.
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
+    IF rv_changed = abap_true.
+      RETURN.
+    ENDIF.
 
     SELECT as4date as4time FROM dd12l " Table tech settings
       INTO CORRESPONDING FIELDS OF TABLE lt_indexes
@@ -55,7 +66,13 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_indexes ASSIGNING <ls_index>.
-      _object_check_timestamp <ls_index>-as4date <ls_index>-as4time.
+      rv_changed = check_timestamp(
+        iv_timestamp = iv_timestamp
+        iv_date      = <ls_index>-as4date
+        iv_time      = <ls_index>-as4time ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.  "lif_object~has_changed_since
@@ -99,14 +116,34 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
+    DATA: lv_objname  TYPE rsedd0-ddobjname,
+          lv_tabclass TYPE dd02l-tabclass,
+          lv_no_ask   TYPE abap_bool,
+          lr_data     TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_data>  TYPE any.
 
 
     lv_objname = ms_item-obj_name.
 
+    lv_no_ask = abap_true.
+    SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+* it cannot delete table with table wihtout asking
+      CREATE DATA lr_data TYPE (lv_objname).
+      ASSIGN lr_data->* TO <ls_data>.
+      SELECT SINGLE * FROM (lv_objname) INTO <ls_data>.
+      IF sy-subrc = 0.
+        lv_no_ask = abap_false.
+      ENDIF.
+    ENDIF.
+
     CALL FUNCTION 'RS_DD_DELETE_OBJ'
       EXPORTING
-        no_ask               = abap_true
+        no_ask               = lv_no_ask
         objname              = lv_objname
         objtype              = 'T'
       EXCEPTIONS
@@ -406,7 +443,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~compare_to_remote_version.
-    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_validation,
+    DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_valid,
           lo_local_version_output TYPE REF TO lcl_xml_output,
           lo_local_version_input  TYPE REF TO lcl_xml_input,
           lv_validation_text      TYPE string.
@@ -425,11 +462,11 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       io_local_version  = lo_local_version_input ).
     IF lv_validation_text IS NOT INITIAL.
       lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
-      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_validation_dialog
+      CREATE OBJECT ro_comparison_result TYPE lcl_tabl_valid_dialog
         EXPORTING
           iv_message = lv_validation_text.
     ELSE.
-      CREATE OBJECT ro_comparison_result TYPE lcl_null_comparison_result.
+      CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
     ENDIF.
   ENDMETHOD.
 

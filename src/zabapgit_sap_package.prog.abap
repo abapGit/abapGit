@@ -37,7 +37,7 @@ CLASS lcl_sap_package DEFINITION FINAL CREATE PRIVATE
   PUBLIC SECTION.
     CLASS-METHODS:
       get
-        IMPORTING iv_package TYPE devclass
+        IMPORTING iv_package        TYPE devclass
         RETURNING VALUE(ri_package) TYPE REF TO lif_sap_package,
       create
         IMPORTING is_package TYPE scompkdtln
@@ -242,7 +242,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     APPEND mv_package TO rt_list.
 
     SELECT SINGLE parentcl INTO lv_parent
-      FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
+      FROM tdevc WHERE devclass = mv_package. "#EC CI_GENBUFF "#EC CI_SUBRC
 
     IF NOT lv_parent IS INITIAL.
       APPEND lv_parent TO rt_list.
@@ -259,7 +259,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
 
     SELECT devclass INTO TABLE rt_list
-      FROM tdevc WHERE parentcl = mv_package.           "#EC CI_GENBUFF
+      FROM tdevc WHERE parentcl = mv_package. "#EC CI_GENBUFF "#EC CI_SUBRC
 
 * note the recursion, since packages are added to the list
     LOOP AT rt_list INTO lv_devclass.

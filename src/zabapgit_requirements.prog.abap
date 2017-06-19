@@ -2,7 +2,6 @@
 *&  Include  zabapgit_requirements
 *&---------------------------------------------------------------------*
 
-"! Helper class for checking requirements / dependencies
 *----------------------------------------------------------------------*
 *       CLASS lcl_requirement_helper DEFINITION
 *----------------------------------------------------------------------*
@@ -40,7 +39,6 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tt
                                  RETURNING value(rt_status) TYPE ty_requirement_status_tt
                                  RAISING   lcx_exception.
-  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS:
       show_requirement_popup IMPORTING it_requirements TYPE ty_requirement_status_tt
@@ -122,7 +120,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
   ENDMETHOD.                    "get_requirement_met_status
 
   METHOD version_greater_or_equal.
-    DATA: lv_number TYPE numc4.
+    DATA: lv_number TYPE numc4 ##NEEDED.
 
     TRY.
         MOVE EXACT: is_status-installed_release TO lv_number,
