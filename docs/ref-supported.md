@@ -47,6 +47,7 @@ SFSW | Switch + Assignment of Objects to the Switch | Yes
 SHI3 | General structure storage: Definition of a structure | Yes
 SHLP | Search Help | Yes
 SICF | ICF Service | Yes
+SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
 SPLO | Format Types | Yes
 SRFC | RFC Service | [#155](https://github.com/larshp/abapGit/issues/155)
 SSFO | SAP Smart Form | Yes
