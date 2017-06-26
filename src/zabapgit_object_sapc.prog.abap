@@ -305,9 +305,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     object_key = ms_item-obj_name.
     objtype    = ms_item-obj_type.
 
-    IF mo_persistence IS NOT BOUND.
-      get_persistence( ).
-    ENDIF.
+    get_persistence( ).
 
     mo_persistence->lock(
       EXPORTING
@@ -348,9 +346,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     object_key = ms_item-obj_name.
 
     TRY.
-        IF mo_persistence IS NOT BOUND.
-          get_persistence( ).
-        ENDIF.
+        get_persistence( ).
 
         mo_persistence->get(
           EXPORTING
