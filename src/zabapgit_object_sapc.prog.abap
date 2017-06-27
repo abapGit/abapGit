@@ -14,13 +14,13 @@ CLASS lcl_object_sapc DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get_data_object
         RETURNING
-          VALUE(ro_apc_appl_obj_data) TYPE REF TO if_wb_object_data_model
+          value(ro_apc_appl_obj_data) TYPE REF TO if_wb_object_data_model
         RAISING
           lcx_exception,
 
       get_persistence
         RETURNING
-          VALUE(ro_persistence) TYPE REF TO if_wb_object_persist
+          value(ro_persistence) TYPE REF TO if_wb_object_persist
         RAISING
           lcx_exception,
 
@@ -77,7 +77,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
     rv_user = <changed_by>.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
@@ -257,7 +257,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
-  ENDMETHOD.
+  ENDMETHOD.                    "lif_object~compare_to_remote_version
 
   METHOD get_data_object.
 
@@ -274,7 +274,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
     ro_apc_appl_obj_data = mo_apc_appl_obj_data.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_data_object
 
 
   METHOD get_persistence.
@@ -292,7 +292,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
     ro_persistence = mo_persistence.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_persistence
 
 
   METHOD lock.
@@ -305,7 +305,9 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     object_key = ms_item-obj_name.
     objtype    = ms_item-obj_type.
 
-    get_persistence( )->lock(
+    get_persistence( ).
+
+    mo_persistence->lock(
       EXPORTING
         p_objname_tr   = objname
         p_object_key   = object_key
@@ -319,7 +321,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
       lcx_exception=>raise( `Error occured while locking SAPC ` && objname ).
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD.                    "lock
 
   METHOD unlock.
 
@@ -335,7 +337,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
                                 p_object_key = object_key
                                 p_objtype_tr = objtype ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "unlock
 
   METHOD get_data.
 
@@ -344,7 +346,9 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     object_key = ms_item-obj_name.
 
     TRY.
-        get_persistence( )->get(
+        get_persistence( ).
+
+        mo_persistence->get(
           EXPORTING
             p_object_key  = object_key
             p_version     = 'A'
@@ -359,7 +363,7 @@ CLASS lcl_object_sapc IMPLEMENTATION.
       IMPORTING
         p_data = p_data ).
 
-  ENDMETHOD.
+  ENDMETHOD.                    "get_data
 
 
 ENDCLASS.                    "lcl_object_sAPC IMPLEMENTATION
