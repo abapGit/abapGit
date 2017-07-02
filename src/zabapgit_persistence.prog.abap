@@ -27,6 +27,8 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
       lock_create
         RAISING lcx_exception,
       lock_exists
+        RETURNING VALUE(rv_exists) TYPE abap_bool,
+      settings_exists
         RETURNING VALUE(rv_exists) TYPE abap_bool.
 
 ENDCLASS.
@@ -1381,9 +1383,24 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
       migrate_repo( ).
       migrate_user( ).
+    ENDIF.
+
+    IF settings_exists( ) = abap_false.
       migrate_settings( ).
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD settings_exists.
+
+    TRY.
+        lcl_app=>db( )->read(
+          iv_type  = 'SETTINGS'
+          iv_value = '' ).
+        rv_exists = abap_true.
+      CATCH lcx_not_found.
+        rv_exists = abap_false.
+    ENDTRY.
   ENDMETHOD.
 
   METHOD migrate_settings.
@@ -1401,87 +1418,135 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     DATA: lv_adt_jump_enabled_as_boolean TYPE abap_bool.
 
 
+    CREATE OBJECT lr_persist_settings.
+    CREATE OBJECT lr_settings.
+    lr_settings->set_defaults( ).
+
     TRY.
-        lcl_app=>db( )->read(
-          iv_type  = 'SETTINGS'
-          iv_value = '' ).
+        lr_settings->set_proxy_url(
+          lcl_app=>db( )->read(
+            iv_type  = 'SETTINGS'
+            iv_value = 'PROXY_URL' ) ).
       CATCH lcx_not_found.
+    ENDTRY.
 
-        CREATE OBJECT lr_persist_settings.
-        CREATE OBJECT lr_settings.
-        lr_settings->set_defaults( ).
+    TRY.
+        lr_settings->set_proxy_port(
+          lcl_app=>db( )->read(
+            iv_type  = 'SETTINGS'
+            iv_value = 'PROXY_PORT' ) ).
+      CATCH lcx_not_found.
+    ENDTRY.
 
-        TRY.
-            lr_settings->set_proxy_url(
-              lcl_app=>db( )->read(
-                iv_type  = 'SETTINGS'
-                iv_value = 'PROXY_URL' ) ).
-          CATCH lcx_not_found.
-        ENDTRY.
+    TRY.
+        lv_flag = lcl_app=>db( )->read(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_AUTH' ).
+        lr_settings->set_proxy_authentication( lv_flag ).
+      CATCH lcx_not_found.
+    ENDTRY.
 
-        TRY.
-            lr_settings->set_proxy_port(
-              lcl_app=>db( )->read(
-                iv_type  = 'SETTINGS'
-                iv_value = 'PROXY_PORT' ) ).
-          CATCH lcx_not_found.
-        ENDTRY.
+    TRY.
+        lv_critical_tests_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'CRIT_TESTS' ).
+        lv_critical_tests_as_boolean = lv_critical_tests_as_string.
+        lr_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
+      CATCH lcx_not_found.
+    ENDTRY.
 
-        TRY.
-            lv_flag = lcl_app=>db( )->read(
-              iv_type  = 'SETTINGS'
-              iv_value = 'PROXY_AUTH' ).
-            lr_settings->set_proxy_authentication( lv_flag ).
-          CATCH lcx_not_found.
-        ENDTRY.
+    TRY.
+        lv_max_lines_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'MAX_LINES' ).
+        lv_max_lines_as_integer = lv_max_lines_as_string.
+        lr_settings->set_max_lines( lv_max_lines_as_integer ).
+      CATCH lcx_not_found cx_sy_conversion_no_number.
+    ENDTRY.
 
-        TRY.
-            lv_critical_tests_as_string = lcl_app=>db( )->read(
-               iv_type  = 'SETTINGS'
-               iv_value = 'CRIT_TESTS' ).
-            lv_critical_tests_as_boolean = lv_critical_tests_as_string.
-            lr_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
-          CATCH lcx_not_found.
-        ENDTRY.
+    TRY.
+        lv_adt_jump_enabled_as_string = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'ADT_JUMP' ).
+        lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
+        lr_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
+      CATCH lcx_not_found.
+    ENDTRY.
 
-        TRY.
-            lv_max_lines_as_string = lcl_app=>db( )->read(
-               iv_type  = 'SETTINGS'
-               iv_value = 'MAX_LINES' ).
-            lv_max_lines_as_integer = lv_max_lines_as_string.
-            lr_settings->set_max_lines( lv_max_lines_as_integer ).
-          CATCH lcx_not_found cx_sy_conversion_no_number.
-        ENDTRY.
+    TRY.
+        lv_s_param_value = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'COMMENT_LEN' ).
+        lv_i_param_value = lv_s_param_value.
+        lr_settings->set_commitmsg_comment_length( lv_i_param_value ).
+      CATCH lcx_not_found cx_sy_conversion_no_number.
+    ENDTRY.
 
-        TRY.
-            lv_adt_jump_enabled_as_string = lcl_app=>db( )->read(
-               iv_type  = 'SETTINGS'
-               iv_value = 'ADT_JUMP' ).
-            lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
-            lr_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
-          CATCH lcx_not_found.
-        ENDTRY.
+    TRY.
+        lv_s_param_value = lcl_app=>db( )->read(
+           iv_type  = 'SETTINGS'
+           iv_value = 'BODY_SIZE' ).
+        lv_i_param_value = lv_s_param_value.
+        lr_settings->set_commitmsg_body_size( lv_i_param_value ).
+      CATCH lcx_not_found cx_sy_conversion_no_number.
+    ENDTRY.
 
-        TRY.
-            lv_s_param_value = lcl_app=>db( )->read(
-               iv_type  = 'SETTINGS'
-               iv_value = 'COMMENT_LEN' ).
-            lv_i_param_value = lv_s_param_value.
-            lr_settings->set_commitmsg_comment_length( lv_i_param_value ).
-          CATCH lcx_not_found cx_sy_conversion_no_number.
-        ENDTRY.
+    lr_persist_settings->modify( io_settings = lr_settings ).
 
-        TRY.
-            lv_s_param_value = lcl_app=>db( )->read(
-               iv_type  = 'SETTINGS'
-               iv_value = 'BODY_SIZE' ).
-            lv_i_param_value = lv_s_param_value.
-            lr_settings->set_commitmsg_body_size( lv_i_param_value ).
-          CATCH lcx_not_found cx_sy_conversion_no_number.
-        ENDTRY.
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_URL' ).
+      CATCH lcx_exception.
+    ENDTRY.
 
-        lr_persist_settings->modify( io_settings = lr_settings ).
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_PORT' ).
+      CATCH lcx_exception.
+    ENDTRY.
 
+    TRY.
+        lcl_app=>db( )->delete(
+          iv_type  = 'SETTINGS'
+          iv_value = 'PROXY_AUTH' ).
+      CATCH lcx_exception.
+    ENDTRY.
+
+    TRY.
+        lcl_app=>db( )->delete(
+           iv_type  = 'SETTINGS'
+           iv_value = 'CRIT_TESTS' ).
+      CATCH lcx_exception.
+    ENDTRY.
+
+    TRY.
+        lcl_app=>db( )->delete(
+           iv_type  = 'SETTINGS'
+           iv_value = 'MAX_LINES' ).
+      CATCH lcx_exception.
+    ENDTRY.
+
+    TRY.
+        lcl_app=>db( )->delete(
+           iv_type  = 'SETTINGS'
+           iv_value = 'ADT_JUMP' ).
+      CATCH lcx_exception.
+    ENDTRY.
+
+    TRY.
+        lcl_app=>db( )->delete(
+           iv_type  = 'SETTINGS'
+           iv_value = 'COMMENT_LEN' ).
+      CATCH lcx_exception.
+    ENDTRY.
+
+    TRY.
+        lcl_app=>db( )->delete(
+           iv_type  = 'SETTINGS'
+           iv_value = 'BODY_SIZE' ).
+      CATCH lcx_exception.
     ENDTRY.
 
   ENDMETHOD.
