@@ -79,4 +79,4 @@ WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
 XSLT | Transformation | Yes
 
-Also see https://github.com/larshp/abapGit-Plugins
+Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)
