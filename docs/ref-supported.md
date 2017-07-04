@@ -8,6 +8,7 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AUTH | Authorization Check Fields | Yes
 BOBF | BOPF: Business Object Model | [Plugin](https://github.com/larshp/abapGit-Plugins)
 CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
