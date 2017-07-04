@@ -51,14 +51,11 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
     DATA: lv_stylename TYPE stxsadm-stylename.
 
-
-    SELECT SINGLE adm~stylename
-             FROM stxsadm AS adm
-             INNER JOIN stxshead AS hdr
-                ON  hdr~active    = c_style_active
-                AND hdr~stylename = adm~stylename
-      INTO lv_stylename
-      WHERE adm~stylename = ms_item-obj_name.
+    SELECT SINGLE stylename
+      FROM stxshead INTO lv_stylename
+      WHERE active    = c_style_active
+        AND stylename = ms_item-obj_name
+        AND vari      = ''.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists
