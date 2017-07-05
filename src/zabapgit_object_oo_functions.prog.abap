@@ -603,8 +603,9 @@ CLASS lcl_oo_base IMPLEMENTATION.
 
   METHOD lif_oo_object_fnc~read_descriptions.
     SELECT * FROM seocompotx INTO TABLE rt_descriptions
-      WHERE clsname = iv_obejct_name.                     "#EC CI_SUBRC
-    DELETE rt_descriptions WHERE descript IS INITIAL.
+      WHERE clsname   = iv_obejct_name
+        AND descript <> ''
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~delete.
