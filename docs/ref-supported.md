@@ -8,8 +8,10 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AUTH | Authorization Check Fields | Yes
 BOBF | BOPF: Business Object Model | [Plugin](https://github.com/larshp/abapGit-Plugins)
+CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 DCLS | ABAP Data Control Language Sources | Yes
@@ -47,6 +49,7 @@ SFSW | Switch + Assignment of Objects to the Switch | Yes
 SHI3 | General structure storage: Definition of a structure | Yes
 SHLP | Search Help | Yes
 SICF | ICF Service | Yes
+SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
 SPLO | Format Types | Yes
 SRFC | RFC Service | [#155](https://github.com/larshp/abapGit/issues/155)
 SSFO | SAP Smart Form | Yes
@@ -77,4 +80,4 @@ WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
 XSLT | Transformation | Yes
 
-Also see https://github.com/larshp/abapGit-Plugins
+Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)

@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2017-06-29 v1.37.3
+------------------
+* fixed 702 compatibility
+* fixed dump when calling branch overview page
+
 2017-06-10 v1.37.2
 ------------------
 * fixed unit tests

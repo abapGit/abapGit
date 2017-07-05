@@ -40,5 +40,8 @@ order: 30
 Mastering SAP Technologies, Melbourne, May 23rd
 -Graham Robinson
 
+[abapGit – so easy](https://blogs.sap.com/2017/06/21/abapgit-so-easy/)
+-Graham Robinson
+
 SAP Teched Las Vegas
 -Graham Robinson
