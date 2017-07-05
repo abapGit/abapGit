@@ -235,6 +235,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lv_filename = is_file-path && is_file-filename.
+* make sure whitespace is preserved in the DOM
+    REPLACE ALL OCCURRENCES OF ` ` IN lv_filename WITH '&nbsp;'.
 
     ro_html->add( |<tr class="{ iv_context }">| ).
 
