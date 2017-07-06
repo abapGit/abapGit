@@ -1049,11 +1049,9 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
       lv_objects_processed = sy-tabix.
 
-      cl_progress_indicator=>progress_indicate(
-        EXPORTING
-          i_text               = |encoding objects &1% ( &2 of &3 )|
-          i_processed          = lv_objects_processed
-          i_total              = lv_objects_total ).
+      cl_progress_indicator=>progress_indicate( i_text      = |encoding objects &1% ( &2 of &3 )|
+                                                i_processed = lv_objects_processed
+                                                i_total     = lv_objects_total ).
 
       lv_xstring = type_and_length( <ls_object> ).
       CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
