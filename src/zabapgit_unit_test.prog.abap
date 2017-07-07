@@ -1744,6 +1744,23 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
     METHODS add_field FOR TESTING.
     METHODS get_field FOR TESTING.
+    METHODS parse_fields_simple_case FOR TESTING.
+    METHODS parse_fields_german_umlauts FOR TESTING.
+
+  PRIVATE SECTION.
+    DATA m_given_parse_string TYPE string.
+    DATA mt_parsed_fields TYPE tihttpnvp.
+
+
+    METHODS _given_string_is
+      IMPORTING
+        i_string TYPE string.
+    METHODS _when_fields_are_parsed.
+    METHODS _then_fields_should_be
+      IMPORTING
+        index TYPE i
+        name  TYPE string
+        value TYPE string.
 
 ENDCLASS. "ltcl_html_action_utils
 
@@ -1792,6 +1809,58 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     assert_equals( act = ls_field exp = ls_answer ). " Both field are filled!
 
   ENDMETHOD.  "get_field
+
+  METHOD parse_fields_simple_case.
+
+    _given_string_is( `committer_name=Gustav Gans` ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1 name = `COMMITTER_NAME` value = `Gustav Gans` ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_german_umlauts.
+
+    _given_string_is( `committer_name=Christian Günter` ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1 name = `COMMITTER_NAME` value = `Christian Günter` ).
+
+  ENDMETHOD.
+
+  METHOD _given_string_is.
+
+    m_given_parse_string = i_string.
+
+  ENDMETHOD.
+
+  METHOD _when_fields_are_parsed.
+
+    mt_parsed_fields = lcl_html_action_utils=>parse_fields( m_given_parse_string ).
+
+  ENDMETHOD.
+
+  METHOD _then_fields_should_be.
+
+    FIELD-SYMBOLS: <parsed_field> LIKE LINE OF mt_parsed_fields.
+
+    READ TABLE mt_parsed_fields ASSIGNING <parsed_field>
+                                INDEX index.
+
+    cl_abap_unit_assert=>assert_subrc( exp = 0
+                                       msg = |No parsed field found at index { index }| ).
+
+    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-name
+                                        exp = name
+                                        msg = |Name at index { index } should be { name }| ).
+
+    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-value
+                                        exp = value
+                                        msg = |Value at index { index } should be { value }| ).
+
+  ENDMETHOD.
 
 ENDCLASS. "ltcl_html_action_utils
 

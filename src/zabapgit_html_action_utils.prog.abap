@@ -75,8 +75,8 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rs_content) TYPE lcl_persistence_db=>ty_content.
 
     CLASS-METHODS parse_commit_request
-      IMPORTING it_postdata      TYPE cnht_post_data_tab
-      EXPORTING es_fields        TYPE any.
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      EXPORTING es_fields   TYPE any.
 
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
