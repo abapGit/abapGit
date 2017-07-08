@@ -587,7 +587,8 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
                   ev_ordernum    TYPE e070-trkorr
         RAISING   lcx_exception,
       tadir_insert
-        IMPORTING iv_package TYPE devclass
+        IMPORTING iv_package          TYPE devclass
+                  iv_generated_object TYPE flag DEFAULT space
         RAISING   lcx_exception,
       jump_se11
         IMPORTING iv_radio TYPE string
@@ -1760,6 +1761,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         wi_tadir_author     = sy-uname
         wi_tadir_devclass   = iv_package
         wi_tadir_masterlang = mv_language
+        wi_set_genflag      = iv_generated_object
         iv_delflag          = abap_false
       EXCEPTIONS
         OTHERS              = 1.
