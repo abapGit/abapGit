@@ -1834,7 +1834,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _then_fields_should_be(:
       index = 1 name = `COMMITTER_NAME`   value = `Albert Schweitzer` 															 ),
-      index = 2 name = `COMMITTER_EMAIL`	value = `albert.schweitzer@googlemail.com`								 ),
+      index = 2 name = `COMMITTER_EMAIL`  value = `albert.schweitzer@googlemail.com`								 ),
       index = 3 name = `COMMENT`          value = `dummy comment` 																	 ),
       index = 4 name = `BODY`             value = `Message body<<new>><<new>>with line break<<new>>` ),
       index = 5 name = `AUTHOR_NAME`      value = `Karl Klammer`																		 ),
@@ -1855,7 +1855,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _then_fields_should_be(:
       index = 1 name = `COMMITTER_NAME`   value = `Christian Günter`																								 ),
-      index = 2 name = `COMMITTER_EMAIL`	value = `guenne@googlemail.com` 																					 ),
+      index = 2 name = `COMMITTER_EMAIL`  value = `guenne@googlemail.com` 																					 ),
       index = 3 name = `COMMENT`          value = `äöü` 																														 ),
       index = 4 name = `BODY`             value = `Message body<<new>><<new>>with line break<<new>>and umlauts. äöü` ),
       index = 5 name = `AUTHOR_NAME`      value = `Gerd Schröder` 																									 ),
