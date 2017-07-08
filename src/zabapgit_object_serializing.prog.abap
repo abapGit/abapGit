@@ -5,6 +5,7 @@
 * All object serializing classes
 
 INCLUDE zabapgit_object_acid.
+INCLUDE zabapgit_object_aobj.
 INCLUDE zabapgit_object_auth.
 INCLUDE zabapgit_object_oo_functions.
 INCLUDE zabapgit_object_clas.

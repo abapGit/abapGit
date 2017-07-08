@@ -581,7 +581,10 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       get_metadata
         RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata,
       corr_insert
-        IMPORTING iv_package TYPE devclass
+        IMPORTING iv_package     TYPE devclass
+                  iv_global_lock TYPE flag DEFAULT space
+        EXPORTING ev_korrnum     TYPE e070-trkorr
+                  ev_ordernum    TYPE e070-trkorr
         RAISING   lcx_exception,
       tadir_insert
         IMPORTING iv_package TYPE devclass
@@ -1781,6 +1784,10 @@ CLASS lcl_objects_super IMPLEMENTATION.
         devclass            = iv_package
         master_language     = mv_language
         mode                = 'INSERT'
+        global_lock         = iv_global_lock
+      IMPORTING
+        korrnum             = ev_korrnum
+        ordernum            = ev_ordernum
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
