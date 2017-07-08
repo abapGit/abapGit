@@ -317,8 +317,6 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ASSERT <body> IS ASSIGNED.
     REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH lif_defs=>gc_newline.
 
-    ASSERT es_fields IS NOT INITIAL.
-
   ENDMETHOD.                    "parse_commit_request
 
   METHOD decode_bg_update.
