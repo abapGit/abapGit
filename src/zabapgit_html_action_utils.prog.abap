@@ -89,7 +89,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RAISING   lcx_exception.
   PRIVATE SECTION.
 
-    CLASS-METHODS _split_query_string
+    CLASS-METHODS _string_to_fields
       IMPORTING
         iv_string        TYPE string
       RETURNING
@@ -114,7 +114,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD parse_fields.
 
-    rt_fields = _split_query_string( iv_string ).
+    rt_fields = _string_to_fields( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
 
   ENDMETHOD.  " parse_fields.
@@ -359,7 +359,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
   ENDMETHOD.  " stage_decode.
 
 
-  METHOD _split_query_string.
+  METHOD _string_to_fields.
 
     DATA: substrings TYPE stringtab,
           field      LIKE LINE OF rt_fields.
