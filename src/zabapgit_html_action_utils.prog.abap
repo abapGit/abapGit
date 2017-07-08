@@ -87,6 +87,13 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       EXPORTING ev_key     TYPE lcl_persistence_repo=>ty_repo-key
                 ev_seed    TYPE string
       RAISING   lcx_exception.
+  PRIVATE SECTION.
+
+    CLASS-METHODS _split_query_string
+      IMPORTING
+        iv_string        TYPE string
+      RETURNING
+        VALUE(rt_fields) TYPE tihttpnvp.
 
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
@@ -107,7 +114,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD parse_fields.
 
-    rt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+    rt_fields = _split_query_string( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
 
   ENDMETHOD.  " parse_fields.
@@ -350,5 +357,31 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ASSERT NOT ev_key IS INITIAL.
 
   ENDMETHOD.  " stage_decode.
+
+
+  METHOD _split_query_string.
+
+    DATA: substrings TYPE stringtab,
+          field      LIKE LINE OF rt_fields.
+
+    FIELD-SYMBOLS: <substring> LIKE LINE OF substrings.
+
+    SPLIT iv_string AT '&' INTO TABLE substrings.
+
+    LOOP AT substrings ASSIGNING <substring>.
+
+      CLEAR: field.
+
+      field-name = substring_before( val = <substring>
+                                     sub = '=' ).
+
+      field-value = substring_after( val = <substring>
+                                     sub = '=' ).
+
+      INSERT field INTO TABLE rt_fields.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 ENDCLASS.       "lcl_html_action_utils IMPLEMENTATION

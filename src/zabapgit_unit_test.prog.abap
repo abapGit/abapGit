@@ -1745,6 +1745,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS add_field FOR TESTING.
     METHODS get_field FOR TESTING.
     METHODS parse_fields_simple_case FOR TESTING.
+    METHODS parse_fields_advanced_case FOR TESTING.
     METHODS parse_fields_german_umlauts FOR TESTING.
 
   PRIVATE SECTION.
@@ -1820,13 +1821,45 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD parse_fields_german_umlauts.
+  METHOD parse_fields_advanced_case.
 
-    _given_string_is( `committer_name=Christian Günter` ).
+    _given_string_is( `committer_name=Albert Schweitzer&`
+                   && `committer_email=albert.schweitzer@googlemail.com&`
+                   && `comment=dummy comment&`
+                   && `body=Message body<<new>><<new>>with line break<<new>>&`
+                   && `author_name=Karl Klammer&`
+                   && `author_email=karl@klammer.com` ).
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( index = 1 name = `COMMITTER_NAME` value = `Christian Günter` ).
+    _then_fields_should_be(:
+      index = 1 name = `COMMITTER_NAME`   value = `Albert Schweitzer` 															 ),
+      index = 2 name = `COMMITTER_EMAIL`	value = `albert.schweitzer@googlemail.com`								 ),
+      index = 3 name = `COMMENT`          value = `dummy comment` 																	 ),
+      index = 4 name = `BODY`             value = `Message body<<new>><<new>>with line break<<new>>` ),
+      index = 5 name = `AUTHOR_NAME`      value = `Karl Klammer`																		 ),
+      index = 6 name = `AUTHOR_EMAIL`     value = `karl@klammer.com`																 ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_german_umlauts.
+
+    _given_string_is( `committer_name=Christian Günter&`
+                   && `committer_email=guenne@googlemail.com&`
+                   && `comment=äöü&`
+                   && `body=Message body<<new>><<new>>with line break<<new>>and umlauts. äöü&`
+                   && `author_name=Gerd Schröder&`
+                   && `author_email=gerd@schroeder.com` ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be(:
+      index = 1 name = `COMMITTER_NAME`   value = `Christian Günter`																								 ),
+      index = 2 name = `COMMITTER_EMAIL`	value = `guenne@googlemail.com` 																					 ),
+      index = 3 name = `COMMENT`          value = `äöü` 																														 ),
+      index = 4 name = `BODY`             value = `Message body<<new>><<new>>with line break<<new>>and umlauts. äöü` ),
+      index = 5 name = `AUTHOR_NAME`      value = `Gerd Schröder` 																									 ),
+      index = 6 name = `AUTHOR_EMAIL`     value = `gerd@schroeder.com`																							 ).
 
   ENDMETHOD.
 
