@@ -174,8 +174,8 @@ CLASS lcl_object_aobj IMPLEMENTATION.
 
     IF ls_aobj_data IS NOT INITIAL.
 
-      corr_insert( EXPORTING iv_package     = iv_package
-                             iv_global_lock = abap_true ).
+      corr_insert( iv_package     = iv_package
+                   iv_global_lock = abap_true ).
 
       _write_tr_entry( iv_arobject_name = ms_item-obj_name ).
 
