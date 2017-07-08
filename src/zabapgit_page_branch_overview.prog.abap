@@ -540,7 +540,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
 
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( lv_string ).
+    lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source' ##NO_TEXT.
     ASSERT sy-subrc = 0.
