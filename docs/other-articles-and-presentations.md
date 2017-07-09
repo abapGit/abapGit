@@ -45,3 +45,6 @@ Mastering SAP Technologies, Melbourne, May 23rd
 
 SAP Teched Las Vegas
 -Graham Robinson
+
+abapGit, [IT Conference on SAP Technologies](http://www.itconferencesap.com/), Cluj
+-Lars Hvam
