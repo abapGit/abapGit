@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2017-07-09 v1.37.4
+------------------
+* SSFO serialization fix
+* Adler32 optimization
+! progress indicator when encoding object pack
+* CLAS diff fix, texts sorted
+* SSST bug, only inactive exists
+! Global settings persistence changed to XML
+
 2017-06-29 v1.37.3
 ------------------
 * fixed 702 compatibility
