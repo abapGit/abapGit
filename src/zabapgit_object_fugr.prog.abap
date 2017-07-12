@@ -206,9 +206,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_functions.
 
-    DATA: lv_include TYPE rs38l-include,
-          lv_area    TYPE rs38l-area,
-          lt_source  TYPE TABLE OF abaptxt255.
+    DATA: lv_include   TYPE rs38l-include,
+          lv_area      TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lt_source    TYPE TABLE OF abaptxt255,
+          lv_dummy     TYPE string.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
@@ -218,6 +220,18 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
+
+*     Determine the namespace of the imported function (if a namespace is used)
+      IF <ls_func>-funcname(1) EQ '/'.
+*       Get namespace from function name
+        lv_namespace = <ls_func>-funcname.
+        SHIFT lv_namespace BY 1 PLACES LEFT.
+        SPLIT lv_namespace AT '/' INTO lv_namespace lv_dummy.
+        CONCATENATE '/' lv_namespace '/' INTO lv_namespace.
+
+*       Remove namespace from area (namespace and area are concatenated in RS_FUNCTIONMODULE_INSERT)
+        REPLACE ALL OCCURRENCES OF lv_namespace IN lv_area WITH ''.
+      ENDIF.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
@@ -250,7 +264,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           short_text              = <ls_func>-short_text
           update_task             = <ls_func>-update_task
           exception_class         = <ls_func>-exception_classes
-*         NAMESPACE               = ' ' todo
+          namespace               = lv_namespace
           remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
           function_include        = lv_include
