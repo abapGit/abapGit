@@ -20,6 +20,9 @@ order: 30
 [SAP Inside Track Hamburg](https://larshp.github.io/sithh2016/)
 -Lars Hvam
 
+[SAP Inside Track Munich](https://www.slideshare.net/h_neumann/what-the-git-sap-inside-track-munich-2016)
+-Hendrik Neumann
+
 [SAP Teched Barcelona](https://larshp.github.io/teched-2016-emea/)
 -Lars Hvam
 
