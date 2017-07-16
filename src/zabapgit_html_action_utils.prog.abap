@@ -292,7 +292,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    lt_fields = parse_fields_upper_case_name( iv_string ).
+    lt_fields = parse_fields_upper_case_name( cl_http_utility=>unescape_url( |{ iv_string }| ) ).
 
     get_field( EXPORTING name = 'TYPE'  it = lt_fields CHANGING cv = rs_key-type ).
     get_field( EXPORTING name = 'VALUE' it = lt_fields CHANGING cv = rs_key-value ).
@@ -306,6 +306,9 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lv_string = cl_http_utility=>unescape_url( lv_string ).
+
     rs_content = dbkey_decode( lv_string ).
 
     lt_fields = parse_fields_upper_case_name( lv_string ).
