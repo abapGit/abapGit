@@ -113,25 +113,41 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push_auto.
 
+    TYPES: BEGIN OF ty_changed,
+             filename   TYPE string,
+             path       TYPE string,
+             changed_by TYPE xubname,
+           END OF ty_changed.
+
     DATA: ls_comment    TYPE lif_defs=>ty_comment,
           ls_files      TYPE lif_defs=>ty_stage_files,
+          lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
+          lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
+          lv_changed_by TYPE xubname,
           lo_stage      TYPE REF TO lcl_stage.
 
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
-
+    FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
+                   <ls_local>   LIKE LINE OF ls_files-local.
 
 
     ls_files = lcl_stage_logic=>get( io_repo ).
 
-    DO.
-      READ TABLE ls_files-local INDEX 1 ASSIGNING <ls_local>.
-      IF sy-subrc <> 0.
-        EXIT.
-      ENDIF.
+    LOOP AT ls_files-local ASSIGNING <ls_local>.
+      lv_changed_by = lcl_objects=>changed_by( <ls_local>-item ).
+      APPEND lv_changed_by TO lt_users.
+      APPEND INITIAL LINE TO lt_changed ASSIGNING <ls_changed>.
+      <ls_changed>-changed_by = lv_changed_by.
+      <ls_changed>-filename   = <ls_local>-file-filename.
+      <ls_changed>-path       = <ls_local>-file-path.
+    ENDLOOP.
 
+    SORT lt_users ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_users.
+
+    LOOP AT lt_users INTO lv_changed_by.
       CLEAR ls_comment.
-      ls_comment-committer-name  = lcl_objects=>changed_by( <ls_local>-item ).
+      ls_comment-committer-name  = lv_changed_by.
       ls_comment-committer-email = |{ ls_comment-committer-name }@localhost|.
 
       CREATE OBJECT lo_stage
@@ -142,7 +158,12 @@ CLASS lcl_background IMPLEMENTATION.
       CLEAR ls_user_files.
 
       LOOP AT ls_files-local ASSIGNING <ls_local>.
-        IF lcl_objects=>changed_by( <ls_local>-item ) = ls_comment-committer-name.
+        READ TABLE lt_changed WITH KEY
+          path = <ls_local>-file-path
+          filename = <ls_local>-file-filename
+          changed_by = lv_changed_by
+          TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
           WRITE: / 'stage' ##NO_TEXT,
             ls_comment-committer-name,
             <ls_local>-file-path,
@@ -156,14 +177,11 @@ CLASS lcl_background IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
-      ls_comment-comment  = build_comment( ls_user_files ).
+      ls_comment-comment = build_comment( ls_user_files ).
 
       io_repo->push( is_comment = ls_comment
                      io_stage   = lo_stage ).
-
-      ls_files = lcl_stage_logic=>get( io_repo ).
-
-    ENDDO.
+    ENDLOOP.
 
   ENDMETHOD.
 
