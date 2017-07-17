@@ -15,6 +15,10 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_string        TYPE clike
       RETURNING VALUE(rt_fields) TYPE tihttpnvp.
 
+    CLASS-METHODS parse_fields_upper_case_name
+      IMPORTING iv_string        TYPE clike
+      RETURNING VALUE(rt_fields) TYPE tihttpnvp.
+
     CLASS-METHODS add_field
       IMPORTING name TYPE string
                 iv   TYPE any
@@ -75,8 +79,8 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RETURNING VALUE(rs_content) TYPE lcl_persistence_db=>ty_content.
 
     CLASS-METHODS parse_commit_request
-      IMPORTING it_postdata      TYPE cnht_post_data_tab
-      EXPORTING es_fields        TYPE any.
+      IMPORTING it_postdata TYPE cnht_post_data_tab
+      EXPORTING es_fields   TYPE any.
 
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
@@ -107,7 +111,32 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
   METHOD parse_fields.
 
-    rt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+    DATA: substrings TYPE stringtab,
+          field      LIKE LINE OF rt_fields.
+
+    FIELD-SYMBOLS: <substring> LIKE LINE OF substrings.
+
+    SPLIT iv_string AT '&' INTO TABLE substrings.
+
+    LOOP AT substrings ASSIGNING <substring>.
+
+      CLEAR: field.
+
+      field-name = substring_before( val = <substring>
+                                     sub = '=' ).
+
+      field-value = substring_after( val = <substring>
+                                     sub = '=' ).
+
+      INSERT field INTO TABLE rt_fields.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD parse_fields_upper_case_name.
+
+    rt_fields = parse_fields( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
 
   ENDMETHOD.  " parse_fields.
@@ -175,8 +204,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+    lt_fields = lcl_html_action_utils=>parse_fields( iv_string ).
 
     get_field( EXPORTING name = 'TYPE' it = lt_fields CHANGING cv = ev_obj_type ).
     get_field( EXPORTING name = 'NAME' it = lt_fields CHANGING cv = ev_obj_name ).
@@ -194,7 +222,8 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
   METHOD dir_decode.
 
     DATA: lt_fields TYPE tihttpnvp.
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ iv_string }| ).
+
+    lt_fields = lcl_html_action_utils=>parse_fields( iv_string ).
     get_field( EXPORTING name = 'PATH' it = lt_fields CHANGING cv = rv_path ).
 
   ENDMETHOD.                    "dir_decode
@@ -232,7 +261,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED.
 
     CLEAR: ev_key, eg_file, eg_object.
-    lt_fields = parse_fields( iv_string ).
+    lt_fields = parse_fields_upper_case_name( iv_string ).
 
     get_field( EXPORTING name = 'KEY'      it = lt_fields CHANGING cv = ev_key ).
 
@@ -263,7 +292,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    lt_fields = parse_fields( iv_string ).
+    lt_fields = parse_fields_upper_case_name( cl_http_utility=>unescape_url( |{ iv_string }| ) ).
 
     get_field( EXPORTING name = 'TYPE'  it = lt_fields CHANGING cv = rs_key-type ).
     get_field( EXPORTING name = 'VALUE' it = lt_fields CHANGING cv = rs_key-value ).
@@ -277,9 +306,12 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lv_string = cl_http_utility=>unescape_url( lv_string ).
+
     rs_content = dbkey_decode( lv_string ).
 
-    lt_fields = parse_fields( lv_string ).
+    lt_fields = parse_fields_upper_case_name( lv_string ).
 
     get_field( EXPORTING name = 'XMLDATA' it = lt_fields CHANGING cv = rs_content-data_str ).
     IF rs_content-data_str(1) <> '<' AND rs_content-data_str+1(1) = '<'. " Hmmm ???
@@ -304,7 +336,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     CONCATENATE LINES OF it_postdata INTO lv_string.
     REPLACE ALL OCCURRENCES OF lif_defs=>gc_crlf    IN lv_string WITH lc_replace.
     REPLACE ALL OCCURRENCES OF lif_defs=>gc_newline IN lv_string WITH lc_replace.
-    lt_fields = parse_fields( lv_string ).
+    lt_fields = parse_fields_upper_case_name( lv_string ).
 
     get_field( EXPORTING name = 'COMMITTER_NAME'  it = lt_fields CHANGING cv = es_fields ).
     get_field( EXPORTING name = 'COMMITTER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
@@ -325,7 +357,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    lt_fields = parse_fields( iv_getdata ).
+    lt_fields = parse_fields_upper_case_name( iv_getdata ).
 
     get_field( EXPORTING name = 'METHOD'   it = lt_fields CHANGING cv = rs_fields ).
     get_field( EXPORTING name = 'USERNAME' it = lt_fields CHANGING cv = rs_fields ).
@@ -342,7 +374,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    lt_fields = parse_fields( iv_getdata ).
+    lt_fields = parse_fields_upper_case_name( iv_getdata ).
 
     get_field( EXPORTING name = 'KEY'  it = lt_fields CHANGING cv = ev_key ).
     get_field( EXPORTING name = 'SEED' it = lt_fields CHANGING cv = ev_seed ).
