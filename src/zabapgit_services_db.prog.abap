@@ -49,7 +49,6 @@ CLASS lcl_services_db IMPLEMENTATION.
   METHOD update.
 
     ASSERT is_content-type IS NOT INITIAL.
-    ASSERT is_content-value IS NOT INITIAL.
 
     lcl_app=>db( )->update(
       iv_type  = is_content-type
