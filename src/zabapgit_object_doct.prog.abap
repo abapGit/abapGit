@@ -67,7 +67,7 @@ CLASS lcl_object_doct IMPLEMENTATION.
     rv_user = read( )-head-tdluser.
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
-    ENDIF.    
+    ENDIF.
   ENDMETHOD.                    "lif_object~changed_by
 
   METHOD lif_object~exists.
