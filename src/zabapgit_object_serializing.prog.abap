@@ -28,6 +28,7 @@ INCLUDE zabapgit_object_msag.
 INCLUDE zabapgit_object_nrob.
 INCLUDE zabapgit_object_para.
 INCLUDE zabapgit_object_pinf.
+INCLUDE zabapgit_object_prag.
 INCLUDE zabapgit_object_prog.
 INCLUDE zabapgit_object_samc.
 INCLUDE zabapgit_object_sapc.
