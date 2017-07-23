@@ -19,7 +19,7 @@ CLASS lcl_object_prag IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
 
-    lcx_exception=>raise( 'PRAG not implemented' ).
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 
   ENDMETHOD.
 
@@ -126,7 +126,6 @@ CLASS lcl_object_prag IMPLEMENTATION.
         operation           = 'SHOW'    " Operation
         object_name         = ms_item-obj_name    " Object Name
         object_type         = ms_item-obj_type    " Object Type
-*        in_new_window       = abap_true
       EXCEPTIONS
         not_executed        = 1
         invalid_object_type = 2
