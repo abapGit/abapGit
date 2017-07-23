@@ -124,9 +124,11 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
       field-name = substring_before( val = <substring>
                                      sub = '=' ).
+      field-name = cl_http_utility=>unescape_url( field-name ).
 
       field-value = substring_after( val = <substring>
                                      sub = '=' ).
+      field-value = cl_http_utility=>unescape_url( field-value ).
 
       INSERT field INTO TABLE rt_fields.
 
