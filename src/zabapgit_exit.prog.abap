@@ -6,7 +6,9 @@ INTERFACE lif_exit.
 
   METHODS:
     change_local_host
-      CHANGING ct_hosts TYPE lif_defs=>ty_icm_sinfo2_tt.
+      CHANGING ct_hosts TYPE lif_defs=>ty_icm_sinfo2_tt,
+    allow_sap_objects
+      RETURNING VALUE(rv_allowed) TYPE abap_bool.
 
 ENDINTERFACE.
 
@@ -40,6 +42,10 @@ CLASS lcl_exit IMPLEMENTATION.
   METHOD lif_exit~change_local_host.
 * default behavior
     RETURN.
+  ENDMETHOD.
+
+  METHOD lif_exit~allow_sap_objects.
+    rv_allowed = abap_false.
   ENDMETHOD.
 
 ENDCLASS.

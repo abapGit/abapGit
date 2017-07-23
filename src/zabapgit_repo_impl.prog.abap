@@ -908,9 +908,14 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       lcx_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
-    SELECT SINGLE devclass FROM tdevc INTO lv_devclass
-      WHERE devclass = iv_package
-      AND as4user <> 'SAP'.                             "#EC CI_GENBUFF
+    IF lcl_exit=>get_instance( )->allow_sap_objects( ) = abap_true.
+      SELECT SINGLE devclass FROM tdevc INTO lv_devclass
+        WHERE devclass = iv_package.                    "#EC CI_GENBUFF
+    ELSE.
+      SELECT SINGLE devclass FROM tdevc INTO lv_devclass
+        WHERE devclass = iv_package
+        AND as4user <> 'SAP'.                           "#EC CI_GENBUFF
+    ENDIF.
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'package not found or not allowed' ).
     ENDIF.
