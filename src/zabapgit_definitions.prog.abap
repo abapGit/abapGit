@@ -33,6 +33,8 @@ INTERFACE lif_defs.
 
   TYPES: ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
 
+  TYPES: ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY.
+
   TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
