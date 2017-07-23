@@ -1779,6 +1779,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS get_field FOR TESTING.
     METHODS parse_fields_simple_case FOR TESTING.
     METHODS parse_fields_advanced_case FOR TESTING.
+    METHODS parse_fields_unescape FOR TESTING.
     METHODS parse_fields_german_umlauts FOR TESTING.
 
   PRIVATE SECTION.
@@ -1914,6 +1915,19 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     _then_fields_should_be( index = 6
                             name  = `AUTHOR_EMAIL`
                             value = `karl@klammer.com` ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_unescape.
+* file status = '?', used in staging page
+
+    _given_string_is( '/SRC/ZFOOBAR.PROG.ABAP=%3F' ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1
+                            name  = '/SRC/ZFOOBAR.PROG.ABAP'
+                            value = '?' ).
 
   ENDMETHOD.
 

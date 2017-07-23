@@ -92,6 +92,11 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
                 ev_seed    TYPE string
       RAISING   lcx_exception.
 
+  PRIVATE SECTION.
+    CLASS-METHODS unescape
+      IMPORTING iv_string        TYPE string
+      RETURNING VALUE(rv_string) TYPE string.
+
 ENDCLASS.       "lcl_html_action_utils DEFINITION
 
 *----------------------------------------------------------------------*
@@ -124,15 +129,24 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
       field-name = substring_before( val = <substring>
                                      sub = '=' ).
-      field-name = cl_http_utility=>unescape_url( field-name ).
+      field-name = unescape( field-name ).
 
       field-value = substring_after( val = <substring>
                                      sub = '=' ).
-      field-value = cl_http_utility=>unescape_url( field-value ).
+      field-value = unescape( field-value ).
 
       INSERT field INTO TABLE rt_fields.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD unescape.
+* do not use cl_http_utility as it does strange things with the encoding
+    rv_string = iv_string.
+
+* todo, more to be added here
+    REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
 
   ENDMETHOD.
 
