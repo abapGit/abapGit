@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-07-23 v1.37.6
+------------------
+* SMIM exists() performance
+* Background mode performance improvements
+* DOCT fix changed_by() dump
+
 2017-07-17 v1.37.5
 ------------------
 * fix FUGR namespaces
