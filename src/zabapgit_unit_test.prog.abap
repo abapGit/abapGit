@@ -62,6 +62,7 @@ ENDCLASS.                    "ltcl_convert DEFINITION
 CLASS ltcl_convert IMPLEMENTATION.
 
   METHOD convert_int.
+
     DATA: lv_xstring TYPE xstring,
           lv_input   TYPE i,
           lv_result  TYPE i.
@@ -69,8 +70,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     DO 1000 TIMES.
       lv_input = sy-index.
-      lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_input
-                                                iv_length = 4 ).
+      lv_xstring = lcl_convert=>int_to_xstring4( lv_input ).
       lv_result = lcl_convert=>xstring_to_int( lv_xstring ).
 
       cl_abap_unit_assert=>assert_equals(
@@ -1096,7 +1096,11 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
       pack_multiple FOR TESTING
         RAISING lcx_exception,
       sort_tree1 FOR TESTING,
-      sort_tree2 FOR TESTING.
+      sort_tree2 FOR TESTING,
+      type_and_length01 FOR TESTING
+        RAISING lcx_exception,
+      type_and_length02 FOR TESTING
+        RAISING lcx_exception.
 
     METHODS:
       object_blob
@@ -1112,6 +1116,34 @@ ENDCLASS.                    "test DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_git_pack IMPLEMENTATION.
+
+  METHOD type_and_length01.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = lcl_git_pack=>type_and_length(
+      iv_type   = lif_defs=>gc_type-commit
+      iv_length = 100 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '9406' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length02.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = lcl_git_pack=>type_and_length(
+      iv_type   = lif_defs=>gc_type-blob
+      iv_length = 90000 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = 'B0F92B' ).
+
+  ENDMETHOD.
 
   METHOD sort_tree1.
 

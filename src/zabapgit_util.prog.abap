@@ -133,9 +133,8 @@ CLASS lcl_convert DEFINITION FINAL.
       RETURNING VALUE(rv_i) TYPE i
       RAISING   lcx_exception.
 
-    CLASS-METHODS int_to_xstring
+    CLASS-METHODS int_to_xstring4
       IMPORTING iv_i              TYPE i
-                iv_length         TYPE i
       RETURNING VALUE(rv_xstring) TYPE xstring.
 
     CLASS-METHODS split_string
@@ -151,12 +150,11 @@ ENDCLASS.                    "lcl_convert DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_convert IMPLEMENTATION.
 
-  METHOD int_to_xstring.
+  METHOD int_to_xstring4.
+* returns xstring of length 4 containing the integer value iv_i
 
     DATA: lv_x TYPE x LENGTH 4.
 
-
-    ASSERT iv_length = 4. " other cases not implemented
 
     lv_x = iv_i.
     rv_xstring = lv_x.
