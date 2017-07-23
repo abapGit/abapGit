@@ -37,56 +37,21 @@ CLASS lcl_object_prag IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    lcx_exception=>raise( 'PRAG not implemented' ).
+    DATA(persist) = NEW cl_wb_abpr_persist( ).
 
-  ENDMETHOD.
+    TRY.
+        persist->if_wb_object_persist~get( p_object_key 					= |{ ms_item-obj_name }|     " Object Key
+                                           p_version							= 'A'    " Version (Active/Inactive)
+                                           p_existence_check_only = abap_true     " Perform Existence Check Only (no existence -> exception)
+        ).
 
-  METHOD lif_object~get_metadata.
+      CATCH cx_swb_exception INTO DATA(error).
+        rv_bool = abap_false.
+        RETURN.
+    ENDTRY.
 
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+    rv_bool = abap_true.
 
-  ENDMETHOD.
-
-  METHOD lif_object~has_changed_since.
-
-    rv_changed = abap_true.
-
-  ENDMETHOD.
-
-  METHOD lif_object~jump.
-
-    call function 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation           = 'SHOW'    " Operation
-        object_name         = ms_item-obj_name    " Object Name
-        object_type         = ms_item-obj_type    " Object Type
-*        enclosing_object    =     " Program Name
-*        position            = SPACE
-*        devclass            =
-*        include             =
-*        version             = SPACE    " 'A': Active, 'I': Inactive, SPACE: Corresponds to Work List
-*        monitor_activation  = 'X'
-*        wb_manager          =
-*        in_new_window       =
-*        with_objectlist     = SPACE
-*        with_worklist       = SPACE
-*      IMPORTING
-*        new_name            =     " New Program Name (After Rename)
-*        wb_todo_request     =
-*      TABLES
-*        objlist             =
-*      CHANGING
-*        p_request           = SPACE    " Request/Task
-*      EXCEPTIONS
-*        not_executed        = 1
-*        invalid_object_type = 2
-*        others              = 3
-      .
-    IF sy-subrc <> 0.
-*     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-*                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-    ENDIF.
 
 *    DATA: object_data TYPE REF TO if_wb_object_data_model.
 *
@@ -138,6 +103,34 @@ CLASS lcl_object_prag IMPLEMENTATION.
 *      EXCEPTIONS
 *        error_occurred = 1
 *        OTHERS         = 2 ).
+
+  ENDMETHOD.
+
+  METHOD lif_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+
+  ENDMETHOD.
+
+  METHOD lif_object~has_changed_since.
+
+    rv_changed = abap_true.
+
+  ENDMETHOD.
+
+  METHOD lif_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation           = 'SHOW'    " Operation
+        object_name         = ms_item-obj_name    " Object Name
+        object_type         = ms_item-obj_type    " Object Type
+*        in_new_window       = abap_true
+      EXCEPTIONS
+        not_executed        = 1
+        invalid_object_type = 2
+        OTHERS              = 3.
 
   ENDMETHOD.
 
