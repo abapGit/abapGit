@@ -1857,8 +1857,7 @@ CLASS lcl_objects_channel_super DEFINITION ABSTRACT
 
   PUBLIC SECTION.
     INTERFACES:
-      lif_object
-      ABSTRACT METHODS exists.
+      lif_object.
 
   PROTECTED SECTION.
     METHODS:
@@ -1875,8 +1874,11 @@ CLASS lcl_objects_channel_super DEFINITION ABSTRACT
           VALUE(r_data_structure_name) TYPE string.
 
   PRIVATE SECTION.
-    DATA: mo_persistence   TYPE REF TO if_wb_object_persist,
-          mo_appl_obj_data TYPE REF TO if_wb_object_data_model.
+    DATA: mo_persistence          TYPE REF TO if_wb_object_persist,
+          mo_appl_obj_data        TYPE REF TO if_wb_object_data_model,
+          mv_data_structure_name  TYPE string,
+          mv_appl_obj_cls_name    TYPE seoclsname,
+          mv_persistence_cls_name TYPE seoclsname.
 
     METHODS:
       create_channel_objects
@@ -1895,7 +1897,9 @@ CLASS lcl_objects_channel_super DEFINITION ABSTRACT
 
       unlock
         RAISING
-          lcx_exception.
+          lcx_exception,
+
+      get_names.
 
 ENDCLASS.
 
@@ -1907,8 +1911,7 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    DATA: lr_data             TYPE REF TO data,
-          data_structure_name TYPE string.
+    DATA: lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data>    TYPE any,
                    <ls_header>  TYPE any,
@@ -1917,8 +1920,7 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
     create_channel_objects( ).
 
     TRY.
-        data_structure_name = get_data_structure_name( ).
-        CREATE DATA lr_data TYPE (data_structure_name).
+        CREATE DATA lr_data TYPE (mv_data_structure_name).
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
@@ -1943,25 +1945,31 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
-*  METHOD lif_object~exists.
-*
-*    DATA: ls_tadir TYPE tadir.
-*
-*    ls_tadir = lcl_tadir=>read_single(
-*      iv_object   = ms_item-obj_type
-*      iv_obj_name = ms_item-obj_name ).
-*    IF ls_tadir IS INITIAL.
-*      RETURN.
-*    ENDIF.
-*
-*    rv_bool = abap_true.
-*
-*  ENDMETHOD.
+  METHOD lif_object~exists.
+
+    DATA: object_key TYPE seu_objkey.
+
+    create_channel_objects( ).
+
+    object_key = ms_item-obj_name.
+
+    TRY.
+        mo_persistence->get( p_object_key           = object_key
+                             p_version              = 'A'
+                             p_existence_check_only = abap_true  ).
+
+      CATCH cx_swb_object_does_not_exist cx_swb_exception.
+        rv_bool = abap_false.
+        RETURN.
+    ENDTRY.
+
+    rv_bool = abap_true.
+
+  ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-    DATA: lr_data             TYPE REF TO data,
-          data_structure_name TYPE string.
+    DATA: lr_data             TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data>   TYPE any,
                    <ls_header> TYPE any,
@@ -1970,8 +1978,7 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
     create_channel_objects( ).
 
     TRY.
-        data_structure_name = get_data_structure_name( ).
-        CREATE DATA lr_data TYPE (data_structure_name).
+        CREATE DATA lr_data TYPE (mv_data_structure_name).
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
@@ -2024,16 +2031,14 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lr_data             TYPE REF TO data,
-          data_structure_name TYPE string.
+    DATA: lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
 
     create_channel_objects( ).
 
     TRY.
-        data_structure_name = get_data_structure_name( ).
-        CREATE DATA lr_data TYPE (data_structure_name).
+        CREATE DATA lr_data TYPE (mv_data_structure_name).
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
@@ -2120,18 +2125,15 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
   METHOD create_channel_objects.
 
-    DATA: appl_obj_cls_name    TYPE seoclsname,
-          persistence_cls_name TYPE seoclsname.
+    get_names( ).
 
     TRY.
         IF mo_appl_obj_data IS NOT BOUND.
-          appl_obj_cls_name = get_appl_obj_cls_name( ).
-          CREATE OBJECT mo_appl_obj_data TYPE (appl_obj_cls_name).
+          CREATE OBJECT mo_appl_obj_data TYPE (mv_appl_obj_cls_name).
         ENDIF.
 
         IF mo_persistence IS NOT BOUND.
-          persistence_cls_name = get_persistence_cls_name( ).
-          CREATE OBJECT mo_persistence TYPE (persistence_cls_name).
+          CREATE OBJECT mo_persistence TYPE (mv_persistence_cls_name).
         ENDIF.
 
       CATCH cx_root.
@@ -2206,6 +2208,13 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
   ENDMETHOD.                    "unlock
 
+  METHOD get_names.
+
+    mv_data_structure_name  = get_data_structure_name( ).
+    mv_appl_obj_cls_name    = get_appl_obj_cls_name( ).
+    mv_persistence_cls_name = get_persistence_cls_name( ).
+
+  ENDMETHOD.
 
 ENDCLASS.
 
