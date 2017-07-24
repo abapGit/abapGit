@@ -2210,9 +2210,17 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
   METHOD get_names.
 
-    mv_data_structure_name  = get_data_structure_name( ).
-    mv_appl_obj_cls_name    = get_appl_obj_cls_name( ).
-    mv_persistence_cls_name = get_persistence_cls_name( ).
+    IF mv_data_structure_name IS INITIAL.
+      mv_data_structure_name  = get_data_structure_name( ).
+    ENDIF.
+
+    IF mv_appl_obj_cls_name IS INITIAL.
+      mv_appl_obj_cls_name    = get_appl_obj_cls_name( ).
+    ENDIF.
+
+    IF mv_persistence_cls_name IS INITIAL.
+      mv_persistence_cls_name = get_persistence_cls_name( ).
+    ENDIF.
 
   ENDMETHOD.
 
