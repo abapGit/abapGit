@@ -7,20 +7,13 @@ CLASS lcl_object_sapc DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+
   PRIVATE SECTION.
     DATA: mo_persistence       TYPE REF TO if_wb_object_persist,
           mo_apc_appl_obj_data TYPE REF TO if_wb_object_data_model.
 
     METHODS:
-      get_data_object
-        RETURNING
-          value(ro_apc_appl_obj_data) TYPE REF TO if_wb_object_data_model
-        RAISING
-          lcx_exception,
-
-      get_persistence
-        RETURNING
-          value(ro_persistence) TYPE REF TO if_wb_object_persist
+      create_apc_objects
         RAISING
           lcx_exception,
 
@@ -57,6 +50,8 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_data>    TYPE any,
                    <ls_header>  TYPE any,
                    <changed_by> TYPE any.
+
+    create_apc_objects( ).
 
     TRY.
         CREATE DATA lr_data TYPE ('APC_APPLICATION_COMPLETE').
@@ -95,13 +90,6 @@ CLASS lcl_object_sapc IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    TRY.
-        get_data_object( ).
-
-      CATCH lcx_exception.
-        RETURN.
-    ENDTRY.
-
     rv_bool = abap_true.
 
   ENDMETHOD.                    "lif_object~exists
@@ -113,6 +101,8 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_data>   TYPE any,
                    <ls_header> TYPE any,
                    <field>     TYPE any.
+
+    create_apc_objects( ).
 
     TRY.
         CREATE DATA lr_data TYPE ('APC_APPLICATION_COMPLETE').
@@ -168,10 +158,11 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: appl_obj_data TYPE REF TO if_wb_object_data_model,
-          lr_data       TYPE REF TO data.
+    DATA: lr_data TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
+
+    create_apc_objects( ).
 
     TRY.
         CREATE DATA lr_data TYPE ('APC_APPLICATION_COMPLETE').
@@ -190,8 +181,6 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     IF lif_object~exists( ) = abap_true.
       lif_object~delete( ).
     ENDIF.
-
-    appl_obj_data = get_data_object( ).
 
     TRY.
         lock( ).
@@ -214,9 +203,9 @@ CLASS lcl_object_sapc IMPLEMENTATION.
           lcx_exception=>raise( 'Error occured while creating SAPC' ).
         ENDIF.
 
-        appl_obj_data->set_data( <ls_data> ).
+        mo_apc_appl_obj_data->set_data( <ls_data> ).
 
-        get_persistence( )->save( p_object_data = appl_obj_data ).
+        mo_persistence->save( p_object_data = mo_apc_appl_obj_data ).
 
         unlock( ).
 
@@ -230,12 +219,14 @@ CLASS lcl_object_sapc IMPLEMENTATION.
 
     DATA: object_key TYPE seu_objkey.
 
+    create_apc_objects( ).
+
     object_key = ms_item-obj_name.
 
     TRY.
         lock( ).
 
-        get_persistence( )->delete( p_object_key = object_key ).
+        mo_persistence->delete( p_object_key = object_key ).
 
         unlock( ).
 
@@ -259,41 +250,22 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.                    "lif_object~compare_to_remote_version
 
-  METHOD get_data_object.
+  METHOD create_apc_objects.
 
-    IF mo_apc_appl_obj_data IS NOT BOUND.
-
-      TRY.
+    TRY.
+        IF mo_apc_appl_obj_data IS NOT BOUND.
           CREATE OBJECT mo_apc_appl_obj_data TYPE ('CL_APC_APPLICATION_OBJ_DATA').
+        ENDIF.
 
-        CATCH cx_root.
-          lcx_exception=>raise( 'SAPC not supported' ).
-      ENDTRY.
-
-    ENDIF.
-
-    ro_apc_appl_obj_data = mo_apc_appl_obj_data.
-
-  ENDMETHOD.                    "get_data_object
-
-
-  METHOD get_persistence.
-
-    IF mo_persistence IS NOT BOUND.
-
-      TRY.
+        IF mo_persistence IS NOT BOUND.
           CREATE OBJECT mo_persistence TYPE ('CL_APC_APPLICATION_OBJ_PERS').
+        ENDIF.
 
-        CATCH cx_root.
-          lcx_exception=>raise( 'SAPC not supported' ).
-      ENDTRY.
+      CATCH cx_root.
+        lcx_exception=>raise( 'SAPC not supported' ).
+    ENDTRY.
 
-    ENDIF.
-
-    ro_persistence = mo_persistence.
-
-  ENDMETHOD.                    "get_persistence
-
+  ENDMETHOD.
 
   METHOD lock.
 
@@ -304,8 +276,6 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     objname    = ms_item-obj_name.
     object_key = ms_item-obj_name.
     objtype    = ms_item-obj_type.
-
-    get_persistence( ).
 
     mo_persistence->lock(
       EXPORTING
@@ -333,21 +303,19 @@ CLASS lcl_object_sapc IMPLEMENTATION.
     object_key = ms_item-obj_name.
     objtype    = ms_item-obj_type.
 
-    get_persistence( )->unlock( p_objname_tr = objname
-                                p_object_key = object_key
-                                p_objtype_tr = objtype ).
+    mo_persistence->unlock( p_objname_tr = objname
+                            p_object_key = object_key
+                            p_objtype_tr = objtype ).
 
   ENDMETHOD.                    "unlock
 
   METHOD get_data.
 
-    DATA:  object_key  TYPE seu_objkey.
+    DATA: object_key TYPE seu_objkey.
 
     object_key = ms_item-obj_name.
 
     TRY.
-        get_persistence( ).
-
         mo_persistence->get(
           EXPORTING
             p_object_key  = object_key
@@ -364,6 +332,5 @@ CLASS lcl_object_sapc IMPLEMENTATION.
         p_data = p_data ).
 
   ENDMETHOD.                    "get_data
-
 
 ENDCLASS.                    "lcl_object_sAPC IMPLEMENTATION
