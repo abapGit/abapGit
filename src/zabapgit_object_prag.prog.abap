@@ -40,7 +40,7 @@ CLASS lcl_object_prag IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    rv_user = sy-uname.
+    rv_user = c_user_unknown.
 
   ENDMETHOD.
 
