@@ -40,6 +40,7 @@ PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
 PINF | Package interface | Yes
+PRAG | Pragma in ABAP Source Code | [#854](https://github.com/larshp/abapGit/issues/854)
 PROG | Program | Yes
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
