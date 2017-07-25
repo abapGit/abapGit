@@ -391,8 +391,15 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     DATA: ls_icfservice TYPE icfservice.
 
-
     read( IMPORTING es_icfservice = ls_icfservice ).
+
+    IF ls_icfservice IS INITIAL.
+      " It seems that the ICF service doesn't exist anymore.
+      " But that's ok, because some objects like SAPC manage
+      " the lifecycle of its ICF service by itself and already
+      " deleted the service.
+      RETURN.
+    ENDIF.
 
     cl_icf_tree=>if_icf_tree~delete_node(
       EXPORTING
