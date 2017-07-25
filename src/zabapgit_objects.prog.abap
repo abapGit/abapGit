@@ -1853,7 +1853,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
 ENDCLASS.                    "lcl_objects_super IMPLEMENTATION
 
 CLASS lcl_objects_channel_super DEFINITION ABSTRACT
-                                INHERITING FROM lcl_objects_super .
+                                INHERITING FROM lcl_objects_super.
 
   PUBLIC SECTION.
     INTERFACES:
@@ -2078,7 +2078,7 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
 
         mo_appl_obj_data->set_data( <ls_data> ).
 
-        mo_persistence->save( p_object_data = mo_appl_obj_data ).
+        mo_persistence->save( mo_appl_obj_data ).
 
         unlock( ).
 
@@ -2099,7 +2099,7 @@ CLASS lcl_objects_channel_super IMPLEMENTATION.
     TRY.
         lock( ).
 
-        mo_persistence->delete( p_object_key = object_key ).
+        mo_persistence->delete( object_key ).
 
         unlock( ).
 
