@@ -6,8 +6,8 @@ CLASS lcl_object_samc DEFINITION INHERITING FROM lcl_objects_channel_super FINAL
 
   PROTECTED SECTION.
     METHODS:
-      get_persistence_cls_name REDEFINITION,
-      get_appl_obj_cls_name REDEFINITION,
+      get_persistence_class_name REDEFINITION,
+      get_data_class_name REDEFINITION,
       get_data_structure_name REDEFINITION.
 
 ENDCLASS.                    "lcl_object_samc DEFINITION
@@ -19,7 +19,7 @@ ENDCLASS.                    "lcl_object_samc DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_samc IMPLEMENTATION.
 
-  METHOD get_appl_obj_cls_name.
+  METHOD get_data_class_name.
 
     r_data_class_name = 'CL_AMC_APPLICATION_OBJ_DATA'.
 
@@ -31,7 +31,7 @@ CLASS lcl_object_samc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_persistence_cls_name.
+  METHOD get_persistence_class_name.
 
     r_persistence_class_name = 'CL_AMC_APPLICATION_OBJ_PERS'.
 
