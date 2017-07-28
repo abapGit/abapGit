@@ -449,13 +449,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     DATA: lv_obj_name TYPE string.
 
 
-    IF ms_item-obj_type = 'SICF'.
-* multiple SICF nodes with same name cannot be added to repository
-      lv_obj_name = ms_item-obj_name(15).
-    ELSE.
-      lv_obj_name = ms_item-obj_name.
-    ENDIF.
-
+    lv_obj_name = ms_item-obj_name.
 
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
