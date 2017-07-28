@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2017-07-28 v1.37.7
+------------------
+* Fix dump when parsing commit author, regex
+* Fix decoding of commit body, newlines
+* SAMC SAPC refactoring
+* DOMA diff fix, sorting
+
 2017-07-23 v1.37.6
 ------------------
 * SMIM exists() performance
