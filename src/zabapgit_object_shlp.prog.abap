@@ -30,7 +30,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
     SELECT SINGLE as4date as4time FROM dd30l
        INTO (lv_date, lv_time)
        WHERE shlpname = ms_item-obj_name
-       AND as4local = 'A'.
+       AND as4local = 'A'.                              "#EC CI_GENBUFF
 
     rv_changed = check_timestamp(
      iv_timestamp = iv_timestamp

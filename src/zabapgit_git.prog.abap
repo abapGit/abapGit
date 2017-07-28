@@ -691,24 +691,23 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   METHOD delta.
 
+    DEFINE _eat_byte.
+      lv_x = lv_delta(1).
+      lv_delta = lv_delta+1.
+    END-OF-DEFINITION.
+
     DATA: lv_delta  TYPE xstring,
           lv_base   TYPE xstring,
           lv_result TYPE xstring,
-*          lv_bitbyte TYPE ty_bitbyte,
           lv_offset TYPE i,
           lv_sha1   TYPE lif_defs=>ty_sha1,
           ls_object LIKE LINE OF ct_objects,
           lv_len    TYPE i,
           lv_org    TYPE x,
-*          lv_i       TYPE i,
           lv_x      TYPE x.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
 
-    DEFINE _eat_byte.
-      lv_x = lv_delta(1).
-      lv_delta = lv_delta+1.
-    END-OF-DEFINITION.
 
     lv_delta = is_object-data.
 

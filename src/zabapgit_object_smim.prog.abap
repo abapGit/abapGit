@@ -73,7 +73,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     lv_loio = ms_item-obj_name.
 
     SELECT SINGLE loio_id FROM smimloio INTO lv_loio
-      WHERE loio_id = lv_loio.
+      WHERE loio_id = lv_loio.                          "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -208,7 +208,8 @@ CLASS lcl_object_smim IMPLEMENTATION.
       ls_file-data     = lv_content.
       mo_files->add( ls_file ).
 
-      SELECT SINGLE lo_class FROM smimloio INTO lv_class WHERE loio_id = lv_loio.
+      SELECT SINGLE lo_class FROM smimloio INTO lv_class
+        WHERE loio_id = lv_loio.                        "#EC CI_GENBUFF
     ENDIF.
 
     io_xml->add( iv_name = 'URL'
