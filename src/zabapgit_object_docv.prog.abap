@@ -87,7 +87,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    lcx_exception=>raise( 'todo, jump DOCT' ).
+    lcx_exception=>raise( 'todo, jump DOCV' ).
 
   ENDMETHOD.                    "jump
 

@@ -21,7 +21,7 @@ CLASS lcl_object_doct DEFINITION INHERITING FROM lcl_objects_super FINAL.
            END OF ty_data.
 
     METHODS: read
-      RETURNING value(rs_data) TYPE ty_data.
+      RETURNING VALUE(rs_data) TYPE ty_data.
 
 ENDCLASS.                    "lcl_object_msag DEFINITION
 
@@ -88,7 +88,43 @@ CLASS lcl_object_doct IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    lcx_exception=>raise( 'todo, jump DOCT' ).
+    DATA: ls_dokentry TYPE dokentry,
+          ls_bcdata   TYPE bdcdata,
+          lt_bcdata   TYPE STANDARD TABLE OF bdcdata.
+
+    ls_dokentry-username = sy-uname.
+    ls_dokentry-langu    = sy-langu.
+    ls_dokentry-class    = c_id.
+    MODIFY dokentry FROM ls_dokentry.
+
+    ls_bcdata-program  = 'SAPMSDCU'.
+    ls_bcdata-dynpro   = '0100'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-dynpro   = space.
+    ls_bcdata-dynbegin = space.
+    ls_bcdata-fnam     = 'RSDCU-OBJECT7'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=SHOW'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SE61'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, DOCT' ).
+    ENDIF.
 
   ENDMETHOD.                    "jump
 
