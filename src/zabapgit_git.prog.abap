@@ -612,6 +612,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     DATA: lv_string TYPE string,
           lv_word   TYPE string,
+          lv_length TYPE i,
           lv_trash  TYPE string ##NEEDED,
           lt_string TYPE TABLE OF string.
 
@@ -623,34 +624,41 @@ CLASS lcl_git_pack IMPLEMENTATION.
     SPLIT lv_string AT lif_defs=>gc_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
-      IF NOT rs_commit-committer IS INITIAL.
-        CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
-          SEPARATED BY lif_defs=>gc_newline.
-      ELSE.
-        SPLIT <lv_string> AT space INTO lv_word lv_trash.
-        CASE lv_word.
-          WHEN 'tree'.
-            rs_commit-tree = <lv_string>+5.
-          WHEN 'parent'.
-            IF rs_commit-parent IS INITIAL.
-              rs_commit-parent = <lv_string>+7.
-            ELSE.
-              rs_commit-parent2 = <lv_string>+7.
-            ENDIF.
-          WHEN 'author'.
-            rs_commit-author = <lv_string>+7.
-          WHEN 'committer'.
-            rs_commit-committer = <lv_string>+10.
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
-      ENDIF.
+*      IF NOT rs_commit-committer IS INITIAL.
+*        CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
+*          SEPARATED BY lif_defs=>gc_newline.
+*      ELSE.
+      lv_length = strlen( <lv_string> ) + 1.
+      lv_string = lv_string+lv_length.
+
+      SPLIT <lv_string> AT space INTO lv_word lv_trash.
+      CASE lv_word.
+        WHEN 'tree'.
+          rs_commit-tree = <lv_string>+5.
+        WHEN 'parent'.
+          IF rs_commit-parent IS INITIAL.
+            rs_commit-parent = <lv_string>+7.
+          ELSE.
+            rs_commit-parent2 = <lv_string>+7.
+          ENDIF.
+        WHEN 'author'.
+          rs_commit-author = <lv_string>+7.
+        WHEN 'committer'.
+          rs_commit-committer = <lv_string>+10.
+          EXIT. " current loop
+        WHEN OTHERS.
+          ASSERT 0 = 1.
+      ENDCASE.
+
+*      ENDIF.
     ENDLOOP.
 
+    rs_commit-body = lv_string+1.
+
 * strip first newline
-    IF strlen( rs_commit-body ) >= 2.
-      rs_commit-body = rs_commit-body+2.
-    ENDIF.
+*    IF strlen( rs_commit-body ) >= 2.
+*      rs_commit-body = rs_commit-body+2.
+*    ENDIF.
 
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL

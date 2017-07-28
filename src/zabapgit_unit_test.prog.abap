@@ -1005,14 +1005,15 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = 'parent1' ).
     cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent2
       exp = 'parent2' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1036,11 +1037,12 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = '' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1065,11 +1067,12 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = 'parent1' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1084,10 +1087,14 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
   PRIVATE SECTION.
 
+    CONSTANTS: c_sha TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
+
     METHODS:
       tree FOR TESTING
         RAISING lcx_exception,
       commit FOR TESTING
+        RAISING lcx_exception,
+      commit_newline FOR TESTING
         RAISING lcx_exception,
       pack_short FOR TESTING
         RAISING lcx_exception,
@@ -1326,8 +1333,6 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
   METHOD tree.
 
-    CONSTANTS: lc_sha TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
-
     DATA: lt_nodes  TYPE lcl_git_pack=>ty_nodes_tt,
           ls_node   LIKE LINE OF lt_nodes,
           lv_data   TYPE xstring,
@@ -1336,7 +1341,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     CLEAR ls_node.
     ls_node-chmod = lif_defs=>gc_chmod-file.
     ls_node-name = 'foobar.txt'.
-    ls_node-sha1 = lc_sha.
+    ls_node-sha1 = c_sha.
     APPEND ls_node TO lt_nodes.
 
     lv_data = lcl_git_pack=>encode_tree( lt_nodes ).
@@ -1350,16 +1355,13 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
   METHOD commit.
 
-    CONSTANTS: lc_tree   TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc',
-               lc_parent TYPE lif_defs=>ty_sha1 VALUE '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
-
     DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
           ls_result TYPE lcl_git_pack=>ty_commit,
           lv_data   TYPE xstring.
 
 
-    ls_commit-tree      = lc_tree.
-    ls_commit-parent    = lc_parent.
+    ls_commit-tree      = c_sha.
+    ls_commit-parent    = c_sha.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-body      = 'very informative'.
@@ -1372,6 +1374,28 @@ CLASS ltcl_git_pack IMPLEMENTATION.
         act = ls_result ).
 
   ENDMETHOD.                    "commit
+
+  METHOD commit_newline.
+
+    DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
+          ls_result TYPE lcl_git_pack=>ty_commit,
+          lv_data   TYPE xstring.
+
+
+    ls_commit-tree      = c_sha.
+    ls_commit-parent    = c_sha.
+    ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-body      = 'very informative' && lif_defs=>gc_newline && lif_defs=>gc_newline.
+
+    lv_data = lcl_git_pack=>encode_commit( ls_commit ).
+    ls_result = lcl_git_pack=>decode_commit( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = ls_commit
+        act = ls_result ).
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
 
