@@ -1668,7 +1668,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
           li_object         TYPE REF TO cl_wb_object,
           li_adt            TYPE REF TO object,
           li_adt_uri_mapper TYPE REF TO object,
-          li_adt_objref     TYPE REF TO object.
+          li_adt_objref     TYPE REF TO object ##needed.
 
     FIELD-SYMBOLS: <uri> TYPE string.
 
@@ -1797,21 +1797,9 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
   METHOD is_adt_jump_possible.
 
-    DATA: li_wb_manager         TYPE REF TO if_wb_manager,
-          li_wb_request         TYPE REF TO cl_wb_request,
+    DATA: li_wb_request         TYPE REF TO cl_wb_request,
           li_adt_uri_mapper_vit TYPE REF TO object,
           is_vit_wb_request     TYPE abap_bool.
-
-    cl_wb_manager=>get_instance(
-      IMPORTING
-        p_instance              = li_wb_manager
-      EXCEPTIONS
-        no_instance             = 1
-        OTHERS                  = 2 ).
-
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'ADT Jump Error' ).
-    ENDIF.
 
     cl_wb_request=>create_from_object_ref(
       EXPORTING
