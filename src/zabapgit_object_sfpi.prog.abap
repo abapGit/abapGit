@@ -70,7 +70,13 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
   ENDMETHOD.                    "lif_object~exists
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, SFPI jump' ).
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation   = 'SHOW'
+        object_name = ms_item-obj_name
+        object_type = ms_item-obj_type.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~delete.
