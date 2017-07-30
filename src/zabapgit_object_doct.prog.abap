@@ -92,6 +92,11 @@ CLASS lcl_object_doct IMPLEMENTATION.
           ls_bcdata   TYPE bdcdata,
           lt_bcdata   TYPE STANDARD TABLE OF bdcdata.
 
+    " We need to modify dokentry directly, otherwise
+    " Batch Input on SE61 wouldn't work because it stores
+    " the last seen Document Class in this table. There's
+    " no standard function to do this. SE61 does this
+    " directly in its dialog modules
     ls_dokentry-username = sy-uname.
     ls_dokentry-langu    = sy-langu.
     ls_dokentry-class    = c_id.
