@@ -102,12 +102,12 @@ CLASS lcl_object_doct IMPLEMENTATION.
     ls_bcdata-dynbegin = 'X'.
     APPEND ls_bcdata TO lt_bcdata.
 
-    ls_bcdata-dynpro   = space.
-    ls_bcdata-dynbegin = space.
+    CLEAR ls_bcdata.
     ls_bcdata-fnam     = 'RSDCU-OBJECT7'.
     ls_bcdata-fval     = ms_item-obj_name.
     APPEND ls_bcdata TO lt_bcdata.
 
+    CLEAR ls_bcdata.
     ls_bcdata-fnam = 'BDC_OKCODE'.
     ls_bcdata-fval = '=SHOW'.
     APPEND ls_bcdata TO lt_bcdata.

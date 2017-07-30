@@ -250,7 +250,37 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   METHOD lif_object~jump.
 
-    lcx_exception=>raise( 'todo' ).
+    DATA: ls_bcdata   TYPE bdcdata,
+          lt_bcdata   TYPE STANDARD TABLE OF bdcdata.
+
+    ls_bcdata-program  = 'SAPMSNRO'.
+    ls_bcdata-dynpro   = '0150'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'NRIV-OBJECT'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=DISP'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SNRO'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, NROB' ).
+    ENDIF.
 
   ENDMETHOD.                    "jump
 
