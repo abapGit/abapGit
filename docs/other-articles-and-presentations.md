@@ -46,6 +46,9 @@ Mastering SAP Technologies, Melbourne, May 23rd
 [abapGit – so easy](https://blogs.sap.com/2017/06/21/abapgit-so-easy/)
 -Graham Robinson
 
+SAUG National Summit 2017, September 5th
+-Graham Robinson
+
 SAP Teched Las Vegas
 -Graham Robinson
 
