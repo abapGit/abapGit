@@ -79,13 +79,26 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    SELECT SINGLE as4user FROM dd02l INTO rv_user
+    DATA: lv_as4date TYPE dd02l-as4date,
+          lv_as4time TYPE dd02l-as4time.
+
+
+    SELECT SINGLE as4user as4date as4time
+      FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
+      RETURN.
     ENDIF.
+
+    SELECT SINGLE as4user INTO rv_user
+      FROM dd09l
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'
+      AND ( as4date > lv_as4date OR ( as4date = lv_as4date AND as4time > lv_as4time ) ).
 
   ENDMETHOD.
 
