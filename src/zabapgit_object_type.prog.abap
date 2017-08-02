@@ -177,12 +177,11 @@ CLASS lcl_object_type IMPLEMENTATION.
 
     DATA: lv_objname TYPE rsedd0-ddobjname.
 
-
     lv_objname = ms_item-obj_name.
 
     CALL FUNCTION 'RS_DD_DELETE_OBJ'
       EXPORTING
-        no_ask               = abap_true
+        no_ask               = abap_false
         objname              = lv_objname
         objtype              = 'G'
       EXCEPTIONS
