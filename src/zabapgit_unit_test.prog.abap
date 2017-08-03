@@ -2037,11 +2037,10 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD _hex_to_char.
 
-    cl_abap_conv_in_ce=>create( )->convert(
-      EXPORTING
-        input = i_x
-      IMPORTING
-        data  = r_s ).
+    DATA lr_conv TYPE REF TO cl_abap_conv_in_ce.
+
+    lr_conv = cl_abap_conv_in_ce=>create( ).
+    lr_conv->convert( EXPORTING input = i_x IMPORTING data = r_s ).
 
   ENDMETHOD.
 
