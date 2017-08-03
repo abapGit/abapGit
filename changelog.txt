@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2017-08-03 v1.37.8
+------------------
+* Fix TABL changed_by
+* Downport to 702
+
 2017-07-28 v1.37.7
 ------------------
 * Fix dump when parsing commit author, regex
