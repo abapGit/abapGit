@@ -7,12 +7,6 @@
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
 
-  METHOD set_files_remote.
-
-    mt_remote = it_files.
-
-  ENDMETHOD.
-
 ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -126,6 +120,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     rt_files = mt_remote.
   ENDMETHOD.                    "get_files
 
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
   METHOD get_objects.
     initialize( ).
 
@@ -207,10 +205,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
 * pushing to the branch currently represented by this repository object
+      mv_branch = lv_branch.
       set( iv_sha1 = lv_branch ).
     ENDIF.
 
-    refresh( ).
     update_local_checksums( lt_updated_files ).
 
     IF lcl_stage_logic=>count( me ) = 0.
@@ -354,6 +352,10 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD get_files_remote.
     rt_files = mt_remote.
+  ENDMETHOD.
+
+  METHOD set_files_remote.
+    mt_remote = it_files.
   ENDMETHOD.
 
   METHOD set.
@@ -908,14 +910,9 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       lcx_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
-    IF lcl_exit=>get_instance( )->allow_sap_objects( ) = abap_true.
-      SELECT SINGLE devclass FROM tdevc INTO lv_devclass
-        WHERE devclass = iv_package.                    "#EC CI_GENBUFF
-    ELSE.
-      SELECT SINGLE devclass FROM tdevc INTO lv_devclass
-        WHERE devclass = iv_package
-        AND as4user <> 'SAP'.                           "#EC CI_GENBUFF
-    ENDIF.
+    SELECT SINGLE devclass FROM tdevc INTO lv_devclass
+      WHERE devclass = iv_package
+      AND as4user <> 'SAP'.                             "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       lcx_exception=>raise( 'package not found or not allowed' ).
     ENDIF.
