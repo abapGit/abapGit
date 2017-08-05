@@ -89,11 +89,11 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: ls_icfservice TYPE icfservice.
+    DATA: ls_tadir TYPE tadir.
 
+    ls_tadir = lcl_tadir=>read_single_sicf( ms_item-obj_name ).
 
-    read( IMPORTING es_icfservice = ls_icfservice ).
-    rv_bool = boolc( NOT ls_icfservice IS INITIAL ).
+    rv_bool = boolc( NOT ls_tadir IS INITIAL ).
 
   ENDMETHOD.                    "lif_object~exists
 
@@ -144,17 +144,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     CLEAR et_icfhandler.
     CLEAR ev_url.
 
-    ls_key = ms_item-obj_name.
-    IF ls_key-icfparguid IS INITIAL.
-* limitation: name must be unique
-      SELECT SINGLE icfparguid FROM icfservice
-        INTO ls_key-icfparguid
-        WHERE icf_name = ls_key-icf_name
-        AND icf_cuser <> 'SAP' ##warn_ok.
-      IF sy-subrc <> 0.
-        RETURN.
-      ENDIF.
-    ENDIF.
+    ls_key = lcl_tadir=>read_single_sicf( ms_item-obj_name )-obj_name.
 
     cl_icf_tree=>if_icf_tree~get_info_from_serv(
       EXPORTING
@@ -202,6 +192,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
           ls_read       TYPE icfservice,
           ls_icfdocu    TYPE icfdocu,
           lv_url        TYPE string,
+          lv_exists     TYPE abap_bool,
           lt_icfhandler TYPE TABLE OF icfhandler.
 
 
@@ -214,14 +205,16 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
                   CHANGING cg_data = lt_icfhandler ).
 
-    read( IMPORTING es_icfservice = ls_read ).
-    IF ls_read IS INITIAL.
+
+    lv_exists = lif_object~exists( ).
+    IF lv_exists = abap_false.
       insert_sicf( is_icfservice = ls_icfservice
                    is_icfdocu    = ls_icfdocu
                    it_icfhandler = lt_icfhandler
                    iv_package    = iv_package
                    iv_url        = lv_url ).
     ELSE.
+      read( IMPORTING es_icfservice = ls_read ).
       change_sicf( is_icfservice = ls_icfservice
                    is_icfdocu    = ls_icfdocu
                    it_icfhandler = lt_icfhandler
