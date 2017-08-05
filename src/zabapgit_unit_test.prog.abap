@@ -2208,7 +2208,8 @@ CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS calculate_status FOR TESTING.
+    METHODS calculate_status FOR TESTING
+      RAISING lcx_exception.
 
 ENDCLASS.   "ltcl_file_status
 

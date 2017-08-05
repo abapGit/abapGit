@@ -27,7 +27,8 @@ CLASS lcl_file_status DEFINITION FINAL
                   it_local          TYPE lif_defs=>ty_files_item_tt
                   it_remote         TYPE lif_defs=>ty_files_tt
                   it_cur_state      TYPE lif_defs=>ty_file_signatures_tt
-        RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt,
+        RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
+        RAISING   lcx_exception,
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE lif_defs=>ty_results_tt

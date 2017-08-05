@@ -21,7 +21,8 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object       TYPE tadir-object
                   iv_obj_name     TYPE tadir-obj_name
-        RETURNING VALUE(rs_tadir) TYPE tadir,
+        RETURNING VALUE(rs_tadir) TYPE tadir
+        RAISING   lcx_exception,
       read_single_sicf
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_obj_name     TYPE tadir-obj_name
@@ -31,7 +32,8 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_pgmid           TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object          TYPE tadir-object
                   iv_obj_name        TYPE tadir-obj_name
-        RETURNING VALUE(rv_devclass) TYPE tadir-devclass.
+        RETURNING VALUE(rv_devclass) TYPE tadir-devclass
+        RAISING   lcx_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
