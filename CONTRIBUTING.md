@@ -12,11 +12,7 @@ Guidelines for bug reports:
 
 3. **Demonstrate the problem** &mdash; provide clear steps that can be reproduced.
 
-A good bug report should not leave others needing to chase you up for more
-information. Please try to be as detailed as possible in your report. What is
-your environment? What steps will reproduce the issue? What OS experienced the 
-problem? What would you expect to be the outcome? All these details will help 
-to fix any potential bugs.
+A good bug report should not leave others needing to chase you up for more information. Please try to be as detailed as possible in your report. What is your environment? What steps will reproduce the issue? What would you expect to be the outcome? All these details will help to fix any potential bugs.
 
 ## Development Guidelines
 
