@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-08-03 v1.38.0
+------------------
+! SICF serialization changed
+* TOBJ serialization added TDDAT, TVDIR, and TVIMF tables
+* TYPE fix overwriting/pull
+
 2017-08-03 v1.37.8
 ------------------
 * Fix TABL changed_by
