@@ -82,6 +82,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
         dialogname            = ls_dialog_module-tdct-dnam
         dynpronumber          = ls_dialog_module-tdct-dynr
         programname           = ls_dialog_module-tdct-prog
+        suppress_corr_check   = abap_false
 *     It seems that dia_par parameter doesn't do anything, but we can't omit it
 *     Parameters are inserted below
       TABLES
@@ -98,17 +99,68 @@ CLASS lcl_object_dial IMPLEMENTATION.
     " It seems that there's no API for diapar, therefore we manipulate it directly
     INSERT diapar FROM TABLE ls_dialog_module-dia_pars.
 
+    tadir_insert( iv_package ).
+
   ENDMETHOD.
 
   METHOD lif_object~delete.
 
-    DATA: ls_tdct TYPE tdct.
+    DATA: ls_bcdata TYPE bdcdata,
+          lt_bcdata TYPE STANDARD TABLE OF bdcdata.
 
-    " We don't use RS_DIALOG_DELETE because it interacts with the GUI
+    ls_bcdata-program  = 'SAPMSDIA'.
+    ls_bcdata-dynpro   = '1010'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
 
-    ls_tdct = _read_tdct( ).
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'DIAPAR-DNAM'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
 
-    PERFORM fu_delete_dialog IN PROGRAM sapmsdia USING ls_tdct.
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RS38L-PARM'.
+    ls_bcdata-fval     = abap_true.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=DELF'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-program  = 'SAPLSPO1'.
+    ls_bcdata-dynpro   = '0100'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=YES'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'SAPMSDIA'.
+    ls_bcdata-dynpro   = '1010'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=BACK'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      EXPORTING
+        tcode     = 'SE35'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
+    ENDIF.
 
   ENDMETHOD.
 
