@@ -5,10 +5,35 @@
 CLASS lcl_object_cmpt DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE lif_defs=>ty_item
+          iv_language TYPE spras.
+
     INTERFACES lif_object.
+
+  PRIVATE SECTION.
+    DATA: mo_cmp_db TYPE REF TO object.
+
 ENDCLASS.
 
 CLASS lcl_object_cmpt IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( is_item     = is_item
+                        iv_language = iv_language ).
+
+    TRY.
+        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_GET_DB_ACCESS')
+          RECEIVING
+            r_ref_db_access = mo_cmp_db.
+
+      CATCH cx_root.
+    ENDTRY.
+
+  ENDMETHOD.
 
   METHOD lif_object~has_changed_since.
 
@@ -18,11 +43,23 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    DATA(template) = CAST cl_cmp_template( cl_cmp_template=>s_create_from_db( i_name     = |{ ms_item-obj_name }|
-                                                                              i_version  = 'A' ) ).
+    DATA: mi_cmp_template TYPE REF TO object.
 
+    TRY.
+        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_CREATE_FROM_DB')
+          EXPORTING
+            i_name         = |{ ms_item-obj_name }|
+            i_version      = 'A'
+          RECEIVING
+            r_ref_template = mi_cmp_template.
 
-    rv_user = template->if_cmp_template_edit~get_change_user( ).
+        CALL METHOD mi_cmp_template->('IF_CMP_TEMPLATE_EDIT~GET_CHANGE_USER')
+          RECEIVING
+            r_user = rv_user.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -39,38 +76,72 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
     name = ms_item-obj_name.
 
-    rv_bool = cl_cmp_template=>s_template_exists( i_name    = name
-                                                  i_version = 'A' ).
+    TRY.
+        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
+          EXPORTING
+            i_name       = name
+            i_version    = 'A'
+          RECEIVING
+            r_flg_exists = rv_bool.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
 
   ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-    DATA(cmp_db) = cl_cmp_template=>s_get_db_access( ).
+    DATA: lr_template TYPE REF TO data.
+    FIELD-SYMBOLS: <template> TYPE any.
 
-    DATA(template) = cmp_db->read_template( i_name     = |{ ms_item-obj_name }|
-                                            i_version  = 'A' ).
+    TRY.
+        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
+        ASSIGN lr_template->* TO <template>.
 
-    io_xml->add( iv_name = 'CMPT'
-                 ig_data = template ).
+        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~READ_TEMPLATE')
+          EXPORTING
+            i_name     = |{ ms_item-obj_name }|
+            i_version  = 'A'
+          RECEIVING
+            r_template = <template>.
+
+        io_xml->add( iv_name = 'CMPT'
+                     ig_data = <template> ).
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
+
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-    DATA: template TYPE if_cmp_template_db=>typ_template.
+    DATA: lr_template TYPE REF TO data.
+    FIELD-SYMBOLS: <template> TYPE any.
 
-    io_xml->read(
-      EXPORTING
-        iv_name       = 'CMPT'
-      CHANGING
-        cg_data       = template ).
+    TRY.
+        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
+        ASSIGN lr_template->* TO <template>.
 
-    DATA(cmp_db) = cl_cmp_template=>s_get_db_access( ).
+        io_xml->read(
+          EXPORTING
+            iv_name = 'CMPT'
+          CHANGING
+            cg_data = <template> ).
 
-    cmp_db->save_template( i_template_db = template
-                           i_flg_header  = abap_true
-                           i_flg_lines   = abap_true ).
+        DATA(cmp_db) = cl_cmp_template=>s_get_db_access( ).
+
+        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
+          EXPORTING
+            i_template_db = <template>
+            i_flg_header  = abap_true
+            i_flg_lines   = abap_true.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -94,12 +165,21 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA(cmp_db) = cl_cmp_template=>s_get_db_access( ).
+    DATA: deleted TYPE abap_bool.
 
-    DATA(deleted) = cmp_db->delete_template( i_name        = |{ ms_item-obj_name }|
-                                             i_version     = 'A'
-                                             i_flg_header  = abap_true
-                                             i_flg_lines   = abap_true ).
+    TRY.
+        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
+          EXPORTING
+            i_name        = |{ ms_item-obj_name }|
+            i_version     = 'A'
+            i_flg_header  = abap_true
+            i_flg_lines   = abap_true
+          RECEIVING
+            r_flg_deleted = deleted.
+
+      CATCH cx_root.
+        lcx_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
 
     IF deleted = abap_false.
       lcx_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
