@@ -131,8 +131,6 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
           CHANGING
             cg_data = <template> ).
 
-        DATA(cmp_db) = cl_cmp_template=>s_get_db_access( ).
-
         CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
           EXPORTING
             i_template_db = <template>
