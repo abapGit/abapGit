@@ -16,7 +16,7 @@ CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
-DIAL | Dialog Module | [#879](https://github.com/larshp/abapGit/issues/879)
+DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
