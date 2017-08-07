@@ -699,13 +699,19 @@ CLASS lcl_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD compare_remote_to_local.
+* this method is used for comparing local with remote objects
+* before pull, this is useful eg. when overwriting a TABL object.
+* only the main XML file is used for comparison
 
     DATA: ls_remote_file       TYPE lif_defs=>ty_file,
           lo_remote_version    TYPE REF TO lcl_xml_input,
+          lv_count             TYPE i,
           lo_comparison_result TYPE REF TO lif_comparison_result.
 
 
-    IF is_result-filename CS '.XML'.
+    FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
+
+    IF is_result-filename CS '.XML' AND lv_count = 2.
       IF io_object->exists( ) = abap_false.
         RETURN.
       ENDIF.
