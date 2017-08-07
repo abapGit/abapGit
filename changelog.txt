@@ -8,6 +8,10 @@ Legend
 + : added
 - : removed
 
+2017-08-07 v1.39.0
+------------------
++ DIAL supported
+
 2017-08-05 v1.38.0
 ------------------
 ! SICF serialization changed
