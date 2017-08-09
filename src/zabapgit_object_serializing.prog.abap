@@ -25,6 +25,7 @@ INCLUDE zabapgit_object_fugr.
 INCLUDE zabapgit_object_iarp.
 INCLUDE zabapgit_object_iasp.
 INCLUDE zabapgit_object_iatu.
+INCLUDE zabapgit_object_JOBD.
 INCLUDE zabapgit_object_intf.
 INCLUDE zabapgit_object_msag.
 INCLUDE zabapgit_object_nrob.
