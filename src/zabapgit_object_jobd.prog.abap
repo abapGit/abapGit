@@ -32,12 +32,16 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
+    DATA: jd_name TYPE c LENGTH 32.
+
+    jd_name = ms_item-obj_name.
+
     TRY.
-        cl_jr_jd_manager=>check_jd_existence(
+        CALL METHOD ('CL_JR_JD_MANAGER')=>('CHECK_JD_EXISTENCE')
           EXPORTING
             im_jd_name     = |{ ms_item-obj_name }|
           IMPORTING
-            ex_is_existing = rv_bool ).
+            ex_is_existing = rv_bool.
 
       CATCH cx_root.
         lcx_exception=>raise( |JOBD not supported| ).
@@ -47,18 +51,20 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition.
+    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition,
+          lo_job_definition TYPE REF TO object,
+          jd_name           TYPE c LENGTH 32.
+
+    jd_name = ms_item-obj_name.
 
     TRY.
-        cl_jr_jd_manager=>get_instance(
+        CREATE OBJECT lo_job_definition TYPE ('CL_JR_JOB_DEFINITION')
           EXPORTING
-            im_jd_name      = |{ ms_item-obj_name }|
-          IMPORTING
-            ex_jd_obj       = DATA(lo_job_definition) ).
+            im_jd_name = jd_name.
 
-        lo_job_definition->get_jd_attributes(
+        CALL METHOD lo_job_definition->('GET_JD_ATTRIBUTES')
           IMPORTING
-            ex_jd_attributes = ls_job_definition ).
+            ex_jd_attributes = ls_job_definition.
 
         CLEAR: ls_job_definition-jdpackage,
                ls_job_definition-btcjob_user,
@@ -79,7 +85,11 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition.
+    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition,
+          lo_job_definition TYPE REF TO object,
+          jd_name           TYPE c LENGTH 32.
+
+    jd_name = ms_item-obj_name.
 
     TRY.
         io_xml->read(
@@ -88,15 +98,15 @@ CLASS lcl_object_jobd IMPLEMENTATION.
           CHANGING
             cg_data = ls_job_definition ).
 
-        cl_jr_jd_manager=>create_instance(
+        CREATE OBJECT lo_job_definition TYPE ('CL_JR_JOB_DEFINITION')
           EXPORTING
-            im_jd_name = |{ ms_item-obj_name }|
-          IMPORTING
-            ex_jd_obj  = DATA(lo_job_definition) ).
+            im_jd_name = jd_name.
 
         ls_job_definition-jdpackage = iv_package.
 
-        lo_job_definition->create_jd( ls_job_definition ).
+        CALL METHOD lo_job_definition->('CREATE_JD')
+          EXPORTING
+            im_jd_attributes = ls_job_definition.
 
       CATCH cx_root.
         lcx_exception=>raise( |Error deserializing JOBD| ).
@@ -108,14 +118,17 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    TRY.
-        cl_jr_jd_manager=>get_instance(
-          EXPORTING
-            im_jd_name = |{ ms_item-obj_name }|
-          IMPORTING
-            ex_jd_obj  = DATA(lo_job_definition) ).
+    DATA: lo_job_definition TYPE REF TO object,
+          jd_name           TYPE c LENGTH 32.
 
-        lo_job_definition->delete_jd( ).
+    jd_name = ms_item-obj_name.
+
+    TRY.
+        CREATE OBJECT lo_job_definition TYPE ('CL_JR_JOB_DEFINITION')
+          EXPORTING
+            im_jd_name = jd_name.
+
+        CALL METHOD lo_job_definition->('DELETE_JD').
 
       CATCH cx_root.
         lcx_exception=>raise( |Error deleting JOBD| ).
