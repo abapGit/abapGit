@@ -14,6 +14,7 @@ BOBF | BOPF: Business Object Model | [Plugin](https://github.com/larshp/abapGit-
 CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
+CMPT | Code Composer Template | Yes
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
 DIAL | Dialog Module | Yes
