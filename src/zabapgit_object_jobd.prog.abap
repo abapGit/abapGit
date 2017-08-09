@@ -51,31 +51,51 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition,
+    DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
           jd_name           TYPE c LENGTH 32.
+
+    FIELD-SYMBOLS: <ls_job_definition> TYPE any,
+                   <field>             TYPE any.
 
     jd_name = ms_item-obj_name.
 
     TRY.
+        CREATE DATA lr_job_definition TYPE ('CL_JR_JOB_DEFINITION=>TY_JOB_DEFINITION').
+        ASSIGN lr_job_definition->* TO <ls_job_definition>.
+        ASSERT sy-subrc = 0.
+
         CREATE OBJECT lo_job_definition TYPE ('CL_JR_JOB_DEFINITION')
           EXPORTING
             im_jd_name = jd_name.
 
         CALL METHOD lo_job_definition->('GET_JD_ATTRIBUTES')
           IMPORTING
-            ex_jd_attributes = ls_job_definition.
+            ex_jd_attributes = <ls_job_definition>.
 
-        CLEAR: ls_job_definition-jdpackage,
-               ls_job_definition-btcjob_user,
-               ls_job_definition-owner,
-               ls_job_definition-created_date,
-               ls_job_definition-created_time,
-               ls_job_definition-changed_date,
-               ls_job_definition-changed_time.
+        ASSIGN COMPONENT 'JDPACKAGE' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'BTCJOB_USER' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'OWNER' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'CREATED_DATE' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'CREATED_TIME' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'CHANGED_DATE' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
+
+        ASSIGN COMPONENT 'CHANGED_TIME' OF STRUCTURE <ls_job_definition> TO <field>.
+        CLEAR <field>.
 
         io_xml->add( iv_name = 'JOBD'
-                     ig_data = ls_job_definition ).
+                     ig_data = <ls_job_definition> ).
 
       CATCH cx_root.
         lcx_exception=>raise( |Error serializing JOBD| ).
@@ -85,28 +105,38 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_job_definition TYPE cl_jr_job_definition=>ty_job_definition,
+    DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
           jd_name           TYPE c LENGTH 32.
+
+    FIELD-SYMBOLS: <ls_job_definition> TYPE any,
+                   <field>             TYPE any.
 
     jd_name = ms_item-obj_name.
 
     TRY.
+        CREATE DATA lr_job_definition TYPE ('CL_JR_JOB_DEFINITION=>TY_JOB_DEFINITION').
+        ASSIGN lr_job_definition->* TO <ls_job_definition>.
+        ASSERT sy-subrc = 0.
+
         io_xml->read(
           EXPORTING
             iv_name = 'JOBD'
           CHANGING
-            cg_data = ls_job_definition ).
+            cg_data = <ls_job_definition> ).
 
         CREATE OBJECT lo_job_definition TYPE ('CL_JR_JOB_DEFINITION')
           EXPORTING
             im_jd_name = jd_name.
 
-        ls_job_definition-jdpackage = iv_package.
+
+        ASSIGN COMPONENT 'JDPACKAGE' OF STRUCTURE <ls_job_definition> TO <field>.
+
+        <field> = iv_package.
 
         CALL METHOD lo_job_definition->('CREATE_JD')
           EXPORTING
-            im_jd_attributes = ls_job_definition.
+            im_jd_attributes = <ls_job_definition>.
 
       CATCH cx_root.
         lcx_exception=>raise( |Error deserializing JOBD| ).
