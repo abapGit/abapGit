@@ -7,6 +7,9 @@ CLASS lcl_object_jobd DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
+  PRIVATE SECTION.
+    TYPES: ty_jd_name TYPE c LENGTH 32.
+
 ENDCLASS.
 
 CLASS lcl_object_jobd IMPLEMENTATION.
@@ -32,14 +35,14 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: jd_name TYPE c LENGTH 32.
+    DATA: jd_name TYPE ty_jd_name.
 
     jd_name = ms_item-obj_name.
 
     TRY.
         CALL METHOD ('CL_JR_JD_MANAGER')=>('CHECK_JD_EXISTENCE')
           EXPORTING
-            im_jd_name     = |{ ms_item-obj_name }|
+            im_jd_name     = jd_name
           IMPORTING
             ex_is_existing = rv_bool.
 
@@ -53,7 +56,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
-          jd_name           TYPE c LENGTH 32.
+          jd_name           TYPE ty_jd_name.
 
     FIELD-SYMBOLS: <ls_job_definition> TYPE any,
                    <field>             TYPE any.
@@ -107,7 +110,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
-          jd_name           TYPE c LENGTH 32.
+          jd_name           TYPE ty_jd_name.
 
     FIELD-SYMBOLS: <ls_job_definition> TYPE any,
                    <field>             TYPE any.
