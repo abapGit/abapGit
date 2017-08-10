@@ -519,8 +519,6 @@ CLASS lcl_http IMPLEMENTATION.
     li_exit = lcl_exit=>get_instance( ).
     li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
 
-    lcl_exit=>get_instance( )->change_local_host( CHANGING ct_hosts = lt_list ).
-
     FIND REGEX 'https?://([^/^:]*)' IN iv_url
       SUBMATCHES lv_host.
 
