@@ -41,6 +41,7 @@ INCLUDE zabapgit_object_sfpi.
 INCLUDE zabapgit_object_sfsw.
 INCLUDE zabapgit_object_shi3.
 INCLUDE zabapgit_object_shlp.
+INCLUDE zabapgit_object_shma.
 INCLUDE zabapgit_object_sicf.
 INCLUDE zabapgit_object_smim.
 INCLUDE zabapgit_object_splo.
