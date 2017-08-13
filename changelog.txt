@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-08-11 v1.40.0
+------------------
++ JOBD supported
++ CMPT supported
+* downport fix
+
 2017-08-07 v1.39.0
 ------------------
 + DIAL supported
