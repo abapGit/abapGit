@@ -56,31 +56,19 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: area_name           TYPE shm_area_name,
-          area_attributes     TYPE shma_attributes,
-          area_attributes_rts TYPE shma_rts_table,
-          oo_attributes       TYPE seoo_attributes_r,
-          startup_list        TYPE db_startup_table,
-          startup_list_rts    TYPE db_startup_table_rts,
-          change_info         TYPE change_info,
-          tadir_shma          TYPE tadir,
-          tadir_class         TYPE tadir.
+    DATA: area_name       TYPE shm_area_name,
+          area_attributes TYPE shma_attributes,
+          startup_list    TYPE db_startup_table.
 
     area_name = ms_item-obj_name.
 
     TRY.
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('READ_AREA_ATTRIBUTES_ALL')
           EXPORTING
-            area_name           = area_name
+            area_name       = area_name
           IMPORTING
-            area_attributes     = area_attributes
-            area_attributes_rts = area_attributes_rts
-            oo_attributes       = oo_attributes
-            startup_list        = startup_list
-            startup_list_rts    = startup_list_rts
-            change_info         = change_info
-            tadir_shma          = tadir_shma
-            tadir_class         = tadir_class.
+            area_attributes = area_attributes
+            startup_list    = startup_list.
 
         CLEAR: area_attributes-chg_user,
                area_attributes-chg_date,
@@ -89,46 +77,11 @@ CLASS lcl_object_shma IMPLEMENTATION.
                area_attributes-cls_gen_date ,
                area_attributes-cls_gen_time.
 
-        LOOP AT area_attributes_rts ASSIGNING FIELD-SYMBOL(<area_attribute_rts>).
-
-          CLEAR: <area_attribute_rts>-chg_user,
-                 <area_attribute_rts>-chg_date,
-                 <area_attribute_rts>-chg_time.
-
-        ENDLOOP.
-
-        LOOP AT oo_attributes ASSIGNING FIELD-SYMBOL(<oo_attribue>).
-
-          CLEAR: <oo_attribue>-createdon,
-                 <oo_attribue>-changedby,
-                 <oo_attribue>-changedon.
-
-        ENDLOOP.
-
-
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
                      ig_data = area_attributes ).
 
-        io_xml->add( iv_name = 'AREA_ATTRIBUTES_RTS'
-                     ig_data = area_attributes_rts ).
-
-        io_xml->add( iv_name = 'OO_ATTRIBUTES'
-                     ig_data = oo_attributes ).
-
         io_xml->add( iv_name = 'STARTUP_LIST'
                      ig_data = startup_list ).
-
-        io_xml->add( iv_name = 'STARTUP_LIST_RTS'
-                     ig_data = startup_list_rts ).
-
-        io_xml->add( iv_name = 'CHANGE_INFO'
-                     ig_data = change_info ).
-
-        io_xml->add( iv_name = 'TADIR_SHMA'
-                     ig_data = tadir_shma ).
-
-        io_xml->add( iv_name = 'TADIR_CLASS'
-                     ig_data = tadir_class ).
 
       CATCH cx_root INTO DATA(error).
         lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
@@ -180,19 +133,18 @@ CLASS lcl_object_shma IMPLEMENTATION.
     " lifecycle. Therefore we have to reimplement most of the
     " FMs logic
 
-
     CONSTANTS:
         c_request_delete TYPE i VALUE '4'.
 
-    DATA: l_request TYPE i,
+    DATA: request   TYPE i,
           area_name TYPE shm_area_name,
-          l_order   TYPE e070-trkorr,
-          l_korrnum TYPE tadir-korrnum,
-          l_objname TYPE tadir-obj_name,
-          l_task    TYPE e070-trkorr,
-          l_append  TYPE abap_bool,
-          l_tadir   TYPE tadir,
-          l_tdevc   TYPE tdevc,
+          order     TYPE e070-trkorr,
+          korrnum   TYPE tadir-korrnum,
+          objname   TYPE tadir-obj_name,
+          task      TYPE e070-trkorr,
+          append    TYPE abap_bool,
+          tadir     TYPE tadir,
+          tdevc     TYPE tdevc,
           lo_cts_if TYPE REF TO object.
 
     area_name = ms_item-obj_name.
@@ -223,10 +175,10 @@ CLASS lcl_object_shma IMPLEMENTATION.
           EXPORTING
             request     = c_request_delete
           IMPORTING
-            access_mode = l_request
-            appendable  = l_append.
+            access_mode = request
+            appendable  = append.
 
-        IF l_request <> c_request_delete.
+        IF request <> c_request_delete.
           lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
         ENDIF.
 
@@ -234,35 +186,35 @@ CLASS lcl_object_shma IMPLEMENTATION.
           EXPORTING
             request = c_request_delete
           IMPORTING
-            order   = l_order
-            task    = l_task.
+            order   = order
+            task    = task.
 
         DELETE FROM shma_attributes  WHERE area_name = area_name.
         DELETE FROM shma_start       WHERE area_name = area_name.
 
-        l_korrnum = l_order.
-        l_objname = area_name.
+        korrnum = order.
+        objname = area_name.
 
         CALL FUNCTION 'TR_TADIR_INTERFACE'
           EXPORTING
             wi_read_only      = abap_true
             wi_tadir_pgmid    = 'R3TR'
             wi_tadir_object   = 'SHMA'
-            wi_tadir_obj_name = l_objname
+            wi_tadir_obj_name = objname
           IMPORTING
-            new_tadir_entry   = l_tadir
+            new_tadir_entry   = tadir
           EXCEPTIONS
             OTHERS            = 0.
 
         CALL FUNCTION 'TR_DEVCLASS_GET'
           EXPORTING
-            iv_devclass = l_tadir-devclass
+            iv_devclass = tadir-devclass
           IMPORTING
-            es_tdevc    = l_tdevc
+            es_tdevc    = tdevc
           EXCEPTIONS
             OTHERS      = 1.
 
-        IF  sy-subrc = 0 AND l_tdevc-korrflag IS INITIAL.
+        IF  sy-subrc = 0 AND tdevc-korrflag IS INITIAL.
 
           " TADIR entries for local objects must be deleted 'by hand'
 
@@ -272,8 +224,8 @@ CLASS lcl_object_shma IMPLEMENTATION.
               wi_delete_tadir_entry = abap_true
               wi_tadir_pgmid        = 'R3TR'
               wi_tadir_object       = 'SHMA'
-              wi_tadir_obj_name     = l_objname
-              wi_tadir_korrnum      = l_korrnum
+              wi_tadir_obj_name     = objname
+              wi_tadir_korrnum      = korrnum
             EXCEPTIONS
               OTHERS                = 0.
 
@@ -283,8 +235,8 @@ CLASS lcl_object_shma IMPLEMENTATION.
               wi_delete_tadir_entry = abap_true
               wi_tadir_pgmid        = 'R3TR'
               wi_tadir_object       = 'CLAS'
-              wi_tadir_obj_name     = l_objname
-              wi_tadir_korrnum      = l_korrnum
+              wi_tadir_obj_name     = objname
+              wi_tadir_korrnum      = korrnum
             EXCEPTIONS
               OTHERS                = 0.
 
