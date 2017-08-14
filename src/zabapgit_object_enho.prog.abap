@@ -131,6 +131,140 @@ CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
 
+<<<<<<< HEAD
+||||||| merged common ancestors
+
+=======
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_wdyconf DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho_wdyn DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS: constructor
+      IMPORTING
+        is_item  TYPE lif_defs=>ty_item
+        io_files TYPE REF TO lcl_objects_files.
+    INTERFACES: lif_object_enho.
+
+  PRIVATE SECTION.
+    DATA: ms_item  TYPE lif_defs=>ty_item,
+          mo_files TYPE REF TO lcl_objects_files.
+
+ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS lcl_object_enho_wdyconf IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS lcl_object_enho_wdyn IMPLEMENTATION.
+
+  METHOD constructor.
+    ms_item = is_item.
+    mo_files = io_files.
+  ENDMETHOD.                    "constructor
+
+  METHOD lif_object_enho~deserialize.
+
+    DATA: ls_enh_data TYPE enhwdyn,
+          li_tool     TYPE REF TO if_enh_tool,
+          lo_wdyn     TYPE REF TO cl_enh_tool_wdy,
+          tool_type   TYPE enhtooltype,
+          package     TYPE devclass.
+
+    FIELD-SYMBOLS: <controller_data> TYPE enhwdyc,
+                   <view_data>       TYPE enhwdyv.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'TOOL'
+      CHANGING
+        cg_data = tool_type ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'COMPONENT_DATA'
+      CHANGING
+        cg_data = ls_enh_data ).
+
+    package = iv_package.
+
+    TRY.
+        cl_enh_factory=>create_enhancement(
+          EXPORTING
+            enhname     = |{ ms_item-obj_name }|
+            enhtype     = ''
+            enhtooltype = tool_type
+          IMPORTING
+            enhancement = li_tool
+          CHANGING
+            devclass    = package ).
+
+        lo_wdyn ?= li_tool.
+
+        lo_wdyn->initialize( ls_enh_data-component_name ).
+
+        lo_wdyn->set_component_data( ls_enh_data-component_data ).
+
+        LOOP AT ls_enh_data-controller_data ASSIGNING <controller_data>.
+
+          lo_wdyn->set_controller_data( p_controller_name = <controller_data>-controller_name
+                                        p_enh_data        = <controller_data> ).
+
+        ENDLOOP.
+
+        LOOP AT ls_enh_data-view_data ASSIGNING <view_data>.
+
+          lo_wdyn->set_view_data( p_view_name = <view_data>-view_name
+                                  p_enh_data  = <view_data> ).
+
+        ENDLOOP.
+
+        lo_wdyn->if_enh_object~save( ).
+        lo_wdyn->if_enh_object~unlock( ).
+
+      CATCH cx_root.
+        lcx_exception=>raise( |error deserializing ENHO wdyn { ms_item-obj_name }| ).
+    ENDTRY.
+
+  ENDMETHOD.                    "lif_object_enho~deserialize
+
+  METHOD lif_object_enho~serialize.
+
+    DATA: lo_wdyn        TYPE REF TO cl_enh_tool_wdy,
+          component_name TYPE wdy_component_name,
+          ls_enh_data    TYPE enhwdyn.
+
+    lo_wdyn ?= ii_enh_tool.
+
+    component_name = lo_wdyn->get_component_name( ).
+
+    TRY.
+        lo_wdyn->get_all_data_for_comp(
+          EXPORTING
+            p_component_name = component_name
+          IMPORTING
+            p_enh_data       = ls_enh_data ).
+
+        io_xml->add( iv_name = 'TOOL'
+                     ig_data = ii_enh_tool->get_tool( ) ).
+
+        io_xml->add( iv_name = 'COMPONENT_DATA'
+                     ig_data = ls_enh_data ).
+
+      CATCH cx_enh_not_found.
+        lcx_exception=>raise( |error serializing ENHO wdyn { ms_item-obj_name }| ).
+    ENDTRY.
+
+  ENDMETHOD.                    "lif_object_enho~serialize
+
+ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
+
+
+>>>>>>> 4826b837037c33ea6360bf08d50202b10ee9a7d0
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enho_clif DEFINITION
 *----------------------------------------------------------------------*
@@ -1121,9 +1255,11 @@ CLASS lcl_object_enho IMPLEMENTATION.
           EXPORTING
             is_item  = ms_item
             io_files = mo_files.
-
-* ToDo:
-*      WHEN 'ENHWDYN'. "cl_enh_tool_wdy
+      WHEN 'WDYENH'.
+        CREATE OBJECT ri_enho TYPE lcl_object_enho_wdyn
+          EXPORTING
+            is_item  = ms_item
+            io_files = mo_files.
       WHEN OTHERS.
         lcx_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
     ENDCASE.
