@@ -167,6 +167,11 @@ CLASS lcl_object_shma IMPLEMENTATION.
           lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
         ENDIF.
 
+        CALL METHOD ('\PROGRAM=SAPMSHM_MONITOR\CLASS=LCL_SHMM')=>('FREE_AREA_BY_NAME')
+          EXPORTING
+            area_name     = area_name
+            affect_server = cl_shm_area=>affect_all_servers.
+
         CREATE OBJECT lo_cts_if TYPE ('\FUNCTION-POOL=SHMA\CLASS=LCL_CTS_INTERFACE')
           EXPORTING
             area = area_name.
