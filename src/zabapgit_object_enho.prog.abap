@@ -131,10 +131,6 @@ CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
 
-<<<<<<< HEAD
-||||||| merged common ancestors
-
-=======
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enho_wdyconf DEFINITION
 *----------------------------------------------------------------------*
@@ -263,8 +259,6 @@ CLASS lcl_object_enho_wdyn IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
 
-
->>>>>>> 4826b837037c33ea6360bf08d50202b10ee9a7d0
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enho_clif DEFINITION
 *----------------------------------------------------------------------*
