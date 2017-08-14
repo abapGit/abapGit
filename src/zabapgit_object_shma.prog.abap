@@ -38,26 +38,17 @@ CLASS lcl_object_shma IMPLEMENTATION.
   METHOD lif_object~get_metadata.
 
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
   METHOD lif_object~exists.
 
-    DATA: clskey TYPE seoclskey.
+    DATA: area_name TYPE shm_area_name.
 
-    clskey = ms_item-obj_name.
-
-    CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
-      EXPORTING
-        clskey        = clskey
-      EXCEPTIONS
-        not_specified = 1
-        not_existing  = 2
-        is_interface  = 3
-        no_text       = 4
-        inconsistent  = 5
-        OTHERS        = 6.
+    SELECT SINGLE area_name
+           FROM shma_attributes
+           INTO area_name
+           WHERE area_name = ms_item-obj_name.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -91,6 +82,30 @@ CLASS lcl_object_shma IMPLEMENTATION.
             tadir_shma          = tadir_shma
             tadir_class         = tadir_class.
 
+        CLEAR: area_attributes-chg_user,
+               area_attributes-chg_date,
+               area_attributes-chg_time,
+               area_attributes-cls_gen_user ,
+               area_attributes-cls_gen_date ,
+               area_attributes-cls_gen_time.
+
+        LOOP AT area_attributes_rts ASSIGNING FIELD-SYMBOL(<area_attribute_rts>).
+
+          CLEAR: <area_attribute_rts>-chg_user,
+                 <area_attribute_rts>-chg_date,
+                 <area_attribute_rts>-chg_time.
+
+        ENDLOOP.
+
+        LOOP AT oo_attributes ASSIGNING FIELD-SYMBOL(<oo_attribue>).
+
+          CLEAR: <oo_attribue>-createdon,
+                 <oo_attribue>-changedby,
+                 <oo_attribue>-changedon.
+
+        ENDLOOP.
+
+
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
                      ig_data = area_attributes ).
 
@@ -123,15 +138,9 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: area_name           TYPE shm_area_name,
-          area_attributes     TYPE shma_attributes,
-          area_attributes_rts TYPE shma_rts_table,
-          oo_attributes       TYPE seoo_attributes_r,
-          startup_list        TYPE db_startup_table,
-          startup_list_rts    TYPE db_startup_table_rts,
-          change_info         TYPE change_info,
-          tadir_shma          TYPE tadir,
-          tadir_class         TYPE tadir.
+    DATA: area_name       TYPE shm_area_name,
+          area_attributes TYPE shma_attributes,
+          startup_list    TYPE db_startup_table.
 
     area_name = ms_item-obj_name.
 
@@ -150,10 +159,13 @@ CLASS lcl_object_shma IMPLEMENTATION.
     TRY.
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
-            area_name 			= area_name
-            attributes			= area_attributes
-            startup_list		= startup_list
-            force_overwrite = abap_true.
+            area_name           = area_name
+            attributes          = area_attributes
+            startup_list        = startup_list
+            force_overwrite     = abap_true
+            no_class_generation = abap_true
+            silent_mode         = abap_true.
+
 
       CATCH cx_root INTO DATA(error).
         lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
@@ -163,16 +175,135 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: area_name TYPE shm_area_name.
+    " We can't use FM SHMA_DELETE_AREA because it depends
+    " on the corresponding class, but in abapGit it has its own
+    " lifecycle. Therefore we have to reimplement most of the
+    " FMs logic
+
+
+    CONSTANTS:
+        c_request_delete TYPE i VALUE '4'.
+
+    DATA: l_request TYPE i,
+          area_name TYPE shm_area_name,
+          l_order   TYPE e070-trkorr,
+          l_korrnum TYPE tadir-korrnum,
+          l_objname TYPE tadir-obj_name,
+          l_task    TYPE e070-trkorr,
+          l_append  TYPE abap_bool,
+          l_tadir   TYPE tadir,
+          l_tdevc   TYPE tdevc,
+          lo_cts_if TYPE REF TO object.
 
     area_name = ms_item-obj_name.
 
     TRY.
-        CALL FUNCTION 'SHMA_DELETE_AREA'
+        CALL FUNCTION 'ENQUEUE_E_SHM_AREA'
+          EXPORTING
+            mode_shma_attributes = 'E'
+            area_name            = area_name
+            x_area_name          = ' '
+            _scope               = '2'
+            _wait                = ' '
+            _collect             = ' '
+          EXCEPTIONS
+            foreign_lock         = 1
+            system_failure       = 2
+            OTHERS               = 3.
+
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
+        ENDIF.
+
+        CREATE OBJECT lo_cts_if TYPE ('\FUNCTION-POOL=SHMA\CLASS=LCL_CTS_INTERFACE')
+          EXPORTING
+            area = area_name.
+
+        CALL METHOD lo_cts_if->('CHECK_AREA')
+          EXPORTING
+            request     = c_request_delete
+          IMPORTING
+            access_mode = l_request
+            appendable  = l_append.
+
+        IF l_request <> c_request_delete.
+          lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
+        ENDIF.
+
+        CALL METHOD lo_cts_if->('INSERT_AREA')
+          EXPORTING
+            request = c_request_delete
+          IMPORTING
+            order   = l_order
+            task    = l_task.
+
+        DELETE FROM shma_attributes  WHERE area_name = area_name.
+        DELETE FROM shma_start       WHERE area_name = area_name.
+
+        l_korrnum = l_order.
+        l_objname = area_name.
+
+        CALL FUNCTION 'TR_TADIR_INTERFACE'
+          EXPORTING
+            wi_read_only      = abap_true
+            wi_tadir_pgmid    = 'R3TR'
+            wi_tadir_object   = 'SHMA'
+            wi_tadir_obj_name = l_objname
+          IMPORTING
+            new_tadir_entry   = l_tadir
+          EXCEPTIONS
+            OTHERS            = 0.
+
+        CALL FUNCTION 'TR_DEVCLASS_GET'
+          EXPORTING
+            iv_devclass = l_tadir-devclass
+          IMPORTING
+            es_tdevc    = l_tdevc
+          EXCEPTIONS
+            OTHERS      = 1.
+
+        IF  sy-subrc = 0 AND l_tdevc-korrflag IS INITIAL.
+
+          " TADIR entries for local objects must be deleted 'by hand'
+
+          CALL FUNCTION 'TR_TADIR_INTERFACE'
+            EXPORTING
+              wi_test_modus         = abap_false
+              wi_delete_tadir_entry = abap_true
+              wi_tadir_pgmid        = 'R3TR'
+              wi_tadir_object       = 'SHMA'
+              wi_tadir_obj_name     = l_objname
+              wi_tadir_korrnum      = l_korrnum
+            EXCEPTIONS
+              OTHERS                = 0.
+
+          CALL FUNCTION 'TR_TADIR_INTERFACE'
+            EXPORTING
+              wi_test_modus         = abap_false
+              wi_delete_tadir_entry = abap_true
+              wi_tadir_pgmid        = 'R3TR'
+              wi_tadir_object       = 'CLAS'
+              wi_tadir_obj_name     = l_objname
+              wi_tadir_korrnum      = l_korrnum
+            EXCEPTIONS
+              OTHERS                = 0.
+
+        ENDIF.
+
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('DELETE_RUNTIME_SETTINGS')
           EXPORTING
             area_name = area_name.
 
-      CATCH cx_root INTO DATA(error).
+        CALL FUNCTION 'DEQUEUE_E_SHM_AREA'
+          EXPORTING
+            mode_shma_attributes = 'E'
+            area_name            = area_name
+            x_area_name          = ' '
+            _scope               = '3'
+            _synchron            = ' '
+            _collect             = ' '.
+
+      CATCH cx_root.
         lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
