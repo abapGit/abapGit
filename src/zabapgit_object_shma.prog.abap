@@ -11,14 +11,6 @@ CLASS lcl_object_shma DEFINITION INHERITING FROM lcl_objects_super FINAL.
     TYPES: db_startup_table     TYPE STANDARD TABLE OF shma_start      WITH DEFAULT KEY,
            db_startup_table_rts TYPE STANDARD TABLE OF shma_start_rts  WITH DEFAULT KEY.
 
-    TYPES:
-      BEGIN OF change_info,
-        defined     TYPE shma_chg_info,
-        rts         TYPE shma_chg_info,
-        startup     TYPE shma_chg_info,
-        startup_rts TYPE shma_chg_info,
-      END OF change_info.
-
 ENDCLASS.
 
 CLASS lcl_object_shma IMPLEMENTATION.
