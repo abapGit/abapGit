@@ -7,10 +7,6 @@ CLASS lcl_object_shma DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
 
-  PRIVATE SECTION.
-    TYPES: db_startup_table     TYPE STANDARD TABLE OF shma_start      WITH DEFAULT KEY,
-           db_startup_table_rts TYPE STANDARD TABLE OF shma_start_rts  WITH DEFAULT KEY.
-
 ENDCLASS.
 
 CLASS lcl_object_shma IMPLEMENTATION.
@@ -49,8 +45,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: area_name       TYPE shm_area_name,
-          area_attributes TYPE shma_attributes,
-          startup_list    TYPE db_startup_table.
+          area_attributes TYPE shma_attributes.
 
     area_name = ms_item-obj_name.
 
@@ -59,8 +54,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
           EXPORTING
             area_name       = area_name
           IMPORTING
-            area_attributes = area_attributes
-            startup_list    = startup_list.
+            area_attributes = area_attributes.
 
         CLEAR: area_attributes-chg_user,
                area_attributes-chg_date,
@@ -72,9 +66,6 @@ CLASS lcl_object_shma IMPLEMENTATION.
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
                      ig_data = area_attributes ).
 
-        io_xml->add( iv_name = 'STARTUP_LIST'
-                     ig_data = startup_list ).
-
       CATCH cx_root INTO DATA(error).
         lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
@@ -84,8 +75,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
   METHOD lif_object~deserialize.
 
     DATA: area_name       TYPE shm_area_name,
-          area_attributes TYPE shma_attributes,
-          startup_list    TYPE db_startup_table.
+          area_attributes TYPE shma_attributes.
 
     area_name = ms_item-obj_name.
 
@@ -95,18 +85,11 @@ CLASS lcl_object_shma IMPLEMENTATION.
       CHANGING
         cg_data = area_attributes ).
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'STARTUP_LIST'
-      CHANGING
-        cg_data = startup_list ).
-
     TRY.
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
             area_name           = area_name
             attributes          = area_attributes
-            startup_list        = startup_list
             force_overwrite     = abap_true
             no_class_generation = abap_true
             silent_mode         = abap_true.
