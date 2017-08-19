@@ -66,7 +66,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
                      ig_data = area_attributes ).
 
-      CATCH cx_root INTO DATA(error).
+      CATCH cx_root.
         lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
@@ -94,8 +94,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
             no_class_generation = abap_true
             silent_mode         = abap_true.
 
-
-      CATCH cx_root INTO DATA(error).
+      CATCH cx_root.
         lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
