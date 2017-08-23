@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2017-08-23 v1.41.0
+------------------
++ SHMA supported
++ ENHO for function groups + web dynpro supported
+
 2017-08-11 v1.40.0
 ------------------
 + JOBD supported
