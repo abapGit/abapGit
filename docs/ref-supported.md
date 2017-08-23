@@ -25,7 +25,7 @@ DTEL | Data Element | Yes
 ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
 ECTD | eCATT Test Data Container | [#105](https://github.com/larshp/abapGit/issues/105)
 ENHC | Composite Enhancement Implementation | Yes
-ENHO | Enhancement Implementation | Partial [#113](https://github.com/larshp/abapGit/issues/113)
+ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
 FORM | SAPscript form | Yes
@@ -60,7 +60,7 @@ SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
 SFPI | Form Object: Interface | Yes
 SFPF | Form Object: Form | Yes
-SHMA | Shared Objects: Defined Area Attributes | [#85](https://github.com/larshp/abapGit/issues/85)
+SHMA | Shared Objects: Defined Area Attributes | Yes
 SMIM | Info Object from the MIME Repository | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 STYL | SAPscript style | Yes
