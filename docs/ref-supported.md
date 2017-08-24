@@ -49,20 +49,20 @@ SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
+SFPF | Form Object: Form | Yes
+SFPI | Form Object: Interface | Yes
 SFSW | Switch + Assignment of Objects to the Switch | Yes
 SHI3 | General structure storage: Definition of a structure | Yes
 SHLP | Search Help | Yes
+SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
+SMIM | Info Object from the MIME Repository | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
 SPLO | Format Types | Yes
+SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 SRFC | RFC Service | [#155](https://github.com/larshp/abapGit/issues/155)
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
-SFPI | Form Object: Interface | Yes
-SFPF | Form Object: Form | Yes
-SHMA | Shared Objects: Defined Area Attributes | Yes
-SMIM | Info Object from the MIME Repository | Yes
-SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 STYL | SAPscript style | Yes
 SUSC | Authorization object class | Yes
 SUSO | Authorization object | Yes
