@@ -47,10 +47,18 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo            TYPE REF TO lcl_repo_online,
-          lv_answer          TYPE c LENGTH 1,
-          lt_tadir           TYPE lif_defs=>ty_tadir_tt,
-          lt_tadir_to_delete LIKE lt_tadir.
+    DATA: lo_repo                   TYPE REF TO lcl_repo_online,
+          lv_answer                 TYPE c LENGTH 1,
+          lt_tadir                  TYPE lif_defs=>ty_tadir_tt,
+          lt_tadir_to_delete        LIKE lt_tadir,
+          lt_tadir_to_delete_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
+                                                WITH UNIQUE KEY pgmid object obj_name,
+          lt_local                  TYPE lif_defs=>ty_files_item_tt,
+          lt_remote                 TYPE lif_defs=>ty_files_tt,
+          lt_status                 TYPE lif_defs=>ty_results_tt,
+          lt_package                TYPE lcl_persistence_repo=>ty_repo-package.
+    FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
+                   <tadir>  TYPE lif_defs=>ty_tadir.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -73,40 +81,32 @@ CLASS lcl_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    " delete local files that are not in remote...
-    DATA(lt_files_local) = lo_repo->get_files_local( ).
-    DATA(lt_files_remote) = lo_repo->get_files_remote( ).
+    " delete files which are added locally but are not in remote repo
+    lt_local  = lo_repo->get_files_local( ).
+    lt_remote = lo_repo->get_files_remote( ).
+    lt_status = lo_repo->status( ).
 
-    DATA(package) = lo_repo->get_package( ).
-    lt_tadir = lcl_tadir=>read( package ).
+    lt_package = lo_repo->get_package( ).
+    lt_tadir = lcl_tadir=>read( lt_package ).
 
-    LOOP AT lt_files_local ASSIGNING FIELD-SYMBOL(<file_local>).
+    LOOP AT lt_status ASSIGNING <status>
+                      WHERE lstate = lif_defs=>gc_state-added.
 
-      IF NOT line_exists( lt_files_remote[ path     = <file_local>-file-path
-                                           filename = <file_local>-file-filename ] ).
+      READ TABLE lt_tadir ASSIGNING <tadir>
+                          WITH KEY pgmid    = 'R3TR'
+                                   object   = <status>-obj_type
+                                   obj_name = <status>-obj_name
+                                   devclass = <status>-package
+                          BINARY SEARCH.
+      ASSERT sy-subrc = 0.
 
-        IF sy-subrc = 0.
-
-          READ TABLE lt_tadir ASSIGNING FIELD-SYMBOL(<tadir>)
-                              WITH KEY object   = <file_local>-item-obj_type
-                                       obj_name = <file_local>-item-obj_name
-                                       devclass = <file_local>-item-devclass.
-
-          ASSERT sy-subrc = 0.
-
-          INSERT <tadir> INTO TABLE lt_tadir_to_delete.
-
-        ENDIF.
-
-      ENDIF.
+      INSERT <tadir> INTO TABLE lt_tadir_to_delete_unique.
 
     ENDLOOP.
 
+    IF lines( lt_tadir_to_delete_unique ) > 0.
 
-    IF lines( lt_tadir_to_delete ) > 0.
-
-      SORT lt_tadir_to_delete.
-      DELETE ADJACENT DUPLICATES FROM lt_tadir_to_delete.
+      lt_tadir_to_delete = lt_tadir_to_delete_unique.
       lcl_objects=>delete( lt_tadir_to_delete ).
 
     ENDIF.
