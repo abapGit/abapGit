@@ -47,8 +47,10 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          lv_answer TYPE c LENGTH 1.
+    DATA: lo_repo            TYPE REF TO lcl_repo_online,
+          lv_answer          TYPE c LENGTH 1,
+          lt_tadir           TYPE lif_defs=>ty_tadir_tt,
+          lt_tadir_to_delete LIKE lt_tadir.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -71,7 +73,44 @@ CLASS lcl_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    lo_repo->delete( ).
+    " delete local files that are not in remote...
+    DATA(lt_files_local) = lo_repo->get_files_local( ).
+    DATA(lt_files_remote) = lo_repo->get_files_remote( ).
+
+    DATA(package) = lo_repo->get_package( ).
+    lt_tadir = lcl_tadir=>read( package ).
+
+    LOOP AT lt_files_local ASSIGNING FIELD-SYMBOL(<file_local>).
+
+      IF NOT line_exists( lt_files_remote[ path     = <file_local>-file-path
+                                           filename = <file_local>-file-filename ] ).
+
+        IF sy-subrc = 0.
+
+          READ TABLE lt_tadir ASSIGNING FIELD-SYMBOL(<tadir>)
+                              WITH KEY object   = <file_local>-item-obj_type
+                                       obj_name = <file_local>-item-obj_name
+                                       devclass = <file_local>-item-devclass.
+
+          ASSERT sy-subrc = 0.
+
+          INSERT <tadir> INTO TABLE lt_tadir_to_delete.
+
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
+
+
+    IF lines( lt_tadir_to_delete ) > 0.
+
+      SORT lt_tadir_to_delete.
+      DELETE ADJACENT DUPLICATES FROM lt_tadir_to_delete.
+      lcl_objects=>delete( lt_tadir_to_delete ).
+
+    ENDIF.
+
     lo_repo->deserialize( ).
 
   ENDMETHOD.
