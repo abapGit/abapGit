@@ -71,6 +71,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
+    lo_repo->delete( ).
     lo_repo->deserialize( ).
 
   ENDMETHOD.
