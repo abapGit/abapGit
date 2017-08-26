@@ -57,9 +57,9 @@ CLASS lcl_services_git IMPLEMENTATION.
           lt_remote                 TYPE lif_defs=>ty_files_tt,
           lt_status                 TYPE lif_defs=>ty_results_tt,
           lt_package                TYPE lcl_persistence_repo=>ty_repo-package.
+
     FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
                    <tadir>  TYPE lif_defs=>ty_tadir.
-
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
