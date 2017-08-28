@@ -42,21 +42,21 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       set_dot_abapgit
         IMPORTING io_dot_abapgit TYPE REF TO lcl_dot_abapgit
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
       deserialize
         RAISING lcx_exception,
       refresh
         IMPORTING iv_drop_cache TYPE abap_bool DEFAULT abap_false
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
       refresh_local, " For testing purposes, maybe removed later
       update_local_checksums
         IMPORTING it_files TYPE lif_defs=>ty_file_signatures_tt
         RAISING   lcx_exception,
       rebuild_local_checksums
-        RAISING   lcx_exception,
+        RAISING lcx_exception,
       find_remote_dot_abapgit
         RETURNING VALUE(ro_dot) TYPE REF TO lcl_dot_abapgit
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
         RAISING   lcx_exception.
@@ -108,7 +108,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
         RAISING   lcx_exception,
       set_new_remote
-        IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
+        IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
         RAISING   lcx_exception,
       get_sha1_local
@@ -130,7 +130,10 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       push
         IMPORTING is_comment TYPE lif_defs=>ty_comment
                   io_stage   TYPE REF TO lcl_stage
-        RAISING   lcx_exception.
+        RAISING   lcx_exception,
+      delete_spare_local_objects
+        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+        RAISING   lcx_exception lcx_cancel.
 
   PRIVATE SECTION.
     DATA:
@@ -149,8 +152,8 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       actualize_head_branch
         RAISING lcx_exception,
       delete_initial_online_repo
-        importing iv_commit type flag
-        RAISING lcx_exception.
+        IMPORTING iv_commit TYPE flag
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
 

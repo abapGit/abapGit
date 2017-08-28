@@ -47,19 +47,8 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo                   TYPE REF TO lcl_repo_online,
-          lv_answer                 TYPE c LENGTH 1,
-          lt_tadir                  TYPE lif_defs=>ty_tadir_tt,
-          lt_tadir_to_delete        LIKE lt_tadir,
-          lt_tadir_to_delete_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
-                                                WITH UNIQUE KEY pgmid object obj_name,
-          lt_local                  TYPE lif_defs=>ty_files_item_tt,
-          lt_remote                 TYPE lif_defs=>ty_files_tt,
-          lt_status                 TYPE lif_defs=>ty_results_tt,
-          lt_package                TYPE lcl_persistence_repo=>ty_repo-package.
-
-    FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
-                   <tadir>  TYPE lif_defs=>ty_tadir.
+    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+          lv_answer TYPE c LENGTH 1.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -81,34 +70,18 @@ CLASS lcl_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE lcx_cancel.
     ENDIF.
 
-    " delete files which are added locally but are not in remote repo
-    lt_local  = lo_repo->get_files_local( ).
-    lt_remote = lo_repo->get_files_remote( ).
-    lt_status = lo_repo->status( ).
+    lv_answer = lcl_popups=>popup_to_confirm(
+      titlebar              = 'Warning'
+      text_question         = 'Delete superfluous local objects?'
+      text_button_1         = 'Ok'
+      icon_button_1         = 'ICON_OKAY'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
 
-    lt_package = lo_repo->get_package( ).
-    lt_tadir = lcl_tadir=>read( lt_package ).
-
-    LOOP AT lt_status ASSIGNING <status>
-                      WHERE lstate = lif_defs=>gc_state-added.
-
-      READ TABLE lt_tadir ASSIGNING <tadir>
-                          WITH KEY pgmid    = 'R3TR'
-                                   object   = <status>-obj_type
-                                   obj_name = <status>-obj_name
-                                   devclass = <status>-package
-                          BINARY SEARCH.
-      ASSERT sy-subrc = 0.
-
-      INSERT <tadir> INTO TABLE lt_tadir_to_delete_unique.
-
-    ENDLOOP.
-
-    IF lines( lt_tadir_to_delete_unique ) > 0.
-
-      lt_tadir_to_delete = lt_tadir_to_delete_unique.
-      lcl_objects=>delete( lt_tadir_to_delete ).
-
+    IF lv_answer = '1'.
+      lo_repo->delete_spare_local_objects( iv_key ).
     ENDIF.
 
     lo_repo->deserialize( ).
