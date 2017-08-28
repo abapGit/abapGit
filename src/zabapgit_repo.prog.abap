@@ -131,8 +131,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING is_comment TYPE lif_defs=>ty_comment
                   io_stage   TYPE REF TO lcl_stage
         RAISING   lcx_exception,
-      delete_spare_local_objects
-        IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      delete_unneccessary_local_objs
         RAISING   lcx_exception lcx_cancel.
 
   PRIVATE SECTION.

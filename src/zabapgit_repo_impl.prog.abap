@@ -321,7 +321,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " delete_initial_online_repo
 
-  METHOD delete_spare_local_objects.
+  METHOD delete_unneccessary_local_objs.
 
     DATA: lt_tadir                  TYPE lif_defs=>ty_tadir_tt,
           lt_tadir_to_delete        LIKE lt_tadir,

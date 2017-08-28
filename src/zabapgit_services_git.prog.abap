@@ -81,7 +81,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '1'.
-      lo_repo->delete_spare_local_objects( iv_key ).
+      lo_repo->delete_unneccessary_local_objs( ).
     ENDIF.
 
     lo_repo->deserialize( ).
