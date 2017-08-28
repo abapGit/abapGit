@@ -365,7 +365,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.
+  ENDMETHOD. "  delete_unneccessary_local_objs.
+
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
