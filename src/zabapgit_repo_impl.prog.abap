@@ -323,14 +323,28 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD delete_unnecessary_local_objs.
 
-    DATA: lt_tadir                  TYPE lif_defs=>ty_tadir_tt,
-          lt_tadir_to_delete        LIKE lt_tadir,
-          lt_tadir_to_delete_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
-                                                WITH UNIQUE KEY pgmid object obj_name,
-          lt_local                  TYPE lif_defs=>ty_files_item_tt,
-          lt_remote                 TYPE lif_defs=>ty_files_tt,
-          lt_status                 TYPE lif_defs=>ty_results_tt,
-          lt_package                TYPE lcl_persistence_repo=>ty_repo-package.
+    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
+
+    lt_tadir = get_unnecessary_local_objs( ).
+
+    IF lines( lt_tadir ) > 0.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+  ENDMETHOD. "  delete_unneccessary_local_objs.
+
+
+  METHOD get_unnecessary_local_objs.
+
+    DATA: lt_tadir        TYPE lif_defs=>ty_tadir_tt,
+          lt_tadir_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
+                               WITH UNIQUE KEY pgmid object obj_name,
+          lt_local        TYPE lif_defs=>ty_files_item_tt,
+          lt_remote       TYPE lif_defs=>ty_files_tt,
+          lt_status       TYPE lif_defs=>ty_results_tt,
+          lt_package      TYPE lcl_persistence_repo=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
                    <tadir>  TYPE lif_defs=>ty_tadir.
@@ -354,19 +368,13 @@ CLASS lcl_repo_online IMPLEMENTATION.
                           BINARY SEARCH.
       ASSERT sy-subrc = 0.
 
-      INSERT <tadir> INTO TABLE lt_tadir_to_delete_unique.
+      INSERT <tadir> INTO TABLE lt_tadir_unique.
 
     ENDLOOP.
 
-    IF lines( lt_tadir_to_delete_unique ) > 0.
+    rt_unnecessary_local_objects = lt_tadir_unique.
 
-      lt_tadir_to_delete = lt_tadir_to_delete_unique.
-      lcl_objects=>delete( lt_tadir_to_delete ).
-
-    ENDIF.
-
-  ENDMETHOD. "  delete_unneccessary_local_objs.
-
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 

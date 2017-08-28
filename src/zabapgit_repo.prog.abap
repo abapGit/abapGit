@@ -131,6 +131,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         IMPORTING is_comment TYPE lif_defs=>ty_comment
                   io_stage   TYPE REF TO lcl_stage
         RAISING   lcx_exception,
+      get_unnecessary_local_objs
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE LIF_DEFS=>TY_TADIR_TT
+        RAISING   lcx_exception,
       delete_unnecessary_local_objs
         RAISING   lcx_exception lcx_cancel.
 
