@@ -72,7 +72,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     lv_answer = lcl_popups=>popup_to_confirm(
       titlebar              = 'Warning'
-      text_question         = 'Delete superfluous local objects?'
+      text_question         = 'Delete unnecessary local objects?'
       text_button_1         = 'Ok'
       icon_button_1         = 'ICON_OKAY'
       text_button_2         = 'No'
@@ -81,7 +81,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '1'.
-      lo_repo->delete_unneccessary_local_objs( ).
+      lo_repo->delete_unnecessary_local_objs( ).
     ENDIF.
 
     lo_repo->deserialize( ).
