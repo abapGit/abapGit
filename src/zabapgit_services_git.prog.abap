@@ -75,7 +75,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       text_question         = 'Delete superfluous local objects?'
       text_button_1         = 'Ok'
       icon_button_1         = 'ICON_OKAY'
-      text_button_2         = 'Cancel'
+      text_button_2         = 'No'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
       display_cancel_button = abap_false ).                 "#EC NOTEXT
