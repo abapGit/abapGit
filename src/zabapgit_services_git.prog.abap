@@ -77,7 +77,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
       lv_answer = lcl_popups=>popup_to_confirm(
         titlebar              = 'Warning'
-        text_question         = |Delete ({ lines( lt_unnecessary_local_objs ) }) unnecessary local objects?|
+        text_question         = |Delete { lines( lt_unnecessary_local_objs ) } unnecessary local objects?|
         text_button_1         = 'Yes'
         icon_button_1         = 'ICON_OKAY'
         text_button_2         = 'No'
