@@ -1834,8 +1834,9 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_objects_super IMPLEMENTATION
 
-CLASS lcl_objects_channel_super DEFINITION ABSTRACT
+CLASS lcl_objects_saxx_super DEFINITION ABSTRACT
                                 INHERITING FROM lcl_objects_super.
+* common class for SAPC and SAMC objects
 
   PUBLIC SECTION.
     INTERFACES:
@@ -1885,7 +1886,7 @@ CLASS lcl_objects_channel_super DEFINITION ABSTRACT
 
 ENDCLASS.
 
-CLASS lcl_objects_channel_super IMPLEMENTATION.
+CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
     rv_changed = abap_true.

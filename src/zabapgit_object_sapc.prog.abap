@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_OBJECT_SAPC
 *&---------------------------------------------------------------------*
 
-CLASS lcl_object_sapc DEFINITION INHERITING FROM lcl_objects_channel_super FINAL.
+CLASS lcl_object_sapc DEFINITION INHERITING FROM lcl_objects_saxx_super FINAL.
 
   PROTECTED SECTION.
     METHODS:
