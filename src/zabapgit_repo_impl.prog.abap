@@ -321,6 +321,61 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " delete_initial_online_repo
 
+  METHOD delete_unnecessary_local_objs.
+
+    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
+
+    lt_tadir = get_unnecessary_local_objs( ).
+
+    IF lines( lt_tadir ) > 0.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+  ENDMETHOD. "  delete_unneccessary_local_objs.
+
+
+  METHOD get_unnecessary_local_objs.
+
+    DATA: lt_tadir        TYPE lif_defs=>ty_tadir_tt,
+          lt_tadir_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
+                               WITH UNIQUE KEY pgmid object obj_name,
+          lt_local        TYPE lif_defs=>ty_files_item_tt,
+          lt_remote       TYPE lif_defs=>ty_files_tt,
+          lt_status       TYPE lif_defs=>ty_results_tt,
+          lt_package      TYPE lcl_persistence_repo=>ty_repo-package.
+
+    FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
+                   <tadir>  TYPE lif_defs=>ty_tadir.
+
+    " delete objects which are added locally but are not in remote repo
+    lt_local  = me->get_files_local( ).
+    lt_remote = me->get_files_remote( ).
+    lt_status = me->status( ).
+
+    lt_package = me->get_package( ).
+    lt_tadir = lcl_tadir=>read( lt_package ).
+
+    LOOP AT lt_status ASSIGNING <status>
+                      WHERE lstate = lif_defs=>gc_state-added.
+
+      READ TABLE lt_tadir ASSIGNING <tadir>
+                          WITH KEY pgmid    = 'R3TR'
+                                   object   = <status>-obj_type
+                                   obj_name = <status>-obj_name
+                                   devclass = <status>-package
+                          BINARY SEARCH.
+      ASSERT sy-subrc = 0.
+
+      INSERT <tadir> INTO TABLE lt_tadir_unique.
+
+    ENDLOOP.
+
+    rt_unnecessary_local_objects = lt_tadir_unique.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "lcl_repo_online IMPLEMENTATION
 
 *----------------------------------------------------------------------*

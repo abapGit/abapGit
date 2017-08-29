@@ -47,9 +47,9 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          lv_answer TYPE c LENGTH 1.
-
+    DATA: lo_repo                   TYPE REF TO lcl_repo_online,
+          lv_answer                 TYPE c LENGTH 1,
+          lt_unnecessary_local_objs TYPE lif_defs=>ty_tadir_tt.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -69,6 +69,26 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
+    ENDIF.
+
+    lt_unnecessary_local_objs = lo_repo->get_unnecessary_local_objs( ).
+
+    IF lines( lt_unnecessary_local_objs ) > 0.
+
+      lv_answer = lcl_popups=>popup_to_confirm(
+        titlebar              = 'Question'
+        text_question         = |Delete { lines( lt_unnecessary_local_objs ) } unnecessary local objects?|
+        text_button_1         = 'Yes'
+        icon_button_1         = 'ICON_OKAY'
+        text_button_2         = 'No'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false ).               "#EC NOTEXT
+
+      IF lv_answer = '1'.
+        lo_repo->delete_unnecessary_local_objs( ).
+      ENDIF.
+
     ENDIF.
 
     lo_repo->deserialize( ).
