@@ -157,7 +157,9 @@ CLASS lcl_sap_package IMPLEMENTATION.
         no_access                  = 4
         object_locked_and_modified = 5 ).
     IF sy-subrc = 0.
-      RETURN. "Package already exists. We assume this is fine
+      " Package already exists. We assume this is fine. Its properties might be changed later at
+      " DEVC deserialization.
+      RETURN.
     ENDIF.
 
     ls_package = is_package.

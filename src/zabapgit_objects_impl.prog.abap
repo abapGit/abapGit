@@ -557,10 +557,16 @@ CLASS lcl_objects IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* PINF has to be handled before DEVC for package interface usage
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
-        AND obj_type <> 'XSLT'.
+        AND obj_type <> 'XSLT'
+        AND obj_type <> 'PINF'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 

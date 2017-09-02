@@ -19,11 +19,12 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
            END OF ty_requirement,
            ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY,
            BEGIN OF ty_dot_abapgit,
-             master_language TYPE spras,
-             starting_folder TYPE string,
-             folder_logic    TYPE string,
-             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-             requirements    TYPE ty_requirement_tt,
+             master_language   TYPE spras,
+             starting_folder   TYPE string,
+             folder_logic      TYPE string,
+             ignore            TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+             requirements      TYPE ty_requirement_tt,
+             advanced_packages TYPE abap_bool,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:
@@ -66,7 +67,11 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 *        IMPORTING iv_language TYPE spras,
       get_signature
         RETURNING VALUE(rs_signature) TYPE lif_defs=>ty_file_signature
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      uses_advanced_packages
+        RETURNING VALUE(rv_advanced_packages) TYPE abap_bool,
+      set_advanced_packages
+        IMPORTING iv_use_advanced_packages TYPE abap_bool.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
@@ -119,9 +124,10 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     DATA: ls_data TYPE ty_dot_abapgit.
 
 
-    ls_data-master_language = sy-langu.
-    ls_data-starting_folder = '/'.
-    ls_data-folder_logic    = c_folder_logic-prefix.
+    ls_data-master_language   = sy-langu.
+    ls_data-starting_folder   = '/'.
+    ls_data-folder_logic      = c_folder_logic-prefix.
+    ls_data-advanced_packages = abap_false.
 
     APPEND '/.gitignore' TO ls_data-ignore.
     APPEND '/LICENSE' TO ls_data-ignore.
@@ -265,5 +271,13 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
                                             iv_data = serialize( ) ).
 
   ENDMETHOD. "get_signature
+
+  METHOD uses_advanced_packages.
+    rv_advanced_packages = ms_data-advanced_packages.
+  ENDMETHOD.
+
+  METHOD set_advanced_packages.
+    ms_data-advanced_packages = iv_use_advanced_packages.
+  ENDMETHOD.
 
 ENDCLASS.
