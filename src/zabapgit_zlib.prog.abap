@@ -3,83 +3,6 @@
 *&---------------------------------------------------------------------*
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_zlib_convert DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_zlib_convert DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS:
-      hex_to_bits
-        IMPORTING iv_hex         TYPE xsequence
-        RETURNING VALUE(rv_bits) TYPE string,
-      bits_to_int
-        IMPORTING iv_bits       TYPE clike
-        RETURNING VALUE(rv_int) TYPE i,
-      int_to_hex
-        IMPORTING iv_int        TYPE i
-        RETURNING VALUE(rv_hex) TYPE xstring.
-
-ENDCLASS.                    "lcl_zlib_convert DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_zlib_convert IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_zlib_convert IMPLEMENTATION.
-
-  METHOD hex_to_bits.
-
-    DATA: lv_x   TYPE x LENGTH 1,
-          lv_c   TYPE c LENGTH 1,
-          lv_bit TYPE i,
-          lv_hex TYPE xstring.
-
-
-    lv_hex = iv_hex.
-    WHILE NOT lv_hex IS INITIAL.
-      lv_x = lv_hex.
-      DO 8 TIMES.
-        lv_bit = sy-index.
-        GET BIT lv_bit OF lv_x INTO lv_c.
-        CONCATENATE rv_bits lv_c INTO rv_bits.
-      ENDDO.
-      lv_hex = lv_hex+1.
-    ENDWHILE.
-
-  ENDMETHOD.                    "hex_to_bits
-
-  METHOD bits_to_int.
-
-    DATA: lv_c    TYPE c LENGTH 1,
-          lv_bits TYPE string.
-
-    lv_bits = iv_bits.
-
-    WHILE NOT lv_bits IS INITIAL.
-      lv_c = lv_bits.
-      rv_int = rv_int * 2.
-      rv_int = rv_int + lv_c.
-      lv_bits = lv_bits+1.
-    ENDWHILE.
-
-  ENDMETHOD.                    "bits_to_int
-
-  METHOD int_to_hex.
-
-    DATA: lv_x TYPE x.
-
-
-    lv_x = iv_int.
-    rv_hex = lv_x.
-
-  ENDMETHOD.                    "int_to_hex
-
-ENDCLASS.                    "lcl_zlib_convert IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_zlib_stream DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -126,7 +49,7 @@ CLASS lcl_zlib_stream IMPLEMENTATION.
 
   METHOD take_int.
 
-    rv_int = lcl_zlib_convert=>bits_to_int( take_bits( iv_length ) ).
+    rv_int = zcl_abapgit_zlib_convert=>bits_to_int( take_bits( iv_length ) ).
 
   ENDMETHOD.                    "take_int
 
@@ -140,7 +63,7 @@ CLASS lcl_zlib_stream IMPLEMENTATION.
     WHILE strlen( rv_bits ) < iv_length.
       IF mv_bits IS INITIAL.
         lv_x = mv_compressed(1).
-        mv_bits = lcl_zlib_convert=>hex_to_bits( lv_x ).
+        mv_bits = zcl_abapgit_zlib_convert=>hex_to_bits( lv_x ).
         mv_compressed = mv_compressed+1.
       ENDIF.
       lv_left = iv_length - strlen( rv_bits ).
@@ -334,7 +257,7 @@ CLASS lcl_zlib IMPLEMENTATION.
 
       lv_bit = go_stream->take_bits( 1 ).
       CONCATENATE lv_bits lv_bit INTO lv_bits.
-      lv_code = lcl_zlib_convert=>bits_to_int( lv_bits ).
+      lv_code = zcl_abapgit_zlib_convert=>bits_to_int( lv_bits ).
       lv_count = io_huffman->get_count( lv_len ).
 
       IF lv_code - lv_count < lv_first.
@@ -686,7 +609,7 @@ CLASS lcl_zlib IMPLEMENTATION.
         lv_symbol = decode( go_lencode ).
 
         IF lv_symbol < 256.
-          lv_x = lcl_zlib_convert=>int_to_hex( lv_symbol ).
+          lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
           CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
         ELSEIF lv_symbol = 256.
           EXIT.
