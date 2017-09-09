@@ -27,8 +27,8 @@ CLASS lcl_object_devc DEFINITION
                          iv_lock    TYPE abap_bool
                RAISING   lcx_exception.
     DATA:
-      mv_devclass             TYPE devclass,
       mv_local_devclass       TYPE devclass,
+      mv_repo_devclass        TYPE devclass,
       mv_installation_package TYPE devclass.
 ENDCLASS.
 
@@ -36,7 +36,8 @@ CLASS lcl_object_devc IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-    mv_devclass = is_item-obj_name.
+    mv_local_devclass = is_item-devclass. " This may be empty at this point
+    mv_repo_devclass = is_item-obj_name.
   ENDMETHOD.
 
   METHOD get_package.
@@ -61,7 +62,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~changed_by.
-    rv_user = get_package( mv_devclass )->changed_by.
+    rv_user = get_package( mv_local_devclass )->changed_by.
   ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
@@ -79,7 +80,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
     " also count towards the contained objects counter.
 
-    li_package = get_package( mv_devclass ).
+    li_package = get_package( mv_local_devclass ).
     li_package->get_changeable( IMPORTING e_changeable = lv_changeable ).
 
     IF lv_changeable = abap_false.
@@ -140,13 +141,15 @@ CLASS lcl_object_devc IMPLEMENTATION.
           ls_save_sign       TYPE paksavsign.
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
 
+    mv_local_devclass = iv_package.
+
     io_xml->read(
       EXPORTING
         iv_name = 'DEVC'
       CHANGING
         cg_data = ls_package_data ).
 
-    mv_local_devclass = mv_devclass.
+*    mv_local_devclass = mv_local_devclass.
 
     " Is it the top level package?
 *    IF ls_package_data-parentcl IS INITIAL.
@@ -158,7 +161,9 @@ CLASS lcl_object_devc IMPLEMENTATION.
 *      ENDIF.
 *    ENDIF.
 
-    li_package = get_package( mv_devclass ).
+    li_package = get_package( mv_local_devclass ).
+    ls_package_data-devclass = mv_local_devclass.
+    CLEAR ls_package_data-parentcl. ##TODO "
 
     ls_data_sign-ctext            = abap_true.
 *    ls_data_sign-korrflag         = abap_true.
@@ -167,7 +172,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ls_data_sign-dlvunit          = abap_true.
     ls_data_sign-comp_posid       = abap_true.
     ls_data_sign-component        = abap_true.
-    ls_data_sign-parentcl         = abap_true.
+*    ls_data_sign-parentcl         = abap_true.
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
@@ -181,7 +186,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ls_data_sign-project_passdown = abap_true.
 
     IF ls_package_data-ctext IS INITIAL.
-      ls_package_data-ctext = mv_devclass.
+      ls_package_data-ctext = mv_local_devclass.
     ENDIF.
     IF ls_package_data-dlvunit IS INITIAL.
       ls_package_data-dlvunit = 'HOME'.
@@ -292,9 +297,10 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~exists.
+    ASSERT mv_local_devclass IS NOT INITIAL ##TODO.
     cl_package_helper=>check_package_existence(
       EXPORTING
-        i_package_name          = mv_devclass
+        i_package_name          = mv_local_devclass
       IMPORTING
         e_package_exists        = rv_bool
       EXCEPTIONS
@@ -338,7 +344,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           ls_usage_data   TYPE scomppdtln,
           li_usage        TYPE REF TO if_package_permission_to_use.
 
-    li_package = get_package( mv_devclass ).
+    li_package = get_package( mv_local_devclass ).
     IF li_package IS NOT BOUND.
       lcx_exception=>raise( |Could not find package to serialize.| ).
     ENDIF.
@@ -355,8 +361,8 @@ CLASS lcl_object_devc IMPLEMENTATION.
       lcx_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
     ENDIF.
 
-    ls_package_data-devclass = mv_devclass.
-    IF mv_devclass = mv_installation_package.
+    ls_package_data-devclass = mv_repo_devclass.
+    IF mv_local_devclass = mv_installation_package. ##TODO
       CLEAR ls_package_data-parentcl.
     ENDIF.
 
@@ -380,8 +386,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
       EXCEPTIONS
         object_invalid   = 1
         unexpected_error = 2
-        OTHERS           = 3
-    ).
+        OTHERS           = 3 ).
     IF sy-subrc <> 0.
       lcx_exception=>raise( |Error from IF_PACKAGE->GET_PERMISSION_TO_USE { sy-subrc }| ).
     ENDIF.
@@ -446,10 +451,10 @@ CLASS lcl_object_devc IMPLEMENTATION.
             object_not_changeable = 1
             object_invalid        = 2
             intern_err            = 3
-            OTHERS                = 4
-        ).
+            OTHERS                = 4 ).
         IF sy-subrc <> 0.
-          lcx_exception=>raise( |Error from IF_PACKAGE_PERMISSION_TO_USE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+          lcx_exception=>raise(
+            |Error from IF_PACKAGE_PERMISSION_TO_USE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
         ENDIF.
 
       ELSE.

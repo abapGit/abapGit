@@ -621,6 +621,8 @@ CLASS lcl_objects IMPLEMENTATION.
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
 
+      ls_item-devclass = lv_package ##TODO.
+
       lv_cancel = warning_package( is_item    = ls_item
                                    iv_package = lv_package ).
       IF lv_cancel = abap_true.
