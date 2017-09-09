@@ -31,9 +31,12 @@ Example: abapGit own .abapgit.xml
 
 # Description
 
+## Location
+The `.abapgit.xml` file must be located in the root folder of the git repository.
+
 ## Master Language
 
-The language in which all documentation and dictionary elements texts will be created. Follows SAP `sy-langu` values.
+The language in which all documentation and dictionary elements texts will be created. Follows SAP `sy-langu` values. Note that this implies that all objects in a repository will/should have the same master language.
 
 ## Starting Folder
 
