@@ -360,6 +360,17 @@ CLASS lcl_object_devc IMPLEMENTATION.
       CLEAR ls_package_data-parentcl.
     ENDIF.
 
+    " Clear administrative data to prevent diffs
+    CLEAR: ls_package_data-created_by,
+           ls_package_data-created_on,
+           ls_package_data-changed_by,
+           ls_package_data-changed_on,
+           ls_package_data-as4user.
+
+    " Clear text descriptions that might be localized
+    CLEAR: ls_package_data-comp_text,
+           ls_package_data-dlvu_text.
+
     io_xml->add( iv_name = 'DEVC' ig_data = ls_package_data ).
 
     " Save package interface usages
