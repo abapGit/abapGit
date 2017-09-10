@@ -227,34 +227,32 @@ CLASS lcl_objects IMPLEMENTATION.
 
     CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
 
+    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
+        AND is_item-obj_type = 'CLAS'.
+      rv_class_name = 'LCL_OBJECT_CLAS_NEW'.
+    ENDIF.
+
   ENDMETHOD.                    "class_name
 
   METHOD jump.
 
-    DATA: li_obj           TYPE REF TO lif_object,
-          adt_jump_enabled TYPE abap_bool.
+    DATA: li_obj              TYPE REF TO lif_object,
+          lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = lif_defs=>gc_english ).
 
-    adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+    lv_adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
 
-    IF adt_jump_enabled = abap_true.
-
+    IF lv_adt_jump_enabled = abap_true.
       TRY.
           lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
                                        i_obj_type = is_item-obj_type ).
-
         CATCH lcx_exception.
-
           li_obj->jump( ).
-
       ENDTRY.
-
     ELSE.
-
       li_obj->jump( ).
-
     ENDIF.
 
   ENDMETHOD.                    "jump

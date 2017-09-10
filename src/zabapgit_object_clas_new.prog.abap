@@ -117,8 +117,6 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
   METHOD init_scanner.
 
-*    DATA: lt_source TYPE seop_source_string.
-
     ro_scanner = cl_oo_source_scanner_class=>create_class_scanner(
       clif_name = iv_name
       source    = it_source ).
