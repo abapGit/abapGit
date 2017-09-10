@@ -2,9 +2,7 @@
 *& Include          ZABAPGIT_OBJECT_CLAS_NEW
 *&---------------------------------------------------------------------*
 
-* todo: downport
 * todo: refactoring
-* todo: error handling, no breakpoints
 * todo: testing, possible from master branch via experimental switch
 
 CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
@@ -25,18 +23,24 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
           VALUE(rv_updated) TYPE abap_bool,
       generate_classpool
         IMPORTING
-          iv_name TYPE seoclsname,
+          iv_name TYPE seoclsname
+        RAISING
+          lcx_exception,
       update_meta
         IMPORTING
           iv_name     TYPE seoclsname
           iv_exposure TYPE seoexpose
-          it_source   TYPE rswsourcet,
+          it_source   TYPE rswsourcet
+        RAISING
+          lcx_exception,
       determine_method_include
         IMPORTING
           iv_name           TYPE seoclsname
           iv_method         TYPE seocpdname
         RETURNING
-          VALUE(rv_program) TYPE programm,
+          VALUE(rv_program) TYPE programm
+        RAISING
+          lcx_exception,
       init_scanner
         IMPORTING
           it_source         TYPE lif_defs=>ty_string_tt
@@ -85,7 +89,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         internal_error_insert_report   = 11
         OTHERS                         = 12.
     IF sy-subrc <> 0.
-      BREAK-POINT.
+      lcx_exception=>raise( 'error from SEO_METHOD_GENERATE_INCLUDE' ).
     ENDIF.
 
     rv_program = cl_oo_classname_service=>get_method_include( ls_mtdkey ).
@@ -187,7 +191,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         read_source_error             = 2
         OTHERS                        = 3.
     IF sy-subrc <> 0.
-      BREAK-POINT.
+      lcx_exception=>raise( 'error instantiating CL_OO_CLASS_SECTION_SOURCE' ).
     ENDIF.
 
     lo_update->set_dark_mode( seox_true ).
@@ -199,7 +203,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         scan_abap_source_error = 1
         OTHERS                 = 2 ).
     IF sy-subrc <> 0 OR lv_scan_error = abap_true.
-      BREAK-POINT.
+      lcx_exception=>raise( 'CLAS, error while scanning source' ).
     ENDIF.
 
 * this will update the SEO* database tables
@@ -243,7 +247,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         _internal_class_overflow      = 19
         OTHERS                        = 20.
     IF sy-subrc <> 0.
-      BREAK-POINT.
+      lcx_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
     ENDIF.
 
   ENDMETHOD.
@@ -253,6 +257,8 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
     DATA: lv_updated TYPE abap_bool,
           lv_program TYPE program,
           lo_scanner TYPE REF TO cl_oo_source_scanner_class,
+          lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
+          lv_method  LIKE LINE OF lt_methods,
           lt_source  TYPE seop_source_string.
 
 
@@ -294,13 +300,13 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
     ENDIF.
 
 * methods
-    DATA(lt_methods) = lo_scanner->get_method_implementations( ).
+    lt_methods = lo_scanner->get_method_implementations( ).
 
-    LOOP AT lt_methods INTO DATA(lv_method).
+    LOOP AT lt_methods INTO lv_method.
       TRY.
           lt_source = lo_scanner->get_method_impl_source( lv_method ).
         CATCH cx_oo_clif_component.
-          BREAK-POINT.
+          lcx_exception=>raise( 'error from GET_METHOD_IMPL_SOURCE' ).
       ENDTRY.
       lv_program = determine_method_include(
         iv_name   = is_key-clsname
