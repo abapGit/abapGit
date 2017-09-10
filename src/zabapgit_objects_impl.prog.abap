@@ -133,6 +133,11 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = class_name( is_item ).
     ENDIF.
 
+    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
+        AND is_item-obj_type = 'CLAS'.
+      lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
+    ENDIF.
+
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
@@ -226,11 +231,6 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD class_name.
 
     CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
-
-    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
-        AND is_item-obj_type = 'CLAS'.
-      rv_class_name = 'LCL_OBJECT_CLAS_NEW'.
-    ENDIF.
 
   ENDMETHOD.                    "class_name
 
@@ -587,9 +587,7 @@ CLASS lcl_objects IMPLEMENTATION.
     lt_remote = io_repo->get_files_remote( ).
 
     lt_results = lcl_file_status=>status( io_repo ).
-    DELETE lt_results WHERE
-      match = abap_true.     " Full match
-*      OR rstate IS INITIAL. " no remote changes, only local
+    DELETE lt_results WHERE match = abap_true.     " Full match
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
 

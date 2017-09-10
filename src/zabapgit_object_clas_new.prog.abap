@@ -5,6 +5,7 @@
 * todo: downport
 * todo: refactoring
 * todo: error handling, no breakpoints
+* todo: testing, possible from master branch via experimental switch
 
 CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
 
@@ -157,10 +158,11 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
     update_report( iv_program = lv_program
                    it_source  = it_local_macros ).
 
-*    IF ms_class-with_unit_tests = abap_true.
-* todo, this one is special
-*   iv_testclasses TYPE string OPTIONAL
-*    ENDIF.
+    IF lines( it_local_test_classes ) > 0.
+      lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
+      update_report( iv_program = lv_program
+                     it_source  = it_local_test_classes ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -248,15 +250,19 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
   METHOD lif_oo_object_fnc~deserialize_source.
 
-    DATA: lv_updated TYPE abap_bool.
+    DATA: lv_updated TYPE abap_bool,
+          lv_program TYPE program,
+          lo_scanner TYPE REF TO cl_oo_source_scanner_class,
+          lt_source  TYPE seop_source_string.
 
-    DATA(lo_scanner) = init_scanner(
+
+    lo_scanner = init_scanner(
       it_source = it_source
       iv_name   = is_key-clsname ).
 
 * public
-    DATA(lt_source) = lo_scanner->get_public_section_source( ).
-    DATA(lv_program) = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
+    lt_source = lo_scanner->get_public_section_source( ).
+    lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
     lv_updated = update_report( iv_program = lv_program
                                 it_source  = lt_source ).
     IF lv_updated = abap_true.
