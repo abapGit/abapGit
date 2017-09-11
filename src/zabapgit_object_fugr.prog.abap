@@ -430,11 +430,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
              cnam     TYPE reposrc-cnam,
            END OF ty_reposrc.
 
-    DATA: lt_reposrc TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
-          ls_reposrc LIKE LINE OF lt_reposrc,
-          lv_program TYPE program,
-          lv_tabix   LIKE sy-tabix,
-          lt_functab TYPE ty_rs38l_incl_tt.
+    DATA: lt_reposrc   TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc   LIKE LINE OF lt_reposrc,
+          lv_program   TYPE program,
+          lv_offset_ns TYPE i,
+          lv_tabix     LIKE sy-tabix,
+          lt_functab   TYPE ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
@@ -464,15 +465,15 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
 * handle generated maintenance views
     APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
-    if ms_item-obj_name(1) <> '/'.
+    IF ms_item-obj_name(1) <> '/'.
       "FGroup name does not contain a namespace
       <lv_include> = |L{ ms_item-obj_name }T00|.
-    else.
+    ELSE.
       "FGroup name contains a namespace
       lv_offset_ns = find( val = ms_item-obj_name+1 sub = '/' ).
       lv_offset_ns = lv_offset_ns + 2.
       <lv_include> = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
-    endif.
+    ENDIF.
 
     IF lines( rt_includes ) > 0.
       SELECT progname cnam FROM reposrc
