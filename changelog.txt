@@ -8,6 +8,14 @@ Legend
 + : added
 - : removed
 
+2017-09-11 v1.41.2
+------------------
+* FUGR table maintenance, namespaces
+* SICF show error message when deleting root node
+* DDLS better error messages
+* ENHS allow transport popup
++ experimental, optional opt-in: CLAS deserialization performance
+
 2017-09-03 v1.41.1
 ------------------
 * DDLS changed_by
