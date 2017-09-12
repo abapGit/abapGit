@@ -133,6 +133,11 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = class_name( is_item ).
     ENDIF.
 
+    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
+        AND is_item-obj_type = 'CLAS'.
+      lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
+    ENDIF.
+
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
@@ -231,30 +236,23 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: li_obj           TYPE REF TO lif_object,
-          adt_jump_enabled TYPE abap_bool.
+    DATA: li_obj              TYPE REF TO lif_object,
+          lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = lif_defs=>gc_english ).
 
-    adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+    lv_adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
 
-    IF adt_jump_enabled = abap_true.
-
+    IF lv_adt_jump_enabled = abap_true.
       TRY.
           lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
                                        i_obj_type = is_item-obj_type ).
-
         CATCH lcx_exception.
-
           li_obj->jump( ).
-
       ENDTRY.
-
     ELSE.
-
       li_obj->jump( ).
-
     ENDIF.
 
   ENDMETHOD.                    "jump
@@ -589,9 +587,7 @@ CLASS lcl_objects IMPLEMENTATION.
     lt_remote = io_repo->get_files_remote( ).
 
     lt_results = lcl_file_status=>status( io_repo ).
-    DELETE lt_results WHERE
-      match = abap_true.     " Full match
-*      OR rstate IS INITIAL. " no remote changes, only local
+    DELETE lt_results WHERE match = abap_true.     " Full match
     SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
 
