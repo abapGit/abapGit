@@ -7,75 +7,75 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS LCL_OBJECT_FUGR DEFINITION INHERITING FROM LCL_OBJECTS_PROGRAM FINAL.
+CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
-    INTERFACES LIF_OBJECT.
-    ALIASES MO_FILES FOR LIF_OBJECT~MO_FILES.
+    INTERFACES lif_object.
+    ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    TYPES: TY_RS38L_INCL_TT TYPE STANDARD TABLE OF RS38L_INCL WITH DEFAULT KEY.
+    TYPES: ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF TY_FUNCTION,
-             FUNCNAME          TYPE RS38L_FNAM,
-             INCLUDE           TYPE PROGNAME,
-             GLOBAL_FLAG       TYPE RS38L-GLOBAL,
-             REMOTE_CALL       TYPE RS38L-REMOTE,
-             UPDATE_TASK       TYPE RS38L-UTASK,
-             SHORT_TEXT        TYPE TFTIT-STEXT,
-             REMOTE_BASXML     TYPE RS38L-BASXML_ENABLED,
-             IMPORT            TYPE STANDARD TABLE OF RSIMP WITH DEFAULT KEY,
-             CHANGING          TYPE STANDARD TABLE OF RSCHA WITH DEFAULT KEY,
-             EXPORT            TYPE STANDARD TABLE OF RSEXP WITH DEFAULT KEY,
-             TABLES            TYPE STANDARD TABLE OF RSTBL WITH DEFAULT KEY,
-             EXCEPTION         TYPE STANDARD TABLE OF RSEXC WITH DEFAULT KEY,
-             DOCUMENTATION     TYPE STANDARD TABLE OF RSFDO WITH DEFAULT KEY,
-             EXCEPTION_CLASSES TYPE ABAP_BOOL,
-           END OF TY_FUNCTION.
+    TYPES: BEGIN OF ty_function,
+             funcname          TYPE rs38l_fnam,
+             include           TYPE progname,
+             global_flag       TYPE rs38l-global,
+             remote_call       TYPE rs38l-remote,
+             update_task       TYPE rs38l-utask,
+             short_text        TYPE tftit-stext,
+             remote_basxml     TYPE rs38l-basxml_enabled,
+             import            TYPE STANDARD TABLE OF rsimp WITH DEFAULT KEY,
+             changing          TYPE STANDARD TABLE OF rscha WITH DEFAULT KEY,
+             export            TYPE STANDARD TABLE OF rsexp WITH DEFAULT KEY,
+             tables            TYPE STANDARD TABLE OF rstbl WITH DEFAULT KEY,
+             exception         TYPE STANDARD TABLE OF rsexc WITH DEFAULT KEY,
+             documentation     TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
+             exception_classes TYPE abap_bool,
+           END OF ty_function.
 
-    TYPES: TY_FUNCTION_TT TYPE STANDARD TABLE OF TY_FUNCTION WITH DEFAULT KEY.
+    TYPES: ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY.
 
-    METHODS MAIN_NAME
-      RETURNING VALUE(RV_PROGRAM) TYPE PROGRAM
-      RAISING   LCX_EXCEPTION.
+    METHODS main_name
+      RETURNING VALUE(rv_program) TYPE program
+      RAISING   lcx_exception.
 
-    METHODS FUNCTIONS
-      RETURNING VALUE(RT_FUNCTAB) TYPE TY_RS38L_INCL_TT
-      RAISING   LCX_EXCEPTION.
+    METHODS functions
+      RETURNING VALUE(rt_functab) TYPE ty_rs38l_incl_tt
+      RAISING   lcx_exception.
 
-    METHODS INCLUDES
-      RETURNING VALUE(RT_INCLUDES) TYPE RSO_T_OBJNM
-      RAISING   LCX_EXCEPTION.
+    METHODS includes
+      RETURNING VALUE(rt_includes) TYPE rso_t_objnm
+      RAISING   lcx_exception.
 
-    METHODS SERIALIZE_FUNCTIONS
-      RETURNING VALUE(RT_FUNCTIONS) TYPE TY_FUNCTION_TT
-      RAISING   LCX_EXCEPTION.
+    METHODS serialize_functions
+      RETURNING VALUE(rt_functions) TYPE ty_function_tt
+      RAISING   lcx_exception.
 
-    METHODS DESERIALIZE_FUNCTIONS
-      IMPORTING IT_FUNCTIONS TYPE TY_FUNCTION_TT
-      RAISING   LCX_EXCEPTION.
+    METHODS deserialize_functions
+      IMPORTING it_functions TYPE ty_function_tt
+      RAISING   lcx_exception.
 
-    METHODS SERIALIZE_XML
-      IMPORTING IO_XML TYPE REF TO LCL_XML_OUTPUT
-      RAISING   LCX_EXCEPTION.
+    METHODS serialize_xml
+      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      RAISING   lcx_exception.
 
-    METHODS DESERIALIZE_XML
-      IMPORTING IO_XML     TYPE REF TO LCL_XML_INPUT
-                IV_PACKAGE TYPE DEVCLASS
-      RAISING   LCX_EXCEPTION.
+    METHODS deserialize_xml
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
 
-    METHODS SERIALIZE_INCLUDES
-      RAISING LCX_EXCEPTION.
+    METHODS serialize_includes
+      RAISING lcx_exception.
 
-    METHODS DESERIALIZE_INCLUDES
-      IMPORTING IO_XML     TYPE REF TO LCL_XML_INPUT
-                IV_PACKAGE TYPE DEVCLASS
-      RAISING   LCX_EXCEPTION.
+    METHODS deserialize_includes
+      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                iv_package TYPE devclass
+      RAISING   lcx_exception.
 
-    METHODS ARE_EXCEPTIONS_CLASS_BASED
-      IMPORTING IV_FUNCTION_NAME TYPE RS38L_FNAM
-      RETURNING VALUE(RV_RETURN) TYPE ABAP_BOOL
-      RAISING   LCX_EXCEPTION.
+    METHODS are_exceptions_class_based
+      IMPORTING iv_function_name TYPE rs38l_fnam
+      RETURNING VALUE(rv_return) TYPE abap_bool
+      RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_fugr DEFINITION
 
@@ -84,715 +84,715 @@ ENDCLASS.                    "lcl_object_fugr DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS LCL_OBJECT_FUGR IMPLEMENTATION.
+CLASS lcl_object_fugr IMPLEMENTATION.
 
-  METHOD LIF_OBJECT~HAS_CHANGED_SINCE.
+  METHOD lif_object~has_changed_since.
 
-    DATA: LT_FUNCTAB  TYPE TY_RS38L_INCL_TT,
-          LT_INCLUDES TYPE RSO_T_OBJNM.
+    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
+          lt_includes TYPE rso_t_objnm.
 
-    FIELD-SYMBOLS: <LS_FUNC>      LIKE LINE OF LT_FUNCTAB,
-                   <INCLUDE_NAME> LIKE LINE OF LT_INCLUDES.
+    FIELD-SYMBOLS: <ls_func>      LIKE LINE OF lt_functab,
+                   <include_name> LIKE LINE OF lt_includes.
 
-    LT_INCLUDES = INCLUDES( ). " Main prog also included here
+    lt_includes = includes( ). " Main prog also included here
 
-    LOOP AT LT_INCLUDES ASSIGNING <INCLUDE_NAME>.
-      RV_CHANGED = CHECK_PROG_CHANGED_SINCE(
-        IV_PROGRAM   = <INCLUDE_NAME>
-        IV_TIMESTAMP = IV_TIMESTAMP ).
-      IF RV_CHANGED = ABAP_TRUE.
+    LOOP AT lt_includes ASSIGNING <include_name>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <include_name>
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
         RETURN.
       ENDIF.
     ENDLOOP.
 
-    LT_FUNCTAB = FUNCTIONS( ).
+    lt_functab = functions( ).
 
-    LOOP AT LT_FUNCTAB ASSIGNING <LS_FUNC>.
-      RV_CHANGED = CHECK_PROG_CHANGED_SINCE(
-        IV_PROGRAM   = <LS_FUNC>-INCLUDE
-        IV_TIMESTAMP = IV_TIMESTAMP ).
-      IF RV_CHANGED = ABAP_TRUE.
+    LOOP AT lt_functab ASSIGNING <ls_func>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <ls_func>-include
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
         RETURN.
       ENDIF.
     ENDLOOP.
 
   ENDMETHOD.  "lif_object~has_changed_since
 
-  METHOD LIF_OBJECT~CHANGED_BY.
+  METHOD lif_object~changed_by.
 
-    TYPES: BEGIN OF TY_STAMPS,
-             USER TYPE XUBNAME,
-             DATE TYPE D,
-             TIME TYPE T,
-           END OF TY_STAMPS.
+    TYPES: BEGIN OF ty_stamps,
+             user TYPE xubname,
+             date TYPE d,
+             time TYPE t,
+           END OF ty_stamps.
 
-    DATA: LT_STAMPS   TYPE STANDARD TABLE OF TY_STAMPS WITH DEFAULT KEY,
-          LV_PROGRAM  TYPE PROGRAM,
-          LT_INCLUDES TYPE RSO_T_OBJNM.
+    DATA: lt_stamps   TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
+          lv_program  TYPE program,
+          lt_includes TYPE rso_t_objnm.
 
-    FIELD-SYMBOLS: <LS_STAMP>   LIKE LINE OF LT_STAMPS,
-                   <LV_INCLUDE> LIKE LINE OF LT_INCLUDES.
+    FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
+                   <lv_include> LIKE LINE OF lt_includes.
 
 
-    LV_PROGRAM = MAIN_NAME( ).
+    lv_program = main_name( ).
 
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        PROGRAM      = LV_PROGRAM
+        program      = lv_program
       TABLES
-        INCLUDETAB   = LT_INCLUDES
+        includetab   = lt_includes
       EXCEPTIONS
-        NOT_EXISTENT = 1
-        NO_PROGRAM   = 2
+        not_existent = 1
+        no_program   = 2
         OTHERS       = 3.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'Error from RS_GET_ALL_INCLUDES' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
-    SELECT UNAM AS USER UDAT AS DATE UTIME AS TIME FROM REPOSRC
-      APPENDING CORRESPONDING FIELDS OF TABLE LT_STAMPS
-      WHERE PROGNAME = LV_PROGRAM
-      AND   R3STATE = 'A'.                                "#EC CI_SUBRC
+    SELECT unam AS user udat AS date utime AS time FROM reposrc
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE progname = lv_program
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
-    LOOP AT LT_INCLUDES ASSIGNING <LV_INCLUDE>.
-      SELECT UNAM AS USER UDAT AS DATE UTIME AS TIME FROM REPOSRC
-        APPENDING CORRESPONDING FIELDS OF TABLE LT_STAMPS
-        WHERE PROGNAME = <LV_INCLUDE>
-        AND   R3STATE = 'A'.                              "#EC CI_SUBRC
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+      SELECT unam AS user udat AS date utime AS time FROM reposrc
+        APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+        WHERE progname = <lv_include>
+        AND   r3state = 'A'.                              "#EC CI_SUBRC
     ENDLOOP.
 
-    SELECT UNAM AS USER UDAT AS DATE UTIME AS TIME FROM REPOTEXT " Program text pool
-      APPENDING CORRESPONDING FIELDS OF TABLE LT_STAMPS
-      WHERE PROGNAME = LV_PROGRAM
-      AND   R3STATE = 'A'.                                "#EC CI_SUBRC
+    SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE progname = lv_program
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
 
-    SELECT VAUTOR AS USER VDATUM AS DATE VZEIT AS TIME FROM EUDB         " GUI
-      APPENDING CORRESPONDING FIELDS OF TABLE LT_STAMPS
-      WHERE RELID = 'CU'
-      AND   NAME  = LV_PROGRAM
-      AND   SRTF2 = 0 ##TOO_MANY_ITAB_FIELDS.
+    SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE relid = 'CU'
+      AND   name  = lv_program
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
 
 * Screens: username not stored in D020S database table
 
-    SORT LT_STAMPS BY DATE DESCENDING TIME DESCENDING.
+    SORT lt_stamps BY date DESCENDING time DESCENDING.
 
-    READ TABLE LT_STAMPS INDEX 1 ASSIGNING <LS_STAMP>.
-    IF SY-SUBRC = 0.
-      RV_USER = <LS_STAMP>-USER.
+    READ TABLE lt_stamps INDEX 1 ASSIGNING <ls_stamp>.
+    IF sy-subrc = 0.
+      rv_user = <ls_stamp>-user.
     ELSE.
-      RV_USER = C_USER_UNKNOWN.
+      rv_user = c_user_unknown.
     ENDIF.
 
   ENDMETHOD.
 
-  METHOD LIF_OBJECT~GET_METADATA.
-    RS_METADATA = GET_METADATA( ).
+  METHOD lif_object~get_metadata.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
-  METHOD LIF_OBJECT~EXISTS.
+  METHOD lif_object~exists.
 
-    DATA: LV_POOL  TYPE TLIBG-AREA.
+    DATA: lv_pool  TYPE tlibg-area.
 
 
-    LV_POOL = MS_ITEM-OBJ_NAME.
+    lv_pool = ms_item-obj_name.
     CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
       EXPORTING
-        FUNCTION_POOL   = LV_POOL
+        function_pool   = lv_pool
       EXCEPTIONS
-        POOL_NOT_EXISTS = 1.
-    RV_BOOL = BOOLC( SY-SUBRC <> 1 ).
+        pool_not_exists = 1.
+    rv_bool = boolc( sy-subrc <> 1 ).
 
   ENDMETHOD.                    "lif_object~exists
 
-  METHOD DESERIALIZE_FUNCTIONS.
+  METHOD deserialize_functions.
 
-    DATA: LV_INCLUDE   TYPE RS38L-INCLUDE,
-          LV_AREA      TYPE RS38L-AREA,
-          LV_GROUP     TYPE RS38L-AREA,
-          LV_NAMESPACE TYPE RS38L-NAMESPACE,
-          LT_SOURCE    TYPE TABLE OF ABAPTXT255,
-          LV_DUMMY     TYPE STRING.
+    DATA: lv_include   TYPE rs38l-include,
+          lv_area      TYPE rs38l-area,
+          lv_group     TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lt_source    TYPE TABLE OF abaptxt255,
+          lv_dummy     TYPE string.
 
-    FIELD-SYMBOLS: <LS_FUNC> LIKE LINE OF IT_FUNCTIONS.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
-    LOOP AT IT_FUNCTIONS ASSIGNING <LS_FUNC>.
+    LOOP AT it_functions ASSIGNING <ls_func>.
 
-      LT_SOURCE = MO_FILES->READ_ABAP( IV_EXTRA = <LS_FUNC>-FUNCNAME ).
+      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
-      LV_AREA = MS_ITEM-OBJ_NAME.
+      lv_area = ms_item-obj_name.
 
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         EXPORTING
-          COMPLETE_AREA                = LV_AREA
+          complete_area                = lv_area
         IMPORTING
-          NAMESPACE                    = LV_NAMESPACE
-          GROUP                        = LV_GROUP
+          namespace                    = lv_namespace
+          group                        = lv_group
         EXCEPTIONS
           OTHERS                       = 12.
 
-      IF SY-SUBRC <> 0.
-        LCX_EXCEPTION=>RAISE( 'error from FUNCTION_INCLUDE_SPLIT' ).
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
       ENDIF.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
-          FUNCNAME           = <LS_FUNC>-FUNCNAME
+          funcname           = <ls_func>-funcname
         IMPORTING
-          INCLUDE            = LV_INCLUDE
+          include            = lv_include
         EXCEPTIONS
-          FUNCTION_NOT_EXIST = 1.
-      IF SY-SUBRC = 0.
+          function_not_exist = 1.
+      IF sy-subrc = 0.
 * delete the function module to make sure the parameters are updated
 * havent found a nice way to update the paramters
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
-            FUNCNAME                 = <LS_FUNC>-FUNCNAME
-            SUPPRESS_SUCCESS_MESSAGE = ABAP_TRUE
+            funcname                 = <ls_func>-funcname
+            suppress_success_message = abap_true
           EXCEPTIONS
-            ERROR_MESSAGE            = 1
+            error_message            = 1
             OTHERS                   = 2.
-        IF SY-SUBRC <> 0.
-          LCX_EXCEPTION=>RAISE( 'error from FUNCTION_DELETE' ).
+        IF sy-subrc <> 0.
+          lcx_exception=>raise( 'error from FUNCTION_DELETE' ).
         ENDIF.
       ENDIF.
 
       CALL FUNCTION 'RS_FUNCTIONMODULE_INSERT'
         EXPORTING
-          FUNCNAME                = <LS_FUNC>-FUNCNAME
-          FUNCTION_POOL           = LV_GROUP
-          INTERFACE_GLOBAL        = <LS_FUNC>-GLOBAL_FLAG
-          REMOTE_CALL             = <LS_FUNC>-REMOTE_CALL
-          SHORT_TEXT              = <LS_FUNC>-SHORT_TEXT
-          UPDATE_TASK             = <LS_FUNC>-UPDATE_TASK
-          EXCEPTION_CLASS         = <LS_FUNC>-EXCEPTION_CLASSES
-          NAMESPACE               = LV_NAMESPACE
-          REMOTE_BASXML_SUPPORTED = <LS_FUNC>-REMOTE_BASXML
+          funcname                = <ls_func>-funcname
+          function_pool           = lv_group
+          interface_global        = <ls_func>-global_flag
+          remote_call             = <ls_func>-remote_call
+          short_text              = <ls_func>-short_text
+          update_task             = <ls_func>-update_task
+          exception_class         = <ls_func>-exception_classes
+          namespace               = lv_namespace
+          remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
-          FUNCTION_INCLUDE        = LV_INCLUDE
+          function_include        = lv_include
         TABLES
-          IMPORT_PARAMETER        = <LS_FUNC>-IMPORT
-          EXPORT_PARAMETER        = <LS_FUNC>-EXPORT
-          TABLES_PARAMETER        = <LS_FUNC>-TABLES
-          CHANGING_PARAMETER      = <LS_FUNC>-CHANGING
-          EXCEPTION_LIST          = <LS_FUNC>-EXCEPTION
-          PARAMETER_DOCU          = <LS_FUNC>-DOCUMENTATION
+          import_parameter        = <ls_func>-import
+          export_parameter        = <ls_func>-export
+          tables_parameter        = <ls_func>-tables
+          changing_parameter      = <ls_func>-changing
+          exception_list          = <ls_func>-exception
+          parameter_docu          = <ls_func>-documentation
         EXCEPTIONS
-          DOUBLE_TASK             = 1
-          ERROR_MESSAGE           = 2
-          FUNCTION_ALREADY_EXISTS = 3
-          INVALID_FUNCTION_POOL   = 4
-          INVALID_NAME            = 5
-          TOO_MANY_FUNCTIONS      = 6
-          NO_MODIFY_PERMISSION    = 7
-          NO_SHOW_PERMISSION      = 8
-          ENQUEUE_SYSTEM_FAILURE  = 9
-          CANCELED_IN_CORR        = 10
+          double_task             = 1
+          error_message           = 2
+          function_already_exists = 3
+          invalid_function_pool   = 4
+          invalid_name            = 5
+          too_many_functions      = 6
+          no_modify_permission    = 7
+          no_show_permission      = 8
+          enqueue_system_failure  = 9
+          canceled_in_corr        = 10
           OTHERS                  = 11.
-      IF SY-SUBRC <> 0.
-        LCX_EXCEPTION=>RAISE( |error from RS_FUNCTIONMODULE_INSERT: {
-          SY-SUBRC } { SY-MSGID }{ SY-MSGNO }| ).
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( |error from RS_FUNCTIONMODULE_INSERT: {
+          sy-subrc } { sy-msgid }{ sy-msgno }| ).
       ENDIF.
 
-      INSERT REPORT LV_INCLUDE FROM LT_SOURCE.
+      INSERT REPORT lv_include FROM lt_source.
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_functions
 
-  METHOD DESERIALIZE_INCLUDES.
+  METHOD deserialize_includes.
 
-    DATA: LO_XML       TYPE REF TO LCL_XML_INPUT,
-          LS_PROGDIR   TYPE TY_PROGDIR,
-          LT_INCLUDES  TYPE RSO_T_OBJNM,
-          LT_TPOOL     TYPE TEXTPOOL_TABLE,
-          LT_TPOOL_EXT TYPE LIF_DEFS=>TY_TPOOL_TT,
-          LT_SOURCE    TYPE TABLE OF ABAPTXT255.
+    DATA: lo_xml       TYPE REF TO lcl_xml_input,
+          ls_progdir   TYPE ty_progdir,
+          lt_includes  TYPE rso_t_objnm,
+          lt_tpool     TYPE textpool_table,
+          lt_tpool_ext TYPE lif_defs=>ty_tpool_tt,
+          lt_source    TYPE TABLE OF abaptxt255.
 
-    FIELD-SYMBOLS: <LV_INCLUDE> LIKE LINE OF LT_INCLUDES.
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
 
-    TADIR_INSERT( IV_PACKAGE ).
+    tadir_insert( iv_package ).
 
-    IO_XML->READ( EXPORTING IV_NAME = 'INCLUDES'
-                  CHANGING CG_DATA = LT_INCLUDES ).
+    io_xml->read( EXPORTING iv_name = 'INCLUDES'
+                  CHANGING cg_data = lt_includes ).
 
-    LOOP AT LT_INCLUDES ASSIGNING <LV_INCLUDE>.
+    LOOP AT lt_includes ASSIGNING <lv_include>.
 
-      LT_SOURCE = MO_FILES->READ_ABAP( IV_EXTRA = <LV_INCLUDE> ).
+      lt_source = mo_files->read_abap( iv_extra = <lv_include> ).
 
-      LO_XML = MO_FILES->READ_XML( <LV_INCLUDE> ).
+      lo_xml = mo_files->read_xml( <lv_include> ).
 
-      LO_XML->READ( EXPORTING IV_NAME = 'PROGDIR'
-                    CHANGING CG_DATA = LS_PROGDIR ).
+      lo_xml->read( EXPORTING iv_name = 'PROGDIR'
+                    CHANGING cg_data = ls_progdir ).
 
-      LO_XML->READ( EXPORTING IV_NAME = 'TPOOL'
-                    CHANGING CG_DATA = LT_TPOOL_EXT ).
-      LT_TPOOL = READ_TPOOL( LT_TPOOL_EXT ).
+      lo_xml->read( EXPORTING iv_name = 'TPOOL'
+                    CHANGING cg_data = lt_tpool_ext ).
+      lt_tpool = read_tpool( lt_tpool_ext ).
 
-      DESERIALIZE_PROGRAM( IS_PROGDIR = LS_PROGDIR
-                           IT_SOURCE  = LT_SOURCE
-                           IT_TPOOL   = LT_TPOOL
-                           IV_PACKAGE = IV_PACKAGE ).
+      deserialize_program( is_progdir = ls_progdir
+                           it_source  = lt_source
+                           it_tpool   = lt_tpool
+                           iv_package = iv_package ).
 
-      DESERIALIZE_TEXTPOOL( IV_PROGRAM = <LV_INCLUDE>
-                            IT_TPOOL   = LT_TPOOL ).
+      deserialize_textpool( iv_program = <lv_include>
+                            it_tpool   = lt_tpool ).
 
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_includes
 
-  METHOD DESERIALIZE_XML.
+  METHOD deserialize_xml.
 
-    DATA: LV_COMPLETE  TYPE RS38L-AREA,
-          LV_NAMESPACE TYPE RS38L-NAMESPACE,
-          LV_AREAT     TYPE TLIBT-AREAT,
-          LV_STEXT     TYPE TFTIT-STEXT,
-          LV_GROUP     TYPE RS38L-AREA.
+    DATA: lv_complete  TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_areat     TYPE tlibt-areat,
+          lv_stext     TYPE tftit-stext,
+          lv_group     TYPE rs38l-area.
 
 
-    LV_COMPLETE = MS_ITEM-OBJ_NAME.
+    lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
       EXPORTING
-        COMPLETE_AREA                = LV_COMPLETE
+        complete_area                = lv_complete
       IMPORTING
-        NAMESPACE                    = LV_NAMESPACE
-        GROUP                        = LV_GROUP
+        namespace                    = lv_namespace
+        group                        = lv_group
       EXCEPTIONS
-        INCLUDE_NOT_EXISTS           = 1
-        GROUP_NOT_EXISTS             = 2
-        NO_SELECTIONS                = 3
-        NO_FUNCTION_INCLUDE          = 4
-        NO_FUNCTION_POOL             = 5
-        DELIMITER_WRONG_POSITION     = 6
-        NO_CUSTOMER_FUNCTION_GROUP   = 7
-        NO_CUSTOMER_FUNCTION_INCLUDE = 8
-        RESERVED_NAME_CUSTOMER       = 9
-        NAMESPACE_TOO_LONG           = 10
-        AREA_LENGTH_ERROR            = 11
+        include_not_exists           = 1
+        group_not_exists             = 2
+        no_selections                = 3
+        no_function_include          = 4
+        no_function_pool             = 5
+        delimiter_wrong_position     = 6
+        no_customer_function_group   = 7
+        no_customer_function_include = 8
+        reserved_name_customer       = 9
+        namespace_too_long           = 10
+        area_length_error            = 11
         OTHERS                       = 12.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'error from FUNCTION_INCLUDE_SPLIT' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
-    IO_XML->READ( EXPORTING IV_NAME = 'AREAT'
-                  CHANGING CG_DATA = LV_AREAT ).
-    LV_STEXT = LV_AREAT.
+    io_xml->read( EXPORTING iv_name = 'AREAT'
+                  CHANGING cg_data = lv_areat ).
+    lv_stext = lv_areat.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_INSERT'
       EXPORTING
-        FUNCTION_POOL           = LV_GROUP
-        SHORT_TEXT              = LV_STEXT
-        NAMESPACE               = LV_NAMESPACE
-        DEVCLASS                = IV_PACKAGE
+        function_pool           = lv_group
+        short_text              = lv_stext
+        namespace               = lv_namespace
+        devclass                = iv_package
       EXCEPTIONS
-        NAME_ALREADY_EXISTS     = 1
-        NAME_NOT_CORRECT        = 2
-        FUNCTION_ALREADY_EXISTS = 3
-        INVALID_FUNCTION_POOL   = 4
-        INVALID_NAME            = 5
-        TOO_MANY_FUNCTIONS      = 6
-        NO_MODIFY_PERMISSION    = 7
-        NO_SHOW_PERMISSION      = 8
-        ENQUEUE_SYSTEM_FAILURE  = 9
-        CANCELED_IN_CORR        = 10
-        UNDEFINED_ERROR         = 11
+        name_already_exists     = 1
+        name_not_correct        = 2
+        function_already_exists = 3
+        invalid_function_pool   = 4
+        invalid_name            = 5
+        too_many_functions      = 6
+        no_modify_permission    = 7
+        no_show_permission      = 8
+        enqueue_system_failure  = 9
+        canceled_in_corr        = 10
+        undefined_error         = 11
         OTHERS                  = 12.
-    IF SY-SUBRC <> 0 AND SY-SUBRC <> 1 AND SY-SUBRC <> 3.
+    IF sy-subrc <> 0 AND sy-subrc <> 1 AND sy-subrc <> 3.
 * todo, change description
-      LCX_EXCEPTION=>RAISE( 'error from RS_FUNCTION_POOL_INSERT' ).
+      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize_xml
 
-  METHOD SERIALIZE_XML.
+  METHOD serialize_xml.
 
-    DATA: LT_INCLUDES TYPE RSO_T_OBJNM,
-          LV_AREAT    TYPE TLIBT-AREAT.
+    DATA: lt_includes TYPE rso_t_objnm,
+          lv_areat    TYPE tlibt-areat.
 
 
-    SELECT SINGLE AREAT INTO LV_AREAT
-      FROM TLIBT
-      WHERE SPRAS = MV_LANGUAGE
-      AND AREA = MS_ITEM-OBJ_NAME.        "#EC CI_GENBUFF "#EC CI_SUBRC
+    SELECT SINGLE areat INTO lv_areat
+      FROM tlibt
+      WHERE spras = mv_language
+      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
 
-    LT_INCLUDES = INCLUDES( ).
+    lt_includes = includes( ).
 
-    IO_XML->ADD( IV_NAME = 'AREAT'
-                 IG_DATA = LV_AREAT ).
-    IO_XML->ADD( IV_NAME = 'INCLUDES'
-                 IG_DATA = LT_INCLUDES ).
+    io_xml->add( iv_name = 'AREAT'
+                 ig_data = lv_areat ).
+    io_xml->add( iv_name = 'INCLUDES'
+                 ig_data = lt_includes ).
 
   ENDMETHOD.                    "serialize_xml
 
-  METHOD INCLUDES.
+  METHOD includes.
 
-    TYPES: BEGIN OF TY_REPOSRC,
-             PROGNAME TYPE REPOSRC-PROGNAME,
-             CNAM     TYPE REPOSRC-CNAM,
-           END OF TY_REPOSRC.
+    TYPES: BEGIN OF ty_reposrc,
+             progname TYPE reposrc-progname,
+             cnam     TYPE reposrc-cnam,
+           END OF ty_reposrc.
 
-    DATA: LT_REPOSRC   TYPE STANDARD TABLE OF TY_REPOSRC WITH DEFAULT KEY,
-          LS_REPOSRC   LIKE LINE OF LT_REPOSRC,
-          LV_PROGRAM   TYPE PROGRAM,
-          LV_OFFSET_NS TYPE I,
-          LV_TABIX     LIKE SY-TABIX,
-          LT_FUNCTAB   TYPE TY_RS38L_INCL_TT.
+    DATA: lt_reposrc   TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc   LIKE LINE OF lt_reposrc,
+          lv_program   TYPE program,
+          lv_offset_ns TYPE i,
+          lv_tabix     LIKE sy-tabix,
+          lt_functab   TYPE ty_rs38l_incl_tt.
 
-    FIELD-SYMBOLS: <LV_INCLUDE> LIKE LINE OF RT_INCLUDES,
-                   <LS_FUNC>    LIKE LINE OF LT_FUNCTAB.
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
+                   <ls_func>    LIKE LINE OF lt_functab.
 
 
-    LV_PROGRAM = MAIN_NAME( ).
-    LT_FUNCTAB = FUNCTIONS( ).
+    lv_program = main_name( ).
+    lt_functab = functions( ).
 
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        PROGRAM      = LV_PROGRAM
+        program      = lv_program
 *       WITH_RESERVED_INCLUDES =
 *       WITH_CLASS_INCLUDES    = ' ' hmm, todo
       TABLES
-        INCLUDETAB   = RT_INCLUDES
+        includetab   = rt_includes
       EXCEPTIONS
-        NOT_EXISTENT = 1
-        NO_PROGRAM   = 2
+        not_existent = 1
+        no_program   = 2
         OTHERS       = 3.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'Error from RS_GET_ALL_INCLUDES' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
-    LOOP AT LT_FUNCTAB ASSIGNING <LS_FUNC>.
-      DELETE TABLE RT_INCLUDES FROM <LS_FUNC>-INCLUDE.
+    LOOP AT lt_functab ASSIGNING <ls_func>.
+      DELETE TABLE rt_includes FROM <ls_func>-include.
     ENDLOOP.
 
 * handle generated maintenance views
-    APPEND INITIAL LINE TO RT_INCLUDES ASSIGNING <LV_INCLUDE>.
-    IF MS_ITEM-OBJ_NAME(1) <> '/'.
+    APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
+    IF ms_item-obj_name(1) <> '/'.
       "FGroup name does not contain a namespace
-      <LV_INCLUDE> = |L{ MS_ITEM-OBJ_NAME }T00|.
+      <lv_include> = |L{ ms_item-obj_name }T00|.
     ELSE.
       "FGroup name contains a namespace
-      LV_OFFSET_NS = FIND( VAL = MS_ITEM-OBJ_NAME+1 SUB = '/' ).
-      LV_OFFSET_NS = LV_OFFSET_NS + 2.
-      <LV_INCLUDE> = |{ MS_ITEM-OBJ_NAME(LV_OFFSET_NS) }L{ MS_ITEM-OBJ_NAME+LV_OFFSET_NS }T00|.
+      lv_offset_ns = find( val = ms_item-obj_name+1 sub = '/' ).
+      lv_offset_ns = lv_offset_ns + 2.
+      <lv_include> = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
     ENDIF.
 
-    IF LINES( RT_INCLUDES ) > 0.
-      SELECT PROGNAME CNAM FROM REPOSRC
-        INTO TABLE LT_REPOSRC
-        FOR ALL ENTRIES IN RT_INCLUDES
-        WHERE PROGNAME = RT_INCLUDES-TABLE_LINE
-        AND R3STATE = 'A'.
-      SORT LT_REPOSRC BY PROGNAME ASCENDING.
+    IF lines( rt_includes ) > 0.
+      SELECT progname cnam FROM reposrc
+        INTO TABLE lt_reposrc
+        FOR ALL ENTRIES IN rt_includes
+        WHERE progname = rt_includes-table_line
+        AND r3state = 'A'.
+      SORT lt_reposrc BY progname ASCENDING.
     ENDIF.
 
-    LOOP AT RT_INCLUDES ASSIGNING <LV_INCLUDE>.
-      LV_TABIX = SY-TABIX.
+    LOOP AT rt_includes ASSIGNING <lv_include>.
+      lv_tabix = sy-tabix.
 
 * skip SAP standard includes and also make sure the include exists
-      READ TABLE LT_REPOSRC INTO LS_REPOSRC
-        WITH KEY PROGNAME = <LV_INCLUDE> BINARY SEARCH.
-      IF SY-SUBRC <> 0 OR LS_REPOSRC-CNAM = 'SAP'.
-        DELETE RT_INCLUDES INDEX LV_TABIX.
+      READ TABLE lt_reposrc INTO ls_reposrc
+        WITH KEY progname = <lv_include> BINARY SEARCH.
+      IF sy-subrc <> 0 OR ls_reposrc-cnam = 'SAP'.
+        DELETE rt_includes INDEX lv_tabix.
       ENDIF.
 
     ENDLOOP.
 
-    APPEND LV_PROGRAM TO RT_INCLUDES.
+    APPEND lv_program TO rt_includes.
 
   ENDMETHOD.                    "includes
 
-  METHOD FUNCTIONS.
+  METHOD functions.
 
-    DATA: LV_AREA TYPE RS38L-AREA.
+    DATA: lv_area TYPE rs38l-area.
 
 
-    LV_AREA = MS_ITEM-OBJ_NAME.
+    lv_area = ms_item-obj_name.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
       EXPORTING
-        FUNCTION_POOL           = LV_AREA
+        function_pool           = lv_area
       TABLES
-        FUNCTAB                 = RT_FUNCTAB
+        functab                 = rt_functab
       EXCEPTIONS
-        FUNCTION_POOL_NOT_FOUND = 1
+        function_pool_not_found = 1
         OTHERS                  = 2.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
     ENDIF.
 
-    SORT RT_FUNCTAB BY FUNCNAME ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM RT_FUNCTAB COMPARING FUNCNAME.
+    SORT rt_functab BY funcname ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
 
   ENDMETHOD.                    "functions
 
-  METHOD MAIN_NAME.
+  METHOD main_name.
 
-    DATA: LV_AREA      TYPE RS38L-AREA,
-          LV_NAMESPACE TYPE RS38L-NAMESPACE,
-          LV_GROUP     TYPE RS38L-AREA.
+    DATA: lv_area      TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lv_group     TYPE rs38l-area.
 
 
-    LV_AREA = MS_ITEM-OBJ_NAME.
+    lv_area = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
       EXPORTING
-        COMPLETE_AREA                = LV_AREA
+        complete_area                = lv_area
       IMPORTING
-        NAMESPACE                    = LV_NAMESPACE
-        GROUP                        = LV_GROUP
+        namespace                    = lv_namespace
+        group                        = lv_group
       EXCEPTIONS
-        INCLUDE_NOT_EXISTS           = 1
-        GROUP_NOT_EXISTS             = 2
-        NO_SELECTIONS                = 3
-        NO_FUNCTION_INCLUDE          = 4
-        NO_FUNCTION_POOL             = 5
-        DELIMITER_WRONG_POSITION     = 6
-        NO_CUSTOMER_FUNCTION_GROUP   = 7
-        NO_CUSTOMER_FUNCTION_INCLUDE = 8
-        RESERVED_NAME_CUSTOMER       = 9
-        NAMESPACE_TOO_LONG           = 10
-        AREA_LENGTH_ERROR            = 11
+        include_not_exists           = 1
+        group_not_exists             = 2
+        no_selections                = 3
+        no_function_include          = 4
+        no_function_pool             = 5
+        delimiter_wrong_position     = 6
+        no_customer_function_group   = 7
+        no_customer_function_include = 8
+        reserved_name_customer       = 9
+        namespace_too_long           = 10
+        area_length_error            = 11
         OTHERS                       = 12.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'Error from FUNCTION_INCLUDE_SPLIT' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
-    CONCATENATE LV_NAMESPACE 'SAPL' LV_GROUP INTO RV_PROGRAM.
+    CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
 
   ENDMETHOD.                    "main_name
 
-  METHOD SERIALIZE_FUNCTIONS.
+  METHOD serialize_functions.
 
     DATA:
-      LT_SOURCE     TYPE TABLE OF RSSOURCE,
-      LT_FUNCTAB    TYPE TY_RS38L_INCL_TT,
-      LT_NEW_SOURCE TYPE RSFB_SOURCE,
-      LS_FUNCTION   LIKE LINE OF RT_FUNCTIONS.
+      lt_source     TYPE TABLE OF rssource,
+      lt_functab    TYPE ty_rs38l_incl_tt,
+      lt_new_source TYPE rsfb_source,
+      ls_function   LIKE LINE OF rt_functions.
 
-    FIELD-SYMBOLS: <LS_FUNC> LIKE LINE OF LT_FUNCTAB.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
 
 
-    LT_FUNCTAB = FUNCTIONS( ).
+    lt_functab = functions( ).
 
-    LOOP AT LT_FUNCTAB ASSIGNING <LS_FUNC>.
+    LOOP AT lt_functab ASSIGNING <ls_func>.
 * fm RPY_FUNCTIONMODULE_READ does not support source code
 * lines longer than 72 characters
-      CLEAR LS_FUNCTION.
-      MOVE-CORRESPONDING <LS_FUNC> TO LS_FUNCTION.
+      CLEAR ls_function.
+      MOVE-CORRESPONDING <ls_func> TO ls_function.
 
-      CLEAR LT_NEW_SOURCE.
-      CLEAR LT_SOURCE.
+      CLEAR lt_new_source.
+      CLEAR lt_source.
 
       CALL FUNCTION 'RPY_FUNCTIONMODULE_READ_NEW'
         EXPORTING
-          FUNCTIONNAME            = <LS_FUNC>-FUNCNAME
+          functionname            = <ls_func>-funcname
         IMPORTING
-          GLOBAL_FLAG             = LS_FUNCTION-GLOBAL_FLAG
-          REMOTE_CALL             = LS_FUNCTION-REMOTE_CALL
-          UPDATE_TASK             = LS_FUNCTION-UPDATE_TASK
-          SHORT_TEXT              = LS_FUNCTION-SHORT_TEXT
-          REMOTE_BASXML_SUPPORTED = LS_FUNCTION-REMOTE_BASXML
+          global_flag             = ls_function-global_flag
+          remote_call             = ls_function-remote_call
+          update_task             = ls_function-update_task
+          short_text              = ls_function-short_text
+          remote_basxml_supported = ls_function-remote_basxml
         TABLES
-          IMPORT_PARAMETER        = LS_FUNCTION-IMPORT
-          CHANGING_PARAMETER      = LS_FUNCTION-CHANGING
-          EXPORT_PARAMETER        = LS_FUNCTION-EXPORT
-          TABLES_PARAMETER        = LS_FUNCTION-TABLES
-          EXCEPTION_LIST          = LS_FUNCTION-EXCEPTION
-          DOCUMENTATION           = LS_FUNCTION-DOCUMENTATION
-          SOURCE                  = LT_SOURCE
+          import_parameter        = ls_function-import
+          changing_parameter      = ls_function-changing
+          export_parameter        = ls_function-export
+          tables_parameter        = ls_function-tables
+          exception_list          = ls_function-exception
+          documentation           = ls_function-documentation
+          source                  = lt_source
         CHANGING
-          NEW_SOURCE              = LT_NEW_SOURCE
+          new_source              = lt_new_source
         EXCEPTIONS
-          ERROR_MESSAGE           = 1
-          FUNCTION_NOT_FOUND      = 2
-          INVALID_NAME            = 3
+          error_message           = 1
+          function_not_found      = 2
+          invalid_name            = 3
           OTHERS                  = 4.
-      IF SY-SUBRC = 2.
+      IF sy-subrc = 2.
         CONTINUE.
-      ELSEIF SY-SUBRC <> 0.
-        LCX_EXCEPTION=>RAISE( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
+      ELSEIF sy-subrc <> 0.
+        lcx_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
 
-      LS_FUNCTION-EXCEPTION_CLASSES = ARE_EXCEPTIONS_CLASS_BASED( <LS_FUNC>-FUNCNAME ).
+      ls_function-exception_classes = are_exceptions_class_based( <ls_func>-funcname ).
 
-      APPEND LS_FUNCTION TO RT_FUNCTIONS.
+      APPEND ls_function TO rt_functions.
 
-      IF NOT LT_NEW_SOURCE IS INITIAL.
-        MO_FILES->ADD_ABAP( IV_EXTRA = <LS_FUNC>-FUNCNAME
-                            IT_ABAP  = LT_NEW_SOURCE ).
+      IF NOT lt_new_source IS INITIAL.
+        mo_files->add_abap( iv_extra = <ls_func>-funcname
+                            it_abap  = lt_new_source ).
       ELSE.
-        MO_FILES->ADD_ABAP( IV_EXTRA = <LS_FUNC>-FUNCNAME
-                            IT_ABAP  = LT_SOURCE ).
+        mo_files->add_abap( iv_extra = <ls_func>-funcname
+                            it_abap  = lt_source ).
       ENDIF.
 
     ENDLOOP.
 
   ENDMETHOD.                    "serialize_functions
 
-  METHOD SERIALIZE_INCLUDES.
+  METHOD serialize_includes.
 
-    DATA: LT_INCLUDES TYPE RSO_T_OBJNM.
+    DATA: lt_includes TYPE rso_t_objnm.
 
-    FIELD-SYMBOLS: <LV_INCLUDE> LIKE LINE OF LT_INCLUDES.
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
 
-    LT_INCLUDES = INCLUDES( ).
+    lt_includes = includes( ).
 
-    LOOP AT LT_INCLUDES ASSIGNING <LV_INCLUDE>.
+    LOOP AT lt_includes ASSIGNING <lv_include>.
 
 * todo, filename is not correct, a include can be used in several programs
-      SERIALIZE_PROGRAM( IS_ITEM    = MS_ITEM
-                         IO_FILES   = MO_FILES
-                         IV_PROGRAM = <LV_INCLUDE>
-                         IV_EXTRA   = <LV_INCLUDE> ).
+      serialize_program( is_item    = ms_item
+                         io_files   = mo_files
+                         iv_program = <lv_include>
+                         iv_extra   = <lv_include> ).
 
     ENDLOOP.
 
   ENDMETHOD.                    "serialize_includes
 
-  METHOD ARE_EXCEPTIONS_CLASS_BASED.
+  METHOD are_exceptions_class_based.
     DATA:
-      LT_DOKUMENTATION    TYPE TABLE OF FUNCT,
-      LT_EXCEPTION_LIST   TYPE TABLE OF RSEXC,
-      LT_EXPORT_PARAMETER TYPE TABLE OF RSEXP,
-      LT_IMPORT_PARAMETER TYPE TABLE OF RSIMP,
-      LT_TABLES_PARAMETER TYPE TABLE OF RSTBL.
+      lt_dokumentation    TYPE TABLE OF funct,
+      lt_exception_list   TYPE TABLE OF rsexc,
+      lt_export_parameter TYPE TABLE OF rsexp,
+      lt_import_parameter TYPE TABLE OF rsimp,
+      lt_tables_parameter TYPE TABLE OF rstbl.
 
     CALL FUNCTION 'FUNCTION_IMPORT_DOKU'
       EXPORTING
-        FUNCNAME           = IV_FUNCTION_NAME
+        funcname           = iv_function_name
       IMPORTING
-        EXCEPTION_CLASS    = RV_RETURN
+        exception_class    = rv_return
       TABLES
-        DOKUMENTATION      = LT_DOKUMENTATION
-        EXCEPTION_LIST     = LT_EXCEPTION_LIST
-        EXPORT_PARAMETER   = LT_EXPORT_PARAMETER
-        IMPORT_PARAMETER   = LT_IMPORT_PARAMETER
-        TABLES_PARAMETER   = LT_TABLES_PARAMETER
+        dokumentation      = lt_dokumentation
+        exception_list     = lt_exception_list
+        export_parameter   = lt_export_parameter
+        import_parameter   = lt_import_parameter
+        tables_parameter   = lt_tables_parameter
       EXCEPTIONS
-        ERROR_MESSAGE      = 1
-        FUNCTION_NOT_FOUND = 2
-        INVALID_NAME       = 3
+        error_message      = 1
+        function_not_found = 2
+        invalid_name       = 3
         OTHERS             = 4.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'Error from FUNCTION_IMPORT_DOKU' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
     ENDIF.
   ENDMETHOD.
 
-  METHOD LIF_OBJECT~SERIALIZE.
+  METHOD lif_object~serialize.
 
 * function group SEUF
 * function group SIFP
 * function group SUNI
 
-    DATA: LT_FUNCTIONS    TYPE TY_FUNCTION_TT,
-          LS_PROGDIR      TYPE TY_PROGDIR,
-          LV_PROGRAM_NAME TYPE PROGRAMM,
-          LT_DYNPROS      TYPE TY_DYNPRO_TT,
-          LS_CUA          TYPE TY_CUA.
+    DATA: lt_functions    TYPE ty_function_tt,
+          ls_progdir      TYPE ty_progdir,
+          lv_program_name TYPE programm,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua.
 
-    IF LIF_OBJECT~EXISTS( ) = ABAP_FALSE.
+    IF lif_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    SERIALIZE_XML( IO_XML ).
+    serialize_xml( io_xml ).
 
-    LT_FUNCTIONS = SERIALIZE_FUNCTIONS( ).
-    IO_XML->ADD( IV_NAME = 'FUNCTIONS'
-                 IG_DATA = LT_FUNCTIONS ).
+    lt_functions = serialize_functions( ).
+    io_xml->add( iv_name = 'FUNCTIONS'
+                 ig_data = lt_functions ).
 
-    SERIALIZE_INCLUDES( ).
+    serialize_includes( ).
 
-    LV_PROGRAM_NAME = MAIN_NAME( ).
-    LS_PROGDIR = READ_PROGDIR( LV_PROGRAM_NAME ).
+    lv_program_name = main_name( ).
+    ls_progdir = read_progdir( lv_program_name ).
 
-    IF LS_PROGDIR-SUBC = 'F'.
-      LT_DYNPROS = SERIALIZE_DYNPROS( LV_PROGRAM_NAME ).
-      IO_XML->ADD( IV_NAME = 'DYNPROS'
-                   IG_DATA = LT_DYNPROS ).
+    IF ls_progdir-subc = 'F'.
+      lt_dynpros = serialize_dynpros( lv_program_name ).
+      io_xml->add( iv_name = 'DYNPROS'
+                   ig_data = lt_dynpros ).
 
-      LS_CUA = SERIALIZE_CUA( LV_PROGRAM_NAME ).
-      IO_XML->ADD( IV_NAME = 'CUA'
-                   IG_DATA = LS_CUA ).
+      ls_cua = serialize_cua( lv_program_name ).
+      io_xml->add( iv_name = 'CUA'
+                   ig_data = ls_cua ).
     ENDIF.
 
   ENDMETHOD.                    "serialize
 
-  METHOD LIF_OBJECT~DESERIALIZE.
+  METHOD lif_object~deserialize.
 
-    DATA: LV_PROGRAM_NAME TYPE PROGRAMM,
-          LT_FUNCTIONS    TYPE TY_FUNCTION_TT,
-          LT_DYNPROS      TYPE TY_DYNPRO_TT,
-          LS_CUA          TYPE TY_CUA.
+    DATA: lv_program_name TYPE programm,
+          lt_functions    TYPE ty_function_tt,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua.
 
 
-    DESERIALIZE_XML(
-      IO_XML     = IO_XML
-      IV_PACKAGE = IV_PACKAGE ).
+    deserialize_xml(
+      io_xml     = io_xml
+      iv_package = iv_package ).
 
-    IO_XML->READ( EXPORTING IV_NAME = 'FUNCTIONS'
-                  CHANGING CG_DATA = LT_FUNCTIONS ).
-    DESERIALIZE_FUNCTIONS( LT_FUNCTIONS ).
+    io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
+                  CHANGING cg_data = lt_functions ).
+    deserialize_functions( lt_functions ).
 
-    DESERIALIZE_INCLUDES(
-      IO_XML     = IO_XML
-      IV_PACKAGE = IV_PACKAGE ).
+    deserialize_includes(
+      io_xml     = io_xml
+      iv_package = iv_package ).
 
-    LV_PROGRAM_NAME = MAIN_NAME( ).
+    lv_program_name = main_name( ).
 
-    IO_XML->READ( EXPORTING IV_NAME = 'DYNPROS'
-                  CHANGING CG_DATA = LT_DYNPROS ).
-    DESERIALIZE_DYNPROS( IT_DYNPROS = LT_DYNPROS ).
+    io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
+    deserialize_dynpros( it_dynpros = lt_dynpros ).
 
-    IO_XML->READ( EXPORTING IV_NAME = 'CUA'
-                  CHANGING CG_DATA = LS_CUA ).
-    DESERIALIZE_CUA( IV_PROGRAM_NAME = LV_PROGRAM_NAME
-                     IS_CUA = LS_CUA ).
+    io_xml->read( EXPORTING iv_name = 'CUA'
+                  CHANGING cg_data = ls_cua ).
+    deserialize_cua( iv_program_name = lv_program_name
+                     is_cua = ls_cua ).
 
   ENDMETHOD.                    "deserialize
 
-  METHOD LIF_OBJECT~DELETE.
+  METHOD lif_object~delete.
 
-    DATA: LV_AREA TYPE RS38L-AREA.
+    DATA: lv_area TYPE rs38l-area.
 
 
-    LV_AREA = MS_ITEM-OBJ_NAME.
+    lv_area = ms_item-obj_name.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
       EXPORTING
-        AREA                   = LV_AREA
-        SUPPRESS_POPUPS        = ABAP_TRUE
-        SKIP_PROGRESS_IND      = ABAP_TRUE
+        area                   = lv_area
+        suppress_popups        = abap_true
+        skip_progress_ind      = abap_true
       EXCEPTIONS
-        CANCELED_IN_CORR       = 1
-        ENQUEUE_SYSTEM_FAILURE = 2
-        FUNCTION_EXIST         = 3
-        NOT_EXECUTED           = 4
-        NO_MODIFY_PERMISSION   = 5
-        NO_SHOW_PERMISSION     = 6
-        PERMISSION_FAILURE     = 7
-        POOL_NOT_EXIST         = 8
-        CANCELLED              = 9
+        canceled_in_corr       = 1
+        enqueue_system_failure = 2
+        function_exist         = 3
+        not_executed           = 4
+        no_modify_permission   = 5
+        no_show_permission     = 6
+        permission_failure     = 7
+        pool_not_exist         = 8
+        cancelled              = 9
         OTHERS                 = 10.
-    IF SY-SUBRC <> 0.
-      LCX_EXCEPTION=>RAISE( 'error from RS_FUNCTION_POOL_DELETE' ).
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
 
-  METHOD LIF_OBJECT~JUMP.
+  METHOD lif_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-        OPERATION     = 'SHOW'
-        OBJECT_NAME   = MS_ITEM-OBJ_NAME
-        OBJECT_TYPE   = 'FUGR'
-        IN_NEW_WINDOW = ABAP_TRUE.
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'FUGR'
+        in_new_window = abap_true.
 
   ENDMETHOD.                    "jump
 
-  METHOD LIF_OBJECT~COMPARE_TO_REMOTE_VERSION.
-    CREATE OBJECT RO_COMPARISON_RESULT TYPE LCL_COMPARISON_NULL.
+  METHOD lif_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_fugr IMPLEMENTATION
