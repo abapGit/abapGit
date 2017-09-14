@@ -208,12 +208,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
     DATA: lv_include   TYPE rs38l-include,
           lv_area      TYPE rs38l-area,
+          lv_group     TYPE rs38l-area,
           lv_namespace TYPE rs38l-namespace,
           lt_source    TYPE TABLE OF abaptxt255,
           lv_dummy     TYPE string.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
-
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
@@ -221,16 +221,17 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       lv_area = ms_item-obj_name.
 
-*     Determine the namespace of the imported function (if a namespace is used)
-      IF <ls_func>-funcname(1) EQ '/'.
-*       Get namespace from function name
-        lv_namespace = <ls_func>-funcname.
-        SHIFT lv_namespace BY 1 PLACES LEFT.
-        SPLIT lv_namespace AT '/' INTO lv_namespace lv_dummy.
-        CONCATENATE '/' lv_namespace '/' INTO lv_namespace.
+      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+        EXPORTING
+          complete_area                = lv_area
+        IMPORTING
+          namespace                    = lv_namespace
+          group                        = lv_group
+        EXCEPTIONS
+          OTHERS                       = 12.
 
-*       Remove namespace from area (namespace and area are concatenated in RS_FUNCTIONMODULE_INSERT)
-        REPLACE ALL OCCURRENCES OF lv_namespace IN lv_area WITH ''.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
       ENDIF.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
@@ -258,7 +259,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       CALL FUNCTION 'RS_FUNCTIONMODULE_INSERT'
         EXPORTING
           funcname                = <ls_func>-funcname
-          function_pool           = lv_area
+          function_pool           = lv_group
           interface_global        = <ls_func>-global_flag
           remote_call             = <ls_func>-remote_call
           short_text              = <ls_func>-short_text
