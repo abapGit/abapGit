@@ -501,8 +501,8 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD is_local_system.
 
     DATA: lv_host TYPE string,
-          lt_list TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY.
-
+          lt_list TYPE lif_defs=>ty_icm_sinfo2_tt,
+          li_exit TYPE ref to lif_exit.
 
     CALL FUNCTION 'ICM_GET_INFO2'
       TABLES
@@ -515,6 +515,9 @@ CLASS lcl_http IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+
+    li_exit = lcl_exit=>get_instance( ).
+    li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
 
     FIND REGEX 'https?://([^/^:]*)' IN iv_url
       SUBMATCHES lv_host.

@@ -20,6 +20,9 @@ order: 30
 [SAP Inside Track Hamburg](https://larshp.github.io/sithh2016/)
 -Lars Hvam
 
+[SAP Inside Track Munich](https://www.slideshare.net/h_neumann/what-the-git-sap-inside-track-munich-2016)
+-Hendrik Neumann
+
 [SAP Teched Barcelona](https://larshp.github.io/teched-2016-emea/)
 -Lars Hvam
 
@@ -40,5 +43,14 @@ order: 30
 Mastering SAP Technologies, Melbourne, May 23rd
 -Graham Robinson
 
+[abapGit – so easy](https://blogs.sap.com/2017/06/21/abapgit-so-easy/)
+-Graham Robinson
+
+SAUG National Summit 2017, September 5th
+-Graham Robinson
+
 SAP Teched Las Vegas
 -Graham Robinson
+
+abapGit, [IT Conference on SAP Technologies](http://www.itconferencesap.com/), Cluj
+-Lars Hvam

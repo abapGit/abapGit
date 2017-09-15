@@ -154,7 +154,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         ON tparat~paramid = tpara~paramid AND
         tparat~sprache = mv_language
         INTO ls_tpara
-        WHERE tpara~paramid = ls_dd04v-memoryid.
+        WHERE tpara~paramid = ls_dd04v-memoryid.       "#EC CI_BUFFJOIN
     ENDIF.
 
     CLEAR: ls_dd04v-as4user,

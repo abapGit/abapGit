@@ -206,18 +206,33 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_functions.
 
-    DATA: lv_include TYPE rs38l-include,
-          lv_area    TYPE rs38l-area,
-          lt_source  TYPE TABLE OF abaptxt255.
+    DATA: lv_include   TYPE rs38l-include,
+          lv_area      TYPE rs38l-area,
+          lv_group     TYPE rs38l-area,
+          lv_namespace TYPE rs38l-namespace,
+          lt_source    TYPE TABLE OF abaptxt255,
+          lv_dummy     TYPE string.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
-
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
       lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
+
+      CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
+        EXPORTING
+          complete_area                = lv_area
+        IMPORTING
+          namespace                    = lv_namespace
+          group                        = lv_group
+        EXCEPTIONS
+          OTHERS                       = 12.
+
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
+      ENDIF.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
@@ -244,13 +259,13 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       CALL FUNCTION 'RS_FUNCTIONMODULE_INSERT'
         EXPORTING
           funcname                = <ls_func>-funcname
-          function_pool           = lv_area
+          function_pool           = lv_group
           interface_global        = <ls_func>-global_flag
           remote_call             = <ls_func>-remote_call
           short_text              = <ls_func>-short_text
           update_task             = <ls_func>-update_task
           exception_class         = <ls_func>-exception_classes
-*         NAMESPACE               = ' ' todo
+          namespace               = lv_namespace
           remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
           function_include        = lv_include
@@ -416,11 +431,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
              cnam     TYPE reposrc-cnam,
            END OF ty_reposrc.
 
-    DATA: lt_reposrc TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
-          ls_reposrc LIKE LINE OF lt_reposrc,
-          lv_program TYPE program,
-          lv_tabix   LIKE sy-tabix,
-          lt_functab TYPE ty_rs38l_incl_tt.
+    DATA: lt_reposrc   TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc   LIKE LINE OF lt_reposrc,
+          lv_program   TYPE program,
+          lv_offset_ns TYPE i,
+          lv_tabix     LIKE sy-tabix,
+          lt_functab   TYPE ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
@@ -450,7 +466,15 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
 * handle generated maintenance views
     APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
-    <lv_include> = |L{ ms_item-obj_name }T00|.
+    IF ms_item-obj_name(1) <> '/'.
+      "FGroup name does not contain a namespace
+      <lv_include> = |L{ ms_item-obj_name }T00|.
+    ELSE.
+      "FGroup name contains a namespace
+      lv_offset_ns = find( val = ms_item-obj_name+1 sub = '/' ).
+      lv_offset_ns = lv_offset_ns + 2.
+      <lv_include> = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
+    ENDIF.
 
     IF lines( rt_includes ) > 0.
       SELECT progname cnam FROM reposrc

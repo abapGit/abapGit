@@ -13,6 +13,9 @@ CLASS lcl_object_ssfo DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
+  PRIVATE SECTION.
+    METHODS: fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
+
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
 *----------------------------------------------------------------------*
@@ -163,15 +166,10 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
         li_node->set_value( 'DUMMY' ).
       ENDIF.
 
-* remove IDs it seems that they are not used for anything
-* the IDs are "random" so it caused diff files
-      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
-        li_attr = li_node->get_attributes( ).
-        li_attr->remove_named_item( 'ID' ).
-      ENDIF.
-
       li_node = li_iterator->get_next( ).
     ENDWHILE.
+
+    fix_ids( li_xml_doc ).
 
     li_element = li_xml_doc->get_root_element( ).
     li_element->set_attribute(
@@ -185,6 +183,54 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
     io_xml->set_raw( li_xml_doc->get_root_element( ) ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD fix_ids.
+* makes sure ID and IDREF values are the same values for each serialization run
+* the standard code has a counter that keeps increasing values
+
+    DATA: lv_name     TYPE string,
+          li_idref    TYPE REF TO if_ixml_node,
+          li_node     TYPE REF TO if_ixml_node,
+          li_attr     TYPE REF TO if_ixml_named_node_map,
+          li_iterator TYPE REF TO if_ixml_node_iterator,
+          lt_idref    TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
+
+    li_iterator = ii_xml_doc->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      lv_name = li_node->get_name( ).
+      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
+        li_idref = li_node->get_attributes( )->get_named_item( 'IDREF' ).
+        IF li_idref IS BOUND.
+          APPEND li_idref->get_value( ) TO lt_idref.
+          li_idref->set_value( |{ sy-tabix }| ).
+        ENDIF.
+      ENDIF.
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
+
+    li_iterator = ii_xml_doc->create_iterator( ).
+    li_node = li_iterator->get_next( ).
+    WHILE NOT li_node IS INITIAL.
+      lv_name = li_node->get_name( ).
+      IF lv_name = 'NODE' OR lv_name = 'WINDOW'.
+        li_idref = li_node->get_attributes( )->get_named_item( 'ID' ).
+        IF li_idref IS BOUND.
+          lv_name = li_idref->get_value( ).
+          READ TABLE lt_idref WITH KEY table_line = lv_name TRANSPORTING NO FIELDS.
+          IF sy-subrc = 0.
+            li_idref->set_value( |{ sy-tabix }| ).
+          ELSE.
+            li_attr = li_node->get_attributes( ).
+            li_attr->remove_named_item( 'ID' ).
+          ENDIF.
+        ENDIF.
+      ENDIF.
+      li_node = li_iterator->get_next( ).
+    ENDWHILE.
+
+  ENDMETHOD.
 
   METHOD lif_object~deserialize.
 * see function module FB_UPLOAD_FORM

@@ -77,6 +77,10 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     rv_user = ls_icfservice-icf_muser.
 
+    IF rv_user IS INITIAL.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD lif_object~get_metadata.
@@ -85,11 +89,20 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: ls_icfservice TYPE icfservice.
+    DATA: ls_tadir TYPE tadir,
+          ls_key   TYPE ty_sicf_key.
 
+    ls_tadir = lcl_tadir=>read_single_sicf( ms_item-obj_name ).
 
-    read( IMPORTING es_icfservice = ls_icfservice ).
-    rv_bool = boolc( NOT ls_icfservice IS INITIAL ).
+    rv_bool = boolc( NOT ls_tadir IS INITIAL ).
+
+    IF rv_bool = abap_true.
+      ls_key = ls_tadir-obj_name.
+      SELECT SINGLE icfaltnme FROM icfservice INTO ls_key-icf_name
+        WHERE icf_name = ls_key-icf_name
+        AND icfparguid = ls_key-icfparguid.
+      rv_bool = boolc( sy-subrc = 0 ).
+    ENDIF.
 
   ENDMETHOD.                    "lif_object~exists
 
@@ -140,17 +153,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     CLEAR et_icfhandler.
     CLEAR ev_url.
 
-    ls_key = ms_item-obj_name.
-    IF ls_key-icfparguid IS INITIAL.
-* limitation: name must be unique
-      SELECT SINGLE icfparguid FROM icfservice
-        INTO ls_key-icfparguid
-        WHERE icf_name = ls_key-icf_name
-        AND icf_cuser <> 'SAP' ##warn_ok.
-      IF sy-subrc <> 0.
-        RETURN.
-      ENDIF.
-    ENDIF.
+    ls_key = lcl_tadir=>read_single_sicf( ms_item-obj_name )-obj_name.
 
     cl_icf_tree=>if_icf_tree~get_info_from_serv(
       EXPORTING
@@ -198,6 +201,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
           ls_read       TYPE icfservice,
           ls_icfdocu    TYPE icfdocu,
           lv_url        TYPE string,
+          lv_exists     TYPE abap_bool,
           lt_icfhandler TYPE TABLE OF icfhandler.
 
 
@@ -210,14 +214,16 @@ CLASS lcl_object_sicf IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ICFHANDLER_TABLE'
                   CHANGING cg_data = lt_icfhandler ).
 
-    read( IMPORTING es_icfservice = ls_read ).
-    IF ls_read IS INITIAL.
+
+    lv_exists = lif_object~exists( ).
+    IF lv_exists = abap_false.
       insert_sicf( is_icfservice = ls_icfservice
                    is_icfdocu    = ls_icfdocu
                    it_icfhandler = lt_icfhandler
                    iv_package    = iv_package
                    iv_url        = lv_url ).
     ELSE.
+      read( IMPORTING es_icfservice = ls_read ).
       change_sicf( is_icfservice = ls_icfservice
                    is_icfdocu    = ls_icfdocu
                    it_icfhandler = lt_icfhandler
@@ -391,8 +397,20 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     DATA: ls_icfservice TYPE icfservice.
 
-
     read( IMPORTING es_icfservice = ls_icfservice ).
+
+    IF ls_icfservice IS INITIAL.
+      " It seems that the ICF service doesn't exist anymore.
+      " But that's ok, because some objects like SAPC manage
+      " the lifecycle of its ICF service by itself and already
+      " deleted the service.
+      RETURN.
+    ENDIF.
+
+    IF ls_icfservice-icfparguid CO '0'.
+* not supported by the SAP standard API
+      lcx_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
+    ENDIF.
 
     cl_icf_tree=>if_icf_tree~delete_node(
       EXPORTING
@@ -419,7 +437,39 @@ CLASS lcl_object_sicf IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, SICF, jump' ).
+
+    DATA: ls_bcdata TYPE bdcdata,
+          lt_bcdata TYPE STANDARD TABLE OF bdcdata.
+
+    ls_bcdata-program  = 'RSICFTREE'.
+    ls_bcdata-dynpro   = '1000'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-dynpro   = space.
+    ls_bcdata-dynbegin = space.
+    ls_bcdata-fnam     = 'ICF_SERV'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=ONLI'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SICF'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SICF' ).
+    ENDIF.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.

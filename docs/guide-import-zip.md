@@ -6,7 +6,7 @@ order: 10
 
 1: Run report ZABAPGIT via SE38 or SA38
 
-2: Click "New Offline Repo"
+2: Click "+ Offline"
 ![](img/offline1.png)
 
 3: Enter project name eg. "abapOpenChecks", and an empty package eg. "$AOC"

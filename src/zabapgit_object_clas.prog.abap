@@ -18,32 +18,27 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
         iv_language TYPE spras.
 
   PROTECTED SECTION.
-    METHODS deserialize_abap
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
+    DATA: mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc,
+          mv_skip_testclass             TYPE abap_bool.
 
-    METHODS deserialize_docu
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
-      RAISING   lcx_exception.
-    DATA mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc.
-  PRIVATE SECTION.
-    DATA mv_skip_testclass TYPE abap_bool.
-
-    METHODS deserialize_tpool
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
-      RAISING   lcx_exception.
-
-    METHODS deserialize_sotr
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
-                iv_package TYPE devclass
-      RAISING   lcx_exception.
-
-
-    METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING   lcx_exception.
-
+    METHODS:
+      deserialize_abap
+        IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                  iv_package TYPE devclass
+        RAISING   lcx_exception,
+      deserialize_docu
+        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        RAISING   lcx_exception,
+      deserialize_tpool
+        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        RAISING   lcx_exception,
+      deserialize_sotr
+        IMPORTING io_xml     TYPE REF TO lcl_xml_input
+                  iv_package TYPE devclass
+        RAISING   lcx_exception,
+      serialize_xml
+        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -366,6 +361,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
         iv_package    = iv_package
       CHANGING
         is_properties = ls_vseoclass ).
+
     mo_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
       iv_force                 = seox_true
@@ -375,8 +371,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
       it_local_test_classes    = lt_test_classes ).
 
     mo_object_oriented_object_fct->deserialize_source(
-      is_key               = ls_class_key
-      it_source            = lt_source ).
+      is_key    = ls_class_key
+      it_source = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
@@ -385,7 +381,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
 
-    mo_object_oriented_object_fct->add_to_activation_list( is_item = ms_item  ).
+    mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~compare_to_remote_version.
@@ -396,7 +392,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     super->constructor(
       is_item     = is_item
       iv_language = iv_language ).
-    mo_object_oriented_object_fct = lcl_oo_factory=>make( iv_object_type = ms_item-obj_type ).
+    mo_object_oriented_object_fct = lcl_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_CLAS IMPLEMENTATION
@@ -457,8 +453,9 @@ CLASS lcl_oo_class IMPLEMENTATION.
       lcx_exception=>raise( 'error from generate_locals' ).
     ENDIF.
   ENDMETHOD.
+
   METHOD lif_oo_object_fnc~insert_text_pool.
-    DATA: lv_cp        TYPE program.
+    DATA: lv_cp TYPE program.
 
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
 

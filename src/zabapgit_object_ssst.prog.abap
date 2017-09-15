@@ -12,6 +12,7 @@ CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
+    CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
 
   PRIVATE SECTION.
     METHODS validate_font
@@ -50,9 +51,11 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
     DATA: lv_stylename TYPE stxsadm-stylename.
 
-
-    SELECT SINGLE stylename FROM stxsadm INTO lv_stylename
-      WHERE stylename = ms_item-obj_name.
+    SELECT SINGLE stylename
+      FROM stxshead INTO lv_stylename
+      WHERE active    = c_style_active
+        AND stylename = ms_item-obj_name
+        AND vari      = ''.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists
@@ -85,7 +88,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
     CALL FUNCTION 'SSF_READ_STYLE'
       EXPORTING
         i_style_name             = lv_style_name
-        i_style_active_flag      = 'A'
+        i_style_active_flag      = c_style_active
         i_style_variant          = '%MAIN'
         i_style_language         = mv_language
       IMPORTING
@@ -133,10 +136,11 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 * see fm SSF_UPLOAD_STYLE
 
     DATA: ls_header     TYPE ssfcats,
+          ls_new_header TYPE ssfcats,
           lt_paragraphs TYPE TABLE OF ssfparas,
           lt_strings    TYPE TABLE OF ssfstrings,
           lt_tabstops   TYPE TABLE OF stxstab.
-
+    FIELD-SYMBOLS: <spras> TYPE spras.
 
     io_xml->read( EXPORTING iv_name = 'HEADER'
                   CHANGING cg_data = ls_header ).
@@ -149,26 +153,47 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
     validate_font( ls_header-tdfamily ).
 
+    CALL FUNCTION 'SSF_READ_STYLE' "Just load FG
+      EXPORTING
+        i_style_name        = ls_header-stylename
+        i_style_active_flag = 'A'
+      EXCEPTIONS
+        OTHERS              = 0.
+    IF sy-subrc <> 0.
+    ENDIF.
+
+    SET PARAMETER ID 'EUK' FIELD iv_package.
+    ASSIGN ('(SAPLSTXBS)MASTER_LANGUAGE') TO <spras>.
+    IF sy-subrc = 0.
+      <spras> = ls_header-masterlang.
+    ENDIF.
+
     CALL FUNCTION 'SSF_SAVE_STYLE'
       EXPORTING
         i_header     = ls_header
+      IMPORTING
+        e_header     = ls_new_header
       TABLES
         i_paragraphs = lt_paragraphs
         i_strings    = lt_strings
         i_tabstops   = lt_tabstops.
 
-    CALL FUNCTION 'SSF_ACTIVATE_STYLE'
-      EXPORTING
-        i_stylename          = ls_header-stylename
-      EXCEPTIONS
-        no_name              = 1
-        no_style             = 2
-        cancelled            = 3
-        no_access_permission = 4
-        illegal_language     = 5
-        OTHERS               = 6.
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
+    IF ls_new_header IS NOT INITIAL.
+
+      CALL FUNCTION 'SSF_ACTIVATE_STYLE'
+        EXPORTING
+          i_stylename          = ls_header-stylename
+        EXCEPTIONS
+          no_name              = 1
+          no_style             = 2
+          cancelled            = 3
+          no_access_permission = 4
+          illegal_language     = 5
+          OTHERS               = 6.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.                    "deserialize
@@ -200,7 +225,39 @@ CLASS lcl_object_ssst IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo' ).
+
+    DATA: ls_bcdata TYPE bdcdata,
+          lt_bcdata TYPE STANDARD TABLE OF bdcdata.
+
+    ls_bcdata-program  = 'SAPMSSFS'.
+    ls_bcdata-dynpro   = '0100'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'SSFSCREENS-SNAME'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=DISPLAY'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SMARTSTYLES'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SSST' ).
+    ENDIF.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.

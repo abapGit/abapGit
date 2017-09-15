@@ -67,14 +67,16 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    TRY.
-        get_url_for_io( ).
-        rv_bool = abap_true.
-      CATCH lcx_not_found.
-        rv_bool = abap_false.
-    ENDTRY.
+    DATA: lv_loio TYPE sdok_docid.
 
-  ENDMETHOD.                    "lif_object~exists
+
+    lv_loio = ms_item-obj_name.
+
+    SELECT SINGLE loio_id FROM smimloio INTO lv_loio
+      WHERE loio_id = lv_loio.                          "#EC CI_GENBUFF
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
 
   METHOD get_url_for_io.
 
@@ -206,7 +208,8 @@ CLASS lcl_object_smim IMPLEMENTATION.
       ls_file-data     = lv_content.
       mo_files->add( ls_file ).
 
-      SELECT SINGLE lo_class FROM smimloio INTO lv_class WHERE loio_id = lv_loio.
+      SELECT SINGLE lo_class FROM smimloio INTO lv_class
+        WHERE loio_id = lv_loio.                        "#EC CI_GENBUFF
     ENDIF.
 
     io_xml->add( iv_name = 'URL'
@@ -328,7 +331,13 @@ CLASS lcl_object_smim IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, SMIM, jump' ).
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation   = 'SHOW'
+        object_name = ms_item-obj_name
+        object_type = ms_item-obj_type.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.

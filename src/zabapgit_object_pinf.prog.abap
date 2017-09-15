@@ -77,7 +77,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
     IF rv_bool = abap_true.
       SELECT SINGLE mainpack FROM tdevc INTO lv_main_pack
-        WHERE devclass = lv_pack_name.
+        WHERE devclass = lv_pack_name.                  "#EC CI_GENBUFF
       rv_bool = boolc( sy-subrc = 0 ).
     ENDIF.
 

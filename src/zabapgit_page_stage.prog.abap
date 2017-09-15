@@ -131,7 +131,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                    <ls_item> LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-    lt_fields = cl_http_utility=>if_http_utility~string_to_fields( |{ lv_string }| ).
+    lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
 
     IF lines( lt_fields ) = 0.
       lcx_exception=>raise( 'process_stage_list: empty list' ).
@@ -235,6 +235,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lv_filename = is_file-path && is_file-filename.
+* make sure whitespace is preserved in the DOM
+    REPLACE ALL OCCURRENCES OF ` ` IN lv_filename WITH '&nbsp;'.
 
     ro_html->add( |<tr class="{ iv_context }">| ).
 

@@ -13,6 +13,19 @@ CLASS lcl_object_tobj DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
+  PRIVATE SECTION.
+    TYPES: BEGIN OF ty_tobj,
+             tddat TYPE tddat,
+             tvdir TYPE tvdir,
+             tvimf TYPE STANDARD TABLE OF tvimf WITH DEFAULT KEY,
+           END OF ty_tobj.
+
+    METHODS:
+      read_extra IMPORTING iv_tabname     TYPE vim_name
+                 RETURNING VALUE(rs_tobj) TYPE ty_tobj,
+      update_extra IMPORTING is_tobj TYPE ty_tobj,
+      delete_extra IMPORTING iv_tabname TYPE vim_name.
+
 ENDCLASS.                    "lcl_object_tobj DEFINITION
 
 *----------------------------------------------------------------------*
@@ -21,6 +34,32 @@ ENDCLASS.                    "lcl_object_tobj DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_object_tobj IMPLEMENTATION.
+
+  METHOD read_extra.
+
+    SELECT SINGLE * FROM tddat INTO rs_tobj-tddat WHERE tabname = iv_tabname.
+
+    SELECT SINGLE * FROM tvdir INTO rs_tobj-tvdir WHERE tabname = iv_tabname.
+
+    SELECT * FROM tvimf INTO TABLE rs_tobj-tvimf WHERE tabname = iv_tabname.
+
+  ENDMETHOD.
+
+  METHOD update_extra.
+
+    MODIFY tddat FROM is_tobj-tddat.
+    MODIFY tvdir FROM is_tobj-tvdir.
+    MODIFY tvimf FROM TABLE is_tobj-tvimf.
+
+  ENDMETHOD.
+
+  METHOD delete_extra.
+
+    DELETE FROM tddat WHERE tabname = iv_tabname.
+    DELETE FROM tvdir WHERE tabname = iv_tabname.
+    DELETE FROM tvimf WHERE tabname = iv_tabname.
+
+  ENDMETHOD.
 
   METHOD lif_object~has_changed_since.
     rv_changed = abap_true.
@@ -67,6 +106,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
           lt_objs     TYPE tt_objs,
           lt_objsl    TYPE tt_objsl,
           lt_objm     TYPE tt_objm,
+          ls_tobj     TYPE ty_tobj,
           lv_type_pos TYPE i.
 
     lv_type_pos = strlen( ms_item-obj_name ) - 1.
@@ -113,6 +153,11 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     io_xml->add( iv_name = 'OBJM'
                  ig_data = lt_objm ).
 
+    ls_tobj = read_extra( ls_objh-objectname ).
+
+    io_xml->add( iv_name = 'TOBJ'
+                 ig_data = ls_tobj ).
+
   ENDMETHOD.                    "serialize
 
   METHOD lif_object~deserialize.
@@ -121,7 +166,8 @@ CLASS lcl_object_tobj IMPLEMENTATION.
           ls_objt  TYPE objt,
           lt_objs  TYPE tt_objs,
           lt_objsl TYPE tt_objsl,
-          lt_objm  TYPE tt_objm.
+          lt_objm  TYPE tt_objm,
+          ls_tobj  TYPE ty_tobj.
 
 
     io_xml->read( EXPORTING iv_name = 'OBJH'
@@ -160,6 +206,11 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       lcx_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
+    io_xml->read( EXPORTING iv_name = 'TOBJ'
+                  CHANGING cg_data = ls_tobj ).
+
+    update_extra( ls_tobj ).
+
   ENDMETHOD.                    "deserialize
 
   METHOD lif_object~delete.
@@ -188,10 +239,50 @@ CLASS lcl_object_tobj IMPLEMENTATION.
       lcx_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
+    delete_extra( ls_objh-objectname ).
+
   ENDMETHOD.                    "delete
 
   METHOD lif_object~jump.
-    lcx_exception=>raise( 'todo, TOBJ jump' ).
+
+    DATA: ls_bcdata TYPE bdcdata,
+          lt_bcdata TYPE STANDARD TABLE OF bdcdata.
+
+    ls_bcdata-program  = 'SAPMSVIM'.
+    ls_bcdata-dynpro   = '0050'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'VIMDYNFLDS-VIEWNAME'.
+    ls_bcdata-fval = substring( val = ms_item-obj_name
+                                len = strlen( ms_item-obj_name ) - 1 ).
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'VIMDYNFLDS-ELEM_GEN'.
+    ls_bcdata-fval = abap_true.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=SHOW'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SE54'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, TOBJ' ).
+    ENDIF.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~compare_to_remote_version.

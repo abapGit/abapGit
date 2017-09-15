@@ -41,11 +41,11 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING lcx_exception,
+        RAISING   lcx_exception,
 
       deserialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING lcx_exception.
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
@@ -443,7 +443,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM tstct
       WHERE sprsl <> mv_language
-      AND   tcode = ms_item-obj_name.
+      AND   tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
 
     IF lines( lt_tpool_i18n ) > 0.
       SORT lt_tpool_i18n BY sprsl ASCENDING.

@@ -62,6 +62,7 @@ ENDCLASS.                    "ltcl_convert DEFINITION
 CLASS ltcl_convert IMPLEMENTATION.
 
   METHOD convert_int.
+
     DATA: lv_xstring TYPE xstring,
           lv_input   TYPE i,
           lv_result  TYPE i.
@@ -69,8 +70,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     DO 1000 TIMES.
       lv_input = sy-index.
-      lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_input
-                                                iv_length = 4 ).
+      lv_xstring = lcl_convert=>int_to_xstring4( lv_input ).
       lv_result = lcl_convert=>xstring_to_int( lv_xstring ).
 
       cl_abap_unit_assert=>assert_equals(
@@ -1005,14 +1005,15 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = 'parent1' ).
     cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent2
       exp = 'parent2' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1036,11 +1037,12 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = '' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1065,11 +1067,12 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
       act = ms_raw-committer
       exp = 'committer' ).
     cl_abap_unit_assert=>assert_equals(
-      act = ms_raw-body
-      exp = 'comment' ).
-    cl_abap_unit_assert=>assert_equals(
       act = ms_raw-parent
       exp = 'parent1' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
 
   ENDMETHOD.
 
@@ -1084,10 +1087,14 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
   PRIVATE SECTION.
 
+    CONSTANTS: c_sha TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
+
     METHODS:
       tree FOR TESTING
         RAISING lcx_exception,
       commit FOR TESTING
+        RAISING lcx_exception,
+      commit_newline FOR TESTING
         RAISING lcx_exception,
       pack_short FOR TESTING
         RAISING lcx_exception,
@@ -1096,7 +1103,11 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
       pack_multiple FOR TESTING
         RAISING lcx_exception,
       sort_tree1 FOR TESTING,
-      sort_tree2 FOR TESTING.
+      sort_tree2 FOR TESTING,
+      type_and_length01 FOR TESTING
+        RAISING lcx_exception,
+      type_and_length02 FOR TESTING
+        RAISING lcx_exception.
 
     METHODS:
       object_blob
@@ -1112,6 +1123,34 @@ ENDCLASS.                    "test DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_git_pack IMPLEMENTATION.
+
+  METHOD type_and_length01.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = lcl_git_pack=>type_and_length(
+      iv_type   = lif_defs=>gc_type-commit
+      iv_length = 100 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '9406' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length02.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = lcl_git_pack=>type_and_length(
+      iv_type   = lif_defs=>gc_type-blob
+      iv_length = 90000 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = 'B0F92B' ).
+
+  ENDMETHOD.
 
   METHOD sort_tree1.
 
@@ -1294,8 +1333,6 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
   METHOD tree.
 
-    CONSTANTS: lc_sha TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
-
     DATA: lt_nodes  TYPE lcl_git_pack=>ty_nodes_tt,
           ls_node   LIKE LINE OF lt_nodes,
           lv_data   TYPE xstring,
@@ -1304,7 +1341,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     CLEAR ls_node.
     ls_node-chmod = lif_defs=>gc_chmod-file.
     ls_node-name = 'foobar.txt'.
-    ls_node-sha1 = lc_sha.
+    ls_node-sha1 = c_sha.
     APPEND ls_node TO lt_nodes.
 
     lv_data = lcl_git_pack=>encode_tree( lt_nodes ).
@@ -1318,16 +1355,13 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
   METHOD commit.
 
-    CONSTANTS: lc_tree   TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc',
-               lc_parent TYPE lif_defs=>ty_sha1 VALUE '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
-
     DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
           ls_result TYPE lcl_git_pack=>ty_commit,
           lv_data   TYPE xstring.
 
 
-    ls_commit-tree      = lc_tree.
-    ls_commit-parent    = lc_parent.
+    ls_commit-tree      = c_sha.
+    ls_commit-parent    = c_sha.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-body      = 'very informative'.
@@ -1340,6 +1374,28 @@ CLASS ltcl_git_pack IMPLEMENTATION.
         act = ls_result ).
 
   ENDMETHOD.                    "commit
+
+  METHOD commit_newline.
+
+    DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
+          ls_result TYPE lcl_git_pack=>ty_commit,
+          lv_data   TYPE xstring.
+
+
+    ls_commit-tree      = c_sha.
+    ls_commit-parent    = c_sha.
+    ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-body      = 'very informative' && lif_defs=>gc_newline && lif_defs=>gc_newline.
+
+    lv_data = lcl_git_pack=>encode_commit( ls_commit ).
+    ls_result = lcl_git_pack=>decode_commit( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = ls_commit
+        act = ls_result ).
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_abap_unit IMPLEMENTATION
 
@@ -1742,12 +1798,58 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
   PUBLIC SECTION.
 
+    CLASS-METHODS class_constructor.
     METHODS add_field FOR TESTING.
     METHODS get_field FOR TESTING.
+    METHODS parse_fields_simple_case FOR TESTING.
+    METHODS parse_fields_advanced_case FOR TESTING.
+    METHODS parse_fields_unescape FOR TESTING.
+    METHODS parse_fields_german_umlauts FOR TESTING.
+
+  PRIVATE SECTION.
+
+    CONSTANTS: BEGIN OF co_german_umlaut_as_hex,
+                 lower_case_ae TYPE xstring VALUE 'C3A4',
+                 lower_case_oe TYPE xstring VALUE 'C3B6',
+                 lower_case_ue TYPE xstring VALUE 'C3BC',
+               END OF co_german_umlaut_as_hex.
+
+    CLASS-DATA: BEGIN OF ms_german_umlaut_as_char,
+                  lower_case_ae TYPE string,
+                  lower_case_oe TYPE string,
+                  lower_case_ue TYPE string,
+                END OF ms_german_umlaut_as_char.
+
+    DATA m_given_parse_string TYPE string.
+    DATA mt_parsed_fields TYPE tihttpnvp.
+
+    METHODS _given_string_is
+      IMPORTING
+        i_string TYPE string.
+    METHODS _when_fields_are_parsed.
+    METHODS _then_fields_should_be
+      IMPORTING
+        index TYPE i
+        name  TYPE string
+        value TYPE string.
+
+    CLASS-METHODS _hex_to_char
+      IMPORTING
+        i_x        TYPE xstring
+      RETURNING
+        VALUE(r_s) TYPE string.
 
 ENDCLASS. "ltcl_html_action_utils
 
 CLASS ltcl_html_action_utils IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+    ms_german_umlaut_as_char-lower_case_ae = _hex_to_char( co_german_umlaut_as_hex-lower_case_ae ).
+    ms_german_umlaut_as_char-lower_case_oe = _hex_to_char( co_german_umlaut_as_hex-lower_case_oe ).
+    ms_german_umlaut_as_char-lower_case_ue = _hex_to_char( co_german_umlaut_as_hex-lower_case_ue ).
+
+  ENDMETHOD.
 
   METHOD add_field.
 
@@ -1792,6 +1894,155 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     assert_equals( act = ls_field exp = ls_answer ). " Both field are filled!
 
   ENDMETHOD.  "get_field
+
+  METHOD parse_fields_simple_case.
+
+    _given_string_is( `committer_name=Gustav Gans` ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1 name = `COMMITTER_NAME` value = `Gustav Gans` ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_advanced_case.
+
+    _given_string_is( `committer_name=Albert Schweitzer&`
+                   && `committer_email=albert.schweitzer@googlemail.com&`
+                   && `comment=dummy comment&`
+                   && `body=Message body<<new>><<new>>with line break<<new>>&`
+                   && `author_name=Karl Klammer&`
+                   && `author_email=karl@klammer.com` ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1
+                            name  = `COMMITTER_NAME`
+                            value = `Albert Schweitzer` ).
+
+    _then_fields_should_be( index = 2
+                            name  = `COMMITTER_EMAIL`
+                            value = `albert.schweitzer@googlemail.com` ).
+
+    _then_fields_should_be( index = 3
+                            name  = `COMMENT`
+                            value = `dummy comment` ).
+
+    _then_fields_should_be( index = 4
+                            name  = `BODY`
+                            value = `Message body<<new>><<new>>with line break<<new>>` ).
+
+    _then_fields_should_be( index = 5
+                            name  = `AUTHOR_NAME`
+                            value = `Karl Klammer` ).
+
+    _then_fields_should_be( index = 6
+                            name  = `AUTHOR_EMAIL`
+                            value = `karl@klammer.com` ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_unescape.
+* file status = '?', used in staging page
+
+    _given_string_is( '/SRC/ZFOOBAR.PROG.ABAP=%3F' ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1
+                            name  = '/SRC/ZFOOBAR.PROG.ABAP'
+                            value = '?' ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_german_umlauts.
+
+    DATA: ae       TYPE string,
+          oe       TYPE string,
+          ue       TYPE string,
+          ae_oe_ue TYPE string.
+
+    ae = ms_german_umlaut_as_char-lower_case_ae.
+    oe = ms_german_umlaut_as_char-lower_case_oe.
+    ue = ms_german_umlaut_as_char-lower_case_ue.
+
+    ae_oe_ue = ae && oe && ue.
+
+    _given_string_is( |committer_name=Christian G{ ue }nter&|
+                   && |committer_email=guenne@googlemail.com&|
+                   && |comment={ ae_oe_ue }&|
+                   && |body=Message body<<new>><<new>>with line break<<new>>and umlauts. { ae_oe_ue }&|
+                   && |author_name=Gerd Schr{ oe }der&|
+                   && |author_email=gerd@schroeder.com| ).
+
+    _when_fields_are_parsed( ).
+
+    _then_fields_should_be( index = 1
+                            name  = `COMMITTER_NAME`
+                            value = |Christian G{ ue }nter| ).
+
+    _then_fields_should_be( index = 2
+                            name  = `COMMITTER_EMAIL`
+                            value = `guenne@googlemail.com` ).
+
+    _then_fields_should_be( index = 3
+                            name  = `COMMENT`
+                            value = ae_oe_ue ).
+
+    _then_fields_should_be( index = 4
+                            name  = `BODY`
+                            value = |Message body<<new>><<new>>with line break<<new>>and umlauts. { ae_oe_ue }| ).
+
+    _then_fields_should_be( index = 5
+                            name  = `AUTHOR_NAME`
+                            value = |Gerd Schr{ oe }der| ).
+
+    _then_fields_should_be( index = 6
+                            name  = `AUTHOR_EMAIL`
+                            value = `gerd@schroeder.com` ).
+
+  ENDMETHOD.
+
+  METHOD _given_string_is.
+
+    m_given_parse_string = i_string.
+
+  ENDMETHOD.
+
+  METHOD _when_fields_are_parsed.
+
+    mt_parsed_fields = lcl_html_action_utils=>parse_fields_upper_case_name( m_given_parse_string ).
+
+  ENDMETHOD.
+
+  METHOD _then_fields_should_be.
+
+    FIELD-SYMBOLS: <parsed_field> LIKE LINE OF mt_parsed_fields.
+
+    READ TABLE mt_parsed_fields ASSIGNING <parsed_field>
+                                INDEX index.
+
+    cl_abap_unit_assert=>assert_subrc( exp = 0
+                                       msg = |No parsed field found at index { index }| ).
+
+    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-name
+                                        exp = name
+                                        msg = |Name at index { index } should be { name }| ).
+
+    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-value
+                                        exp = value
+                                        msg = |Value at index { index } should be { value }| ).
+
+  ENDMETHOD.
+
+  METHOD _hex_to_char.
+
+    DATA lr_conv TYPE REF TO cl_abap_conv_in_ce.
+
+    lr_conv = cl_abap_conv_in_ce=>create( ).
+    lr_conv->convert( EXPORTING input = i_x IMPORTING data = r_s ).
+
+  ENDMETHOD.
 
 ENDCLASS. "ltcl_html_action_utils
 
@@ -1957,7 +2208,8 @@ CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS calculate_status FOR TESTING.
+    METHODS calculate_status FOR TESTING
+      RAISING lcx_exception.
 
 ENDCLASS.   "ltcl_file_status
 

@@ -114,6 +114,12 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       IMPORTING is_commit      TYPE ty_commit
       RETURNING VALUE(rv_data) TYPE xstring.
 
+    CLASS-METHODS type_and_length
+      IMPORTING iv_type           TYPE lif_defs=>ty_type
+                iv_length         TYPE i
+      RETURNING VALUE(rv_xstring) TYPE xstring
+      RAISING   lcx_exception.
+
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
@@ -123,11 +129,6 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     CLASS-METHODS decode_deltas
       CHANGING ct_objects TYPE lif_defs=>ty_objects_tt
       RAISING  lcx_exception.
-
-    CLASS-METHODS type_and_length
-      IMPORTING is_object         TYPE lif_defs=>ty_object
-      RETURNING VALUE(rv_xstring) TYPE xstring
-      RAISING   lcx_exception.
 
     CLASS-METHODS delta
       IMPORTING is_object  TYPE lif_defs=>ty_object
@@ -251,7 +252,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
               lcl_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              lif_defs=>gc_newline.                                   "#EC NOTEXT
+              lif_defs=>gc_newline.                         "#EC NOTEXT
     lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -347,17 +348,17 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_capa = 'side-band-64k no-progress multi_ack agent='
           && lcl_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && lif_defs=>gc_newline.                  "#EC NOTEXT
+          && ` ` && lv_capa && lif_defs=>gc_newline.        "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && lif_defs=>gc_newline.                                    "#EC NOTEXT
+          && lif_defs=>gc_newline.                          "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1'
-        && lif_defs=>gc_newline ).                                    "#EC NOTEXT
+        && lif_defs=>gc_newline ).                          "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
@@ -430,7 +431,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_x      TYPE x LENGTH 1.
 
 
-    CASE is_object-type.
+    CASE iv_type.
       WHEN lif_defs=>gc_type-commit.
         lv_type = '001'.
       WHEN lif_defs=>gc_type-tree.
@@ -443,7 +444,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         lcx_exception=>raise( 'Unexpected object type while encoding pack' ).
     ENDCASE.
 
-    lv_x4 = xstrlen( is_object-data ).
+    lv_x4 = iv_length.
     DO 32 TIMES.
       GET BIT sy-index OF lv_x4 INTO lv_c.
       CONCATENATE lv_bits lv_c INTO lv_bits.
@@ -611,6 +612,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     DATA: lv_string TYPE string,
           lv_word   TYPE string,
+          lv_length TYPE i,
           lv_trash  TYPE string ##NEEDED,
           lt_string TYPE TABLE OF string.
 
@@ -622,34 +624,41 @@ CLASS lcl_git_pack IMPLEMENTATION.
     SPLIT lv_string AT lif_defs=>gc_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
-      IF NOT rs_commit-committer IS INITIAL.
-        CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
-          SEPARATED BY lif_defs=>gc_newline.
-      ELSE.
-        SPLIT <lv_string> AT space INTO lv_word lv_trash.
-        CASE lv_word.
-          WHEN 'tree'.
-            rs_commit-tree = <lv_string>+5.
-          WHEN 'parent'.
-            IF rs_commit-parent IS INITIAL.
-              rs_commit-parent = <lv_string>+7.
-            ELSE.
-              rs_commit-parent2 = <lv_string>+7.
-            ENDIF.
-          WHEN 'author'.
-            rs_commit-author = <lv_string>+7.
-          WHEN 'committer'.
-            rs_commit-committer = <lv_string>+10.
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
-      ENDIF.
+*      IF NOT rs_commit-committer IS INITIAL.
+*        CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
+*          SEPARATED BY lif_defs=>gc_newline.
+*      ELSE.
+      lv_length = strlen( <lv_string> ) + 1.
+      lv_string = lv_string+lv_length.
+
+      SPLIT <lv_string> AT space INTO lv_word lv_trash.
+      CASE lv_word.
+        WHEN 'tree'.
+          rs_commit-tree = <lv_string>+5.
+        WHEN 'parent'.
+          IF rs_commit-parent IS INITIAL.
+            rs_commit-parent = <lv_string>+7.
+          ELSE.
+            rs_commit-parent2 = <lv_string>+7.
+          ENDIF.
+        WHEN 'author'.
+          rs_commit-author = <lv_string>+7.
+        WHEN 'committer'.
+          rs_commit-committer = <lv_string>+10.
+          EXIT. " current loop
+        WHEN OTHERS.
+          ASSERT 0 = 1.
+      ENDCASE.
+
+*      ENDIF.
     ENDLOOP.
 
+    rs_commit-body = lv_string+1.
+
 * strip first newline
-    IF strlen( rs_commit-body ) >= 2.
-      rs_commit-body = rs_commit-body+2.
-    ENDIF.
+*    IF strlen( rs_commit-body ) >= 2.
+*      rs_commit-body = rs_commit-body+2.
+*    ENDIF.
 
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
@@ -682,24 +691,23 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   METHOD delta.
 
-    DATA: lv_delta   TYPE xstring,
-          lv_base    TYPE xstring,
-          lv_result  TYPE xstring,
-*          lv_bitbyte TYPE ty_bitbyte,
-          lv_offset  TYPE i,
-          lv_sha1    TYPE lif_defs=>ty_sha1,
-          ls_object  LIKE LINE OF ct_objects,
-          lv_len     TYPE i,
-          lv_org     TYPE x,
-*          lv_i       TYPE i,
-          lv_x       TYPE x.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
-
     DEFINE _eat_byte.
       lv_x = lv_delta(1).
       lv_delta = lv_delta+1.
     END-OF-DEFINITION.
+
+    DATA: lv_delta  TYPE xstring,
+          lv_base   TYPE xstring,
+          lv_result TYPE xstring,
+          lv_offset TYPE i,
+          lv_sha1   TYPE lif_defs=>ty_sha1,
+          ls_object LIKE LINE OF ct_objects,
+          lv_len    TYPE i,
+          lv_org    TYPE x,
+          lv_x      TYPE x.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF ct_objects.
+
 
     lv_delta = is_object-data.
 
@@ -1025,26 +1033,35 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   METHOD encode.
 
-    DATA: lv_sha1       TYPE x LENGTH 20,
-          lv_adler32    TYPE lcl_hash=>ty_adler32,
-          lv_len        TYPE i,
-          lv_compressed TYPE xstring,
-          lv_xstring    TYPE xstring.
+    DATA: lv_sha1              TYPE x LENGTH 20,
+          lv_adler32           TYPE lcl_hash=>ty_adler32,
+          lv_compressed        TYPE xstring,
+          lv_xstring           TYPE xstring,
+          lv_objects_total     TYPE i,
+          lv_objects_processed TYPE i.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
-
 
     rv_data = c_pack_start.
 
     CONCATENATE rv_data c_version INTO rv_data IN BYTE MODE.
 
-    lv_len = lines( it_objects ).
-    lv_xstring = lcl_convert=>int_to_xstring( iv_i      = lv_len
-                                              iv_length = 4 ).
+    lv_xstring = lcl_convert=>int_to_xstring4( lines( it_objects ) ).
     CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
 
+    lv_objects_total = lines( it_objects ).
+
     LOOP AT it_objects ASSIGNING <ls_object>.
-      lv_xstring = type_and_length( <ls_object> ).
+
+      lv_objects_processed = sy-tabix.
+
+      cl_progress_indicator=>progress_indicate( i_text      = |encoding objects &1% ( &2 of &3 )|
+                                                i_processed = lv_objects_processed
+                                                i_total     = lv_objects_total ).
+
+      lv_xstring = type_and_length(
+        iv_type   = <ls_object>-type
+        iv_length = xstrlen( <ls_object>-data ) ).
       CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
 
       cl_abap_gzip=>compress_binary(
