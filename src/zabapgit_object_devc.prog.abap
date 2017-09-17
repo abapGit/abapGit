@@ -27,9 +27,9 @@ CLASS lcl_object_devc DEFINITION
                          iv_lock    TYPE abap_bool
                RAISING   lcx_exception.
     DATA:
-      mv_local_devclass       TYPE devclass,
-      mv_repo_devclass        TYPE devclass,
-      mv_installation_package TYPE devclass.
+      mv_local_devclass          TYPE devclass,
+      mv_repo_devclass           TYPE devclass,
+      mv_is_installation_package TYPE abap_bool.
 ENDCLASS.
 
 CLASS lcl_object_devc IMPLEMENTATION.
@@ -149,30 +149,36 @@ CLASS lcl_object_devc IMPLEMENTATION.
       CHANGING
         cg_data = ls_package_data ).
 
-*    mv_local_devclass = mv_local_devclass.
+    ASSERT mv_repo_devclass = ls_package_data-devclass.
 
     " Is it the top level package?
-*    IF ls_package_data-parentcl IS INITIAL.
+    IF ls_package_data-parentcl IS INITIAL.
+      mv_is_installation_package = abap_true.
 *      " Check if the local installation package has a different name
 *      IF mv_installation_package <> ls_package_data-devclass.
 *        " The package is serialized under a different name -> change it
 *        ls_package_data-devclass = mv_installation_package.
 *        mv_local_devclass = mv_installation_package.
 *      ENDIF.
-*    ENDIF.
+    ENDIF.
 
     li_package = get_package( mv_local_devclass ).
+
+    " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
-    CLEAR ls_package_data-parentcl. ##TODO "
+
+    " Parent package is not changed. Assume the folder logic already created the package and set
+    " the hierarchy before.
+    CLEAR ls_package_data-parentcl.
 
     ls_data_sign-ctext            = abap_true.
 *    ls_data_sign-korrflag         = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
-    ls_data_sign-dlvunit          = abap_true.
+*    ls_data_sign-dlvunit          = abap_true.
     ls_data_sign-comp_posid       = abap_true.
     ls_data_sign-component        = abap_true.
-*    ls_data_sign-parentcl         = abap_true.
+*    ls_data_sign-parentcl         = abap_true. " No parent package change here
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
@@ -232,6 +238,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
 
     ELSE.
       " Package does not exist yet, create it
+      " This shouldn't really happen, because the folder logic initially creates the packages.
       cl_package_factory=>create_new_package(
         IMPORTING
           e_package                  = li_package
@@ -297,7 +304,8 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~exists.
-    ASSERT mv_local_devclass IS NOT INITIAL ##TODO.
+    ASSERT mv_local_devclass IS NOT INITIAL.
+
     cl_package_helper=>check_package_existence(
       EXPORTING
         i_package_name          = mv_local_devclass
@@ -362,9 +370,9 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ENDIF.
 
     ls_package_data-devclass = mv_repo_devclass.
-    IF mv_local_devclass = mv_installation_package. ##TODO
-      CLEAR ls_package_data-parentcl.
-    ENDIF.
+*    IF mv_is_installation_package = abap_true.
+    CLEAR ls_package_data-parentcl.
+*    ENDIF.
 
     " Clear administrative data to prevent diffs
     CLEAR: ls_package_data-created_by,
@@ -376,6 +384,12 @@ CLASS lcl_object_devc IMPLEMENTATION.
     " Clear text descriptions that might be localized
     CLEAR: ls_package_data-comp_text,
            ls_package_data-dlvu_text.
+
+    " Clear things related to local installation package
+    CLEAR: ls_package_data-namespace,
+           ls_package_data-dlvunit.
+
+    CLEAR: ls_package_data-korrflag.
 
     io_xml->add( iv_name = 'DEVC' ig_data = ls_package_data ).
 
@@ -403,6 +417,14 @@ CLASS lcl_object_devc IMPLEMENTATION.
         lcx_exception=>raise(
           |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
       ENDIF.
+
+      " Swap the package name
+      ls_usage_data-client_pak = mv_repo_devclass.
+      " The name of the package where the interface belongs to is also retrieved, but should not
+      " be serialized because it may be a local package name and not the 'original' one. The
+      " package interface name should be unique enough anyways.
+      CLEAR ls_usage_data-pack_name.
+
       APPEND ls_usage_data TO lt_usage_data.
     ENDLOOP.
 

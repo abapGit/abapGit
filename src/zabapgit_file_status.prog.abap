@@ -164,8 +164,14 @@ CLASS lcl_file_status IMPLEMENTATION.
 
       IF lo_dot_abapgit->is_ignored(
           iv_path     = <ls_result>-path
-          iv_filename = <ls_result>-filename ) = abap_true. "OR <ls_result>-obj_type = 'DEVC' ##TODO.
+          iv_filename = <ls_result>-filename ) = abap_true.
         DELETE rt_results INDEX lv_index.
+        CONTINUE.
+      ENDIF.
+
+      IF <ls_result>-obj_type = 'DEVC'.
+        CLEAR <ls_result>-package. " Needs to be cleared, otherwise later an assertion fails, which
+                                   " checks the installation package.
       ENDIF.
     ENDLOOP.
 
@@ -224,7 +230,6 @@ CLASS lcl_file_status IMPLEMENTATION.
                                  ev_is_xml   = lv_is_xml ).
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
-      CHECK ls_item-obj_type <> 'DEVC' ##TODO.
 
       ls_item-devclass = lcl_tadir=>get_object_package(
                            iv_object   = ls_item-obj_type

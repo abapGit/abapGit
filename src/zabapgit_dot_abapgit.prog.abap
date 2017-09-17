@@ -25,6 +25,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
              ignore            TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
              requirements      TYPE ty_requirement_tt,
              advanced_packages TYPE abap_bool,
+             original_package  TYPE devclass,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:
@@ -71,7 +72,11 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
       uses_advanced_packages
         RETURNING VALUE(rv_advanced_packages) TYPE abap_bool,
       set_advanced_packages
-        IMPORTING iv_use_advanced_packages TYPE abap_bool.
+        IMPORTING iv_use_advanced_packages TYPE abap_bool,
+      get_original_package
+        RETURNING VALUE(rv_package) TYPE devclass,
+      set_original_package
+        IMPORTING iv_package TYPE devclass.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
@@ -278,6 +283,14 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD set_advanced_packages.
     ms_data-advanced_packages = iv_use_advanced_packages.
+  ENDMETHOD.
+
+  METHOD get_original_package.
+    rv_package = ms_data-original_package.
+  ENDMETHOD.
+
+  METHOD set_original_package.
+    ms_data-original_package = iv_package.
   ENDMETHOD.
 
 ENDCLASS.
