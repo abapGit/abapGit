@@ -337,11 +337,19 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~jump.
+    DATA: lv_jump_devclass TYPE devclass.
+
+    IF mv_local_devclass IS NOT INITIAL.
+      lv_jump_devclass = mv_local_devclass.
+    ELSE.
+      lv_jump_devclass = mv_repo_devclass.
+    ENDIF.
+
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation           = 'SHOW'
-        object_name         = ms_item-obj_name
-        object_type         = ms_item-obj_type
+        object_name         = lv_jump_devclass
+        object_type         = 'DEVC'
       EXCEPTIONS
         not_executed        = 1
         invalid_object_type = 2
