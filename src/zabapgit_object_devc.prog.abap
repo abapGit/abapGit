@@ -304,11 +304,19 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~exists.
-    ASSERT mv_local_devclass IS NOT INITIAL.
+    DATA: lv_check_devclass TYPE devclass.
+
+    " Check remote package if deserialize has not been called before this
+    IF mv_local_devclass IS INITIAL.
+      lv_check_devclass = mv_repo_devclass.
+    ELSE.
+      lv_check_devclass = mv_local_devclass.
+    ENDIF.
+    ASSERT lv_check_devclass IS NOT INITIAL.
 
     cl_package_helper=>check_package_existence(
       EXPORTING
-        i_package_name          = mv_local_devclass
+        i_package_name          = lv_check_devclass
       IMPORTING
         e_package_exists        = rv_bool
       EXCEPTIONS
