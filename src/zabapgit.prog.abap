@@ -67,6 +67,8 @@ INCLUDE zabapgit_objects_impl.
 
 INCLUDE zabapgit_object_serializing.  " All serializing classes here
 
+INCLUDE zabapgit_skip_objects.
+
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
