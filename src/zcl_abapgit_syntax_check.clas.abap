@@ -1,36 +1,36 @@
-class ZCL_ABAPGIT_SYNTAX_CHECK definition
-  public
-  create public .
+CLASS zcl_abapgit_syntax_check DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods RUN
-    importing
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RT_LIST) type SCIT_ALVLIST .
-protected section.
+    CLASS-METHODS run
+      IMPORTING
+        !iv_package    TYPE devclass
+      RETURNING
+        VALUE(rt_list) TYPE scit_alvlist .
+  PROTECTED SECTION.
 
-  class-methods CREATE_INSPECTION
-    importing
-      !IO_SET type ref to CL_CI_OBJECTSET
-      !IO_VARIANT type ref to CL_CI_CHECKVARIANT
-    returning
-      value(RO_INSPECTION) type ref to CL_CI_INSPECTION .
-  class-methods CREATE_OBJECTSET
-    importing
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RO_SET) type ref to CL_CI_OBJECTSET .
-  class-methods CREATE_VARIANT
-    returning
-      value(RO_VARIANT) type ref to CL_CI_CHECKVARIANT .
-  class-methods RUN_INSPECTION
-    importing
-      !IO_INSPECTION type ref to CL_CI_INSPECTION
-    returning
-      value(RT_LIST) type SCIT_ALVLIST .
-private section.
+    CLASS-METHODS create_inspection
+      IMPORTING
+        !io_set              TYPE REF TO cl_ci_objectset
+        !io_variant          TYPE REF TO cl_ci_checkvariant
+      RETURNING
+        VALUE(ro_inspection) TYPE REF TO cl_ci_inspection .
+    CLASS-METHODS create_objectset
+      IMPORTING
+        !iv_package   TYPE devclass
+      RETURNING
+        VALUE(ro_set) TYPE REF TO cl_ci_objectset .
+    CLASS-METHODS create_variant
+      RETURNING
+        VALUE(ro_variant) TYPE REF TO cl_ci_checkvariant .
+    CLASS-METHODS run_inspection
+      IMPORTING
+        !io_inspection TYPE REF TO cl_ci_inspection
+      RETURNING
+        VALUE(rt_list) TYPE scit_alvlist .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
