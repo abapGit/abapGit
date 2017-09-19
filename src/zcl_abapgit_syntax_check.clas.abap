@@ -54,10 +54,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     ro_inspection->set(
-      p_chkv    = io_variant
-      p_objs    = io_set
-*    p_deldate = CONV sci_deldat( sy-datum + 1 )
-      ).
+      p_chkv = io_variant
+      p_objs = io_set ).
 
   ENDMETHOD.
 
@@ -80,10 +78,16 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
     ls_package-package = iv_package.
     INSERT ls_package INTO TABLE lt_packages.
 
-* todo
-    ls_obj-objtype = 'PROG'.
-    ls_obj-objname = 'ZABAPGIT'.
-    INSERT ls_obj INTO TABLE lt_objs.
+    IF lines( lt_packages ) = 0.
+      RETURN.
+    ENDIF.
+
+    SELECT object AS objtype obj_name AS objname
+      FROM tadir
+      INTO CORRESPONDING FIELDS OF TABLE lt_objs
+      FOR ALL ENTRIES IN lt_packages
+      WHERE devclass = lt_packages-package
+      AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
     ro_set = cl_ci_objectset=>save_from_list( lt_objs ).
 
