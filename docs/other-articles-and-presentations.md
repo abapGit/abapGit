@@ -49,6 +49,9 @@ Mastering SAP Technologies, Melbourne, May 23rd
 SAUG National Summit 2017, September 5th
 -Graham Robinson
 
+[abapGit Branching Strategy Discussion](https://blogs.sap.com/2017/09/21/abapgit-branching-strategy-discussion/)
+-André Schaarschmidt
+
 SAP Teched Las Vegas
 -Graham Robinson
 
