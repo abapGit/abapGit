@@ -39,12 +39,6 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
     lv_top = iv_top.
 
-    IF iv_local_path = abap_false AND io_dot->uses_advanced_packages( ) = abap_true AND
-        io_dot->get_original_package( ) <> lv_top.
-
-      lv_top = io_dot->get_original_package( ).
-    ENDIF.
-
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
       zcx_abapgit_exception=>raise( 'unexpected folder structure' ).
