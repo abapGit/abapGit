@@ -284,15 +284,8 @@ CLASS lcl_tadir IMPLEMENTATION.
           <ls_tadir>-obj_name+15 = read_sicf_url( <ls_tadir>-obj_name ).
 
         WHEN 'DEVC'.
-          " The package on this system might be named differently to the one in the repository.
-          IF io_dot IS BOUND.
-            <ls_tadir>-obj_name = lcl_folder_logic=>path_to_package(
-              iv_top                  = iv_top
-              io_dot                  = io_dot
-              iv_path                 = lv_path
-              iv_local_path           = abap_false
-              iv_create_if_not_exists = abap_false ).
-          ENDIF.
+          " Packages all have to same dummy identifier
+          <ls_tadir>-obj_name = 'PACKAGE'.
 
       ENDCASE.
     ENDLOOP.

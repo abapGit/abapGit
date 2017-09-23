@@ -27,17 +27,14 @@ CLASS lcl_object_devc DEFINITION
                          iv_lock    TYPE abap_bool
                RAISING   lcx_exception.
     DATA:
-      mv_local_devclass          TYPE devclass,
-      mv_repo_devclass           TYPE devclass,
-      mv_is_installation_package TYPE abap_bool.
+      mv_local_devclass TYPE devclass.
 ENDCLASS.
 
 CLASS lcl_object_devc IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-    mv_local_devclass = is_item-devclass. " This may be empty at this point
-    mv_repo_devclass = is_item-obj_name.
+    mv_local_devclass = is_item-devclass.
   ENDMETHOD.
 
   METHOD get_package.
@@ -148,19 +145,6 @@ CLASS lcl_object_devc IMPLEMENTATION.
         iv_name = 'DEVC'
       CHANGING
         cg_data = ls_package_data ).
-
-    ASSERT mv_repo_devclass = ls_package_data-devclass.
-
-    " Is it the top level package?
-    IF ls_package_data-parentcl IS INITIAL.
-      mv_is_installation_package = abap_true.
-*      " Check if the local installation package has a different name
-*      IF mv_installation_package <> ls_package_data-devclass.
-*        " The package is serialized under a different name -> change it
-*        ls_package_data-devclass = mv_installation_package.
-*        mv_local_devclass = mv_installation_package.
-*      ENDIF.
-    ENDIF.
 
     li_package = get_package( mv_local_devclass ).
 
@@ -283,6 +267,10 @@ CLASS lcl_object_devc IMPLEMENTATION.
         " No permissions saved
     ENDTRY.
 
+    LOOP AT lt_usage_data ASSIGNING <ls_usage_data>.
+      <ls_usage_data>-client_pak = mv_local_devclass.
+    ENDLOOP.
+
     update_pinf_usages( ii_package    = li_package
                         it_usage_data = lt_usage_data ).
 
@@ -308,23 +296,20 @@ CLASS lcl_object_devc IMPLEMENTATION.
 
     " Check remote package if deserialize has not been called before this
     IF mv_local_devclass IS INITIAL.
-      lv_check_devclass = mv_repo_devclass.
+      rv_bool = abap_false.
     ELSE.
-      lv_check_devclass = mv_local_devclass.
-    ENDIF.
-    ASSERT lv_check_devclass IS NOT INITIAL.
-
-    cl_package_helper=>check_package_existence(
-      EXPORTING
-        i_package_name          = lv_check_devclass
-      IMPORTING
-        e_package_exists        = rv_bool
-      EXCEPTIONS
-        intern_err              = 1
-        package_hierarchy_error = 2
-        OTHERS                  = 3 ).
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
+      cl_package_helper=>check_package_existence(
+        EXPORTING
+          i_package_name          = mv_local_devclass
+        IMPORTING
+          e_package_exists        = rv_bool
+        EXCEPTIONS
+          intern_err              = 1
+          package_hierarchy_error = 2
+          OTHERS                  = 3 ).
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
@@ -337,27 +322,19 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~jump.
-    DATA: lv_jump_devclass TYPE devclass.
-
-    IF mv_local_devclass IS NOT INITIAL.
-      lv_jump_devclass = mv_local_devclass.
-    ELSE.
-      lv_jump_devclass = mv_repo_devclass.
-    ENDIF.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation           = 'SHOW'
-        object_name         = lv_jump_devclass
-        object_type         = 'DEVC'
-      EXCEPTIONS
-        not_executed        = 1
-        invalid_object_type = 2
-        OTHERS              = 3.
-
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
-    ENDIF.
+*    CALL FUNCTION 'RS_TOOL_ACCESS'
+*      EXPORTING
+*        operation           = 'SHOW'
+*        object_name         = ???
+*        object_type         = 'DEVC'
+*      EXCEPTIONS
+*        not_executed        = 1
+*        invalid_object_type = 2
+*        OTHERS              = 3.
+*
+*    IF sy-subrc <> 0.
+*      lcx_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
+*    ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~serialize.
@@ -385,10 +362,8 @@ CLASS lcl_object_devc IMPLEMENTATION.
       lcx_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
     ENDIF.
 
-    ls_package_data-devclass = mv_repo_devclass.
-*    IF mv_is_installation_package = abap_true.
-    CLEAR ls_package_data-parentcl.
-*    ENDIF.
+    CLEAR: ls_package_data-devclass,
+           ls_package_data-parentcl.
 
     " Clear administrative data to prevent diffs
     CLEAR: ls_package_data-created_by,
@@ -434,11 +409,6 @@ CLASS lcl_object_devc IMPLEMENTATION.
           |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
       ENDIF.
 
-      " Swap the package name
-      ls_usage_data-client_pak = mv_repo_devclass.
-      " The name of the package where the interface belongs to is also retrieved, but should not
-      " be serialized because it may be a local package name and not the 'original' one. The
-      " package interface name should be unique enough anyways.
       CLEAR ls_usage_data-pack_name.
 
       APPEND ls_usage_data TO lt_usage_data.
