@@ -4,7 +4,6 @@ category: other
 order: 45
 ---
 
-# External Libraries
 abapGit uses a few external libraries, these are loaded via [cdnjs](https://cdnjs.com/about)
 
 Library   | License
