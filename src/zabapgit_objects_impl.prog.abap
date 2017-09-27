@@ -334,6 +334,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     resolve_ddic( CHANGING ct_tadir = lt_tadir ).
 
+    resolve_ddls( CHANGING ct_tadir = lt_tadir ).
+
     SORT lt_tadir BY korrnum ASCENDING.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
@@ -729,6 +731,62 @@ CLASS lcl_objects IMPLEMENTATION.
         ENDIF.
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD resolve_ddls.
+
+    TYPES: BEGIN OF ty_ddls_name.
+        INCLUDE TYPE ddsymtab.
+    TYPES: END OF ty_ddls_name,
+    tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
+                        WITH NON-UNIQUE DEFAULT KEY.
+
+    TYPES: BEGIN OF ty_s_masdepwa,
+             depname   TYPE dd02l-tabname,
+             deptyp(4),
+             deplocal  TYPE dd02l-as4local,  "Version der abhängigen
+             refname   TYPE dd02l-tabname,
+             reftyp(4),
+             kind(1),
+           END OF ty_s_masdepwa.
+
+    DATA: lt_dep       TYPE STANDARD TABLE OF ty_s_masdepwa
+                      WITH NON-UNIQUE DEFAULT KEY,
+          lt_ddls_name TYPE tty_ddls_names,
+          ls_ddls_name LIKE LINE OF lt_ddls_name.
+
+    FIELD-SYMBOLS: <tadir> TYPE lif_defs=>ty_tadir,
+                   <dep> TYPE ty_s_masdepwa,
+                   <tadir2> TYPE lif_defs=>ty_tadir.
+
+    LOOP AT ct_tadir ASSIGNING <tadir>
+                     WHERE object = 'DDLS'.
+
+      CLEAR: lt_dep,
+             lt_ddls_name.
+
+      ls_ddls_name-name = <tadir>-obj_name.
+      INSERT ls_ddls_name INTO TABLE lt_ddls_name.
+
+      PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL') TABLES lt_ddls_name lt_dep.
+
+      LOOP AT lt_dep ASSIGNING <dep>
+                     WHERE deptyp = 'DDLS'
+                     AND   refname = <tadir>-obj_name.
+
+        READ TABLE ct_tadir ASSIGNING <tadir2>
+                            WITH KEY obj_name = <dep>-depname
+                                     object   = 'DDLS'.
+
+        CHECK sy-subrc = 0.
+
+        <tadir2>-korrnum = <tadir2>-korrnum - 1.
+
+      ENDLOOP.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
