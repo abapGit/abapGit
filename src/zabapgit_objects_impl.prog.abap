@@ -11,38 +11,26 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD warning_overwrite.
 
-    DATA: lv_index    TYPE i,
-          lv_answer   TYPE c,
-          lv_question TYPE string.
+    DATA: lt_results_overwrite LIKE ct_results.
 
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
-
     LOOP AT ct_results ASSIGNING <ls_result>
         WHERE NOT obj_type IS INITIAL.
-
-      lv_index = sy-tabix.
 
       IF <ls_result>-lstate IS NOT INITIAL
           AND <ls_result>-lstate <> lif_defs=>gc_state-deleted
           AND NOT ( <ls_result>-lstate = lif_defs=>gc_state-added
           AND <ls_result>-rstate IS INITIAL ).
-        lv_question = |It looks like object {
-          <ls_result>-obj_type } { <ls_result>-obj_name
-          } has been modified locally, overwrite object?|.
 
-        lv_answer = lcl_popups=>popup_to_confirm(
-          titlebar              = 'Warning'
-          text_question         = lv_question
-          display_cancel_button = abap_false ).             "#EC NOTEXT
-
-        IF lv_answer = '2'.
-          DELETE ct_results INDEX lv_index.
-        ENDIF.
-
+        "current object has been modified locally, add to table for popup
+        APPEND <ls_result> TO lt_results_overwrite.
       ENDIF.
 
     ENDLOOP.
+
+    "all returned objects will be overwritten
+    ct_results = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
 
   ENDMETHOD.
 
