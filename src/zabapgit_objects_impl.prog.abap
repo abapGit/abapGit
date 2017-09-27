@@ -29,8 +29,10 @@ CLASS lcl_objects IMPLEMENTATION.
 
     ENDLOOP.
 
-    "all returned objects will be overwritten
-    ct_results = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+    if lines( lt_results_overwrite ) > 0.
+      "all returned objects will be overwritten
+      ct_results = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+    endif.
 
   ENDMETHOD.
 

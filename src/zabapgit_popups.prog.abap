@@ -85,8 +85,8 @@ CLASS lcl_popups DEFINITION FINAL.
   PRIVATE SECTION.
     TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
-    TYPES BEGIN OF t_popup_select_list.
-      TYPES selected TYPE flag.
+    TYPES: BEGIN OF t_popup_select_list,
+        selected TYPE flag.
       INCLUDE TYPE lif_defs=>ty_result.
     TYPES END OF t_popup_select_list.
 
