@@ -746,13 +746,13 @@ CLASS lcl_objects IMPLEMENTATION.
     TYPES: BEGIN OF ty_s_masdepwa,
              depname   TYPE dd02l-tabname,
              deptyp(4),
-             deplocal  TYPE dd02l-as4local,  "Version der abhängigen
+             deplocal  TYPE dd02l-as4local,
              refname   TYPE dd02l-tabname,
              reftyp(4),
              kind(1),
            END OF ty_s_masdepwa.
 
-    DATA: lt_dep       TYPE STANDARD TABLE OF ty_s_masdepwa
+    DATA: lt_dep TYPE STANDARD TABLE OF ty_s_masdepwa
                       WITH NON-UNIQUE DEFAULT KEY,
           lt_ddls_name TYPE tty_ddls_names,
           ls_ddls_name LIKE LINE OF lt_ddls_name.
