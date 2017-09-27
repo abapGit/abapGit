@@ -729,14 +729,15 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD popup_select_obj_overwrite.
     DATA:
-          ls_list       LIKE LINE OF it_list,
-          ls_popup_list TYPE t_popup_select_list,
-          lt_popup_list TYPE t_popup_select_list_tt,
-          lo_events     TYPE REF TO cl_salv_events_table,
-          lo_columns    TYPE REF TO cl_salv_columns_table,
-          lt_columns    TYPE salv_t_column_ref,
-          ls_column     TYPE salv_s_column_ref,
-          lo_column     TYPE REF TO cl_salv_column_list.
+          ls_list         LIKE LINE OF it_list,
+          ls_popup_list   TYPE t_popup_select_list,
+          lt_popup_list   TYPE t_popup_select_list_tt,
+          lo_events       TYPE REF TO cl_salv_events_table,
+          lo_columns      TYPE REF TO cl_salv_columns_table,
+          lt_columns      TYPE salv_t_column_ref,
+          ls_column       TYPE salv_s_column_ref,
+          lo_column       TYPE REF TO cl_salv_column_list,
+          lo_table_header TYPE REF TO cl_salv_form_text.
 
     LOOP AT it_list INTO ls_list.
       MOVE-CORRESPONDING ls_list TO ls_popup_list.
@@ -760,6 +761,12 @@ CLASS lcl_popups IMPLEMENTATION.
 
         SET HANDLER on_select_list_link_click FOR lo_events.
         SET HANDLER on_select_list_function_click FOR lo_events.
+
+        CREATE OBJECT lo_table_header
+          EXPORTING
+            text = |The following Objects have been modified locally. Select the Objects which should be overwritten.|.
+
+        mo_select_list_popup->set_top_of_list( lo_table_header ).
 
         lo_columns = mo_select_list_popup->get_columns( ).
         lo_columns->set_optimize( abap_true ).
