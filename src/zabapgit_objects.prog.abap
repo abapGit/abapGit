@@ -987,13 +987,19 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO lcl_xml_output.
+          lo_xml          TYPE REF TO lcl_xml_output,
+          lv_subrc        LIKE sy-subrc,
+          lv_curr_lang    TYPE langu,
+          lv_dummy        TYPE string ##needed.
 
     IF iv_program IS INITIAL.
       lv_program_name = is_item-obj_name.
     ELSE.
       lv_program_name = iv_program.
     ENDIF.
+
+    GET LOCALE LANGUAGE lv_curr_lang COUNTRY lv_dummy MODIFIER lv_dummy.
+    SET LOCALE LANGUAGE mv_language.
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
@@ -1007,9 +1013,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_found        = 2
         permission_error = 3
         OTHERS           = 4.
-    IF sy-subrc = 2.
+
+    lv_subrc = sy-subrc.
+
+    SET LOCALE LANGUAGE lv_curr_lang.
+
+    IF lv_subrc = 2.
       RETURN.
-    ELSEIF sy-subrc <> 0.
+    ELSEIF lv_subrc <> 0.
       lcx_exception=>raise( 'Error reading program' ).
     ENDIF.
 
@@ -1059,7 +1070,10 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,
-          ls_progdir_new TYPE progdir.
+          ls_progdir_new TYPE progdir,
+          lv_subrc       LIKE sy-subrc,
+          lv_curr_lang   TYPE langu,
+          lv_dummy       TYPE string ##needed.
 
     FIELD-SYMBOLS: <lg_any> TYPE any.
 
@@ -1104,6 +1118,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_exists = abap_true.
+      GET LOCALE LANGUAGE lv_curr_lang COUNTRY lv_dummy MODIFIER lv_dummy.
+      SET LOCALE LANGUAGE mv_language.
+
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
           program_name     = is_progdir-name
@@ -1116,7 +1133,12 @@ CLASS lcl_objects_program IMPLEMENTATION.
           permission_error = 2
           not_found        = 3
           OTHERS           = 4.
-      IF sy-subrc <> 0.
+
+      lv_subrc = sy-subrc.
+
+      SET LOCALE LANGUAGE lv_curr_lang.
+
+      IF lv_subrc <> 0.
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           lcx_exception=>raise( 'User is currently editing program' ).
         ELSE.
@@ -1150,16 +1172,16 @@ CLASS lcl_objects_program IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      IF NOT it_tpool[] IS INITIAL.
-        INSERT TEXTPOOL is_progdir-name
-          FROM it_tpool
-          LANGUAGE mv_language
-          STATE 'I'.
-        IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
-        ENDIF.
-      ENDIF.
+    ENDIF.
 
+    IF NOT it_tpool[] IS INITIAL.
+      INSERT TEXTPOOL is_progdir-name
+        FROM it_tpool
+        LANGUAGE mv_language
+        STATE 'I'.
+      IF sy-subrc <> 0.
+        lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+      ENDIF.
     ENDIF.
 
     CALL FUNCTION 'READ_PROGDIR'
