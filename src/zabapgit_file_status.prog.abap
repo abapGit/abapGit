@@ -7,23 +7,6 @@
 *----------------------------------------------------------------------*
 CLASS ltcl_file_status DEFINITION DEFERRED.
 CLASS ltcl_file_status2 DEFINITION DEFERRED.
-CLASS lcl_skip_objects DEFINITION.
-  PUBLIC SECTION.
-    METHODS:
-      skip_sadl_generated_objects
-        IMPORTING
-          it_results        TYPE lif_defs=>ty_results_tt
-          io_log            TYPE REF TO lcl_log
-        RETURNING
-          VALUE(rt_results) TYPE lif_defs=>ty_results_tt.
-  PRIVATE SECTION.
-    METHODS:
-      has_sadl_superclass
-        IMPORTING
-          is_class         TYPE lif_defs=>ty_result
-        RETURNING
-          VALUE(rv_return) TYPE abap_bool.
-ENDCLASS.
 
 CLASS lcl_file_status DEFINITION FINAL
   FRIENDS ltcl_file_status ltcl_file_status2.
@@ -162,8 +145,7 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD status.
 
     DATA: lv_index        LIKE sy-tabix,
-          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit,
-          lo_skip_objects TYPE REF TO lcl_skip_objects.
+          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
@@ -186,12 +168,6 @@ CLASS lcl_file_status IMPLEMENTATION.
         DELETE rt_results INDEX lv_index.
       ENDIF.
     ENDLOOP.
-
-
-    CREATE OBJECT lo_skip_objects.
-    rt_results = lo_skip_objects->skip_sadl_generated_objects(
-      it_results = rt_results
-      io_log     = io_log ).
 
     run_checks(
       io_log     = io_log
