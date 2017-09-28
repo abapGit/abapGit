@@ -738,7 +738,8 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD resolve_ddls.
 
     " As CDS-Views aka DDLS can be dependent on each other,
-    " we wan't to ensure that they are deleted in the right order
+    " we wan't to ensure that they are deleted in the right order.
+    " Otherwise deletion is prohibited by standard API
 
     TYPES: BEGIN OF ty_ddls_name.
         INCLUDE TYPE ddsymtab.
@@ -783,7 +784,8 @@ CLASS lcl_objects IMPLEMENTATION.
         READ TABLE ct_tadir ASSIGNING <tadir_dependent>
                             WITH KEY pgmid    = 'R3TR'
                                      object   = 'DDLS'
-                                     obj_name = <dependency>-depname.
+                                     obj_name = <dependency>-depname
+                            BINARY SEARCH.
         CHECK sy-subrc = 0.
 
         <tadir_dependent>-korrnum = <tadir_dependent>-korrnum - 1.
