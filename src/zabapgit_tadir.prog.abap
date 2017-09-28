@@ -241,8 +241,7 @@ CLASS lcl_tadir IMPLEMENTATION.
     CREATE OBJECT lo_skip_objects.
     rt_tadir = lo_skip_objects->skip_sadl_generated_objects(
       it_tadir = rt_tadir
-      io_log   = io_log
-    ).
+      io_log   = io_log ).
 
     IF NOT io_dot IS INITIAL.
       lv_path = lcl_folder_logic=>package_to_path(
