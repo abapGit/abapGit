@@ -67,63 +67,11 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~delete.
-    DATA: li_package    TYPE REF TO if_package,
-          lv_changeable TYPE abap_bool.
-
-    RETURN ##TODO.
-
     " Package deletion is a bit tricky. A package can only be deleted if there are no objects
     " contained in it. This includes subpackages, so first the leaf packages need to be deleted.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
     " also count towards the contained objects counter.
-
-    li_package = get_package( mv_local_devclass ).
-    li_package->get_changeable( IMPORTING e_changeable = lv_changeable ).
-
-    IF lv_changeable = abap_false.
-      li_package->set_changeable(
-        EXPORTING
-          i_changeable                = abap_true
-        EXCEPTIONS
-          object_locked_by_other_user = 1
-          permission_failure          = 2
-          object_already_changeable   = 3
-          object_already_unlocked     = 4
-          object_just_created         = 5
-          object_deleted              = 6
-          object_modified             = 7
-          object_not_existing         = 8
-          object_invalid              = 9
-          unexpected_error            = 10
-          OTHERS                      = 11 ).
-      IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from IF_PACKAGE->SET_CHANGEABLE { sy-subrc }| ).
-      ENDIF.
-    ENDIF.
-
-    li_package->delete(
-      EXCEPTIONS
-        object_not_empty      = 1
-        object_not_changeable = 2
-        object_invalid        = 3
-        intern_err            = 4
-        OTHERS                = 5 ).
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->DELETE { sy-subrc }| ).
-    ENDIF.
-
-    li_package->save(
-      EXCEPTIONS
-        object_invalid        = 1
-        object_not_changeable = 2
-        cancelled_in_corr     = 3
-        permission_failure    = 4
-        unexpected_error      = 5
-        intern_err            = 6
-        OTHERS                = 7 ).
-    IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->SAVE { sy-subrc }| ).
-    ENDIF.
+    " -> Package deletion is currently not supported by abapGit
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
