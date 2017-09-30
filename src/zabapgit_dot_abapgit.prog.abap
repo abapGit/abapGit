@@ -119,9 +119,9 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     DATA: ls_data TYPE ty_dot_abapgit.
 
 
-    ls_data-master_language   = sy-langu.
-    ls_data-starting_folder   = '/'.
-    ls_data-folder_logic      = c_folder_logic-prefix.
+    ls_data-master_language = sy-langu.
+    ls_data-starting_folder = '/'.
+    ls_data-folder_logic    = c_folder_logic-prefix.
 
     APPEND '/.gitignore' TO ls_data-ignore.
     APPEND '/LICENSE' TO ls_data-ignore.
