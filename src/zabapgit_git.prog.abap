@@ -1199,7 +1199,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: lv_time    TYPE lcl_time=>ty_unixtime,
+    DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
           lv_commit  TYPE xstring,
           lt_objects TYPE lif_defs=>ty_objects_tt,
           lv_pack    TYPE xstring,
@@ -1210,7 +1210,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                    <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_time = lcl_time=>get( ).
+    lv_time = zcl_abapgit_time=>get( ).
 
     READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
     ASSERT sy-subrc = 0.
