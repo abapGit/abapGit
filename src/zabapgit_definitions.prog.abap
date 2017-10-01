@@ -214,6 +214,7 @@ INTERFACE lif_defs.
                repo_refresh_checksums   TYPE string VALUE 'repo_refresh_checksums',
                repo_toggle_fav          TYPE string VALUE 'repo_toggle_fav',
                repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
+               repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
 
                abapgit_home             TYPE string VALUE 'abapgit_home',
                abapgit_wiki             TYPE string VALUE 'abapgit_wiki',

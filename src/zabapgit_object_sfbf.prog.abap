@@ -16,7 +16,7 @@ CLASS lcl_object_sfbf DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get
         RETURNING VALUE(ro_bf) TYPE REF TO cl_sfw_bf
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_SFBF DEFINITION
 
@@ -83,7 +83,7 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
         ro_bf->free( ).
         ro_bf = cl_sfw_bf=>get_bf( lv_bf ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error from CL_SFW_BF=>GET_BF' ).
+        zcx_abapgit_exception=>raise( 'Error from CL_SFW_BF=>GET_BF' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -190,7 +190,7 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
     TRY.
         lo_bf = cl_sfw_bf=>create_bf( lv_bf ).
       CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
-        lcx_exception=>raise( 'error in CL_SFW_BF=>CREATE_BF' ).
+        zcx_abapgit_exception=>raise( 'error in CL_SFW_BF=>CREATE_BF' ).
     ENDTRY.
 
     ls_header-author = sy-uname.
@@ -232,7 +232,7 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
 
     READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lcx_exception=>raise( 'Error deleting SFBF' ).
+      zcx_abapgit_exception=>raise( 'Error deleting SFBF' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

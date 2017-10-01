@@ -7,7 +7,7 @@ CLASS lcl_background DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS:
       run
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -17,14 +17,14 @@ CLASS lcl_background DEFINITION FINAL.
       push
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
                   is_settings TYPE lcl_persist_background=>ty_background
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       push_fixed
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
                   is_settings TYPE lcl_persist_background=>ty_background
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       push_auto
         IMPORTING io_repo TYPE REF TO lcl_repo_online
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -44,7 +44,7 @@ CLASS lcl_background IMPLEMENTATION.
       WHEN lcl_persist_background=>c_amethod-auto.
         push_auto( io_repo ).
       WHEN OTHERS.
-        lcx_exception=>raise( 'unknown push method' ).
+        zcx_abapgit_exception=>raise( 'unknown push method' ).
     ENDCASE.
 
   ENDMETHOD.
@@ -233,7 +233,7 @@ CLASS lcl_background IMPLEMENTATION.
           push( io_repo     = lo_repo
                 is_settings = <ls_list> ).
         WHEN OTHERS.
-          lcx_exception=>raise( 'background, unknown mode' ).
+          zcx_abapgit_exception=>raise( 'background, unknown mode' ).
       ENDCASE.
     ENDLOOP.
 

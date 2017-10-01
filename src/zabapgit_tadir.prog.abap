@@ -35,35 +35,35 @@ CLASS lcl_tadir DEFINITION FINAL.
                   io_dot                TYPE REF TO lcl_dot_abapgit OPTIONAL
                   io_log                TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object       TYPE tadir-object
                   iv_obj_name     TYPE tadir-obj_name
         RETURNING VALUE(rs_tadir) TYPE tadir
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_single_sicf
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_obj_name     TYPE tadir-obj_name
         RETURNING VALUE(rs_tadir) TYPE tadir
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_object_package
         IMPORTING iv_pgmid           TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object          TYPE tadir-object
                   iv_obj_name        TYPE tadir-obj_name
         RETURNING VALUE(rv_devclass) TYPE tadir-devclass
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
       read_sicf_url
         IMPORTING iv_obj_name    TYPE tadir-obj_name
         RETURNING VALUE(rv_hash) TYPE text25
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       check_exists
         IMPORTING it_tadir        TYPE lif_defs=>ty_tadir_tt
         RETURNING VALUE(rt_tadir) TYPE lif_defs=>ty_tadir_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_top                TYPE tadir-devclass
@@ -71,7 +71,7 @@ CLASS lcl_tadir DEFINITION FINAL.
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
                   io_log                TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_tadir DEFINITION
 

@@ -51,7 +51,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD deserialize.
 
     IF ms_data-write_protect = abap_true.
-      lcx_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
     ENDIF.
 
     initialize( ).
@@ -72,7 +72,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lx_exception TYPE REF TO lcx_exception.
+    DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
 
     super->refresh( iv_drop_cache ).
     reset_status( ).
@@ -89,7 +89,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
                                            et_objects = mt_objects
                                            ev_branch  = mv_branch ).
 
-      CATCH lcx_exception INTO lx_exception.
+      CATCH zcx_abapgit_exception INTO lx_exception.
 
         delete_initial_online_repo( abap_true ).
 
@@ -154,7 +154,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD set_url.
 
     IF ms_data-write_protect = abap_true.
-      lcx_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
     ENDIF.
 
     mv_initialized = abap_false.
@@ -165,7 +165,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD set_branch_name.
 
     IF ms_data-write_protect = abap_true.
-      lcx_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
     ENDIF.
 
     mv_initialized = abap_false.
@@ -176,7 +176,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD set_new_remote.
 
     IF ms_data-write_protect = abap_true.
-      lcx_exception=>raise( 'Cannot change remote. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot change remote. Local code is write-protected by repo config' ).
     ENDIF.
 
     mv_initialized = abap_false.
@@ -344,7 +344,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE lif_defs=>ty_files_item_tt,
           lt_remote       TYPE lif_defs=>ty_files_tt,
           lt_status       TYPE lif_defs=>ty_results_tt,
-          lt_package      TYPE lcl_persistence_repo=>ty_repo-package.
+          lv_package      TYPE lcl_persistence_repo=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
                    <tadir>  TYPE lif_defs=>ty_tadir.
@@ -354,8 +354,9 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lt_remote = me->get_files_remote( ).
     lt_status = me->status( ).
 
-    lt_package = me->get_package( ).
-    lt_tadir = lcl_tadir=>read( lt_package ).
+    lv_package = me->get_package( ).
+    lt_tadir = lcl_tadir=>read( lv_package ).
+    SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <status>
                       WHERE lstate = lif_defs=>gc_state-added.
@@ -566,7 +567,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
 
     IF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      lcx_exception=>raise( 'Current login language does not match master language' ).
+      zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
     ENDIF.
 
     lo_dot_abapgit = find_remote_dot_abapgit( ).
@@ -844,7 +845,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lcx_exception=>raise( 'repo not found, get' ).
+    zcx_abapgit_exception=>raise( 'repo not found, get' ).
 
   ENDMETHOD.                    "get
 
@@ -895,7 +896,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'new_online not found' ).
+        zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
     CREATE OBJECT ro_repo
@@ -924,7 +925,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'new_offline not found' ).
+        zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 
     CREATE OBJECT ro_repo
@@ -945,7 +946,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         IF lo_repo = io_repo.
           RETURN.
         ENDIF.
-        lcx_exception=>raise( 'identical keys' ).
+        zcx_abapgit_exception=>raise( 'identical keys' ).
       ENDIF.
     ENDLOOP.
 
@@ -960,11 +961,11 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
 
     IF iv_package IS INITIAL.
-      lcx_exception=>raise( 'add, package empty' ).
+      zcx_abapgit_exception=>raise( 'add, package empty' ).
     ENDIF.
 
     IF iv_package = '$TMP'.
-      lcx_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
+      zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
     IF lcl_exit=>get_instance( )->allow_sap_objects( ) = abap_true.
@@ -976,14 +977,14 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         AND as4user <> 'SAP'.                           "#EC CI_GENBUFF
     ENDIF.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'package not found or not allowed' ).
+      zcx_abapgit_exception=>raise( 'package not found or not allowed' ).
     ENDIF.
 
     " make sure its not already in use for a different repository
     lt_repos = mo_persistence->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lcx_exception=>raise( 'Package already in use' ).
+      zcx_abapgit_exception=>raise( 'Package already in use' ).
     ENDIF.
 
   ENDMETHOD.                    "validate_package
@@ -1021,7 +1022,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       IF iv_target_package IS NOT INITIAL AND iv_target_package <> lv_package.
         lv_err = |Installation to package { lv_package } detected. |
               && |Cancelling installation|.
-        lcx_exception=>raise( lv_err ).
+        zcx_abapgit_exception=>raise( lv_err ).
       ENDIF.
 
       rv_installed = abap_true.

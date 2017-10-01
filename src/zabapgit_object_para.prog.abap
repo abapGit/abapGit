@@ -104,7 +104,7 @@ CLASS lcl_object_para IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
     ENDIF.
 
     MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
@@ -128,7 +128,7 @@ CLASS lcl_object_para IMPLEMENTATION.
         cancelled  = 1
         OTHERS     = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
+      zcx_abapgit_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

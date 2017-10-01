@@ -47,7 +47,7 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
         VALUE(rt_post_fields) TYPE tihttpnvp.
     METHODS persist_settings
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
     METHODS read_settings.
 
 ENDCLASS.

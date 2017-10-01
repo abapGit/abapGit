@@ -7,7 +7,7 @@ CLASS lcl_settings DEFINITION DEFERRED.
 CLASS lcl_persist_migrate DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS: run RAISING lcx_exception.
+    CLASS-METHODS: run RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS:
@@ -15,17 +15,17 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
 
     CLASS-METHODS:
       migrate_settings
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       migrate_repo
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       migrate_user
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       table_create
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       table_exists
         RETURNING VALUE(rv_exists) TYPE abap_bool,
       lock_create
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       lock_exists
         RETURNING VALUE(rv_exists) TYPE abap_bool,
       settings_exists
@@ -60,21 +60,21 @@ CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         IMPORTING iv_type  TYPE ty_type
                   iv_value TYPE ty_content-value
                   iv_data  TYPE ty_content-data_str
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delete
         IMPORTING iv_type  TYPE ty_type
                   iv_value TYPE ty_content-value
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       update
         IMPORTING iv_type  TYPE ty_type
                   iv_value TYPE ty_content-value
                   iv_data  TYPE ty_content-data_str
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       modify
         IMPORTING iv_type  TYPE ty_type
                   iv_value TYPE ty_content-value
                   iv_data  TYPE ty_content-data_str
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read
         IMPORTING iv_type        TYPE ty_type
                   iv_value       TYPE ty_content-value
@@ -84,13 +84,13 @@ CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
                   iv_type  TYPE ty_type
                   iv_value TYPE ty_content-value
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS: validate_and_unprettify_xml
       IMPORTING iv_xml        TYPE string
       RETURNING VALUE(rv_xml) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -128,42 +128,42 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     METHODS list
       RETURNING VALUE(rt_repos) TYPE tt_repo
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_sha1
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_sha1 TYPE ty_repo_xml-sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_local_checksums
       IMPORTING iv_key       TYPE ty_repo-key
                 it_checksums TYPE ty_repo_xml-local_checksums
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_url
       IMPORTING iv_key TYPE ty_repo-key
                 iv_url TYPE ty_repo_xml-url
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_branch_name
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_branch_name TYPE ty_repo_xml-branch_name
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_head_branch
       IMPORTING iv_key         TYPE ty_repo-key
                 iv_head_branch TYPE ty_repo_xml-head_branch
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_offline
       IMPORTING iv_key     TYPE ty_repo-key
                 iv_offline TYPE ty_repo_xml-offline
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_dot_abapgit
       IMPORTING iv_key         TYPE ty_repo-key
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS add
       IMPORTING iv_url         TYPE string
@@ -173,22 +173,22 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
                 iv_offline     TYPE sap_bool DEFAULT abap_false
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
       RETURNING VALUE(rv_key)  TYPE ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS delete
       IMPORTING iv_key TYPE ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS read
       IMPORTING iv_key         TYPE ty_repo-key
       RETURNING VALUE(rs_repo) TYPE ty_repo
-      RAISING   lcx_exception
+      RAISING   zcx_abapgit_exception
                 lcx_not_found.
 
     METHODS lock
       IMPORTING iv_mode TYPE enqmode
                 iv_key  TYPE ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS c_type_repo TYPE lcl_persistence_db=>ty_type VALUE 'REPO'.
@@ -198,7 +198,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS from_xml
       IMPORTING iv_repo_xml_string TYPE string
       RETURNING VALUE(rs_repo)     TYPE ty_repo_xml
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS to_xml
       IMPORTING is_repo                   TYPE ty_repo
@@ -206,7 +206,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     METHODS get_next_id
       RETURNING VALUE(rv_next_repo_id) TYPE lcl_persistence_db=>ty_content-value
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -244,20 +244,20 @@ CLASS lcl_persist_background DEFINITION FINAL.
 
     METHODS list
       RETURNING VALUE(rt_list) TYPE tt_background
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS modify
       IMPORTING is_data TYPE ty_background
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS delete
       IMPORTING iv_key TYPE ty_background-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS exists
       IMPORTING iv_key        TYPE ty_background-key
       RETURNING VALUE(rv_yes) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
@@ -268,7 +268,7 @@ CLASS lcl_persist_background DEFINITION FINAL.
     METHODS from_xml
       IMPORTING iv_string     TYPE string
       RETURNING VALUE(rs_xml) TYPE ty_xml
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS to_xml
       IMPORTING is_background    TYPE ty_background
@@ -341,12 +341,12 @@ CLASS lcl_settings DEFINITION FINAL.
         RETURNING
           VALUE(ev_settings_xml) TYPE string
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       set_xml_settings
         IMPORTING
           iv_settings_xml TYPE string
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       set_defaults.
 
   PRIVATE SECTION.
@@ -372,7 +372,7 @@ CLASS lcl_persist_settings DEFINITION FINAL.
       IMPORTING
         io_settings TYPE REF TO lcl_settings
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
     METHODS read
       RETURNING
         VALUE(ro_settings) TYPE REF TO lcl_settings.
@@ -483,104 +483,104 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS set_default_git_user_name
       IMPORTING iv_username TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_default_git_user_name
       RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_default_git_user_email
       IMPORTING iv_email TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_default_git_user_email
       RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_show
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_show
       RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_git_user_name
       IMPORTING iv_url      TYPE lcl_persistence_repo=>ty_repo-url
                 iv_username TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_git_user_name
       IMPORTING iv_url             TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_login
       IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
                 iv_login TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_login
       IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_login) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_git_user_email
       IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
                 iv_email TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_git_user_email
       IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_last_change_seen
       IMPORTING iv_url     TYPE lcl_persistence_repo=>ty_repo-url
                 iv_version TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_last_change_seen
       IMPORTING iv_url            TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_version) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS toggle_hide_files
       RETURNING VALUE(rv_hide) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_hide_files
       RETURNING VALUE(rv_hide) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS toggle_changes_only
       RETURNING VALUE(rv_changes_only) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_changes_only
       RETURNING VALUE(rv_changes_only) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS toggle_diff_unified
       RETURNING VALUE(rv_diff_unified) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_diff_unified
       RETURNING VALUE(rv_diff_unified) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_favorites
       RETURNING VALUE(rt_favorites) TYPE tt_favorites
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS toggle_favorite
       IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS is_favorite_repo
       IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_yes) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
@@ -614,7 +614,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     METHODS from_xml
       IMPORTING iv_xml         TYPE string
       RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS to_xml
       IMPORTING is_user       TYPE ty_user
@@ -622,21 +622,21 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS read
       RETURNING VALUE(rs_user) TYPE ty_user
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update
       IMPORTING is_user TYPE ty_user
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS read_repo_config
       IMPORTING iv_url                TYPE lcl_persistence_repo=>ty_repo-url
       RETURNING VALUE(rs_repo_config) TYPE ty_repo_config
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update_repo_config
       IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
                 is_repo_config TYPE ty_repo_config
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.             "lcl_persistence_user DEFINITION
 
@@ -971,7 +971,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
         system_failure = 2
         OTHERS         = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
+      zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
     ENDIF.
 
 * trigger dummy update task to automatically release locks at commit
@@ -1002,7 +1002,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
       WHERE type = iv_type
       AND value = iv_value.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'DB Delete failed' ).
+      zcx_abapgit_exception=>raise( 'DB Delete failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1029,7 +1029,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
       WHERE type  = iv_type
       AND   value = iv_value.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'DB update failed' ).
+      zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.
 
   ENDMETHOD.  "update
@@ -1047,7 +1047,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
     MODIFY (c_tabname) FROM ls_content.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'DB modify failed' ).
+      zcx_abapgit_exception=>raise( 'DB modify failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1107,7 +1107,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-dot_abapgit = is_dot_abapgit.
@@ -1143,7 +1143,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-local_checksums = it_checksums.
@@ -1163,7 +1163,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
 
     IF iv_url IS INITIAL.
-      lcx_exception=>raise( 'update, url empty' ).
+      zcx_abapgit_exception=>raise( 'update, url empty' ).
     ENDIF.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -1171,7 +1171,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-url = iv_url.
@@ -1195,7 +1195,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-branch_name = iv_branch_name.
@@ -1219,7 +1219,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-head_branch = iv_head_branch.
@@ -1242,7 +1242,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-offline = iv_offline.
@@ -1266,7 +1266,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     TRY.
         ls_repo = read( iv_key ).
       CATCH lcx_not_found.
-        lcx_exception=>raise( 'key not found' ).
+        zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
     ls_repo-sha1 = iv_branch_sha1.
@@ -1351,7 +1351,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
       RESULT repo = rs_repo ##NO_TEXT.
 
     IF rs_repo IS INITIAL.
-      lcx_exception=>raise( 'Inconsistent repo metadata' ).
+      zcx_abapgit_exception=>raise( 'Inconsistent repo metadata' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1509,56 +1509,56 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
         lcl_app=>db( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_URL' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_PORT' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_AUTH' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'CRIT_TESTS' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'MAX_LINES' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'ADT_JUMP' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'COMMENT_LEN' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
         lcl_app=>db( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'BODY_SIZE' ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
   ENDMETHOD.
@@ -1669,7 +1669,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'migrate, error from DDIF_ENQU_PUT' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_ENQU_PUT' ).
     ENDIF.
 
     lv_obj_name = lcl_persistence_db=>c_lock.
@@ -1684,7 +1684,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_ENQU_ACTIVATE'
@@ -1695,7 +1695,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
         put_failure = 2
         OTHERS      = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'migrate, error from DDIF_ENQU_ACTIVATE' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_ENQU_ACTIVATE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1770,7 +1770,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'migrate, error from DDIF_TABL_PUT' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_TABL_PUT' ).
     ENDIF.
 
     lv_obj_name = lcl_persistence_db=>c_tabname.
@@ -1785,7 +1785,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
       EXCEPTIONS
         OTHERS            = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
@@ -1799,7 +1799,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
         put_failure = 2
         OTHERS      = 3.
     IF sy-subrc <> 0 OR lv_rc <> 0.
-      lcx_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
+      zcx_abapgit_exception=>raise( 'migrate, error from DDIF_TABL_ACTIVATE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1943,7 +1943,7 @@ CLASS lcl_persist_settings IMPLEMENTATION.
           lcl_app=>db( )->read( iv_type  = lcl_settings=>c_dbtype_settings
                                 iv_value = '' ) ).
 
-      CATCH lcx_not_found lcx_exception.
+      CATCH lcx_not_found zcx_abapgit_exception.
 
         ro_settings->set_defaults( ).
 

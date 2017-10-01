@@ -17,13 +17,13 @@ CLASS lcl_object_wdya DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS read
       EXPORTING es_app        TYPE wdy_application
                 et_properties TYPE wdy_app_property_table
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS save
       IMPORTING is_app        TYPE wdy_application
                 it_properties TYPE wdy_app_property_table
                 iv_package    TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_wdya DEFINITION
 
@@ -83,7 +83,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         rv_bool = abap_false.
       CATCH cx_wdy_md_permission_failure.
-        lcx_exception=>raise( 'WDYA, permission failure' ).
+        zcx_abapgit_exception=>raise( 'WDYA, permission failure' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object~exists
@@ -108,7 +108,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         RETURN.
       CATCH cx_wdy_md_permission_failure.
-        lcx_exception=>raise( 'WDYA, permission failure' ).
+        zcx_abapgit_exception=>raise( 'WDYA, permission failure' ).
     ENDTRY.
 
     li_app->if_wdy_md_object~get_definition( IMPORTING definition = es_app ).
@@ -166,7 +166,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
 
         lo_app->if_wdy_md_lockable_object~save_to_database( ).
       CATCH cx_wdy_md_exception.
-        lcx_exception=>raise( 'error saving WDYA' ).
+        zcx_abapgit_exception=>raise( 'error saving WDYA' ).
     ENDTRY.
 
   ENDMETHOD.                    "save
@@ -219,7 +219,7 @@ CLASS lcl_object_wdya IMPLEMENTATION.
       CATCH cx_wdy_md_not_existing.
         RETURN.
       CATCH cx_wdy_md_exception.
-        lcx_exception=>raise( 'WDYA, error deleting' ).
+        zcx_abapgit_exception=>raise( 'WDYA, error deleting' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

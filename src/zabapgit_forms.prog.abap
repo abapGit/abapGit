@@ -7,7 +7,7 @@
 *&---------------------------------------------------------------------*
 FORM run.
 
-  DATA: lx_exception TYPE REF TO lcx_exception,
+  DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
         lv_ind       TYPE t000-ccnocliind.
 
 
@@ -23,13 +23,13 @@ FORM run.
   TRY.
       lcl_migrations=>run( ).
       PERFORM open_gui.
-    CATCH lcx_exception INTO lx_exception.
-      MESSAGE lx_exception->mv_text TYPE 'E'.
+    CATCH zcx_abapgit_exception INTO lx_exception.
+      MESSAGE lx_exception->text TYPE 'E'.
   ENDTRY.
 
 ENDFORM.                    "run
 
-FORM open_gui RAISING lcx_exception.
+FORM open_gui RAISING zcx_abapgit_exception.
 
   IF sy-batch = abap_true.
     lcl_background=>run( ).
@@ -50,7 +50,7 @@ ENDFORM.
 *      -->CS_ERROR       text
 *      -->CV_SHOW_POPUP  text
 *      -->RAISING        text
-*      -->LCX_EXCEPTION  text
+*      -->zcx_abapgit_exception  text
 *      -->##CALLED       text
 *      -->##NEEDED       text
 *----------------------------------------------------------------------*
@@ -58,11 +58,11 @@ FORM branch_popup TABLES   tt_fields TYPE lif_defs=>ty_sval_tt
                   USING    pv_code TYPE clike
                   CHANGING cs_error TYPE svale
                            cv_show_popup TYPE c
-                  RAISING lcx_exception ##called ##needed.
+                  RAISING zcx_abapgit_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
   DATA: lv_url          TYPE string,
-        lx_error        TYPE REF TO lcx_exception,
+        lx_error        TYPE REF TO zcx_abapgit_exception,
         ls_package_data TYPE scompkdtln,
         ls_branch       TYPE lcl_git_branch_list=>ty_git_branch,
         lv_create       TYPE boolean.
@@ -85,7 +85,7 @@ FORM branch_popup TABLES   tt_fields TYPE lif_defs=>ty_sval_tt
 
     TRY.
         ls_branch = lcl_popups=>branch_list_popup( lv_url ).
-      CATCH lcx_exception INTO lx_error.
+      CATCH zcx_abapgit_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
         RETURN.
     ENDTRY.
@@ -120,7 +120,7 @@ FORM package_popup TABLES   tt_fields TYPE lif_defs=>ty_sval_tt
                    USING    pv_code TYPE clike
                    CHANGING cs_error TYPE svale
                             cv_show_popup TYPE c
-                   RAISING  lcx_exception ##called ##needed.
+                   RAISING  zcx_abapgit_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
   DATA: ls_package_data TYPE scompkdtln,
@@ -161,7 +161,7 @@ FORM output.
       p_exclude = lt_ucomm.
 ENDFORM.
 
-FORM exit RAISING lcx_exception.
+FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
       IF lcl_app=>gui( )->back( ) IS INITIAL.

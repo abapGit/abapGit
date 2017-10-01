@@ -28,11 +28,11 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml   TYPE REF TO lcl_xml_input
                   is_dd04v TYPE dd04v
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -116,7 +116,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -138,7 +138,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      lcx_exception=>raise( 'Not found in DD04L' ).
+      zcx_abapgit_exception=>raise( 'Not found in DD04L' ).
     ENDIF.
 
     SELECT SINGLE * FROM dd04t
@@ -219,7 +219,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DDIF_DTEL_PUT' ).
+      zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT' ).
     ENDIF.
 
     deserialize_texts( io_xml   = io_xml
@@ -308,7 +308,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
       ls_dd04v_tmp = is_dd04v.
       READ TABLE lt_dd04_texts ASSIGNING <dd04_text> WITH KEY ddlanguage = <lang>.
       IF sy-subrc > 0.
-        lcx_exception=>raise( |DD04_TEXTS cannot find lang { <lang> } in XML| ).
+        zcx_abapgit_exception=>raise( |DD04_TEXTS cannot find lang { <lang> } in XML| ).
       ENDIF.
       MOVE-CORRESPONDING <dd04_text> TO ls_dd04v_tmp.
       CALL FUNCTION 'DDIF_DTEL_PUT'
@@ -323,7 +323,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from DDIF_DTEL_PUT @TEXTS' ).
+        zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT @TEXTS' ).
       ENDIF.
     ENDLOOP.
 

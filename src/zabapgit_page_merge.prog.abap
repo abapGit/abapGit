@@ -31,7 +31,7 @@ CLASS lcl_merge DEFINITION FINAL.
                   iv_source       TYPE string
                   iv_target       TYPE string
         RETURNING VALUE(rs_merge) TYPE ty_merge
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-DATA: gs_merge   TYPE ty_merge,
@@ -43,20 +43,20 @@ CLASS lcl_merge DEFINITION FINAL.
       all_files
         RETURNING VALUE(rt_files) TYPE lcl_git_porcelain=>ty_expanded_tt,
       calculate_result
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       find_ancestors
         IMPORTING iv_commit           TYPE lif_defs=>ty_sha1
         RETURNING VALUE(rt_ancestors) TYPE ty_ancestor_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       find_first_common
         IMPORTING it_list1         TYPE ty_ancestor_tt
                   it_list2         TYPE ty_ancestor_tt
         RETURNING VALUE(rs_common) TYPE ty_ancestor
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       fetch_git
         IMPORTING iv_source TYPE string
                   iv_target TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -69,7 +69,7 @@ CLASS lcl_merge IMPLEMENTATION.
 
 
     IF iv_source = iv_target.
-      lcx_exception=>raise( 'source = target' ).
+      zcx_abapgit_exception=>raise( 'source = target' ).
     ENDIF.
 
     CLEAR gs_merge.
@@ -244,7 +244,7 @@ CLASS lcl_merge IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    lcx_exception=>raise( 'error finding common ancestor' ).
+    zcx_abapgit_exception=>raise( 'error finding common ancestor' ).
 
   ENDMETHOD.
 
@@ -323,7 +323,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
         IMPORTING io_repo   TYPE REF TO lcl_repo_online
                   iv_source TYPE string
                   iv_target TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -365,7 +365,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-merge.
         IF ms_merge-stage->count( ) = 0.
-          lcx_exception=>raise( 'nothing to merge' ).
+          zcx_abapgit_exception=>raise( 'nothing to merge' ).
         ENDIF.
 
         CREATE OBJECT ei_page TYPE lcl_gui_page_commit

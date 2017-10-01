@@ -44,22 +44,22 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
     METHODS get_ext
       IMPORTING it_params     TYPE ty_wwwparams_tt
       RETURNING VALUE(rv_ext) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS normalize_params
       IMPORTING iv_size   TYPE i
       CHANGING  ct_params TYPE ty_wwwparams_tt  " Param table to patch
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS strip_params
       CHANGING ct_params TYPE ty_wwwparams_tt
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
     METHODS find_param
       IMPORTING it_params       TYPE ty_wwwparams_tt
                 iv_name         TYPE w3_name
       RETURNING VALUE(rv_value) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_object_W3SUPER DEFINITION
 
@@ -198,7 +198,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         import_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot read W3xx data' ).
+      zcx_abapgit_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
     CALL FUNCTION 'WWWPARAMS_READ_ALL'
@@ -211,7 +211,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         entry_not_exists = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot read W3xx data' ).
+      zcx_abapgit_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
     lv_size = find_param( it_params = lt_w3params iv_name = c_param_names-filesize ).
@@ -238,11 +238,11 @@ CLASS lcl_object_w3super IMPLEMENTATION.
           EXCEPTIONS
             failed   = 1.
       WHEN OTHERS.
-        lcx_exception=>raise( 'Wrong W3xx type' ).
+        zcx_abapgit_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot convert W3xx to xstring' ).
+      zcx_abapgit_exception=>raise( 'Cannot convert W3xx to xstring' ).
     ENDIF.
 
     io_xml->add( iv_name = 'NAME'
@@ -287,7 +287,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         lv_xstring = lif_object~mo_files->read_raw( iv_extra = 'data'
                                                     iv_ext   = get_ext( lt_w3params ) ).
       WHEN OTHERS.
-        lcx_exception=>raise( 'W3xx: Unknown serializer version' ).
+        zcx_abapgit_exception=>raise( 'W3xx: Unknown serializer version' ).
     ENDCASE.
 
     CASE ms_key-relid.
@@ -319,12 +319,12 @@ CLASS lcl_object_w3super IMPLEMENTATION.
           EXCEPTIONS
             failed        = 1.
         IF sy-subrc IS NOT INITIAL.
-          lcx_exception=>raise( 'Cannot update W3xx params' ).
+          zcx_abapgit_exception=>raise( 'Cannot update W3xx params' ).
         ENDIF.
 
         CLEAR lt_w3mime.
       WHEN OTHERS.
-        lcx_exception=>raise( 'Wrong W3xx type' ).
+        zcx_abapgit_exception=>raise( 'Wrong W3xx type' ).
     ENDCASE.
 
     " Update size of file based on actual data file size, prove param object name
@@ -338,7 +338,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         update_error = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot update W3xx params' ).
+      zcx_abapgit_exception=>raise( 'Cannot update W3xx params' ).
     ENDIF.
 
     ms_key-tdate    = sy-datum.
@@ -357,7 +357,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         export_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot upload W3xx data' ).
+      zcx_abapgit_exception=>raise( 'Cannot upload W3xx data' ).
     ENDIF.
 
     CONCATENATE 'W3' ms_key-relid INTO lv_tadir_obj.
@@ -397,7 +397,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         OTHERS                         = 99.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot update TADIR for W3xx' ).
+      zcx_abapgit_exception=>raise( 'Cannot update TADIR for W3xx' ).
     ENDIF.
 
   ENDMETHOD.                    "lif_object~deserialize
@@ -412,7 +412,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         delete_error      = 2.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot delete W3xx data' ).
+      zcx_abapgit_exception=>raise( 'Cannot delete W3xx data' ).
     ENDIF.
 
     CALL FUNCTION 'WWWPARAMS_DELETE_ALL'
@@ -422,7 +422,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
         delete_error = 1.
 
     IF sy-subrc IS NOT INITIAL.
-      lcx_exception=>raise( 'Cannot delete W3xx params' ).
+      zcx_abapgit_exception=>raise( 'Cannot delete W3xx params' ).
     ENDIF.
 
   ENDMETHOD.                    "lif_object~delete
@@ -477,7 +477,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     READ TABLE it_params ASSIGNING <param> WITH KEY name = iv_name.
     IF sy-subrc > 0.
-      lcx_exception=>raise( |W3xx: Cannot find { iv_name } for { ms_key-objid }| ).
+      zcx_abapgit_exception=>raise( |W3xx: Cannot find { iv_name } for { ms_key-objid }| ).
     ENDIF.
 
     rv_value = <param>-value.

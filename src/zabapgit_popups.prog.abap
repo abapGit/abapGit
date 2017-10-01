@@ -19,27 +19,27 @@ CLASS lcl_popups DEFINITION FINAL.
       popup_package_export
         EXPORTING ev_package      TYPE devclass
                   ev_folder_logic TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_object
         RETURNING VALUE(rs_tadir) TYPE tadir
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       run_page_class_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       repo_new_offline
         RETURNING VALUE(rs_popup) TYPE ty_popup
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       branch_list_popup
         IMPORTING iv_url             TYPE string
                   iv_default_branch  TYPE string OPTIONAL
                   iv_show_new_option TYPE abap_bool OPTIONAL
         RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       repo_popup
         IMPORTING iv_url            TYPE string
                   iv_package        TYPE devclass  OPTIONAL
@@ -48,7 +48,7 @@ CLASS lcl_popups DEFINITION FINAL.
                   iv_freeze_url     TYPE abap_bool OPTIONAL
                   iv_title          TYPE clike     DEFAULT 'Clone repository ...'
         RETURNING VALUE(rs_popup)   TYPE ty_popup
-        RAISING   lcx_exception ##NO_TEXT,
+        RAISING   zcx_abapgit_exception ##NO_TEXT,
       popup_to_confirm
         IMPORTING
                   titlebar              TYPE clike
@@ -60,27 +60,27 @@ CLASS lcl_popups DEFINITION FINAL.
                   default_button        TYPE char1 DEFAULT '1'
                   display_cancel_button TYPE char1 DEFAULT abap_true
         RETURNING VALUE(rv_answer)      TYPE char1
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_inform
         IMPORTING
                   titlebar     TYPE clike
                   text_message TYPE clike
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_create_package
         EXPORTING es_package_data TYPE scompkdtln
                   ev_create       TYPE boolean
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_create_transp_branch
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
         RETURNING VALUE(rs_transport_branch) TYPE lif_defs=>ty_transport_to_branch
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   lcx_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_select_obj_overwrite
         IMPORTING it_list TYPE lif_defs=>ty_results_tt
         RETURNING VALUE(rt_list) TYPE lif_defs=>ty_results_tt
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
@@ -164,7 +164,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -217,7 +217,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -263,7 +263,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2 ##NO_TEXT.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = 'A'.
@@ -304,7 +304,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2 ##NO_TEXT.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = 'A'.
@@ -361,7 +361,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields   = 1
         OTHERS            = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -458,7 +458,7 @@ CLASS lcl_popups IMPLEMENTATION.
         too_much_marks     = 3
         OTHERS             = 4.                             "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
 
     IF lv_answer = 'A'. " cancel
@@ -554,7 +554,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields   = 1
         OTHERS            = 2.                              "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
       rs_popup-cancel = abap_true.
@@ -595,7 +595,7 @@ CLASS lcl_popups IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.                        "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
   ENDMETHOD.  "popup_to_confirm
@@ -628,7 +628,7 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc = 1.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
-      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
+      zcx_abapgit_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
     ENDIF.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
@@ -711,7 +711,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -793,7 +793,7 @@ CLASS lcl_popups IMPLEMENTATION.
         mo_select_list_popup->display( ).
 
       CATCH cx_salv_msg.
-        lcx_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
+        zcx_abapgit_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
     ENDTRY.
 
     LOOP AT lt_popup_list INTO ls_popup_list WHERE selected = abap_true.

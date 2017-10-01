@@ -29,12 +29,12 @@ CLASS lcl_branch_overview DEFINITION FINAL.
     CLASS-METHODS: run
       IMPORTING io_repo           TYPE REF TO lcl_repo_online
       RETURNING VALUE(rt_commits) TYPE ty_commit_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: compress
       IMPORTING it_commits        TYPE ty_commit_tt
       RETURNING VALUE(rt_commits) TYPE ty_commit_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: get_branches
       RETURNING VALUE(rt_branches) TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
@@ -44,17 +44,17 @@ CLASS lcl_branch_overview DEFINITION FINAL.
     CLASS-METHODS:
       parse_commits
         IMPORTING it_objects TYPE lif_defs=>ty_objects_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       determine_branch
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       determine_merges
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       fixes
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
         RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     CLASS-DATA:
       gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
@@ -308,7 +308,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -333,20 +333,20 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       refresh
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       body
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       form_select
         IMPORTING iv_name        TYPE string
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_merge
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       decode_merge
         IMPORTING it_postdata     TYPE cnht_post_data_tab
         RETURNING VALUE(rs_merge) TYPE ty_merge
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       escape_branch

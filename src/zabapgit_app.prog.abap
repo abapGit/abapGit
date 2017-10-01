@@ -16,12 +16,12 @@ CLASS lcl_app DEFINITION FINAL.
 
     CLASS-METHODS gui
       RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS user
       IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
       RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS repo_srv
       RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.

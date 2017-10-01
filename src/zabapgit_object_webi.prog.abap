@@ -38,19 +38,19 @@ CLASS lcl_object_webi DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       handle_endpoint
         IMPORTING is_webi TYPE ty_webi
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   cx_ws_md_exception,
       handle_types
         IMPORTING is_webi TYPE ty_webi
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   cx_ws_md_exception,
       handle_soap
         IMPORTING is_webi TYPE ty_webi
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   cx_ws_md_exception,
       handle_function
         IMPORTING is_webi TYPE ty_webi
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   cx_ws_md_exception.
 
 ENDCLASS.                    "lcl_object_SFBS DEFINITION
@@ -106,7 +106,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
         webi_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from WEBI_GET_OBJECT' ).
+      zcx_abapgit_exception=>raise( 'error from WEBI_GET_OBJECT' ).
     ENDIF.
 
     SORT ls_webi-pveptype BY
@@ -119,7 +119,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
         li_vi = cl_ws_md_factory=>get_vif_root( )->get_virtual_interface( lv_name ).
         ls_webi-veptext = li_vi->get_short_text( sews_c_vif_version-active ).
       CATCH cx_ws_md_exception.
-        lcx_exception=>raise( 'error serializing WEBI' ).
+        zcx_abapgit_exception=>raise( 'error serializing WEBI' ).
     ENDTRY.
 
     LOOP AT ls_webi-pvepheader ASSIGNING <ls_header>.
@@ -162,11 +162,11 @@ CLASS lcl_object_webi IMPLEMENTATION.
     IF ls_endpoint-endpointtype = 'BAPI'.
 * it looks like some special handling is needed when calling
 * set_data, and looking at the cluster data LS_ENDPOINT-CLUSTD
-      lcx_exception=>raise( 'todo, WEBI BAPI' ).
+      zcx_abapgit_exception=>raise( 'todo, WEBI BAPI' ).
     ENDIF.
 
     IF lines( is_webi-pvepfunction ) <> 1.
-      lcx_exception=>raise( 'todo, WEBI, function name' ).
+      zcx_abapgit_exception=>raise( 'todo, WEBI, function name' ).
     ENDIF.
 
 * field ls_endpoint-endpointname does not exist in 702
@@ -391,7 +391,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
           CATCH cx_ws_md_exception ##no_handler.
         ENDTRY.
         lv_text = lx_root->if_message~get_text( ).
-        lcx_exception=>raise( 'error deserializing WEBI' ).
+        zcx_abapgit_exception=>raise( 'error deserializing WEBI' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -410,7 +410,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
     TRY.
         lo_vif->if_ws_md_vif_root~delete_virtual_interface( lv_name ).
       CATCH cx_ws_md_exception.
-        lcx_exception=>raise( 'error deleting WEBI' ).
+        zcx_abapgit_exception=>raise( 'error deleting WEBI' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object~delete

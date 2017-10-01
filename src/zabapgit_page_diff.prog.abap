@@ -31,7 +31,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
                   is_file          TYPE lif_defs=>ty_file OPTIONAL
                   is_object        TYPE lif_defs=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -76,7 +76,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       IMPORTING it_remote TYPE lif_defs=>ty_files_tt
                 it_local  TYPE lif_defs=>ty_files_item_tt
                 is_status TYPE lif_defs=>ty_result
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
     METHODS build_menu
       IMPORTING iv_supress_stage TYPE abap_bool
       RETURNING VALUE(ro_menu)   TYPE REF TO lcl_html_toolbar.
@@ -145,7 +145,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     IF lines( mt_diff_files ) = 0.
-      lcx_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
+      zcx_abapgit_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
     ENDIF.
 
     ms_control-page_menu  = build_menu( iv_supress_stage ).
@@ -179,7 +179,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     IF <ls_local> IS INITIAL AND <ls_remote> IS INITIAL.
-      lcx_exception=>raise( |DIFF: file not found { is_status-filename }| ).
+      zcx_abapgit_exception=>raise( |DIFF: file not found { is_status-filename }| ).
     ENDIF.
 
     APPEND INITIAL LINE TO mt_diff_files ASSIGNING <ls_diff>.

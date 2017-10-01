@@ -28,21 +28,21 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       "! </p>
       "! @parameter it_requirements | The requirements to check
       "! @parameter iv_show_popup | Show popup with requirements
-      "! @raising lcx_exception | Cancelled by user or internal error
+      "! @raising zcx_abapgit_exception | Cancelled by user or internal error
       check_requirements IMPORTING it_requirements TYPE lcl_dot_abapgit=>ty_requirement_tt
                                    iv_show_popup   TYPE abap_bool DEFAULT abap_true
-                         RAISING   lcx_exception,
+                         RAISING   zcx_abapgit_exception,
       "! Get a table with information about each requirement
       "! @parameter it_requirements | Requirements
       "! @parameter rt_status | Result
-      "! @raising lcx_exception | Internal error
+      "! @raising zcx_abapgit_exception | Internal error
       get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tt
                                  RETURNING value(rt_status) TYPE ty_requirement_status_tt
-                                 RAISING   lcx_exception.
+                                 RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
       show_requirement_popup IMPORTING it_requirements TYPE ty_requirement_status_tt
-                             RAISING   lcx_exception,
+                             RAISING   zcx_abapgit_exception,
       version_greater_or_equal IMPORTING is_status      TYPE ty_requirement_status
                                RETURNING value(rv_true) TYPE abap_bool.
 ENDCLASS.                    "lcl_requirement_helper DEFINITION
@@ -74,7 +74,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         IMPORTING
           answer        = lv_answer.
       IF lv_answer <> '1'.
-        lcx_exception=>raise( 'Cancelling because of unmet requirements.' ).
+        zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
       ENDIF.
     ENDIF.
   ENDMETHOD.                    "check_requirements
@@ -92,7 +92,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         no_release_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##no_text.
+      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##no_text.
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
@@ -212,10 +212,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
         lo_alv->display( ).
 
       CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error INTO lx_ex.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text     = lx_ex->get_text( )
-            ix_previous = lx_ex.
+        zcx_abapgit_exception=>raise( lx_ex->get_text( ) ).
     ENDTRY.
   ENDMETHOD.                    "show_requirement_popup
 ENDCLASS.                    "lcl_requirement_helper IMPLEMENTATION

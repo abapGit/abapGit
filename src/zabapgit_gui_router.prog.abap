@@ -15,45 +15,45 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 it_postdata  TYPE cnht_post_data_tab OPTIONAL
       EXPORTING ei_page      TYPE REF TO lif_gui_page
                 ev_state     TYPE i
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
   PRIVATE SECTION.
 
     METHODS get_page_by_name
       IMPORTING iv_name        TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
                 iv_prev_page   TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_branch_overview
       IMPORTING iv_getdata     TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_stage
       IMPORTING iv_getdata     TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_db_by_name
       IMPORTING iv_name        TYPE clike
                 iv_getdata     TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_background
       IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_page_playground
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
 ENDCLASS.
 
@@ -163,6 +163,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN lif_defs=>gc_action-repo_refresh.                    " Repo refresh
         lcl_services_repo=>refresh( lv_key ).
         ev_state = lif_defs=>gc_event_state-re_render.
+      WHEN lif_defs=>gc_action-repo_syntax_check.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_syntax_check
+          EXPORTING
+            io_repo = lcl_app=>repo_srv( )->get( lv_key ).
+        ev_state = lif_defs=>gc_event_state-new_page.
       WHEN lif_defs=>gc_action-repo_purge.                      " Repo remove & purge all objects
         lcl_services_repo=>purge( lv_key ).
         ev_state = lif_defs=>gc_event_state-re_render.
@@ -251,7 +256,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_page TYPE (lv_page_class).
       CATCH cx_sy_create_object_error.
-        lcx_exception=>raise( |Cannot create page class { lv_page_class }| ).
+        zcx_abapgit_exception=>raise( |Cannot create page class { lv_page_class }| ).
     ENDTRY.
 
   ENDMETHOD.        " get_page_by_name
@@ -272,7 +277,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
       CATCH cx_sy_create_object_error.
         lv_message = |Cannot create page class { lv_page_class }|.
-        lcx_exception=>raise( lv_message ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.        " get_page_db_by_name
@@ -372,7 +377,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_page TYPE (lv_class_name).
       CATCH cx_sy_create_object_error.
-        lcx_exception=>raise( |Cannot create page class { lv_class_name }| ).
+        zcx_abapgit_exception=>raise( |Cannot create page class { lv_class_name }| ).
     ENDTRY.
 
   ENDMETHOD.  "get_page_playground

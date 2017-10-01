@@ -16,7 +16,7 @@ CLASS lcl_object_ddls DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PROTECTED SECTION.
     METHODS open_adt_stob
       IMPORTING iv_ddls_name TYPE tadir-obj_name
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -123,7 +123,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
         me->open_adt_stob( iv_ddls_name = ms_item-obj_name ).
       WHEN OTHERS.
-        lcx_exception=>raise( 'DDLS Jump Error' ).
+        zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
     ENDCASE.
 
   ENDMETHOD.                    "jump
@@ -142,7 +142,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
           EXPORTING
             name = ms_item-obj_name.
       CATCH cx_root.
-        lcx_exception=>raise( 'DDLS error deleting' ).
+        zcx_abapgit_exception=>raise( 'DDLS error deleting' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete
@@ -171,7 +171,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
           IMPORTING
             ddddlsrcv_wa = <ls_data>.
       CATCH cx_root.
-        lcx_exception=>raise( 'DDLS error reading' ).
+        zcx_abapgit_exception=>raise( 'DDLS error reading' ).
     ENDTRY.
 
     ASSIGN COMPONENT 'AS4USER' OF STRUCTURE <ls_data> TO <lv_field>.
@@ -233,7 +233,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
             devclass   = iv_package
             prid       = 0.
       CATCH cx_root.
-        lcx_exception=>raise( 'DDLS error writing TADIR' ).
+        zcx_abapgit_exception=>raise( 'DDLS error writing TADIR' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -293,7 +293,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'DDLS Jump Error' ).
+        zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
     ENDTRY.
 
   ENDMETHOD.                    "open_adt_stob

@@ -32,14 +32,14 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
       deserialize
         IMPORTING iv_xstr               TYPE xstring
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     METHODS:
       constructor
         IMPORTING is_data TYPE ty_dot_abapgit,
       serialize
         RETURNING VALUE(rv_xstr) TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_data
         RETURNING VALUE(rs_data) TYPE ty_dot_abapgit,
       add_ignore
@@ -66,7 +66,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 *        IMPORTING iv_language TYPE spras,
       get_signature
         RETURNING VALUE(rs_signature) TYPE lif_defs=>ty_file_signature
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
@@ -75,7 +75,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
       to_xml
         IMPORTING is_data       TYPE ty_dot_abapgit
         RETURNING VALUE(rv_xml) TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       from_xml
         IMPORTING iv_xml         TYPE string
         RETURNING VALUE(rs_data) TYPE ty_dot_abapgit.

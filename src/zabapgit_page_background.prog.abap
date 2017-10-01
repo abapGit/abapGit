@@ -32,7 +32,7 @@ CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
 
   METHOD run.
 
-    DATA: lx_error TYPE REF TO lcx_exception,
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception,
           lv_text  TYPE string,
           lv_line  TYPE i VALUE 1.
 
@@ -48,8 +48,8 @@ CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
           APPEND lv_text TO mt_text.
           lv_line = lv_line + 1.
         ENDDO.
-      CATCH lcx_exception INTO lx_error.
-        APPEND lx_error->mv_text TO mt_text.
+      CATCH zcx_abapgit_exception INTO lx_error.
+        APPEND lx_error->text TO mt_text.
     ENDTRY.
 
   ENDMETHOD.
@@ -92,7 +92,7 @@ CLASS lcl_gui_page_bkg DEFINITION FINAL
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_data
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 

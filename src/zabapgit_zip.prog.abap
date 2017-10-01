@@ -12,48 +12,48 @@ CLASS lcl_zip DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS import
       IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export
       IMPORTING io_repo   TYPE REF TO lcl_repo
                 it_filter TYPE scts_tadir OPTIONAL
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export_package
-      RAISING lcx_exception lcx_cancel.
+      RAISING zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS export_object
-      RAISING lcx_exception lcx_cancel.
+      RAISING zcx_abapgit_exception lcx_cancel.
 
   PRIVATE SECTION.
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS unzip_file
       IMPORTING iv_xstr         TYPE xstring
       RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS normalize_path
       CHANGING ct_files TYPE lif_defs=>ty_files_tt
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS filename
       IMPORTING iv_str      TYPE string
       EXPORTING ev_path     TYPE string
                 ev_filename TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS file_download
       IMPORTING iv_package TYPE devclass
                 iv_xstr    TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS encode_files
       IMPORTING it_files       TYPE lif_defs=>ty_files_item_tt
       RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_zip DEFINITION
 
@@ -95,10 +95,10 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).                         "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from file_save_dialog' ).
+      zcx_abapgit_exception=>raise( 'error from file_save_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      lcx_exception=>raise( 'cancelled' ).
+      zcx_abapgit_exception=>raise( 'cancelled' ).
     ENDIF.
 
     lt_rawdata = cl_bcs_convert=>xstring_to_solix( iv_xstr ).
@@ -136,7 +136,7 @@ CLASS lcl_zip IMPLEMENTATION.
         error_no_gui              = 23
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from gui_download' ).
+      zcx_abapgit_exception=>raise( 'error from gui_download' ).
     ENDIF.
 
   ENDMETHOD.                    "file_download
@@ -167,7 +167,7 @@ CLASS lcl_zip IMPLEMENTATION.
       FIND REGEX '(.*/)(.*)' IN iv_str
         SUBMATCHES ev_path ev_filename.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'Malformed path' ).
+        zcx_abapgit_exception=>raise( 'Malformed path' ).
       ENDIF.
       IF ev_path <> '/'.
         CONCATENATE '/' ev_path INTO ev_path.
@@ -206,10 +206,10 @@ CLASS lcl_zip IMPLEMENTATION.
         not_supported_by_gui    = 4
         OTHERS                  = 5 ).                      "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from file_open_dialog' ).
+      zcx_abapgit_exception=>raise( 'error from file_open_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      lcx_exception=>raise( 'cancelled' ).
+      zcx_abapgit_exception=>raise( 'cancelled' ).
     ENDIF.
 
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
@@ -245,7 +245,7 @@ CLASS lcl_zip IMPLEMENTATION.
         error_no_gui            = 18
         OTHERS                  = 19 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from gui_upload' ).
+      zcx_abapgit_exception=>raise( 'error from gui_upload' ).
     ENDIF.
 
     CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.
@@ -313,7 +313,7 @@ CLASS lcl_zip IMPLEMENTATION.
                     zip_parse_error = 1
                     OTHERS          = 2 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from zip' ).
+      zcx_abapgit_exception=>raise( 'error from zip' ).
     ENDIF.
 
     LOOP AT lo_zip->files ASSIGNING <ls_zipfile>.
@@ -328,7 +328,7 @@ CLASS lcl_zip IMPLEMENTATION.
           zip_decompression_error = 2
           OTHERS                  = 3 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from zip get' ).
+        zcx_abapgit_exception=>raise( 'error from zip get' ).
       ENDIF.
 
       APPEND INITIAL LINE TO rt_files ASSIGNING <ls_file>.
@@ -492,7 +492,7 @@ CLASS lcl_zip IMPLEMENTATION.
           error_no_gui              = 23
           OTHERS                    = 24 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from gui_download' ).
+        zcx_abapgit_exception=>raise( 'error from gui_download' ).
       ENDIF.
     ENDLOOP.
 

@@ -7,11 +7,11 @@ CLASS lcl_services_db DEFINITION FINAL.
 
     CLASS-METHODS delete
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS update
       IMPORTING is_content TYPE lcl_persistence_db=>ty_content
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_services_db
 

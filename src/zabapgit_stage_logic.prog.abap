@@ -11,11 +11,11 @@ CLASS lcl_stage_logic DEFINITION FINAL.
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
         RETURNING VALUE(rs_files) TYPE lif_defs=>ty_stage_files
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       count
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
         RETURNING VALUE(rv_count) TYPE i
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:

@@ -35,7 +35,7 @@ CLASS lcl_object_wapa DEFINITION INHERITING FROM lcl_objects_super FINAL.
       read_page
         IMPORTING is_page        TYPE o2pagattr
         RETURNING VALUE(rs_page) TYPE ty_page
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
@@ -211,7 +211,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         error_occured           = 7
         invalid_parameter       = 8 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
     ENDIF.
 
     lo_bsp->save( ).

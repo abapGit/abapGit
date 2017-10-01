@@ -11,7 +11,7 @@ CLASS lcl_object_tabl_valid DEFINITION FINAL.
       RETURNING
         VALUE(rv_message) TYPE string
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_tabl_valid_dialog DEFINITION FINAL.
@@ -81,7 +81,7 @@ CLASS lcl_tabl_valid_dialog IMPLEMENTATION.
           icon_button_2         = 'ICON_OKAY'
           default_button        = '2'
           display_cancel_button = abap_false ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         mv_halt = abap_true.
     ENDTRY.
 
@@ -96,13 +96,13 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
   PRIVATE SECTION.
     METHODS:
       setup,
-      type_changed         FOR TESTING RAISING lcx_exception,
-      no_type_changes      FOR TESTING RAISING lcx_exception,
-      field_not_found      FOR TESTING RAISING lcx_exception,
-      no_fields_no_message FOR TESTING RAISING lcx_exception,
+      type_changed         FOR TESTING RAISING zcx_abapgit_exception,
+      no_type_changes      FOR TESTING RAISING zcx_abapgit_exception,
+      field_not_found      FOR TESTING RAISING zcx_abapgit_exception,
+      no_fields_no_message FOR TESTING RAISING zcx_abapgit_exception,
       create_xmls
         RAISING
-          lcx_exception.
+          zcx_abapgit_exception.
 
     DATA: mo_table_validator            TYPE REF TO lcl_object_tabl_valid,
           mo_previous_version_out_xml   TYPE REF TO lcl_xml_output,

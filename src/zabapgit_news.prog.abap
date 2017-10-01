@@ -28,7 +28,7 @@ CLASS lcl_news DEFINITION CREATE PRIVATE FRIENDS ltcl_news.
       create " TODO REFACTOR
         IMPORTING io_repo            TYPE REF TO lcl_repo
         RETURNING VALUE(ro_instance) TYPE REF TO lcl_news
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     METHODS:
       get_log
@@ -115,7 +115,7 @@ CLASS lcl_news IMPLEMENTATION.
     TRY.
         " Find changelog
         lt_remote = io_repo->get_files_remote( ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
 
