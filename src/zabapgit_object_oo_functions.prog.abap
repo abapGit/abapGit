@@ -65,7 +65,9 @@ INTERFACE lif_oo_object_fnc.
       IMPORTING
         iv_object_name     TYPE sobj_name
       RETURNING
-        VALUE(rt_includes) TYPE ty_includes_tt,
+        VALUE(rt_includes) TYPE ty_includes_tt
+      RAISING
+        lcx_exception,
     exists
       IMPORTING
         iv_object_name   TYPE seoclskey
