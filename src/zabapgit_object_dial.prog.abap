@@ -93,7 +93,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
         OTHERS                = 3.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error deserializing dialogmodule { ms_item-obj_name }| ).
+      zcx_abapgit_exception=>raise( |Error deserializing dialogmodule { ms_item-obj_name }| ).
     ENDIF.
 
     " It seems that there's no API for diapar, therefore we manipulate it directly
@@ -157,7 +157,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
     ENDIF.
 
   ENDMETHOD.
@@ -178,7 +178,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
         OTHERS           = 2.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from RS_DIALOG_SHOW, DIAL| ).
+      zcx_abapgit_exception=>raise( |Error from RS_DIALOG_SHOW, DIAL| ).
     ENDIF.
 
   ENDMETHOD.

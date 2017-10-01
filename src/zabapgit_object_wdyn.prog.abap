@@ -24,42 +24,42 @@ CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
         RETURNING VALUE(rt_objects) TYPE wdy_md_transport_keys,
       read
         RETURNING VALUE(rs_component) TYPE wdy_component_metadata
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_controller
         IMPORTING is_key               TYPE wdy_md_controller_key
         RETURNING VALUE(rs_controller) TYPE wdy_md_controller_meta_data
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_definition
         IMPORTING is_key               TYPE wdy_md_component_key
         RETURNING VALUE(rs_definition) TYPE wdy_md_component_meta_data
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_view
         IMPORTING is_key         TYPE wdy_md_view_key
         RETURNING VALUE(rs_view) TYPE wdy_md_view_meta_data
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       recover_controller
         IMPORTING is_controller TYPE wdy_md_controller_meta_data
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       recover_definition
         IMPORTING is_definition TYPE wdy_md_component_meta_data
                   iv_package    TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       recover_view
         IMPORTING is_view TYPE wdy_md_view_meta_data
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delta_controller
         IMPORTING is_controller   TYPE wdy_md_controller_meta_data
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delta_definition
         IMPORTING is_definition     TYPE wdy_md_component_meta_data
                   VALUE(iv_package) TYPE devclass
         RETURNING VALUE(rs_delta)   TYPE svrs2_xversionable_object
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delta_view
         IMPORTING is_view         TYPE wdy_md_view_meta_data
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       add_fm_param_exporting
         IMPORTING i_name   TYPE string
                   i_value  TYPE any
@@ -131,7 +131,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_component->save_to_database( ).
           li_component->unlock( ).
         CATCH cx_wdy_md_exception.
-          lcx_exception=>raise( 'error creating dummy component' ).
+          zcx_abapgit_exception=>raise( 'error creating dummy component' ).
       ENDTRY.
     ENDIF.
 
@@ -158,7 +158,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
+      zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_definition
@@ -194,7 +194,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_controller->save_to_database( ).
           li_controller->unlock( ).
         CATCH cx_wdy_md_exception.
-          lcx_exception=>raise( 'error creating dummy controller' ).
+          zcx_abapgit_exception=>raise( 'error creating dummy controller' ).
       ENDTRY.
     ENDIF.
 
@@ -254,7 +254,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
+      zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_controller
@@ -285,7 +285,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
           li_view->save_to_database( ).
           li_view->unlock( ).
         CATCH cx_wdy_md_exception.
-          lcx_exception=>raise( 'error creating dummy view' ).
+          zcx_abapgit_exception=>raise( 'error creating dummy view' ).
       ENDTRY.
     ENDIF.
 
@@ -325,7 +325,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTIONS
         inconsistent_objects = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
+      zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
   ENDMETHOD.                    "delta_view
@@ -485,7 +485,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       EXCEPTION-TABLE
       lt_fm_exception.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from WDYC_GET_OBJECT' ).
+      zcx_abapgit_exception=>raise( 'error from WDYC_GET_OBJECT' ).
     ENDIF.
 
     APPEND LINES OF lt_components TO mt_components.
@@ -493,7 +493,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
     READ TABLE lt_definition INDEX 1 INTO rs_controller-definition.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'WDYC, definition not found' ).
+      zcx_abapgit_exception=>raise( 'WDYC, definition not found' ).
     ENDIF.
 
     CLEAR: rs_controller-definition-author,
@@ -530,12 +530,12 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from WDYD_GET_OBJECT' ).
+      zcx_abapgit_exception=>raise( 'error from WDYD_GET_OBJECT' ).
     ENDIF.
 
     READ TABLE lt_definition INDEX 1 INTO rs_definition-definition.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'WDYD, definition not found' ).
+      zcx_abapgit_exception=>raise( 'WDYD, definition not found' ).
     ENDIF.
 
     CLEAR: rs_definition-definition-author,
@@ -585,7 +585,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
         not_existing           = 1
         OTHERS                 = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from WDYV_GET_OBJECT' ).
+      zcx_abapgit_exception=>raise( 'error from WDYV_GET_OBJECT' ).
     ENDIF.
 
     READ TABLE lt_definition INDEX 1 ASSIGNING <ls_definition>.

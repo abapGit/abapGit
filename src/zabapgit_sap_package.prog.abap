@@ -15,7 +15,7 @@ INTERFACE lif_sap_package.
       RETURNING VALUE(rv_parentcl) TYPE tdevc-parentcl,
     create_child
       IMPORTING iv_child TYPE devclass
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     exists
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
@@ -41,10 +41,10 @@ CLASS lcl_sap_package DEFINITION FINAL CREATE PRIVATE
         RETURNING VALUE(ri_package) TYPE REF TO lif_sap_package,
       create
         IMPORTING is_package TYPE scompkdtln
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       create_local
         IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     METHODS:
       constructor
@@ -124,7 +124,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
         no_access                  = 4
         object_locked_and_modified = 5 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error reading parent package' ).
+      zcx_abapgit_exception=>raise( 'error reading parent package' ).
     ENDIF.
 
     ls_child-devclass  = iv_child.
@@ -200,7 +200,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
 *        error_in_cts_checks        = 21
         OTHERS                     = 18 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Package { is_package-devclass } could not be created| ).
+      zcx_abapgit_exception=>raise( |Package { is_package-devclass } could not be created| ).
     ENDIF.
 
     li_package->save(
@@ -217,7 +217,7 @@ CLASS lcl_sap_package IMPLEMENTATION.
     IF sy-subrc <> 0.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
-      lcx_exception=>raise( lv_err ).
+      zcx_abapgit_exception=>raise( lv_err ).
     ENDIF.
 
     li_package->set_changeable( abap_false ).

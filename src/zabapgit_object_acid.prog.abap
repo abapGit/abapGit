@@ -16,7 +16,7 @@ CLASS lcl_object_acid DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PRIVATE SECTION.
     METHODS: create_object
       RETURNING VALUE(ro_aab) TYPE REF TO cl_aab_id
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_acid DEFINITION
 
@@ -54,7 +54,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
         name_not_allowed = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error creating CL_AAB_ID object' ).
+      zcx_abapgit_exception=>raise( 'error creating CL_AAB_ID object' ).
     ENDIF.
 
   ENDMETHOD.                    "create_object
@@ -117,7 +117,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
         where_used_error = 9
         OTHERS           = 10 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error deleting ACID object' ).
+      zcx_abapgit_exception=>raise( 'error deleting ACID object' ).
     ENDIF.
     lo_aab->dequeue( ).
 

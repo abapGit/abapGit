@@ -17,7 +17,7 @@ CLASS lcl_file_status DEFINITION FINAL
       IMPORTING io_repo           TYPE REF TO lcl_repo
                 io_log            TYPE REF TO lcl_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -28,13 +28,13 @@ CLASS lcl_file_status DEFINITION FINAL
                   it_remote         TYPE lif_defs=>ty_files_tt
                   it_cur_state      TYPE lif_defs=>ty_file_signatures_tt
         RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE lif_defs=>ty_results_tt
                   io_dot     TYPE REF TO lcl_dot_abapgit
                   iv_top     TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build_existing
         IMPORTING is_local         TYPE lif_defs=>ty_file_item
                   is_remote        TYPE lif_defs=>ty_file

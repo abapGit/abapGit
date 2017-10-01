@@ -58,7 +58,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
             r_user = rv_user.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'CMPT not supported' ).
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -85,7 +85,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
             r_flg_exists = rv_bool.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'CMPT not supported' ).
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -110,7 +110,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
                      ig_data = <template> ).
 
       CATCH cx_root.
-        lcx_exception=>raise( 'CMPT not supported' ).
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
 
@@ -138,7 +138,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
             i_flg_lines   = abap_true.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'CMPT not supported' ).
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
     CALL FUNCTION 'RS_CORR_INSERT'
@@ -156,7 +156,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
         OTHERS              = 4.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_CORR_INSERT, CMPT' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, CMPT' ).
     ENDIF.
 
   ENDMETHOD.
@@ -176,11 +176,11 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
             r_flg_deleted = deleted.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'CMPT not supported' ).
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
     IF deleted = abap_false.
-      lcx_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
+      zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -199,7 +199,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from RS_TOOL_ACCESS, CMPT| ).
+      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, CMPT| ).
     ENDIF.
 
   ENDMETHOD.

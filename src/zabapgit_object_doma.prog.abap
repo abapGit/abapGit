@@ -34,12 +34,12 @@ CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml   TYPE REF TO lcl_xml_input
                   is_dd01v TYPE dd01v
                   it_dd07v TYPE dd07v_tab
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_doma DEFINITION
 
@@ -124,7 +124,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -151,7 +151,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0 OR ls_dd01v IS INITIAL.
-      lcx_exception=>raise( 'error from DDIF_DOMA_GET' ).
+      zcx_abapgit_exception=>raise( 'error from DDIF_DOMA_GET' ).
     ENDIF.
 
     CLEAR: ls_dd01v-as4user,
@@ -217,7 +217,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DDIF_DOMA_PUT' ).
+      zcx_abapgit_exception=>raise( 'error from DDIF_DOMA_PUT' ).
     ENDIF.
 
     deserialize_texts( io_xml   = io_xml
@@ -331,7 +331,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
       ls_dd01v_tmp = is_dd01v.
       READ TABLE lt_dd01_texts ASSIGNING <dd01_text> WITH KEY ddlanguage = <lang>.
       IF sy-subrc > 0.
-        lcx_exception=>raise( |DD01_TEXTS cannot find lang { <lang> } in XML| ).
+        zcx_abapgit_exception=>raise( |DD01_TEXTS cannot find lang { <lang> } in XML| ).
       ENDIF.
       MOVE-CORRESPONDING <dd01_text> TO ls_dd01v_tmp.
 
@@ -359,7 +359,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from DDIF_DOMA_PUT @TEXTS' ).
+        zcx_abapgit_exception=>raise( 'error from DDIF_DOMA_PUT @TEXTS' ).
       ENDIF.
     ENDLOOP.
 

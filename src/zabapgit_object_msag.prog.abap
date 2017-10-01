@@ -24,10 +24,10 @@ CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 
 ENDCLASS.                    "lcl_object_msag DEFINITION
@@ -92,7 +92,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
         no_permission     = 3
         OTHERS            = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RS_DELETE_MESSAGE_ID' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_DELETE_MESSAGE_ID' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -126,7 +126,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
         permission_failure  = 02
         unknown_objectclass = 03.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_CORR_INSERT' ).
     ENDIF.
 
     SELECT * FROM t100u INTO TABLE lt_before
@@ -136,7 +136,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       DELETE lt_before WHERE msgnr = <ls_t100>-msgnr.
       MODIFY t100 FROM <ls_t100>.                         "#EC CI_SUBRC
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'MSAG: Table T100 modify failed' ).
+        zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
       CLEAR ls_t100u.
       MOVE-CORRESPONDING <ls_t100> TO ls_t100u ##enh_ok.
@@ -145,7 +145,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ls_t100u-selfdef = '3'.
       MODIFY t100u FROM ls_t100u.                         "#EC CI_SUBRC
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'MSAG: Table T100U modify failed' ).
+        zcx_abapgit_exception=>raise( 'MSAG: Table T100U modify failed' ).
       ENDIF.
     ENDLOOP.
 
@@ -156,7 +156,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     ls_t100a-ltime = sy-uzeit.
     MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'MSAG: Table T100A modify failed' ).
+      zcx_abapgit_exception=>raise( 'MSAG: Table T100A modify failed' ).
     ENDIF.
 
     ls_t100t-sprsl = mv_language.
@@ -164,7 +164,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
     ls_t100t-stext = ls_t100a-stext.
     MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'MSAG: Table T100T modify failed' ).
+      zcx_abapgit_exception=>raise( 'MSAG: Table T100T modify failed' ).
     ENDIF.
 
     LOOP AT lt_before INTO ls_t100u.
@@ -293,7 +293,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
       ls_t100-arbgb = lv_msg_id.
       MODIFY t100 FROM ls_t100.                           "#EC CI_SUBRC
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'MSAG: Table T100 modify failed' ).
+        zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
     ENDLOOP.
 

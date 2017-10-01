@@ -17,7 +17,7 @@ CLASS lcl_object_xslt DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get
         RETURNING VALUE(ro_xslt) TYPE REF TO cl_o2_api_xsltdesc
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_xslt DEFINITION
 
@@ -53,7 +53,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         permission_failure = 2
         OTHERS             = 3 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
+      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
     ENDIF.
 
   ENDMETHOD.
@@ -126,7 +126,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         undefined_name          = 5
         OTHERS                  = 6 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
+      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
     ENDIF.
 
     lo_xslt->activate( ).
@@ -159,7 +159,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         version_not_found  = 4
         OTHERS             = 5 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
+      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
     ENDIF.
 
     lo_xslt->set_changeable( abap_true ).

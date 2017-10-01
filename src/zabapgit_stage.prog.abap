@@ -26,7 +26,7 @@ CLASS lcl_stage DEFINITION FINAL.
     CLASS-METHODS method_description
       IMPORTING iv_method             TYPE ty_method
       RETURNING VALUE(rv_description) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS:
       constructor
@@ -41,21 +41,21 @@ CLASS lcl_stage DEFINITION FINAL.
         IMPORTING iv_path     TYPE lif_defs=>ty_file-path
                   iv_filename TYPE lif_defs=>ty_file-filename
                   iv_data     TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       reset
         IMPORTING iv_path     TYPE lif_defs=>ty_file-path
                   iv_filename TYPE lif_defs=>ty_file-filename
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       reset_all
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       rm
         IMPORTING iv_path     TYPE lif_defs=>ty_file-path
                   iv_filename TYPE lif_defs=>ty_file-filename
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       ignore
         IMPORTING iv_path     TYPE lif_defs=>ty_file-path
                   iv_filename TYPE lif_defs=>ty_file-filename
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lookup
         IMPORTING iv_path          TYPE lif_defs=>ty_file-path
                   iv_filename      TYPE lif_defs=>ty_file-filename
@@ -79,7 +79,7 @@ CLASS lcl_stage DEFINITION FINAL.
                   iv_filename TYPE lif_defs=>ty_file-filename
                   iv_method   TYPE ty_method
                   iv_data     TYPE xstring OPTIONAL
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.   "lcl_stage DEFINITION
 
@@ -155,7 +155,7 @@ CLASS lcl_stage IMPLEMENTATION.
       WHEN c_method-ignore.
         rv_description = 'ignore' ##NO_TEXT.
       WHEN OTHERS.
-        lcx_exception=>raise( 'unknown staging method type' ).
+        zcx_abapgit_exception=>raise( 'unknown staging method type' ).
     ENDCASE.
 
   ENDMETHOD.        "method_description

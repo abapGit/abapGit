@@ -36,7 +36,7 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING.
                   iv_data              TYPE string
         RETURNING VALUE(rs_local_file) TYPE lif_defs=>ty_file_item,
       when_staging
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       then_file_should_be_added
         IMPORTING
           is_local_file TYPE lif_defs=>ty_file_item,
@@ -335,13 +335,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_it_should_raise_exception.
-    DATA: lo_exception TYPE REF TO lcx_exception.
+    DATA: lo_exception TYPE REF TO zcx_abapgit_exception.
     TRY.
         when_staging( ).
         cl_abap_unit_assert=>fail( 'Should have raised exception').
-      CATCH lcx_exception INTO lo_exception.
+      CATCH zcx_abapgit_exception INTO lo_exception.
         cl_abap_unit_assert=>assert_equals(
-          act = lo_exception->mv_text
+          act = lo_exception->text
           exp = with_text ).
     ENDTRY.
   ENDMETHOD.

@@ -19,14 +19,14 @@ CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS read
       EXPORTING ev_ddtext TYPE ddtypet-ddtext
                 et_source TYPE abaptxt255_tab
-      RAISING   lcx_exception
+      RAISING   zcx_abapgit_exception
                 lcx_not_found.
 
     METHODS create
       IMPORTING iv_ddtext   TYPE ddtypet-ddtext
                 it_source   TYPE abaptxt255_tab
                 iv_devclass TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_type DEFINITION
 
@@ -54,7 +54,7 @@ CLASS lcl_object_type IMPLEMENTATION.
     TRY.
         read( ).
         rv_bool = abap_true.
-      CATCH lcx_not_found lcx_exception.
+      CATCH lcx_not_found zcx_abapgit_exception.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -90,7 +90,7 @@ CLASS lcl_object_type IMPLEMENTATION.
         reps_not_exist    = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from TYPD_GET_OBJECT' ).
+      zcx_abapgit_exception=>raise( 'error from TYPD_GET_OBJECT' ).
     ENDIF.
 
   ENDMETHOD.                    "read
@@ -140,14 +140,14 @@ CLASS lcl_object_type IMPLEMENTATION.
         illegal_name         = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DD_TYGR_INSERT_SOURCES' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_TYGR_INSERT_SOURCES' ).
     ENDIF.
 
     CONCATENATE c_prefix lv_typegroup INTO lv_progname.
     UPDATE progdir SET uccheck = abap_true
       WHERE name = lv_progname.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error setting uccheck' ).
+      zcx_abapgit_exception=>raise( 'error setting uccheck' ).
     ENDIF.
 
   ENDMETHOD.                    "create
@@ -201,7 +201,7 @@ CLASS lcl_object_type IMPLEMENTATION.
         dialog_needed        = 5
         OTHERS               = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error deleting TYPE' ).
+      zcx_abapgit_exception=>raise( 'error deleting TYPE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

@@ -15,19 +15,19 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RETURNING VALUE(rv_key) TYPE lcl_persistence_db=>ty_value,
       get_name
         RETURNING VALUE(rv_name) TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_files_local
         IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
                   it_filter       TYPE scts_tadir OPTIONAL
         RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_item_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_local_checksums
         RETURNING VALUE(rt_checksums) TYPE lcl_persistence_repo=>ty_local_checksum_tt,
       get_local_checksums_per_file
         RETURNING VALUE(rt_checksums) TYPE lif_defs=>ty_file_signatures_tt,
       get_files_remote
         RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_package
         RETURNING VALUE(rv_package) TYPE lcl_persistence_repo=>ty_repo-package,
       get_master_language
@@ -37,29 +37,29 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       ignore_subpackages
         RETURNING VALUE(rv_yes) TYPE sap_bool,
       delete
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       get_dot_abapgit
         RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
       set_dot_abapgit
         IMPORTING io_dot_abapgit TYPE REF TO lcl_dot_abapgit
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       refresh
         IMPORTING iv_drop_cache TYPE abap_bool DEFAULT abap_false
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       refresh_local, " For testing purposes, maybe removed later
       update_local_checksums
         IMPORTING it_files TYPE lif_defs=>ty_file_signatures_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       rebuild_local_checksums
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       find_remote_dot_abapgit
         RETURNING VALUE(ro_dot) TYPE REF TO lcl_dot_abapgit
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
     DATA: mt_local              TYPE lif_defs=>ty_files_item_tt,
@@ -77,7 +77,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
                   iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
                   iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
                   is_dot_abapgit TYPE lcl_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -91,7 +91,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       refresh REDEFINITION,
       constructor
         IMPORTING is_data TYPE lcl_persistence_repo=>ty_repo
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_url
         RETURNING VALUE(rv_url) TYPE lcl_persistence_repo=>ty_repo-url,
       get_branch_name
@@ -100,42 +100,42 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
       get_branches
         RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       set_url
         IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       set_branch_name
         IMPORTING iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       set_new_remote
         IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
                   iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_sha1_local
         RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1,
       get_sha1_remote
         RETURNING VALUE(rv_sha1) TYPE lcl_persistence_repo=>ty_repo-sha1
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_files_remote REDEFINITION,
       get_objects
         RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize REDEFINITION,
       status
         IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
         RETURNING VALUE(rt_results) TYPE lif_defs=>ty_results_tt
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       reset_status,
       rebuild_local_checksums REDEFINITION,
       push
         IMPORTING is_comment TYPE lif_defs=>ty_comment
                   io_stage   TYPE REF TO lcl_stage
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
         RETURNING VALUE(rt_unnecessary_local_objects) TYPE LIF_DEFS=>TY_TADIR_TT
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delete_unnecessary_local_objs
-        RAISING   lcx_exception lcx_cancel.
+        RAISING   zcx_abapgit_exception lcx_cancel.
 
   PRIVATE SECTION.
     DATA:
@@ -148,14 +148,14 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
     METHODS:
       handle_stage_ignore
         IMPORTING io_stage TYPE REF TO lcl_stage
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       initialize
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       actualize_head_branch
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       delete_initial_online_repo
         IMPORTING iv_commit TYPE flag
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo_online DEFINITION
 
@@ -168,7 +168,7 @@ CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
     METHODS:
       set_files_remote
         IMPORTING it_files TYPE lif_defs=>ty_files_tt
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo_offline DEFINITION
 
@@ -183,43 +183,43 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS list
       RETURNING VALUE(rt_list) TYPE ty_repo_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS refresh
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS new_online
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_online
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS new_offline
       IMPORTING iv_url         TYPE string
                 iv_package     TYPE devclass
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo_offline
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS delete
       IMPORTING io_repo TYPE REF TO lcl_repo
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get
       IMPORTING iv_key         TYPE lcl_persistence_db=>ty_value
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS is_repo_installed
       IMPORTING iv_url              TYPE string
                 iv_target_package   TYPE devclass OPTIONAL
       RETURNING VALUE(rv_installed) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS switch_repo_type
       IMPORTING iv_key     TYPE lcl_persistence_db=>ty_value
                 iv_offline TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -231,10 +231,10 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS add
       IMPORTING io_repo TYPE REF TO lcl_repo
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS validate_package
       IMPORTING iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION

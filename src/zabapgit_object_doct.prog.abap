@@ -128,7 +128,7 @@ CLASS lcl_object_doct IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, DOCT' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, DOCT' ).
     ENDIF.
 
   ENDMETHOD.                    "jump
@@ -150,7 +150,7 @@ CLASS lcl_object_doct IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DOCU_DEL' ).
+      zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

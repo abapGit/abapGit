@@ -80,7 +80,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deserializing ENSC: `
           && lx_root->get_text( ) ##NO_TEXT.
-        lcx_exception=>raise( lv_message ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.  "deserialize
@@ -124,7 +124,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while serializing ENSC: `
           && lx_root->get_text( ) ##NO_TEXT.
-        lcx_exception=>raise( lv_message ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.  "serialize
@@ -170,7 +170,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deleting ENSC: `
           && lx_root->get_text( ) ##NO_TEXT.
-        lcx_exception=>raise( lv_message ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.  "delete

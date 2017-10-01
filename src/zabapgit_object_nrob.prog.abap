@@ -16,7 +16,7 @@ CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PRIVATE SECTION.
     METHODS:
       delete_intervals IMPORTING iv_object TYPE inri-object
-                       RAISING   lcx_exception.
+                       RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_nrob DEFINITION
 
@@ -104,7 +104,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_READ' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_READ' ).
     ENDIF.
 
     io_xml->add( iv_name = 'ATTRIBUTES'
@@ -141,7 +141,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wrong_indicator           = 5
         OTHERS                    = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
     ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
@@ -150,7 +150,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       EXCEPTIONS
         object_not_initialized = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
     ENDIF.
 
     tadir_insert( iv_package ).
@@ -183,7 +183,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         subobject_not_found        = 8
         OTHERS                     = 9.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_LIST' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_LIST' ).
     ENDIF.
 
     IF lines( lt_list ) = 0.
@@ -208,7 +208,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         object_not_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0 OR lv_error = abap_true.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_UPDATE' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_INTERVAL_UPDATE' ).
     ENDIF.
 
     CALL FUNCTION 'NUMBER_RANGE_UPDATE_CLOSE'
@@ -219,7 +219,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         object_not_initialized = 2
         OTHERS                 = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_UPDATE_CLOSE' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_UPDATE_CLOSE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -243,7 +243,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         wrong_indicator    = 3
         OTHERS             = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from NUMBER_RANGE_OBJECT_DELETE' ).
+      zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -279,7 +279,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, NROB' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, NROB' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

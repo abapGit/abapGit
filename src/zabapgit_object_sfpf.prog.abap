@@ -21,10 +21,10 @@ CLASS lcl_object_sfpf DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       load
         RETURNING VALUE(ri_wb_form) TYPE REF TO if_fp_wb_form
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       form_to_xstring
         RETURNING VALUE(rv_xstr) TYPE xstring
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_doma DEFINITION
 
@@ -96,7 +96,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
     TRY.
         lo_wb_form->delete( lv_name ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPI error, delete' ).
+        zcx_abapgit_exception=>raise( 'SFPI error, delete' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete
@@ -111,7 +111,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
     TRY.
         ri_wb_form = cl_fp_wb_form=>load( lv_name ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPF error, load' ).
+        zcx_abapgit_exception=>raise( 'SFPF error, load' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -127,7 +127,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
         li_fp_form ?= li_wb_form->get_object( ).
         rv_xstr = cl_fp_helper=>convert_form_to_xstring( li_fp_form ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPF error, form_to_xstring' ).
+        zcx_abapgit_exception=>raise( 'SFPF error, form_to_xstring' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -214,7 +214,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
         li_wb_object->save( ).
         li_wb_object->free( ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPF error, deserialize' ).
+        zcx_abapgit_exception=>raise( 'SFPF error, deserialize' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).

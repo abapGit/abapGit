@@ -18,15 +18,15 @@ CLASS lcl_object_prag DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       _raise_pragma_not_exists
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       _raise_pragma_exists
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       _raise_pragma_enqueue
         RAISING
-          lcx_exception.
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -157,19 +157,19 @@ CLASS lcl_object_prag IMPLEMENTATION.
 
   METHOD _raise_pragma_enqueue.
 
-    lcx_exception=>raise( |Pragma { ms_item-obj_name } enqueue error| ).
+    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } enqueue error| ).
 
   ENDMETHOD.
 
   METHOD _raise_pragma_exists.
 
-    lcx_exception=>raise( |Pragma { ms_item-obj_name } exists| ).
+    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } exists| ).
 
   ENDMETHOD.
 
   METHOD _raise_pragma_not_exists.
 
-    lcx_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
+    zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
 
   ENDMETHOD.
 

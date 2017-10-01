@@ -27,7 +27,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
                 es_icfdocu    TYPE icfdocu
                 et_icfhandler TYPE ty_icfhandler_tt
                 ev_url        TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS insert_sicf
       IMPORTING is_icfservice TYPE icfservice
@@ -35,7 +35,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
                 it_icfhandler TYPE ty_icfhandler_tt
                 iv_package    TYPE devclass
                 iv_url        TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS change_sicf
       IMPORTING is_icfservice TYPE icfservice
@@ -43,7 +43,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
                 it_icfhandler TYPE ty_icfhandler_tt
                 iv_package    TYPE devclass
                 iv_parent     TYPE icfparguid
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS to_icfhndlist
       IMPORTING it_list        TYPE ty_icfhandler_tt
@@ -52,7 +52,7 @@ CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS find_parent
       IMPORTING iv_url           TYPE string
       RETURNING VALUE(rv_parent) TYPE icfparguid
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_sicf DEFINITION
 
@@ -171,7 +171,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'SICF - error from get_info_from_serv' ).
+      zcx_abapgit_exception=>raise( 'SICF - error from get_info_from_serv' ).
     ENDIF.
 
     ASSERT lines( lt_serv_info ) = 1.
@@ -261,7 +261,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority          = 5
         OTHERS                = 6 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'SICF - error from service_from_url' ).
+      zcx_abapgit_exception=>raise( 'SICF - error from service_from_url' ).
     ENDIF.
 
   ENDMETHOD.                    "find_parent
@@ -322,7 +322,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |SICF - error from insert_node: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |SICF - error from insert_node: { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.                    "insert_sicf
@@ -388,7 +388,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'SICF - error from change_node' ).
+      zcx_abapgit_exception=>raise( 'SICF - error from change_node' ).
     ENDIF.
 
   ENDMETHOD.                    "change_sicf
@@ -409,7 +409,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
     IF ls_icfservice-icfparguid CO '0'.
 * not supported by the SAP standard API
-      lcx_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
+      zcx_abapgit_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
     ENDIF.
 
     cl_icf_tree=>if_icf_tree~delete_node(
@@ -431,7 +431,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         no_authority                = 11
         OTHERS                      = 12 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'SICF - error from delete_node' ).
+      zcx_abapgit_exception=>raise( 'SICF - error from delete_node' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -467,7 +467,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SICF' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SICF' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

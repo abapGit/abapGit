@@ -7,7 +7,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       lif_gui_page~on_event   REDEFINITION.
 
   PROTECTED SECTION.
@@ -24,19 +24,19 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       test_changed_by
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       retrieve_active_repo
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       render_toc
         IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -77,7 +77,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
         lcl_app=>user( )->set_repo_show( lv_key ).
         TRY.
             lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
-          CATCH lcx_exception ##NO_HANDLER.
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
         ev_state = lif_defs=>gc_event_state-re_render.
@@ -112,7 +112,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
   METHOD render_content.
 
     DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
-          lx_error    TYPE REF TO lcx_exception,
+          lx_error    TYPE REF TO zcx_abapgit_exception,
           lo_tutorial TYPE REF TO lcl_gui_view_tutorial,
           lo_repo     LIKE LINE OF lt_repos.
 
@@ -122,7 +122,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     TRY.
         lt_repos = lcl_app=>repo_srv( )->list( ).
-      CATCH lcx_exception INTO lx_error.
+      CATCH zcx_abapgit_exception INTO lx_error.
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
         RETURN.
     ENDTRY.
@@ -145,7 +145,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     TRY.
         lcl_app=>repo_srv( )->list( ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
 
@@ -155,7 +155,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
           lcl_app=>repo_srv( )->get( mv_show ).
-        CATCH lcx_exception.
+        CATCH zcx_abapgit_exception.
           CLEAR mv_show.
           lcl_app=>user( )->set_repo_show( mv_show ).
       ENDTRY.

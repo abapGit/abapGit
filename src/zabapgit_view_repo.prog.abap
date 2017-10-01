@@ -17,7 +17,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
 
     METHODS constructor
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -34,19 +34,19 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
         IMPORTING iv_lstate      TYPE char1
                   iv_rstate      TYPE char1
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build_head_menu
         IMPORTING iv_lstate         TYPE char1
                   iv_rstate         TYPE char1
         RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       build_grid_menu
         RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       render_item_files
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
@@ -63,7 +63,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     METHODS:
       build_obj_jump_link
@@ -125,7 +125,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     DATA: lt_repo_items TYPE lcl_repo_content_list=>tt_repo_items,
           lo_browser    TYPE REF TO lcl_repo_content_list,
-          lx_error      TYPE REF TO lcx_exception,
+          lx_error      TYPE REF TO zcx_abapgit_exception,
           lv_lstate     TYPE char1,
           lv_rstate     TYPE char1,
           lv_max        TYPE abap_bool,
@@ -208,7 +208,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
         ro_html->add( '</div>' ).
 
-      CATCH lcx_exception INTO lx_error.
+      CATCH zcx_abapgit_exception INTO lx_error.
         ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
@@ -348,7 +348,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                              iv_act = |{ lif_defs=>gc_action-go_diff }?key={ lv_key }|
                              iv_opt = lif_defs=>gc_html_opt-strong ).
           ENDIF.
-        CATCH lcx_exception ##NO_HANDLER.
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
           " authorization error or repository does not exist
           " ignore error
       ENDTRY.

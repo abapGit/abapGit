@@ -17,10 +17,10 @@ CLASS lcl_object_sfpi DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       load
         RETURNING VALUE(ri_wb_interface) TYPE REF TO if_fp_wb_interface
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       interface_to_xstring
         RETURNING VALUE(rv_xstr) TYPE xstring
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_doma DEFINITION
 
@@ -92,7 +92,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
     TRY.
         lo_wb_interface->delete( lv_name ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPI error, delete' ).
+        zcx_abapgit_exception=>raise( 'SFPI error, delete' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete
@@ -107,7 +107,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
     TRY.
         ri_wb_interface = cl_fp_wb_interface=>load( lv_name ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPI error, load' ).
+        zcx_abapgit_exception=>raise( 'SFPI error, load' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -123,7 +123,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
         li_fp_interface ?= li_wb_interface->get_object( ).
         rv_xstr = cl_fp_helper=>convert_interface_to_xstring( li_fp_interface ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPI error, interface_to_xstring' ).
+        zcx_abapgit_exception=>raise( 'SFPI error, interface_to_xstring' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -160,7 +160,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
         li_wb_object->save( ).
         li_wb_object->free( ).
       CATCH cx_fp_api.
-        lcx_exception=>raise( 'SFPI error, deserialize' ).
+        zcx_abapgit_exception=>raise( 'SFPI error, deserialize' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).

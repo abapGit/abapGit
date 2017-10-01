@@ -16,7 +16,7 @@ CLASS lcl_object_sfbs DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get
         RETURNING VALUE(ro_bfs) TYPE REF TO cl_sfw_bfs
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_SFBS DEFINITION
 
@@ -57,7 +57,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
         ro_bfs->free( ).
         ro_bfs = cl_sfw_bfs=>get_bfs( lv_bfset ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error from CL_SFW_BFS=>GET_BFS' ).
+        zcx_abapgit_exception=>raise( 'Error from CL_SFW_BFS=>GET_BFS' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -168,7 +168,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
     TRY.
         lo_bfs = cl_sfw_bfs=>create_bfs( lv_bfset ).
       CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
-        lcx_exception=>raise( 'error in CL_SFW_BFS=>CREATE_BFS' ).
+        zcx_abapgit_exception=>raise( 'error in CL_SFW_BFS=>CREATE_BFS' ).
     ENDTRY.
 
     ls_header-author = sy-uname.
@@ -206,7 +206,7 @@ CLASS lcl_object_sfbs IMPLEMENTATION.
 
     READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lcx_exception=>raise( 'Error deleting SFBS' ).
+      zcx_abapgit_exception=>raise( 'Error deleting SFBS' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

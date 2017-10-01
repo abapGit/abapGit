@@ -67,7 +67,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
                      ig_data = ls_area_attributes ).
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -95,7 +95,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
             silent_mode         = abap_true.
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -137,7 +137,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
             OTHERS               = 3.
 
         IF sy-subrc <> 0.
-          lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
+          zcx_abapgit_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
         ENDIF.
 
         CALL METHOD ('\PROGRAM=SAPMSHM_MONITOR\CLASS=LCL_SHMM')=>('FREE_AREA_BY_NAME')
@@ -157,7 +157,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
             appendable  = lv_append.
 
         IF lv_request <> lc_request_delete.
-          lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
+          zcx_abapgit_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
         ENDIF.
 
         CALL METHOD lo_cts_if->('INSERT_AREA')
@@ -223,7 +223,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
             _collect             = ' '.
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -259,7 +259,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHMA' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHMA' ).
     ENDIF.
 
   ENDMETHOD.

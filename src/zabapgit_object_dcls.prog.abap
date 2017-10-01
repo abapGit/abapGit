@@ -55,8 +55,8 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         jump_adt( i_obj_name = ms_item-obj_name
                   i_obj_type = ms_item-obj_type ).
 
-      CATCH lcx_exception.
-        lcx_exception=>raise( 'DCLS Jump Error' ).
+      CATCH zcx_abapgit_exception.
+        zcx_abapgit_exception=>raise( 'DCLS Jump Error' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -75,7 +75,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
             iv_dclname = ms_item-obj_name.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'DCLS error' ).
+        zcx_abapgit_exception=>raise( 'DCLS error' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -133,7 +133,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
                      ig_data = <ls_data> ).
 
       CATCH cx_root.
-        lcx_exception=>raise( 'DCLS error' ).
+        zcx_abapgit_exception=>raise( 'DCLS error' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -175,7 +175,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         tadir_insert( iv_package ).
 
       CATCH cx_root.
-        lcx_exception=>raise( 'DCLS error' ).
+        zcx_abapgit_exception=>raise( 'DCLS error' ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).

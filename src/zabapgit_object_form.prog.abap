@@ -57,7 +57,7 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
       RETURNING
         VALUE(et_lines) TYPE lcl_object_form=>tyt_lines
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
 
     METHODS _clear_changed_fields
       CHANGING
@@ -68,7 +68,7 @@ CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
         is_form_data TYPE lcl_object_form=>tys_form_data
         it_lines     TYPE lcl_object_form=>tyt_lines
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
 
     METHODS _find_form
       IMPORTING

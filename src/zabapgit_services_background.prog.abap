@@ -8,7 +8,7 @@ CLASS lcl_services_bkg DEFINITION FINAL.
 
     CLASS-METHODS update_task
       IMPORTING is_bg_task TYPE lcl_persist_background=>ty_background
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_services_background
 

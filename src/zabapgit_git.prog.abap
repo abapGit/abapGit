@@ -18,7 +18,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 it_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects  TYPE lif_defs=>ty_objects_tt
                 ev_branch   TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 * local to remote
     CLASS-METHODS receive_pack
@@ -27,12 +27,12 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_new         TYPE lif_defs=>ty_sha1
                 iv_branch_name TYPE string
                 iv_pack        TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS branches
       IMPORTING iv_url                TYPE string
       RETURNING VALUE(ro_branch_list) TYPE REF TO lcl_git_branch_list
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_service,
@@ -45,7 +45,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_service     TYPE string
       EXPORTING eo_client      TYPE REF TO lcl_http_client
                 eo_branch_list TYPE REF TO lcl_git_branch_list
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS find_branch
       IMPORTING iv_url         TYPE string
@@ -53,12 +53,12 @@ CLASS lcl_git_transport DEFINITION FINAL.
                 iv_branch_name TYPE string
       EXPORTING eo_client      TYPE REF TO lcl_http_client
                 ev_branch      TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS parse
       EXPORTING ev_pack TYPE xstring
       CHANGING  cv_data TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_transport DEFINITION
 
@@ -89,22 +89,22 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     CLASS-METHODS decode
       IMPORTING iv_data           TYPE xstring
       RETURNING VALUE(rt_objects) TYPE lif_defs=>ty_objects_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS decode_tree
       IMPORTING iv_data         TYPE xstring
       RETURNING VALUE(rt_nodes) TYPE ty_nodes_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS decode_commit
       IMPORTING iv_data          TYPE xstring
       RETURNING VALUE(rs_commit) TYPE ty_commit
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS encode
       IMPORTING it_objects     TYPE lif_defs=>ty_objects_tt
       RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS encode_tree
       IMPORTING it_nodes       TYPE ty_nodes_tt
@@ -118,7 +118,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
       IMPORTING iv_type           TYPE lif_defs=>ty_type
                 iv_length         TYPE i
       RETURNING VALUE(rv_xstring) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
@@ -128,12 +128,12 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
 
     CLASS-METHODS decode_deltas
       CHANGING ct_objects TYPE lif_defs=>ty_objects_tt
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS delta
       IMPORTING is_object  TYPE lif_defs=>ty_object
       CHANGING  ct_objects TYPE lif_defs=>ty_objects_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS delta_header
       EXPORTING ev_header TYPE i
@@ -146,7 +146,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     CLASS-METHODS get_type
       IMPORTING iv_x           TYPE x
       RETURNING VALUE(rv_type) TYPE lif_defs=>ty_type
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS get_length
       EXPORTING ev_length TYPE i
@@ -155,7 +155,7 @@ CLASS lcl_git_pack DEFINITION FINAL FRIENDS ltcl_git_pack.
     CLASS-METHODS zlib_decompress
       CHANGING cv_data         TYPE xstring
                cv_decompressed TYPE xstring
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_pack DEFINITION
 
@@ -264,11 +264,11 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
-      lcx_exception=>raise( 'unpack not ok' ).
+      zcx_abapgit_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
-      lcx_exception=>raise( 'pre-receive hook declined' ).
+      zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
     ELSEIF lv_string CP '*funny refname*'.
-      lcx_exception=>raise( 'funny refname' ).
+      zcx_abapgit_exception=>raise( 'funny refname' ).
     ENDIF.
 
   ENDMETHOD.                    "receive_pack
@@ -286,7 +286,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lv_len = lcl_git_utils=>length_utf8_hex( cv_data ).
 
       IF lv_len > xstrlen( cv_data ).
-        lcx_exception=>raise( 'parse, string length too large' ).
+        zcx_abapgit_exception=>raise( 'parse, string length too large' ).
       ENDIF.
 
       lv_contents = cv_data(lv_len).
@@ -372,7 +372,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
            CHANGING cv_data = lv_xstring ).
 
     IF lv_pack IS INITIAL.
-      lcx_exception=>raise( 'empty pack' ).
+      zcx_abapgit_exception=>raise( 'empty pack' ).
     ENDIF.
 
     et_objects = lcl_git_pack=>decode( lv_pack ).
@@ -441,7 +441,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       WHEN lif_defs=>gc_type-ref_d.
         lv_type = '111'.
       WHEN OTHERS.
-        lcx_exception=>raise( 'Unexpected object type while encoding pack' ).
+        zcx_abapgit_exception=>raise( 'Unexpected object type while encoding pack' ).
     ENDCASE.
 
     lv_x4 = iv_length.
@@ -466,7 +466,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       CONCATENATE lv_result '0' lv_bits+7(7) INTO lv_result.
     ELSE.
 * this IF can be refactored, use shifting?
-      lcx_exception=>raise( 'Todo, encoding length' ).
+      zcx_abapgit_exception=>raise( 'Todo, encoding length' ).
     ENDIF.
 
 * convert bit string to xstring
@@ -603,7 +603,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       WHEN '111'.
         rv_type = lif_defs=>gc_type-ref_d.
       WHEN OTHERS.
-        lcx_exception=>raise( 'Todo, unknown type' ).
+        zcx_abapgit_exception=>raise( 'Todo, unknown type' ).
     ENDCASE.
 
   ENDMETHOD.                    "get_type
@@ -663,7 +663,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
         OR rs_commit-tree IS INITIAL.
-      lcx_exception=>raise( 'multiple parents? not supported' ).
+      zcx_abapgit_exception=>raise( 'multiple parents? not supported' ).
     ENDIF.
 
   ENDMETHOD.                    "decode_commit
@@ -714,10 +714,10 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * find base
     READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Base not found, { is_object-sha1 }| ).
+      zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
     ELSEIF <ls_object>-type = lif_defs=>gc_type-ref_d.
 * sanity check
-      lcx_exception=>raise( 'Delta, base eq delta' ).
+      zcx_abapgit_exception=>raise( 'Delta, base eq delta' ).
     ENDIF.
 
     lv_base = <ls_object>-data.
@@ -857,7 +857,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         IF ls_node-chmod <> lif_defs=>gc_chmod-dir
             AND ls_node-chmod <> lif_defs=>gc_chmod-file
             AND ls_node-chmod <> lif_defs=>gc_chmod-executable.
-          lcx_exception=>raise( 'Unknown chmod' ).
+          zcx_abapgit_exception=>raise( 'Unknown chmod' ).
         ENDIF.
 
         ls_node-name = lv_name.
@@ -886,7 +886,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     cv_decompressed = ls_data-raw.
 
     IF lv_compressed_len IS INITIAL.
-      lcx_exception=>raise( 'Decompression falied :o/' ).
+      zcx_abapgit_exception=>raise( 'Decompression falied :o/' ).
     ENDIF.
 
     cv_data = cv_data+lv_compressed_len.
@@ -899,7 +899,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       cv_data = cv_data+1.
     ENDIF.
     IF cv_data(4) <> lv_adler32.
-      lcx_exception=>raise( 'Wrong Adler checksum' ).
+      zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
     ENDIF.
   ENDMETHOD.
 
@@ -926,13 +926,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 * header
     IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
-      lcx_exception=>raise( 'Unexpected pack header' ).
+      zcx_abapgit_exception=>raise( 'Unexpected pack header' ).
     ENDIF.
     lv_data = lv_data+4.
 
 * version
     IF lv_data(4) <> c_version.
-      lcx_exception=>raise( 'Version not supported' ).
+      zcx_abapgit_exception=>raise( 'Version not supported' ).
     ENDIF.
     lv_data = lv_data+4.
 
@@ -958,7 +958,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * strip header, '789C', CMF + FLG
       lv_zlib = lv_data(2).
       IF lv_zlib <> c_zlib AND lv_zlib <> c_zlib_hmm.
-        lcx_exception=>raise( 'Unexpected zlib header' ).
+        zcx_abapgit_exception=>raise( 'Unexpected zlib header' ).
       ENDIF.
       lv_data = lv_data+2.
 
@@ -973,7 +973,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
             raw_out_len = lv_decompress_len ).
 
         IF lv_expected <> lv_decompress_len.
-          lcx_exception=>raise( 'Decompression falied' ).
+          zcx_abapgit_exception=>raise( 'Decompression falied' ).
         ENDIF.
 
         cl_abap_gzip=>compress_binary(
@@ -1024,7 +1024,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
     IF to_upper( lv_sha1 ) <> lv_data.
-      lcx_exception=>raise( 'SHA1 at end of pack doesnt match' ).
+      zcx_abapgit_exception=>raise( 'SHA1 at end of pack doesnt match' ).
     ENDIF.
 
     decode_deltas( CHANGING ct_objects = rt_objects ).
@@ -1109,7 +1109,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
       EXPORTING et_files   TYPE lif_defs=>ty_files_tt
                 et_objects TYPE lif_defs=>ty_objects_tt
                 ev_branch  TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS push
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
@@ -1117,24 +1117,24 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 io_stage         TYPE REF TO lcl_stage
       EXPORTING ev_branch        TYPE lif_defs=>ty_sha1
                 et_updated_files TYPE lif_defs=>ty_file_signatures_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS create_branch
       IMPORTING io_repo TYPE REF TO lcl_repo_online
                 iv_name TYPE string
                 iv_from TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS delete_branch
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_branch TYPE lcl_git_branch_list=>ty_git_branch
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS full_tree
       IMPORTING it_objects         TYPE lif_defs=>ty_objects_tt
                 iv_branch          TYPE lif_defs=>ty_sha1
       RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -1159,7 +1159,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
     CLASS-METHODS build_trees
       IMPORTING it_expanded     TYPE ty_expanded_tt
       RETURNING VALUE(rt_trees) TYPE ty_trees_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS find_folders
       IMPORTING it_expanded       TYPE ty_expanded_tt
@@ -1170,14 +1170,14 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 iv_sha1    TYPE lif_defs=>ty_sha1
                 iv_path    TYPE string
       CHANGING  ct_files   TYPE lif_defs=>ty_files_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS walk_tree
       IMPORTING it_objects         TYPE lif_defs=>ty_objects_tt
                 iv_tree            TYPE lif_defs=>ty_sha1
                 iv_base            TYPE string
       RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS receive_pack
       IMPORTING is_comment       TYPE lif_defs=>ty_comment
@@ -1186,7 +1186,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 it_blobs         TYPE lif_defs=>ty_files_tt
                 io_stage         TYPE REF TO lcl_stage
       RETURNING VALUE(rv_branch) TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_porcelain DEFINITION
 
@@ -1199,7 +1199,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: lv_time    TYPE lcl_time=>ty_unixtime,
+    DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
           lv_commit  TYPE xstring,
           lt_objects TYPE lif_defs=>ty_objects_tt,
           lv_pack    TYPE xstring,
@@ -1210,7 +1210,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
                    <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_time = lcl_time=>get( ).
+    lv_time = zcl_abapgit_time=>get( ).
 
     READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
     ASSERT sy-subrc = 0.
@@ -1302,7 +1302,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lv_pack    TYPE xstring.
 
     IF iv_name CS ` `.
-      lcx_exception=>raise( 'Branch name cannot contain blank spaces' ).
+      zcx_abapgit_exception=>raise( 'Branch name cannot contain blank spaces' ).
     ENDIF.
 
 * "client MUST send an empty packfile"
@@ -1391,7 +1391,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           CLEAR <ls_updated>-sha1.       " Mark as deleted
 
         WHEN OTHERS.
-          lcx_exception=>raise( 'stage method not supported, todo' ).
+          zcx_abapgit_exception=>raise( 'stage method not supported, todo' ).
       ENDCASE.
     ENDLOOP.
 
@@ -1419,7 +1419,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       WITH KEY sha1 = iv_tree
       type = lif_defs=>gc_type-tree.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'tree not found' ).
+      zcx_abapgit_exception=>raise( 'tree not found' ).
     ENDIF.
     lt_nodes = lcl_git_pack=>decode_tree( ls_object-data ).
 
@@ -1439,7 +1439,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             iv_base    = iv_base && <ls_node>-name && '/' ).
           APPEND LINES OF lt_expanded TO rt_expanded.
         WHEN OTHERS.
-          lcx_exception=>raise( 'walk_tree: unknown chmod' ).
+          zcx_abapgit_exception=>raise( 'walk_tree: unknown chmod' ).
       ENDCASE.
     ENDLOOP.
 
@@ -1453,7 +1453,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = lif_defs=>gc_type-commit.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'commit not found' ).
+      zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.
     ls_commit = lcl_git_pack=>decode_commit( ls_object-data ).
 
@@ -1479,7 +1479,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = lif_defs=>gc_type-commit.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Commit/branch not found' ).
+      zcx_abapgit_exception=>raise( 'Commit/branch not found' ).
     ENDIF.
     ls_commit = lcl_git_pack=>decode_commit( ls_object-data ).
 
@@ -1599,7 +1599,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = lif_defs=>gc_type-tree.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Walk, tree not found' ).
+      zcx_abapgit_exception=>raise( 'Walk, tree not found' ).
     ENDIF.
 
     lt_nodes = lcl_git_pack=>decode_tree( <ls_tree>-data ).
@@ -1609,7 +1609,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
         READ TABLE it_objects ASSIGNING <ls_blob>
           WITH KEY sha1 = <ls_node>-sha1 type = lif_defs=>gc_type-blob.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Walk, blob not found' ).
+          zcx_abapgit_exception=>raise( 'Walk, blob not found' ).
         ENDIF.
 
         CLEAR ls_file.

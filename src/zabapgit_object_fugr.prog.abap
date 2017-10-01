@@ -37,45 +37,45 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
     METHODS main_name
       RETURNING VALUE(rv_program) TYPE program
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS functions
       RETURNING VALUE(rt_functab) TYPE ty_rs38l_incl_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS includes
       RETURNING VALUE(rt_includes) TYPE rso_t_objnm
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_functions
       RETURNING VALUE(rt_functions) TYPE ty_function_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_functions
       IMPORTING it_functions TYPE ty_function_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_xml
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_includes
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS deserialize_includes
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS are_exceptions_class_based
       IMPORTING iv_function_name TYPE rs38l_fnam
       RETURNING VALUE(rv_return) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_fugr DEFINITION
 
@@ -146,7 +146,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         no_program   = 2
         OTHERS       = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
     SELECT unam AS user udat AS date utime AS time FROM reposrc
@@ -231,7 +231,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           OTHERS                       = 12.
 
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
+        zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
       ENDIF.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
@@ -252,7 +252,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
             error_message            = 1
             OTHERS                   = 2.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from FUNCTION_DELETE' ).
+          zcx_abapgit_exception=>raise( 'error from FUNCTION_DELETE' ).
         ENDIF.
       ENDIF.
 
@@ -289,7 +289,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           canceled_in_corr        = 10
           OTHERS                  = 11.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |error from RS_FUNCTIONMODULE_INSERT: {
+        zcx_abapgit_exception=>raise( |error from RS_FUNCTIONMODULE_INSERT: {
           sy-subrc } { sy-msgid }{ sy-msgno }| ).
       ENDIF.
 
@@ -371,7 +371,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'AREAT'
@@ -399,7 +399,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         OTHERS                  = 12.
     IF sy-subrc <> 0 AND sy-subrc <> 1 AND sy-subrc <> 3.
 * todo, change description
-      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
+      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize_xml
@@ -457,7 +457,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         no_program   = 2
         OTHERS       = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
     LOOP AT lt_functab ASSIGNING <ls_func>.
@@ -517,7 +517,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         function_pool_not_found = 1
         OTHERS                  = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
     ENDIF.
 
     SORT rt_functab BY funcname ASCENDING.
@@ -554,7 +554,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         area_length_error            = 11
         OTHERS                       = 12.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
+      zcx_abapgit_exception=>raise( 'Error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
@@ -610,7 +610,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       IF sy-subrc = 2.
         CONTINUE.
       ELSEIF sy-subrc <> 0.
-        lcx_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
+        zcx_abapgit_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
 
       ls_function-exception_classes = are_exceptions_class_based( <ls_func>-funcname ).
@@ -675,7 +675,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         invalid_name       = 3
         OTHERS             = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
+      zcx_abapgit_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
     ENDIF.
   ENDMETHOD.
 
@@ -775,7 +775,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         cancelled              = 9
         OTHERS                 = 10.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
+      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
