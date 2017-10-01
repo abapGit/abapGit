@@ -636,7 +636,8 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_tadir = lcl_tadir=>read(
       iv_package            = get_package( )
       iv_ignore_subpackages = ignore_subpackages( )
-      io_dot                = get_dot_abapgit( ) ).
+      io_dot                = get_dot_abapgit( )
+      io_log                = io_log ).
 
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).

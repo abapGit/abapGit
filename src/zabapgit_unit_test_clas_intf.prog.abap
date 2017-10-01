@@ -150,6 +150,10 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
     ms_delete_key = is_deletion_key.
   ENDMETHOD.
 
+  METHOD lif_oo_object_fnc~read_superclass.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltd_fake_object_files DEFINITION FOR TESTING

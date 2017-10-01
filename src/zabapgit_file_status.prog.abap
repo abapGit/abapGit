@@ -144,8 +144,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lv_index       LIKE sy-tabix,
-          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit.
+    DATA: lv_index        LIKE sy-tabix,
+          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 

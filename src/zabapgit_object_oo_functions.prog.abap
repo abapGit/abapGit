@@ -125,7 +125,12 @@ INTERFACE lif_oo_object_fnc.
       IMPORTING
         is_deletion_key TYPE seoclskey
       RAISING
-        lcx_exception.
+        lcx_exception,
+    read_superclass
+      IMPORTING
+        iv_classname         TYPE seoclsname
+      RETURNING
+        VALUE(rv_superclass) TYPE seoclsname.
 ENDINTERFACE.
 
 CLASS lcl_oo_serializer DEFINITION.
@@ -610,6 +615,11 @@ CLASS lcl_oo_base IMPLEMENTATION.
 
   METHOD lif_oo_object_fnc~delete.
     ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+  METHOD lif_oo_object_fnc~read_superclass.
+    SELECT SINGLE refclsname FROM vseoextend INTO rv_superclass
+      WHERE clsname = iv_classname.
   ENDMETHOD.
 
 ENDCLASS.
