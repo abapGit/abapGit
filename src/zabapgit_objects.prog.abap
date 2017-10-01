@@ -2329,5 +2329,8 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_descr   TYPE string
       CHANGING  ct_files   TYPE lif_defs=>ty_file_signatures_tt
       RAISING   lcx_exception.
+    CLASS-METHODS resolve_ddls
+      CHANGING
+        ct_tadir TYPE lif_defs=>ty_tadir_tt.
 
 ENDCLASS.                    "lcl_object DEFINITION
