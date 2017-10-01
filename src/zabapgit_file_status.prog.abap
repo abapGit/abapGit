@@ -51,7 +51,7 @@ CLASS lcl_file_status DEFINITION FINAL
                   it_items         TYPE lif_defs=>ty_items_ts
                   it_state         TYPE lif_defs=>ty_file_signatures_ts
         RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       identify_object
         IMPORTING iv_filename TYPE string
                   iv_path     TYPE string
@@ -59,7 +59,7 @@ CLASS lcl_file_status DEFINITION FINAL
                   io_dot      TYPE REF TO lcl_dot_abapgit
         EXPORTING es_item     TYPE lif_defs=>ty_item
                   ev_is_xml   TYPE abap_bool
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 

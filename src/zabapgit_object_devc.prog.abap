@@ -18,13 +18,13 @@ CLASS lcl_object_devc DEFINITION
   PRIVATE SECTION.
     METHODS:
       get_package RETURNING VALUE(ri_package) TYPE REF TO if_package
-                  RAISING   lcx_exception,
+                  RAISING   zcx_abapgit_exception,
       update_pinf_usages IMPORTING ii_package    TYPE REF TO if_package
                                    it_usage_data TYPE scomppdata
-                         RAISING   lcx_exception,
+                         RAISING   zcx_abapgit_exception,
       set_lock IMPORTING ii_package TYPE REF TO if_package
                          iv_lock    TYPE abap_bool
-               RAISING   lcx_exception.
+               RAISING   zcx_abapgit_exception.
     DATA:
       mv_local_devclass TYPE devclass.
 ENDCLASS.
@@ -54,7 +54,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
       IF sy-subrc = 1.
         RETURN.
       ELSEIF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
       ENDIF.
     ENDIF.
   ENDMETHOD.
@@ -161,7 +161,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           superpackage_invalid       = 17
           OTHERS                     = 18 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from IF_PACKAGE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
       ENDIF.
 
 *      " If the application component was cleared SET_ALL_ATTRIBUTES doesn't change it
@@ -201,7 +201,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           error_in_cts_checks        = 21
           OTHERS                     = 22 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from CL_PACKAGE_FACTORY=>CREATE_NEW_PACKAGE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>CREATE_NEW_PACKAGE { sy-subrc }| ).
       ENDIF.
     ENDIF.
 
@@ -212,7 +212,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
             iv_name = 'PERMISSION'
           CHANGING
             cg_data = lt_usage_data ).
-      CATCH lcx_exception ##NO_HANDLER.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
         " No permissions saved
     ENDTRY.
 
@@ -234,7 +234,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
         object_invalid        = 4
         OTHERS                = 5 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->SAVE_GENERIC { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SAVE_GENERIC { sy-subrc }| ).
     ENDIF.
 
     set_lock( ii_package = li_package iv_lock = abap_false ).
@@ -257,7 +257,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           package_hierarchy_error = 2
           OTHERS                  = 3 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
       ENDIF.
     ENDIF.
   ENDMETHOD.
@@ -282,7 +282,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
         invalid_object_type = 2
         OTHERS              = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
+      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
     ENDIF.
   ENDMETHOD.
 
@@ -296,7 +296,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
 
     li_package = get_package( ).
     IF li_package IS NOT BOUND.
-      lcx_exception=>raise( |Could not find package to serialize.| ).
+      zcx_abapgit_exception=>raise( |Could not find package to serialize.| ).
     ENDIF.
 
     li_package->get_all_attributes(
@@ -308,7 +308,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
         intern_err      = 3
         OTHERS          = 4 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
     ENDIF.
 
     CLEAR: ls_package_data-devclass,
@@ -342,7 +342,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->GET_PERMISSION_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_PERMISSION_TO_USE { sy-subrc }| ).
     ENDIF.
 
     LOOP AT lt_intf_usages INTO li_usage.
@@ -354,7 +354,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           intern_err        = 2
           OTHERS            = 3 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise(
+        zcx_abapgit_exception=>raise(
           |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
       ENDIF.
 
@@ -385,7 +385,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE=>GET_PERMISSIONS_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE=>GET_PERMISSIONS_TO_USE { sy-subrc }| ).
     ENDIF.
 
     ls_data_sign-err_sever = abap_true.
@@ -410,7 +410,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
             intern_err            = 3
             OTHERS                = 4 ).
         IF sy-subrc <> 0.
-          lcx_exception=>raise(
+          zcx_abapgit_exception=>raise(
             |Error from IF_PACKAGE_PERMISSION_TO_USE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
         ENDIF.
 
@@ -428,7 +428,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
             unexpected_error        = 5
             OTHERS                  = 6 ).
         IF sy-subrc <> 0.
-          lcx_exception=>raise( |Error from IF_PACKAGE->ADD_PERMISSION_TO_USE { sy-subrc }| ).
+          zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->ADD_PERMISSION_TO_USE { sy-subrc }| ).
         ENDIF.
 
       ENDIF.
@@ -451,7 +451,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           intern_err            = 4
           OTHERS                = 5 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from IF_PACKAGE->DELETE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->DELETE { sy-subrc }| ).
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -477,7 +477,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           unexpected_error            = 10
           OTHERS                      = 11 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Error from IF_PACKAGE->SET_CHANGEABLE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_CHANGEABLE { sy-subrc }| ).
       ENDIF.
     ENDIF.
 
@@ -499,7 +499,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     IF ( sy-subrc = 1 AND iv_lock = abap_true ) OR ( sy-subrc = 2 AND iv_lock = abap_false ).
       " There's no getter to find out beforehand...
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from IF_PACKAGE->SET_PERMISSIONS_CHANGEABLE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_PERMISSIONS_CHANGEABLE { sy-subrc }| ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
