@@ -344,7 +344,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE lif_defs=>ty_files_item_tt,
           lt_remote       TYPE lif_defs=>ty_files_tt,
           lt_status       TYPE lif_defs=>ty_results_tt,
-          lt_package      TYPE lcl_persistence_repo=>ty_repo-package.
+          lv_package      TYPE lcl_persistence_repo=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
                    <tadir>  TYPE lif_defs=>ty_tadir.
@@ -354,8 +354,9 @@ CLASS lcl_repo_online IMPLEMENTATION.
     lt_remote = me->get_files_remote( ).
     lt_status = me->status( ).
 
-    lt_package = me->get_package( ).
-    lt_tadir = lcl_tadir=>read( lt_package ).
+    lv_package = me->get_package( ).
+    lt_tadir = lcl_tadir=>read( lv_package ).
+    SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <status>
                       WHERE lstate = lif_defs=>gc_state-added.
