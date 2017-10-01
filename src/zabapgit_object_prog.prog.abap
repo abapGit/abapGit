@@ -98,7 +98,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
         reject_deletion    = 4
         OTHERS             = 5.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DELETE_PROGRAM' ).
+      lcx_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.                    "delete
