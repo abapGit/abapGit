@@ -28,8 +28,14 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
         iv_language TYPE spras.
 
   PROTECTED SECTION.
+    TYPES tty_bdcdata TYPE STANDARD TABLE OF bdcdata
+                           WITH NON-UNIQUE DEFAULT KEY.
 
     METHODS get_metadata REDEFINITION.
+
+    METHODS change_bdc_jump_data ABSTRACT
+      CHANGING
+        ct_bdcdata TYPE tty_bdcdata.
 
   PRIVATE SECTION.
 
@@ -89,8 +95,53 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~jump.
-    " No idea how to jump to SMW0
-    lcx_exception=>raise( 'Please go to SMW0 for W3MI object' ).
+
+    DATA: ls_bdcdata TYPE bdcdata,
+          lt_bdcdata TYPE STANDARD TABLE OF bdcdata.
+
+    ls_bdcdata-program  = 'SAPMWWW0'.
+    ls_bdcdata-dynpro   = '0100'.
+    ls_bdcdata-dynbegin = 'X'.
+    APPEND ls_bdcdata TO lt_bdcdata.
+
+    change_bdc_jump_data(
+      CHANGING
+        ct_bdcdata = lt_bdcdata ).
+
+    CLEAR ls_bdcdata.
+    ls_bdcdata-fnam = 'BDC_OKCODE'.
+    ls_bdcdata-fval = '=CRO1'.
+    APPEND ls_bdcdata TO lt_bdcdata.
+
+    ls_bdcdata-program  = 'RSWWWSHW'.
+    ls_bdcdata-dynpro   = '1000'.
+    ls_bdcdata-dynbegin = 'X'.
+    APPEND ls_bdcdata TO lt_bdcdata.
+
+    CLEAR ls_bdcdata.
+    ls_bdcdata-fnam     = 'SO_OBJID-LOW'.
+    ls_bdcdata-fval     = ms_item-obj_name.
+    APPEND ls_bdcdata TO lt_bdcdata.
+
+    CLEAR ls_bdcdata.
+    ls_bdcdata-fnam = 'BDC_OKCODE'.
+    ls_bdcdata-fval = '=ONLI'.
+    APPEND ls_bdcdata TO lt_bdcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = 'SMW0'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bdcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
+    ENDIF.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~get_metadata.
@@ -445,10 +496,30 @@ ENDCLASS. "lcl_object_W3SUPER IMPLEMENTATION
 *   Web Reporting/Internet Transaction Server MIME Types (binary data)
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3mi DEFINITION INHERITING FROM lcl_object_w3super FINAL.
+
+  PROTECTED SECTION.
+    METHODS: change_bdc_jump_data REDEFINITION.
 ENDCLASS.                    "lcl_object_W3MI DEFINITION
 
 CLASS lcl_object_w3mi IMPLEMENTATION.
+
+  METHOD change_bdc_jump_data.
+
+    DATA: ls_bdcdata LIKE LINE OF ct_bdcdata.
+
+    ls_bdcdata-fnam = 'RADIO_HT'.
+    ls_bdcdata-fval = ' '.
+    APPEND ls_bdcdata TO ct_bdcdata.
+
+    CLEAR ls_bdcdata.
+    ls_bdcdata-fnam = 'RADIO_MI'.
+    ls_bdcdata-fval = 'X'.
+    APPEND ls_bdcdata TO ct_bdcdata.
+
+  ENDMETHOD.
+
 ENDCLASS.
+
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_W3HT DEFINITION
@@ -456,7 +527,26 @@ ENDCLASS.
 *   Web Reporting/Internet Transaction Server MIME Types (html data)
 *----------------------------------------------------------------------*
 CLASS lcl_object_w3ht DEFINITION INHERITING FROM lcl_object_w3super FINAL.
+
+  PROTECTED SECTION.
+    METHODS: change_bdc_jump_data REDEFINITION.
 ENDCLASS.                    "lcl_object_W3HT DEFINITION
 
 CLASS lcl_object_w3ht IMPLEMENTATION.
+
+  METHOD change_bdc_jump_data.
+
+    DATA: ls_bdcdata LIKE LINE OF ct_bdcdata.
+
+    ls_bdcdata-fnam = 'RADIO_HT'.
+    ls_bdcdata-fval = 'X'.
+    APPEND ls_bdcdata TO ct_bdcdata.
+
+    CLEAR ls_bdcdata.
+    ls_bdcdata-fnam = 'RADIO_MI'.
+    ls_bdcdata-fval = ' '.
+    APPEND ls_bdcdata TO ct_bdcdata.
+
+  ENDMETHOD.
+
 ENDCLASS.
