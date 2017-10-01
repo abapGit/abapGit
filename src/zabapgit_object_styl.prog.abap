@@ -125,7 +125,7 @@ CLASS lcl_object_styl IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, STYL' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, STYL' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

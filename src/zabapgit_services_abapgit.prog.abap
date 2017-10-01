@@ -19,16 +19,16 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
       VALUE 'https://github.com/larshp/abapGit-plugins.git'.
 
     CLASS-METHODS open_abapgit_homepage
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     CLASS-METHODS open_abapgit_wikipage
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     CLASS-METHODS install_abapgit
-      RAISING lcx_exception lcx_cancel.
+      RAISING zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS install_abapgit_pi
-      RAISING lcx_exception lcx_cancel.
+      RAISING zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS is_installed
       RETURNING VALUE(rv_installed) TYPE abap_bool.
@@ -43,7 +43,7 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
                 iv_text    TYPE c
                 iv_url     TYPE string
                 iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_services_abapgit
 
@@ -55,7 +55,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       EXPORTING document = c_abapgit_homepage
       EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Opening page in external browser failed.' ).
+      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
   ENDMETHOD.  "open_abapgit_homepage
@@ -66,7 +66,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       EXPORTING document = c_abapgit_wikipage
       EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Opening page in external browser failed.' ).
+      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
   ENDMETHOD.  "open_abapgit_wikipage
@@ -159,7 +159,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
     TRY.
         rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_abapgit_url ).
         " TODO, alternative checks for presence in the system
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection
         rv_installed = abap_false.
     ENDTRY.
@@ -171,7 +171,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
     TRY.
         rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_plugins_url ).
         " TODO, alternative checks for presence in the system
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection
         rv_installed = abap_false.
     ENDTRY.

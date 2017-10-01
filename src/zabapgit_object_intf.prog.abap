@@ -19,18 +19,18 @@ CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
     METHODS deserialize_abap
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_docu
       IMPORTING io_xml TYPE REF TO lcl_xml_input
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_intf DEFINITION
 
@@ -288,7 +288,7 @@ CLASS lcl_oo_interface IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
 
@@ -313,7 +313,7 @@ CLASS lcl_oo_interface IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN. " in case only inactive version exists
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from seo_clif_get' ).
+      zcx_abapgit_exception=>raise( 'error from seo_clif_get' ).
     ENDIF.
   ENDMETHOD.
 
@@ -329,7 +329,7 @@ CLASS lcl_oo_interface IMPLEMENTATION.
         other        = 5
         OTHERS       = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from SEO_INTERFACE_DELETE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_DELETE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.

@@ -6,50 +6,50 @@ CLASS lcl_services_repo DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS clone
       IMPORTING iv_url TYPE string
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS refresh
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS remove
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS purge
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS new_offline
-      RAISING lcx_exception lcx_cancel.
+      RAISING zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS remote_attach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS remote_detach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS remote_change
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS refresh_local_checksums
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS toggle_favorite
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS open_se80
       IMPORTING iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS transport_to_branch
       IMPORTING iv_repository_key TYPE lcl_persistence_db=>ty_value
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
 ENDCLASS. "lcl_services_repo
 
@@ -133,7 +133,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
     ENDIF.
 
     lv_package = lo_repo->get_package( ).
@@ -331,7 +331,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lt_transport_headers = lcl_popups=>popup_to_select_transports( ).
     lt_transport_objects = lcl_transport=>to_tadir( lt_transport_headers ).
     IF lt_transport_objects IS INITIAL.
-      lcx_exception=>raise( 'Canceled or List of objects is empty ' ).
+      zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
 
     ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(

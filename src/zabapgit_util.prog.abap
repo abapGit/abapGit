@@ -58,7 +58,7 @@ CLASS lcl_convert DEFINITION FINAL.
     CLASS-METHODS xstring_to_int
       IMPORTING iv_xstring  TYPE xstring
       RETURNING VALUE(rv_i) TYPE i
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS int_to_xstring4
       IMPORTING iv_i              TYPE i
@@ -209,12 +209,12 @@ CLASS lcl_hash DEFINITION FINAL.
       IMPORTING iv_type        TYPE lif_defs=>ty_type
                 iv_data        TYPE xstring
       RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
       RETURNING VALUE(rv_sha1) TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
 
@@ -286,7 +286,7 @@ CLASS lcl_hash IMPLEMENTATION.
         internal_error = 3
         OTHERS         = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error while calculating SHA1' ).
+      zcx_abapgit_exception=>raise( 'Error while calculating SHA1' ).
     ENDIF.
 
     rv_sha1 = lv_hash.
@@ -454,17 +454,17 @@ CLASS lcl_url DEFINITION FINAL.
     CLASS-METHODS host
       IMPORTING iv_repo        TYPE string
       RETURNING VALUE(rv_host) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS name
       IMPORTING iv_repo        TYPE string
       RETURNING VALUE(rv_name) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS path_name
       IMPORTING iv_repo             TYPE string
       RETURNING VALUE(rv_path_name) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS regex
@@ -472,7 +472,7 @@ CLASS lcl_url DEFINITION FINAL.
       EXPORTING ev_host TYPE string
                 ev_path TYPE string
                 ev_name TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
 
@@ -507,7 +507,7 @@ CLASS lcl_url IMPLEMENTATION.
     FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
       SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Malformed URL' ).
+      zcx_abapgit_exception=>raise( 'Malformed URL' ).
     ENDIF.
 
   ENDMETHOD.                    "url
@@ -864,18 +864,18 @@ CLASS lcl_login_manager DEFINITION FINAL.
         IMPORTING iv_uri                  TYPE string
                   ii_client               TYPE REF TO if_http_client OPTIONAL
         RETURNING VALUE(rv_authorization) TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       save
         IMPORTING iv_uri    TYPE string
                   ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       clear,
       set
         IMPORTING iv_uri         TYPE string
                   iv_username    TYPE string
                   iv_password    TYPE string
         RETURNING VALUE(rv_auth) TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_auth,
@@ -889,7 +889,7 @@ CLASS lcl_login_manager DEFINITION FINAL.
       append
         IMPORTING iv_uri  TYPE string
                   iv_auth TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 

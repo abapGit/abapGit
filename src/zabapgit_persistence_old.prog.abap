@@ -25,13 +25,13 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persist_migrate.
 
     METHODS list
       RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS update
       IMPORTING iv_url         TYPE ty_repo_persi-url
                 iv_branch_name TYPE ty_repo_persi-branch_name
                 iv_branch      TYPE lif_defs=>ty_sha1
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS add
       IMPORTING iv_url         TYPE string
@@ -39,31 +39,31 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persist_migrate.
                 iv_branch      TYPE lif_defs=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS delete
       IMPORTING iv_url         TYPE ty_repo_persi-url
                 iv_branch_name TYPE ty_repo_persi-branch_name
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS read_text_online
       RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS save_text_online
       IMPORTING it_repos TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS header_online
       RETURNING VALUE(rs_header) TYPE thead.
 
     METHODS read_text_offline
       RETURNING VALUE(rt_repos) TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS save_text_offline
       IMPORTING it_repos TYPE ty_repos_persi_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS header_offline
       RETURNING VALUE(rs_header) TYPE thead.
@@ -71,12 +71,12 @@ CLASS lcl_persistence DEFINITION FINAL FRIENDS lcl_persist_migrate.
     METHODS read_text
       IMPORTING is_header       TYPE thead
       RETURNING VALUE(rt_lines) TYPE tlinetab
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS save_text
       IMPORTING is_header TYPE thead
                 it_lines  TYPE tlinetab
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_persistence DEFINITION
 
@@ -102,7 +102,7 @@ CLASS lcl_persistence IMPLEMENTATION.
         OTHERS   = 5.
     IF sy-subrc <> 0.
       ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      lcx_exception=>raise( 'error from SAVE_TEXT' ).
+      zcx_abapgit_exception=>raise( 'error from SAVE_TEXT' ).
     ENDIF.
 
   ENDMETHOD.                    "save_text
@@ -130,7 +130,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
     DELETE lt_repos WHERE url = iv_url AND branch_name = iv_branch_name.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'repo not found, delete' ).
+      zcx_abapgit_exception=>raise( 'repo not found, delete' ).
     ENDIF.
 
     save_text_online( lt_repos ).
@@ -207,7 +207,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     READ TABLE lt_repos WITH KEY url = iv_url branch_name = iv_branch_name
       TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
-      lcx_exception=>raise( 'already inserted' ).
+      zcx_abapgit_exception=>raise( 'already inserted' ).
     ENDIF.
 
     APPEND INITIAL LINE TO lt_repos ASSIGNING <ls_repo>.
@@ -230,7 +230,7 @@ CLASS lcl_persistence IMPLEMENTATION.
 
 
     IF iv_branch IS INITIAL.
-      lcx_exception=>raise( 'update, sha empty' ).
+      zcx_abapgit_exception=>raise( 'update, sha empty' ).
     ENDIF.
 
     lt_repos = list( ).
@@ -238,7 +238,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     READ TABLE lt_repos ASSIGNING <ls_repo>
       WITH KEY url = iv_url branch_name = iv_branch_name.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'persist update, repo not found' ).
+      zcx_abapgit_exception=>raise( 'persist update, repo not found' ).
     ENDIF.
 
     <ls_repo>-sha1 = iv_branch.
@@ -275,7 +275,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF sy-subrc = 4.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from READ_TEXT' ).
+      zcx_abapgit_exception=>raise( 'Error from READ_TEXT' ).
     ENDIF.
 
   ENDMETHOD.                    "read_text
@@ -297,7 +297,7 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF lines( lt_lines ) MOD 4 <> 0.
 * if this happens, delete text ZABAPGIT in SO10 or edit the text
 * manually, so it contains the right information
-      lcx_exception=>raise( 'Persistence, text broken' ).
+      zcx_abapgit_exception=>raise( 'Persistence, text broken' ).
     ENDIF.
 
     CLEAR ls_repo.
@@ -308,7 +308,7 @@ CLASS lcl_persistence IMPLEMENTATION.
           ls_repo-package = <ls_line>-tdline.
 
           IF ls_repo-url IS INITIAL OR ls_repo-branch_name IS INITIAL.
-            lcx_exception=>raise( 'Persistence, text broken 2' ).
+            zcx_abapgit_exception=>raise( 'Persistence, text broken 2' ).
           ENDIF.
           APPEND ls_repo TO rt_repos.
           CLEAR ls_repo.
@@ -342,13 +342,13 @@ CLASS lcl_persistence IMPLEMENTATION.
     IF lines( lt_lines ) MOD 2 <> 0.
 * if this happens, delete text ZABAPGIT in SO10 or edit the text
 * manually, so it contains the right information
-      lcx_exception=>raise( 'Persistence, text broken' ).
+      zcx_abapgit_exception=>raise( 'Persistence, text broken' ).
     ENDIF.
 
     CLEAR ls_repo.
     LOOP AT lt_lines ASSIGNING <ls_line>.
       IF <ls_line>-tdline IS INITIAL.
-        lcx_exception=>raise( 'Persistence, text broken' ).
+        zcx_abapgit_exception=>raise( 'Persistence, text broken' ).
       ENDIF.
       IF ls_repo-url IS INITIAL.
         ls_repo-url = <ls_line>-tdline.
@@ -386,36 +386,36 @@ CLASS lcl_user DEFINITION FINAL FRIENDS lcl_persist_migrate.
     CLASS-METHODS set_username
       IMPORTING iv_user     TYPE xubname DEFAULT sy-uname
                 iv_username TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS get_username
       IMPORTING iv_user            TYPE xubname DEFAULT sy-uname
       RETURNING VALUE(rv_username) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS set_email
       IMPORTING iv_user  TYPE xubname DEFAULT sy-uname
                 iv_email TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS get_email
       IMPORTING iv_user         TYPE xubname DEFAULT sy-uname
       RETURNING VALUE(rv_email) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS list
       RETURNING VALUE(rt_data) TYPE ty_user_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS read
       IMPORTING iv_name         TYPE tdobname
       RETURNING VALUE(rv_value) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS save
       IMPORTING iv_name  TYPE tdobname
                 iv_value TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_user DEFINITION
 
@@ -452,7 +452,7 @@ CLASS lcl_user IMPLEMENTATION.
         wrong_access_to_archive = 7
         OTHERS                  = 8.
     IF sy-subrc <> 4 AND sy-subrc <> 0.
-      lcx_exception=>raise( 'error from READ_TEXT' ).
+      zcx_abapgit_exception=>raise( 'error from READ_TEXT' ).
     ENDIF.
 
     READ TABLE lt_lines INTO ls_line INDEX 1.
@@ -491,7 +491,7 @@ CLASS lcl_user IMPLEMENTATION.
         OTHERS   = 5.
     IF sy-subrc <> 0.
       ROLLBACK WORK.                                   "#EC CI_ROLLBACK
-      lcx_exception=>raise( 'error from SAVE_TEXT' ).
+      zcx_abapgit_exception=>raise( 'error from SAVE_TEXT' ).
     ENDIF.
 
     COMMIT WORK.

@@ -141,10 +141,10 @@ CLASS lcl_objects IMPLEMENTATION.
                 EXPORTING
                   is_item = is_item.
             CATCH cx_sy_create_object_error.
-              lcx_exception=>raise( lv_message ).
+              zcx_abapgit_exception=>raise( lv_message ).
           ENDTRY.
         ELSE. " No native support? -> fail
-          lcx_exception=>raise( lv_message ).
+          zcx_abapgit_exception=>raise( lv_message ).
         ENDIF.
     ENDTRY.
 
@@ -170,7 +170,7 @@ CLASS lcl_objects IMPLEMENTATION.
                        iv_language    = lif_defs=>gc_english
                        iv_native_only = iv_native_only ).
         rv_bool = abap_true.
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -211,7 +211,7 @@ CLASS lcl_objects IMPLEMENTATION.
         li_obj = create_object( is_item = is_item
                                 iv_language = lif_defs=>gc_english ).
         rv_bool = li_obj->exists( ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
 * ignore all errors and assume the object exists
         rv_bool = abap_true.
     ENDTRY.
@@ -238,7 +238,7 @@ CLASS lcl_objects IMPLEMENTATION.
       TRY.
           lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
                                        i_obj_type = is_item-obj_type ).
-        CATCH lcx_exception.
+        CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.
     ELSE.
@@ -420,7 +420,7 @@ CLASS lcl_objects IMPLEMENTATION.
           WHEN 'DA'.
             <ls_edge>-to-obj_type = 'TTYP'.
           WHEN OTHERS.
-            lcx_exception=>raise( 'resolve_ddic, unknown object_cls' ).
+            zcx_abapgit_exception=>raise( 'resolve_ddic, unknown object_cls' ).
         ENDCASE.
       ENDLOOP.
 
@@ -523,7 +523,7 @@ CLASS lcl_objects IMPLEMENTATION.
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
     IF lines( lt_files ) <> lines( it_files ).
-      lcx_exception=>raise( 'Duplicates' ).
+      zcx_abapgit_exception=>raise( 'Duplicates' ).
     ENDIF.
 
   ENDMETHOD.
@@ -608,7 +608,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_cancel = warning_package( is_item    = ls_item
                                    iv_package = lv_package ).
       IF lv_cancel = abap_true.
-        lcx_exception=>raise( 'cancelled' ).
+        zcx_abapgit_exception=>raise( 'cancelled' ).
       ENDIF.
 
       CREATE OBJECT lo_files
@@ -715,9 +715,7 @@ CLASS lcl_objects IMPLEMENTATION.
         lo_comparison_result->show_confirmation_dialog( ).
 
         IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
-          RAISE EXCEPTION TYPE lcx_exception
-            EXPORTING
-              iv_text = 'Deserialization aborted by user'.
+          zcx_abapgit_exception=>raise( 'Deserialization aborted by user' ).
         ENDIF.
       ENDIF.
     ENDIF.

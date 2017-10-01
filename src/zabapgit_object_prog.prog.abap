@@ -23,10 +23,10 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
     METHODS:
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_prog DEFINITION
 
@@ -98,7 +98,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
         reject_deletion    = 4
         OTHERS             = 5.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DELETE_PROGRAM' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DELETE_PROGRAM' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

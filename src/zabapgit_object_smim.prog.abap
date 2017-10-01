@@ -21,7 +21,7 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS find_content
       IMPORTING iv_url            TYPE string
       RETURNING VALUE(rv_content) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS build_filename
       IMPORTING iv_filename        TYPE string
@@ -31,7 +31,7 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_super FINAL.
       EXPORTING ev_url       TYPE string
                 ev_is_folder TYPE boole_d
       RAISING   lcx_not_found
-                lcx_exception.
+                zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_smim DEFINITION
 
@@ -140,7 +140,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
 
     READ TABLE lt_files ASSIGNING <ls_file> WITH KEY filename = lv_filename.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'SMIM, file not found' ).
+      zcx_abapgit_exception=>raise( 'SMIM, file not found' ).
     ENDIF.
 
     rv_content = <ls_file>-data.
@@ -198,7 +198,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           permission_failure = 4
           OTHERS             = 5 ).
       IF sy-subrc <> 0 AND sy-subrc <> 2 AND sy-subrc <> 3.
-        lcx_exception=>raise( 'error from mime api->get:' && sy-msgv1 ).
+        zcx_abapgit_exception=>raise( 'error from mime api->get:' && sy-msgv1 ).
       ENDIF.
 
       lv_filename = get_filename( lv_url ).
@@ -260,7 +260,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           folder_exists      = 5
           OTHERS             = 6 ).
       IF sy-subrc <> 5 AND sy-subrc <> 0.
-        lcx_exception=>raise( 'error frrom SMIM create_folder' ).
+        zcx_abapgit_exception=>raise( 'error frrom SMIM create_folder' ).
       ENDIF.
     ELSE.
       lv_filename = get_filename( lv_url ).
@@ -292,7 +292,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           is_folder               = 7
           OTHERS                  = 8 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SMIM put' ).
+        zcx_abapgit_exception=>raise( 'error from SMIM put' ).
       ENDIF.
     ENDIF.
 
@@ -325,7 +325,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
         not_found          = 5
         OTHERS             = 6 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from delete' ).
+      zcx_abapgit_exception=>raise( 'error from delete' ).
     ENDIF.
 
   ENDMETHOD.                    "delete

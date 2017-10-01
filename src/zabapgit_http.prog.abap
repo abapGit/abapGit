@@ -8,13 +8,13 @@ CLASS lcl_proxy_auth DEFINITION FINAL.
     CLASS-METHODS:
       run
         IMPORTING ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-DATA: gv_username TYPE string,
                 gv_password TYPE string.
 
-    CLASS-METHODS: enter RAISING lcx_exception.
+    CLASS-METHODS: enter RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -43,7 +43,7 @@ CLASS lcl_proxy_auth IMPLEMENTATION.
         cv_pass     = gv_password ).
 
     IF gv_username IS INITIAL OR gv_password IS INITIAL.
-      lcx_exception=>raise( 'Proxy auth failed' ).
+      zcx_abapgit_exception=>raise( 'Proxy auth failed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -59,11 +59,11 @@ CLASS lcl_http_digest DEFINITION FINAL.
                   ii_client   TYPE REF TO if_http_client
                   iv_username TYPE string
                   iv_password TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       run
         IMPORTING
                   ii_client TYPE REF TO if_http_client
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA: mv_ha1      TYPE string,
@@ -80,7 +80,7 @@ CLASS lcl_http_digest DEFINITION FINAL.
                   iv_data        TYPE string
         RETURNING
                   VALUE(rv_hash) TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     METHODS:
       hash
@@ -92,7 +92,7 @@ CLASS lcl_http_digest DEFINITION FINAL.
                   iv_cnonse          TYPE string
         RETURNING
                   VALUE(rv_response) TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       parse
         IMPORTING
           ii_client TYPE REF TO if_http_client.
@@ -114,17 +114,17 @@ CLASS lcl_http_client DEFINITION FINAL.
                   iv_data        TYPE xstring
         RETURNING
                   VALUE(rv_data) TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_cdata
         RETURNING VALUE(rv_value) TYPE string,
       check_http_200
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       send_receive
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       set_headers
         IMPORTING iv_url     TYPE string
                   iv_service TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
@@ -222,7 +222,7 @@ CLASS lcl_http_client IMPLEMENTATION.
         WHEN OTHERS.
           lv_text = 'Another error occured'.                "#EC NOTEXT
       ENDCASE.
-      lcx_exception=>raise( lv_text ).
+      zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
   ENDMETHOD.  "send_receive
@@ -240,18 +240,18 @@ CLASS lcl_http_client IMPLEMENTATION.
       WHEN 200.
         RETURN.
       WHEN 302.
-        lcx_exception=>raise( 'HTTP redirect, check URL' ).
+        zcx_abapgit_exception=>raise( 'HTTP redirect, check URL' ).
       WHEN 401.
-        lcx_exception=>raise( 'HTTP 401, unauthorized' ).
+        zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
       WHEN 403.
-        lcx_exception=>raise( 'HTTP 403, forbidden' ).
+        zcx_abapgit_exception=>raise( 'HTTP 403, forbidden' ).
       WHEN 404.
-        lcx_exception=>raise( 'HTTP 404, not found' ).
+        zcx_abapgit_exception=>raise( 'HTTP 404, not found' ).
       WHEN 415.
-        lcx_exception=>raise( 'HTTP 415, unsupported media type' ).
+        zcx_abapgit_exception=>raise( 'HTTP 415, unsupported media type' ).
       WHEN OTHERS.
         lv_text = mi_client->response->get_cdata( ).
-        lcx_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
+        zcx_abapgit_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
     ENDCASE.
 
   ENDMETHOD.                                                "http_200
@@ -359,7 +359,7 @@ CLASS lcl_http_digest IMPLEMENTATION.
         internal_error = 3
         OTHERS         = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CALCULATE_HASH_FOR_RAW' ).
+      zcx_abapgit_exception=>raise( 'error from CALCULATE_HASH_FOR_RAW' ).
     ENDIF.
 
     rv_hash = lv_hash.
@@ -383,14 +383,14 @@ CLASS lcl_http DEFINITION FINAL.
         IMPORTING iv_url           TYPE string
                   iv_service       TYPE string
         RETURNING VALUE(ro_client) TYPE REF TO lcl_http_client
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
       check_auth_requested
         IMPORTING ii_client                TYPE REF TO if_http_client
         RETURNING VALUE(rv_auth_requested) TYPE abap_bool
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       is_local_system
         IMPORTING iv_url         TYPE string
         RETURNING VALUE(rv_bool) TYPE abap_bool,
@@ -399,7 +399,7 @@ CLASS lcl_http DEFINITION FINAL.
                   io_client        TYPE REF TO lcl_http_client
                   iv_url           TYPE string
         RETURNING VALUE(rv_scheme) TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -446,7 +446,7 @@ CLASS lcl_http IMPLEMENTATION.
           lv_text = 'While creating HTTP Client'.           "#EC NOTEXT
 
       ENDCASE.
-      lcx_exception=>raise( lv_text ).
+      zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
     IF lo_settings->get_proxy_authentication( ) = abap_true.
@@ -559,7 +559,7 @@ CLASS lcl_http IMPLEMENTATION.
         cv_pass         = lv_pass ).
 
     IF lv_user IS INITIAL.
-      lcx_exception=>raise( 'HTTP 401, unauthorized' ).
+      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
     ENDIF.
 
     IF lv_user <> lv_default_user.

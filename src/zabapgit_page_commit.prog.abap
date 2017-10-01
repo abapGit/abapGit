@@ -15,7 +15,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
       constructor
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
                   io_stage TYPE REF TO lcl_stage
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -32,10 +32,10 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
       render_stage
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       render_form
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       render_text_input
         IMPORTING iv_name       TYPE string
                   iv_label      TYPE string

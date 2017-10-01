@@ -10,12 +10,12 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
   PUBLIC SECTION.
 
     METHODS go_home
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS back
       IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_exit) TYPE xfeld
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
@@ -34,10 +34,10 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS constructor
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS startup
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS cache_html
       IMPORTING iv_text       TYPE string
@@ -52,7 +52,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_url) TYPE w3url.
 
     METHODS render
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS get_current_page_name
       RETURNING VALUE(rv_page_name) TYPE string.
@@ -61,7 +61,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING ii_page          TYPE REF TO lif_gui_page
                 iv_with_bookmark TYPE abap_bool DEFAULT abap_false
                 iv_replacing     TYPE abap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS handle_action
       IMPORTING action      TYPE c
@@ -85,7 +85,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD handle_action.
 
-    DATA: lx_exception TYPE REF TO lcx_exception,
+    DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
           li_page      TYPE REF TO lif_gui_page,
           lv_state     TYPE i.
 
@@ -130,12 +130,12 @@ CLASS lcl_gui IMPLEMENTATION.
           WHEN lif_defs=>gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
-            lcx_exception=>raise( |Unknown action: { action }| ).
+            zcx_abapgit_exception=>raise( |Unknown action: { action }| ).
         ENDCASE.
 
-      CATCH lcx_exception INTO lx_exception.
+      CATCH zcx_abapgit_exception INTO lx_exception.
         ROLLBACK WORK.
-        MESSAGE lx_exception->mv_text TYPE 'S' DISPLAY LIKE 'E'.
+        MESSAGE lx_exception->text TYPE 'S' DISPLAY LIKE 'E'.
       CATCH lcx_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.

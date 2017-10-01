@@ -8,7 +8,7 @@ CLASS lcl_gui_asset_manager DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_gui.
     METHODS get_asset
       IMPORTING iv_asset_name  TYPE string
       RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_images
       RETURNING VALUE(rt_images) TYPE lif_defs=>tt_web_assets.
@@ -21,12 +21,12 @@ CLASS lcl_gui_asset_manager DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_gui.
     METHODS get_inline_asset
       IMPORTING iv_asset_name  TYPE string
       RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_mime_asset
       IMPORTING iv_asset_name  TYPE c
       RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_inline_images
       RETURNING VALUE(rt_images) TYPE lif_defs=>tt_web_assets.
@@ -48,7 +48,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       WHEN 'JS_COMMON'.
         lv_mime_name = 'ZABAPGIT_JS_COMMON'.
       WHEN OTHERS.
-        lcx_exception=>raise( |Improper resource name: { iv_asset_name }| ).
+        zcx_abapgit_exception=>raise( |Improper resource name: { iv_asset_name }| ).
     ENDCASE.
 
     " Inline is default (for older AG snapshots to work)
@@ -58,7 +58,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
     ENDIF.
 
     IF rv_data IS INITIAL.
-      lcx_exception=>raise( |Failed to get GUI resource: { iv_asset_name }| ).
+      zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_name }| ).
     ENDIF.
 
   ENDMETHOD.  " get_asset.
@@ -152,7 +152,7 @@ CLASS lcl_gui_asset_manager IMPLEMENTATION.
       WHEN 'JS_COMMON'.
         " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
       WHEN OTHERS.
-        lcx_exception=>raise( |No inline resource: { iv_asset_name }| ).
+        zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_name }| ).
     ENDCASE.
 
     CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY lif_defs=>gc_newline.

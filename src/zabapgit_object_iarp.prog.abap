@@ -18,11 +18,11 @@ CLASS lcl_object_iarp DEFINITION INHERITING FROM lcl_objects_super FINAL.
       read
         EXPORTING es_attr       TYPE w3resoattr
                   et_parameters TYPE w3resopara_tabletype
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       save
         IMPORTING is_attr       TYPE w3resoattr
                   it_parameters TYPE w3resopara_tabletype
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -64,7 +64,7 @@ CLASS lcl_object_iarp IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from w3api_resource~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3api_resource~load' ).
     ENDIF.
 
     li_resource->get_attributes( IMPORTING p_attributes = es_attr ).
@@ -150,7 +150,7 @@ CLASS lcl_object_iarp IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from if_w3_api_resource~load' ).
+      zcx_abapgit_exception=>raise( 'error from if_w3_api_resource~load' ).
     ENDIF.
 
     li_resource->if_w3_api_object~set_changeable( abap_true ).
@@ -177,7 +177,7 @@ CLASS lcl_object_iarp IMPLEMENTATION.
     IF sy-subrc = 1.
       rv_bool = abap_false.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from w3_api_resource~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3_api_resource~load' ).
     ELSE.
       rv_bool = abap_true.
     ENDIF.

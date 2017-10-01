@@ -49,7 +49,7 @@ END-OF-DEFINITION.
 CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    METHODS convert_int FOR TESTING RAISING lcx_exception.
+    METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
@@ -148,7 +148,7 @@ CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FI
 
     METHODS:
       run FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
     CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
 
@@ -410,7 +410,7 @@ CLASS ltcl_dot_abapgit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT
   PRIVATE SECTION.
     METHODS:
       identity FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       ignore FOR TESTING.
 
 ENDCLASS.
@@ -479,17 +479,17 @@ CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
         IMPORTING iv_path TYPE string
                   iv_name TYPE string,
       single_file FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       two_files_same_path FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       root_empty FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       namespaces FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       more_sub FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       sub FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
     DATA: mt_expanded TYPE lcl_git_porcelain=>ty_expanded_tt,
           mt_trees    TYPE lcl_git_porcelain=>ty_trees_tt.
@@ -665,11 +665,11 @@ CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PUBLIC SECTION.
     METHODS:
       up FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       empty FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       down FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
     TYPES: BEGIN OF st_old,
              foo TYPE i,
@@ -797,9 +797,9 @@ CLASS ltcl_url DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
 
     METHODS:
-      repo_host FOR TESTING RAISING lcx_exception,
-      repo_name1 FOR TESTING RAISING lcx_exception,
-      repo_name2 FOR TESTING RAISING lcx_exception,
+      repo_host FOR TESTING RAISING zcx_abapgit_exception,
+      repo_name1 FOR TESTING RAISING zcx_abapgit_exception,
+      repo_name2 FOR TESTING RAISING zcx_abapgit_exception,
       repo_error FOR TESTING.
 
 ENDCLASS.                    "ltcl_url DEFINITION
@@ -816,7 +816,7 @@ CLASS ltcl_url IMPLEMENTATION.
     TRY.
         lcl_url=>host( 'not a real url' ).                  "#EC NOTEXT
         cl_abap_unit_assert=>fail( ).
-      CATCH lcx_exception.                              "#EC NO_HANDLER
+      CATCH zcx_abapgit_exception.                              "#EC NO_HANDLER
     ENDTRY.
 
   ENDMETHOD.                    "repo_error
@@ -869,7 +869,7 @@ CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
   PRIVATE SECTION.
     METHODS:
       is_supported FOR TESTING,
-      not_exist FOR TESTING RAISING lcx_exception.
+      not_exist FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_object_types DEFINITION
 
@@ -940,11 +940,11 @@ CLASS ltcl_git_pack_decode_commit DEFINITION FOR TESTING
   PUBLIC SECTION.
     METHODS:
       decode1 FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       decode2 FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       decode3 FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA: ms_raw TYPE lcl_git_pack=>ty_commit,
@@ -953,7 +953,7 @@ CLASS ltcl_git_pack_decode_commit DEFINITION FOR TESTING
     METHODS:
       setup,
       decode
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       add
         IMPORTING iv_string TYPE string.
 
@@ -1091,29 +1091,29 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
     METHODS:
       tree FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       commit FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       commit_newline FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       pack_short FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       pack_long FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       pack_multiple FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       sort_tree1 FOR TESTING,
       sort_tree2 FOR TESTING,
       type_and_length01 FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       type_and_length02 FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
     METHODS:
       object_blob
         IMPORTING iv_data          TYPE xstring
         RETURNING VALUE(rs_object) TYPE lif_defs=>ty_object
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "test DEFINITION
 
@@ -1405,11 +1405,11 @@ CLASS ltcl_html DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
     DATA: mo_html TYPE REF TO lcl_html.
 
     METHODS:
-      indent1 FOR TESTING RAISING lcx_exception,
-      indent2 FOR TESTING RAISING lcx_exception,
-      indent3 FOR TESTING RAISING lcx_exception,
-      indent4 FOR TESTING RAISING lcx_exception,
-      style1  FOR TESTING RAISING lcx_exception.
+      indent1 FOR TESTING RAISING zcx_abapgit_exception,
+      indent2 FOR TESTING RAISING zcx_abapgit_exception,
+      indent3 FOR TESTING RAISING zcx_abapgit_exception,
+      indent4 FOR TESTING RAISING zcx_abapgit_exception,
+      style1  FOR TESTING RAISING zcx_abapgit_exception.
 
     METHODS:
       setup.
@@ -1533,20 +1533,20 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
     METHODS:
       check
         IMPORTING is_item TYPE lif_defs=>ty_item
-        RAISING   lcx_exception,
-      serialize_tabl FOR TESTING RAISING lcx_exception,
-      serialize_enqu FOR TESTING RAISING lcx_exception,
-      serialize_shlp FOR TESTING RAISING lcx_exception,
-      serialize_view FOR TESTING RAISING lcx_exception,
-      serialize_auth FOR TESTING RAISING lcx_exception,
-      serialize_clas FOR TESTING RAISING lcx_exception,
-      serialize_doma FOR TESTING RAISING lcx_exception,
-      serialize_dtel FOR TESTING RAISING lcx_exception,
-      serialize_fugr FOR TESTING RAISING lcx_exception,
-      serialize_msag FOR TESTING RAISING lcx_exception,
-      serialize_prog FOR TESTING RAISING lcx_exception,
-      serialize_tran FOR TESTING RAISING lcx_exception,
-      serialize_ttyp FOR TESTING RAISING lcx_exception.
+        RAISING   zcx_abapgit_exception,
+      serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_enqu FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_view FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_auth FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_clas FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_doma FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_dtel FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_fugr FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_msag FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_prog FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
+      serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_serialize DEFINITION
 
@@ -1736,9 +1736,9 @@ CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHO
       setup,
       teardown,
       encoding FOR TESTING
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       same_server FOR TESTING
-        RAISING lcx_exception.
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -2209,7 +2209,7 @@ CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
   PUBLIC SECTION.
     METHODS calculate_status FOR TESTING
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
 ENDCLASS.   "ltcl_file_status
 
@@ -2310,7 +2310,7 @@ CLASS ltcl_file_status2 DEFINITION FOR TESTING RISK LEVEL HARMLESS
   INHERITING FROM cl_aunit_assert.
 
   PUBLIC SECTION.
-    METHODS check FOR TESTING RAISING lcx_exception.
+    METHODS check FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.   "ltcl_sap_package
 

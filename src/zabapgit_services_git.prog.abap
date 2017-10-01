@@ -17,29 +17,29 @@ CLASS lcl_services_git DEFINITION FINAL.
 
     CLASS-METHODS pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS create_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS switch_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS delete_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS commit
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_commit TYPE ty_commit_fields
                 io_stage  TYPE REF TO lcl_stage
-      RAISING   lcx_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception lcx_cancel.
 
 ENDCLASS. " lcl_services_git
 
@@ -54,7 +54,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
     ENDIF.
 
     lv_answer = lcl_popups=>popup_to_confirm(
@@ -133,7 +133,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
-      lcx_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
+      zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
     ENDIF.
 
     lo_repo->refresh( ).
@@ -186,9 +186,9 @@ CLASS lcl_services_git IMPLEMENTATION.
     ENDIF.
 
     IF ls_branch-name = 'HEAD'.
-      lcx_exception=>raise( 'Cannot delete HEAD' ).
+      zcx_abapgit_exception=>raise( 'Cannot delete HEAD' ).
     ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      lcx_exception=>raise( 'Switch branch before deleting current' ).
+      zcx_abapgit_exception=>raise( 'Switch branch before deleting current' ).
     ENDIF.
 
     lcl_git_porcelain=>delete_branch(
@@ -211,13 +211,13 @@ CLASS lcl_services_git IMPLEMENTATION.
                                       iv_email   = is_commit-committer_email ).
 
     IF is_commit-committer_name IS INITIAL.
-      lcx_exception=>raise( 'Commit: Committer name empty' ).
+      zcx_abapgit_exception=>raise( 'Commit: Committer name empty' ).
     ELSEIF is_commit-committer_email IS INITIAL.
-      lcx_exception=>raise( 'Commit: Committer email empty' ).
+      zcx_abapgit_exception=>raise( 'Commit: Committer email empty' ).
     ELSEIF is_commit-author_email IS NOT INITIAL AND is_commit-author_name IS INITIAL.
-      lcx_exception=>raise( 'Commit: Author email empty' ). " Opposite should be OK ?
+      zcx_abapgit_exception=>raise( 'Commit: Author email empty' ). " Opposite should be OK ?
     ELSEIF is_commit-comment IS INITIAL.
-      lcx_exception=>raise( 'Commit: empty comment' ).
+      zcx_abapgit_exception=>raise( 'Commit: empty comment' ).
     ENDIF.
 
     ls_comment-committer-name  = is_commit-committer_name.

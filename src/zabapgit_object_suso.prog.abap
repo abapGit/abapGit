@@ -66,7 +66,7 @@ CLASS lcl_object_suso IMPLEMENTATION.
       WHERE object = ms_item-obj_name
       AND langu = mv_language.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'TOBJT no english description' ).
+      zcx_abapgit_exception=>raise( 'TOBJT no english description' ).
     ENDIF.
 
     SELECT SINGLE * FROM tobjvorflg INTO ls_tobjvorflg

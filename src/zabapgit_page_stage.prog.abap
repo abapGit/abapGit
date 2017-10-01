@@ -15,7 +15,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
         IMPORTING
                   io_repo TYPE REF TO lcl_repo_online
                   iv_seed TYPE string OPTIONAL
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -48,7 +48,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
       process_stage_list
         IMPORTING it_postdata TYPE cnht_post_data_tab
                   io_stage    TYPE REF TO lcl_stage
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
 
       build_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
@@ -134,7 +134,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
 
     IF lines( lt_fields ) = 0.
-      lcx_exception=>raise( 'process_stage_list: empty list' ).
+      zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
     ENDIF.
 
     LOOP AT lt_fields ASSIGNING <ls_item>.
@@ -160,7 +160,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         WHEN lcl_stage=>c_method-skip.
           " Do nothing
         WHEN OTHERS.
-          lcx_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
+          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
       ENDCASE.
     ENDLOOP.
 
@@ -345,7 +345,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         IF sy-subrc = 0.
           rv_user = lcl_objects=>changed_by( ls_local_file-item ).
         ENDIF.
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         CLEAR rv_user. "Should not raise errors if user last changed by was not found
     ENDTRY.
 

@@ -17,7 +17,7 @@ CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PRIVATE SECTION.
     METHODS validate_font
       IMPORTING iv_tdfamily TYPE tdfamily
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_ssst DEFINITION
 
@@ -68,7 +68,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
     SELECT SINGLE tdfamily FROM tfo01 INTO lv_tdfamily
       WHERE tdfamily = iv_tdfamily.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Font family not found' ).
+      zcx_abapgit_exception=>raise( 'Font family not found' ).
     ENDIF.
 
   ENDMETHOD.                    "validate_font
@@ -110,7 +110,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
     IF sy-subrc = 2.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SSF_READ_STYLE' ).
+      zcx_abapgit_exception=>raise( 'error from SSF_READ_STYLE' ).
     ENDIF.
 
     CLEAR ls_header-version.
@@ -191,7 +191,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
           illegal_language     = 5
           OTHERS               = 6.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
+        zcx_abapgit_exception=>raise( 'error from SSF_ACTIVATE_STYLE' ).
       ENDIF.
 
     ENDIF.
@@ -219,7 +219,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         illegal_language      = 6
         OTHERS                = 7.
     IF sy-subrc <> 0 AND sy-subrc <> 2.
-      lcx_exception=>raise( 'error from SSF_DELETE_STYLE' ).
+      zcx_abapgit_exception=>raise( 'error from SSF_DELETE_STYLE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -255,7 +255,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SSST' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SSST' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

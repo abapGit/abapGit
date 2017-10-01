@@ -95,7 +95,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deserializing EHNS: `
           && lx_root->get_text( ) ##NO_TEXT.
-        lcx_exception=>raise( lv_message ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.  "deserialize
@@ -136,7 +136,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
                      iv_name = 'BADI_DATA' ).
 
       CATCH cx_enh_root INTO lx_root.
-        lcx_exception=>raise( `Error occured while serializing EHNS: `
+        zcx_abapgit_exception=>raise( `Error occured while serializing EHNS: `
           && lx_root->get_text( ) ) ##NO_TEXT.
     ENDTRY.
 
@@ -190,7 +190,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         ENDIF.
         lo_badidef_tool->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
-        lcx_exception=>raise( `Error occured while deleting EHNS: `
+        zcx_abapgit_exception=>raise( `Error occured while deleting EHNS: `
           && lx_root->get_text( ) ) ##NO_TEXT.
     ENDTRY.
 

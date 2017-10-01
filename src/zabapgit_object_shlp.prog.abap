@@ -92,7 +92,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_DD_DELETE_OBJ, SHLP' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, SHLP' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -125,7 +125,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DDIF_SHLP_GET' ).
+      zcx_abapgit_exception=>raise( 'error from DDIF_SHLP_GET' ).
     ENDIF.
     IF ls_dd30v IS INITIAL.
       RETURN. " does not exist in system
@@ -199,7 +199,7 @@ CLASS lcl_object_shlp IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DDIF_SHLP_PUT' ).
+      zcx_abapgit_exception=>raise( 'error from DDIF_SHLP_PUT' ).
     ENDIF.
 
     lcl_objects_activation=>add_item( ms_item ).

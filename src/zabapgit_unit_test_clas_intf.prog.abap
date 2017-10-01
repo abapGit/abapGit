@@ -225,13 +225,13 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       ms_item                    TYPE lif_defs=>ty_item.
     METHODS: when_deserializing
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
       then_should_deserialize_source,
       given_the_descriptions
         IMPORTING
           it_descriptions TYPE lif_defs=>ty_seocompotx_tt
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       then_shuld_update_descriptions
         IMPORTING
           it_descriptions TYPE lif_defs=>ty_seocompotx_tt,
@@ -240,7 +240,7 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
         IMPORTING
           it_lines TYPE tlinetab
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       then_docu_should_be_created
         IMPORTING
           it_lines TYPE tlinetab,
@@ -326,7 +326,7 @@ INHERITING FROM ltc_oo_test.
       setup,
       given_a_class_properties
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       then_should_create_class,
       then_it_should_generate_locals,
       should_create_class        FOR TESTING RAISING cx_static_check,
@@ -534,7 +534,7 @@ INHERITING FROM ltc_oo_test.
       setup,
       given_an_interface_properties
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       then_should_create_interface,
       create_interface    FOR TESTING RAISING cx_static_check,
       update_descriptions FOR TESTING RAISING cx_static_check,

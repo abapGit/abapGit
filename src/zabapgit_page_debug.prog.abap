@@ -14,7 +14,7 @@ CLASS lcl_gui_page_debuginfo DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PRIVATE SECTION.
     METHODS render_debug_info
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
     METHODS render_supported_object_types
       RETURNING VALUE(rv_html) TYPE string.
 

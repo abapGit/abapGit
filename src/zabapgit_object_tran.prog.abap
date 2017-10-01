@@ -41,11 +41,11 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
       serialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
 
       deserialize_texts
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
 
@@ -271,7 +271,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         object_not_found = 2
         OTHERS           = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RPY_TRANSACTION_DELETE' ).
+      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_DELETE' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -321,7 +321,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         lv_type = ststc_c_type_parameters.
 * todo, or ststc_c_type_variant?
       WHEN OTHERS.
-        lcx_exception=>raise( 'Transaction, unknown CINFO' ).
+        zcx_abapgit_exception=>raise( 'Transaction, unknown CINFO' ).
     ENDCASE.
 
     IF ls_tstcp IS NOT INITIAL.
@@ -362,7 +362,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
         db_access_error         = 8
         OTHERS                  = 9.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
+      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
     ENDIF.
 
     " Texts deserializing (translations)
@@ -398,7 +398,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     IF sy-subrc = 4 OR sy-subrc = 3.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
+      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
     ENDIF.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
@@ -471,7 +471,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     IF lines( lt_tpool_i18n ) > 0.
       MODIFY tstct FROM TABLE lt_tpool_i18n.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'Update of t-code translations failed' ).
+        zcx_abapgit_exception=>raise( 'Update of t-code translations failed' ).
       ENDIF.
     ENDIF.
 

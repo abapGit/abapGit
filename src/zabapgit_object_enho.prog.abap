@@ -10,11 +10,11 @@ INTERFACE lif_object_enho.
     deserialize
       IMPORTING io_xml     TYPE REF TO lcl_xml_input
                 iv_package TYPE devclass
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     serialize
       IMPORTING io_xml      TYPE REF TO lcl_xml_output
                 ii_enh_tool TYPE REF TO if_enh_tool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDINTERFACE.                    "lif_object_enho
 
@@ -85,7 +85,7 @@ CLASS lcl_object_enho_wdyc IMPLEMENTATION.
         lo_wdyconf->if_enh_object~save( ).
         lo_wdyconf->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO wdyconf' ).
+        zcx_abapgit_exception=>raise( 'error deserializing ENHO wdyconf' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -223,7 +223,7 @@ CLASS lcl_object_enho_wdyn IMPLEMENTATION.
         lo_wdyn->if_enh_object~unlock( ).
 
       CATCH cx_root.
-        lcx_exception=>raise( |error deserializing ENHO wdyn { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |error deserializing ENHO wdyn { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -252,7 +252,7 @@ CLASS lcl_object_enho_wdyn IMPLEMENTATION.
                      ig_data = ls_enh_data ).
 
       CATCH cx_enh_not_found.
-        lcx_exception=>raise( |error serializing ENHO wdyn { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |error serializing ENHO wdyn { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~serialize
@@ -271,19 +271,19 @@ CLASS lcl_object_enho_clif DEFINITION.
       deserialize
         IMPORTING io_xml  TYPE REF TO lcl_xml_input
                   io_clif TYPE REF TO cl_enh_tool_clif
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   cx_enh_root,
       serialize
         IMPORTING io_xml   TYPE REF TO lcl_xml_output
                   io_files TYPE REF TO lcl_objects_files
                   io_clif  TYPE REF TO cl_enh_tool_clif
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS: serialize_includes
       IMPORTING io_files TYPE REF TO lcl_objects_files
                 io_clif  TYPE REF TO cl_enh_tool_clif
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_enho_clif DEFINITION
 *----------------------------------------------------------------------*
@@ -541,7 +541,7 @@ CLASS lcl_object_enho_badi IMPLEMENTATION.
         lo_badi->if_enh_object~save( ).
         lo_badi->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO badi' ).
+        zcx_abapgit_exception=>raise( 'error deserializing ENHO badi' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -576,12 +576,12 @@ CLASS lcl_object_enho_hook DEFINITION.
     METHODS hook_impl_deserialize
       IMPORTING it_spaces TYPE ty_spaces_tt
       CHANGING  ct_impl   TYPE enh_hook_impl_it
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS hook_impl_serialize
       EXPORTING et_spaces TYPE ty_spaces_tt
       CHANGING  ct_impl   TYPE enh_hook_impl_it
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_enho_hook DEFINITION
 
@@ -747,7 +747,7 @@ CLASS lcl_object_enho_hook IMPLEMENTATION.
         lo_hook_impl->if_enh_object~save( ).
         lo_hook_impl->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO hook' ).
+        zcx_abapgit_exception=>raise( 'error deserializing ENHO hook' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -852,7 +852,7 @@ CLASS lcl_object_enho_intf IMPLEMENTATION.
         lo_enh_intf->if_enh_object~save( ).
         lo_enh_intf->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO interface' ).
+        zcx_abapgit_exception=>raise( 'error deserializing ENHO interface' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -992,7 +992,7 @@ CLASS lcl_object_enho_class IMPLEMENTATION.
         lo_enh_class->if_enh_object~save( ).
         lo_enh_class->if_enh_object~unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'error deserializing ENHO class' ).
+        zcx_abapgit_exception=>raise( 'error deserializing ENHO class' ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -1082,7 +1082,7 @@ CLASS lcl_object_enho_fugr IMPLEMENTATION.
         lo_fugrdata->if_enh_object~unlock( ).
 
       CATCH cx_enh_root.
-        lcx_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object_enho~deserialize
@@ -1116,7 +1116,7 @@ CLASS lcl_object_enho_fugr IMPLEMENTATION.
         ENDLOOP.
 
       CATCH cx_enh_not_found.
-        lcx_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
     ENDTRY.
 
     io_xml->add( iv_name = 'TOOL'
@@ -1149,7 +1149,7 @@ CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
         RETURNING
           VALUE(ri_enho) TYPE REF TO lif_object_enho
         RAISING
-          lcx_exception.
+          zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_enho DEFINITION
 
@@ -1206,7 +1206,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
           enhancement_id   = lv_enh_id
           bypassing_buffer = abap_true ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
 
     li_enho = factory( li_enh_tool->get_tool( ) ).
@@ -1255,7 +1255,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
             is_item  = ms_item
             io_files = mo_files.
       WHEN OTHERS.
-        lcx_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
+        zcx_abapgit_exception=>raise( |Unsupported ENHO type { iv_tool }| ).
     ENDCASE.
 
   ENDMETHOD.                    "factory
@@ -1297,7 +1297,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
         li_enh_object->save( ).
         li_enh_object->unlock( ).
       CATCH cx_enh_root.
-        lcx_exception=>raise( 'Error deleting ENHO' ).
+        zcx_abapgit_exception=>raise( 'Error deleting ENHO' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

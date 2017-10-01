@@ -161,7 +161,7 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS explain_content
       IMPORTING is_data TYPE lcl_persistence_db=>ty_content
       RETURNING VALUE(rv_text) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
