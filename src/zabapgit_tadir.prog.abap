@@ -276,11 +276,6 @@ CLASS lcl_tadir IMPLEMENTATION.
         WHEN 'SICF'.
 * replace the internal GUID with a hash of the path
           <ls_tadir>-obj_name+15 = read_sicf_url( <ls_tadir>-obj_name ).
-
-        WHEN 'DEVC'.
-          " Packages all have to same dummy identifier
-          <ls_tadir>-obj_name = 'PACKAGE'.
-
       ENDCASE.
     ENDLOOP.
 

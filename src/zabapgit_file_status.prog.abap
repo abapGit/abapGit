@@ -24,6 +24,7 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS:
       calculate_status
         IMPORTING iv_devclass       TYPE devclass
+                  io_dot            TYPE REF TO lcl_dot_abapgit
                   it_local          TYPE lif_defs=>ty_files_item_tt
                   it_remote         TYPE lif_defs=>ty_files_tt
                   it_cur_state      TYPE lif_defs=>ty_file_signatures_tt
@@ -45,18 +46,20 @@ CLASS lcl_file_status DEFINITION FINAL
         RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
       build_new_remote
         IMPORTING iv_devclass      TYPE devclass
+                  io_dot           TYPE REF TO lcl_dot_abapgit
                   is_remote        TYPE lif_defs=>ty_file
                   it_items         TYPE lif_defs=>ty_items_ts
                   it_state         TYPE lif_defs=>ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
+        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result
+        RAISING   lcx_exception,
       identify_object
         IMPORTING iv_filename TYPE string
                   iv_path     TYPE string
+                  iv_devclass TYPE devclass
+                  io_dot      TYPE REF TO lcl_dot_abapgit
         EXPORTING es_item     TYPE lif_defs=>ty_item
-                  ev_is_xml   TYPE abap_bool,
-      get_unique_package_name
-        IMPORTING iv_path            TYPE string
-        RETURNING VALUE(rv_obj_name) TYPE lif_defs=>ty_item-obj_name.
+                  ev_is_xml   TYPE abap_bool
+        RAISING   lcx_exception.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 
@@ -156,6 +159,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
+      io_dot       = io_repo->get_dot_abapgit( )
       it_local     = io_repo->get_files_local( io_log = io_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
@@ -193,8 +197,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
-                   <ls_local>  LIKE LINE OF it_local,
-                   <ls_item>   LIKE LINE OF lt_items.
+                   <ls_local>  LIKE LINE OF it_local.
 
 
     lt_state_idx = it_cur_state. " Force sort it
@@ -205,15 +208,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     LOOP AT it_local ASSIGNING <ls_local>.
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
       IF <ls_local>-item IS NOT INITIAL.
-        APPEND <ls_local>-item TO lt_items ASSIGNING <ls_item>. " Collect for item index
-
-        " For the status calculation the package name needs to be unique, both locally and remote
-        IF <ls_item>-obj_type = 'DEVC'.
-          CLEAR <ls_item>-devclass.
-          <ls_item>-obj_name = get_unique_package_name( <ls_local>-file-path ).
-        ENDIF.
-
-        UNASSIGN <ls_item>.
+        APPEND <ls_local>-item TO lt_items. " Collect for item index
       ENDIF.
 
       READ TABLE lt_remote ASSIGNING <ls_remote>
@@ -235,16 +230,16 @@ CLASS lcl_file_status IMPLEMENTATION.
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       identify_object( EXPORTING iv_filename = <ls_remote>-filename
                                  iv_path     = <ls_remote>-path
+                                 io_dot      = io_dot
+                                 iv_devclass = iv_devclass
                        IMPORTING es_item     = ls_item
                                  ev_is_xml   = lv_is_xml ).
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
-      IF ls_item-obj_type <> 'DEVC'.
-        ls_item-devclass = lcl_tadir=>get_object_package(
-                             iv_object   = ls_item-obj_type
-                             iv_obj_name = ls_item-obj_name ).
-      ENDIF.
+      ls_item-devclass = lcl_tadir=>get_object_package(
+                           iv_object   = ls_item-obj_type
+                           iv_obj_name = ls_item-obj_name ).
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
@@ -256,6 +251,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
       <ls_result> = build_new_remote( iv_devclass = iv_devclass
+                                      io_dot      = io_dot
                                       is_remote   = <ls_remote>
                                       it_items    = lt_items_idx
                                       it_state    = lt_state_idx ).
@@ -285,7 +281,9 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = get_unique_package_name( iv_path ).
+      lv_name = lcl_folder_logic=>path_to_package( iv_top  = iv_devclass
+                                                   io_dot  = io_dot
+                                                   iv_path = iv_path ).
     ENDIF.
 
     CLEAR es_item.
@@ -294,17 +292,6 @@ CLASS lcl_file_status IMPLEMENTATION.
     ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
 
   ENDMETHOD.  "identify_object.
-
-  METHOD get_unique_package_name.
-    DATA: lv_path TYPE string.
-
-    lv_path = iv_path.
-    REPLACE FIRST OCCURRENCE OF '/' IN lv_path WITH 'ROOT/'.
-    REPLACE ALL OCCURRENCES OF '/' IN lv_path WITH '_'.
-    lv_path = to_upper( lv_path ).
-
-    rv_obj_name = lv_path.
-  ENDMETHOD.
 
   METHOD build_existing.
 
@@ -378,6 +365,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     identify_object( EXPORTING iv_filename = is_remote-filename
                                iv_path     = is_remote-path
+                               iv_devclass = iv_devclass
+                               io_dot      = io_dot
                      IMPORTING es_item     = ls_item ).
 
     " Check if in item index + get package

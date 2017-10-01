@@ -2221,7 +2221,8 @@ CLASS ltcl_file_status IMPLEMENTATION.
           lt_remote      TYPE lif_defs=>ty_files_tt,
           lt_state       TYPE lif_defs=>ty_file_signatures_tt,
           lt_results     TYPE lif_defs=>ty_results_tt,
-          lt_results_exp TYPE lif_defs=>ty_results_tt.
+          lt_results_exp TYPE lif_defs=>ty_results_tt,
+          lo_dot         TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
@@ -2293,8 +2294,13 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_result 'DOMA' 'XFELD'     'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
     lt_results_exp = lt_results.
 
+    lo_dot = lcl_dot_abapgit=>build_default( ).
+*    lo_dot->set_starting_folder( 'SRC' ).
+*    lo_dot->set_folder_logic( lcl_dot_abapgit=>c_folder_logic-prefix ).
+
     lt_results = lcl_file_status=>calculate_status(
       iv_devclass        = '$Z$'
+      io_dot             = lo_dot
       it_local           = lt_local
       it_remote          = lt_remote
       it_cur_state       = lt_state ).

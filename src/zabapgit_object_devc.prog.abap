@@ -17,8 +17,7 @@ CLASS lcl_object_devc DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
-      get_package IMPORTING iv_devclass       TYPE devclass
-                  RETURNING VALUE(ri_package) TYPE REF TO if_package
+      get_package RETURNING VALUE(ri_package) TYPE REF TO if_package
                   RAISING   lcx_exception,
       update_pinf_usages IMPORTING ii_package    TYPE REF TO if_package
                                    it_usage_data TYPE scomppdata
@@ -38,28 +37,30 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_package.
-    cl_package_factory=>load_package(
-      EXPORTING
-        i_package_name             = iv_devclass
-        i_force_reload             = abap_true
-      IMPORTING
-        e_package                  = ri_package
-      EXCEPTIONS
-        object_not_existing        = 1
-        unexpected_error           = 2
-        intern_err                 = 3
-        no_access                  = 4
-        object_locked_and_modified = 5
-        OTHERS                     = 6 ).
-    IF sy-subrc = 1.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+    IF me->lif_object~exists( ) = abap_true.
+      cl_package_factory=>load_package(
+        EXPORTING
+          i_package_name             = mv_local_devclass
+          i_force_reload             = abap_true
+        IMPORTING
+          e_package                  = ri_package
+        EXCEPTIONS
+          object_not_existing        = 1
+          unexpected_error           = 2
+          intern_err                 = 3
+          no_access                  = 4
+          object_locked_and_modified = 5
+          OTHERS                     = 6 ).
+      IF sy-subrc = 1.
+        RETURN.
+      ELSEIF sy-subrc <> 0.
+        lcx_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~changed_by.
-    rv_user = get_package( mv_local_devclass )->changed_by.
+    rv_user = get_package( )->changed_by.
   ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
@@ -94,7 +95,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
       CHANGING
         cg_data = ls_package_data ).
 
-    li_package = get_package( mv_local_devclass ).
+    li_package = get_package( ).
 
     " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
@@ -293,7 +294,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           ls_usage_data   TYPE scomppdtln,
           li_usage        TYPE REF TO if_package_permission_to_use.
 
-    li_package = get_package( mv_local_devclass ).
+    li_package = get_package( ).
     IF li_package IS NOT BOUND.
       lcx_exception=>raise( |Could not find package to serialize.| ).
     ENDIF.
