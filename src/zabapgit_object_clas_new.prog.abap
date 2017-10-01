@@ -179,7 +179,8 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
     ls_clskey-clsname = iv_name.
 
-    CREATE OBJECT lo_update
+* todo, downport to 702, see https://github.com/larshp/abapGit/issues/933
+    CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
       EXPORTING
         clskey                        = ls_clskey
         exposure                      = iv_exposure
