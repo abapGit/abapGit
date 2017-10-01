@@ -114,7 +114,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
-*    ls_data_sign-restricted       = abap_true.
+    ls_data_sign-restricted       = abap_true.
     ls_data_sign-mainpack         = abap_true.
     ls_data_sign-srv_check        = abap_true.
     ls_data_sign-cli_check        = abap_true.
@@ -357,7 +357,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
       ENDIF.
 
-      CLEAR ls_usage_data-pack_name.
+      CLEAR: ls_usage_data-pack_name, ls_usage_data-client_pak.
 
       APPEND ls_usage_data TO lt_usage_data.
     ENDLOOP.
