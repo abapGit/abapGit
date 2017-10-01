@@ -163,6 +163,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN lif_defs=>gc_action-repo_refresh.                    " Repo refresh
         lcl_services_repo=>refresh( lv_key ).
         ev_state = lif_defs=>gc_event_state-re_render.
+      WHEN lif_defs=>gc_action-repo_syntax_check.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_syntax_check
+          EXPORTING
+            io_repo = lcl_app=>repo_srv( )->get( lv_key ).
+        ev_state = lif_defs=>gc_event_state-new_page.
       WHEN lif_defs=>gc_action-repo_purge.                      " Repo remove & purge all objects
         lcl_services_repo=>purge( lv_key ).
         ev_state = lif_defs=>gc_event_state-re_render.
