@@ -97,7 +97,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
   METHOD lif_object~jump.
 
     DATA: ls_bdcdata TYPE bdcdata,
-          lt_bdcdata TYPE STANDARD TABLE OF bdcdata.
+          lt_bdcdata TYPE tty_bdcdata.
 
     ls_bdcdata-program  = 'SAPMWWW0'.
     ls_bdcdata-dynpro   = '0100'.
