@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2017-09-11 v1.42.0
+------------------
+* fix dump in "reset local objects"
+* Fix DDLS deletion/uninstall sequence
+* Skip DDLS auto generated objects
+! New dialog box for overwriting local objects
+
 2017-09-11 v1.41.2
 ------------------
 * FUGR table maintenance, namespaces
