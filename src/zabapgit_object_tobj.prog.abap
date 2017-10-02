@@ -136,7 +136,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CTO_OBJECT_GET' ).
+      zcx_abapgit_exception=>raise( 'error from CTO_OBJECT_GET' ).
     ENDIF.
 
     CLEAR: ls_objh-luser,
@@ -203,7 +203,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
     IF sy-subrc <> 0.
 * TOBJ has to be saved/generated after the DDIC tables have been
 * activated - fixed with late deserialization
-      lcx_exception=>raise( 'error from OBJ_GENERATE' ).
+      zcx_abapgit_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOBJ'
@@ -236,7 +236,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
         object_enqueue_failed = 5
         OTHERS                = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from OBJ_GENERATE' ).
+      zcx_abapgit_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
     delete_extra( ls_objh-objectname ).
@@ -280,7 +280,7 @@ CLASS lcl_object_tobj IMPLEMENTATION.
         OTHERS    = 1.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, TOBJ' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, TOBJ' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

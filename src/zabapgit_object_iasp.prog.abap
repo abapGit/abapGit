@@ -18,11 +18,11 @@ CLASS lcl_object_iasp DEFINITION INHERITING FROM lcl_objects_super FINAL.
       read
         EXPORTING es_attr       TYPE w3servattr
                   et_parameters TYPE w3servpara_tabletype
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       save
         IMPORTING is_attr       TYPE w3servattr
                   it_parameters TYPE w3servpara_tabletype
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -64,7 +64,7 @@ CLASS lcl_object_iasp IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from w3api_service~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3api_service~load' ).
     ENDIF.
 
     li_service->get_attributes( IMPORTING p_attributes = es_attr ).
@@ -150,7 +150,7 @@ CLASS lcl_object_iasp IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from if_w3_api_service~load' ).
+      zcx_abapgit_exception=>raise( 'error from if_w3_api_service~load' ).
     ENDIF.
 
     li_service->if_w3_api_object~set_changeable( abap_true ).
@@ -177,7 +177,7 @@ CLASS lcl_object_iasp IMPLEMENTATION.
     IF sy-subrc = 1.
       rv_bool = abap_false.
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from w3_api_service~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3_api_service~load' ).
     ELSE.
       rv_bool = abap_true.
     ENDIF.

@@ -21,7 +21,7 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
     DATA: mv_tree_id TYPE ttree-id.
 
     METHODS jump_se43
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
     METHODS clear_fields
       CHANGING cs_head  TYPE ttree
@@ -94,7 +94,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         OTHERS                = 4.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHI3' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHI3' ).
     ENDIF.
 
   ENDMETHOD.                    "jump_se43
@@ -133,7 +133,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         canceled           = 3
         OTHERS             = 4.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from BMENU_DELETE_TREE, SHI3' ).
+      zcx_abapgit_exception=>raise( 'error from BMENU_DELETE_TREE, SHI3' ).
     ENDIF.
 
   ENDMETHOD.                    "delete
@@ -245,7 +245,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
         no_nodes_given           = 1
         OTHERS                   = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from STREE_HIERARCHY_SAVE, SHI3' ).
+      zcx_abapgit_exception=>raise( 'Error from STREE_HIERARCHY_SAVE, SHI3' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize

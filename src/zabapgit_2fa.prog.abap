@@ -657,11 +657,11 @@ CLASS lcl_2fa_auth_registry DEFINITION
       "! @parameter cv_username | Username
       "! @parameter cv_password | Password, will be replaced by an access token if two factor
       "!                          authentication succeeds
-      "! @raising lcx_exception | Error in two factor authentication
+      "! @raising zcx_abapgit_exception | Error in two factor authentication
       use_2fa_if_required IMPORTING iv_url      TYPE string
                           CHANGING  cv_username TYPE string
                                     cv_password TYPE string
-                          RAISING   lcx_exception.
+                          RAISING   zcx_abapgit_exception.
     CLASS-DATA:
       "! All authenticators managed by the registry
       gt_registered_authenticators TYPE HASHED TABLE OF REF TO lif_2fa_authenticator
@@ -670,7 +670,7 @@ CLASS lcl_2fa_auth_registry DEFINITION
     CLASS-METHODS:
       popup_token
         RETURNING VALUE(rv_token) TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_2fa_auth_registry IMPLEMENTATION.
@@ -754,10 +754,7 @@ CLASS lcl_2fa_auth_registry IMPLEMENTATION.
           CATCH lcx_2fa_illegal_state ##NO_HANDLER.
         ENDTRY.
 
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            iv_text     = |2FA error: { lx_ex->get_text( ) }|
-            ix_previous = lx_ex.
+        zcx_abapgit_exception=>raise( |2FA error: { lx_ex->get_text( ) }| ).
     ENDTRY.
   ENDMETHOD.
 
@@ -786,11 +783,11 @@ CLASS lcl_2fa_auth_registry IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2. "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
-      lcx_exception=>raise( 'Authentication cancelled' ).
+      zcx_abapgit_exception=>raise( 'Authentication cancelled' ).
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.

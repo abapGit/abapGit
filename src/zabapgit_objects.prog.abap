@@ -13,15 +13,15 @@ CLASS lcl_objects_activation DEFINITION FINAL.
     CLASS-METHODS add
       IMPORTING iv_type TYPE trobjtype
                 iv_name TYPE clike
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS add_item
       IMPORTING is_item TYPE lif_defs=>ty_item
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS activate
       IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS clear.
 
@@ -65,7 +65,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
           insert_into_corr_error = 3
           OTHERS                 = 4.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
+        zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.
     ENDIF.
 
@@ -132,7 +132,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
             object_not_found = 1
             OTHERS           = 2.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
+          zcx_abapgit_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
         ENDIF.
 
         IF iv_type = 'CLAS'.
@@ -166,49 +166,49 @@ CLASS lcl_objects_files DEFINITION.
         IMPORTING iv_extra  TYPE clike OPTIONAL
                   iv_ext    TYPE string
                   iv_string TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_string
         IMPORTING iv_extra         TYPE clike OPTIONAL
                   iv_ext           TYPE string
         RETURNING VALUE(rv_string) TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       add_xml
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO lcl_xml_output
                   iv_normalize TYPE sap_bool DEFAULT abap_true
                   is_metadata  TYPE lif_defs=>ty_metadata OPTIONAL
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
 * needed since type-check during dynamic call fails even if the object is compatible
       add_xml_from_plugin
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO object
                   iv_normalize TYPE sap_bool DEFAULT abap_true
-        RAISING   lcx_exception ##called,
+        RAISING   zcx_abapgit_exception ##called,
       read_xml
         IMPORTING iv_extra      TYPE clike OPTIONAL
         RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_abap
         IMPORTING iv_extra       TYPE clike OPTIONAL
                   iv_error       TYPE sap_bool DEFAULT abap_true
         RETURNING VALUE(rt_abap) TYPE abaptxt255_tab
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       add_abap
         IMPORTING iv_extra TYPE clike OPTIONAL
                   it_abap  TYPE STANDARD TABLE
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       add
         IMPORTING is_file TYPE lif_defs=>ty_file,
       add_raw
         IMPORTING iv_extra TYPE clike OPTIONAL
                   iv_ext   TYPE string
                   iv_data  TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read_raw
         IMPORTING iv_extra       TYPE clike OPTIONAL
                   iv_ext         TYPE string
         RETURNING VALUE(rv_data) TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_files
         RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt,
       set_files
@@ -226,7 +226,7 @@ CLASS lcl_objects_files DEFINITION.
         IMPORTING iv_filename TYPE string
                   iv_error    TYPE abap_bool DEFAULT abap_true
         EXPORTING ev_data     TYPE xstring
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       filename
         IMPORTING iv_extra           TYPE clike OPTIONAL
                   iv_ext             TYPE string
@@ -269,32 +269,32 @@ INTERFACE lif_object.
   METHODS:
     serialize
       IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     deserialize
       IMPORTING iv_package TYPE devclass
                 io_xml     TYPE REF TO lcl_xml_input
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     delete
-      RAISING lcx_exception,
+      RAISING zcx_abapgit_exception,
     exists
       RETURNING VALUE(rv_bool) TYPE abap_bool
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     changed_by
       RETURNING VALUE(rv_user) TYPE xubname
-      RAISING   lcx_exception,
+      RAISING   zcx_abapgit_exception,
     jump
-      RAISING lcx_exception,
+      RAISING zcx_abapgit_exception,
     get_metadata
       RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata,
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
   METHODS:
     compare_to_remote_version
       IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
       RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_comparison_result
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   DATA: mo_files TYPE REF TO lcl_objects_files.
 
@@ -491,7 +491,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     IF sy-subrc <> 0.
       IF iv_error = abap_true.
-        lcx_exception=>raise( |File not found: { iv_filename }| ).
+        zcx_abapgit_exception=>raise( |File not found: { iv_filename }| ).
       ELSE.
         RETURN.
       ENDIF.
@@ -555,7 +555,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
       jump_adt
         IMPORTING i_obj_name TYPE lif_defs=>ty_item-obj_name
                   i_obj_type TYPE lif_defs=>ty_item-obj_type
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
@@ -576,14 +576,14 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata,
       corr_insert
         IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       tadir_insert
         IMPORTING iv_package TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       jump_se11
         IMPORTING iv_radio TYPE string
                   iv_field TYPE string
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -592,7 +592,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         IMPORTING io_object                     TYPE REF TO cl_wb_object
                   io_adt                        TYPE REF TO object
         RETURNING VALUE(r_is_adt_jump_possible) TYPE abap_bool
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_objects_super DEFINITION
 
@@ -690,10 +690,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
             iv_package = iv_package
             io_xml     = io_xml.
       CATCH cx_static_check INTO lx_plugin.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            ix_previous = lx_plugin
-            iv_text     = lx_plugin->get_text( ).
+        zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
   ENDMETHOD.                    "lif_object~deserialize
 
@@ -703,10 +700,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     TRY.
         CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DELETE').
       CATCH cx_static_check INTO lx_plugin.
-        RAISE EXCEPTION TYPE lcx_exception
-          EXPORTING
-            ix_previous = lx_plugin
-            iv_text     = lx_plugin->get_text( ).
+        zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.                    "lif_object~delete
@@ -835,7 +829,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
                 io_files   TYPE REF TO lcl_objects_files
                 iv_program TYPE programm OPTIONAL
                 iv_extra   TYPE clike OPTIONAL
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS read_progdir
       IMPORTING iv_program        TYPE programm
@@ -846,7 +840,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
                 it_source  TYPE abaptxt255_tab
                 it_tpool   TYPE textpool_table
                 iv_package TYPE devclass
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
 
@@ -880,27 +874,27 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     METHODS serialize_dynpros
       IMPORTING iv_program_name  TYPE programm
       RETURNING VALUE(rt_dynpro) TYPE ty_dynpro_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_cua
       IMPORTING iv_program_name TYPE programm
       RETURNING VALUE(rs_cua)   TYPE ty_cua
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_dynpros
       IMPORTING it_dynpros TYPE ty_dynpro_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_textpool
       IMPORTING iv_program  TYPE programm
                 it_tpool    TYPE textpool_table
                 iv_language TYPE langu OPTIONAL
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_cua
       IMPORTING iv_program_name TYPE programm
                 is_cua          TYPE ty_cua
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS check_prog_changed_since
       IMPORTING iv_program        TYPE programm
@@ -1015,7 +1009,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       RETURN.
     ELSEIF sy-subrc <> 0.
       lcl_language=>restore_login_language( ).
-      lcx_exception=>raise( 'Error reading program' ).
+      zcx_abapgit_exception=>raise( 'Error reading program' ).
     ENDIF.
 
     lcl_language=>restore_login_language( ).
@@ -1084,9 +1078,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc = 1.
-      lcx_exception=>raise( 'Cancelled' ).
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
@@ -1130,9 +1124,9 @@ CLASS lcl_objects_program IMPLEMENTATION.
         lcl_language=>restore_login_language( ).
 
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
-          lcx_exception=>raise( 'User is currently editing program' ).
+          zcx_abapgit_exception=>raise( 'User is currently editing program' ).
         ELSE.
-          lcx_exception=>raise( 'PROG, error updating' ).
+          zcx_abapgit_exception=>raise( 'PROG, error updating' ).
         ENDIF.
       ENDIF.
 
@@ -1152,7 +1146,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
          STATE 'I'
          EXTENSION TYPE is_progdir-name+30.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
+          zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
         ENDIF.
       ELSE.
         INSERT REPORT is_progdir-name
@@ -1160,11 +1154,23 @@ CLASS lcl_objects_program IMPLEMENTATION.
           STATE 'I'
           PROGRAM TYPE is_progdir-subc.
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'error from INSERT REPORT' ).
+          zcx_abapgit_exception=>raise( 'error from INSERT REPORT' ).
         ENDIF.
       ENDIF.
 
+<<<<<<< HEAD
     ENDIF.
+=======
+      IF NOT it_tpool[] IS INITIAL.
+        INSERT TEXTPOOL is_progdir-name
+          FROM it_tpool
+          LANGUAGE mv_language
+          STATE 'I'.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
+        ENDIF.
+      ENDIF.
+>>>>>>> pr/3
 
     IF NOT it_tpool[] IS INITIAL.
       INSERT TEXTPOOL is_progdir-name
@@ -1186,7 +1192,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_exists = 1
         OTHERS     = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'not found in PROGDIR' ).
+      zcx_abapgit_exception=>raise( 'not found in PROGDIR' ).
     ENDIF.
 
 * todo, package?
@@ -1209,7 +1215,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_executed = 1
         OTHERS       = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'PROG, error inserting' ).
+      zcx_abapgit_exception=>raise( 'PROG, error inserting' ).
     ENDIF.
 
     SELECT SINGLE * FROM progdir INTO ls_progdir_new
@@ -1281,7 +1287,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         unknown_version = 2
         OTHERS          = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_CUA_INTERNAL_FETCH' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CUA_INTERNAL_FETCH' ).
     ENDIF.
 
   ENDMETHOD.                    "serialize_cua
@@ -1310,7 +1316,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc = 2.
-      lcx_exception=>raise( 'error from screen_list' ).
+      zcx_abapgit_exception=>raise( 'error from screen_list' ).
     ENDIF.
 
 * loop dynpros and skip generated selection screens
@@ -1332,7 +1338,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           permission_error     = 3
           OTHERS               = 4.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'Error while reading dynpro' ).
+        zcx_abapgit_exception=>raise( 'Error while reading dynpro' ).
       ENDIF.
 
       LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
@@ -1392,7 +1398,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           illegal_field_position = 9
           OTHERS                 = 10.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
-        lcx_exception=>raise( 'error from RPY_DYNPRO_INSERT' ).
+        zcx_abapgit_exception=>raise( 'error from RPY_DYNPRO_INSERT' ).
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
@@ -1462,7 +1468,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       LANGUAGE lv_language
       STATE 'I'.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+      zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
     IF lv_language = mv_language. " Add just once
@@ -1497,7 +1503,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       AND object = ms_item-obj_type
       AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'not found in tadir' ).
+      zcx_abapgit_exception=>raise( 'not found in tadir' ).
     ENDIF.
 
     ls_tr_key-obj_type = ms_item-obj_type.
@@ -1530,7 +1536,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         OTHERS    = 2.
     IF sy-subrc <> 0.
 * if moving code from SAPlink, see https://github.com/larshp/abapGit/issues/562
-      lcx_exception=>raise( 'error from RS_CUA_INTERNAL_WRITE' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CUA_INTERNAL_WRITE' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'CUAD'
@@ -1688,7 +1694,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
                                                  RECEIVING  p_wb_object = li_object
                                                  EXCEPTIONS OTHERS   = 1 ).
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'ADT Jump Error' ).
+          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
         ENDIF.
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
@@ -1697,7 +1703,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
 
         IF is_adt_jump_possible( io_object = li_object
                                  io_adt    = li_adt ) = abap_false.
-          lcx_exception=>raise( 'ADT Jump Error' ).
+          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
         ENDIF.
 
         CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
@@ -1719,11 +1725,11 @@ CLASS lcl_objects_super IMPLEMENTATION.
                                            EXCEPTIONS OTHERS   = 1 ).
 
         IF sy-subrc <> 0.
-          lcx_exception=>raise( 'ADT Jump Error' ).
+          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
         ENDIF.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'ADT Jump Error' ).
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -1769,7 +1775,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
       EXCEPTIONS
         OTHERS              = 1.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -1795,9 +1801,9 @@ CLASS lcl_objects_super IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc = 1.
-      lcx_exception=>raise( 'Cancelled' ).
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
   ENDMETHOD.                    "corr_insert
@@ -1820,7 +1826,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         OTHERS            = 3 ).
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'ADT Jump Error' ).
+      zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDIF.
 
     TRY.
@@ -1841,7 +1847,7 @@ CLASS lcl_objects_super IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root.
-        lcx_exception=>raise( 'ADT Jump Error' ).
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -1880,21 +1886,21 @@ CLASS lcl_objects_saxx_super DEFINITION ABSTRACT
     METHODS:
       create_channel_objects
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       get_data
         EXPORTING
           p_data TYPE any
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       lock
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       unlock
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
 
       get_names.
 
@@ -1921,7 +1927,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
-        lcx_exception=>raise( |{ ms_item-obj_name } not supported| ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_name } not supported| ).
     ENDTRY.
 
     get_data(
@@ -1979,7 +1985,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
-        lcx_exception=>raise( |{ ms_item-obj_type } not supported| ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
     get_data(
@@ -2039,7 +2045,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         ASSIGN lr_data->* TO <ls_data>.
 
       CATCH cx_root.
-        lcx_exception=>raise( |{ ms_item-obj_type } not supported| ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
     io_xml->read(
@@ -2070,7 +2076,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
             OTHERS              = 4.
 
         IF sy-subrc <> 0.
-          lcx_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
+          zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
         ENDIF.
 
         mo_appl_obj_data->set_data( <ls_data> ).
@@ -2080,7 +2086,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         unlock( ).
 
       CATCH cx_swb_exception.
-        lcx_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
+        zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -2101,7 +2107,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         unlock( ).
 
       CATCH cx_swb_exception.
-        lcx_exception=>raise( |Error occured while deleting { ms_item-obj_type }| ).
+        zcx_abapgit_exception=>raise( |Error occured while deleting { ms_item-obj_type }| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -2134,7 +2140,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root.
-        lcx_exception=>raise( |{ ms_item-obj_type } not supported| ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -2154,7 +2160,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
             p_object_data = mo_appl_obj_data ).
 
       CATCH cx_root.
-        lcx_exception=>raise( |{ ms_item-obj_type } not supported| ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
     mo_appl_obj_data->get_data(
@@ -2184,7 +2190,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
         OTHERS         = 3 ).
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error occured while locking { ms_item-obj_type } | && objname ).
+      zcx_abapgit_exception=>raise( |Error occured while locking { ms_item-obj_type } | && objname ).
     ENDIF.
 
   ENDMETHOD.                    "lock
@@ -2247,31 +2253,31 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_language     TYPE spras
                 io_log          TYPE REF TO lcl_log OPTIONAL
       RETURNING VALUE(rt_files) TYPE lif_defs=>ty_files_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS deserialize
       IMPORTING io_repo                  TYPE REF TO lcl_repo
       RETURNING VALUE(rt_accessed_files) TYPE lif_defs=>ty_file_signatures_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS delete
       IMPORTING it_tadir TYPE lif_defs=>ty_tadir_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS jump
       IMPORTING is_item TYPE lif_defs=>ty_item
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS changed_by
       IMPORTING is_item        TYPE lif_defs=>ty_item
       RETURNING VALUE(rv_user) TYPE xubname
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS has_changed_since
       IMPORTING is_item           TYPE lif_defs=>ty_item
                 iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS is_supported
       IMPORTING is_item        TYPE lif_defs=>ty_item
@@ -2289,7 +2295,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE lif_defs=>ty_files_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS create_object
       IMPORTING is_item        TYPE lif_defs=>ty_item
@@ -2297,7 +2303,7 @@ CLASS lcl_objects DEFINITION FINAL.
                 is_metadata    TYPE lif_defs=>ty_metadata OPTIONAL
                 iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS
       prioritize_deser
@@ -2310,24 +2316,24 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS resolve_ddic
       CHANGING ct_tadir TYPE lif_defs=>ty_tadir_tt
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS warning_overwrite
       CHANGING ct_results TYPE lif_defs=>ty_results_tt
-      RAISING  lcx_exception.
+      RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS warning_package
       IMPORTING is_item          TYPE lif_defs=>ty_item
                 iv_package       TYPE devclass
       RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS update_package_tree
       IMPORTING iv_package TYPE devclass.
 
     CLASS-METHODS delete_obj
       IMPORTING is_item TYPE lif_defs=>ty_item
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS compare_remote_to_local
       IMPORTING
@@ -2335,13 +2341,16 @@ CLASS lcl_objects DEFINITION FINAL.
         it_remote TYPE lif_defs=>ty_files_tt
         is_result TYPE lif_defs=>ty_result
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
 
     CLASS-METHODS deserialize_objects
       IMPORTING it_objects TYPE ty_deserialization_tt
                 iv_ddic    TYPE abap_bool DEFAULT abap_false
                 iv_descr   TYPE string
       CHANGING  ct_files   TYPE lif_defs=>ty_file_signatures_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
+    CLASS-METHODS resolve_ddls
+      CHANGING
+        ct_tadir TYPE lif_defs=>ty_tadir_tt.
 
 ENDCLASS.                    "lcl_object DEFINITION

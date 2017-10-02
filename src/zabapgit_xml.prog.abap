@@ -30,15 +30,15 @@ CLASS lcl_xml DEFINITION ABSTRACT.
     METHODS parse
       IMPORTING iv_normalize TYPE abap_bool DEFAULT abap_true
                 iv_xml       TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS error
       IMPORTING ii_parser TYPE REF TO if_ixml_parser
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS display_xml_error
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_xml DEFINITION
 
@@ -105,7 +105,7 @@ CLASS lcl_xml IMPLEMENTATION.
         txt2  = 'See http://larshp.github.io/abapGit/other-xml-mismatch.html'
         txt3  = lv_version.                                 "#EC NOTEXT
 
-    lcx_exception=>raise( 'XML error' ).
+    zcx_abapgit_exception=>raise( 'XML error' ).
 
   ENDMETHOD.                    "display_xml_error
 
@@ -160,7 +160,7 @@ CLASS lcl_xml IMPLEMENTATION.
       ENDDO.
     ENDIF.
 
-    lcx_exception=>raise( 'Error while parsing XML' ).
+    zcx_abapgit_exception=>raise( 'Error while parsing XML' ).
   ENDMETHOD.                    "error
 
 ENDCLASS.                    "lcl_xml IMPLEMENTATION
@@ -177,7 +177,7 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
       add
         IMPORTING iv_name TYPE clike
                   ig_data TYPE any
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       set_raw
         IMPORTING ii_raw TYPE REF TO if_ixml_element,
       add_xml
@@ -318,11 +318,11 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
     METHODS:
       constructor
         IMPORTING iv_xml TYPE clike
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       read
         IMPORTING iv_name TYPE clike
         CHANGING  cg_data TYPE any
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       get_raw
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_document,
 * todo, add read_xml to match add_xml in lcl_xml_output
@@ -387,7 +387,7 @@ CLASS lcl_xml_input IMPLEMENTATION.
           SOURCE XML mi_xml_doc
           RESULT (lt_rtab) ##no_text.
       CATCH cx_transformation_error INTO lx_error.
-        lcx_exception=>raise( lx_error->if_message~get_text( ) ).
+        zcx_abapgit_exception=>raise( lx_error->if_message~get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.                    "read
@@ -406,7 +406,7 @@ CLASS lcl_xml_pretty DEFINITION FINAL.
                 iv_ignore_errors TYPE abap_bool DEFAULT abap_true
                 iv_unpretty      TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_xml)    TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -439,7 +439,7 @@ CLASS lcl_xml_pretty IMPLEMENTATION.
         rv_xml = iv_xml.
         RETURN.
       ELSE.
-        lcx_exception=>raise( 'error parsing xml' ).
+        zcx_abapgit_exception=>raise( 'error parsing xml' ).
       ENDIF.
     ENDIF.
     li_istream->close( ).

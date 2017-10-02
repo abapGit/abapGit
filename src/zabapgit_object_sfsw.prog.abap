@@ -16,7 +16,7 @@ CLASS lcl_object_sfsw DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_sfsw DEFINITION
 
@@ -80,7 +80,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     TRY.
         ro_switch = cl_sfw_sw=>get_switch_from_db( lv_switch_id ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error from CL_SFW_SW=>GET_SWITCH' ).
+        zcx_abapgit_exception=>raise( 'Error from CL_SFW_SW=>GET_SWITCH' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -157,7 +157,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     TRY.
         lo_switch = cl_sfw_sw=>create_switch( lv_switch_id ).
       CATCH cx_pak_not_authorized cx_pak_invalid_state cx_pak_invalid_data.
-        lcx_exception=>raise( 'error in CL_SFW_SW=>CREATE_SWITCH' ).
+        zcx_abapgit_exception=>raise( 'error in CL_SFW_SW=>CREATE_SWITCH' ).
     ENDTRY.
 
     ls_header-author = sy-uname.
@@ -178,7 +178,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
         OTHERS    = 2 ).
     SET PARAMETER ID 'EUK' FIELD ''.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
+      zcx_abapgit_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
 
@@ -198,7 +198,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
         lo_switch->set_delete_flag( lv_switch_id ).
         lo_switch->save_all( ).
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        lcx_exception=>raise( 'Error deleting Switch' ).
+        zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
     ENDTRY.
 
   ENDMETHOD.                    "delete

@@ -25,18 +25,18 @@ CLASS lcl_object_pinf DEFINITION INHERITING FROM lcl_objects_super FINAL.
         IMPORTING is_pinf             TYPE ty_pinf
                   iv_package          TYPE devclass
         RETURNING VALUE(ri_interface) TYPE REF TO if_package_interface
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       delete_elements
         IMPORTING ii_interface TYPE REF TO if_package_interface
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       update_attributes
         IMPORTING is_pinf      TYPE ty_pinf
                   ii_interface TYPE REF TO if_package_interface
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       update_elements
         IMPORTING is_pinf      TYPE ty_pinf
                   ii_interface TYPE REF TO if_package_interface
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_PINF DEFINITION
 
@@ -266,7 +266,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           unexpected_error        = 4
           OTHERS                  = 7 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error creating new package interface' ).
+        zcx_abapgit_exception=>raise( 'error creating new package interface' ).
       ENDIF.
     ELSE.
       cl_package_interface=>load_package_interface(
@@ -283,7 +283,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
           object_locked_and_modified = 5
           OTHERS                     = 6 ).
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error loading package interface' ).
+        zcx_abapgit_exception=>raise( 'error loading package interface' ).
       ENDIF.
     ENDIF.
 
@@ -329,7 +329,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
         object_locked_and_modified = 5
         OTHERS                     = 6 ).
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error loading package interface, delete' ).
+      zcx_abapgit_exception=>raise( 'error loading package interface, delete' ).
     ENDIF.
 
 * elements must be deleted before the package interface

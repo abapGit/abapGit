@@ -47,7 +47,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
             ex_is_existing = rv_bool.
 
       CATCH cx_root.
-        lcx_exception=>raise( |JOBD not supported| ).
+        zcx_abapgit_exception=>raise( |JOBD not supported| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -101,7 +101,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
                      ig_data = <ls_job_definition> ).
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error serializing JOBD| ).
+        zcx_abapgit_exception=>raise( |Error serializing JOBD| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -142,7 +142,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
             im_jd_attributes = <ls_job_definition>.
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error deserializing JOBD| ).
+        zcx_abapgit_exception=>raise( |Error deserializing JOBD| ).
     ENDTRY.
 
     lcl_objects_activation=>add_item( ms_item ).
@@ -164,7 +164,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
         CALL METHOD lo_job_definition->('DELETE_JD').
 
       CATCH cx_root.
-        lcx_exception=>raise( |Error deleting JOBD| ).
+        zcx_abapgit_exception=>raise( |Error deleting JOBD| ).
     ENDTRY.
 
   ENDMETHOD.
@@ -186,7 +186,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
         OTHERS            = 2.
 
     IF sy-subrc <> 0.
-      lcx_exception=>raise( |Error from TR_OBJECT_JUMP_TO_TOOL, JOBD| ).
+      zcx_abapgit_exception=>raise( |Error from TR_OBJECT_JUMP_TO_TOOL, JOBD| ).
     ENDIF.
 
   ENDMETHOD.

@@ -14,12 +14,12 @@ CLASS lcl_git_utils DEFINITION FINAL. " > Maybe better move to lcl_git_pack ??
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
       RETURNING VALUE(rv_pkt) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS length_utf8_hex
       IMPORTING iv_data       TYPE xstring
       RETURNING VALUE(rv_len) TYPE i
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_git_utils
 
@@ -61,7 +61,7 @@ CLASS lcl_git_utils IMPLEMENTATION.
         lo_obj->read( EXPORTING n    = lv_len
                       IMPORTING data = lv_string ).
       CATCH cx_sy_conversion_codepage.
-        lcx_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
+        zcx_abapgit_exception=>raise( 'error converting to hex, LENGTH_UTF8_HEX' ).
     ENDTRY.
 
     lv_char4 = lv_string.
@@ -80,7 +80,7 @@ CLASS lcl_git_utils IMPLEMENTATION.
     lv_len = strlen( iv_string ).
 
     IF lv_len >= 255.
-      lcx_exception=>raise( 'PKT, todo' ).
+      zcx_abapgit_exception=>raise( 'PKT, todo' ).
     ENDIF.
 
     lv_x = lv_len + 4.
@@ -115,27 +115,27 @@ CLASS lcl_git_branch_list DEFINITION FINAL.
 
     METHODS constructor
       IMPORTING iv_data TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS find_by_name
       IMPORTING iv_branch_name   TYPE clike
       RETURNING VALUE(rs_branch) TYPE ty_git_branch
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_head " For potential future use
       RETURNING VALUE(rs_branch) TYPE ty_git_branch
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_head_symref
       RETURNING VALUE(rv_head_symref) TYPE string.
 
     METHODS get_branches_only
       RETURNING VALUE(rt_branches) TYPE ty_git_branch_list_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_tags_only " For potential future use
       RETURNING VALUE(rt_branches) TYPE ty_git_branch_list_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS is_ignored
       IMPORTING iv_branch_name   TYPE clike
@@ -165,7 +165,7 @@ CLASS lcl_git_branch_list DEFINITION FINAL.
       IMPORTING iv_data        TYPE string
       EXPORTING et_list        TYPE ty_git_branch_list_tt
                 ev_head_symref TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS parse_head_params
       IMPORTING iv_data        TYPE string
@@ -192,13 +192,13 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
   METHOD find_by_name.
 
     IF iv_branch_name IS INITIAL.
-      lcx_exception=>raise( 'Branch name empty' ).
+      zcx_abapgit_exception=>raise( 'Branch name empty' ).
     ENDIF.
 
     READ TABLE mt_branches INTO rs_branch
       WITH KEY name = iv_branch_name.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Branch not found' ).
+      zcx_abapgit_exception=>raise( 'Branch not found' ).
     ENDIF.
 
   ENDMETHOD.  "find_by_name
@@ -244,7 +244,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        lcx_exception=>raise( 'No branches, create branch manually by adding file' ).
+        zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ).
       ELSE.
         CONTINUE.
       ENDIF.

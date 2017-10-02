@@ -25,20 +25,20 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
       deserialize_abap
         IMPORTING io_xml     TYPE REF TO lcl_xml_input
                   iv_package TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_docu
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_tpool
         IMPORTING io_xml TYPE REF TO lcl_xml_input
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       deserialize_sotr
         IMPORTING io_xml     TYPE REF TO lcl_xml_input
                   iv_package TYPE devclass
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       serialize_xml
         IMPORTING io_xml TYPE REF TO lcl_xml_output
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -442,7 +442,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
 
@@ -462,7 +462,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
         locals_not_initialised = 4
         OTHERS                 = 5.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from generate_locals' ).
+      zcx_abapgit_exception=>raise( 'error from generate_locals' ).
     ENDIF.
   ENDMETHOD.
 
@@ -476,7 +476,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
       LANGUAGE iv_language
       STATE 'I'.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+      zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPT'
@@ -501,7 +501,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
           object_not_found = 1
           OTHERS           = 2.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
+        zcx_abapgit_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
       ENDIF.
 
       READ TABLE lt_objects INDEX 1 INTO lv_object.
@@ -538,7 +538,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
           no_entry_found                = 18
           OTHERS                        = 19.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
+        zcx_abapgit_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -569,7 +569,18 @@ CLASS lcl_oo_class IMPLEMENTATION.
 * when the methods are changed
 *    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
 
-    lt_methods = cl_oo_classname_service=>get_all_method_includes( lv_class_name ).
+    cl_oo_classname_service=>get_all_method_includes(
+      EXPORTING
+        clsname            = lv_class_name
+      RECEIVING
+        result             = lt_methods
+      EXCEPTIONS
+        class_not_existing = 1 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Class { lv_class_name } not existing| ).
+    ENDIF.
+
     LOOP AT lt_methods ASSIGNING <ls_method>.
       APPEND <ls_method>-incname TO rt_includes.
     ENDLOOP.
@@ -591,7 +602,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN. " in case only inactive version exists
     ELSEIF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from seo_clif_get' ).
+      zcx_abapgit_exception=>raise( 'error from seo_clif_get' ).
     ENDIF.
   ENDMETHOD.
 
@@ -674,7 +685,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
         other        = 5
         OTHERS       = 6.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from SEO_CLASS_DELETE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'Error from SEO_CLASS_DELETE_COMPLETE' ).
     ENDIF.
   ENDMETHOD.
 

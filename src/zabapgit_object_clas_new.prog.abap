@@ -25,14 +25,14 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
         IMPORTING
           iv_name TYPE seoclsname
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       update_meta
         IMPORTING
           iv_name     TYPE seoclsname
           iv_exposure TYPE seoexpose
           it_source   TYPE rswsourcet
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       determine_method_include
         IMPORTING
           iv_name           TYPE seoclsname
@@ -40,7 +40,7 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
         RETURNING
           VALUE(rv_program) TYPE programm
         RAISING
-          lcx_exception,
+          zcx_abapgit_exception,
       init_scanner
         IMPORTING
           it_source         TYPE lif_defs=>ty_string_tt
@@ -89,7 +89,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         internal_error_insert_report   = 11
         OTHERS                         = 12.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SEO_METHOD_GENERATE_INCLUDE' ).
+      zcx_abapgit_exception=>raise( 'error from SEO_METHOD_GENERATE_INCLUDE' ).
     ENDIF.
 
     rv_program = cl_oo_classname_service=>get_method_include( ls_mtdkey ).
@@ -115,7 +115,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
     ENDIF.
 
   ENDMETHOD.
@@ -179,7 +179,8 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
     ls_clskey-clsname = iv_name.
 
-    CREATE OBJECT lo_update
+* todo, downport to 702, see https://github.com/larshp/abapGit/issues/933
+    CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
       EXPORTING
         clskey                        = ls_clskey
         exposure                      = iv_exposure
@@ -191,7 +192,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         read_source_error             = 2
         OTHERS                        = 3.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error instantiating CL_OO_CLASS_SECTION_SOURCE' ).
+      zcx_abapgit_exception=>raise( 'error instantiating CL_OO_CLASS_SECTION_SOURCE' ).
     ENDIF.
 
     lo_update->set_dark_mode( seox_true ).
@@ -209,7 +210,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         scan_abap_source_error = 1
         OTHERS                 = 2 ).
     IF sy-subrc <> 0 OR lv_scan_error = abap_true.
-      lcx_exception=>raise( 'CLAS, error while scanning source' ).
+      zcx_abapgit_exception=>raise( 'CLAS, error while scanning source' ).
     ENDIF.
 
 * this will update the SEO* database tables
@@ -253,7 +254,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
         _internal_class_overflow      = 19
         OTHERS                        = 20.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
+      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
     ENDIF.
 
   ENDMETHOD.
@@ -312,7 +313,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
       TRY.
           lt_source = lo_scanner->get_method_impl_source( lv_method ).
         CATCH cx_oo_clif_component.
-          lcx_exception=>raise( 'error from GET_METHOD_IMPL_SOURCE' ).
+          zcx_abapgit_exception=>raise( 'error from GET_METHOD_IMPL_SOURCE' ).
       ENDTRY.
       lv_program = determine_method_include(
         iv_name   = is_key-clsname

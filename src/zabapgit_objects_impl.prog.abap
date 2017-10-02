@@ -11,38 +11,28 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD warning_overwrite.
 
-    DATA: lv_index    TYPE i,
-          lv_answer   TYPE c,
-          lv_question TYPE string.
+    DATA: lt_results_overwrite LIKE ct_results.
 
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
-
     LOOP AT ct_results ASSIGNING <ls_result>
         WHERE NOT obj_type IS INITIAL.
-
-      lv_index = sy-tabix.
 
       IF <ls_result>-lstate IS NOT INITIAL
           AND <ls_result>-lstate <> lif_defs=>gc_state-deleted
           AND NOT ( <ls_result>-lstate = lif_defs=>gc_state-added
           AND <ls_result>-rstate IS INITIAL ).
-        lv_question = |It looks like object {
-          <ls_result>-obj_type } { <ls_result>-obj_name
-          } has been modified locally, overwrite object?|.
 
-        lv_answer = lcl_popups=>popup_to_confirm(
-          titlebar              = 'Warning'
-          text_question         = lv_question
-          display_cancel_button = abap_false ).             "#EC NOTEXT
-
-        IF lv_answer = '2'.
-          DELETE ct_results INDEX lv_index.
-        ENDIF.
-
+        "current object has been modified locally, add to table for popup
+        APPEND <ls_result> TO lt_results_overwrite.
       ENDIF.
 
     ENDLOOP.
+
+    if lines( lt_results_overwrite ) > 0.
+      "all returned objects will be overwritten
+      ct_results = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+    endif.
 
   ENDMETHOD.
 
@@ -151,10 +141,10 @@ CLASS lcl_objects IMPLEMENTATION.
                 EXPORTING
                   is_item = is_item.
             CATCH cx_sy_create_object_error.
-              lcx_exception=>raise( lv_message ).
+              zcx_abapgit_exception=>raise( lv_message ).
           ENDTRY.
         ELSE. " No native support? -> fail
-          lcx_exception=>raise( lv_message ).
+          zcx_abapgit_exception=>raise( lv_message ).
         ENDIF.
     ENDTRY.
 
@@ -180,7 +170,7 @@ CLASS lcl_objects IMPLEMENTATION.
                        iv_language    = lif_defs=>gc_english
                        iv_native_only = iv_native_only ).
         rv_bool = abap_true.
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -221,7 +211,7 @@ CLASS lcl_objects IMPLEMENTATION.
         li_obj = create_object( is_item = is_item
                                 iv_language = lif_defs=>gc_english ).
         rv_bool = li_obj->exists( ).
-      CATCH lcx_exception.
+      CATCH zcx_abapgit_exception.
 * ignore all errors and assume the object exists
         rv_bool = abap_true.
     ENDTRY.
@@ -248,7 +238,7 @@ CLASS lcl_objects IMPLEMENTATION.
       TRY.
           lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
                                        i_obj_type = is_item-obj_type ).
-        CATCH lcx_exception.
+        CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.
     ELSE.
@@ -333,6 +323,8 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     resolve_ddic( CHANGING ct_tadir = lt_tadir ).
+
+    resolve_ddls( CHANGING ct_tadir = lt_tadir ).
 
     SORT lt_tadir BY korrnum ASCENDING.
 
@@ -428,7 +420,7 @@ CLASS lcl_objects IMPLEMENTATION.
           WHEN 'DA'.
             <ls_edge>-to-obj_type = 'TTYP'.
           WHEN OTHERS.
-            lcx_exception=>raise( 'resolve_ddic, unknown object_cls' ).
+            zcx_abapgit_exception=>raise( 'resolve_ddic, unknown object_cls' ).
         ENDCASE.
       ENDLOOP.
 
@@ -531,7 +523,7 @@ CLASS lcl_objects IMPLEMENTATION.
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
     IF lines( lt_files ) <> lines( it_files ).
-      lcx_exception=>raise( 'Duplicates' ).
+      zcx_abapgit_exception=>raise( 'Duplicates' ).
     ENDIF.
 
   ENDMETHOD.
@@ -616,7 +608,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_cancel = warning_package( is_item    = ls_item
                                    iv_package = lv_package ).
       IF lv_cancel = abap_true.
-        lcx_exception=>raise( 'cancelled' ).
+        zcx_abapgit_exception=>raise( 'cancelled' ).
       ENDIF.
 
       CREATE OBJECT lo_files
@@ -723,12 +715,72 @@ CLASS lcl_objects IMPLEMENTATION.
         lo_comparison_result->show_confirmation_dialog( ).
 
         IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
-          RAISE EXCEPTION TYPE lcx_exception
-            EXPORTING
-              iv_text = 'Deserialization aborted by user'.
+          zcx_abapgit_exception=>raise( 'Deserialization aborted by user' ).
         ENDIF.
       ENDIF.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD resolve_ddls.
+
+    " As CDS-Views aka DDLS can be dependent on each other,
+    " we wan't to ensure that they are deleted in the right order.
+    " Otherwise deletion is prohibited by standard API
+
+    TYPES: BEGIN OF ty_ddls_name.
+        INCLUDE TYPE ddsymtab.
+    TYPES: END OF ty_ddls_name.
+
+    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
+                               WITH NON-UNIQUE DEFAULT KEY,
+           BEGIN OF ty_dependency,
+             depname  TYPE dd02l-tabname,
+             deptyp   TYPE c LENGTH 4,
+             deplocal TYPE dd02l-as4local,
+             refname  TYPE dd02l-tabname,
+             reftyp   TYPE c LENGTH 4,
+             kind     TYPE c LENGTH 1,
+           END OF ty_dependency.
+
+    DATA: lt_dependency TYPE STANDARD TABLE OF ty_dependency
+                             WITH NON-UNIQUE DEFAULT KEY,
+          lt_ddls_name  TYPE tty_ddls_names,
+          ls_ddls_name  LIKE LINE OF lt_ddls_name.
+
+    FIELD-SYMBOLS: <tadir_ddls>      TYPE lif_defs=>ty_tadir,
+                   <dependency>      TYPE ty_dependency,
+                   <tadir_dependent> TYPE lif_defs=>ty_tadir.
+
+    LOOP AT ct_tadir ASSIGNING <tadir_ddls>
+                     WHERE object = 'DDLS'.
+
+      CLEAR: lt_dependency,
+             lt_ddls_name.
+
+      ls_ddls_name-name = <tadir_ddls>-obj_name.
+      INSERT ls_ddls_name INTO TABLE lt_ddls_name.
+
+      PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
+                               TABLES lt_ddls_name lt_dependency.
+
+      LOOP AT lt_dependency ASSIGNING <dependency>
+                            WHERE deptyp = 'DDLS'
+                            AND   refname = <tadir_ddls>-obj_name.
+
+        READ TABLE ct_tadir ASSIGNING <tadir_dependent>
+                            WITH KEY pgmid    = 'R3TR'
+                                     object   = 'DDLS'
+                                     obj_name = <dependency>-depname
+                            BINARY SEARCH.
+        CHECK sy-subrc = 0.
+
+        <tadir_dependent>-korrnum = <tadir_dependent>-korrnum - 1.
+
+      ENDLOOP.
+
+    ENDLOOP.
 
   ENDMETHOD.
 

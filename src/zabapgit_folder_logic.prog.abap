@@ -13,7 +13,7 @@ CLASS lcl_folder_logic DEFINITION.
           iv_package     TYPE devclass
         RETURNING
           VALUE(rv_path) TYPE string
-        RAISING lcx_exception,
+        RAISING zcx_abapgit_exception,
       path_to_package
         IMPORTING
           iv_top            TYPE devclass
@@ -22,7 +22,7 @@ CLASS lcl_folder_logic DEFINITION.
         RETURNING
           VALUE(rv_package) TYPE devclass
         RAISING
-          lcx_exception.
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -38,7 +38,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
-      lcx_exception=>raise( 'unexpected folder structure' ).
+      zcx_abapgit_exception=>raise( 'unexpected folder structure' ).
     ENDIF.
     lv_path    = iv_path+lv_length.
     lv_parent  = iv_top.
@@ -86,7 +86,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       lv_parentcl = lcl_sap_package=>get( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
-        lcx_exception=>raise( |error, expected parent package, { iv_package }| ).
+        zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
       ELSE.
         CASE io_dot->get_folder_logic( ).
           WHEN lcl_dot_abapgit=>c_folder_logic-full.
@@ -102,7 +102,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects. Alternatively change to FULL folder logic
               lv_message = 'PREFIX: Unexpected package naming(' && iv_package && ')' ##no_text.
-              lcx_exception=>raise( lv_message ).
+              zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
             ASSERT 0 = 1.
@@ -110,7 +110,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
         lv_path = iv_package+lv_len.
         IF strlen( lv_path ) = 0.
-          lcx_exception=>raise( 'Folder logic: length = 0' ).
+          zcx_abapgit_exception=>raise( 'Folder logic: length = 0' ).
         ENDIF.
 
         IF lv_path(1) = '_'.
@@ -143,7 +143,7 @@ CLASS ltcl_folder_logic_helper DEFINITION FOR TESTING FINAL.
               iv_logic    TYPE string
               iv_package  TYPE devclass
               iv_path     TYPE string
-            RAISING lcx_exception.
+            RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -194,11 +194,11 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
     METHODS:
       setup,
       teardown,
-      prefix1 FOR TESTING RAISING lcx_exception,
-      prefix2 FOR TESTING RAISING lcx_exception,
-      prefix_error1 FOR TESTING RAISING lcx_exception,
-      full1 FOR TESTING RAISING lcx_exception,
-      full2 FOR TESTING RAISING lcx_exception.
+      prefix1 FOR TESTING RAISING zcx_abapgit_exception,
+      prefix2 FOR TESTING RAISING zcx_abapgit_exception,
+      prefix_error1 FOR TESTING RAISING zcx_abapgit_exception,
+      full1 FOR TESTING RAISING zcx_abapgit_exception,
+      full2 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
 
@@ -274,7 +274,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
           iv_package  = '$FOOBAR'
           iv_path     = '/src/' ).
         cl_abap_unit_assert=>fail( 'Error expected' ).
-      CATCH lcx_exception ##NO_HANDLER.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
@@ -310,10 +310,10 @@ CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DU
     METHODS:
       setup,
       teardown,
-      prefix1 FOR TESTING RAISING lcx_exception,
-      prefix2 FOR TESTING RAISING lcx_exception,
-      full1 FOR TESTING RAISING lcx_exception,
-      full2 FOR TESTING RAISING lcx_exception.
+      prefix1 FOR TESTING RAISING zcx_abapgit_exception,
+      prefix2 FOR TESTING RAISING zcx_abapgit_exception,
+      full1 FOR TESTING RAISING zcx_abapgit_exception,
+      full2 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
 

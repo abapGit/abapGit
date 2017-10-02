@@ -5,24 +5,24 @@ CLASS lcl_transport DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      zip RAISING lcx_exception,
+      zip RAISING zcx_abapgit_exception,
       to_tadir IMPORTING it_transport_headers TYPE trwbo_request_headers
                RETURNING VALUE(rt_tadir)      TYPE scts_tadir
-               RAISING   lcx_exception.
+               RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS:
       read_requests
         IMPORTING it_trkorr          TYPE trwbo_request_headers
         RETURNING VALUE(rt_requests) TYPE trwbo_requests
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       find_top_package
         IMPORTING it_tadir          TYPE scts_tadir
         RETURNING VALUE(rv_package) TYPE devclass,
       resolve
         IMPORTING it_requests     TYPE trwbo_requests
         RETURNING VALUE(rt_tadir) TYPE scts_tadir
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -45,12 +45,12 @@ CLASS lcl_transport IMPLEMENTATION.
     lt_requests = read_requests( lt_trkorr ).
     lt_tadir = resolve( lt_requests ).
     IF lines( lt_tadir ) = 0.
-      lcx_exception=>raise( 'empty transport' ).
+      zcx_abapgit_exception=>raise( 'empty transport' ).
     ENDIF.
 
     lv_package = find_top_package( lt_tadir ).
     IF lv_package IS INITIAL.
-      lcx_exception=>raise( 'error finding super package' ).
+      zcx_abapgit_exception=>raise( 'error finding super package' ).
     ENDIF.
 
     ls_data-key         = 'TZIP'.
@@ -123,7 +123,7 @@ CLASS lcl_transport IMPLEMENTATION.
           invalid_input = 1
           OTHERS        = 2.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
+        zcx_abapgit_exception=>raise( 'error from TR_READ_REQUEST_WITH_TASKS' ).
       ENDIF.
 
       APPEND LINES OF lt_requests TO rt_requests.
@@ -154,7 +154,7 @@ CLASS lcl_transport IMPLEMENTATION.
               no_mapping     = 1
               OTHERS         = 2.
           IF sy-subrc <> 0.
-            lcx_exception=>raise( 'error from GET_R3TR_OBJECT_FROM_LIMU_OBJ' ).
+            zcx_abapgit_exception=>raise( 'error from GET_R3TR_OBJECT_FROM_LIMU_OBJ' ).
           ENDIF.
           lv_obj_name = lv_trobj_name.
         ELSE.
@@ -188,7 +188,7 @@ CLASS lcl_transport_objects DEFINITION.
         is_stage_objects   TYPE lif_defs=>ty_stage_files
         it_object_statuses TYPE lif_defs=>ty_results_tt
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
   PRIVATE SECTION.
     DATA mt_transport_objects TYPE scts_tadir.
 ENDCLASS.
@@ -212,7 +212,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
         CASE ls_object_status-lstate.
           WHEN lif_defs=>gc_state-added OR lif_defs=>gc_state-modified.
             IF ls_transport_object-delflag = abap_true.
-              lcx_exception=>raise( |Object { ls_transport_object-obj_name
+              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be added/modified, but has deletion flag in transport| ).
             ENDIF.
 
@@ -222,7 +222,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
                        item-obj_type = ls_transport_object-object
                        file-filename = ls_object_status-filename.
             IF sy-subrc <> 0.
-              lcx_exception=>raise( |Object { ls_transport_object-obj_name
+              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } not found in the local repository files| ).
             ENDIF.
 
@@ -232,7 +232,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
               iv_data     = ls_local_file-file-data ).
           WHEN lif_defs=>gc_state-deleted.
             IF ls_transport_object-delflag = abap_false.
-              lcx_exception=>raise( |Object { ls_transport_object-obj_name
+              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be removed, but has NO deletion flag in transport| ).
             ENDIF.
             io_stage->rm(
@@ -243,7 +243,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
         ENDCASE.
       ENDLOOP.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( |Object { ls_transport_object-obj_name
+        zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
         } not found in the local repository files| ).
       ENDIF.
     ENDLOOP.
@@ -258,7 +258,7 @@ CLASS lcl_transport_2_branch DEFINITION.
         IMPORTING io_repository          TYPE REF TO lcl_repo_online
                   is_transport_to_branch TYPE lif_defs=>ty_transport_to_branch
                   it_transport_objects   TYPE scts_tadir
-        RAISING   lcx_exception.
+        RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
 
     METHODS create_new_branch
@@ -266,7 +266,7 @@ CLASS lcl_transport_2_branch DEFINITION.
         io_repository  TYPE REF TO lcl_repo_online
         iv_branch_name TYPE string
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
     METHODS generate_commit_message
       IMPORTING
         is_transport_to_branch TYPE lif_defs=>ty_transport_to_branch
@@ -279,7 +279,7 @@ CLASS lcl_transport_2_branch DEFINITION.
         is_stage_objects     TYPE lif_defs=>ty_stage_files
         it_object_statuses   TYPE lif_defs=>ty_results_tt
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcl_transport_2_branch IMPLEMENTATION.
@@ -329,8 +329,8 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
           iv_from = io_repository->get_sha1_local( ) ).
 
         io_repository->set_branch_name( iv_branch_name ).
-      CATCH lcx_exception.
-        lcx_exception=>raise( 'Error when creating new branch').
+      CATCH zcx_abapgit_exception.
+        zcx_abapgit_exception=>raise( 'Error when creating new branch').
     ENDTRY.
   ENDMETHOD.
 

@@ -7,7 +7,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS render_error
-        IMPORTING ix_error            TYPE REF TO lcx_exception OPTIONAL
+        IMPORTING ix_error            TYPE REF TO zcx_abapgit_exception OPTIONAL
                   iv_error            TYPE string OPTIONAL
         RETURNING VALUE(ro_html)      TYPE REF TO lcl_html.
 
@@ -19,7 +19,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_branch             TYPE string OPTIONAL
                 io_news               TYPE REF TO lcl_news OPTIONAL
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_item_state
         IMPORTING iv1                 TYPE char1
@@ -31,17 +31,17 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 io_repo               TYPE REF TO lcl_repo_online
                 iv_interactive        TYPE abap_bool
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_js_error_banner
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_news
       IMPORTING
                 io_news               TYPE REF TO lcl_news
       RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_gui_chunk_lib
 
@@ -223,7 +223,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF ix_error IS BOUND.
-      lv_error = ix_error->mv_text.
+      lv_error = ix_error->text.
     ELSE.
       lv_error = iv_error.
     ENDIF.

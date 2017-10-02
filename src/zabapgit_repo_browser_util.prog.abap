@@ -35,7 +35,7 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
                 iv_by_folders        TYPE abap_bool
                 iv_changes_only      TYPE abap_bool
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS get_log
       RETURNING VALUE(ro_log) TYPE REF TO lcl_log.
@@ -46,16 +46,16 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
 
     METHODS build_repo_items_offline
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS build_repo_items_online
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS build_folders
       IMPORTING iv_cur_dir    TYPE string
       CHANGING  ct_repo_items TYPE tt_repo_items
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS filter_changes
       CHANGING ct_repo_items TYPE tt_repo_items.

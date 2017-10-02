@@ -14,7 +14,7 @@ INTERFACE lif_oo_object_fnc.
       CHANGING
         is_properties TYPE any
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     generate_locals
       IMPORTING
         is_key                   TYPE seoclskey
@@ -24,13 +24,13 @@ INTERFACE lif_oo_object_fnc.
         it_local_macros          TYPE seop_source_string OPTIONAL
         it_local_test_classes    TYPE seop_source_string OPTIONAL
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     deserialize_source
       IMPORTING
         is_key    TYPE seoclskey
         it_source TYPE lif_defs=>ty_string_tt
       RAISING
-        lcx_exception
+        zcx_abapgit_exception
         cx_sy_dyn_call_error,
     insert_text_pool
       IMPORTING
@@ -38,7 +38,7 @@ INTERFACE lif_oo_object_fnc.
         it_text_pool  TYPE textpool_table
         iv_language   TYPE spras
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     update_descriptions
       IMPORTING
         is_key          TYPE seoclskey
@@ -47,25 +47,27 @@ INTERFACE lif_oo_object_fnc.
       IMPORTING
         is_item TYPE lif_defs=>ty_item
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     create_sotr
       IMPORTING
         iv_package TYPE devclass
         it_sotr    TYPE lif_defs=>ty_sotr_tt
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     create_documentation
       IMPORTING
         it_lines       TYPE tlinetab
         iv_object_name TYPE dokhl-object
         iv_language    TYPE spras
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     get_includes
       IMPORTING
         iv_object_name     TYPE sobj_name
       RETURNING
-        VALUE(rt_includes) TYPE ty_includes_tt,
+        VALUE(rt_includes) TYPE ty_includes_tt
+      RAISING
+        zcx_abapgit_exception,
     exists
       IMPORTING
         iv_object_name   TYPE seoclskey
@@ -78,7 +80,7 @@ INTERFACE lif_oo_object_fnc.
       RETURNING
         VALUE(rt_source) TYPE lif_defs=>ty_string_tt
       RAISING
-        lcx_exception
+        zcx_abapgit_exception
         cx_sy_dyn_call_error,
     get_skip_test_classes
       RETURNING
@@ -89,14 +91,14 @@ INTERFACE lif_oo_object_fnc.
       RETURNING
         VALUE(rs_class_properties) TYPE vseoclass
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     get_interface_properties
       IMPORTING
         is_interface_key               TYPE seoclskey
       RETURNING
         VALUE(rs_interface_properties) TYPE vseointerf
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     read_text_pool
       IMPORTING
         iv_class_name       TYPE seoclsname
@@ -115,7 +117,7 @@ INTERFACE lif_oo_object_fnc.
       RETURNING
         VALUE(rt_sotr) TYPE lif_defs=>ty_sotr_tt
       RAISING
-        lcx_exception,
+        zcx_abapgit_exception,
     read_descriptions
       IMPORTING
         iv_obejct_name         TYPE seoclsname
@@ -125,7 +127,12 @@ INTERFACE lif_oo_object_fnc.
       IMPORTING
         is_deletion_key TYPE seoclskey
       RAISING
-        lcx_exception.
+        zcx_abapgit_exception,
+    read_superclass
+      IMPORTING
+        iv_classname         TYPE seoclsname
+      RETURNING
+        VALUE(rv_superclass) TYPE seoclsname.
 ENDINTERFACE.
 
 CLASS lcl_oo_serializer DEFINITION.
@@ -138,7 +145,7 @@ CLASS lcl_oo_serializer DEFINITION.
         RETURNING
           VALUE(rt_source) TYPE lif_defs=>ty_string_tt
         RAISING
-          lcx_exception
+          zcx_abapgit_exception
           cx_sy_dyn_call_error,
       are_test_classes_skipped
         RETURNING
@@ -146,33 +153,33 @@ CLASS lcl_oo_serializer DEFINITION.
     METHODS serialize_locals_imp
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_locals_def
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
     METHODS serialize_testclasses
       IMPORTING
                 is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_macros
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS serialize_abap_new
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception
+      RAISING   zcx_abapgit_exception
                 cx_sy_dyn_call_error.
     METHODS remove_signatures
       CHANGING ct_source TYPE lif_defs=>ty_string_tt.
@@ -207,7 +214,7 @@ CLASS lcl_oo_serializer IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
     ENDIF.
 
     lo_source->read( 'A' ).
@@ -394,12 +401,12 @@ CLASS lcl_oo_base DEFINITION ABSTRACT.
     METHODS deserialize_abap_source_old
       IMPORTING is_clskey TYPE seoclskey
                 it_source TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_abap_source_new
       IMPORTING is_clskey TYPE seoclskey
                 it_source TYPE lif_defs=>ty_string_tt
-      RAISING   lcx_exception
+      RAISING   zcx_abapgit_exception
                 cx_sy_dyn_call_error.
 ENDCLASS.
 
@@ -437,7 +444,7 @@ CLASS lcl_oo_base IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
     ENDIF.
 
     TRY.
@@ -446,9 +453,9 @@ CLASS lcl_oo_base IMPLEMENTATION.
         lo_source->save( ).
         lo_source->access_permission( seok_access_free ).
       CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'permission error' ).
+        zcx_abapgit_exception=>raise( 'permission error' ).
       CATCH cx_oo_source_save_failure.
-        lcx_exception=>raise( 'save failure' ).
+        zcx_abapgit_exception=>raise( 'save failure' ).
     ENDTRY.
 
   ENDMETHOD.
@@ -470,7 +477,7 @@ CLASS lcl_oo_base IMPLEMENTATION.
     TRY.
         CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
       CATCH cx_oo_access_permission.
-        lcx_exception=>raise( 'source_new, access permission exception' ).
+        zcx_abapgit_exception=>raise( 'source_new, access permission exception' ).
     ENDTRY.
 
     CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~SET_SOURCE')
@@ -512,7 +519,7 @@ CLASS lcl_oo_base IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from DOCU_UPD' ).
+      zcx_abapgit_exception=>raise( 'error from DOCU_UPD' ).
     ENDIF.
   ENDMETHOD.
 
@@ -610,6 +617,11 @@ CLASS lcl_oo_base IMPLEMENTATION.
 
   METHOD lif_oo_object_fnc~delete.
     ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+  METHOD lif_oo_object_fnc~read_superclass.
+    SELECT SINGLE refclsname FROM vseoextend INTO rv_superclass
+      WHERE clsname = iv_classname.
   ENDMETHOD.
 
 ENDCLASS.

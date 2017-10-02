@@ -6,13 +6,13 @@ CLASS lcl_migrations DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS run
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS rebuild_local_checksums_161112
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
     CLASS-METHODS local_dot_abapgit
-      RAISING lcx_exception.
+      RAISING zcx_abapgit_exception.
 
 ENDCLASS. "lcl_migrations
 
@@ -37,7 +37,7 @@ CLASS lcl_migrations IMPLEMENTATION.
           lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
-          lx_exception   TYPE REF TO lcx_exception.
+          lx_exception   TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
 
@@ -64,12 +64,12 @@ CLASS lcl_migrations IMPLEMENTATION.
           " everybody to fetch their repos.
           TRY.
               <lo_repo>->refresh( ).
-            CATCH lcx_exception INTO lx_exception.
+            CATCH zcx_abapgit_exception INTO lx_exception.
               lv_msg = |Please do not use the "{ <lo_repo>->get_name( ) }" repository until migrated|.
               CALL FUNCTION 'POPUP_TO_INFORM'
                 EXPORTING
                   titel = 'Migration has failed'
-                  txt1  = lx_exception->mv_text
+                  txt1  = lx_exception->text
                   txt2  = lv_msg
                   txt3  = 'You will be prompted to migrate the repository every time you run abapGit.'
                   txt4  = 'You can safely remove the repository in its ''Advanced -> Remove'' menu.'.

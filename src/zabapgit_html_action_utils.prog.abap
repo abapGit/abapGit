@@ -38,7 +38,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_string   TYPE clike
       EXPORTING ev_obj_type TYPE tadir-object
                 ev_obj_name TYPE tadir-obj_name
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS dir_encode
       IMPORTING iv_path          TYPE string
@@ -47,7 +47,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
     CLASS-METHODS dir_decode
       IMPORTING iv_string      TYPE clike
       RETURNING VALUE(rv_path) TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS file_encode
       IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
@@ -64,7 +64,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
                 eg_file   TYPE any "assuming ty_file
                 eg_object TYPE any "assuming ty_item
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS dbkey_encode
       IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
@@ -90,7 +90,7 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       IMPORTING iv_getdata TYPE clike
       EXPORTING ev_key     TYPE lcl_persistence_repo=>ty_repo-key
                 ev_seed    TYPE string
-      RAISING   lcx_exception.
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS unescape

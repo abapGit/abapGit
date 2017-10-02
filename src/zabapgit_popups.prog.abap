@@ -19,27 +19,27 @@ CLASS lcl_popups DEFINITION FINAL.
       popup_package_export
         EXPORTING ev_package      TYPE devclass
                   ev_folder_logic TYPE string
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_object
         RETURNING VALUE(rs_tadir) TYPE tadir
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       create_branch_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       run_page_class_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       repo_new_offline
         RETURNING VALUE(rs_popup) TYPE ty_popup
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       branch_list_popup
         IMPORTING iv_url             TYPE string
                   iv_default_branch  TYPE string OPTIONAL
                   iv_show_new_option TYPE abap_bool OPTIONAL
         RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       repo_popup
         IMPORTING iv_url            TYPE string
                   iv_package        TYPE devclass  OPTIONAL
@@ -48,7 +48,7 @@ CLASS lcl_popups DEFINITION FINAL.
                   iv_freeze_url     TYPE abap_bool OPTIONAL
                   iv_title          TYPE clike     DEFAULT 'Clone repository ...'
         RETURNING VALUE(rs_popup)   TYPE ty_popup
-        RAISING   lcx_exception ##NO_TEXT,
+        RAISING   zcx_abapgit_exception ##NO_TEXT,
       popup_to_confirm
         IMPORTING
                   titlebar              TYPE clike
@@ -60,34 +60,62 @@ CLASS lcl_popups DEFINITION FINAL.
                   default_button        TYPE char1 DEFAULT '1'
                   display_cancel_button TYPE char1 DEFAULT abap_true
         RETURNING VALUE(rv_answer)      TYPE char1
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_inform
         IMPORTING
                   titlebar     TYPE clike
                   text_message TYPE clike
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_create_package
         EXPORTING es_package_data TYPE scompkdtln
                   ev_create       TYPE boolean
-        RAISING   lcx_exception,
+        RAISING   zcx_abapgit_exception,
       popup_to_create_transp_branch
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
         RETURNING VALUE(rs_transport_branch) TYPE lif_defs=>ty_transport_to_branch
-        RAISING   lcx_exception
+        RAISING   zcx_abapgit_exception
                   lcx_cancel,
       popup_to_select_transports
-        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
+        RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
+      popup_select_obj_overwrite
+        IMPORTING it_list TYPE lif_defs=>ty_results_tt
+        RETURNING VALUE(rt_list) TYPE lif_defs=>ty_results_tt
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
-    CLASS-METHODS: add_field
-      IMPORTING iv_tabname    TYPE sval-tabname
-                iv_fieldname  TYPE sval-fieldname
-                iv_fieldtext  TYPE sval-fieldtext
-                iv_value      TYPE clike DEFAULT ''
-                iv_field_attr TYPE sval-field_attr DEFAULT ''
-      CHANGING  ct_fields     TYPE ty_sval_tt.
+    TYPES: BEGIN OF t_popup_select_list,
+        selected TYPE flag.
+      INCLUDE TYPE lif_defs=>ty_result.
+    TYPES END OF t_popup_select_list.
+
+    TYPES: t_popup_select_list_tt TYPE STANDARD TABLE OF t_popup_select_list WITH DEFAULT KEY.
+
+    CLASS-DATA:
+    mtr_select_list TYPE REF TO t_popup_select_list_tt,
+    mo_select_list_popup TYPE REF TO cl_salv_table.
+
+    CLASS-METHODS:
+      add_field
+        IMPORTING iv_tabname    TYPE sval-tabname
+                  iv_fieldname  TYPE sval-fieldname
+                  iv_fieldtext  TYPE sval-fieldtext
+                  iv_value      TYPE clike DEFAULT ''
+                  iv_field_attr TYPE sval-field_attr DEFAULT ''
+        CHANGING  ct_fields     TYPE ty_sval_tt,
+
+      on_select_list_link_click
+        FOR EVENT link_click OF cl_salv_events_table
+        IMPORTING
+          !row
+          !column,
+
+      on_select_list_function_click
+        FOR EVENT added_function OF cl_salv_events_table
+        IMPORTING
+          !e_salv_function.
+
 
 ENDCLASS.
 
@@ -136,7 +164,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -189,7 +217,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -235,7 +263,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2 ##NO_TEXT.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = 'A'.
@@ -276,7 +304,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2 ##NO_TEXT.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = 'A'.
@@ -333,7 +361,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields   = 1
         OTHERS            = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -430,7 +458,7 @@ CLASS lcl_popups IMPLEMENTATION.
         too_much_marks     = 3
         OTHERS             = 4.                             "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
 
     IF lv_answer = 'A'. " cancel
@@ -526,7 +554,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields   = 1
         OTHERS            = 2.                              "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
     IF lv_returncode = 'A'.
       rs_popup-cancel = abap_true.
@@ -567,7 +595,7 @@ CLASS lcl_popups IMPLEMENTATION.
         text_not_found        = 1
         OTHERS                = 2.                        "#EC NOTEXT
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
+      zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
   ENDMETHOD.  "popup_to_confirm
@@ -600,7 +628,7 @@ CLASS lcl_popups IMPLEMENTATION.
     IF sy-subrc = 1.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
-      lcx_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
+      zcx_abapgit_exception=>raise( 'Function module PB_POPUP_PACKAGE_CREATE does not exist' ).
     ENDIF.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
@@ -683,7 +711,7 @@ CLASS lcl_popups IMPLEMENTATION.
         error_in_fields = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      lcx_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_returncode = 'A'.
@@ -697,6 +725,116 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     rs_transport_branch-commit_text = <ls_field>-value.
+  ENDMETHOD.
+
+  METHOD popup_select_obj_overwrite.
+    DATA:
+          ls_list         LIKE LINE OF it_list,
+          ls_popup_list   TYPE t_popup_select_list,
+          lt_popup_list   TYPE t_popup_select_list_tt,
+          lo_events       TYPE REF TO cl_salv_events_table,
+          lo_columns      TYPE REF TO cl_salv_columns_table,
+          lt_columns      TYPE salv_t_column_ref,
+          ls_column       TYPE salv_s_column_ref,
+          lo_column       TYPE REF TO cl_salv_column_list,
+          lo_table_header TYPE REF TO cl_salv_form_text.
+
+    LOOP AT it_list INTO ls_list.
+      MOVE-CORRESPONDING ls_list TO ls_popup_list.
+      APPEND ls_popup_list TO lt_popup_list.
+    ENDLOOP.
+
+    TRY.
+        cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
+                                CHANGING t_table = lt_popup_list ).
+
+        GET REFERENCE OF lt_popup_list INTO mtr_select_list.
+        mo_select_list_popup->set_screen_status( pfstatus = 'ST850'
+                                                 report = 'SAPLKKBL' ).
+
+        mo_select_list_popup->set_screen_popup( start_column = 1
+                                                end_column = 65
+                                                start_line = 1
+                                                end_line = 20 ).
+
+        lo_events = mo_select_list_popup->get_event( ).
+
+        SET HANDLER on_select_list_link_click FOR lo_events.
+        SET HANDLER on_select_list_function_click FOR lo_events.
+
+        CREATE OBJECT lo_table_header
+          EXPORTING
+            text = |The following Objects have been modified locally. Select the Objects which should be overwritten.|.
+
+        mo_select_list_popup->set_top_of_list( lo_table_header ).
+
+        lo_columns = mo_select_list_popup->get_columns( ).
+        lo_columns->set_optimize( abap_true ).
+        lt_columns = lo_columns->get( ).
+
+        LOOP AT lt_columns INTO ls_column.
+          CASE ls_column-columnname.
+            WHEN 'OBJ_TYPE' OR 'OBJ_NAME'.
+
+            WHEN 'SELECTED'.
+              lo_column ?= ls_column-r_column.
+              lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
+              lo_column->set_output_length( 20 ).
+              lo_column->set_short_text( 'Overwrite?' ).
+              lo_column->set_medium_text( 'Overwr. Lcl Object?' ).
+              lo_column->set_long_text( 'Overwrite Local Object?' ).
+
+            WHEN OTHERS.
+              ls_column-r_column->set_technical( abap_true ).
+
+          ENDCASE.
+        ENDLOOP.
+
+        mo_select_list_popup->display( ).
+
+      CATCH cx_salv_msg.
+        zcx_abapgit_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
+    ENDTRY.
+
+    LOOP AT lt_popup_list INTO ls_popup_list WHERE selected = abap_true.
+      MOVE-CORRESPONDING ls_popup_list TO ls_list.
+      APPEND ls_list TO rt_list.
+    ENDLOOP.
+
+    CLEAR:
+    mo_select_list_popup,
+    mtr_select_list.
+
+  ENDMETHOD.
+
+  METHOD on_select_list_function_click.
+    CASE e_salv_function.
+      WHEN 'GOON'.
+        mo_select_list_popup->close_screen( ).
+      WHEN 'ABR'.
+        "Canceled: clear list to overwrite nothing
+        CLEAR mtr_select_list->*.
+        mo_select_list_popup->close_screen( ).
+    ENDCASE.
+  ENDMETHOD.
+
+  METHOD on_select_list_link_click.
+    DATA:
+          lsr_line TYPE REF TO t_popup_select_list,
+          lv_line  TYPE sytabix.
+
+    lv_line = row.
+
+    READ TABLE mtr_select_list->* REFERENCE INTO lsr_line INDEX lv_line.
+    IF sy-subrc = 0.
+      IF lsr_line->selected = abap_true.
+        lsr_line->selected = abap_false.
+      ELSE.
+        lsr_line->selected = abap_true.
+      ENDIF.
+    ENDIF.
+
+    mo_select_list_popup->refresh( ).
   ENDMETHOD.
 
 ENDCLASS.

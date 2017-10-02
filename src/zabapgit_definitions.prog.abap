@@ -7,7 +7,7 @@ TYPE-POOLS seop.
 INTERFACE lif_defs.
 
   CONSTANTS: gc_xml_version  TYPE string VALUE 'v1.0.0',    "#EC NOTEXT
-             gc_abap_version TYPE string VALUE 'v1.41.2'.   "#EC NOTEXT
+             gc_abap_version TYPE string VALUE 'v1.42.0'.   "#EC NOTEXT
 
   TYPES: ty_type    TYPE c LENGTH 6,
          ty_bitbyte TYPE c LENGTH 8,
@@ -214,6 +214,7 @@ INTERFACE lif_defs.
                repo_refresh_checksums   TYPE string VALUE 'repo_refresh_checksums',
                repo_toggle_fav          TYPE string VALUE 'repo_toggle_fav',
                repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
+               repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
 
                abapgit_home             TYPE string VALUE 'abapgit_home',
                abapgit_wiki             TYPE string VALUE 'abapgit_wiki',
