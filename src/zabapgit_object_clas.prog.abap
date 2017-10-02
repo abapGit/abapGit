@@ -200,7 +200,8 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_descriptions TYPE lif_defs=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
           lt_sotr         TYPE lif_defs=>ty_sotr_tt,
-          lt_lines        TYPE tlinetab.
+          lt_lines        TYPE tlinetab,
+          lo_exception    TYPE REF TO cx_root. "#EC NEEDED
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -212,7 +213,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     TRY.
         ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
 
-      CLEANUP.
+      CLEANUP INTO lo_exception. "Exception object is not needed here -> This is just a workaround for abaplint
         lcl_language=>restore_login_language( ).
 
     ENDTRY.
