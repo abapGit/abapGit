@@ -200,21 +200,24 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_descriptions TYPE lif_defs=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
           lt_sotr         TYPE lif_defs=>ty_sotr_tt,
-          lt_lines        TYPE tlinetab,
-          lv_curr_lang    TYPE langu,
-          lv_dummy        TYPE string ##needed.
+          lt_lines        TYPE tlinetab.
 
     ls_clskey-clsname = ms_item-obj_name.
 
     "If class was deserialized with a previous versions of abapGit and current language was different
     "from master language at this time, this call would return SY-LANGU as master language. To fix
     "these objects, set SY-LANGU to master language temporarily.
-    GET LOCALE LANGUAGE lv_curr_lang COUNTRY lv_dummy MODIFIER lv_dummy.
-    SET LOCALE LANGUAGE mv_language.
+    lcl_language=>set_current_language( mv_language ).
 
-    ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
+    TRY.
+        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
 
-    SET LOCALE LANGUAGE lv_curr_lang.
+      CLEANUP.
+        lcl_language=>restore_login_language( ).
+
+    ENDTRY.
+
+    lcl_language=>restore_login_language( ).
 
     CLEAR: ls_vseoclass-uuid,
            ls_vseoclass-author,

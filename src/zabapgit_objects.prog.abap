@@ -987,10 +987,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO lcl_xml_output,
-          lv_subrc        LIKE sy-subrc,
-          lv_curr_lang    TYPE langu,
-          lv_dummy        TYPE string ##needed.
+          lo_xml          TYPE REF TO lcl_xml_output.
 
     IF iv_program IS INITIAL.
       lv_program_name = is_item-obj_name.
@@ -998,8 +995,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       lv_program_name = iv_program.
     ENDIF.
 
-    GET LOCALE LANGUAGE lv_curr_lang COUNTRY lv_dummy MODIFIER lv_dummy.
-    SET LOCALE LANGUAGE mv_language.
+    lcl_language=>set_current_language( mv_language ).
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
@@ -1014,15 +1010,15 @@ CLASS lcl_objects_program IMPLEMENTATION.
         permission_error = 3
         OTHERS           = 4.
 
-    lv_subrc = sy-subrc.
-
-    SET LOCALE LANGUAGE lv_curr_lang.
-
-    IF lv_subrc = 2.
+    IF sy-subrc = 2.
+      lcl_language=>restore_login_language( ).
       RETURN.
-    ELSEIF lv_subrc <> 0.
+    ELSEIF sy-subrc <> 0.
+      lcl_language=>restore_login_language( ).
       lcx_exception=>raise( 'Error reading program' ).
     ENDIF.
+
+    lcl_language=>restore_login_language( ).
 
     ls_progdir = read_progdir( lv_program_name ).
 
@@ -1070,10 +1066,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,
-          ls_progdir_new TYPE progdir,
-          lv_subrc       LIKE sy-subrc,
-          lv_curr_lang   TYPE langu,
-          lv_dummy       TYPE string ##needed.
+          ls_progdir_new TYPE progdir.
 
     FIELD-SYMBOLS: <lg_any> TYPE any.
 
@@ -1118,8 +1111,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_exists = abap_true.
-      GET LOCALE LANGUAGE lv_curr_lang COUNTRY lv_dummy MODIFIER lv_dummy.
-      SET LOCALE LANGUAGE mv_language.
+      lcl_language=>set_current_language( mv_language ).
 
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
@@ -1134,17 +1126,17 @@ CLASS lcl_objects_program IMPLEMENTATION.
           not_found        = 3
           OTHERS           = 4.
 
-      lv_subrc = sy-subrc.
+      IF sy-subrc <> 0.
+        lcl_language=>restore_login_language( ).
 
-      SET LOCALE LANGUAGE lv_curr_lang.
-
-      IF lv_subrc <> 0.
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           lcx_exception=>raise( 'User is currently editing program' ).
         ELSE.
           lcx_exception=>raise( 'PROG, error updating' ).
         ENDIF.
       ENDIF.
+
+      lcl_language=>restore_login_language( ).
     ELSE.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
