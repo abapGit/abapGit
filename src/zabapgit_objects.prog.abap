@@ -1157,20 +1157,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'error from INSERT REPORT' ).
         ENDIF.
       ENDIF.
-
-<<<<<<< HEAD
     ENDIF.
-=======
-      IF NOT it_tpool[] IS INITIAL.
-        INSERT TEXTPOOL is_progdir-name
-          FROM it_tpool
-          LANGUAGE mv_language
-          STATE 'I'.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
-        ENDIF.
-      ENDIF.
->>>>>>> pr/3
 
     IF NOT it_tpool[] IS INITIAL.
       INSERT TEXTPOOL is_progdir-name
@@ -1178,7 +1165,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         LANGUAGE mv_language
         STATE 'I'.
       IF sy-subrc <> 0.
-        lcx_exception=>raise( 'error from INSERT TEXTPOOL' ).
+        zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
       ENDIF.
     ENDIF.
 
