@@ -11,7 +11,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD warning_overwrite.
 
-    DATA: lt_results_overwrite LIKE ct_results.
+    DATA: lt_results_overwrite   LIKE ct_results,
+          lt_confirmed_overwrite LIKE ct_results.
 
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
@@ -29,10 +30,19 @@ CLASS lcl_objects IMPLEMENTATION.
 
     ENDLOOP.
 
-    if lines( lt_results_overwrite ) > 0.
+    IF lines( lt_results_overwrite ) > 0.
       "all returned objects will be overwritten
-      ct_results = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
-    endif.
+      lt_confirmed_overwrite = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+
+      LOOP AT lt_results_overwrite ASSIGNING <ls_result>.
+        READ TABLE lt_confirmed_overwrite TRANSPORTING NO FIELDS
+             WITH KEY obj_type = <ls_result>-obj_type
+                      obj_name = <ls_result>-obj_name.
+        IF sy-subrc <> 0.
+          DELETE TABLE ct_results FROM <ls_result>.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
