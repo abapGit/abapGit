@@ -19,11 +19,12 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
            END OF ty_requirement,
            ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY,
            BEGIN OF ty_dot_abapgit,
-             master_language TYPE spras,
-             starting_folder TYPE string,
-             folder_logic    TYPE string,
-             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-             requirements    TYPE ty_requirement_tt,
+             master_language    TYPE spras,
+             starting_folder    TYPE string,
+             folder_logic       TYPE string,
+             ignore             TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+             requirements       TYPE ty_requirement_tt,
+             callback_classname TYPE abap_classname,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:
@@ -66,7 +67,11 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 *        IMPORTING iv_language TYPE spras,
       get_signature
         RETURNING VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      get_callback_classname
+        RETURNING VALUE(rv_classname) TYPE abap_classname,
+      set_callback_classname
+        IMPORTING iv_classname TYPE abap_classname.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
@@ -266,4 +271,11 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   ENDMETHOD. "get_signature
 
+  METHOD get_callback_classname.
+    rv_classname = ms_data-callback_classname.
+  ENDMETHOD.
+
+  METHOD set_callback_classname.
+    ms_data-callback_classname = iv_classname.
+  ENDMETHOD.
 ENDCLASS.

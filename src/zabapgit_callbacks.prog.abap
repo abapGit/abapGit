@@ -107,8 +107,7 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
   METHOD init_listener.
     DATA: lv_classname TYPE abap_classname.
 
-    ##TODO.
-*    lv_classname = mo_repository->get_dot_abapgit( )->get_callback_classname( ).
+    lv_classname = mo_repository->get_dot_abapgit( )->get_callback_classname( ).
 
     IF lv_classname IS NOT INITIAL.
       CREATE OBJECT mo_listener TYPE (lv_classname).
