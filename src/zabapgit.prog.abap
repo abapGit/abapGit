@@ -52,7 +52,6 @@ INCLUDE zabapgit_exit.
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
-INCLUDE zabapgit_callbacks.
 INCLUDE zabapgit_news.
 INCLUDE zabapgit_stage_logic.
 INCLUDE zabapgit_2fa.
@@ -62,6 +61,7 @@ INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
 INCLUDE zabapgit_file_status.
 INCLUDE zabapgit_popups.
+INCLUDE zabapgit_callbacks.
 INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 

@@ -134,9 +134,13 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
+    DATA: lo_repo             TYPE REF TO lcl_repo_online,
+          lo_callback_adapter TYPE REF TO lcl_callback_adapter,
+          lv_old_version      TYPE string,
+          lv_new_version      TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lv_old_version = lo_repo->get_dot_abapgit( )->get_version( ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
@@ -144,6 +148,17 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     lo_repo->refresh( ).
     lo_repo->deserialize( ).
+
+    lv_new_version = lo_repo->get_dot_abapgit( )->get_version( ).
+
+    lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
+    IF lo_callback_adapter->check_execution_allowed(
+         lcl_callback_adapter=>gc_methname_on_after_install
+       ) = abap_true.
+      lo_callback_adapter->on_after_install( iv_package     = lo_repo->get_package( )
+                                             iv_old_version = lv_old_version
+                                             iv_new_version = lv_new_version ).
+    ENDIF.
 
     COMMIT WORK.
 
