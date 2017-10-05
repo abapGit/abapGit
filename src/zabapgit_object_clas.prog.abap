@@ -212,7 +212,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     TRY.
         ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
 
-        CLEANUP.
+      CLEANUP.
         lcl_language=>restore_login_language( ).
 
     ENDTRY.
