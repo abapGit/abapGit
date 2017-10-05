@@ -749,8 +749,8 @@ CLASS lcl_popups IMPLEMENTATION.
                                 CHANGING t_table = lt_popup_list ).
 
         GET REFERENCE OF lt_popup_list INTO mtr_select_list.
-        mo_select_list_popup->set_screen_status( pfstatus = 'ST850'
-                                                 report = 'SAPLKKBL' ).
+        mo_select_list_popup->set_screen_status( pfstatus = '102'
+                                                 report = 'SAPMSVIM' ).
 
         mo_select_list_popup->set_screen_popup( start_column = 1
                                                 end_column = 65
@@ -808,11 +808,31 @@ CLASS lcl_popups IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_select_list_function_click.
+    DATA:
+          lsr_line TYPE REF TO t_popup_select_list.
+
     CASE e_salv_function.
-      WHEN 'GOON'.
+      WHEN 'O.K.'.
         mo_select_list_popup->close_screen( ).
+
       WHEN 'ABR'.
         "Canceled: clear list to overwrite nothing
+        CLEAR mtr_select_list->*.
+        mo_select_list_popup->close_screen( ).
+
+      WHEN 'SALL'.
+        LOOP AT mtr_select_list->* REFERENCE INTO lsr_line.
+          lsr_line->selected = abap_true.
+        ENDLOOP.
+        mo_select_list_popup->refresh( ).
+
+      WHEN 'DSEL'.
+        LOOP AT mtr_select_list->* REFERENCE INTO lsr_line.
+          lsr_line->selected = abap_false.
+        ENDLOOP.
+        mo_select_list_popup->refresh( ).
+
+      WHEN OTHERS.
         CLEAR mtr_select_list->*.
         mo_select_list_popup->close_screen( ).
     ENDCASE.
