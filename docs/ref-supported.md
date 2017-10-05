@@ -17,6 +17,7 @@ CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/
 CMPT | Code Composer Template | Yes
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
+DEVC | Package | Yes
 DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
