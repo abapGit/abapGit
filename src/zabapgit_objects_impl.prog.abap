@@ -557,10 +557,16 @@ CLASS lcl_objects IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* PINF has to be handled before DEVC for package interface usage
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
-        AND obj_type <> 'XSLT'.
+        AND obj_type <> 'XSLT'
+        AND obj_type <> 'PINF'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
@@ -578,7 +584,8 @@ CLASS lcl_objects IMPLEMENTATION.
           lt_results TYPE lif_defs=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,
           lt_rest    TYPE TABLE OF ty_deserialization,
-          lt_late    TYPE TABLE OF ty_deserialization.
+          lt_late    TYPE TABLE OF ty_deserialization,
+          lv_path    TYPE string.
 
     FIELD-SYMBOLS: <ls_result> TYPE lif_defs=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -621,9 +628,16 @@ CLASS lcl_objects IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'cancelled' ).
       ENDIF.
 
+      IF ls_item-obj_type = 'DEVC'.
+        " Packages have the same filename across different folders. The path needs to be supplied
+        " to find the correct file.
+        lv_path = <ls_result>-path.
+      ENDIF.
+
       CREATE OBJECT lo_files
         EXPORTING
-          is_item = ls_item.
+          is_item = ls_item
+          iv_path = lv_path.
       lo_files->set_files( lt_remote ).
 
 * Analyze XML in order to instantiate the proper serializer
@@ -652,6 +666,7 @@ CLASS lcl_objects IMPLEMENTATION.
       <ls_deser>-xml     = lo_xml.
       <ls_deser>-package = lv_package.
 
+      CLEAR: lv_path, lv_package.
     ENDLOOP.
 
     deserialize_objects( EXPORTING it_objects = lt_ddic

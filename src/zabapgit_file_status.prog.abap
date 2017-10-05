@@ -24,6 +24,7 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS:
       calculate_status
         IMPORTING iv_devclass       TYPE devclass
+                  io_dot            TYPE REF TO lcl_dot_abapgit
                   it_local          TYPE lif_defs=>ty_files_item_tt
                   it_remote         TYPE lif_defs=>ty_files_tt
                   it_cur_state      TYPE lif_defs=>ty_file_signatures_tt
@@ -45,14 +46,20 @@ CLASS lcl_file_status DEFINITION FINAL
         RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
       build_new_remote
         IMPORTING iv_devclass      TYPE devclass
+                  io_dot           TYPE REF TO lcl_dot_abapgit
                   is_remote        TYPE lif_defs=>ty_file
                   it_items         TYPE lif_defs=>ty_items_ts
                   it_state         TYPE lif_defs=>ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result,
+        RETURNING VALUE(rs_result) TYPE lif_defs=>ty_result
+        RAISING   zcx_abapgit_exception,
       identify_object
         IMPORTING iv_filename TYPE string
+                  iv_path     TYPE string
+                  iv_devclass TYPE devclass
+                  io_dot      TYPE REF TO lcl_dot_abapgit
         EXPORTING es_item     TYPE lif_defs=>ty_item
-                  ev_is_xml   TYPE abap_bool.
+                  ev_is_xml   TYPE abap_bool
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_file_status DEFINITION
 
@@ -94,7 +101,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     " Check files for one object is in the same folder
 
-    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL AND obj_type <> 'DEVC'.
       READ TABLE lt_item_idx ASSIGNING <ls_res2>
         WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
         BINARY SEARCH. " Sorted above
@@ -124,7 +131,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Check for multiple files with same filename
     SORT lt_res_sort BY filename ASCENDING.
 
-    LOOP AT lt_res_sort ASSIGNING <ls_res1>.
+    LOOP AT lt_res_sort ASSIGNING <ls_res1> WHERE obj_type <> 'DEVC'.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
         io_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
                      iv_type = 'W'
@@ -152,6 +159,7 @@ CLASS lcl_file_status IMPLEMENTATION.
 
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
+      io_dot       = io_repo->get_dot_abapgit( )
       it_local     = io_repo->get_files_local( io_log = io_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
@@ -166,6 +174,7 @@ CLASS lcl_file_status IMPLEMENTATION.
           iv_path     = <ls_result>-path
           iv_filename = <ls_result>-filename ) = abap_true.
         DELETE rt_results INDEX lv_index.
+        CONTINUE.
       ENDIF.
     ENDLOOP.
 
@@ -220,6 +229,9 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Complete item index for unmarked remote files
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       identify_object( EXPORTING iv_filename = <ls_remote>-filename
+                                 iv_path     = <ls_remote>-path
+                                 io_dot      = io_dot
+                                 iv_devclass = iv_devclass
                        IMPORTING es_item     = ls_item
                                  ev_is_xml   = lv_is_xml ).
 
@@ -239,6 +251,7 @@ CLASS lcl_file_status IMPLEMENTATION.
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       APPEND INITIAL LINE TO rt_results ASSIGNING <ls_result>.
       <ls_result> = build_new_remote( iv_devclass = iv_devclass
+                                      io_dot      = io_dot
                                       is_remote   = <ls_remote>
                                       it_items    = lt_items_idx
                                       it_state    = lt_state_idx ).
@@ -264,6 +277,14 @@ CLASS lcl_file_status IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
+
+    " Try to get a unique package name for DEVC by using the path
+    IF lv_type = 'DEVC'.
+      ASSERT lv_name = 'PACKAGE'.
+      lv_name = lcl_folder_logic=>path_to_package( iv_top  = iv_devclass
+                                                   io_dot  = io_dot
+                                                   iv_path = iv_path ).
+    ENDIF.
 
     CLEAR es_item.
     es_item-obj_type = lv_type.
@@ -343,6 +364,9 @@ CLASS lcl_file_status IMPLEMENTATION.
     rs_result-rstate   = lif_defs=>gc_state-added.
 
     identify_object( EXPORTING iv_filename = is_remote-filename
+                               iv_path     = is_remote-path
+                               iv_devclass = iv_devclass
+                               io_dot      = io_dot
                      IMPORTING es_item     = ls_item ).
 
     " Check if in item index + get package

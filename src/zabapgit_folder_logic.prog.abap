@@ -8,19 +8,20 @@ CLASS lcl_folder_logic DEFINITION.
     CLASS-METHODS:
       package_to_path
         IMPORTING
-          iv_top         TYPE devclass
-          io_dot         TYPE REF TO lcl_dot_abapgit
-          iv_package     TYPE devclass
-        RETURNING
-          VALUE(rv_path) TYPE string
+                  iv_top         TYPE devclass
+                  io_dot         TYPE REF TO lcl_dot_abapgit
+                  iv_package     TYPE devclass
+        RETURNING VALUE(rv_path) TYPE string
         RAISING zcx_abapgit_exception,
       path_to_package
         IMPORTING
-          iv_top            TYPE devclass
-          io_dot            TYPE REF TO lcl_dot_abapgit
-          iv_path           TYPE string
+          iv_top                  TYPE devclass
+          io_dot                  TYPE REF TO lcl_dot_abapgit
+          iv_path                 TYPE string
+          iv_create_if_not_exists TYPE abap_bool DEFAULT abap_true
+          iv_local_path           TYPE abap_bool DEFAULT abap_true
         RETURNING
-          VALUE(rv_package) TYPE devclass
+          VALUE(rv_package)       TYPE devclass
         RAISING
           zcx_abapgit_exception.
 
@@ -33,16 +34,18 @@ CLASS lcl_folder_logic IMPLEMENTATION.
     DATA: lv_length TYPE i,
           lv_parent TYPE devclass,
           lv_new    TYPE string,
-          lv_path   TYPE string.
+          lv_path   TYPE string,
+          lv_top    TYPE devclass.
 
+    lv_top = iv_top.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
       zcx_abapgit_exception=>raise( 'unexpected folder structure' ).
     ENDIF.
     lv_path    = iv_path+lv_length.
-    lv_parent  = iv_top.
-    rv_package = iv_top.
+    lv_parent  = lv_top.
+    rv_package = lv_top.
 
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
@@ -62,13 +65,14 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
       TRANSLATE rv_package TO UPPER CASE.
 
-      IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false.
+      IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false AND
+          iv_create_if_not_exists = abap_true.
+
         lcl_sap_package=>get( lv_parent )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.
     ENDWHILE.
-
 
   ENDMETHOD.
 
@@ -78,7 +82,6 @@ CLASS lcl_folder_logic IMPLEMENTATION.
           lv_path     TYPE string,
           lv_message  TYPE string,
           lv_parentcl TYPE tdevc-parentcl.
-
 
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
@@ -137,13 +140,13 @@ CLASS ltcl_folder_logic_helper DEFINITION FOR TESTING FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS: test
-            IMPORTING
-              iv_starting TYPE string
-              iv_top      TYPE devclass
-              iv_logic    TYPE string
-              iv_package  TYPE devclass
-              iv_path     TYPE string
-            RAISING zcx_abapgit_exception.
+      IMPORTING
+                iv_starting TYPE string
+                iv_top      TYPE devclass
+                iv_logic    TYPE string
+                iv_package  TYPE devclass
+                iv_path     TYPE string
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 

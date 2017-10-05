@@ -161,7 +161,8 @@ CLASS lcl_objects_files DEFINITION.
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING is_item TYPE lif_defs=>ty_item,
+        IMPORTING is_item TYPE lif_defs=>ty_item
+                  iv_path TYPE string OPTIONAL,
       add_string
         IMPORTING iv_extra  TYPE clike OPTIONAL
                   iv_ext    TYPE string
@@ -219,7 +220,8 @@ CLASS lcl_objects_files DEFINITION.
   PRIVATE SECTION.
     DATA: ms_item           TYPE lif_defs=>ty_item,
           mt_accessed_files TYPE lif_defs=>ty_file_signatures_tt,
-          mt_files          TYPE lif_defs=>ty_files_tt.
+          mt_files          TYPE lif_defs=>ty_files_tt,
+          mv_path           TYPE string.
 
     METHODS:
       read_file
@@ -309,6 +311,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
+    mv_path = iv_path.
   ENDMETHOD.                    "constructor
 
   METHOD add.
@@ -451,6 +454,12 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     lv_obj_name = ms_item-obj_name.
 
+    IF ms_item-obj_type = 'DEVC'.
+      " Packages have a fixed filename so that the repository can be installed to a different
+      " package(-hierarchy) on the client and not show up as a different package in the repo.
+      lv_obj_name = 'package'.
+    ENDIF.
+
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
         INTO rv_filename.                                   "#EC NOTEXT
@@ -487,7 +496,13 @@ CLASS lcl_objects_files IMPLEMENTATION.
                    <ls_accessed> LIKE LINE OF mt_accessed_files.
 
     CLEAR ev_data.
-    READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
+
+    IF mv_path IS NOT INITIAL.
+      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY path     = mv_path
+                                                       filename = iv_filename.
+    ELSE.
+      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
+    ENDIF.
 
     IF sy-subrc <> 0.
       IF iv_error = abap_true.
