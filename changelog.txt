@@ -8,6 +8,14 @@ Legend
 + : added
 - : removed
 
+2017-10-05 v1.43.0
+------------------
++ DEVC support
+* Textpool language when serializing
+* Jump to W3HT and W3MI
+* More moved to global classes
+* Downport
+
 2017-10-01 v1.42.0
 ------------------
 * fix dump in "reset local objects"
