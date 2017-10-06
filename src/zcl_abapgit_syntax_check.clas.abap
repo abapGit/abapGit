@@ -11,6 +11,14 @@ CLASS zcl_abapgit_syntax_check DEFINITION
         VALUE(rt_list) TYPE scit_alvlist .
   PROTECTED SECTION.
 
+    TYPES:
+      ty_tdevc_tt TYPE STANDARD TABLE OF tdevc WITH DEFAULT KEY .
+
+    CLASS-METHODS find_all_subpackages
+      IMPORTING
+        !iv_package        TYPE devclass
+      RETURNING
+        VALUE(rt_packages) TYPE ty_tdevc_tt .
     CLASS-METHODS create_inspection
       IMPORTING
         !io_set              TYPE REF TO cl_ci_objectset
@@ -63,21 +71,11 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
   METHOD create_objectset.
 
     DATA: lt_objs     TYPE scit_objs,
-          lt_packages TYPE cl_pak_package_queries=>tt_subpackage_info,
-          ls_package  LIKE LINE OF lt_packages,
+          lt_packages TYPE ty_tdevc_tt,
           ls_obj      LIKE LINE OF lt_objs.
 
 
-    cl_pak_package_queries=>get_all_subpackages(
-      EXPORTING
-        im_package             = iv_package
-        im_also_local_packages = abap_true
-      IMPORTING
-        et_subpackages         = lt_packages ).
-
-    ls_package-package = iv_package.
-    INSERT ls_package INTO TABLE lt_packages.
-
+    lt_packages = find_all_subpackages( iv_package ).
     IF lines( lt_packages ) = 0.
       RETURN.
     ENDIF.
@@ -86,7 +84,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
       FROM tadir
       INTO CORRESPONDING FIELDS OF TABLE lt_objs
       FOR ALL ENTRIES IN lt_packages
-      WHERE devclass = lt_packages-package
+      WHERE devclass = lt_packages-devclass
       AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
     ro_set = cl_ci_objectset=>save_from_list( lt_objs ).
@@ -123,6 +121,25 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
         not_enqueued = 1
         OTHERS       = 2 ).
     ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD find_all_subpackages.
+
+* TODO, in the future, move this method to the ABAPGIT global package class
+
+    DATA: ls_package LIKE LINE OF rt_packages.
+
+
+    SELECT SINGLE * FROM tdevc INTO ls_package WHERE devclass = iv_package.
+    ASSERT sy-subrc = 0.
+    APPEND ls_package TO rt_packages.
+
+    LOOP AT rt_packages INTO ls_package.
+      SELECT * FROM tdevc APPENDING TABLE rt_packages
+        WHERE parentcl = ls_package-devclass.
+    ENDLOOP.
 
   ENDMETHOD.
 
