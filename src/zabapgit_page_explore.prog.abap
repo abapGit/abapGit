@@ -6,7 +6,7 @@ CLASS lcl_gui_page_explore DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PUBLIC SECTION.
 
     CONSTANTS c_explore_url TYPE string
-      VALUE 'http://larshp.github.io/abapGit/explore.html'.
+      VALUE 'https://dotabap.github.io/explore.html'.
 
     METHODS constructor.
 
