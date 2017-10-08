@@ -80,7 +80,8 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
       ro_html->add( 'abapGit plugins installed in package&nbsp;' ).
       ro_html->add( lcl_services_abapgit=>c_package_plugins ).
     ELSE.
-      ro_html->add_a( iv_txt = 'install abapGit plugins' iv_act = zif_abapgit_definitions=>gc_action-abapgit_install_pi ).
+      ro_html->add_a( iv_txt = 'install abapGit plugins'
+                      iv_act = zif_abapgit_definitions=>gc_action-abapgit_install_pi ).
       ro_html->add( ' - you can also install plugins to extend supported object types' ).
     ENDIF.
     ro_html->add( '</li>' ).

@@ -63,7 +63,8 @@ CLASS lcl_stage_logic IMPLEMENTATION.
           iv_path     = <ls_remote>-path
           iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE cs_files-remote INDEX lv_index.
-      ELSEIF <ls_remote>-path = zif_abapgit_definitions=>gc_root_dir AND <ls_remote>-filename = zif_abapgit_definitions=>gc_dot_abapgit.
+      ELSEIF <ls_remote>-path     = zif_abapgit_definitions=>gc_root_dir
+         AND <ls_remote>-filename = zif_abapgit_definitions=>gc_dot_abapgit.
         " Remove .abapgit from remotes - it cannot be removed or ignored
         DELETE cs_files-remote INDEX lv_index.
       ENDIF.

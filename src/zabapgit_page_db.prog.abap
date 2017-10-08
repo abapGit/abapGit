@@ -137,7 +137,8 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
     ro_html->add( '</td></tr></table>' ).
 
     " Form
-    ro_html->add( |<form id="db_form" method="post" action="sapevent:{ zif_abapgit_definitions=>gc_action-db_update }">| ).
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:|
+               && |{ zif_abapgit_definitions=>gc_action-db_update }">| ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).

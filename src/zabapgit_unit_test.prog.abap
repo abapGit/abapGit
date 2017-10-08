@@ -1386,7 +1386,9 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     ls_commit-parent    = c_sha.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
-    ls_commit-body      = 'very informative' && zif_abapgit_definitions=>gc_newline && zif_abapgit_definitions=>gc_newline.
+    ls_commit-body      = 'very informative'
+                        && zif_abapgit_definitions=>gc_newline
+                        && zif_abapgit_definitions=>gc_newline.
 
     lv_data = lcl_git_pack=>encode_commit( ls_commit ).
     ls_result = lcl_git_pack=>decode_commit( lv_data ).
