@@ -133,9 +133,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
         RETURNING VALUE(rt_unnecessary_local_objects) TYPE LIF_DEFS=>TY_TADIR_TT
-        RAISING   zcx_abapgit_exception,
-      delete_unnecessary_local_objs
-        RAISING   zcx_abapgit_exception lcx_cancel.
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA:

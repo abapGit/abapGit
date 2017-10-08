@@ -32,7 +32,12 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF lines( lt_results_overwrite ) > 0.
       "all returned objects will be overwritten
-      lt_confirmed_overwrite = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+      lcl_popups=>popup_to_select_from_list(
+        EXPORTING
+          it_list = lt_results_overwrite
+          i_text  = |The following Objects have been modified locally. Select the Objects which should be overwritten.|
+        IMPORTING
+          et_list = lt_confirmed_overwrite ).
 
       LOOP AT lt_results_overwrite ASSIGNING <ls_result>.
         READ TABLE lt_confirmed_overwrite TRANSPORTING NO FIELDS
