@@ -2294,16 +2294,6 @@ CLASS lcl_objects DEFINITION FINAL.
       RETURNING VALUE(rt_types) TYPE ty_types_tt.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_dependency,
-             depname  TYPE dd02l-tabname,
-             deptyp   TYPE c LENGTH 4,
-             deplocal TYPE dd02l-as4local,
-             refname  TYPE dd02l-tabname,
-             reftyp   TYPE c LENGTH 4,
-             kind     TYPE c LENGTH 1,
-           END OF ty_dependency,
-           tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
-                               WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS check_duplicates
       IMPORTING it_files TYPE lif_defs=>ty_files_tt
@@ -2325,10 +2315,6 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS class_name
       IMPORTING is_item              TYPE lif_defs=>ty_item
       RETURNING VALUE(rv_class_name) TYPE string.
-
-    CLASS-METHODS resolve_ddic
-      CHANGING ct_tadir TYPE lif_defs=>ty_tadir_tt
-      RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS warning_overwrite
       CHANGING ct_results TYPE lif_defs=>ty_results_tt
@@ -2361,13 +2347,5 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_descr   TYPE string
       CHANGING  ct_files   TYPE lif_defs=>ty_file_signatures_tt
       RAISING   zcx_abapgit_exception.
-    CLASS-METHODS resolve_ddls
-      CHANGING
-        ct_tadir TYPE lif_defs=>ty_tadir_tt.
-    CLASS-METHODS get_ddls_dependencies
-      IMPORTING
-        i_ddls_name          TYPE tadir-obj_name
-      RETURNING
-        VALUE(rt_dependency) TYPE tty_dedenpency.
 
 ENDCLASS.                    "lcl_object DEFINITION
