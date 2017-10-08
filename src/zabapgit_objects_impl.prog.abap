@@ -316,6 +316,8 @@ CLASS lcl_objects IMPLEMENTATION.
           <ls_tadir>-korrnum = '8000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
+        WHEN 'DEVC'.
+          <ls_tadir>-korrnum = '9500'.
         WHEN 'PROG'.
 * delete includes after main programs
           SELECT COUNT(*) FROM reposrc
@@ -334,7 +336,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     resolve_ddic( CHANGING ct_tadir = lt_tadir ).
 
-    resolve_ddls( CHANGING ct_tadir = lt_tadir ).
+*    resolve_ddls( CHANGING ct_tadir = lt_tadir ).
 
     SORT lt_tadir BY korrnum ASCENDING.
 
@@ -435,6 +437,73 @@ CLASS lcl_objects IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
+
+
+    "================================================================
+
+    TYPES: BEGIN OF ty_ddls_name.
+        INCLUDE TYPE ddsymtab.
+    TYPES: END OF ty_ddls_name.
+
+    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
+                               WITH NON-UNIQUE DEFAULT KEY,
+           BEGIN OF ty_dependency,
+             depname  TYPE dd02l-tabname,
+             deptyp   TYPE c LENGTH 4,
+             deplocal TYPE dd02l-as4local,
+             refname  TYPE dd02l-tabname,
+             reftyp   TYPE c LENGTH 4,
+             kind     TYPE c LENGTH 1,
+           END OF ty_dependency.
+
+    DATA: lt_dependency TYPE STANDARD TABLE OF ty_dependency
+                             WITH NON-UNIQUE DEFAULT KEY,
+          lt_ddls_name  TYPE tty_ddls_names,
+          ls_ddls_name  LIKE LINE OF lt_ddls_name.
+
+    FIELD-SYMBOLS: <tadir_ddls>      TYPE lif_defs=>ty_tadir,
+                   <dependency>      TYPE ty_dependency,
+                   <tadir_dependent> TYPE lif_defs=>ty_tadir.
+
+    LOOP AT ct_tadir ASSIGNING <tadir_ddls>
+                     WHERE object = 'DDLS'.
+
+      CLEAR: lt_dependency,
+             lt_ddls_name.
+
+      APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
+      <ls_node>-obj_name = <tadir_ddls>-obj_name.
+      <ls_node>-obj_type = <tadir_ddls>-object.
+
+      ls_ddls_name-name = <tadir_ddls>-obj_name.
+      INSERT ls_ddls_name INTO TABLE lt_ddls_name.
+
+      PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
+                               TABLES lt_ddls_name lt_dependency.
+
+      LOOP AT lt_dependency ASSIGNING <dependency>
+                            WHERE deptyp = 'DDLS'
+                            AND   refname = <tadir_ddls>-obj_name.
+
+        READ TABLE ct_tadir ASSIGNING <tadir_dependent>
+                            WITH KEY pgmid    = 'R3TR'
+                                     object   = 'DDLS'
+                                     obj_name = <dependency>-depname
+                            BINARY SEARCH.
+        CHECK sy-subrc = 0.
+
+        APPEND INITIAL LINE TO lt_edges ASSIGNING <ls_edge>.
+        <ls_edge>-from = <ls_node>.
+        <ls_edge>-to-obj_name = <dependency>-depname.
+        <ls_edge>-to-obj_type = 'DDLS'.
+
+*        <tadir_dependent>-korrnum = <tadir_dependent>-korrnum - 1.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+    "===================================================================
 
     DO.
       lv_before = lines( lt_nodes ).
