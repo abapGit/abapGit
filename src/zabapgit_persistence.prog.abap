@@ -16,10 +16,6 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
     CLASS-METHODS:
       migrate_settings
         RAISING zcx_abapgit_exception,
-      migrate_repo
-        RAISING zcx_abapgit_exception,
-      migrate_user
-        RAISING zcx_abapgit_exception,
       table_create
         RAISING zcx_abapgit_exception,
       table_exists
@@ -1392,9 +1388,6 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     IF lock_exists( ) = abap_false.
       lock_create( ).
-
-      migrate_repo( ).
-      migrate_user( ).
     ENDIF.
 
     IF settings_exists( ) = abap_false.
@@ -1560,46 +1553,6 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'BODY_SIZE' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD migrate_repo.
-
-    DATA: lt_repo TYPE lcl_persistence=>ty_repos_persi_tt,
-          lo_repo TYPE REF TO lcl_persistence,
-          lo_new  TYPE REF TO lcl_persistence_repo,
-          ls_repo LIKE LINE OF lt_repo.
-
-
-    CREATE OBJECT lo_repo.
-    CREATE OBJECT lo_new.
-
-    lt_repo = lo_repo->list( ).
-
-    LOOP AT lt_repo INTO ls_repo.
-      lo_new->add( iv_url         = ls_repo-url
-                   iv_branch_name = ls_repo-branch_name
-                   iv_branch      = ls_repo-sha1
-                   iv_package     = ls_repo-package
-                   iv_offline     = ls_repo-offline
-                   is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD migrate_user.
-
-    DATA: lo_user  TYPE REF TO lcl_persistence_user,
-          lt_users TYPE lcl_user=>ty_user_tt.
-
-    FIELD-SYMBOLS: <ls_user> LIKE LINE OF lt_users.
-
-
-    lt_users = lcl_user=>list( ).
-    LOOP AT lt_users ASSIGNING <ls_user>.
-      lo_user = lcl_app=>user( <ls_user>-user ).
-      lo_user->set_default_git_user_name( <ls_user>-username ).
-      lo_user->set_default_git_user_email( <ls_user>-email ).
-    ENDLOOP.
 
   ENDMETHOD.
 
