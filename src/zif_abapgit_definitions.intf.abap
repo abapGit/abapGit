@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_definitions
+INTERFACE ZIF_ABAPGIT_DEFINITIONS
   PUBLIC .
 
 
@@ -12,7 +12,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file_signature,
       path     TYPE string,
       filename TYPE string,
-      sha1     TYPE zif_abapgit_definitions=>ty_sha1,
+      sha1     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
     END OF ty_file_signature .
   TYPES:
     ty_file_signatures_tt TYPE STANDARD TABLE OF
@@ -54,7 +54,7 @@ INTERFACE zif_abapgit_definitions
     ty_items_ts TYPE SORTED TABLE OF ty_item WITH UNIQUE KEY obj_type obj_name .
   TYPES:
     BEGIN OF ty_file_item,
-      file TYPE zif_abapgit_definitions=>ty_file,
+      file TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file,
       item TYPE ty_item,
     END OF ty_file_item .
   TYPES:
@@ -87,15 +87,15 @@ INTERFACE zif_abapgit_definitions
     tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_stage_files,
-      local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      remote TYPE zif_abapgit_definitions=>ty_files_tt,
+      local  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt,
+      remote TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
     END OF ty_stage_files .
   TYPES:
     ty_chmod TYPE c LENGTH 6 .
   TYPES:
     BEGIN OF ty_object,
-      sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-      type TYPE zif_abapgit_definitions=>ty_type,
+      sha1 TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
+      type TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type,
       data TYPE xstring,
     END OF ty_object .
   TYPES:
@@ -152,10 +152,10 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS gc_abap_version TYPE string VALUE 'v1.43.1' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
-      commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
-      tree   TYPE zif_abapgit_definitions=>ty_type VALUE 'tree', "#EC NOTEXT
-      ref_d  TYPE zif_abapgit_definitions=>ty_type VALUE 'ref_d', "#EC NOTEXT
-      blob   TYPE zif_abapgit_definitions=>ty_type VALUE 'blob', "#EC NOTEXT
+      commit TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type VALUE 'commit', "#EC NOTEXT
+      tree   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type VALUE 'tree', "#EC NOTEXT
+      ref_d  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type VALUE 'ref_d', "#EC NOTEXT
+      blob   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type VALUE 'blob', "#EC NOTEXT
     END OF gc_type .
   CONSTANTS:
     BEGIN OF gc_state, " https://git-scm.com/docs/git-status
