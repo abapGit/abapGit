@@ -316,8 +316,6 @@ CLASS lcl_objects IMPLEMENTATION.
           <ls_tadir>-korrnum = '8000'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
-        WHEN 'DEVC'.
-          <ls_tadir>-korrnum = '9500'.
         WHEN 'PROG'.
 * delete includes after main programs
           SELECT COUNT(*) FROM reposrc
@@ -378,6 +376,10 @@ CLASS lcl_objects IMPLEMENTATION.
                    <ls_found> LIKE LINE OF lt_founds,
                    <ls_node>  LIKE LINE OF lt_nodes.
 
+    DATA: lt_dependency TYPE tty_dedenpency.
+    FIELD-SYMBOLS: <tadir_ddls>      TYPE lif_defs=>ty_tadir,
+                   <dependency>      TYPE ty_dependency,
+                   <tadir_dependent> TYPE lif_defs=>ty_tadir.
 
 * build nodes
     LOOP AT ct_tadir ASSIGNING <ls_tadir>
@@ -441,45 +443,17 @@ CLASS lcl_objects IMPLEMENTATION.
 
     "================================================================
 
-    TYPES: BEGIN OF ty_ddls_name.
-        INCLUDE TYPE ddsymtab.
-    TYPES: END OF ty_ddls_name.
-
-    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
-                               WITH NON-UNIQUE DEFAULT KEY,
-           BEGIN OF ty_dependency,
-             depname  TYPE dd02l-tabname,
-             deptyp   TYPE c LENGTH 4,
-             deplocal TYPE dd02l-as4local,
-             refname  TYPE dd02l-tabname,
-             reftyp   TYPE c LENGTH 4,
-             kind     TYPE c LENGTH 1,
-           END OF ty_dependency.
-
-    DATA: lt_dependency TYPE STANDARD TABLE OF ty_dependency
-                             WITH NON-UNIQUE DEFAULT KEY,
-          lt_ddls_name  TYPE tty_ddls_names,
-          ls_ddls_name  LIKE LINE OF lt_ddls_name.
-
-    FIELD-SYMBOLS: <tadir_ddls>      TYPE lif_defs=>ty_tadir,
-                   <dependency>      TYPE ty_dependency,
-                   <tadir_dependent> TYPE lif_defs=>ty_tadir.
 
     LOOP AT ct_tadir ASSIGNING <tadir_ddls>
                      WHERE object = 'DDLS'.
 
-      CLEAR: lt_dependency,
-             lt_ddls_name.
+      CLEAR: lt_dependency.
 
       APPEND INITIAL LINE TO lt_nodes ASSIGNING <ls_node>.
       <ls_node>-obj_name = <tadir_ddls>-obj_name.
       <ls_node>-obj_type = <tadir_ddls>-object.
 
-      ls_ddls_name-name = <tadir_ddls>-obj_name.
-      INSERT ls_ddls_name INTO TABLE lt_ddls_name.
-
-      PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
-                               TABLES lt_ddls_name lt_dependency.
+      lt_dependency = get_ddls_dependencies( <tadir_ddls>-obj_name ).
 
       LOOP AT lt_dependency ASSIGNING <dependency>
                             WHERE deptyp = 'DDLS'
@@ -496,8 +470,6 @@ CLASS lcl_objects IMPLEMENTATION.
         <ls_edge>-from = <ls_node>.
         <ls_edge>-to-obj_name = <dependency>-depname.
         <ls_edge>-to-obj_type = 'DDLS'.
-
-*        <tadir_dependent>-korrnum = <tadir_dependent>-korrnum - 1.
 
       ENDLOOP.
 
@@ -875,6 +847,27 @@ CLASS lcl_objects IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_ddls_dependencies.
+
+    TYPES: BEGIN OF ty_ddls_name.
+        INCLUDE TYPE ddsymtab.
+    TYPES: END OF ty_ddls_name.
+
+    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
+                               WITH NON-UNIQUE DEFAULT KEY.
+
+    DATA: lt_ddls_name TYPE tty_ddls_names,
+          ls_ddls_name LIKE LINE OF lt_ddls_name.
+
+    ls_ddls_name-name = i_ddls_name.
+    INSERT ls_ddls_name INTO TABLE lt_ddls_name.
+
+    PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
+                             TABLES lt_ddls_name rt_dependency.
 
   ENDMETHOD.
 
