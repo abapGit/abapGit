@@ -13,7 +13,7 @@ CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
     ALIASES mo_files FOR lif_object~mo_files.
     METHODS constructor
       IMPORTING
-        is_item     TYPE lif_defs=>ty_item
+        is_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
         iv_language TYPE spras.
   PROTECTED SECTION.
     METHODS deserialize_abap
@@ -53,7 +53,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
   METHOD deserialize_abap.
     DATA: ls_vseointerf   TYPE vseointerf,
           lt_source       TYPE seop_source_string,
-          lt_descriptions TYPE lif_defs=>ty_seocompotx_tt,
+          lt_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey.
 
 
@@ -145,7 +145,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
   METHOD serialize_xml.
     DATA:
-      lt_descriptions TYPE lif_defs=>ty_seocompotx_tt,
+      lt_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
       ls_vseointerf   TYPE vseointerf,
       ls_clskey       TYPE seoclskey,
       lt_lines        TYPE tlinetab.

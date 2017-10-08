@@ -402,7 +402,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     lv_string = lcl_convert=>xstring_to_string_utf8( iv_content ).
 
-    SPLIT lv_string AT lif_defs=>gc_newline INTO TABLE rt_content.
+    SPLIT lv_string AT ZIF_ABAPGIT_DEFINITIONS=>gc_newline INTO TABLE rt_content.
 
   ENDMETHOD.
 
@@ -415,7 +415,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       IMPORTING
         p_content = lt_content ).
 
-    CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY lif_defs=>gc_newline RESPECTING BLANKS.
+    CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY ZIF_ABAPGIT_DEFINITIONS=>gc_newline RESPECTING BLANKS.
 
     rv_content = lcl_convert=>string_to_xstring_utf8( lv_string ).
 

@@ -14,14 +14,14 @@ CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
       mt_local_test_classes    TYPE rswsourcet,
       mv_force                 TYPE seoflag,
       ms_deserialize_key       TYPE seoclskey,
-      mt_source                TYPE lif_defs=>ty_string_tt,
-      ms_item_to_activate      TYPE lif_defs=>ty_item,
-      mt_descriptions          TYPE lif_defs=>ty_seocompotx_tt,
+      mt_source                TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt,
+      ms_item_to_activate      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+      mt_descriptions          TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
       ms_description_key       TYPE seoclskey,
       mv_text_pool_class_name  TYPE seoclsname,
       mt_text_pool             TYPE textpool_table,
       mv_text_pool_inserted    TYPE abap_bool,
-      mt_sotr                  TYPE lif_defs=>ty_sotr_tt,
+      mt_sotr                  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
       mt_sotr_package          TYPE devclass,
       mv_docu_object_name      TYPE dokhl-object,
       mv_docu_language         TYPE spras,
@@ -189,7 +189,7 @@ CLASS ltd_fake_object_files IMPLEMENTATION.
                                         exp = abap_false ).
   ENDMETHOD.
   METHOD constructor.
-    DATA ls_empty_item TYPE lif_defs=>ty_item.
+    DATA ls_empty_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
     super->constructor( ls_empty_item ).
     APPEND 'source'         TO me->mt_sources.
     APPEND 'definition'     TO me->mt_local_definitions.
@@ -222,19 +222,19 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       mo_xml_input               TYPE REF TO lcl_xml_input,
       mo_xml_out                 TYPE REF TO lcl_xml_output,
       mo_oo_object               TYPE REF TO lif_object,
-      ms_item                    TYPE lif_defs=>ty_item.
+      ms_item                    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
     METHODS: when_deserializing
       RAISING
         zcx_abapgit_exception,
       then_should_deserialize_source,
       given_the_descriptions
         IMPORTING
-          it_descriptions TYPE lif_defs=>ty_seocompotx_tt
+          it_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt
         RAISING
           zcx_abapgit_exception,
       then_shuld_update_descriptions
         IMPORTING
-          it_descriptions TYPE lif_defs=>ty_seocompotx_tt,
+          it_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
       then_it_should_add_activation,
       given_documentation_in_xml_as
         IMPORTING
@@ -389,7 +389,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
   METHOD should_update_descriptions.
     DATA:
       ls_description  TYPE seocompotx,
-      lt_descriptions TYPE lif_defs=>ty_seocompotx_tt.
+      lt_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt.
 
     given_a_class_properties( ).
 
@@ -466,7 +466,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
 
   METHOD insert_text_pool.
     DATA: lt_pool_external TYPE textpool_table,
-          ls_pool_external TYPE lif_defs=>ty_tpool.
+          ls_pool_external TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool.
     ls_pool_external-id = 'ID'.
     ls_pool_external-key = 'KEY'.
     APPEND ls_pool_external TO lt_pool_external.
@@ -490,7 +490,7 @@ CLASS ltcl_class_deserialization IMPLEMENTATION.
 
   METHOD create_stor_from_xml.
     DATA:
-      lt_sotr TYPE lif_defs=>ty_sotr_tt,
+      lt_sotr TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
       ls_sotr LIKE LINE OF lt_sotr.
 
     given_a_class_properties( ).
@@ -574,7 +574,7 @@ CLASS ltcl_interface_deserialization IMPLEMENTATION.
   METHOD update_descriptions.
     DATA:
       ls_description  TYPE seocompotx,
-      lt_descriptions TYPE lif_defs=>ty_seocompotx_tt.
+      lt_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt.
 
     given_an_interface_properties( ).
 
@@ -829,7 +829,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_abap.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
 
     APPEND 'a_source_line' TO  me->mo_spy_oo_object_functions->mt_source.
 
@@ -844,7 +844,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_definitions.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
 
     APPEND 'a_local_definition' TO  me->mo_spy_oo_object_functions->mt_local_definitions.
 
@@ -860,7 +860,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_implementation.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
 
     APPEND 'a_local_implementation' TO  me->mo_spy_oo_object_functions->mt_local_implementations.
 
@@ -876,7 +876,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_local_macros.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
     APPEND 'a_local_macro' TO  me->mo_spy_oo_object_functions->mt_local_macros.
 
     mo_oo_object->serialize( mo_xml_out ).
@@ -891,7 +891,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_test_classes.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
     APPEND 'a_local_test' TO  me->mo_spy_oo_object_functions->mt_local_test_classes.
 
     mo_oo_object->serialize( mo_xml_out ).
@@ -1004,8 +1004,8 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD read_sotr_if_exception_class.
     DATA:
-      lt_sotr        TYPE lif_defs=>ty_sotr_tt,
-      lt_actual_sotr TYPE lif_defs=>ty_sotr_tt,
+      lt_sotr        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
+      lt_actual_sotr TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
       ls_sotr        LIKE LINE OF lt_sotr.
 
     me->mo_spy_oo_object_functions->ms_class_properties-category = seoc_category_exception.
@@ -1033,7 +1033,7 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD do_not_read_sotr_regular_class.
     DATA:
-      lt_actual_sotr TYPE lif_defs=>ty_sotr_tt.
+      lt_actual_sotr TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt.
 
     CLEAR: me->mo_spy_oo_object_functions->ms_class_properties-category.
 
@@ -1080,9 +1080,9 @@ CLASS ltcl_serialize_class IMPLEMENTATION.
 
   METHOD should_serialize_descriptions.
     DATA:
-      lt_descriptions        TYPE lif_defs=>ty_seocompotx_tt,
-      lt_actual_descriptions TYPE lif_defs=>ty_seocompotx_tt,
-      ls_description         TYPE LINE OF lif_defs=>ty_seocompotx_tt.
+      lt_descriptions        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+      lt_actual_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+      ls_description         TYPE LINE OF ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt.
 
     ls_description-clsname = 'class'.
     APPEND ls_description TO lt_descriptions.
@@ -1146,7 +1146,7 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD serialize_abap.
-    DATA lt_abap_source TYPE lif_defs=>ty_string_tt.
+    DATA lt_abap_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt.
 
     APPEND 'a_source_line' TO  me->mo_spy_oo_object_functions->mt_source.
 
@@ -1232,9 +1232,9 @@ CLASS ltcl_serialize_interface IMPLEMENTATION.
 
   METHOD should_serialize_descriptions.
     DATA:
-      lt_descriptions        TYPE lif_defs=>ty_seocompotx_tt,
-      lt_actual_descriptions TYPE lif_defs=>ty_seocompotx_tt,
-      ls_description         TYPE LINE OF lif_defs=>ty_seocompotx_tt.
+      lt_descriptions        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+      lt_actual_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+      ls_description         TYPE LINE OF ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt.
 
     ls_description-clsname = 'class'.
     APPEND ls_description TO lt_descriptions.

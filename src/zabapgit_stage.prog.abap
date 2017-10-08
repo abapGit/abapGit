@@ -16,7 +16,7 @@ CLASS lcl_stage DEFINITION FINAL.
                END OF c_method.
 
     TYPES: BEGIN OF ty_stage,
-             file   TYPE lif_defs=>ty_file,
+             file   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file,
              method TYPE ty_method,
            END OF ty_stage.
 
@@ -31,37 +31,37 @@ CLASS lcl_stage DEFINITION FINAL.
     METHODS:
       constructor
         IMPORTING iv_branch_name  TYPE string
-                  iv_branch_sha1  TYPE lif_defs=>ty_sha1
-                  iv_merge_source TYPE lif_defs=>ty_sha1 OPTIONAL,
+                  iv_branch_sha1  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1
+                  iv_merge_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1 OPTIONAL,
       get_branch_name
         RETURNING VALUE(rv_branch) TYPE string,
       get_branch_sha1
-        RETURNING VALUE(rv_branch) TYPE lif_defs=>ty_sha1,
+        RETURNING VALUE(rv_branch) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
       add
-        IMPORTING iv_path     TYPE lif_defs=>ty_file-path
-                  iv_filename TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
                   iv_data     TYPE xstring
         RAISING   zcx_abapgit_exception,
       reset
-        IMPORTING iv_path     TYPE lif_defs=>ty_file-path
-                  iv_filename TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
         RAISING   zcx_abapgit_exception,
       reset_all
         RAISING   zcx_abapgit_exception,
       rm
-        IMPORTING iv_path     TYPE lif_defs=>ty_file-path
-                  iv_filename TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
         RAISING   zcx_abapgit_exception,
       ignore
-        IMPORTING iv_path     TYPE lif_defs=>ty_file-path
-                  iv_filename TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
         RAISING   zcx_abapgit_exception,
       lookup
-        IMPORTING iv_path          TYPE lif_defs=>ty_file-path
-                  iv_filename      TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path          TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
         RETURNING VALUE(rv_method) TYPE ty_method,
       get_merge_source
-        RETURNING VALUE(rv_source) TYPE lif_defs=>ty_sha1,
+        RETURNING VALUE(rv_source) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
       count
         RETURNING VALUE(rv_count) TYPE i,
       get_all
@@ -70,13 +70,13 @@ CLASS lcl_stage DEFINITION FINAL.
   PRIVATE SECTION.
     DATA: mt_stage        TYPE ty_stage_tt,
           mv_branch_name  TYPE string,
-          mv_branch_sha1  TYPE lif_defs=>ty_sha1,
-          mv_merge_source TYPE lif_defs=>ty_sha1.
+          mv_branch_sha1  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
+          mv_merge_source TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1.
 
     METHODS:
       append
-        IMPORTING iv_path     TYPE lif_defs=>ty_file-path
-                  iv_filename TYPE lif_defs=>ty_file-filename
+        IMPORTING iv_path     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-path
+                  iv_filename TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file-filename
                   iv_method   TYPE ty_method
                   iv_data     TYPE xstring OPTIONAL
         RAISING   zcx_abapgit_exception.

@@ -193,8 +193,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD push.
 
-    DATA: lv_branch        TYPE lif_defs=>ty_sha1,
-          lt_updated_files TYPE lif_defs=>ty_file_signatures_tt.
+    DATA: lv_branch        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
+          lt_updated_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt.
 
 
     handle_stage_ignore( io_stage ).
@@ -246,8 +246,8 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF lv_add = abap_true.
       io_stage->add(
-        iv_path     = lif_defs=>gc_root_dir
-        iv_filename = lif_defs=>gc_dot_abapgit
+        iv_path     = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir
+        iv_filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit
         iv_data     = lo_dot_abapgit->serialize( ) ).
 
       set_dot_abapgit( lo_dot_abapgit ).
@@ -257,9 +257,9 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD rebuild_local_checksums. "REMOTE
 
-    DATA: lt_remote       TYPE lif_defs=>ty_files_tt,
-          lt_local        TYPE lif_defs=>ty_files_item_tt,
-          ls_last_item    TYPE lif_defs=>ty_item,
+    DATA: lt_remote       TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+          lt_local        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt,
+          ls_last_item    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
           lv_branch_equal TYPE abap_bool,
           lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
 
@@ -274,7 +274,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path = lif_defs=>gc_root_dir AND file-filename = lif_defs=>gc_dot_abapgit ).
+      AND NOT ( file-path = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir AND file-filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit ).
 
     SORT lt_local BY item.
     SORT lt_remote BY path filename.
@@ -323,7 +323,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD delete_unnecessary_local_objs.
 
-    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
+    DATA: lt_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt.
 
     lt_tadir = get_unnecessary_local_objs( ).
 
@@ -338,16 +338,16 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD get_unnecessary_local_objs.
 
-    DATA: lt_tadir        TYPE lif_defs=>ty_tadir_tt,
-          lt_tadir_unique TYPE HASHED TABLE OF lif_defs=>ty_tadir
+    DATA: lt_tadir        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt,
+          lt_tadir_unique TYPE HASHED TABLE OF ZIF_ABAPGIT_DEFINITIONS=>ty_tadir
                                WITH UNIQUE KEY pgmid object obj_name,
-          lt_local        TYPE lif_defs=>ty_files_item_tt,
-          lt_remote       TYPE lif_defs=>ty_files_tt,
-          lt_status       TYPE lif_defs=>ty_results_tt,
+          lt_local        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt,
+          lt_remote       TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+          lt_status       TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt,
           lv_package      TYPE lcl_persistence_repo=>ty_repo-package.
 
-    FIELD-SYMBOLS: <status> TYPE lif_defs=>ty_result,
-                   <tadir>  TYPE lif_defs=>ty_tadir.
+    FIELD-SYMBOLS: <status> TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_result,
+                   <tadir>  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir.
 
     " delete objects which are added locally but are not in remote repo
     lt_local  = me->get_files_local( ).
@@ -359,7 +359,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <status>
-                      WHERE lstate = lif_defs=>gc_state-added.
+                      WHERE lstate = ZIF_ABAPGIT_DEFINITIONS=>gc_state-added.
 
       READ TABLE lt_tadir ASSIGNING <tadir>
                           WITH KEY pgmid    = 'R3TR'
@@ -403,8 +403,8 @@ CLASS lcl_repo IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = lif_defs=>gc_root_dir
-      filename = lif_defs=>gc_dot_abapgit.
+      WITH KEY path = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir
+      filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit.
     IF sy-subrc = 0.
       ro_dot = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
     ENDIF.
@@ -488,8 +488,8 @@ CLASS lcl_repo IMPLEMENTATION.
     " If this is not true that there is an error somewhere but not here
 
     DATA: lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
-          lt_files_idx TYPE lif_defs=>ty_file_signatures_tt,
-          lt_local     TYPE lif_defs=>ty_files_item_tt,
+          lt_files_idx TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt,
+          lt_local     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt,
           lv_chks_row  TYPE i,
           lv_file_row  TYPE i.
 
@@ -561,7 +561,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lt_updated_files TYPE lif_defs=>ty_file_signatures_tt,
+    DATA: lt_updated_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt,
           lo_dot_abapgit   TYPE REF TO lcl_dot_abapgit,
           lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement.
 
@@ -607,10 +607,10 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt,
-          ls_item  TYPE lif_defs=>ty_item,
-          lt_files TYPE lif_defs=>ty_files_tt,
-          lt_cache TYPE SORTED TABLE OF lif_defs=>ty_file_item
+    DATA: lt_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt,
+          ls_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+          lt_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+          lt_cache TYPE SORTED TABLE OF ZIF_ABAPGIT_DEFINITIONS=>ty_file_item
                    WITH NON-UNIQUE KEY item.
 
     DATA: lt_filter       TYPE SORTED TABLE OF tadir
@@ -630,10 +630,10 @@ CLASS lcl_repo IMPLEMENTATION.
     ENDIF.
 
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = lif_defs=>gc_root_dir.
-    <ls_return>-file-filename = lif_defs=>gc_dot_abapgit.
+    <ls_return>-file-path     = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir.
+    <ls_return>-file-filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit.
     <ls_return>-file-data     = get_dot_abapgit( )->serialize( ).
-    <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob
+    <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = ZIF_ABAPGIT_DEFINITIONS=>gc_type-blob
                                                 iv_data = <ls_return>-file-data ).
 
     lt_cache = mt_local.
@@ -687,7 +687,7 @@ CLASS lcl_repo IMPLEMENTATION.
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
-        <ls_file>-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob iv_data = <ls_file>-data ).
+        <ls_file>-sha1 = lcl_hash=>sha1( iv_type = ZIF_ABAPGIT_DEFINITIONS=>gc_type-blob iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
@@ -773,8 +773,8 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD rebuild_local_checksums. "LOCAL (BASE)
 
-    DATA: lt_local     TYPE lif_defs=>ty_files_item_tt,
-          ls_last_item TYPE lif_defs=>ty_item,
+    DATA: lt_local     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt,
+          ls_last_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
           lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
@@ -786,7 +786,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path = lif_defs=>gc_root_dir AND file-filename = lif_defs=>gc_dot_abapgit ).
+      AND NOT ( file-path = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir AND file-filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit ).
 
     SORT lt_local BY item.
 

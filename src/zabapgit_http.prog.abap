@@ -408,7 +408,7 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD get_agent.
 
 * bitbucket require agent prefix = "git/"
-    rv_agent = 'git/abapGit-' && lif_defs=>gc_abap_version.
+    rv_agent = 'git/abapGit-' && ZIF_ABAPGIT_DEFINITIONS=>gc_abap_version.
 
   ENDMETHOD.
 
@@ -501,7 +501,7 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD is_local_system.
 
     DATA: lv_host TYPE string,
-          lt_list TYPE lif_defs=>ty_icm_sinfo2_tt,
+          lt_list TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_icm_sinfo2_tt,
           li_exit TYPE ref to lif_exit.
 
     CALL FUNCTION 'ICM_GET_INFO2'

@@ -72,10 +72,10 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                   io_repo     = mo_repo
                                   io_stage    = mo_stage ).
 
-        ev_state = lif_defs=>gc_event_state-go_back_to_bookmark.
+        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back_to_bookmark.
 
       WHEN c_action-commit_cancel.
-        ev_state = lif_defs=>gc_event_state-go_back.
+        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.
@@ -241,12 +241,12 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
-                     iv_typ = lif_defs=>gc_action_type-onclick
-                     iv_opt = lif_defs=>gc_html_opt-strong ) ##NO_TEXT.
+                     iv_typ = ZIF_ABAPGIT_DEFINITIONS=>gc_action_type-onclick
+                     iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ) ##NO_TEXT.
 
     lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
-                     iv_opt = lif_defs=>gc_html_opt-cancel ) ##NO_TEXT.
+                     iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-cancel ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).

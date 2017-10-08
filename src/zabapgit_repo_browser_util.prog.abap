@@ -23,7 +23,7 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
              changes  TYPE i,
              lstate   TYPE char1,
              rstate   TYPE char1,
-             files    TYPE lif_defs=>tt_repo_files,
+             files    TYPE ZIF_ABAPGIT_DEFINITIONS=>tt_repo_files,
            END OF ty_repo_item.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
@@ -167,7 +167,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
   METHOD build_repo_items_offline.
 
-    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
+    DATA: lt_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt.
 
     FIELD-SYMBOLS: <ls_repo_item> LIKE LINE OF rt_repo_items,
                    <ls_tadir>     LIKE LINE OF lt_tadir.
@@ -190,8 +190,8 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
   METHOD build_repo_items_online.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          ls_file        TYPE lif_defs=>ty_repo_file,
-          lt_status      TYPE lif_defs=>ty_results_tt.
+          ls_file        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_repo_file,
+          lt_status      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt.
 
     FIELD-SYMBOLS: <status>       LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.

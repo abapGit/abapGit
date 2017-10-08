@@ -102,21 +102,21 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         mv_hide_files   = lcl_app=>user( )->toggle_hide_files( ).
-        ev_state        = lif_defs=>gc_event_state-re_render.
+        ev_state        = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
         mv_cur_dir      = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
-        ev_state        = lif_defs=>gc_event_state-re_render.
+        ev_state        = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
         mv_cur_dir      = '/'. " Root
-        ev_state        = lif_defs=>gc_event_state-re_render.
+        ev_state        = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
-        ev_state        = lif_defs=>gc_event_state-re_render.
+        ev_state        = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
-        ev_state        = lif_defs=>gc_event_state-re_render.
+        ev_state        = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event
@@ -201,7 +201,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
           ro_html->add( |Only { lv_max_str } shown in list. Display {
             lcl_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
-            lcl_html=>a( iv_txt = 'Settings' iv_act = lif_defs=>gc_action-go_settings )
+            lcl_html=>a( iv_txt = 'Settings' iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_settings )
             } )| ).
           ro_html->add( '</div>' ).
         ENDIF.
@@ -265,9 +265,9 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     DATA: lo_tb_advanced TYPE REF TO lcl_html_toolbar,
           lo_tb_branch   TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
-          lv_wp_opt      LIKE lif_defs=>gc_html_opt-crossout,
-          lv_crossout    LIKE lif_defs=>gc_html_opt-crossout,
-          lv_pull_opt    LIKE lif_defs=>gc_html_opt-crossout.
+          lv_wp_opt      LIKE ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout,
+          lv_crossout    LIKE ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout,
+          lv_pull_opt    LIKE ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout.
 
     CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
@@ -276,60 +276,60 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     lv_key = mo_repo->get_key( ).
 
     IF mo_repo->is_write_protected( ) = abap_true.
-      lv_wp_opt   = lif_defs=>gc_html_opt-crossout.
-      lv_pull_opt = lif_defs=>gc_html_opt-crossout.
+      lv_wp_opt   = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout.
+      lv_pull_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout.
     ELSE.
-      lv_pull_opt = lif_defs=>gc_html_opt-strong.
+      lv_pull_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong.
     ENDIF.
 
     " Build branch drop-down ========================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_branch->add( iv_txt = 'Overview'
-                         iv_act = |{ lif_defs=>gc_action-go_branch_overview }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_branch_overview }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Switch'
-                         iv_act = |{ lif_defs=>gc_action-git_branch_switch }?{ lv_key }|
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-git_branch_switch }?{ lv_key }|
                          iv_opt = lv_wp_opt ).
       lo_tb_branch->add( iv_txt = 'Create'
-                         iv_act = |{ lif_defs=>gc_action-git_branch_create }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-git_branch_create }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Delete'
-                         iv_act = |{ lif_defs=>gc_action-git_branch_delete }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-git_branch_delete }?{ lv_key }| ).
     ENDIF.
 
     " Build advanced drop-down ========================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Reset local'
-                           iv_act = |{ lif_defs=>gc_action-git_reset }?{ lv_key }|
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
       lo_tb_advanced->add( iv_txt = 'Background mode'
-                           iv_act = |{ lif_defs=>gc_action-go_background }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_background }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Change remote'
-                           iv_act = |{ lif_defs=>gc_action-repo_remote_change }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_remote_change }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Make off-line'
-                           iv_act = |{ lif_defs=>gc_action-repo_remote_detach }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_remote_detach }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Force stage'
-                           iv_act = |{ lif_defs=>gc_action-go_stage }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_stage }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Transport to Branch'
-                           iv_act = |{ lif_defs=>gc_action-repo_transport_to_branch }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_transport_to_branch }?{ lv_key }| ).
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
-                           iv_act = |{ lif_defs=>gc_action-repo_remote_attach }?{ lv_key }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_remote_attach }?{ lv_key }| ).
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Syntax Check'
-                         iv_act = |{ lif_defs=>gc_action-repo_syntax_check }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_syntax_check }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Repo settings'
-                         iv_act = |{ lif_defs=>gc_action-repo_settings }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_settings }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Update local checksums'
-                         iv_act = |{ lif_defs=>gc_action-repo_refresh_checksums }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_refresh_checksums }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Remove'
-                         iv_act = |{ lif_defs=>gc_action-repo_remove }?{ lv_key }| ).
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_remove }?{ lv_key }| ).
 
     CLEAR lv_crossout.
     IF mo_repo->is_write_protected( ) = abap_true
         OR lcl_auth=>is_allowed( lif_auth=>gc_authorization-uninstall ) = abap_false.
-      lv_crossout = lif_defs=>gc_html_opt-crossout.
+      lv_crossout = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-crossout.
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Uninstall'
-                         iv_act = |{ lif_defs=>gc_action-repo_purge }?{ lv_key }|
+                         iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_purge }?{ lv_key }|
                          iv_opt = lv_crossout ).
 
     " Build main toolbar ==============================
@@ -337,18 +337,18 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
       TRY.
           IF iv_rstate IS NOT INITIAL. " Something new at remote
             ro_toolbar->add( iv_txt = 'Pull'
-                             iv_act = |{ lif_defs=>gc_action-git_pull }?{ lv_key }|
+                             iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-git_pull }?{ lv_key }|
                              iv_opt = lv_pull_opt ).
           ENDIF.
           IF iv_lstate IS NOT INITIAL. " Something new at local
             ro_toolbar->add( iv_txt = 'Stage'
-                             iv_act = |{ lif_defs=>gc_action-go_stage }?{ lv_key }|
-                             iv_opt = lif_defs=>gc_html_opt-strong ).
+                             iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_stage }?{ lv_key }|
+                             iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ).
           ENDIF.
           IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
             ro_toolbar->add( iv_txt = 'Show diff'
-                             iv_act = |{ lif_defs=>gc_action-go_diff }?key={ lv_key }|
-                             iv_opt = lif_defs=>gc_html_opt-strong ).
+                             iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_diff }?key={ lv_key }|
+                             iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ).
           ENDIF.
         CATCH zcx_abapgit_exception ##NO_HANDLER.
           " authorization error or repository does not exist
@@ -358,17 +358,17 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                        io_sub = lo_tb_branch ) ##NO_TEXT.
     ELSE.
       ro_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |{ lif_defs=>gc_action-zip_import }?{ lv_key }|
-                       iv_opt = lif_defs=>gc_html_opt-strong ).
+                       iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-zip_import }?{ lv_key }|
+                       iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ).
       ro_toolbar->add( iv_txt = 'Export ZIP'
-                       iv_act = |{ lif_defs=>gc_action-zip_export }?{ lv_key }|
-                       iv_opt = lif_defs=>gc_html_opt-strong ).
+                       iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-zip_export }?{ lv_key }|
+                       iv_opt = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ).
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
     ro_toolbar->add( iv_txt = 'Refresh'
-                     iv_act = |{ lif_defs=>gc_action-repo_refresh }?{ lv_key }| ).
+                     iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_refresh }?{ lv_key }| ).
     ro_toolbar->add( iv_txt = lcl_html=>icon( iv_name = 'settings/grey70' )
                      io_sub = build_grid_menu( ) ).
 
@@ -497,7 +497,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
         ro_html->add( '<div>' ).
         ro_html->add_a( iv_txt = |view diff ({ is_item-changes })|
-                        iv_act = |{ lif_defs=>gc_action-go_diff }?{ lv_difflink }| ).
+                        iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_diff }?{ lv_difflink }| ).
         ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
                                                             iv2 = is_item-rstate ) ).
         ro_html->add( '</div>' ).
@@ -511,7 +511,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
             ro_html->add_a( iv_txt = 'view diff'
-                            iv_act = |{ lif_defs=>gc_action-go_diff }?{ lv_difflink }| ).
+                            iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_diff }?{ lv_difflink }| ).
             ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = ls_file-lstate
                                                                 iv2 = ls_file-rstate ) ).
           ELSE.
@@ -570,7 +570,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                                                     iv_obj_name = is_item-obj_name ).
 
     rv_html = lcl_html=>a( iv_txt = |{ is_item-obj_name }|
-                           iv_act = |{ lif_defs=>gc_action-jump }?{ lv_encode }| ).
+                           iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_obj_jump_link
 

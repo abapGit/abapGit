@@ -91,7 +91,7 @@ CLASS lcl_news IMPLEMENTATION.
       lc_log_path     TYPE string VALUE '/',
       lc_log_filename TYPE string VALUE 'changelog.txt'.
 
-    DATA: lt_remote      TYPE lif_defs=>ty_files_tt,
+    DATA: lt_remote      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
           lv_last_seen   TYPE string,
           lv_url         TYPE string,
           lo_repo_online TYPE REF TO lcl_repo_online.
@@ -126,7 +126,7 @@ CLASS lcl_news IMPLEMENTATION.
       CREATE OBJECT ro_instance
         EXPORTING
           iv_rawdata          = <file>-data
-          iv_current_version  = lif_defs=>gc_abap_version " TODO refactor
+          iv_current_version  = ZIF_ABAPGIT_DEFINITIONS=>gc_abap_version " TODO refactor
           iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
 

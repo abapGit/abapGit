@@ -115,19 +115,19 @@ CLASS lcl_gui IMPLEMENTATION.
         ENDIF.
 
         CASE lv_state.
-          WHEN lif_defs=>gc_event_state-re_render.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
             render( ).
-          WHEN lif_defs=>gc_event_state-new_page.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-new_page.
             call_page( li_page ).
-          WHEN lif_defs=>gc_event_state-new_page_w_bookmark.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-new_page_w_bookmark.
             call_page( ii_page = li_page iv_with_bookmark = abap_true ).
-          WHEN lif_defs=>gc_event_state-new_page_replacing.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-new_page_replacing.
             call_page( ii_page = li_page iv_replacing = abap_true ).
-          WHEN lif_defs=>gc_event_state-go_back.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back.
             back( ).
-          WHEN lif_defs=>gc_event_state-go_back_to_bookmark.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back_to_bookmark.
             back( iv_to_bookmark = abap_true ).
-          WHEN lif_defs=>gc_event_state-no_more_act.
+          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
             zcx_abapgit_exception=>raise( |Unknown action: { action }| ).
@@ -201,7 +201,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = |{ lif_defs=>gc_action-go_main }| ). " doesn't accept strings directly
+    on_event( action = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_main }| ). " doesn't accept strings directly
 
   ENDMETHOD.                "go_home
 
@@ -209,7 +209,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events,
-          lt_assets TYPE lif_defs=>tt_web_assets.
+          lt_assets TYPE ZIF_ABAPGIT_DEFINITIONS=>tt_web_assets.
 
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 

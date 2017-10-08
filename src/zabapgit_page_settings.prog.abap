@@ -125,7 +125,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
           persist_settings( ).
         ENDIF.
 
-        ev_state = lif_defs=>gc_event_state-go_back.
+        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

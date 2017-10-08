@@ -98,7 +98,7 @@ CLASS lcl_git_branch_list DEFINITION FINAL.
   PUBLIC SECTION.
     TYPES: ty_git_branch_type TYPE char2.
     TYPES: BEGIN OF ty_git_branch,
-             sha1         TYPE lif_defs=>ty_sha1,
+             sha1         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
              name         TYPE string,
              type         TYPE ty_git_branch_type,
              is_head      TYPE abap_bool,
@@ -216,7 +216,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
   METHOD parse_branch_list.
 
     DATA: lt_result      TYPE TABLE OF string,
-          lv_hash        TYPE lif_defs=>ty_sha1,
+          lv_hash        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
           lv_name        TYPE string,
           lv_head_params TYPE string,
           lv_char        TYPE c,
@@ -226,7 +226,7 @@ CLASS lcl_git_branch_list IMPLEMENTATION.
 
     CLEAR: et_list, ev_head_symref.
 
-    SPLIT iv_data AT lif_defs=>gc_newline INTO TABLE lt_result.
+    SPLIT iv_data AT ZIF_ABAPGIT_DEFINITIONS=>gc_newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
       IF sy-tabix = 1.

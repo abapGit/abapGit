@@ -98,8 +98,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_local_checksum,
-             item  TYPE lif_defs=>ty_item,
-             files TYPE lif_defs=>ty_file_signatures_tt,
+             item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+             files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt,
            END OF ty_local_checksum.
 
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
@@ -107,7 +107,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: BEGIN OF ty_repo_xml,
              url                TYPE string,
              branch_name        TYPE string,
-             sha1               TYPE lif_defs=>ty_sha1,
+             sha1               TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1,
              package            TYPE devclass,
              offline            TYPE sap_bool,
              local_checksums    TYPE ty_local_checksum_tt,
@@ -168,7 +168,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS add
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
-                iv_branch      TYPE lif_defs=>ty_sha1 OPTIONAL
+                iv_branch      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
@@ -591,7 +591,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       BEGIN OF ty_repo_config,
         url              TYPE lcl_persistence_repo=>ty_repo-url,
         login            TYPE string,
-        git_user         TYPE lif_defs=>ty_git_user,
+        git_user         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_git_user,
         last_change_seen TYPE string,
       END OF ty_repo_config.
 
@@ -599,7 +599,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES:
       BEGIN OF ty_user,
-        default_git_user TYPE lif_defs=>ty_git_user,
+        default_git_user TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_git_user,
         repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
@@ -1628,7 +1628,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ls_dd25v-viewname   = lcl_persistence_db=>c_lock.
     ls_dd25v-aggtype    = 'E'.
     ls_dd25v-roottab    = lcl_persistence_db=>c_tabname.
-    ls_dd25v-ddlanguage = lif_defs=>gc_english.
+    ls_dd25v-ddlanguage = ZIF_ABAPGIT_DEFINITIONS=>gc_english.
     ls_dd25v-ddtext     = c_text.
 
     APPEND INITIAL LINE TO lt_dd26e ASSIGNING <ls_dd26e>.
@@ -1721,7 +1721,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
     ls_dd02v-tabname    = lcl_persistence_db=>c_tabname.
-    ls_dd02v-ddlanguage = lif_defs=>gc_english.
+    ls_dd02v-ddlanguage = ZIF_ABAPGIT_DEFINITIONS=>gc_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
     ls_dd02v-contflag   = 'A'.

@@ -25,7 +25,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          ms_files TYPE lif_defs=>ty_stage_files,
+          ms_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files,
           mv_seed  TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS:
@@ -34,15 +34,15 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
       render_file
         IMPORTING iv_context     TYPE string
-                  is_file        TYPE lif_defs=>ty_file
-                  is_item        TYPE lif_defs=>ty_item OPTIONAL
+                  is_file        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file
+                  is_item        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
 
       render_actions
         RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
 
       read_last_changed_by
-        IMPORTING is_file        TYPE lif_defs=>ty_file
+        IMPORTING is_file        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file
         RETURNING VALUE(rv_user) TYPE xubname,
 
       process_stage_list
@@ -83,7 +83,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     IF lines( ms_files-local ) > 0.
       ro_menu->add( iv_txt = |All diffs|
-                    iv_act = |{ lif_defs=>gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+                    iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_diff }?key={ mo_repo->get_key( ) }| ).
     ENDIF.
 
   ENDMETHOD. "build_menu
@@ -117,7 +117,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         io_repo  = mo_repo
         io_stage = lo_stage.
 
-    ev_state = lif_defs=>gc_event_state-new_page.
+    ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-new_page.
 
   ENDMETHOD.
 
@@ -125,7 +125,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp,
-          ls_file   TYPE lif_defs=>ty_file.
+          ls_file   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
                    <ls_item> LIKE LINE OF lt_fields.
@@ -245,7 +245,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         lv_param    = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
                                                           ig_file = is_file ).
         lv_filename = lcl_html=>a( iv_txt = lv_filename
-                                   iv_act = |{ lif_defs=>gc_action-go_diff }?{ lv_param }| ).
+                                   iv_act = |{ ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ro_html->add( |<td class="name">{ lv_filename }</td>| ).
         ro_html->add( |<td class="user">{ read_last_changed_by( is_file ) }</td>| ).
@@ -295,11 +295,11 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     " Action buttons
     ro_html->add( '<td class="indent5em">' ).
     ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
-                    iv_typ   = lif_defs=>gc_action_type-onclick
+                    iv_typ   = ZIF_ABAPGIT_DEFINITIONS=>gc_action_type-onclick
                     iv_id    = 'commitButton'
                     iv_style = 'display: none'
                     iv_txt   = 'Commit (<span id="fileCounter"></span>)'
-                    iv_opt   = lif_defs=>gc_html_opt-strong ) ##NO_TEXT.
+                    iv_opt   = ZIF_ABAPGIT_DEFINITIONS=>gc_html_opt-strong ) ##NO_TEXT.
     ro_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
@@ -337,8 +337,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.  "scripts
 
   METHOD read_last_changed_by.
-    DATA: ls_local_file  TYPE lif_defs=>ty_file_item,
-          lt_files_local TYPE lif_defs=>ty_files_item_tt.
+    DATA: ls_local_file  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_item,
+          lt_files_local TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_item_tt.
     TRY.
         lt_files_local = mo_repo->get_files_local( ).
         READ TABLE lt_files_local INTO ls_local_file WITH KEY file = is_file.
