@@ -185,8 +185,8 @@ CLASS lcl_transport_objects DEFINITION.
     METHODS to_stage
       IMPORTING
         io_stage           TYPE REF TO lcl_stage
-        is_stage_objects   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files
-        it_object_statuses TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt
+        is_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files
+        it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -200,8 +200,8 @@ CLASS lcl_transport_objects IMPLEMENTATION.
 
   METHOD to_stage.
     DATA: ls_transport_object TYPE tadir,
-          ls_local_file       TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_item,
-          ls_object_status    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_result.
+          ls_local_file       TYPE zif_abapgit_definitions=>ty_file_item,
+          ls_object_status    TYPE zif_abapgit_definitions=>ty_result.
 
     LOOP AT mt_transport_objects INTO ls_transport_object.
       LOOP AT it_object_statuses INTO ls_object_status
@@ -210,7 +210,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
           AND NOT lstate IS INITIAL.
 
         CASE ls_object_status-lstate.
-          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_state-added OR ZIF_ABAPGIT_DEFINITIONS=>gc_state-modified.
+          WHEN zif_abapgit_definitions=>gc_state-added OR zif_abapgit_definitions=>gc_state-modified.
             IF ls_transport_object-delflag = abap_true.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be added/modified, but has deletion flag in transport| ).
@@ -230,7 +230,7 @@ CLASS lcl_transport_objects IMPLEMENTATION.
               iv_path     = ls_local_file-file-path
               iv_filename = ls_local_file-file-filename
               iv_data     = ls_local_file-file-data ).
-          WHEN ZIF_ABAPGIT_DEFINITIONS=>gc_state-deleted.
+          WHEN zif_abapgit_definitions=>gc_state-deleted.
             IF ls_transport_object-delflag = abap_false.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be removed, but has NO deletion flag in transport| ).
@@ -256,7 +256,7 @@ CLASS lcl_transport_2_branch DEFINITION.
     METHODS:
       create
         IMPORTING io_repository          TYPE REF TO lcl_repo_online
-                  is_transport_to_branch TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_transport_to_branch
+                  is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
                   it_transport_objects   TYPE scts_tadir
         RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -269,15 +269,15 @@ CLASS lcl_transport_2_branch DEFINITION.
         zcx_abapgit_exception.
     METHODS generate_commit_message
       IMPORTING
-        is_transport_to_branch TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_transport_to_branch
+        is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
       RETURNING
-        VALUE(rs_comment)      TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_comment.
+        VALUE(rs_comment)      TYPE zif_abapgit_definitions=>ty_comment.
     METHODS stage_transport_objects
       IMPORTING
         it_transport_objects TYPE scts_tadir
         io_stage             TYPE REF TO lcl_stage
-        is_stage_objects     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files
-        it_object_statuses   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt
+        is_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files
+        it_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception.
 ENDCLASS.
@@ -287,10 +287,10 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
   METHOD create.
     DATA:
       lv_branch_name     TYPE string,
-      ls_comment         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_comment,
+      ls_comment         TYPE zif_abapgit_definitions=>ty_comment,
       lo_stage           TYPE REF TO lcl_stage,
-      ls_stage_objects   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files,
-      lt_object_statuses TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt.
+      ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
+      lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
 
     lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
         lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).

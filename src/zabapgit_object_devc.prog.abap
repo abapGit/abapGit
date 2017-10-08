@@ -12,7 +12,7 @@ CLASS lcl_object_devc DEFINITION
     ALIASES:
       mo_files FOR lif_object~mo_files.
     METHODS:
-      constructor IMPORTING is_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
                             iv_language TYPE spras.
   PROTECTED SECTION.
   PRIVATE SECTION.

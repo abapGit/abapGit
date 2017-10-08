@@ -16,7 +16,7 @@ CLASS lcl_objects_activation DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS add_item
-      IMPORTING is_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS activate
@@ -161,7 +161,7 @@ CLASS lcl_objects_files DEFINITION.
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING is_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
                   iv_path TYPE string OPTIONAL,
       add_string
         IMPORTING iv_extra  TYPE clike OPTIONAL
@@ -177,7 +177,7 @@ CLASS lcl_objects_files DEFINITION.
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO lcl_xml_output
                   iv_normalize TYPE sap_bool DEFAULT abap_true
-                  is_metadata  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_metadata OPTIONAL
+                  is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         RAISING   zcx_abapgit_exception,
 * needed since type-check during dynamic call fails even if the object is compatible
       add_xml_from_plugin
@@ -199,7 +199,7 @@ CLASS lcl_objects_files DEFINITION.
                   it_abap  TYPE STANDARD TABLE
         RAISING   zcx_abapgit_exception,
       add
-        IMPORTING is_file TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file,
+        IMPORTING is_file TYPE zif_abapgit_definitions=>ty_file,
       add_raw
         IMPORTING iv_extra TYPE clike OPTIONAL
                   iv_ext   TYPE string
@@ -211,16 +211,16 @@ CLASS lcl_objects_files DEFINITION.
         RETURNING VALUE(rv_data) TYPE xstring
         RAISING   zcx_abapgit_exception,
       get_files
-        RETURNING VALUE(rt_files) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt,
       set_files
-        IMPORTING it_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+        IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt,
       get_accessed_files
-        RETURNING VALUE(rt_files) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt.
+        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
 
   PRIVATE SECTION.
-    DATA: ms_item           TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
-          mt_accessed_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt,
-          mt_files          TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt,
+    DATA: ms_item           TYPE zif_abapgit_definitions=>ty_item,
+          mt_accessed_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          mt_files          TYPE zif_abapgit_definitions=>ty_files_tt,
           mv_path           TYPE string.
 
     METHODS:
@@ -287,7 +287,7 @@ INTERFACE lif_object.
     jump
       RAISING zcx_abapgit_exception,
     get_metadata
-      RETURNING VALUE(rs_metadata) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_metadata,
+      RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
@@ -365,19 +365,19 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     lv_abap = lcl_convert=>xstring_to_string_utf8( lv_data ).
 
-    SPLIT lv_abap AT ZIF_ABAPGIT_DEFINITIONS=>gc_newline INTO TABLE rt_abap.
+    SPLIT lv_abap AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_abap.
 
   ENDMETHOD.                    "read_abap
 
   METHOD add_abap.
 
     DATA: lv_source TYPE string,
-          ls_file   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file.
+          ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
 
-    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY ZIF_ABAPGIT_DEFINITIONS=>gc_newline.
+    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY zif_abapgit_definitions=>gc_newline.
 * when editing files via eg. GitHub web interface it adds a newline at end of file
-    lv_source = lv_source && ZIF_ABAPGIT_DEFINITIONS=>gc_newline.
+    lv_source = lv_source && zif_abapgit_definitions=>gc_newline.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
@@ -390,7 +390,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   METHOD add_string.
 
-    DATA: ls_file TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file.
+    DATA: ls_file TYPE zif_abapgit_definitions=>ty_file.
 
 
     ls_file-path = '/'.
@@ -405,7 +405,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
   METHOD add_xml.
 
     DATA: lv_xml  TYPE string,
-          ls_file TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file.
+          ls_file TYPE zif_abapgit_definitions=>ty_file.
 
 
     lv_xml = io_xml->render( iv_normalize = iv_normalize
@@ -526,7 +526,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
   METHOD add_raw.
 
-    DATA: ls_file TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file.
+    DATA: ls_file TYPE zif_abapgit_definitions=>ty_file.
 
     ls_file-path     = '/'.
     ls_file-data     = iv_data.
@@ -563,20 +563,20 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
     METHODS:
       constructor
         IMPORTING
-          is_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+          is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item-obj_name
-                  i_obj_type TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item-obj_type
+        IMPORTING i_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name
+                  i_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type
         RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
   PROTECTED SECTION.
 
-    DATA: ms_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item     TYPE zif_abapgit_definitions=>ty_item,
           mv_language TYPE spras.
 
     METHODS:
@@ -588,7 +588,7 @@ CLASS lcl_objects_super DEFINITION ABSTRACT.
         RETURNING
           VALUE(rv_changed) TYPE abap_bool,
       get_metadata
-        RETURNING VALUE(rs_metadata) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_metadata,
+        RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
       corr_insert
         IMPORTING iv_package TYPE devclass
         RAISING   zcx_abapgit_exception,
@@ -621,7 +621,7 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
     CLASS-METHODS class_constructor.
 
     METHODS constructor
-      IMPORTING is_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   cx_sy_create_object_error.
 
     INTERFACES lif_object.
@@ -668,7 +668,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
     super->constructor( is_item = is_item
-                        iv_language = ZIF_ABAPGIT_DEFINITIONS=>gc_english ).
+                        iv_language = zif_abapgit_definitions=>gc_english ).
 
 *    determine the responsible plugin
     READ TABLE gt_objtype_map INTO ls_objtype_map
@@ -840,7 +840,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
 
     METHODS serialize_program
       IMPORTING io_xml     TYPE REF TO lcl_xml_output OPTIONAL
-                is_item    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+                is_item    TYPE zif_abapgit_definitions=>ty_item
                 io_files   TYPE REF TO lcl_objects_files
                 iv_program TYPE programm OPTIONAL
                 iv_extra   TYPE clike OPTIONAL
@@ -920,10 +920,10 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
     CLASS-METHODS:
       add_tpool
         IMPORTING it_tpool        TYPE textpool_table
-        RETURNING VALUE(rt_tpool) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool_tt,
+        RETURNING VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt,
       read_tpool
-        IMPORTING it_tpool        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool_tt
-        RETURNING VALUE(rt_tpool) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool_tt.
+        IMPORTING it_tpool        TYPE zif_abapgit_definitions=>ty_tpool_tt
+        RETURNING VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt.
 
   PRIVATE SECTION.
     METHODS:
@@ -2245,49 +2245,49 @@ CLASS lcl_objects DEFINITION FINAL.
              obj     TYPE REF TO lif_object,
              xml     TYPE REF TO lcl_xml_input,
              package TYPE devclass,
-             item    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+             item    TYPE zif_abapgit_definitions=>ty_item,
            END OF ty_deserialization.
 
     TYPES: ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY.
 
     CLASS-METHODS serialize
-      IMPORTING is_item         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
                 iv_language     TYPE spras
                 io_log          TYPE REF TO lcl_log OPTIONAL
-      RETURNING VALUE(rt_files) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt
+      RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS deserialize
       IMPORTING io_repo                  TYPE REF TO lcl_repo
-      RETURNING VALUE(rt_accessed_files) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt
+      RETURNING VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS delete
-      IMPORTING it_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt
+      IMPORTING it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS jump
-      IMPORTING is_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS changed_by
-      IMPORTING is_item        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
       RETURNING VALUE(rv_user) TYPE xubname
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS has_changed_since
-      IMPORTING is_item           TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item           TYPE zif_abapgit_definitions=>ty_item
                 iv_timestamp      TYPE timestamp
       RETURNING VALUE(rv_changed) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS is_supported
-      IMPORTING is_item        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
                 iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
     CLASS-METHODS exists
-      IMPORTING is_item        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
       RETURNING VALUE(rv_bool) TYPE abap_bool.
 
     CLASS-METHODS supported_list
@@ -2296,36 +2296,36 @@ CLASS lcl_objects DEFINITION FINAL.
   PRIVATE SECTION.
 
     CLASS-METHODS check_duplicates
-      IMPORTING it_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt
+      IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS create_object
-      IMPORTING is_item        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
                 iv_language    TYPE spras
-                is_metadata    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_metadata OPTIONAL
+                is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
                 iv_native_only TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS
       prioritize_deser
-        IMPORTING it_results        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt
-        RETURNING VALUE(rt_results) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt.
+        IMPORTING it_results        TYPE zif_abapgit_definitions=>ty_results_tt
+        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
 
     CLASS-METHODS class_name
-      IMPORTING is_item              TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_item
       RETURNING VALUE(rv_class_name) TYPE string.
 
     CLASS-METHODS resolve_ddic
-      CHANGING ct_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt
+      CHANGING ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS warning_overwrite
-      CHANGING ct_results TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_results_tt
+      CHANGING ct_results TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING  zcx_abapgit_exception.
 
     CLASS-METHODS warning_package
-      IMPORTING is_item          TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
                 iv_package       TYPE devclass
       RETURNING VALUE(rv_cancel) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
@@ -2334,14 +2334,14 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING iv_package TYPE devclass.
 
     CLASS-METHODS delete_obj
-      IMPORTING is_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS compare_remote_to_local
       IMPORTING
         io_object TYPE REF TO lif_object
-        it_remote TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_files_tt
-        is_result TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_result
+        it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        is_result TYPE zif_abapgit_definitions=>ty_result
       RAISING
         zcx_abapgit_exception.
 
@@ -2349,10 +2349,10 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING it_objects TYPE ty_deserialization_tt
                 iv_ddic    TYPE abap_bool DEFAULT abap_false
                 iv_descr   TYPE string
-      CHANGING  ct_files   TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signatures_tt
+      CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING   zcx_abapgit_exception.
     CLASS-METHODS resolve_ddls
       CHANGING
-        ct_tadir TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt.
+        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
 ENDCLASS.                    "lcl_object DEFINITION

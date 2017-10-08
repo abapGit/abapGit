@@ -10,7 +10,7 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       get
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
-        RETURNING VALUE(rs_files) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files
+        RETURNING VALUE(rs_files) TYPE zif_abapgit_definitions=>ty_stage_files
         RAISING   zcx_abapgit_exception,
       count
         IMPORTING io_repo         TYPE REF TO lcl_repo_online
@@ -21,9 +21,9 @@ CLASS lcl_stage_logic DEFINITION FINAL.
     CLASS-METHODS:
       remove_ignored
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
-        CHANGING  cs_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files,
+        CHANGING  cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
       remove_identical
-        CHANGING cs_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files.
+        CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
 ENDCLASS.
 
@@ -41,7 +41,7 @@ CLASS lcl_stage_logic IMPLEMENTATION.
 
   METHOD count.
 
-    DATA: ls_files TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_stage_files.
+    DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
     ls_files = get( io_repo ).
 
@@ -63,7 +63,7 @@ CLASS lcl_stage_logic IMPLEMENTATION.
           iv_path     = <ls_remote>-path
           iv_filename = <ls_remote>-filename ) = abap_true.
         DELETE cs_files-remote INDEX lv_index.
-      ELSEIF <ls_remote>-path = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir AND <ls_remote>-filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit.
+      ELSEIF <ls_remote>-path = zif_abapgit_definitions=>gc_root_dir AND <ls_remote>-filename = zif_abapgit_definitions=>gc_dot_abapgit.
         " Remove .abapgit from remotes - it cannot be removed or ignored
         DELETE cs_files-remote INDEX lv_index.
       ENDIF.

@@ -92,7 +92,7 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
         mo_repo->set_dot_abapgit( lo_dot ).
         mo_repo->refresh( ).
 
-        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-go_back.
+        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

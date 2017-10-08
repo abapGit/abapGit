@@ -72,7 +72,7 @@ CLASS lcl_state IMPLEMENTATION.
     ELSEIF cv_prev IS INITIAL.
       cv_prev = iv_cur.
     ELSE.
-      cv_prev = ZIF_ABAPGIT_DEFINITIONS=>gc_state-mixed.
+      cv_prev = zif_abapgit_definitions=>gc_state-mixed.
     ENDIF.
 
   ENDMETHOD.
@@ -93,7 +93,7 @@ CLASS lcl_convert DEFINITION FINAL.
 
     CLASS-METHODS x_to_bitbyte
       IMPORTING iv_x              TYPE x
-      RETURNING VALUE(rv_bitbyte) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_bitbyte.
+      RETURNING VALUE(rv_bitbyte) TYPE zif_abapgit_definitions=>ty_bitbyte.
 
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING iv_string         TYPE string
@@ -254,14 +254,14 @@ CLASS lcl_hash DEFINITION FINAL.
       RETURNING VALUE(rv_checksum) TYPE ty_adler32.
 
     CLASS-METHODS sha1
-      IMPORTING iv_type        TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_type
+      IMPORTING iv_type        TYPE zif_abapgit_definitions=>ty_type
                 iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS sha1_raw
       IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sha1
+      RETURNING VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_hash DEFINITION
@@ -593,7 +593,7 @@ CLASS lcl_diff DEFINITION FINAL.
              update TYPE i,
            END OF ty_count.
 
-    DATA mt_beacons TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_string_tt READ-ONLY.
+    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -658,8 +658,8 @@ CLASS lcl_diff IMPLEMENTATION.
     lv_new = lcl_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = lcl_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_new AT ZIF_ABAPGIT_DEFINITIONS=>gc_newline INTO TABLE et_new.
-    SPLIT lv_old AT ZIF_ABAPGIT_DEFINITIONS=>gc_newline INTO TABLE et_old.
+    SPLIT lv_new AT zif_abapgit_definitions=>gc_newline INTO TABLE et_new.
+    SPLIT lv_old AT zif_abapgit_definitions=>gc_newline INTO TABLE et_old.
 
   ENDMETHOD.                    "unpack
 

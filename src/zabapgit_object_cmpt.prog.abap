@@ -8,7 +8,7 @@ CLASS lcl_object_cmpt DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       constructor
         IMPORTING
-          is_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+          is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
     INTERFACES lif_object.

@@ -65,7 +65,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ei_page      = ei_page
           ev_state     = ev_state ).
 
-      IF ev_state <> ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-not_handled.
+      IF ev_state <> zif_abapgit_definitions=>gc_event_state-not_handled.
         RETURN.
       ENDIF.
     ENDIF.
@@ -80,10 +80,10 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
-        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
-        ev_state = ZIF_ABAPGIT_DEFINITIONS=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.  "on_event
@@ -92,7 +92,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: ls_tadir TYPE tadir,
           lv_user  TYPE xubname,
-          ls_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
+          ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_tadir = lcl_popups=>popup_object( ).
@@ -179,21 +179,21 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.
 
-    lo_advsub->add( iv_txt = 'Database util'    iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_db ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-zip_package ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-zip_transport ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Object to files'  iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-zip_object ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Database util'    iv_act = zif_abapgit_definitions=>gc_action-go_db ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = zif_abapgit_definitions=>gc_action-zip_package ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = zif_abapgit_definitions=>gc_action-zip_transport ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Object to files'  iv_act = zif_abapgit_definitions=>gc_action-zip_object ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Page playground'  iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_playground ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Debug info'       iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_debuginfo ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Settings'         iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_settings ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Page playground'  iv_act = zif_abapgit_definitions=>gc_action-go_playground ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Debug info'       iv_act = zif_abapgit_definitions=>gc_action-go_debuginfo ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Settings'         iv_act = zif_abapgit_definitions=>gc_action-go_settings ) ##NO_TEXT.
 
-    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-abapgit_wiki ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = zif_abapgit_definitions=>gc_action-abapgit_wiki ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = '+ Clone'            iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_clone ) ##NO_TEXT.
-    ro_menu->add( iv_txt = '+ Offline'          iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-repo_newoffline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'            iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_explore ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Clone'            iv_act = zif_abapgit_definitions=>gc_action-repo_clone ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Offline'          iv_act = zif_abapgit_definitions=>gc_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'            iv_act = zif_abapgit_definitions=>gc_action-go_explore ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Advanced'           io_sub = lo_advsub ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Help'               io_sub = lo_helpsub ) ##NO_TEXT.
@@ -276,7 +276,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    lcl_html=>a( iv_txt = 'tutorial' iv_act = ZIF_ABAPGIT_DEFINITIONS=>gc_action-go_tutorial )
+                    lcl_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).

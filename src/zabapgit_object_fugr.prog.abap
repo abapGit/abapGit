@@ -304,7 +304,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           ls_progdir   TYPE ty_progdir,
           lt_includes  TYPE rso_t_objnm,
           lt_tpool     TYPE textpool_table,
-          lt_tpool_ext TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool_tt,
+          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
           lt_source    TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.

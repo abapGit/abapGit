@@ -49,7 +49,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lo_repo                   TYPE REF TO lcl_repo_online,
           lv_answer                 TYPE c LENGTH 1,
-          lt_unnecessary_local_objs TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tadir_tt.
+          lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -201,7 +201,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD commit.
 
-    DATA: ls_comment TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_comment,
+    DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
           lo_user    TYPE REF TO lcl_persistence_user.
 
     lo_user = lcl_app=>user( ).
@@ -228,7 +228,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     IF NOT is_commit-body IS INITIAL.
       CONCATENATE ls_comment-comment '' is_commit-body
-        INTO ls_comment-comment SEPARATED BY ZIF_ABAPGIT_DEFINITIONS=>gc_newline.
+        INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>gc_newline.
     ENDIF.
 
     io_repo->push( is_comment = ls_comment

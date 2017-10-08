@@ -350,8 +350,8 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
     CLEAR es_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-    REPLACE ALL OCCURRENCES OF ZIF_ABAPGIT_DEFINITIONS=>gc_crlf    IN lv_string WITH lc_replace.
-    REPLACE ALL OCCURRENCES OF ZIF_ABAPGIT_DEFINITIONS=>gc_newline IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
     lt_fields = parse_fields_upper_case_name( lv_string ).
 
     get_field( EXPORTING name = 'COMMITTER_NAME'  it = lt_fields CHANGING cv = es_fields ).
@@ -363,7 +363,7 @@ CLASS lcl_html_action_utils IMPLEMENTATION.
 
     ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <body>.
     ASSERT <body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH ZIF_ABAPGIT_DEFINITIONS=>gc_newline.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH zif_abapgit_definitions=>gc_newline.
 
   ENDMETHOD.                    "parse_commit_request
 

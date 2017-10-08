@@ -55,8 +55,8 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<p>abapGit version: { ZIF_ABAPGIT_DEFINITIONS=>gc_abap_version }</p>| ).
-    ro_html->add( |<p>XML version:     { ZIF_ABAPGIT_DEFINITIONS=>gc_xml_version }</p>| ).
+    ro_html->add( |<p>abapGit version: { zif_abapgit_definitions=>gc_abap_version }</p>| ).
+    ro_html->add( |<p>XML version:     { zif_abapgit_definitions=>gc_xml_version }</p>| ).
     ro_html->add( |<p>GUI version:     { lv_gui_version }</p>| ).
     ro_html->add( |<p>LCL_TIME:        { zcl_abapgit_time=>get( ) }</p>| ).
     ro_html->add( |<p>SY time:         { sy-datum } { sy-uzeit } { sy-tzone }</p>| ).
@@ -67,7 +67,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     DATA: lt_objects TYPE STANDARD TABLE OF ko100,
           lv_list    TYPE string,
-          ls_item    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
+          ls_item    TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS <object> LIKE LINE OF lt_objects.
 

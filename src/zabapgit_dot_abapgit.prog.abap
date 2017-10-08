@@ -65,7 +65,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
 *      set_master_language
 *        IMPORTING iv_language TYPE spras,
       get_signature
-        RETURNING VALUE(rs_signature) TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_file_signature
+        RETURNING VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -209,7 +209,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
     lv_name = iv_path && iv_filename.
 
     CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
-    CONCATENATE '/' ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit INTO lv_dot.
+    CONCATENATE '/' zif_abapgit_definitions=>gc_dot_abapgit INTO lv_dot.
 
     LOOP AT ms_data-ignore INTO lv_ignore.
       FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.
@@ -259,9 +259,9 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD get_signature.
 
-    rs_signature-path     = ZIF_ABAPGIT_DEFINITIONS=>gc_root_dir.
-    rs_signature-filename = ZIF_ABAPGIT_DEFINITIONS=>gc_dot_abapgit.
-    rs_signature-sha1     = lcl_hash=>sha1( iv_type = ZIF_ABAPGIT_DEFINITIONS=>gc_type-blob
+    rs_signature-path     = zif_abapgit_definitions=>gc_root_dir.
+    rs_signature-filename = zif_abapgit_definitions=>gc_dot_abapgit.
+    rs_signature-sha1     = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
                                             iv_data = serialize( ) ).
 
   ENDMETHOD. "get_signature

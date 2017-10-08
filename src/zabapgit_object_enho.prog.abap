@@ -28,12 +28,12 @@ CLASS lcl_object_enho_wdyc DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item  TYPE zif_abapgit_definitions=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
@@ -141,12 +141,12 @@ CLASS lcl_object_enho_wdyn DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item  TYPE zif_abapgit_definitions=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
@@ -434,12 +434,12 @@ CLASS lcl_object_enho_badi DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item  TYPE zif_abapgit_definitions=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_badi DEFINITION
@@ -557,7 +557,7 @@ CLASS lcl_object_enho_hook DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item  TYPE zif_abapgit_definitions=>ty_item
         io_files TYPE REF TO lcl_objects_files.
 
     INTERFACES: lif_object_enho.
@@ -570,7 +570,7 @@ CLASS lcl_object_enho_hook DEFINITION.
 
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
-    DATA: ms_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
+    DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
     DATA: mo_files TYPE REF TO lcl_objects_files.
 
     METHODS hook_impl_deserialize
@@ -765,12 +765,12 @@ CLASS lcl_object_enho_intf DEFINITION.
     METHODS:
       constructor
         IMPORTING
-          is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+          is_item  TYPE zif_abapgit_definitions=>ty_item
           io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_interface DEFINITION
@@ -870,12 +870,12 @@ CLASS lcl_object_enho_class DEFINITION.
     METHODS:
       constructor
         IMPORTING
-          is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+          is_item  TYPE zif_abapgit_definitions=>ty_item
           io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item.
+    DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
     DATA: mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_class DEFINITION
@@ -1010,12 +1010,12 @@ CLASS lcl_object_enho_fugr DEFINITION.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item  TYPE zif_abapgit_definitions=>ty_item
         io_files TYPE REF TO lcl_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item,
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
           mo_files TYPE REF TO lcl_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION

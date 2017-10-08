@@ -14,7 +14,7 @@ CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
     ALIASES mo_files FOR lif_object~mo_files.
     METHODS constructor
       IMPORTING
-        is_item     TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_item
+        is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
   PROTECTED SECTION.
@@ -197,9 +197,9 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
     DATA: ls_vseoclass    TYPE vseoclass,
           lt_tpool        TYPE textpool_table,
-          lt_descriptions TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+          lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
-          lt_sotr         TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
+          lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
           lt_lines        TYPE tlinetab.
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -279,7 +279,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD deserialize_sotr.
     "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt.
+    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
                   CHANGING cg_data = lt_sotr ).
@@ -316,7 +316,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
   METHOD deserialize_tpool.
 
     DATA: lv_clsname   TYPE seoclsname,
-          lt_tpool_ext TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_tpool_tt,
+          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
           lt_tpool     TYPE textpool_table.
 
 
@@ -345,7 +345,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
           lt_local_implementations TYPE seop_source_string,
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
-          lt_descriptions          TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_seocompotx_tt,
+          lt_descriptions          TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
           ls_class_key             TYPE seoclskey.
 
 
@@ -484,7 +484,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~create_sotr.
-    DATA: lt_sotr    TYPE ZIF_ABAPGIT_DEFINITIONS=>ty_sotr_tt,
+    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt,
           lt_objects TYPE sotr_objects,
           ls_paket   TYPE sotr_pack,
           lv_object  LIKE LINE OF lt_objects.
