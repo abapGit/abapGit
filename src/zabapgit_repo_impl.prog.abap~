@@ -322,6 +322,40 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " delete_initial_online_repo
 
+<<<<<<< HEAD
+||||||| merged common ancestors
+  METHOD delete_unnecessary_local_objs.
+
+    DATA: lt_tadir TYPE lif_defs=>ty_tadir_tt.
+
+    lt_tadir = get_unnecessary_local_objs( ).
+
+    IF lines( lt_tadir ) > 0.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+  ENDMETHOD. "  delete_unneccessary_local_objs.
+
+
+=======
+  METHOD delete_unnecessary_local_objs.
+
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+    lt_tadir = get_unnecessary_local_objs( ).
+
+    IF lines( lt_tadir ) > 0.
+
+      lcl_objects=>delete( lt_tadir ).
+
+    ENDIF.
+
+  ENDMETHOD. "  delete_unneccessary_local_objs.
+
+
+>>>>>>> 4c0d697a9117aac2fb18510e583baa44713b6c8c
   METHOD get_unnecessary_local_objs.
 
     DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,

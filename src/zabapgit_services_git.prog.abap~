@@ -49,9 +49,15 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lo_repo                   TYPE REF TO lcl_repo_online,
           lv_answer                 TYPE c LENGTH 1,
-          lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
+<<<<<<< HEAD
+          lt_unnecessary_local_objs TYPE lif_defs=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
           lt_columns                TYPE stringtab.
+||||||| merged common ancestors
+          lt_unnecessary_local_objs TYPE lif_defs=>ty_tadir_tt.
+=======
+          lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt.
+>>>>>>> 4c0d697a9117aac2fb18510e583baa44713b6c8c
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 

@@ -77,15 +77,39 @@ CLASS lcl_popups DEFINITION FINAL.
                   lcx_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
+<<<<<<< HEAD
       popup_to_select_from_list
         IMPORTING it_list               TYPE STANDARD TABLE
                   i_header_text         TYPE csequence
                   i_select_column_text  TYPE csequence
                   it_columns_to_display TYPE stringtab
-        EXPORTING VALUE(et_list)        TYPE STANDARD TABLE.
+        EXPORTING VALUE(et_list)        TYPE STANDARD TABLE
+||||||| merged common ancestors
+      popup_select_obj_overwrite
+        IMPORTING it_list TYPE lif_defs=>ty_results_tt
+        RETURNING VALUE(rt_list) TYPE lif_defs=>ty_results_tt
+=======
+      popup_select_obj_overwrite
+        IMPORTING it_list TYPE zif_abapgit_definitions=>ty_results_tt
+        RETURNING VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_results_tt
+>>>>>>> 4c0d697a9117aac2fb18510e583baa44713b6c8c
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
+
+    TYPES: BEGIN OF t_popup_select_list,
+<<<<<<< HEAD
+             selected TYPE flag.
+        INCLUDE TYPE lif_defs=>ty_result.
+||||||| merged common ancestors
+        selected TYPE flag.
+      INCLUDE TYPE lif_defs=>ty_result.
+=======
+        selected TYPE flag.
+      INCLUDE TYPE zif_abapgit_definitions=>ty_result.
+>>>>>>> 4c0d697a9117aac2fb18510e583baa44713b6c8c
+    TYPES END OF t_popup_select_list.
 
     CONSTANTS: co_fieldname_selected TYPE lvc_fname VALUE `SELECTED`.
 

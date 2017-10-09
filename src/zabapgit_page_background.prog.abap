@@ -111,7 +111,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
   METHOD build_menu.
     CREATE OBJECT ro_menu.
     ro_menu->add( iv_txt = 'Run background logic'
-                  iv_act = lif_defs=>gc_action-go_background_run ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>gc_action-go_background_run ) ##NO_TEXT.
   ENDMETHOD. "build_menu
 
   METHOD lif_gui_page~on_event.
@@ -119,11 +119,11 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     DATA ls_bg_task TYPE lcl_persist_background=>ty_background.
 
     CASE iv_action.
-      WHEN lif_defs=>gc_action-bg_update.
+      WHEN zif_abapgit_definitions=>gc_action-bg_update.
         ls_bg_task     = lcl_html_action_utils=>decode_bg_update( iv_getdata ).
         ls_bg_task-key = mv_key.
         lcl_services_bkg=>update_task( ls_bg_task ).
-        ev_state = lif_defs=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
@@ -182,7 +182,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     ro_html->add( '<br>' ).
 
     ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
-    ro_html->add( |<form method="get" action="sapevent:{ lif_defs=>gc_action-bg_update }">| ).
+    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>gc_action-bg_update }">| ).
     ro_html->add( '<input type="radio" name="method" value="nothing"' &&
       lv_nothing && '>Do nothing<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="method" value="push"' &&

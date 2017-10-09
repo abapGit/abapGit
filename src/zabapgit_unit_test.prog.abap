@@ -168,9 +168,9 @@ CLASS ltcl_dangerous IMPLEMENTATION.
   METHOD run.
 
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
-          lt_tadir   TYPE lif_defs=>ty_tadir_tt,
+          lt_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_msg     TYPE string,
-          lt_results TYPE lif_defs=>ty_results_tt,
+          lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_types   TYPE lcl_objects=>ty_types_tt.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
@@ -295,8 +295,8 @@ CLASS ltcl_diff IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
 
-    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY lif_defs=>gc_newline.
-    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY lif_defs=>gc_newline.
+    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY zif_abapgit_definitions=>gc_newline.
+    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY zif_abapgit_definitions=>gc_newline.
 
     lv_xnew = lcl_convert=>string_to_xstring_utf8( lv_new ).
     lv_xold = lcl_convert=>string_to_xstring_utf8( lv_old ).
@@ -512,7 +512,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     <ls_expanded>-path  = iv_path.
     <ls_expanded>-name  = iv_name.
     <ls_expanded>-sha1  = 'a'.
-    <ls_expanded>-chmod = lif_defs=>gc_chmod-file.
+    <ls_expanded>-chmod = zif_abapgit_definitions=>gc_chmod-file.
 
   ENDMETHOD.
 
@@ -882,7 +882,7 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
   METHOD is_supported.
 
-    DATA: ls_item      TYPE lif_defs=>ty_item,
+    DATA: ls_item      TYPE zif_abapgit_definitions=>ty_item,
           lv_supported TYPE abap_bool,
           lt_types     TYPE lcl_objects=>ty_types_tt.
 
@@ -908,7 +908,7 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
   METHOD not_exist.
 
-    DATA: ls_item   TYPE lif_defs=>ty_item,
+    DATA: ls_item   TYPE zif_abapgit_definitions=>ty_item,
           lv_exists TYPE abap_bool,
           lt_types  TYPE lcl_objects=>ty_types_tt.
 
@@ -968,7 +968,7 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
 
   METHOD add.
 
-    CONCATENATE mv_str iv_string lif_defs=>gc_newline INTO mv_str.
+    CONCATENATE mv_str iv_string zif_abapgit_definitions=>gc_newline INTO mv_str.
 
   ENDMETHOD.
 
@@ -1087,7 +1087,7 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
 
   PRIVATE SECTION.
 
-    CONSTANTS: c_sha TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
+    CONSTANTS: c_sha TYPE zif_abapgit_definitions=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
     METHODS:
       tree FOR TESTING
@@ -1112,7 +1112,7 @@ CLASS ltcl_git_pack DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FI
     METHODS:
       object_blob
         IMPORTING iv_data          TYPE xstring
-        RETURNING VALUE(rs_object) TYPE lif_defs=>ty_object
+        RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "test DEFINITION
@@ -1129,7 +1129,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     DATA: lv_result TYPE xstring.
 
     lv_result = lcl_git_pack=>type_and_length(
-      iv_type   = lif_defs=>gc_type-commit
+      iv_type   = zif_abapgit_definitions=>gc_type-commit
       iv_length = 100 ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -1143,7 +1143,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     DATA: lv_result TYPE xstring.
 
     lv_result = lcl_git_pack=>type_and_length(
-      iv_type   = lif_defs=>gc_type-blob
+      iv_type   = zif_abapgit_definitions=>gc_type-blob
       iv_length = 90000 ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -1160,12 +1160,12 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = lif_defs=>gc_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_definitions=>gc_chmod-file.
     <ls_tree>-name  = 'b.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = lif_defs=>gc_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_definitions=>gc_chmod-file.
     <ls_tree>-name  = 'a.txt'.
     <ls_tree>-sha1  = '0123'.
 
@@ -1188,12 +1188,12 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = lif_defs=>gc_chmod-file.
+    <ls_tree>-chmod = zif_abapgit_definitions=>gc_chmod-file.
     <ls_tree>-name  = 'foo.txt'.
     <ls_tree>-sha1  = '0123'.
 
     APPEND INITIAL LINE TO lt_tree ASSIGNING <ls_tree>.
-    <ls_tree>-chmod = lif_defs=>gc_chmod-dir.
+    <ls_tree>-chmod = zif_abapgit_definitions=>gc_chmod-dir.
     <ls_tree>-name  = 'foo'.
     <ls_tree>-sha1  = '0123'.
 
@@ -1211,22 +1211,22 @@ CLASS ltcl_git_pack IMPLEMENTATION.
   METHOD pack_multiple.
 
     CONSTANTS: lc_data TYPE x LENGTH 15 VALUE '123456789ABCDEF545794254754554',
-               lc_sha  TYPE lif_defs=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
+               lc_sha  TYPE zif_abapgit_definitions=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
 
-    DATA: lt_objects TYPE lif_defs=>ty_objects_tt,
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
           lt_nodes   TYPE lcl_git_pack=>ty_nodes_tt,
           ls_node    LIKE LINE OF lt_nodes,
           ls_commit  TYPE lcl_git_pack=>ty_commit,
-          lt_result  TYPE lif_defs=>ty_objects_tt,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
           lv_data    TYPE xstring.
 
 
 * blob
     lv_data = lc_data.
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob iv_data = lv_data ).
-    ls_object-type = lif_defs=>gc_type-blob.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = lv_data ).
+    ls_object-type = zif_abapgit_definitions=>gc_type-blob.
     ls_object-data = lv_data.
     APPEND ls_object TO lt_objects.
 
@@ -1239,8 +1239,8 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     ls_commit-body      = 'body'.
     lv_data = lcl_git_pack=>encode_commit( ls_commit ).
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-commit iv_data = lv_data ).
-    ls_object-type = lif_defs=>gc_type-commit.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-commit iv_data = lv_data ).
+    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
     ls_object-data = lv_data.
     APPEND ls_object TO lt_objects.
 
@@ -1252,8 +1252,8 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     APPEND ls_node TO lt_nodes.
     lv_data = lcl_git_pack=>encode_tree( lt_nodes ).
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-tree iv_data = lv_data ).
-    ls_object-type = lif_defs=>gc_type-tree.
+    ls_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-tree iv_data = lv_data ).
+    ls_object-type = zif_abapgit_definitions=>gc_type-tree.
     ls_object-data = lv_data.
     APPEND ls_object TO lt_objects.
 
@@ -1270,9 +1270,9 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
   METHOD object_blob.
 
-    rs_object-sha1 = lcl_hash=>sha1( iv_type = lif_defs=>gc_type-blob
+    rs_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
                                      iv_data = iv_data ).
-    rs_object-type = lif_defs=>gc_type-blob.
+    rs_object-type = zif_abapgit_definitions=>gc_type-blob.
     rs_object-data = iv_data.
 
   ENDMETHOD.                    "object_blob
@@ -1281,9 +1281,9 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
     CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
 
-    DATA: lt_objects TYPE lif_defs=>ty_objects_tt,
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
-          lt_result  TYPE lif_defs=>ty_objects_tt,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
           lv_data    TYPE xstring.
 
 
@@ -1306,10 +1306,10 @@ CLASS ltcl_git_pack IMPLEMENTATION.
 
     CONSTANTS: lc_data TYPE x LENGTH 8 VALUE '0123456789ABCDEF'.
 
-    DATA: lt_objects TYPE lif_defs=>ty_objects_tt,
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
           ls_object  LIKE LINE OF lt_objects,
           lv_xstring TYPE xstring,
-          lt_result  TYPE lif_defs=>ty_objects_tt,
+          lt_result  TYPE zif_abapgit_definitions=>ty_objects_tt,
           lv_data    TYPE xstring.
 
 
@@ -1339,7 +1339,7 @@ CLASS ltcl_git_pack IMPLEMENTATION.
           lt_result TYPE lcl_git_pack=>ty_nodes_tt.
 
     CLEAR ls_node.
-    ls_node-chmod = lif_defs=>gc_chmod-file.
+    ls_node-chmod = zif_abapgit_definitions=>gc_chmod-file.
     ls_node-name = 'foobar.txt'.
     ls_node-sha1 = c_sha.
     APPEND ls_node TO lt_nodes.
@@ -1386,7 +1386,9 @@ CLASS ltcl_git_pack IMPLEMENTATION.
     ls_commit-parent    = c_sha.
     ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
     ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
-    ls_commit-body      = 'very informative' && lif_defs=>gc_newline && lif_defs=>gc_newline.
+    ls_commit-body      = 'very informative'
+                        && zif_abapgit_definitions=>gc_newline
+                        && zif_abapgit_definitions=>gc_newline.
 
     lv_data = lcl_git_pack=>encode_commit( ls_commit ).
     ls_result = lcl_git_pack=>decode_commit( lv_data ).
@@ -1430,8 +1432,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( 'hello world' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && lif_defs=>gc_newline &&
-             '  hello world' && lif_defs=>gc_newline &&
+    lv_exp = '<td>' && zif_abapgit_definitions=>gc_newline &&
+             '  hello world' && zif_abapgit_definitions=>gc_newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1448,8 +1450,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '<input name="comment" type="text">' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && lif_defs=>gc_newline &&
-             '  <input name="comment" type="text">' && lif_defs=>gc_newline &&
+    lv_exp = '<td>' && zif_abapgit_definitions=>gc_newline &&
+             '  <input name="comment" type="text">' && zif_abapgit_definitions=>gc_newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1466,8 +1468,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '<textarea name="body" rows="10" cols="72"></textarea>' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && lif_defs=>gc_newline &&
-             '  <textarea name="body" rows="10" cols="72"></textarea>' && lif_defs=>gc_newline &&
+    lv_exp = '<td>' && zif_abapgit_definitions=>gc_newline &&
+             '  <textarea name="body" rows="10" cols="72"></textarea>' && zif_abapgit_definitions=>gc_newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1484,8 +1486,8 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( 'foo<br>bar' ).
     mo_html->add( '</td>' ).
 
-    lv_exp = '<td>' && lif_defs=>gc_newline &&
-             '  foo<br>bar' && lif_defs=>gc_newline &&
+    lv_exp = '<td>' && zif_abapgit_definitions=>gc_newline &&
+             '  foo<br>bar' && zif_abapgit_definitions=>gc_newline &&
              '</td>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1505,11 +1507,11 @@ CLASS ltcl_html IMPLEMENTATION.
     mo_html->add( '}' ).
     mo_html->add( '</style>' ).
 
-    lv_exp = '<style type="text/css">' && lif_defs=>gc_newline &&
-             '  .class1 { color: red }' && lif_defs=>gc_newline &&
-             '  .class2 {' && lif_defs=>gc_newline &&
-             '    color: red' && lif_defs=>gc_newline &&
-             '  }' && lif_defs=>gc_newline &&
+    lv_exp = '<style type="text/css">' && zif_abapgit_definitions=>gc_newline &&
+             '  .class1 { color: red }' && zif_abapgit_definitions=>gc_newline &&
+             '  .class2 {' && zif_abapgit_definitions=>gc_newline &&
+             '    color: red' && zif_abapgit_definitions=>gc_newline &&
+             '  }' && zif_abapgit_definitions=>gc_newline &&
              '</style>'.
 
     cl_abap_unit_assert=>assert_equals(
@@ -1532,7 +1534,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS:
       check
-        IMPORTING is_item TYPE lif_defs=>ty_item
+        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
       serialize_enqu FOR TESTING RAISING zcx_abapgit_exception,
@@ -1559,7 +1561,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_enqu.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'ENQU'.
@@ -1571,7 +1573,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_shlp.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'SHLP'.
@@ -1583,7 +1585,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_view.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'VIEW'.
@@ -1595,7 +1597,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_tabl.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'TABL'.
@@ -1607,7 +1609,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_auth.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'AUTH'.
@@ -1619,7 +1621,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_clas.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'CLAS'.
@@ -1631,7 +1633,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_doma.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'DOMA'.
@@ -1643,7 +1645,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_dtel.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'DTEL'.
@@ -1655,7 +1657,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_fugr.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'FUGR'.
@@ -1667,7 +1669,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_msag.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'MSAG'.
@@ -1679,7 +1681,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_prog.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'PROG'.
@@ -1691,7 +1693,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_tran.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'TRAN'.
@@ -1703,7 +1705,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD serialize_ttyp.
 
-    DATA: ls_item  TYPE lif_defs=>ty_item.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
     ls_item-obj_type = 'TTYP'.
@@ -1715,10 +1717,10 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: lt_files TYPE lif_defs=>ty_files_tt.
+    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
     lt_files = lcl_objects=>serialize( is_item     = is_item
-                                       iv_language = lif_defs=>gc_english ).
+                                       iv_language = zif_abapgit_definitions=>gc_english ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -2217,11 +2219,11 @@ CLASS ltcl_file_status IMPLEMENTATION.
 
   METHOD calculate_status.
 
-    DATA: lt_local       TYPE lif_defs=>ty_files_item_tt,
-          lt_remote      TYPE lif_defs=>ty_files_tt,
-          lt_state       TYPE lif_defs=>ty_file_signatures_tt,
-          lt_results     TYPE lif_defs=>ty_results_tt,
-          lt_results_exp TYPE lif_defs=>ty_results_tt,
+    DATA: lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_state       TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lt_results     TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_results_exp TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_dot         TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
@@ -2324,7 +2326,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: lt_results TYPE lif_defs=>ty_results_tt,
+    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_log     TYPE REF TO lcl_log.
 
     FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.

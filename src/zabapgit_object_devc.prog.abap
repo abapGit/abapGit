@@ -12,7 +12,7 @@ CLASS lcl_object_devc DEFINITION
     ALIASES:
       mo_files FOR lif_object~mo_files.
     METHODS:
-      constructor IMPORTING is_item     TYPE lif_defs=>ty_item
+      constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
                             iv_language TYPE spras.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -85,6 +85,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           li_usage           TYPE REF TO if_package_permission_to_use,
           ls_usage_data_sign TYPE scomppsign,
           ls_save_sign       TYPE paksavsign.
+
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
 
     mv_local_devclass = iv_package.
@@ -294,6 +295,8 @@ CLASS lcl_object_devc IMPLEMENTATION.
           ls_usage_data   TYPE scomppdtln,
           li_usage        TYPE REF TO if_package_permission_to_use.
 
+    FIELD-SYMBOLS: <field> TYPE any.
+
     li_package = get_package( ).
     IF li_package IS NOT BOUND.
       zcx_abapgit_exception=>raise( |Could not find package to serialize.| ).
@@ -325,8 +328,14 @@ CLASS lcl_object_devc IMPLEMENTATION.
     CLEAR: ls_package_data-comp_text,
            ls_package_data-dlvu_text,
            ls_package_data-translation_depth_text,
-           ls_package_data-translation_graph_depth_text,
            ls_package_data-layer_text.
+
+    ASSIGN COMPONENT 'TRANSLATION_GRAPH_DEPTH_TEXT'
+           OF STRUCTURE ls_package_data
+           TO <field>.
+    IF sy-subrc = 0.
+      CLEAR: <field>.
+    ENDIF.
 
     " Clear things related to local installation package
     CLEAR: ls_package_data-namespace,
@@ -334,8 +343,14 @@ CLASS lcl_object_devc IMPLEMENTATION.
            ls_package_data-pdevclass.
 
     " Not usable on customer systems
-    CLEAR: ls_package_data-translation_depth,
-           ls_package_data-translation_graph_depth.
+    CLEAR: ls_package_data-translation_depth.
+
+    ASSIGN COMPONENT 'TRANSLATION_GRAPH_DEPTH'
+           OF STRUCTURE ls_package_data
+           TO <field>.
+    IF sy-subrc = 0.
+      CLEAR: <field>.
+    ENDIF.
 
     CLEAR: ls_package_data-korrflag.
 

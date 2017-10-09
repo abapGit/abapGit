@@ -132,8 +132,20 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
                   io_stage   TYPE REF TO lcl_stage
         RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
-        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>TY_TADIR_TT
+<<<<<<< HEAD
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE LIF_DEFS=>TY_TADIR_TT
         RAISING   zcx_abapgit_exception.
+||||||| merged common ancestors
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE LIF_DEFS=>TY_TADIR_TT
+        RAISING   zcx_abapgit_exception,
+      delete_unnecessary_local_objs
+        RAISING   zcx_abapgit_exception lcx_cancel.
+=======
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>TY_TADIR_TT
+        RAISING   zcx_abapgit_exception,
+      delete_unnecessary_local_objs
+        RAISING   zcx_abapgit_exception lcx_cancel.
+>>>>>>> 4c0d697a9117aac2fb18510e583baa44713b6c8c
 
   PRIVATE SECTION.
     DATA:
