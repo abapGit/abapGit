@@ -34,10 +34,11 @@ CLASS lcl_objects IMPLEMENTATION.
       "all returned objects will be overwritten
       lcl_popups=>popup_to_select_from_list(
         EXPORTING
-          it_list = lt_results_overwrite
-          i_text  = |The following Objects have been modified locally. Select the Objects which should be overwritten.|
+          it_list              = lt_results_overwrite
+          i_header_text        = |The following Objects have been modified locally. Select the Objects which should be overwritten.|
+          i_select_column_text = 'Overwrite?'
         IMPORTING
-          et_list = lt_confirmed_overwrite ).
+          et_list              = lt_confirmed_overwrite ).
 
       LOOP AT lt_results_overwrite ASSIGNING <ls_result>.
         READ TABLE lt_confirmed_overwrite TRANSPORTING NO FIELDS

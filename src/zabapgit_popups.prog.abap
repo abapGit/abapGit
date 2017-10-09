@@ -78,9 +78,10 @@ CLASS lcl_popups DEFINITION FINAL.
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_to_select_from_list
-        IMPORTING it_list        TYPE STANDARD TABLE
-                  i_text         TYPE csequence
-        EXPORTING VALUE(et_list) TYPE STANDARD TABLE
+        IMPORTING it_list              TYPE STANDARD TABLE
+                  i_header_text        TYPE csequence
+                  i_select_column_text TYPE csequence
+        EXPORTING VALUE(et_list)       TYPE STANDARD TABLE
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -91,7 +92,6 @@ CLASS lcl_popups DEFINITION FINAL.
         INCLUDE TYPE lif_defs=>ty_result.
     TYPES END OF t_popup_select_list.
 
-    TYPES: t_popup_select_list_tt TYPE STANDARD TABLE OF t_popup_select_list WITH DEFAULT KEY.
     CONSTANTS: co_fieldname_selected TYPE lvc_fname VALUE `SELECTED`.
 
     CLASS-DATA:
@@ -100,10 +100,6 @@ CLASS lcl_popups DEFINITION FINAL.
       mo_table_descr       TYPE REF TO cl_abap_tabledescr.
 
     CLASS-METHODS:
-      create_new_table
-        IMPORTING
-          it_data TYPE STANDARD TABLE,
-
       add_field
         IMPORTING iv_tabname    TYPE sval-tabname
                   iv_fieldname  TYPE sval-fieldname
@@ -112,16 +108,22 @@ CLASS lcl_popups DEFINITION FINAL.
                   iv_field_attr TYPE sval-field_attr DEFAULT ''
         CHANGING  ct_fields     TYPE ty_sval_tt,
 
-      on_select_list_link_click
-            FOR EVENT link_click OF cl_salv_events_table
+      create_new_table
         IMPORTING
-            !row
-            !column,
+          it_list TYPE STANDARD TABLE,
 
-      on_select_list_function_click
-            FOR EVENT added_function OF cl_salv_events_table
+      get_selected_rows
+        EXPORTING
+          et_list TYPE INDEX TABLE,
+
+      on_select_list_link_click FOR EVENT link_click OF cl_salv_events_table
         IMPORTING
-            !e_salv_function.
+            row
+            column,
+
+      on_select_list_function_click FOR EVENT added_function OF cl_salv_events_table
+        IMPORTING
+            e_salv_function.
 
 
 ENDCLASS.
@@ -742,17 +744,13 @@ CLASS lcl_popups IMPLEMENTATION.
       lt_columns      TYPE salv_t_column_ref,
       ls_column       TYPE salv_s_column_ref,
       lo_column       TYPE REF TO cl_salv_column_list,
-      lo_table_header TYPE REF TO cl_salv_form_text,
-      lv_condition    TYPE string,
-      lr_exporting    TYPE REF TO data.
+      lo_table_header TYPE REF TO cl_salv_form_text.
 
-    FIELD-SYMBOLS: <ls_list> TYPE any,
-                   <table>   TYPE STANDARD TABLE,
-                   <ls_exp>  TYPE any.
+    FIELD-SYMBOLS: <table> TYPE STANDARD TABLE.
 
     CLEAR: et_list.
 
-    create_new_table( it_data = it_list ).
+    create_new_table( it_list = it_list ).
 
     ASSIGN mr_table->* TO <table>.
     ASSERT sy-subrc = 0.
@@ -776,7 +774,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
         CREATE OBJECT lo_table_header
           EXPORTING
-            text = i_text.
+            text = i_header_text.
 
         mo_select_list_popup->set_top_of_list( lo_table_header ).
 
@@ -792,9 +790,9 @@ CLASS lcl_popups IMPLEMENTATION.
               lo_column ?= ls_column-r_column.
               lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
               lo_column->set_output_length( 20 ).
-              lo_column->set_short_text( 'Overwrite?' ).
-              lo_column->set_medium_text( 'Overwr. Lcl Object?' ).
-              lo_column->set_long_text( 'Overwrite Local Object?' ).
+              lo_column->set_short_text( |{ i_select_column_text }| ).
+              lo_column->set_medium_text( |{ i_select_column_text }| ).
+              lo_column->set_long_text( |{ i_select_column_text }| ).
 
             WHEN OTHERS.
               ls_column-r_column->set_technical( abap_true ).
@@ -808,22 +806,13 @@ CLASS lcl_popups IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
     ENDTRY.
 
-    lv_condition = |{ co_fieldname_selected } = ABAP_TRUE|.
-
-    CREATE DATA lr_exporting LIKE LINE OF et_list.
-    ASSIGN lr_exporting->* TO <ls_exp>.
-
-    LOOP AT <table> ASSIGNING <ls_list>
-                    WHERE (lv_condition).
-
-      CLEAR: <ls_exp>.
-      MOVE-CORRESPONDING <ls_list> TO <ls_exp>.
-      APPEND <ls_exp> TO et_list.
-
-    ENDLOOP.
+    get_selected_rows(
+      IMPORTING
+        et_list = et_list ).
 
     CLEAR: mo_select_list_popup,
-           mr_table.
+           mr_table,
+           mo_table_descr.
 
   ENDMETHOD.
 
@@ -839,10 +828,10 @@ CLASS lcl_popups IMPLEMENTATION.
 
     FIELD-SYMBOLS: <table>     TYPE STANDARD TABLE,
                    <component> TYPE abap_componentdescr,
-                   <struct>    TYPE data,
+                   <line>      TYPE data,
                    <data>      TYPE any.
 
-    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_data ).
+    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
     lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
     lt_components = lo_struct_descr->get_components( ).
 
@@ -860,14 +849,14 @@ CLASS lcl_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_struct TYPE HANDLE struct_descr.
-    ASSIGN lr_struct->* TO <struct>.
+    ASSIGN lr_struct->* TO <line>.
     ASSERT sy-subrc = 0.
 
-    LOOP AT it_data ASSIGNING <data>.
+    LOOP AT it_list ASSIGNING <data>.
 
-      CLEAR: <struct>.
-      MOVE-CORRESPONDING <data> TO <struct>.
-      INSERT <struct> INTO TABLE <table>.
+      CLEAR: <line>.
+      MOVE-CORRESPONDING <data> TO <line>.
+      INSERT <line> INTO TABLE <table>.
 
     ENDLOOP.
 
@@ -960,6 +949,35 @@ CLASS lcl_popups IMPLEMENTATION.
     ENDIF.
 
     mo_select_list_popup->refresh( ).
+  ENDMETHOD.
+
+
+  METHOD get_selected_rows.
+
+    DATA: lv_condition TYPE string,
+          lr_exporting TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_exporting> TYPE any,
+                   <table>        TYPE STANDARD TABLE,
+                   <ls_line>      TYPE any.
+
+    lv_condition = |{ co_fieldname_selected } = ABAP_TRUE|.
+
+    ASSIGN mr_table->* TO <table>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_exporting LIKE LINE OF et_list.
+    ASSIGN lr_exporting->* TO <ls_exporting>.
+
+    LOOP AT <table> ASSIGNING <ls_line>
+                    WHERE (lv_condition).
+
+      CLEAR: <ls_exporting>.
+      MOVE-CORRESPONDING <ls_line> TO <ls_exporting>.
+      APPEND <ls_exporting> TO et_list.
+
+    ENDLOOP.
+
   ENDMETHOD.
 
 ENDCLASS.
