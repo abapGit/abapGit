@@ -36,7 +36,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
     DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
           lo_srfc_persist TYPE REF TO if_wb_object_persist.
 
-    CREATE OBJECT lo_srfc_persist TYPE cl_uconrfc_object_persist.
+    CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
 
     TRY.
         lo_srfc_persist->get(
@@ -63,7 +63,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
           lx_error        TYPE REF TO cx_root,
           lv_text         TYPE string.
 
-    FIELD-SYMBOLS: <ls_srfc_data> TYPE uconrfcserv_complete.
+    FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
 
 
     TRY.
@@ -102,7 +102,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
           lr_srfc_data    TYPE REF TO data,
           lx_error        TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_srfc_data> TYPE uconrfcserv_complete.
+    FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
 
 
     TRY.
