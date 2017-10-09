@@ -95,10 +95,9 @@ CLASS lcl_popups DEFINITION FINAL.
     CONSTANTS: co_fieldname_selected TYPE lvc_fname VALUE `SELECTED`.
 
     CLASS-DATA:
-*      mtr_select_list        TYPE REF TO t_popup_select_list_tt,
-      mo_select_list_popup   TYPE REF TO cl_salv_table,
-      mr_table               TYPE REF TO data,
-      mo_table_descr_et_data TYPE REF TO cl_abap_tabledescr.
+      mo_select_list_popup TYPE REF TO cl_salv_table,
+      mr_table             TYPE REF TO data,
+      mo_table_descr       TYPE REF TO cl_abap_tabledescr.
 
     CLASS-METHODS:
       create_new_table
@@ -743,28 +742,32 @@ CLASS lcl_popups IMPLEMENTATION.
       lt_columns      TYPE salv_t_column_ref,
       ls_column       TYPE salv_s_column_ref,
       lo_column       TYPE REF TO cl_salv_column_list,
-      lo_table_header TYPE REF TO cl_salv_form_text.
+      lo_table_header TYPE REF TO cl_salv_form_text,
+      lv_condition    TYPE string,
+      lr_exporting    TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_list> TYPE any.
-    FIELD-SYMBOLS: <table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <ls_list> TYPE any,
+                   <table>   TYPE STANDARD TABLE,
+                   <ls_exp>  TYPE any.
 
     CLEAR: et_list.
 
     create_new_table( it_data = it_list ).
 
     ASSIGN mr_table->* TO <table>.
+    ASSERT sy-subrc = 0.
 
     TRY.
         cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
-                                CHANGING t_table = <table> ).
+                                CHANGING  t_table = <table> ).
 
         mo_select_list_popup->set_screen_status( pfstatus = '102'
                                                  report = 'SAPMSVIM' ).
 
         mo_select_list_popup->set_screen_popup( start_column = 1
-                                                end_column = 65
-                                                start_line = 1
-                                                end_line = 20 ).
+                                                end_column   = 65
+                                                start_line   = 1
+                                                end_line     = 20 ).
 
         lo_events = mo_select_list_popup->get_event( ).
 
@@ -785,7 +788,7 @@ CLASS lcl_popups IMPLEMENTATION.
           CASE ls_column-columnname.
             WHEN 'OBJ_TYPE' OR 'OBJ_NAME'.
 
-            WHEN 'SELECTED'.
+            WHEN co_fieldname_selected.
               lo_column ?= ls_column-r_column.
               lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
               lo_column->set_output_length( 20 ).
@@ -805,15 +808,13 @@ CLASS lcl_popups IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
     ENDTRY.
 
-    DATA(condition) = |{ co_fieldname_selected } = ABAP_TRUE|.
+    lv_condition = |{ co_fieldname_selected } = ABAP_TRUE|.
 
-    DATA: lr_exp TYPE REF TO data.
-    CREATE DATA lr_exp LIKE LINE OF et_list.
-    FIELD-SYMBOLS: <ls_exp> TYPE any.
-    ASSIGN lr_exp->* TO <ls_exp>.
+    CREATE DATA lr_exporting LIKE LINE OF et_list.
+    ASSIGN lr_exporting->* TO <ls_exp>.
 
     LOOP AT <table> ASSIGNING <ls_list>
-                    WHERE (condition).
+                    WHERE (lv_condition).
 
       CLEAR: <ls_exp>.
       MOVE-CORRESPONDING <ls_list> TO <ls_exp>.
@@ -828,31 +829,41 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD create_new_table.
 
-    DATA: lr_struct TYPE REF TO data.
-    FIELD-SYMBOLS: <table> TYPE STANDARD TABLE.
+    " create and populate a table on the fly derived from
+    " it_data with a select column
 
-    mo_table_descr_et_data = CAST cl_abap_tabledescr( cl_abap_tabledescr=>describe_by_data( it_data ) ).
+    DATA: lr_struct       TYPE REF TO data,
+          lt_components   TYPE cl_abap_structdescr=>component_table,
+          lo_struct_descr TYPE REF TO cl_abap_structdescr,
+          struct_descr    TYPE REF TO cl_abap_structdescr.
 
-    DATA(components) = CAST cl_abap_structdescr( mo_table_descr_et_data->get_table_line_type( ) )->get_components( ).
+    FIELD-SYMBOLS: <table>     TYPE STANDARD TABLE,
+                   <component> TYPE abap_componentdescr,
+                   <struct>    TYPE data,
+                   <data>      TYPE any.
 
-    INSERT INITIAL LINE INTO components ASSIGNING FIELD-SYMBOL(<component>) INDEX 1.
+    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_data ).
+    lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
+    lt_components = lo_struct_descr->get_components( ).
+
+    INSERT INITIAL LINE INTO lt_components ASSIGNING <component> INDEX 1.
     ASSERT sy-subrc = 0.
 
     <component>-name = co_fieldname_selected.
     <component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
 
-    DATA(struct_descr) = cl_abap_structdescr=>create( p_components = components ).
-    mo_table_descr_et_data = cl_abap_tabledescr=>create( p_line_type = struct_descr ).
+    struct_descr = cl_abap_structdescr=>create( p_components = lt_components ).
+    mo_table_descr = cl_abap_tabledescr=>create( p_line_type = struct_descr ).
 
-    CREATE DATA mr_table TYPE HANDLE mo_table_descr_et_data.
+    CREATE DATA mr_table TYPE HANDLE mo_table_descr.
     ASSIGN mr_table->* TO <table>.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_struct TYPE HANDLE struct_descr.
-    ASSIGN lr_struct->* TO FIELD-SYMBOL(<struct>).
+    ASSIGN lr_struct->* TO <struct>.
     ASSERT sy-subrc = 0.
 
-    LOOP AT it_data ASSIGNING FIELD-SYMBOL(<data>).
+    LOOP AT it_data ASSIGNING <data>.
 
       CLEAR: <struct>.
       MOVE-CORRESPONDING <data> TO <struct>.
