@@ -71,8 +71,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
   METHOD create_objectset.
 
     DATA: lt_objs     TYPE scit_objs,
-          lt_packages TYPE ty_tdevc_tt,
-          ls_obj      LIKE LINE OF lt_objs.
+          lt_packages TYPE ty_tdevc_tt.
 
 
     lt_packages = find_all_subpackages( iv_package ).
@@ -129,16 +128,21 @@ CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
 
 * TODO, in the future, move this method to the ABAPGIT global package class
 
-    DATA: ls_package LIKE LINE OF rt_packages.
+    DATA: ls_package LIKE LINE OF rt_packages,
+          lt_found   LIKE rt_packages,
+          lt_sub     LIKE rt_packages.
 
 
     SELECT SINGLE * FROM tdevc INTO ls_package WHERE devclass = iv_package.
     ASSERT sy-subrc = 0.
     APPEND ls_package TO rt_packages.
 
-    LOOP AT rt_packages INTO ls_package.
-      SELECT * FROM tdevc APPENDING TABLE rt_packages
-        WHERE parentcl = ls_package-devclass.
+    SELECT * FROM tdevc APPENDING TABLE lt_sub
+      WHERE parentcl = ls_package-devclass.
+
+    LOOP AT lt_sub INTO ls_package.
+      lt_found = find_all_subpackages( ls_package-devclass ).
+      APPEND LINES OF lt_found TO rt_packages.
     ENDLOOP.
 
   ENDMETHOD.

@@ -6,8 +6,8 @@ CLASS lcl_merge DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_ancestor,
-             commit TYPE lif_defs=>ty_sha1,
-             tree   TYPE lif_defs=>ty_sha1,
+             commit TYPE zif_abapgit_definitions=>ty_sha1,
+             tree   TYPE zif_abapgit_definitions=>ty_sha1,
              time   TYPE string,
              body   TYPE string,
            END OF ty_ancestor.
@@ -35,7 +35,7 @@ CLASS lcl_merge DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-DATA: gs_merge   TYPE ty_merge,
-                gt_objects TYPE lif_defs=>ty_objects_tt.
+                gt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
     TYPES: ty_ancestor_tt TYPE STANDARD TABLE OF ty_ancestor WITH DEFAULT KEY.
 
@@ -45,7 +45,7 @@ CLASS lcl_merge DEFINITION FINAL.
       calculate_result
         RAISING zcx_abapgit_exception,
       find_ancestors
-        IMPORTING iv_commit           TYPE lif_defs=>ty_sha1
+        IMPORTING iv_commit           TYPE zif_abapgit_definitions=>ty_sha1
         RETURNING VALUE(rt_ancestors) TYPE ty_ancestor_tt
         RAISING   zcx_abapgit_exception,
       find_first_common
@@ -115,7 +115,7 @@ CLASS lcl_merge IMPLEMENTATION.
 
     DEFINE _from_source.
       READ TABLE gt_objects ASSIGNING <ls_object>
-        WITH KEY type = lif_defs=>gc_type-blob
+        WITH KEY type = zif_abapgit_definitions=>gc_type-blob
         sha1 = <ls_source>-sha1.
       ASSERT sy-subrc = 0.
 
@@ -260,7 +260,7 @@ CLASS lcl_merge IMPLEMENTATION.
     END-OF-DEFINITION.
 
     DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
-          lt_visit  TYPE STANDARD TABLE OF lif_defs=>ty_sha1,
+          lt_visit  TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1,
           lv_commit LIKE LINE OF lt_visit.
 
     FIELD-SYMBOLS: <ls_ancestor> LIKE LINE OF rt_ancestors,
@@ -271,7 +271,7 @@ CLASS lcl_merge IMPLEMENTATION.
 
     LOOP AT lt_visit INTO lv_commit.
       READ TABLE gt_objects ASSIGNING <ls_object>
-        WITH KEY type = lif_defs=>gc_type-commit sha1 = lv_commit.
+        WITH KEY type = zif_abapgit_definitions=>gc_type-commit sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 
       ls_commit = lcl_git_pack=>decode_commit( <ls_object>-data ).
@@ -283,7 +283,7 @@ CLASS lcl_merge IMPLEMENTATION.
       <ls_ancestor>-commit = lv_commit.
       <ls_ancestor>-tree = ls_commit-tree.
       <ls_ancestor>-body = ls_commit-body.
-      FIND REGEX lif_defs=>gc_author_regex IN ls_commit-author
+      FIND REGEX zif_abapgit_definitions=>gc_author_regex IN ls_commit-author
         SUBMATCHES <ls_ancestor>-time ##NO_TEXT.
       ASSERT sy-subrc = 0.
     ENDLOOP.
@@ -372,7 +372,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
           EXPORTING
             io_repo  = mo_repo
             io_stage = ms_merge-stage.
-        ev_state = lif_defs=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.

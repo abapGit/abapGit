@@ -16,7 +16,7 @@ CLASS lcl_xml DEFINITION ABSTRACT.
   PROTECTED SECTION.
     DATA: mi_ixml     TYPE REF TO if_ixml,
           mi_xml_doc  TYPE REF TO if_ixml_document,
-          ms_metadata TYPE lif_defs=>ty_metadata.
+          ms_metadata TYPE zif_abapgit_definitions=>ty_metadata.
 
     CONSTANTS: c_abapgit_tag             TYPE string VALUE 'abapGit' ##NO_TEXT,
                c_attr_version            TYPE string VALUE 'version' ##NO_TEXT,
@@ -81,7 +81,7 @@ CLASS lcl_xml IMPLEMENTATION.
     li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
-    IF li_version->get_value( ) <> lif_defs=>gc_xml_version.
+    IF li_version->get_value( ) <> zif_abapgit_definitions=>gc_xml_version.
       display_xml_error( ).
     ENDIF.
 
@@ -96,7 +96,7 @@ CLASS lcl_xml IMPLEMENTATION.
     DATA: lv_version TYPE string.
 
 
-    lv_version = |abapGit version: { lif_defs=>gc_abap_version }|.
+    lv_version = |abapGit version: { zif_abapgit_definitions=>gc_abap_version }|.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -187,7 +187,7 @@ CLASS lcl_xml_output DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RETURNING VALUE(ri_element) TYPE REF TO if_ixml_element,
       render
         IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
-                  is_metadata   TYPE lif_defs=>ty_metadata OPTIONAL
+                  is_metadata   TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         RETURNING VALUE(rv_xml) TYPE string.
 
   PRIVATE SECTION.
@@ -270,7 +270,7 @@ CLASS lcl_xml_output IMPLEMENTATION.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = c_attr_version value = lif_defs=>gc_xml_version ).
+    li_git->set_attribute( name = c_attr_version value = zif_abapgit_definitions=>gc_xml_version ).
     IF NOT is_metadata IS INITIAL.
       li_git->set_attribute( name  = c_attr_serializer
                              value = is_metadata-class ).
@@ -327,7 +327,7 @@ CLASS lcl_xml_input DEFINITION FINAL INHERITING FROM lcl_xml CREATE PUBLIC.
         RETURNING VALUE(ri_raw) TYPE REF TO if_ixml_document,
 * todo, add read_xml to match add_xml in lcl_xml_output
       get_metadata
-        RETURNING VALUE(rs_metadata) TYPE lif_defs=>ty_metadata.
+        RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata.
 
   PRIVATE SECTION.
     METHODS: fix_xml.

@@ -16,7 +16,7 @@ CLASS lcl_object_prog DEFINITION INHERITING FROM lcl_objects_program FINAL.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tpool_i18n,
              language TYPE langu,
-             textpool TYPE lif_defs=>ty_tpool_tt,
+             textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
            END OF ty_tpool_i18n,
            tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
 
@@ -120,7 +120,7 @@ CLASS lcl_object_prog IMPLEMENTATION.
           ls_progdir      TYPE ty_progdir,
           lt_tpool        TYPE textpool_table,
           lt_dynpros      TYPE ty_dynpro_tt,
-          lt_tpool_ext    TYPE lif_defs=>ty_tpool_tt,
+          lt_tpool_ext    TYPE zif_abapgit_definitions=>ty_tpool_tt,
           ls_cua          TYPE ty_cua,
           lt_source       TYPE abaptxt255_tab.
 

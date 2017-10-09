@@ -16,10 +16,6 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
     CLASS-METHODS:
       migrate_settings
         RAISING zcx_abapgit_exception,
-      migrate_repo
-        RAISING zcx_abapgit_exception,
-      migrate_user
-        RAISING zcx_abapgit_exception,
       table_create
         RAISING zcx_abapgit_exception,
       table_exists
@@ -98,8 +94,8 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
     TYPES: BEGIN OF ty_local_checksum,
-             item  TYPE lif_defs=>ty_item,
-             files TYPE lif_defs=>ty_file_signatures_tt,
+             item  TYPE zif_abapgit_definitions=>ty_item,
+             files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
            END OF ty_local_checksum.
 
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
@@ -107,7 +103,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: BEGIN OF ty_repo_xml,
              url                TYPE string,
              branch_name        TYPE string,
-             sha1               TYPE lif_defs=>ty_sha1,
+             sha1               TYPE zif_abapgit_definitions=>ty_sha1,
              package            TYPE devclass,
              offline            TYPE sap_bool,
              local_checksums    TYPE ty_local_checksum_tt,
@@ -168,7 +164,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS add
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
-                iv_branch      TYPE lif_defs=>ty_sha1 OPTIONAL
+                iv_branch      TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
@@ -591,7 +587,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       BEGIN OF ty_repo_config,
         url              TYPE lcl_persistence_repo=>ty_repo-url,
         login            TYPE string,
-        git_user         TYPE lif_defs=>ty_git_user,
+        git_user         TYPE zif_abapgit_definitions=>ty_git_user,
         last_change_seen TYPE string,
       END OF ty_repo_config.
 
@@ -599,7 +595,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES:
       BEGIN OF ty_user,
-        default_git_user TYPE lif_defs=>ty_git_user,
+        default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
         repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
@@ -1392,9 +1388,6 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     IF lock_exists( ) = abap_false.
       lock_create( ).
-
-      migrate_repo( ).
-      migrate_user( ).
     ENDIF.
 
     IF settings_exists( ) = abap_false.
@@ -1563,46 +1556,6 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD migrate_repo.
-
-    DATA: lt_repo TYPE lcl_persistence=>ty_repos_persi_tt,
-          lo_repo TYPE REF TO lcl_persistence,
-          lo_new  TYPE REF TO lcl_persistence_repo,
-          ls_repo LIKE LINE OF lt_repo.
-
-
-    CREATE OBJECT lo_repo.
-    CREATE OBJECT lo_new.
-
-    lt_repo = lo_repo->list( ).
-
-    LOOP AT lt_repo INTO ls_repo.
-      lo_new->add( iv_url         = ls_repo-url
-                   iv_branch_name = ls_repo-branch_name
-                   iv_branch      = ls_repo-sha1
-                   iv_package     = ls_repo-package
-                   iv_offline     = ls_repo-offline
-                   is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD migrate_user.
-
-    DATA: lo_user  TYPE REF TO lcl_persistence_user,
-          lt_users TYPE lcl_user=>ty_user_tt.
-
-    FIELD-SYMBOLS: <ls_user> LIKE LINE OF lt_users.
-
-
-    lt_users = lcl_user=>list( ).
-    LOOP AT lt_users ASSIGNING <ls_user>.
-      lo_user = lcl_app=>user( <ls_user>-user ).
-      lo_user->set_default_git_user_name( <ls_user>-username ).
-      lo_user->set_default_git_user_email( <ls_user>-email ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
   METHOD lock_exists.
 
     DATA: lv_viewname TYPE dd25l-viewname.
@@ -1628,7 +1581,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ls_dd25v-viewname   = lcl_persistence_db=>c_lock.
     ls_dd25v-aggtype    = 'E'.
     ls_dd25v-roottab    = lcl_persistence_db=>c_tabname.
-    ls_dd25v-ddlanguage = lif_defs=>gc_english.
+    ls_dd25v-ddlanguage = zif_abapgit_definitions=>gc_english.
     ls_dd25v-ddtext     = c_text.
 
     APPEND INITIAL LINE TO lt_dd26e ASSIGNING <ls_dd26e>.
@@ -1721,7 +1674,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
     ls_dd02v-tabname    = lcl_persistence_db=>c_tabname.
-    ls_dd02v-ddlanguage = lif_defs=>gc_english.
+    ls_dd02v-ddlanguage = zif_abapgit_definitions=>gc_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
     ls_dd02v-contflag   = 'A'.
