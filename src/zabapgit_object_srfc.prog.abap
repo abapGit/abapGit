@@ -59,13 +59,20 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
     DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
           lo_srfc_persist TYPE REF TO if_wb_object_persist,
-          ls_srfc_data    TYPE uconrfcserv_complete,
-          lx_error        TYPE REF TO cx_swb_exception,
+          lr_srfc_data    TYPE REF TO data,
+          lx_error        TYPE REF TO cx_root,
           lv_text         TYPE string.
 
-    CREATE OBJECT lo_srfc_persist TYPE cl_uconrfc_object_persist.
+    FIELD-SYMBOLS: <ls_srfc_data> TYPE uconrfcserv_complete.
+
 
     TRY.
+        CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
+        ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
+        ASSERT sy-subrc = 0.
+
+        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+
         lo_srfc_persist->get(
           EXPORTING
             p_object_key  = |{ ms_item-obj_name }|
@@ -75,15 +82,15 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
         lo_object_data->get_data(
           IMPORTING
-            p_data = ls_srfc_data ).
+            p_data = <ls_srfc_data> ).
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception INTO lx_error.
+      CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
 
     io_xml->add( iv_name = 'SRFC'
-                 ig_data = ls_srfc_data ).
+                 ig_data = <ls_srfc_data> ).
 
   ENDMETHOD.
 
@@ -92,26 +99,34 @@ CLASS lcl_object_srfc IMPLEMENTATION.
     DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
           lo_object_data  TYPE REF TO if_wb_object_data_model,
           lv_text         TYPE string,
-          ls_srfc_data    TYPE uconrfcserv_complete,
-          lx_error        TYPE REF TO cx_swb_exception.
+          lr_srfc_data    TYPE REF TO data,
+          lx_error        TYPE REF TO cx_root.
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'SRFC'
-      CHANGING
-        cg_data = ls_srfc_data ).
+    FIELD-SYMBOLS: <ls_srfc_data> TYPE uconrfcserv_complete.
+
 
     TRY.
-        CREATE OBJECT lo_srfc_persist TYPE cl_uconrfc_object_persist.
-        CREATE OBJECT lo_object_data TYPE cl_uconrfc_object_data.
 
-        lo_object_data->set_data( p_data = ls_srfc_data ).
+        CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
+        ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
+        ASSERT sy-subrc = 0.
+
+        io_xml->read(
+          EXPORTING
+            iv_name = 'SRFC'
+          CHANGING
+            cg_data = <ls_srfc_data> ).
+
+        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+        CREATE OBJECT lo_object_data TYPE ('CL_UCONRFC_OBJECT_DATA').
+
+        lo_object_data->set_data( p_data = <ls_srfc_data> ).
 
         lo_srfc_persist->save( lo_object_data ).
 
         tadir_insert( iv_package ).
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception INTO lx_error.
+      CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
@@ -124,7 +139,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
           lx_error        TYPE REF TO cx_swb_exception,
           lv_text         TYPE string.
 
-    CREATE OBJECT lo_srfc_persist TYPE cl_uconrfc_object_persist.
+    CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
 
     TRY.
         lo_srfc_persist->delete( p_object_key = |{ ms_item-obj_name }|
