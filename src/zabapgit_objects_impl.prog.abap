@@ -35,7 +35,8 @@ CLASS lcl_objects IMPLEMENTATION.
       lcl_popups=>popup_to_select_from_list(
         EXPORTING
           it_list              = lt_results_overwrite
-          i_header_text        = |The following Objects have been modified locally. Select the Objects which should be overwritten.|
+          i_header_text        = |The following Objects have been modified locally.|
+                              && | Select the Objects which should be overwritten.|
           i_select_column_text = 'Overwrite?'
         IMPORTING
           et_list              = lt_confirmed_overwrite ).
