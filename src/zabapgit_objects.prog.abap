@@ -2341,4 +2341,11 @@ CLASS lcl_objects DEFINITION FINAL.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS deserialize_objects
+      IMPORTING it_objects TYPE ty_deserialization_tt
+                iv_ddic    TYPE abap_bool DEFAULT abap_false
+                iv_descr   TYPE string
+      CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING   zcx_abapgit_exception.
+
 ENDCLASS.                    "lcl_object DEFINITION

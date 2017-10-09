@@ -584,6 +584,4 @@ CLASS lcl_objects IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDMETHOD.
-
 ENDCLASS.                    "lcl_objects IMPLEMENTATION
