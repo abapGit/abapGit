@@ -28,8 +28,8 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
-                  is_file          TYPE lif_defs=>ty_file OPTIONAL
-                  is_object        TYPE lif_defs=>ty_item OPTIONAL
+                  is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
+                  is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   zcx_abapgit_exception,
       lif_gui_page~on_event REDEFINITION.
@@ -73,9 +73,9 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
     METHODS append_diff
-      IMPORTING it_remote TYPE lif_defs=>ty_files_tt
-                it_local  TYPE lif_defs=>ty_files_item_tt
-                is_status TYPE lif_defs=>ty_result
+      IMPORTING it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+                it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
+                is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING   zcx_abapgit_exception.
     METHODS build_menu
       IMPORTING iv_supress_stage TYPE abap_bool
@@ -91,9 +91,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lt_remote TYPE lif_defs=>ty_files_tt,
-          lt_local  TYPE lif_defs=>ty_files_item_tt,
-          lt_status TYPE lif_defs=>ty_results_tt,
+    DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_repo   TYPE REF TO lcl_repo_online,
           lv_ts     TYPE timestamp.
 
@@ -295,9 +295,9 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     IF iv_supress_stage = abap_false.
       ro_menu->add( iv_txt = 'Stage'
-                    iv_act = |{ lif_defs=>gc_action-go_stage }?{ mv_repo_key }|
+                    iv_act = |{ zif_abapgit_definitions=>gc_action-go_stage }?{ mv_repo_key }|
                     iv_id  = 'stage-button'
-                    iv_opt = lif_defs=>gc_html_opt-strong ).
+                    iv_opt = zif_abapgit_definitions=>gc_html_opt-strong ).
     ENDIF.
 
     IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
@@ -305,10 +305,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
       " File types
       IF lines( lt_types ) > 1.
-        lo_sub->add( iv_txt = 'TYPE' iv_typ = lif_defs=>gc_action_type-separator ).
+        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
         LOOP AT lt_types ASSIGNING <i>.
           lo_sub->add( iv_txt = <i>
-                       iv_typ = lif_defs=>gc_action_type-onclick
+                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
                        iv_aux = 'type'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -316,10 +316,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
       " Changed by
       IF lines( lt_users ) > 1.
-        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = lif_defs=>gc_action_type-separator ).
+        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
         LOOP AT lt_users ASSIGNING <i>.
           lo_sub->add( iv_txt = <i>
-                       iv_typ = lif_defs=>gc_action_type-onclick
+                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
                        iv_aux = 'changed-by'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -339,7 +339,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
         mv_unified = lcl_app=>user( )->toggle_diff_unified( ).
-        ev_state   = lif_defs=>gc_event_state-re_render.
+        ev_state   = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD. "lif_gui_page~on_event
@@ -633,7 +633,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( 'var gHelper = new DiffHelper({' ).
     ro_html->add( |  seed:        "{ mv_seed }",| ).
-    ro_html->add( |  stageAction: "{ lif_defs=>gc_action-go_stage }",| ).
+    ro_html->add( |  stageAction: "{ zif_abapgit_definitions=>gc_action-go_stage }",| ).
     ro_html->add( '  ids: {' ).
     ro_html->add( '    diffList:    "diff-list",' ).
     ro_html->add( '    filterMenu:  "diff-filter",' ).

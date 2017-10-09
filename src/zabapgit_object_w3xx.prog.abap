@@ -24,7 +24,7 @@ CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
 
     METHODS constructor
       IMPORTING
-        is_item     TYPE lif_defs=>ty_item
+        is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
   PROTECTED SECTION.
