@@ -287,7 +287,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     lt_tadir[] = it_tadir[].
 
-    zcl_abapgit_ddic_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
+    zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lcl_progress=>show( iv_key     = 'Delete'

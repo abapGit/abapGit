@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_ddic_dependencies DEFINITION
+CLASS zcl_abapgit_dependencies DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -18,8 +18,10 @@ CLASS zcl_abapgit_ddic_dependencies DEFINITION
       ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
 
     CLASS-METHODS resolve
-      CHANGING !ct_tadir TYPE ty_tadir_tt
-      RAISING  zcx_abapgit_exception .
+      CHANGING
+        !ct_tadir TYPE ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_dependency,
@@ -51,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ddic_dependencies IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
