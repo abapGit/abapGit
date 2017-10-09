@@ -78,10 +78,11 @@ CLASS lcl_popups DEFINITION FINAL.
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_to_select_from_list
-        IMPORTING it_list              TYPE STANDARD TABLE
-                  i_header_text        TYPE csequence
-                  i_select_column_text TYPE csequence
-        EXPORTING VALUE(et_list)       TYPE STANDARD TABLE
+        IMPORTING it_list               TYPE STANDARD TABLE
+                  i_header_text         TYPE csequence
+                  i_select_column_text  TYPE csequence
+                  it_columns_to_display TYPE stringtab
+        EXPORTING VALUE(et_list)        TYPE STANDARD TABLE
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -783,21 +784,23 @@ CLASS lcl_popups IMPLEMENTATION.
         lt_columns = lo_columns->get( ).
 
         LOOP AT lt_columns INTO ls_column.
-          CASE ls_column-columnname.
-            WHEN 'OBJ_TYPE' OR 'OBJ_NAME'.
 
-            WHEN co_fieldname_selected.
-              lo_column ?= ls_column-r_column.
-              lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
-              lo_column->set_output_length( 20 ).
-              lo_column->set_short_text( |{ i_select_column_text }| ).
-              lo_column->set_medium_text( |{ i_select_column_text }| ).
-              lo_column->set_long_text( |{ i_select_column_text }| ).
+          IF ls_column-columnname = co_fieldname_selected.
+            lo_column ?= ls_column-r_column.
+            lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
+            lo_column->set_output_length( 20 ).
+            lo_column->set_short_text( |{ i_select_column_text }| ).
+            lo_column->set_medium_text( |{ i_select_column_text }| ).
+            lo_column->set_long_text( |{ i_select_column_text }| ).
+            CONTINUE.
+          ENDIF.
 
-            WHEN OTHERS.
-              ls_column-r_column->set_technical( abap_true ).
+          READ TABLE it_columns_to_display TRANSPORTING NO FIELDS
+                                           WITH KEY table_line = ls_column-columnname.
+          IF sy-subrc <> 0.
+            ls_column-r_column->set_technical( abap_true ).
+          ENDIF.
 
-          ENDCASE.
         ENDLOOP.
 
         mo_select_list_popup->display( ).
