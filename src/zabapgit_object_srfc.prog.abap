@@ -36,9 +36,9 @@ CLASS lcl_object_srfc IMPLEMENTATION.
     DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
           lo_srfc_persist TYPE REF TO if_wb_object_persist.
 
-    CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-
     TRY.
+        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+
         lo_srfc_persist->get(
           EXPORTING
             p_object_key  = |{ ms_item-obj_name }|
@@ -46,7 +46,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
           CHANGING
             p_object_data = lo_object_data ).
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception.
+      CATCH cx_root.
         rv_bool = abap_false.
         RETURN.
     ENDTRY.
@@ -64,7 +64,6 @@ CLASS lcl_object_srfc IMPLEMENTATION.
           lv_text         TYPE string.
 
     FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
-
 
     TRY.
         CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
@@ -104,9 +103,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
 
-
     TRY.
-
         CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
         ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
         ASSERT sy-subrc = 0.
@@ -136,16 +133,16 @@ CLASS lcl_object_srfc IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
-          lx_error        TYPE REF TO cx_swb_exception,
+          lx_error        TYPE REF TO cx_root,
           lv_text         TYPE string.
 
-    CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-
     TRY.
+        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
+
         lo_srfc_persist->delete( p_object_key = |{ ms_item-obj_name }|
                                  p_version    = 'A' ).
 
-      CATCH cx_swb_object_does_not_exist cx_swb_exception INTO lx_error.
+      CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
     ENDTRY.
