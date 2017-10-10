@@ -464,6 +464,14 @@ CLASS lcl_oo_base IMPLEMENTATION.
     DATA: lo_factory TYPE REF TO object,
           lo_source  TYPE REF TO object.
 
+    "Buffer needs to be refreshed,
+    "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
+    CALL FUNCTION 'SEO_BUFFER_INIT'.
+    CALL FUNCTION 'SEO_BUFFER_REFRESH'
+      EXPORTING
+        cifkey  = is_clskey
+        version = seoc_version_inactive.
+
     CALL METHOD ('CL_OO_FACTORY')=>('CREATE_INSTANCE')
       RECEIVING
         result = lo_factory.
