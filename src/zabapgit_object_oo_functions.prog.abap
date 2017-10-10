@@ -472,6 +472,8 @@ CLASS lcl_oo_base IMPLEMENTATION.
       RECEIVING
         result = lo_factory.
 
+    "Enable modification mode to avoid exception CX_OO_ACCESS_PERMISSON when
+    "dealing with objects in foreign namespaces (namespace role = C)
     CALL METHOD lo_factory->('CREATE_SETTINGS')
       EXPORTING
         modification_mode_enabled = abap_true
