@@ -358,8 +358,9 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
                    iv_program_type = c_include_program_type
                    iv_version      = c_active_version ).
 
+    " Assuming that all methods that were scanned are implemented
     update_cs_number_of_methods( iv_classname              = iv_classname
-                                 iv_number_of_impl_methods = lines( it_methods ) ). " Assuming that all methods that were scanned are implemented
+                                 iv_number_of_impl_methods = lines( it_methods ) ).
 
   ENDMETHOD.
 
