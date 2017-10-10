@@ -6,9 +6,9 @@ CLASS lcl_skip_objects IMPLEMENTATION.
   METHOD skip_sadl_generated_objects.
     DATA: ls_tadir_class     LIKE LINE OF rt_tadir,
           lo_sadl_class      TYPE REF TO lif_object,
-          ls_item            TYPE  lif_defs=>ty_tadir,
+          ls_item            TYPE  zif_abapgit_definitions=>ty_tadir,
           ls_tadir           LIKE LINE OF rt_tadir,
-          lt_lines_to_delete TYPE lif_defs=>ty_tadir_tt.
+          lt_lines_to_delete TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
     rt_tadir = it_tadir.
     LOOP AT it_tadir INTO ls_tadir WHERE object = 'DDLS'.

@@ -43,7 +43,7 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
           zcx_abapgit_exception,
       init_scanner
         IMPORTING
-          it_source         TYPE lif_defs=>ty_string_tt
+          it_source         TYPE zif_abapgit_definitions=>ty_string_tt
           iv_name           TYPE seoclsname
         RETURNING
           VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class.
@@ -333,7 +333,7 @@ CLASS lcl_object_clas_new DEFINITION INHERITING FROM lcl_object_clas.
   PUBLIC SECTION.
     METHODS: constructor
       IMPORTING
-        is_item     TYPE lif_defs=>ty_item
+        is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
   PROTECTED SECTION.
@@ -360,7 +360,7 @@ CLASS lcl_object_clas_new IMPLEMENTATION.
           lt_local_implementations TYPE seop_source_string,
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
-          lt_descriptions          TYPE lif_defs=>ty_seocompotx_tt,
+          lt_descriptions          TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
           ls_class_key             TYPE seoclskey.
 
 

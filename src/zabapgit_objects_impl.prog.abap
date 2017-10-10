@@ -20,8 +20,8 @@ CLASS lcl_objects IMPLEMENTATION.
         WHERE NOT obj_type IS INITIAL.
 
       IF <ls_result>-lstate IS NOT INITIAL
-          AND <ls_result>-lstate <> lif_defs=>gc_state-deleted
-          AND NOT ( <ls_result>-lstate = lif_defs=>gc_state-added
+          AND <ls_result>-lstate <> zif_abapgit_definitions=>gc_state-deleted
+          AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>gc_state-added
           AND <ls_result>-rstate IS INITIAL ).
 
         "current object has been modified locally, add to table for popup
@@ -169,7 +169,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     rv_changed = create_object(
       is_item     = is_item
-      iv_language = lif_defs=>gc_english )->has_changed_since( iv_timestamp ).
+      iv_language = zif_abapgit_definitions=>gc_english )->has_changed_since( iv_timestamp ).
 
   ENDMETHOD.  "has_changed_since
 
@@ -177,7 +177,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     TRY.
         create_object( is_item        = is_item
-                       iv_language    = lif_defs=>gc_english
+                       iv_language    = zif_abapgit_definitions=>gc_english
                        iv_native_only = iv_native_only ).
         rv_bool = abap_true.
       CATCH zcx_abapgit_exception.
@@ -219,7 +219,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     TRY.
         li_obj = create_object( is_item = is_item
-                                iv_language = lif_defs=>gc_english ).
+                                iv_language = zif_abapgit_definitions=>gc_english ).
         rv_bool = li_obj->exists( ).
       CATCH zcx_abapgit_exception.
 * ignore all errors and assume the object exists
@@ -240,7 +240,7 @@ CLASS lcl_objects IMPLEMENTATION.
           lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
-                            iv_language = lif_defs=>gc_english ).
+                            iv_language = zif_abapgit_definitions=>gc_english ).
 
     lv_adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
 
@@ -267,7 +267,7 @@ CLASS lcl_objects IMPLEMENTATION.
       rv_user = lcl_objects_super=>c_user_unknown.
     ELSE.
       li_obj = create_object( is_item     = is_item
-                              iv_language = lif_defs=>gc_english ).
+                              iv_language = zif_abapgit_definitions=>gc_english ).
       rv_user = li_obj->changed_by( ).
     ENDIF.
 
@@ -279,7 +279,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: ls_item     TYPE lif_defs=>ty_item,
+    DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lv_tabclass TYPE dd02l-tabclass,
           lt_tadir    LIKE it_tadir.
 
@@ -357,11 +357,11 @@ CLASS lcl_objects IMPLEMENTATION.
 * in case they have dependencies with .INCLUDE
 
     TYPES: BEGIN OF ty_edge,
-             from TYPE lif_defs=>ty_item,
-             to   TYPE lif_defs=>ty_item,
+             from TYPE zif_abapgit_definitions=>ty_item,
+             to   TYPE zif_abapgit_definitions=>ty_item,
            END OF ty_edge.
 
-    DATA: lt_nodes        TYPE TABLE OF lif_defs=>ty_item,
+    DATA: lt_nodes        TYPE TABLE OF zif_abapgit_definitions=>ty_item,
           lt_edges        TYPE TABLE OF ty_edge,
           lt_findstrings  TYPE TABLE OF rsfind,
           lv_plus         TYPE i VALUE 1,
@@ -473,7 +473,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF is_supported( is_item ) = abap_true.
       li_obj = create_object( is_item     = is_item
-                              iv_language = lif_defs=>gc_english ).
+                              iv_language = zif_abapgit_definitions=>gc_english ).
 
       li_obj->delete( ).
 
@@ -526,7 +526,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD check_duplicates.
 
-    DATA: lt_files TYPE lif_defs=>ty_files_tt.
+    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
 
     lt_files[] = it_files[].
@@ -574,20 +574,20 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item    TYPE lif_defs=>ty_item,
+    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_cancel  TYPE abap_bool,
           li_obj     TYPE REF TO lif_object,
-          lt_remote  TYPE lif_defs=>ty_files_tt,
+          lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package TYPE devclass,
           lo_files   TYPE REF TO lcl_objects_files,
           lo_xml     TYPE REF TO lcl_xml_input,
-          lt_results TYPE lif_defs=>ty_results_tt,
+          lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,
           lt_rest    TYPE TABLE OF ty_deserialization,
           lt_late    TYPE TABLE OF ty_deserialization,
           lv_path    TYPE string.
 
-    FIELD-SYMBOLS: <ls_result> TYPE lif_defs=>ty_result,
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
 
@@ -605,7 +605,7 @@ CLASS lcl_objects IMPLEMENTATION.
     warning_overwrite( CHANGING ct_results = lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
-        AND NOT ( lstate = lif_defs=>gc_state-added AND rstate IS INITIAL ).
+        AND NOT ( lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL ).
       lcl_progress=>show( iv_key     = 'Deserialize'
                           iv_current = sy-tabix
                           iv_total   = lines( lt_results )
@@ -716,7 +716,7 @@ CLASS lcl_objects IMPLEMENTATION.
 * before pull, this is useful eg. when overwriting a TABL object.
 * only the main XML file is used for comparison
 
-    DATA: ls_remote_file       TYPE lif_defs=>ty_file,
+    DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
           lo_remote_version    TYPE REF TO lcl_xml_input,
           lv_count             TYPE i,
           lo_comparison_result TYPE REF TO lif_comparison_result.
@@ -774,9 +774,9 @@ CLASS lcl_objects IMPLEMENTATION.
           lt_ddls_name  TYPE tty_ddls_names,
           ls_ddls_name  LIKE LINE OF lt_ddls_name.
 
-    FIELD-SYMBOLS: <tadir_ddls>      TYPE lif_defs=>ty_tadir,
+    FIELD-SYMBOLS: <tadir_ddls>      TYPE zif_abapgit_definitions=>ty_tadir,
                    <dependency>      TYPE ty_dependency,
-                   <tadir_dependent> TYPE lif_defs=>ty_tadir.
+                   <tadir_dependent> TYPE zif_abapgit_definitions=>ty_tadir.
 
     LOOP AT ct_tadir ASSIGNING <tadir_ddls>
                      WHERE object = 'DDLS'.

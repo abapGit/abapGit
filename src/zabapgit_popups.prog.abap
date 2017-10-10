@@ -72,14 +72,14 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   zcx_abapgit_exception,
       popup_to_create_transp_branch
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
-        RETURNING VALUE(rs_transport_branch) TYPE lif_defs=>ty_transport_to_branch
+        RETURNING VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
         RAISING   zcx_abapgit_exception
                   lcx_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_select_obj_overwrite
-        IMPORTING it_list TYPE lif_defs=>ty_results_tt
-        RETURNING VALUE(rt_list) TYPE lif_defs=>ty_results_tt
+        IMPORTING it_list TYPE zif_abapgit_definitions=>ty_results_tt
+        RETURNING VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -87,7 +87,7 @@ CLASS lcl_popups DEFINITION FINAL.
 
     TYPES: BEGIN OF t_popup_select_list,
         selected TYPE flag.
-      INCLUDE TYPE lif_defs=>ty_result.
+      INCLUDE TYPE zif_abapgit_definitions=>ty_result.
     TYPES END OF t_popup_select_list.
 
     TYPES: t_popup_select_list_tt TYPE STANDARD TABLE OF t_popup_select_list WITH DEFAULT KEY.
