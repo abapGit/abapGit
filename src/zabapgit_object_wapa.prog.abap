@@ -175,6 +175,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
           lt_nodes      TYPE o2applnode_table,
           lt_navgraph   TYPE o2applgrap_table,
           lv_objkey     TYPE seu_objkey,
+          lv_obj_name   TYPE string,
           ls_item       LIKE ms_item,
           lv_extra      TYPE string,
           lv_content    TYPE xstring,
@@ -252,12 +253,14 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
       lo_page->save( p_with_all_texts = abap_true ).
 
-      ls_item-obj_type = 'WAPP'.
-      ls_item-obj_name = cl_wb_object_type=>get_concatenated_key_from_id(
+      lv_obj_name = cl_wb_object_type=>get_concatenated_key_from_id(
         p_key_component1 = <ls_page>-attributes-applname
         p_key_component2 = <ls_page>-attributes-pagekey
         p_external_id    = 'WG ' ).
-      lcl_objects_activation=>add_item( ls_item ).
+
+      lcl_objects_activation=>add( iv_type = 'WAPP'
+                                   iv_name = lv_obj_name ).
+
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize
