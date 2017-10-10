@@ -38,11 +38,6 @@ DEFINE _append_result.
   <result>-filename = &8.
 END-OF-DEFINITION.
 
-DEFINE _given_source_is.
-  APPEND INITIAL LINE TO mt_source ASSIGNING <source>.
-  <source> = &1.
-END-OF-DEFINITION.
-
 * todo, should the tests be in the same include as the classes
 * they are testing?
 
@@ -2622,6 +2617,9 @@ CLASS ltcl_oo_serialize DEFINITION FINAL FOR TESTING
       two_line_include_3 FOR TESTING RAISING cx_static_check,
       more_than_two_lines FOR TESTING RAISING cx_static_check,
 
+      _given_source_is
+        IMPORTING
+          i_source TYPE LINE OF zif_abapgit_definitions=>ty_string_tt,
       _given_empty_test_include,
       _when_skip_is_calculated,
       _then_should_be_skipped,
@@ -2656,8 +2654,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `*"* use this source file for your ABAP unit test classes`.
+    _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
 
     _when_skip_is_calculated( ).
 
@@ -2669,8 +2666,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `*`.
+    _given_source_is( `*` ).
 
     _when_skip_is_calculated( ).
 
@@ -2682,8 +2678,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `write: 'This is ABAP'.`.
+    _given_source_is( `write: 'This is ABAP'.` ).
 
     _when_skip_is_calculated( ).
 
@@ -2695,9 +2690,8 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `*"* use this source file for your ABAP unit test classes`,
-      ``.
+    _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
+    _given_source_is( ` `                                                        ).
 
     _when_skip_is_calculated( ).
 
@@ -2709,9 +2703,8 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `*"* use this source file for your ABAP unit test classes`,
-      `write: 'This is ABAP'.`.
+    _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
+    _given_source_is( `write: 'This is ABAP'.`                                   ).
 
     _when_skip_is_calculated( ).
 
@@ -2723,9 +2716,8 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      ` `,
-      `*"* use this source file for your ABAP unit test classes`.
+    _given_source_is( ` `                                                        ).
+    _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
 
     _when_skip_is_calculated( ).
 
@@ -2737,24 +2729,24 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
-    _given_source_is:
-      `*"* use this source file for your ABAP unit test classes`,
-      `CLASS ltcl_test DEFINITION FINAL FOR TESTING`,
-      `  DURATION SHORT`,
-      `  RISK LEVEL HARMLESS.`,
-      ` `,
-      `  PRIVATE SECTION.`,
-      `    METHODS:`,
-      `      first_test FOR TESTING RAISING cx_static_check.`,
-      `ENDCLASS.`,
-      ` `,
-      `CLASS ltcl_test IMPLEMENTATION.`,
 
-      `  METHOD first_test.`,
-      `    cl_abap_unit_assert=>fail( 'This is a real test' ).`,
-      `  ENDMETHOD.`,
-      ` `,
-      `ENDCLASS.`.
+    _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
+    _given_source_is( `CLASS ltcl_test DEFINITION FINAL FOR TESTING`             ).
+    _given_source_is( `  DURATION SHORT`                                         ).
+    _given_source_is( `  RISK LEVEL HARMLESS.`                                   ).
+    _given_source_is( ` `                                                        ).
+    _given_source_is( `  PRIVATE SECTION.`                                       ).
+    _given_source_is( `    METHODS:`                                             ).
+    _given_source_is( `      first_test FOR TESTING RAISING cx_static_check.`    ).
+    _given_source_is( `ENDCLASS.`                                                ).
+    _given_source_is( ` `                                                        ).
+    _given_source_is( `CLASS ltcl_test IMPLEMENTATION.`                          ).
+    _given_source_is( ` `                                                        ).
+    _given_source_is( `  METHOD first_test.`                                     ).
+    _given_source_is( `    cl_abap_unit_assert=>fail( 'This is a real test' ).`  ).
+    _given_source_is( `  ENDMETHOD.`                                             ).
+    _given_source_is( ` `                                                        ).
+    _given_source_is( `ENDCLASS.`                                                ).
 
     _when_skip_is_calculated( ).
 
@@ -2762,6 +2754,11 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD _given_source_is.
+
+    INSERT i_source INTO TABLE mt_source.
+
+  ENDMETHOD.
 
   METHOD _given_empty_test_include.
 
