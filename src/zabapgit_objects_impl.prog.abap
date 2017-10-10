@@ -12,7 +12,8 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD warning_overwrite.
 
     DATA: lt_results_overwrite   LIKE ct_results,
-          lt_confirmed_overwrite LIKE ct_results.
+          lt_confirmed_overwrite LIKE ct_results,
+          lt_columns             TYPE stringtab.
 
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
@@ -31,8 +32,20 @@ CLASS lcl_objects IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( lt_results_overwrite ) > 0.
+
+      INSERT `OBJ_TYPE` INTO TABLE lt_columns.
+      INSERT `OBJ_NAME` INTO TABLE lt_columns.
+
       "all returned objects will be overwritten
-      lt_confirmed_overwrite = lcl_popups=>popup_select_obj_overwrite( lt_results_overwrite ).
+      lcl_popups=>popup_to_select_from_list(
+        EXPORTING
+          it_list               = lt_results_overwrite
+          i_header_text         = |The following Objects have been modified locally.|
+                              && | Select the Objects which should be overwritten.|
+          i_select_column_text  = 'Overwrite?'
+          it_columns_to_display = lt_columns
+        IMPORTING
+          et_list               = lt_confirmed_overwrite ).
 
       LOOP AT lt_results_overwrite ASSIGNING <ls_result>.
         READ TABLE lt_confirmed_overwrite TRANSPORTING NO FIELDS

@@ -322,21 +322,6 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   ENDMETHOD.  " delete_initial_online_repo
 
-  METHOD delete_unnecessary_local_objs.
-
-    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-
-    lt_tadir = get_unnecessary_local_objs( ).
-
-    IF lines( lt_tadir ) > 0.
-
-      lcl_objects=>delete( lt_tadir ).
-
-    ENDIF.
-
-  ENDMETHOD. "  delete_unneccessary_local_objs.
-
-
   METHOD get_unnecessary_local_objs.
 
     DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
