@@ -91,7 +91,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
 
     ro_html->add( |<td class="logo">{
                   lcl_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                               iv_act = lif_defs=>gc_action-abapgit_home )
+                               iv_act = zif_abapgit_definitions=>gc_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
     ro_html->add( |<td><span class="page_title"> &#x25BA; {
@@ -119,7 +119,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ lif_defs=>gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ro_html->add( |<td><span class="version">{ zif_abapgit_definitions=>gc_abap_version }</span></td>| ). "#EC NOTEXT
     ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
 
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
@@ -146,7 +146,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
   ENDMETHOD. "scripts
 
   METHOD lif_gui_page~on_event.
-    ev_state = lif_defs=>gc_event_state-not_handled.
+    ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
   ENDMETHOD. "lif_gui_page~on_event
 
   METHOD lif_gui_page~render.

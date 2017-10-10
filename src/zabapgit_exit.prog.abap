@@ -6,7 +6,7 @@ INTERFACE lif_exit.
 
   METHODS:
     change_local_host
-      CHANGING ct_hosts TYPE lif_defs=>ty_icm_sinfo2_tt,
+      CHANGING ct_hosts TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
     allow_sap_objects
       RETURNING VALUE(rv_allowed) TYPE abap_bool.
 

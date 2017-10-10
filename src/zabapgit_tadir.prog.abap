@@ -12,15 +12,15 @@ CLASS lcl_skip_objects DEFINITION.
     METHODS:
       skip_sadl_generated_objects
         IMPORTING
-          it_tadir          TYPE lif_defs=>ty_tadir_tt
+          it_tadir          TYPE zif_abapgit_definitions=>ty_tadir_tt
           io_log            TYPE REF TO lcl_log OPTIONAL
         RETURNING
-          VALUE(rt_tadir) TYPE lif_defs=>ty_tadir_tt.
+          VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
     METHODS:
       has_sadl_superclass
         IMPORTING
-          is_class         TYPE lif_defs=>ty_tadir
+          is_class         TYPE zif_abapgit_definitions=>ty_tadir
         RETURNING
           VALUE(rv_return) TYPE abap_bool.
 ENDCLASS.
@@ -34,7 +34,7 @@ CLASS lcl_tadir DEFINITION FINAL.
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
                   io_dot                TYPE REF TO lcl_dot_abapgit OPTIONAL
                   io_log                TYPE REF TO lcl_log OPTIONAL
-        RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
+        RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception,
       read_single
         IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
@@ -61,8 +61,8 @@ CLASS lcl_tadir DEFINITION FINAL.
         RETURNING VALUE(rv_hash) TYPE text25
         RAISING   zcx_abapgit_exception,
       check_exists
-        IMPORTING it_tadir        TYPE lif_defs=>ty_tadir_tt
-        RETURNING VALUE(rt_tadir) TYPE lif_defs=>ty_tadir_tt
+        IMPORTING it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
+        RETURNING VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception,
       build
         IMPORTING iv_package            TYPE tadir-devclass
@@ -70,7 +70,7 @@ CLASS lcl_tadir DEFINITION FINAL.
                   io_dot                TYPE REF TO lcl_dot_abapgit
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
                   io_log                TYPE REF TO lcl_log OPTIONAL
-        RETURNING VALUE(rt_tadir)       TYPE lif_defs=>ty_tadir_tt
+        RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_tadir DEFINITION
@@ -178,7 +178,7 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD check_exists.
 
     DATA: lv_exists TYPE abap_bool,
-          ls_item   TYPE lif_defs=>ty_item.
+          ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -218,7 +218,7 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lt_tadir        TYPE lif_defs=>ty_tadir_tt,
+    DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_tdevc        TYPE STANDARD TABLE OF tdevc,
           lv_path         TYPE string,
           lo_skip_objects TYPE REF TO lcl_skip_objects,
