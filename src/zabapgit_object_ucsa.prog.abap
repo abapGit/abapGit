@@ -145,7 +145,7 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
           lo_persistence TYPE REF TO object,
           lr_sa          TYPE REF TO data.
 
-    FIELD-SYMBOLS: <sa>     TYPE any.
+    FIELD-SYMBOLS: <sa> TYPE any.
 
     TRY.
         CREATE DATA lr_sa TYPE ('UCONSERVASCOMPLETE').
@@ -183,16 +183,9 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
     DATA: lv_id          TYPE ty_id,
           lx_root        TYPE REF TO cx_root,
           lv_text        TYPE string,
-          lo_persistence TYPE REF TO object,
-          lr_sa          TYPE REF TO data.
-
-    FIELD-SYMBOLS: <sa> TYPE any.
+          lo_persistence TYPE REF TO object.
 
     TRY.
-        CREATE DATA lr_sa TYPE ('UCONSERVASCOMPLETE').
-        ASSIGN lr_sa->* TO <sa>.
-        ASSERT sy-subrc = 0.
-
         lv_id = ms_item-obj_name.
 
         lo_persistence = get_persistence( lv_id ).
