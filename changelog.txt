@@ -8,6 +8,19 @@ Legend
 + : added
 - : removed
 
+2017-10-10 v1.44.0
+------------------
+* WAPA: fixes for so2_controller
+* PROG: fix textpool translation activation
+* Some refactoring
++ Select unnessesary objects when resetting local
+* PROG: force delete of used includes
+* new url for explore page
+* remove old persistency layer
+* downport
+* fix for foreign customer namespaces
+* definitions refactored to global class
+
 2017-10-06 v1.43.1
 ------------------
 * Clear some DEVC fields
