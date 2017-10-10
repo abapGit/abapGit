@@ -38,6 +38,11 @@ DEFINE _append_result.
   <result>-filename = &8.
 END-OF-DEFINITION.
 
+DEFINE _given_source_is.
+  APPEND INITIAL LINE TO mt_source ASSIGNING <source>.
+  <source> = &1.
+END-OF-DEFINITION.
+
 * todo, should the tests be in the same include as the classes
 * they are testing?
 
@@ -816,7 +821,7 @@ CLASS ltcl_url IMPLEMENTATION.
     TRY.
         lcl_url=>host( 'not a real url' ).                  "#EC NOTEXT
         cl_abap_unit_assert=>fail( ).
-      CATCH zcx_abapgit_exception.                              "#EC NO_HANDLER
+      CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
     ENDTRY.
 
   ENDMETHOD.                    "repo_error
@@ -2596,6 +2601,190 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
       CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_oo_serialize DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      empty_include FOR TESTING RAISING cx_static_check,
+      one_line_include FOR TESTING RAISING cx_static_check,
+      one_line_include_2 FOR TESTING RAISING cx_static_check,
+      one_line_include_3 FOR TESTING RAISING cx_static_check,
+      two_line_include FOR TESTING RAISING cx_static_check,
+      two_line_include_2 FOR TESTING RAISING cx_static_check,
+      two_line_include_3 FOR TESTING RAISING cx_static_check,
+      more_than_two_lines FOR TESTING RAISING cx_static_check,
+
+      _given_empty_test_include,
+      _when_skip_is_calculated,
+      _then_should_be_skipped,
+      _then_should_not_be_skipped.
+
+    DATA: mo_oo_serializer  TYPE REF TO lcl_oo_serializer,
+          mt_source         TYPE zif_abapgit_definitions=>ty_string_tt,
+          mv_skip_testclass TYPE abap_bool.
+
+ENDCLASS.
+
+
+CLASS ltcl_oo_serialize IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_oo_serializer.
+
+  ENDMETHOD.
+
+  METHOD empty_include.
+
+    _given_empty_test_include( ).
+
+    _when_skip_is_calculated( ).
+
+    _then_should_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD one_line_include.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      `*"* use this source file for your ABAP unit test classes`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD one_line_include_2.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      `*`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD one_line_include_3.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      `write: 'This is ABAP'.`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_not_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD two_line_include.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      `*"* use this source file for your ABAP unit test classes`,
+      ``.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD two_line_include_2.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      `*"* use this source file for your ABAP unit test classes`,
+      `write: 'This is ABAP'.`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_not_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD two_line_include_3.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      ` `,
+      `*"* use this source file for your ABAP unit test classes`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_not_be_skipped( ).
+
+  ENDMETHOD.
+
+  METHOD more_than_two_lines.
+
+    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
+
+    _given_source_is:
+      '*"* use this source file for your ABAP unit test classes',
+      `CLASS ltcl_test DEFINITION FINAL FOR TESTING`,
+      `  DURATION SHORT`,
+      `  RISK LEVEL HARMLESS.`,
+
+      `  PRIVATE SECTION.`,
+      `    METHODS:`,
+      `      first_test FOR TESTING RAISING cx_static_check.`,
+      `ENDCLASS.`,
+      ` `,
+      `CLASS ltcl_test IMPLEMENTATION.`,
+
+      `  METHOD first_test.`,
+      `    cl_abap_unit_assert=>fail( 'This is a real test' ).`,
+      `  ENDMETHOD.`,
+
+      `ENDCLASS.`.
+
+    _when_skip_is_calculated( ).
+
+    _then_should_not_be_skipped( ).
+
+  ENDMETHOD.
+
+
+  METHOD _given_empty_test_include.
+
+  ENDMETHOD.
+
+  METHOD _when_skip_is_calculated.
+
+    mv_skip_testclass = mo_oo_serializer->calculate_skip_testclass( mt_source ).
+
+  ENDMETHOD.
+
+  METHOD _then_should_be_skipped.
+
+    cl_abap_unit_assert=>assert_true( act = mv_skip_testclass
+                                      msg = |Testclass should be skipped| ).
+
+  ENDMETHOD.
+
+
+  METHOD _then_should_not_be_skipped.
+
+    cl_abap_unit_assert=>assert_false( act = mv_skip_testclass
+                                       msg = |Testclass should not be skipped| ).
 
   ENDMETHOD.
 
