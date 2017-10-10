@@ -2738,11 +2738,11 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
     FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
     _given_source_is:
-      '*"* use this source file for your ABAP unit test classes',
+      `*"* use this source file for your ABAP unit test classes`,
       `CLASS ltcl_test DEFINITION FINAL FOR TESTING`,
       `  DURATION SHORT`,
       `  RISK LEVEL HARMLESS.`,
-
+      ` `,
       `  PRIVATE SECTION.`,
       `    METHODS:`,
       `      first_test FOR TESTING RAISING cx_static_check.`,
@@ -2753,7 +2753,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
       `  METHOD first_test.`,
       `    cl_abap_unit_assert=>fail( 'This is a real test' ).`,
       `  ENDMETHOD.`,
-
+      ` `,
       `ENDCLASS.`.
 
     _when_skip_is_calculated( ).
