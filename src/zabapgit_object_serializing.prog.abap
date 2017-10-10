@@ -59,6 +59,7 @@ INCLUDE zabapgit_object_tobj.
 INCLUDE zabapgit_object_tran.
 INCLUDE zabapgit_object_ttyp.
 INCLUDE zabapgit_object_type.
+INCLUDE zabapgit_object_ucsa.
 INCLUDE zabapgit_object_vcls.
 INCLUDE zabapgit_object_view.
 INCLUDE zabapgit_object_w3xx.
