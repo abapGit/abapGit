@@ -2316,10 +2316,6 @@ CLASS lcl_objects DEFINITION FINAL.
       IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_item
       RETURNING VALUE(rv_class_name) TYPE string.
 
-    CLASS-METHODS resolve_ddic
-      CHANGING ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING  zcx_abapgit_exception.
-
     CLASS-METHODS warning_overwrite
       CHANGING ct_results TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING  zcx_abapgit_exception.
@@ -2351,8 +2347,5 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_descr   TYPE string
       CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING   zcx_abapgit_exception.
-    CLASS-METHODS resolve_ddls
-      CHANGING
-        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
 ENDCLASS.                    "lcl_object DEFINITION
