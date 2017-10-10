@@ -28,8 +28,7 @@ CLASS lcl_object_wapa DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS:
       get_page_content
         IMPORTING io_page           TYPE REF TO cl_o2_api_pages
-        RETURNING VALUE(rv_content) TYPE xstring
-        RAISING   zcx_abapgit_exception,
+        RETURNING VALUE(rv_content) TYPE xstring,
       to_page_content
         IMPORTING iv_content        TYPE xstring
         RETURNING VALUE(rt_content) TYPE o2pageline_table,
@@ -237,19 +236,15 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         IMPORTING
           p_page      = lo_page ).
 
-      IF <ls_page>-attributes-pagetype <> so2_controller.
+      SPLIT <ls_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
+      REPLACE ALL OCCURRENCES OF '_-' IN lv_extra WITH '/'.
+      lv_content = mo_files->read_raw( iv_extra = lv_extra
+                                       iv_ext   = lv_ext ).
+      lo_page->set_page( to_page_content( lv_content ) ).
 
-        SPLIT <ls_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
-        REPLACE ALL OCCURRENCES OF '_-' IN lv_extra WITH '/'.
-        lv_content = mo_files->read_raw( iv_extra = lv_extra
-                                         iv_ext   = lv_ext ).
-        lo_page->set_page( to_page_content( lv_content ) ).
-
-        lo_page->set_event_handlers( <ls_page>-event_handlers ).
-        lo_page->set_parameters( <ls_page>-parameters ).
-        lo_page->set_type_source( <ls_page>-types ).
-
-      ENDIF.
+      lo_page->set_event_handlers( <ls_page>-event_handlers ).
+      lo_page->set_parameters( <ls_page>-parameters ).
+      lo_page->set_type_source( <ls_page>-types ).
 
       lo_page->save( p_with_all_texts = abap_true ).
 
@@ -353,55 +348,50 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       IMPORTING
         p_page    = lo_page ).
 
+    lo_page->get_event_handlers(
+      IMPORTING
+        p_ev_handler = rs_page-event_handlers
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2 ).
+    ASSERT sy-subrc = 0.
+
+    lo_page->get_parameters(
+      IMPORTING
+        p_parameters = rs_page-parameters
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2
+        OTHERS       = 3 ).
+    ASSERT sy-subrc = 0.
+
+    lo_page->get_type_source(
+      IMPORTING
+        p_source     = rs_page-types
+      EXCEPTIONS
+        page_deleted = 1
+        invalid_call = 2
+        OTHERS       = 3 ).
+    ASSERT sy-subrc = 0.
+
+    lv_content = get_page_content( lo_page ).
+    SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
+    REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
+    mo_files->add_raw(
+      iv_extra = lv_extra
+      iv_ext   = lv_ext
+      iv_data  = lv_content ).
+
     lo_page->get_attrs(
       IMPORTING
         p_attrs = rs_page-attributes ).
-
-    IF rs_page-attributes-pagetype <> so2_controller.
-
-      lo_page->get_event_handlers(
-        IMPORTING
-          p_ev_handler = rs_page-event_handlers
-        EXCEPTIONS
-          page_deleted = 1
-          invalid_call = 2 ).
-      ASSERT sy-subrc = 0.
-
-      lo_page->get_parameters(
-        IMPORTING
-          p_parameters = rs_page-parameters
-        EXCEPTIONS
-          page_deleted = 1
-          invalid_call = 2
-          OTHERS       = 3 ).
-      ASSERT sy-subrc = 0.
-
-      lo_page->get_type_source(
-        IMPORTING
-          p_source     = rs_page-types
-        EXCEPTIONS
-          page_deleted = 1
-          invalid_call = 2
-          OTHERS       = 3 ).
-      ASSERT sy-subrc = 0.
-
-      lv_content = get_page_content( lo_page ).
-      SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
-      REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
-      mo_files->add_raw(
-        iv_extra = lv_extra
-        iv_ext   = lv_ext
-        iv_data  = lv_content ).
-
-      CLEAR: rs_page-attributes-implclass.
-
-    ENDIF.
 
     CLEAR: rs_page-attributes-author,
            rs_page-attributes-createdon,
            rs_page-attributes-changedby,
            rs_page-attributes-changedon,
            rs_page-attributes-changetime,
+           rs_page-attributes-implclass,
            rs_page-attributes-gendate,
            rs_page-attributes-gentime,
            rs_page-attributes-devclass.
@@ -426,15 +416,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     io_page->get_page(
       IMPORTING
-        p_content = lt_content
-      EXCEPTIONS
-        invalid_call = 1
-        page_deleted = 2
-        OTHERS       = 3 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |WAPA - error from get_page_content| ).
-    ENDIF.
+        p_content = lt_content ).
 
     CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY zif_abapgit_definitions=>gc_newline RESPECTING BLANKS.
 
