@@ -16,7 +16,10 @@ CLASS lcl_object_ucsa DEFINITION INHERITING FROM lcl_objects_super FINAL.
         IMPORTING
           iv_id                 TYPE ty_id
         RETURNING
-          VALUE(ro_persistence) TYPE REF TO object.
+          VALUE(ro_persistence) TYPE REF TO object,
+      clear_dynamic_fields
+        CHANGING
+          cs_complete_comm_assembly TYPE any.
 
 ENDCLASS.
 
@@ -53,7 +56,7 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
-            version  = 'A'
+            version  = zif_abapgit_definitions=>gc_version-active
             language = sy-langu.
 
       CATCH cx_root.
@@ -67,68 +70,34 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_id          TYPE ty_id,
-          lx_root        TYPE REF TO cx_root,
-          lv_text        TYPE string,
-          lo_persistence TYPE REF TO object,
-          lr_sa          TYPE REF TO data.
+    DATA: lv_id                     TYPE ty_id,
+          lx_root                   TYPE REF TO cx_root,
+          lv_text                   TYPE string,
+          lo_persistence            TYPE REF TO object,
+          lr_complete_comm_assembly TYPE REF TO data.
 
-    FIELD-SYMBOLS: <sa>     TYPE any,
-                   <header> TYPE any,
-                   <field>  TYPE any.
+    FIELD-SYMBOLS: <ls_complete_comm_assembly> TYPE any.
 
     lv_id = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_sa TYPE ('UCONSERVASCOMPLETE').
-        ASSIGN lr_sa->* TO <sa>.
+        CREATE DATA lr_complete_comm_assembly TYPE ('UCONSERVASCOMPLETE').
+        ASSIGN lr_complete_comm_assembly->* TO <ls_complete_comm_assembly>.
         ASSERT sy-subrc = 0.
 
         lo_persistence = get_persistence( lv_id ).
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
-            version  = 'A'
+            version  = zif_abapgit_definitions=>gc_version-active
             language = sy-langu
           IMPORTING
-            sa       = <sa>.
+            sa       = <ls_complete_comm_assembly>.
 
-        ASSIGN COMPONENT 'HEADER' OF STRUCTURE <sa>
-               TO <header>.
-        ASSERT sy-subrc = 0.
-
-        ASSIGN COMPONENT 'CREATEDBY' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
-
-        ASSIGN COMPONENT 'CREATEDON' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
-
-        ASSIGN COMPONENT 'CREATEDAT' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
-
-        ASSIGN COMPONENT 'CHANGEDBY' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
-
-        ASSIGN COMPONENT 'CHANGEDON' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
-
-        ASSIGN COMPONENT 'CHANGEDAT' OF STRUCTURE <header>
-               TO <field>.
-        ASSERT sy-subrc = 0.
-        CLEAR: <field>.
+        clear_dynamic_fields( CHANGING cs_complete_comm_assembly = <ls_complete_comm_assembly> ).
 
         io_xml->add( iv_name = 'UCSA'
-                     ig_data = <sa> ).
+                     ig_data = <ls_complete_comm_assembly> ).
 
       CATCH cx_root INTO lx_root.
         lv_text = lx_root->get_text( ).
@@ -139,24 +108,24 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
   METHOD lif_object~deserialize.
 
-    DATA: lv_id          TYPE ty_id,
-          lx_root        TYPE REF TO cx_root,
-          lv_text        TYPE string,
-          lo_persistence TYPE REF TO object,
-          lr_sa          TYPE REF TO data.
+    DATA: lv_id                     TYPE ty_id,
+          lx_root                   TYPE REF TO cx_root,
+          lv_text                   TYPE string,
+          lo_persistence            TYPE REF TO object,
+          lr_complete_comm_assembly TYPE REF TO data.
 
-    FIELD-SYMBOLS: <sa> TYPE any.
+    FIELD-SYMBOLS: <ls_complete_comm_assembly> TYPE any.
 
     TRY.
-        CREATE DATA lr_sa TYPE ('UCONSERVASCOMPLETE').
-        ASSIGN lr_sa->* TO <sa>.
+        CREATE DATA lr_complete_comm_assembly TYPE ('UCONSERVASCOMPLETE').
+        ASSIGN lr_complete_comm_assembly->* TO <ls_complete_comm_assembly>.
         ASSERT sy-subrc = 0.
 
         io_xml->read(
           EXPORTING
             iv_name = 'UCSA'
           CHANGING
-            cg_data = <sa> ).
+            cg_data = <ls_complete_comm_assembly> ).
 
         lv_id = ms_item-obj_name.
 
@@ -166,8 +135,8 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~SAVE')
           EXPORTING
-            sa      = <sa>
-            version = 'A'.
+            sa      = <ls_complete_comm_assembly>
+            version = zif_abapgit_definitions=>gc_version-active.
 
         tadir_insert( iv_package ).
 
@@ -192,7 +161,7 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~DELETE')
           EXPORTING
-            version = 'A'.
+            version = zif_abapgit_definitions=>gc_version-active.
 
       CATCH cx_root INTO lx_root.
         lv_text = lx_root->get_text( ).
@@ -234,6 +203,48 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
         id       = iv_id
       RECEIVING
         instance = ro_persistence.
+
+  ENDMETHOD.
+
+
+  METHOD clear_dynamic_fields.
+
+    FIELD-SYMBOLS: <header> TYPE any,
+                   <field>  TYPE any.
+
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE cs_complete_comm_assembly
+           TO <header>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'CREATEDBY' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
+
+    ASSIGN COMPONENT 'CREATEDON' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
+
+    ASSIGN COMPONENT 'CREATEDAT' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
+
+    ASSIGN COMPONENT 'CHANGEDBY' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
+
+    ASSIGN COMPONENT 'CHANGEDON' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
+
+    ASSIGN COMPONENT 'CHANGEDAT' OF STRUCTURE <header>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    CLEAR: <field>.
 
   ENDMETHOD.
 
