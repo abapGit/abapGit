@@ -19,7 +19,12 @@ CLASS lcl_object_ucsa DEFINITION INHERITING FROM lcl_objects_super FINAL.
           VALUE(ro_persistence) TYPE REF TO object,
       clear_dynamic_fields
         CHANGING
-          cs_complete_comm_assembly TYPE any.
+          cs_complete_comm_assembly TYPE any,
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE csequence
+        CHANGING
+          cs_header   TYPE any.
 
 ENDCLASS.
 
@@ -53,6 +58,10 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
     TRY.
         lo_persistence = get_persistence( lv_id ).
+
+        " Interface IF_UCON_SA_PERSIST and other objects are not present
+        " in lower Netweaver realeses. Therefore we have to call them
+        " dynamically to be downward comapatible.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
@@ -216,32 +225,38 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
            TO <header>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'CREATEDBY' OF STRUCTURE <header>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    clear_field(
+      EXPORTING iv_fieldname = 'CREATEDBY'
+      CHANGING  cs_header   = <header> ).
 
-    ASSIGN COMPONENT 'CREATEDON' OF STRUCTURE <header>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    clear_field(
+      EXPORTING iv_fieldname = 'CREATEDON'
+      CHANGING  cs_header   = <header> ).
 
-    ASSIGN COMPONENT 'CREATEDAT' OF STRUCTURE <header>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    clear_field(
+      EXPORTING iv_fieldname = 'CREATEDAT'
+      CHANGING  cs_header   = <header> ).
 
-    ASSIGN COMPONENT 'CHANGEDBY' OF STRUCTURE <header>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    clear_field(
+      EXPORTING iv_fieldname = 'CHANGEDBY'
+      CHANGING  cs_header   = <header> ).
 
-    ASSIGN COMPONENT 'CHANGEDON' OF STRUCTURE <header>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    clear_field(
+      EXPORTING iv_fieldname = 'CHANGEDON'
+      CHANGING  cs_header   = <header> ).
 
-    ASSIGN COMPONENT 'CHANGEDAT' OF STRUCTURE <header>
+    clear_field(
+      EXPORTING iv_fieldname = 'CHANGEDAT'
+      CHANGING  cs_header   = <header> ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <field>  TYPE any.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_header
            TO <field>.
     ASSERT sy-subrc = 0.
     CLEAR: <field>.
