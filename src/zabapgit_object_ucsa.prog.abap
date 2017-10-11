@@ -17,9 +17,11 @@ CLASS lcl_object_ucsa DEFINITION INHERITING FROM lcl_objects_super FINAL.
           iv_id                 TYPE ty_id
         RETURNING
           VALUE(ro_persistence) TYPE REF TO object,
+
       clear_dynamic_fields
         CHANGING
           cs_complete_comm_assembly TYPE any,
+
       clear_field
         IMPORTING
           iv_fieldname TYPE csequence
@@ -215,7 +217,6 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD clear_dynamic_fields.
 
     FIELD-SYMBOLS: <header> TYPE any.
@@ -249,7 +250,6 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
       CHANGING  cs_header    = <header> ).
 
   ENDMETHOD.
-
 
   METHOD clear_field.
 
