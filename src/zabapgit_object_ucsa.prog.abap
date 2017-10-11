@@ -24,7 +24,7 @@ CLASS lcl_object_ucsa DEFINITION INHERITING FROM lcl_objects_super FINAL.
         IMPORTING
           iv_fieldname TYPE csequence
         CHANGING
-          cs_header   TYPE any.
+          cs_header    TYPE any.
 
 ENDCLASS.
 
@@ -218,8 +218,7 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
   METHOD clear_dynamic_fields.
 
-    FIELD-SYMBOLS: <header> TYPE any,
-                   <field>  TYPE any.
+    FIELD-SYMBOLS: <header> TYPE any.
 
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE cs_complete_comm_assembly
            TO <header>.
@@ -227,27 +226,27 @@ CLASS lcl_object_ucsa IMPLEMENTATION.
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDBY'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDON'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDAT'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDBY'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDON'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDAT'
-      CHANGING  cs_header   = <header> ).
+      CHANGING  cs_header    = <header> ).
 
   ENDMETHOD.
 
