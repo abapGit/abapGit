@@ -26,130 +26,261 @@ CLASS lcl_object_sxci IMPLEMENTATION.
   METHOD lif_object~get_metadata.
 
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
   METHOD lif_object~exists.
 
-*    DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
-*          lo_srfc_persist TYPE REF TO if_wb_object_persist.
-*
-*    TRY.
-*        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-*
-*        lo_srfc_persist->get(
-*          EXPORTING
-*            p_object_key  = |{ ms_item-obj_name }|
-*            p_version     = 'A'
-*          CHANGING
-*            p_object_data = lo_object_data ).
-*
-*      CATCH cx_root.
-*        rv_bool = abap_false.
-*        RETURN.
-*    ENDTRY.
-*
-*    rv_bool = abap_true.
+    DATA: lv_imp_name TYPE rsexscrn-imp_name.
+
+    CALL FUNCTION 'SXV_IMP_EXISTS'
+      EXPORTING
+        imp_name           = lv_imp_name
+      EXCEPTIONS
+        not_existing       = 1
+        data_inconsistency = 2
+        OTHERS             = 3.
+
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-*    DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
-*          lo_srfc_persist TYPE REF TO if_wb_object_persist,
-*          lr_srfc_data    TYPE REF TO data,
-*          lx_error        TYPE REF TO cx_root,
-*          lv_text         TYPE string.
-*
-*    FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
-*
-*    TRY.
-*        CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
-*        ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
-*        ASSERT sy-subrc = 0.
-*
-*        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-*
-*        lo_srfc_persist->get(
-*          EXPORTING
-*            p_object_key  = |{ ms_item-obj_name }|
-*            p_version     = 'A'
-*          CHANGING
-*            p_object_data = lo_object_data ).
-*
-*        lo_object_data->get_data(
-*          IMPORTING
-*            p_data = <ls_srfc_data> ).
-*
-*      CATCH cx_root INTO lx_error.
-*        lv_text = lx_error->get_text( ).
-*        zcx_abapgit_exception=>raise( lv_text ).
-*    ENDTRY.
-*
-*    io_xml->add( iv_name = 'SRFC'
-*                 ig_data = <ls_srfc_data> ).
+    DATA: lv_imp_name          TYPE rsexscrn-imp_name,
+          lv_exit_name         TYPE rsexscrn-exit_name,
+          lo_filter_obj        TYPE REF TO cl_badi_flt_struct,
+          lv_ext_clname        TYPE seoclsname,
+          ls_badi              TYPE badi_data,
+          ls_impl              TYPE impl_data,
+          lv_mast_langu        TYPE sy-langu,
+          lo_filter_values_obj TYPE REF TO cl_badi_flt_values_alv,
+          lt_fcodes            TYPE seex_fcode_table,
+          lt_cocos             TYPE seex_coco_table,
+          lt_intas             TYPE seex_table_table,
+          lt_scrns             TYPE seex_screen_table,
+          lt_methods           TYPE seex_mtd_table,
+          lt_filters           TYPE seex_filter_table.
+
+    lv_imp_name = ms_item-obj_name.
+
+    CALL FUNCTION 'SXV_EXIT_FOR_IMP'
+      EXPORTING
+        imp_name           = lv_imp_name
+      IMPORTING
+        exit_name          = lv_exit_name
+      TABLES
+        filters            = lt_filters
+      EXCEPTIONS
+        data_inconsistency = 1
+        OTHERS             = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+    ENDIF.
+
+    CALL FUNCTION 'SXO_BADI_READ'
+      EXPORTING
+        exit_name    = lv_exit_name    " Enhancement Name
+      IMPORTING
+        badi         = ls_badi
+*       mast_langu   =     " SAP R/3 System, Current Language
+        ext_clname   = lv_ext_clname    " Object Type Name
+        filter_obj   = lo_filter_obj
+*      TABLES
+*       fcodes       =
+*       cocos        =
+*       intas        =
+*       scrns        =
+*       methods      =
+*       inactive_tabstrips =
+      EXCEPTIONS
+        read_failure = 1
+        OTHERS       = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+    ENDIF.
+
+    CALL FUNCTION 'SXO_IMPL_FOR_BADI_READ'
+      EXPORTING
+        imp_name          = lv_imp_name     " Implementation name for an enhancement
+        exit_name         = lv_exit_name    " Enhancement Name
+*       maint_langu       = SY-LANGU    " SAP R/3 System, Current Language
+        inter_name        = ls_badi-inter_name     " Interface Name
+        filter_obj        = lo_filter_obj    " Manage Filter Type Structures for Business Add-Ins
+*       no_create_filter_values_obj =
+      IMPORTING
+        impl              = ls_impl
+        mast_langu        = lv_mast_langu
+        filter_values_obj = lo_filter_values_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
+      TABLES
+        fcodes            = lt_fcodes
+        cocos             = lt_cocos
+        intas             = lt_intas
+        scrns             = lt_scrns
+      CHANGING
+        methods           = lt_methods
+      EXCEPTIONS
+        read_failure      = 1
+        OTHERS            = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+    ENDIF.
+
+    CLEAR: ls_impl-aname,
+           ls_impl-adate,
+           ls_impl-atime,
+           ls_impl-uname,
+           ls_impl-udate,
+           ls_impl-utime.
+
+    io_xml->add( iv_name = 'SXCI'
+                 ig_data = ls_impl ).
+
+    io_xml->add( iv_name = 'FILTERS'
+                 ig_data = lt_filters ).
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-*    DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
-*          lo_object_data  TYPE REF TO if_wb_object_data_model,
-*          lv_text         TYPE string,
-*          lr_srfc_data    TYPE REF TO data,
-*          lx_error        TYPE REF TO cx_root.
-*
-*    FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
-*
-*    TRY.
-*        CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
-*        ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
-*        ASSERT sy-subrc = 0.
-*
-*        io_xml->read(
-*          EXPORTING
-*            iv_name = 'SRFC'
-*          CHANGING
-*            cg_data = <ls_srfc_data> ).
-*
-*        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-*        CREATE OBJECT lo_object_data TYPE ('CL_UCONRFC_OBJECT_DATA').
-*
-*        lo_object_data->set_data( p_data = <ls_srfc_data> ).
-*
-*        lo_srfc_persist->save( lo_object_data ).
-*
-*        tadir_insert( iv_package ).
-*
-*      CATCH cx_root INTO lx_error.
-*        lv_text = lx_error->get_text( ).
-*        zcx_abapgit_exception=>raise( lv_text ).
-*    ENDTRY.
+    DATA: ls_impl           TYPE impl_data,
+          lt_filters        TYPE seex_filter_table,
+          ls_badi           TYPE badi_data,
+          lv_mast_langu     TYPE sy-langu,
+          lv_ext_clname     TYPE seoclsname,
+          lo_filter_obj     TYPE REF TO cl_badi_flt_struct,
+          lo_filter_val_obj TYPE REF TO cl_badi_flt_values_alv,
+          lv_korrnum        TYPE trkorr,
+          flt_ext           TYPE rsexscrn-flt_ext,
+          lv_package        TYPE devclass.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SXCI'
+      CHANGING
+        cg_data = ls_impl ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'FILTERS'
+      CHANGING
+        cg_data = lt_filters ).
+
+    CALL FUNCTION 'SXO_BADI_READ'
+      EXPORTING
+        exit_name    = ls_impl-exit_name    " Enhancement Name
+      IMPORTING
+        badi         = ls_badi
+*       mast_langu   =     " SAP R/3 System, Current Language
+        ext_clname   = lv_ext_clname    " Object Type Name
+        filter_obj   = lo_filter_obj
+*      TABLES
+*       fcodes       =
+*       cocos        =
+*       intas        =
+*       scrns        =
+*       methods      =
+*       inactive_tabstrips =
+      EXCEPTIONS
+        read_failure = 1
+        OTHERS       = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXO_BADI_READ' ).
+    ENDIF.
+
+    lv_package = iv_package.
+
+    CREATE OBJECT lo_filter_val_obj
+      EXPORTING
+        filter_object = lo_filter_obj    " Manage Filter Type Structures for Business Add-Ins
+        filter_values = lt_filters    " Filter Values
+*       for_flt_val_creation   =     " Create Filter Values in Dialog Box
+*       for_overview  =     " Overview Display of All Implementations
+*       filter_values_for_over =     " Filter Values with All Implementations
+*       fieldcatalog  =     " Field Catalog for List Viewer Control
+      .
+
+    CALL FUNCTION 'SXO_IMPL_SAVE'
+      EXPORTING
+        impl            = ls_impl
+        flt_ext         = flt_ext    " Alternative
+*       flt_type        =     " Data Element (Semantic Domain)
+*       maint_langu     = SY-LANGU    " SAP R/3 System, Current Language
+        filter_val_obj  = lo_filter_val_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
+        genflag         = abap_true     " Generation Flag
+        no_dialog       = abap_true     " No dialogs
+*  IMPORTING
+*       mast_langu      =     " SAP R/3 System, Current Language
+*  TABLES
+*       fcodes_to_insert =
+*       cocos_to_insert =
+*       intas_to_insert =
+*       sscrs_to_insert =
+      CHANGING
+        korrnum         = lv_korrnum
+        devclass        = lv_package    " Development class for Change and Transport Organizer
+      EXCEPTIONS
+        save_failure    = 1
+        action_canceled = 2
+        OTHERS          = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_SAVE' ).
+    ENDIF.
+
+    CALL FUNCTION 'SXO_IMPL_ACTIVE'
+      EXPORTING
+        imp_name                  = ls_impl-imp_name    " Implementation name for an enhancement
+        no_dialog                 = abap_true
+      EXCEPTIONS
+        badi_not_existing         = 1
+        imp_not_existing          = 2
+        already_active            = 3
+        data_inconsistency        = 4
+        activation_not_admissable = 5
+        action_canceled           = 6
+        access_failure            = 7
+        OTHERS                    = 8.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_ACTIVE' ).
+    ENDIF.
 
   ENDMETHOD.
 
   METHOD lif_object~delete.
 
-*    DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
-*          lx_error        TYPE REF TO cx_root,
-*          lv_text         TYPE string.
-*
-*    TRY.
-*        CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
-*
-*        lo_srfc_persist->delete( p_object_key = |{ ms_item-obj_name }|
-*                                 p_version    = 'A' ).
-*
-*      CATCH cx_root INTO lx_error.
-*        lv_text = lx_error->get_text( ).
-*        zcx_abapgit_exception=>raise( lv_text ).
-*    ENDTRY.
+    DATA: lv_imp_name TYPE rsexscrn-imp_name.
+
+    lv_imp_name = ms_item-obj_name.
+
+    CALL FUNCTION 'SXO_IMPL_DELETE'
+      EXPORTING
+        imp_name           = lv_imp_name
+        no_dialog          = abap_true
+*      CHANGING
+*       korr_num           =     " Correction Number
+      EXCEPTIONS
+        imp_not_existing   = 1
+        action_canceled    = 2
+        access_failure     = 3
+        data_inconsistency = 4
+        OTHERS             = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_DELETE' ).
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD lif_object~jump.
+
+    " SXO_IMPL_SHOW
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
