@@ -6,6 +6,14 @@ CLASS lcl_object_sxci DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+  PRIVATE SECTION.
+    CONSTANTS: BEGIN OF co_badi_comp_name,
+                 filters            TYPE string VALUE 'FILTERS',
+                 function_codes     TYPE string VALUE 'FUNCTION_CODES',
+                 control_composites TYPE string VALUE 'CONTROL_COMPOSITES',
+                 customer_includes  TYPE string VALUE 'CUSTOMER_INCLUDES',
+                 screens            TYPE string VALUE 'SCREENS',
+               END OF co_badi_comp_name.
 
 ENDCLASS.
 
@@ -47,20 +55,19 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_imp_name          TYPE rsexscrn-imp_name,
-          lv_exit_name         TYPE rsexscrn-exit_name,
-          lo_filter_obj        TYPE REF TO cl_badi_flt_struct,
-          lv_ext_clname        TYPE seoclsname,
-          ls_badi              TYPE badi_data,
-          ls_impl              TYPE impl_data,
-          lv_mast_langu        TYPE sy-langu,
-          lo_filter_values_obj TYPE REF TO cl_badi_flt_values_alv,
-          lt_fcodes            TYPE seex_fcode_table,
-          lt_cocos             TYPE seex_coco_table,
-          lt_intas             TYPE seex_table_table,
-          lt_scrns             TYPE seex_screen_table,
-          lt_methods           TYPE seex_mtd_table,
-          lt_filters           TYPE seex_filter_table.
+    DATA: lv_imp_name           TYPE rsexscrn-imp_name,
+          lv_exit_name          TYPE rsexscrn-exit_name,
+          lo_filter_obj         TYPE REF TO cl_badi_flt_struct,
+          lv_ext_clname         TYPE seoclsname,
+          ls_badi               TYPE badi_data,
+          ls_impl               TYPE impl_data,
+          lv_mast_langu         TYPE sy-langu,
+          lo_filter_values_obj  TYPE REF TO cl_badi_flt_values_alv,
+          lt_function_codes     TYPE seex_fcode_table,
+          lt_control_composites TYPE seex_coco_table,
+          lt_customer_includes  TYPE seex_table_table,
+          lt_screens            TYPE seex_screen_table,
+          lt_filters            TYPE seex_filter_table.
 
     lv_imp_name = ms_item-obj_name.
 
@@ -84,16 +91,8 @@ CLASS lcl_object_sxci IMPLEMENTATION.
         exit_name    = lv_exit_name    " Enhancement Name
       IMPORTING
         badi         = ls_badi
-*       mast_langu   =     " SAP R/3 System, Current Language
         ext_clname   = lv_ext_clname    " Object Type Name
         filter_obj   = lo_filter_obj
-*      TABLES
-*       fcodes       =
-*       cocos        =
-*       intas        =
-*       scrns        =
-*       methods      =
-*       inactive_tabstrips =
       EXCEPTIONS
         read_failure = 1
         OTHERS       = 2.
@@ -106,21 +105,17 @@ CLASS lcl_object_sxci IMPLEMENTATION.
       EXPORTING
         imp_name          = lv_imp_name     " Implementation name for an enhancement
         exit_name         = lv_exit_name    " Enhancement Name
-*       maint_langu       = SY-LANGU    " SAP R/3 System, Current Language
         inter_name        = ls_badi-inter_name     " Interface Name
         filter_obj        = lo_filter_obj    " Manage Filter Type Structures for Business Add-Ins
-*       no_create_filter_values_obj =
       IMPORTING
         impl              = ls_impl
         mast_langu        = lv_mast_langu
         filter_values_obj = lo_filter_values_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
       TABLES
-        fcodes            = lt_fcodes
-        cocos             = lt_cocos
-        intas             = lt_intas
-        scrns             = lt_scrns
-      CHANGING
-        methods           = lt_methods
+        fcodes            = lt_function_codes
+        cocos             = lt_control_composites
+        intas             = lt_customer_includes
+        scrns             = lt_screens
       EXCEPTIONS
         read_failure      = 1
         OTHERS            = 2.
@@ -139,23 +134,38 @@ CLASS lcl_object_sxci IMPLEMENTATION.
     io_xml->add( iv_name = 'SXCI'
                  ig_data = ls_impl ).
 
-    io_xml->add( iv_name = 'FILTERS'
+    io_xml->add( iv_name = co_badi_comp_name-filters
                  ig_data = lt_filters ).
+
+    io_xml->add( iv_name = co_badi_comp_name-function_codes
+                 ig_data = lt_function_codes ).
+
+    io_xml->add( iv_name = co_badi_comp_name-control_composites
+                 ig_data = lt_control_composites ).
+
+    io_xml->add( iv_name = co_badi_comp_name-customer_includes
+                 ig_data = lt_customer_includes ).
+
+    io_xml->add( iv_name = co_badi_comp_name-screens
+                 ig_data = lt_screens ).
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_impl           TYPE impl_data,
-          lt_filters        TYPE seex_filter_table,
-          ls_badi           TYPE badi_data,
-          lv_mast_langu     TYPE sy-langu,
-          lv_ext_clname     TYPE seoclsname,
-          lo_filter_obj     TYPE REF TO cl_badi_flt_struct,
-          lo_filter_val_obj TYPE REF TO cl_badi_flt_values_alv,
-          lv_korrnum        TYPE trkorr,
-          flt_ext           TYPE rsexscrn-flt_ext,
-          lv_package        TYPE devclass.
+    DATA: ls_impl               TYPE impl_data,
+          lt_filters            TYPE seex_filter_table,
+          lt_function_codes     TYPE seex_fcode_table,
+          lt_control_composites TYPE seex_coco_table,
+          lt_customer_includes  TYPE seex_table_table,
+          lt_screens            TYPE seex_screen_table,
+          ls_badi               TYPE badi_data,
+          lv_ext_clname         TYPE seoclsname,
+          lo_filter_obj         TYPE REF TO cl_badi_flt_struct,
+          lo_filter_val_obj     TYPE REF TO cl_badi_flt_values_alv,
+          lv_korrnum            TYPE trkorr,
+          flt_ext               TYPE rsexscrn-flt_ext,
+          lv_package            TYPE devclass.
 
     io_xml->read(
       EXPORTING
@@ -165,25 +175,41 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
     io_xml->read(
       EXPORTING
-        iv_name = 'FILTERS'
+        iv_name = co_badi_comp_name-filters
       CHANGING
         cg_data = lt_filters ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = co_badi_comp_name-function_codes
+      CHANGING
+        cg_data = lt_function_codes ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = co_badi_comp_name-control_composites
+      CHANGING
+        cg_data = lt_control_composites ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = co_badi_comp_name-customer_includes
+      CHANGING
+        cg_data = lt_customer_includes ).
+
+    io_xml->read(
+      EXPORTING
+        iv_name = co_badi_comp_name-screens
+      CHANGING
+        cg_data = lt_screens ).
 
     CALL FUNCTION 'SXO_BADI_READ'
       EXPORTING
         exit_name    = ls_impl-exit_name    " Enhancement Name
       IMPORTING
         badi         = ls_badi
-*       mast_langu   =     " SAP R/3 System, Current Language
         ext_clname   = lv_ext_clname    " Object Type Name
         filter_obj   = lo_filter_obj
-*      TABLES
-*       fcodes       =
-*       cocos        =
-*       intas        =
-*       scrns        =
-*       methods      =
-*       inactive_tabstrips =
       EXCEPTIONS
         read_failure = 1
         OTHERS       = 2.
@@ -197,36 +223,27 @@ CLASS lcl_object_sxci IMPLEMENTATION.
     CREATE OBJECT lo_filter_val_obj
       EXPORTING
         filter_object = lo_filter_obj    " Manage Filter Type Structures for Business Add-Ins
-        filter_values = lt_filters    " Filter Values
-*       for_flt_val_creation   =     " Create Filter Values in Dialog Box
-*       for_overview  =     " Overview Display of All Implementations
-*       filter_values_for_over =     " Filter Values with All Implementations
-*       fieldcatalog  =     " Field Catalog for List Viewer Control
-      .
+        filter_values = lt_filters.    " Filter Values
 
     CALL FUNCTION 'SXO_IMPL_SAVE'
       EXPORTING
-        impl            = ls_impl
-        flt_ext         = flt_ext    " Alternative
-*       flt_type        =     " Data Element (Semantic Domain)
-*       maint_langu     = SY-LANGU    " SAP R/3 System, Current Language
-        filter_val_obj  = lo_filter_val_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
-        genflag         = abap_true     " Generation Flag
-        no_dialog       = abap_true     " No dialogs
-*  IMPORTING
-*       mast_langu      =     " SAP R/3 System, Current Language
-*  TABLES
-*       fcodes_to_insert =
-*       cocos_to_insert =
-*       intas_to_insert =
-*       sscrs_to_insert =
+        impl             = ls_impl
+        flt_ext          = flt_ext    " Alternative
+        filter_val_obj   = lo_filter_val_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
+        genflag          = abap_true     " Generation Flag
+        no_dialog        = abap_true     " No dialogs
+      TABLES
+        fcodes_to_insert = lt_function_codes
+        cocos_to_insert  = lt_control_composites
+        intas_to_insert  = lt_customer_includes
+        sscrs_to_insert  = lt_screens
       CHANGING
-        korrnum         = lv_korrnum
-        devclass        = lv_package    " Development class for Change and Transport Organizer
+        korrnum          = lv_korrnum
+        devclass         = lv_package    " Development class for Change and Transport Organizer
       EXCEPTIONS
-        save_failure    = 1
-        action_canceled = 2
-        OTHERS          = 3.
+        save_failure     = 1
+        action_canceled  = 2
+        OTHERS           = 3.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SXO_IMPL_SAVE' ).
@@ -262,8 +279,6 @@ CLASS lcl_object_sxci IMPLEMENTATION.
       EXPORTING
         imp_name           = lv_imp_name
         no_dialog          = abap_true
-*      CHANGING
-*       korr_num           =     " Correction Number
       EXCEPTIONS
         imp_not_existing   = 1
         action_canceled    = 2
