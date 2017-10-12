@@ -2652,8 +2652,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD one_line_include.
 
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
-
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
 
     _when_skip_is_calculated( ).
@@ -2663,8 +2661,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD one_line_include_2.
-
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
     _given_source_is( `*` ).
 
@@ -2676,8 +2672,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD one_line_include_3.
 
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
-
     _given_source_is( `write: 'This is ABAP'.` ).
 
     _when_skip_is_calculated( ).
@@ -2688,10 +2682,8 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD two_line_include.
 
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
-
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
-    _given_source_is( ` `                                                        ).
+    _given_source_is( ``                                                         ).
 
     _when_skip_is_calculated( ).
 
@@ -2700,8 +2692,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD two_line_include_2.
-
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
 
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
     _given_source_is( `write: 'This is ABAP'.`                                   ).
@@ -2714,8 +2704,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD two_line_include_3.
 
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
-
     _given_source_is( ` `                                                        ).
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
 
@@ -2726,9 +2714,6 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD more_than_two_lines.
-
-    FIELD-SYMBOLS: <source> LIKE LINE OF mt_source.
-
 
     _given_source_is( `*"* use this source file for your ABAP unit test classes` ).
     _given_source_is( `CLASS ltcl_test DEFINITION FINAL FOR TESTING`             ).
