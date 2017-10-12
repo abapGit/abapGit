@@ -54,6 +54,7 @@ INCLUDE zabapgit_object_ssst.
 INCLUDE zabapgit_object_styl.
 INCLUDE zabapgit_object_susc.
 INCLUDE zabapgit_object_suso.
+INCLUDE zabapgit_object_sxci.
 INCLUDE zabapgit_object_tabl_valid.
 INCLUDE zabapgit_object_tabl.
 INCLUDE zabapgit_object_tobj.
