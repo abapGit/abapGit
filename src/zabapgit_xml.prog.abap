@@ -374,8 +374,9 @@ CLASS lcl_xml_input IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_rtab> LIKE LINE OF lt_rtab.
 
-
     ASSERT NOT iv_name IS INITIAL.
+
+    CLEAR cg_data. "Initialize result to avoid problems with empty values
 
     APPEND INITIAL LINE TO lt_rtab ASSIGNING <ls_rtab>.
     <ls_rtab>-name = iv_name.
