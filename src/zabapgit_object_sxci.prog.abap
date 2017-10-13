@@ -94,6 +94,12 @@ CLASS lcl_object_sxci IMPLEMENTATION.
       IMPORTING
         badi         = ls_badi_definition
         filter_obj   = lo_filter_object
+      TABLES
+        fcodes       = lt_function_codes
+        cocos        = lt_control_composites
+        intas        = lt_customer_includes
+        scrns        = lt_screens
+        methods      = lt_methods
       EXCEPTIONS
         read_failure = 1
         OTHERS       = 2.
