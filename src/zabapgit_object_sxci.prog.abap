@@ -6,6 +6,7 @@ CLASS lcl_object_sxci DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES lif_object.
+
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF co_badi_comp_name,
                  filters            TYPE string VALUE 'FILTERS',
@@ -57,20 +58,18 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lv_implementation_name            TYPE rsexscrn-imp_name,
-          lv_exit_name           TYPE rsexscrn-exit_name,
-          lo_filter_obj          TYPE REF TO cl_badi_flt_struct,
-          lv_ext_clname          TYPE seoclsname,
-          ls_badi_definition     TYPE badi_data,
-          ls_badi_implementation TYPE impl_data,
-          lv_mast_langu          TYPE sy-langu,
-          lo_filter_values_obj   TYPE REF TO cl_badi_flt_values_alv,
-          lt_function_codes      TYPE seex_fcode_table,
-          lt_control_composites  TYPE seex_coco_table,
-          lt_customer_includes   TYPE seex_table_table,
-          lt_screens             TYPE seex_screen_table,
-          lt_filters             TYPE seex_filter_table,
-          lt_methods             TYPE seex_mtd_table.
+    DATA: lv_implementation_name  TYPE rsexscrn-imp_name,
+          lv_exit_name            TYPE rsexscrn-exit_name,
+          lo_filter_object        TYPE REF TO cl_badi_flt_struct,
+          ls_badi_definition      TYPE badi_data,
+          ls_badi_implementation  TYPE impl_data,
+          lo_filter_values_object TYPE REF TO cl_badi_flt_values_alv,
+          lt_function_codes       TYPE seex_fcode_table,
+          lt_control_composites   TYPE seex_coco_table,
+          lt_customer_includes    TYPE seex_table_table,
+          lt_screens              TYPE seex_screen_table,
+          lt_filters              TYPE seex_filter_table,
+          lt_methods              TYPE seex_mtd_table.
 
     lv_implementation_name = ms_item-obj_name.
 
@@ -91,11 +90,10 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
     CALL FUNCTION 'SXO_BADI_READ'
       EXPORTING
-        exit_name    = lv_exit_name    " Enhancement Name
+        exit_name    = lv_exit_name
       IMPORTING
         badi         = ls_badi_definition
-        ext_clname   = lv_ext_clname    " Object Type Name
-        filter_obj   = lo_filter_obj
+        filter_obj   = lo_filter_object
       EXCEPTIONS
         read_failure = 1
         OTHERS       = 2.
@@ -106,14 +104,13 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
     CALL FUNCTION 'SXO_IMPL_FOR_BADI_READ'
       EXPORTING
-        imp_name          = lv_implementation_name     " Implementation name for an enhancement
-        exit_name         = lv_exit_name    " Enhancement Name
-        inter_name        = ls_badi_definition-inter_name     " Interface Name
-        filter_obj        = lo_filter_obj    " Manage Filter Type Structures for Business Add-Ins
+        imp_name          = lv_implementation_name        " Implementation name for an enhancement
+        exit_name         = lv_exit_name                  " Enhancement Name
+        inter_name        = ls_badi_definition-inter_name " Interface Name
+        filter_obj        = lo_filter_object                 " Manage Filter Type Structures for Business Add-Ins
       IMPORTING
         impl              = ls_badi_implementation
-        mast_langu        = lv_mast_langu
-        filter_values_obj = lo_filter_values_obj    " Manage Filter Values in ALV Grid for Business Add-Ins
+        filter_values_obj = lo_filter_values_object          " Manage Filter Values in ALV Grid for Business Add-Ins
       TABLES
         fcodes            = lt_function_codes
         cocos             = lt_control_composites
@@ -166,8 +163,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
           lt_customer_includes         TYPE seex_table_table,
           lt_screens                   TYPE seex_screen_table,
           ls_badi_definition           TYPE badi_data,
-          lv_ext_clname                TYPE seoclsname,
-          lo_filter_obj                TYPE REF TO cl_badi_flt_struct,
+          lo_filter_object             TYPE REF TO cl_badi_flt_struct,
           lo_filter_val_obj            TYPE REF TO cl_badi_flt_values_alv,
           lv_korrnum                   TYPE trkorr,
           lv_filter_type_enhaceability TYPE rsexscrn-flt_ext,
@@ -214,8 +210,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
         exit_name    = ls_badi_implementation-exit_name    " Enhancement Name
       IMPORTING
         badi         = ls_badi_definition
-        ext_clname   = lv_ext_clname    " Object Type Name
-        filter_obj   = lo_filter_obj
+        filter_obj   = lo_filter_object
       EXCEPTIONS
         read_failure = 1
         OTHERS       = 2.
@@ -228,7 +223,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
     CREATE OBJECT lo_filter_val_obj
       EXPORTING
-        filter_object = lo_filter_obj " Manage Filter Type Structures for Business Add-Ins
+        filter_object = lo_filter_object " Manage Filter Type Structures for Business Add-Ins
         filter_values = lt_filters.   " Filter Values
 
     CALL FUNCTION 'SXO_IMPL_SAVE'
