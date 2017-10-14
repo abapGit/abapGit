@@ -82,7 +82,8 @@ CLASS lcl_popups DEFINITION FINAL.
                   i_header_text         TYPE csequence
                   i_select_column_text  TYPE csequence
                   it_columns_to_display TYPE stringtab
-        EXPORTING VALUE(et_list)        TYPE STANDARD TABLE.
+        EXPORTING VALUE(et_list)        TYPE STANDARD TABLE
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     TYPES: ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
