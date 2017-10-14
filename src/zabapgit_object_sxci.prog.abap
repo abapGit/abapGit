@@ -109,7 +109,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
         OTHERS       = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+      zcx_abapgit_exception=>raise( 'error from SXO_BADI_READ' ).
     ENDIF.
 
     CALL FUNCTION 'SXO_IMPL_FOR_BADI_READ'
@@ -133,7 +133,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
         OTHERS            = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SXV_EXIT_FOR_IMP' ).
+      zcx_abapgit_exception=>raise( 'error from SXO_IMPL_FOR_BADI_READ' ).
     ENDIF.
 
     CLEAR: ls_classic_badi_implementation-implementation_data-aname,
