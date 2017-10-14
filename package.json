@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "scripts": {
-    "test": "abaplint src/*.abap"
+    "test": "abaplint \"src/**/*.abap\""
   },
   "repository": {
     "type": "git",

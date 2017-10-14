@@ -2,7 +2,7 @@
 [![abaplint](http://abaplint.org/badges/larshp/abapGit)](http://abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 
-# abapGit #
+# abapGit 
 
 Git client for ABAP
 
@@ -12,16 +12,20 @@ ABAP Version: 702 or higher
 
 Latest build: [zabapgit.abap](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.abap)
 
-## Design Goals ##
+## Design Goals 
 - Easy installation
 - Easy upgrade
 - Small system footprint
 - Code readable in git repository
 
-## Documentation/Guides ##
+## Documentation/Guides 
 http://larshp.github.io/abapGit/
 
-## FAQ ##
+## Projects using abapGit 
+
+See [dotabap.org](http://dotabap.org)
+
+## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
 ![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_33_3.png)
