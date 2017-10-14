@@ -14,15 +14,28 @@ CLASS lcl_object_iamu DEFINITION INHERITING FROM lcl_objects_super FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_iamu,
+    TYPES: BEGIN OF ty_internet_appl_comp_binary,
              attributes TYPE w3mimeattr,
              source     TYPE w3mimetabtype,
              length     TYPE i,
-           END OF ty_iamu.
+           END OF ty_internet_appl_comp_binary.
+
     DATA: mo_mime_api TYPE REF TO if_w3_api_mime.
 
     METHODS:
-      load
+      load_mime_api
+        RAISING
+          zcx_abapgit_exception,
+
+      read
+        RETURNING
+          VALUE(rs_internet_appl_comp_binary) TYPE ty_internet_appl_comp_binary
+        RAISING
+          zcx_abapgit_exception,
+
+      save
+        IMPORTING
+          is_internet_appl_comp_binary TYPE ty_internet_appl_comp_binary
         RAISING
           zcx_abapgit_exception,
 
@@ -59,135 +72,34 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: ls_iamu TYPE ty_iamu.
+    DATA: ls_internet_appl_comp_binary TYPE ty_internet_appl_comp_binary.
 
-    load( ).
-
-    mo_mime_api->get_attributes(
-      IMPORTING
-        p_attributes   = ls_iamu-attributes
-      EXCEPTIONS
-        object_invalid = 1
-        mime_deleted   = 2
-        error_occured  = 3
-        OTHERS         = 4 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_attributes| ).
-    ENDIF.
-
-    CLEAR: ls_iamu-attributes-chname,
-           ls_iamu-attributes-tdate,
-           ls_iamu-attributes-ttime,
-           ls_iamu-attributes-devclass.
-
-    mo_mime_api->get_source(
-      IMPORTING
-        p_source       = ls_iamu-source
-        p_datalength   = ls_iamu-length
-      EXCEPTIONS
-        object_invalid = 1
-        mime_deleted   = 2
-        error_occured  = 3
-        OTHERS         = 4 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_source| ).
-    ENDIF.
+    ls_internet_appl_comp_binary = read( ).
 
     io_xml->add( iv_name = 'IAMU'
-                 ig_data = ls_iamu ).
+                 ig_data = ls_internet_appl_comp_binary ).
 
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-    DATA: ls_iamu TYPE ty_iamu.
+    DATA: ls_internet_appl_comp_binary TYPE ty_internet_appl_comp_binary.
 
     io_xml->read(
       EXPORTING
         iv_name = 'IAMU'
       CHANGING
-        cg_data = ls_iamu ).
+        cg_data = ls_internet_appl_comp_binary ).
 
-    ls_iamu-attributes-devclass = iv_package.
+    ls_internet_appl_comp_binary-attributes-devclass = iv_package.
 
-    cl_w3_api_mime=>if_w3_api_mime~create_new(
-      EXPORTING
-        p_mime_data             = ls_iamu-attributes
-        p_mime_content          = ls_iamu-source
-        p_datalength            = ls_iamu-length
-      IMPORTING
-        p_mime                  = mo_mime_api
-      EXCEPTIONS
-        object_already_existing = 1
-        object_just_created     = 2
-        not_authorized          = 3
-        undefined_name          = 4
-        author_not_existing     = 5
-        action_cancelled        = 6
-        error_occured           = 7
-        OTHERS                  = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_ne| ).
-    ENDIF.
-
-    mo_mime_api->set_attributes(
-      EXPORTING
-        p_attributes          = ls_iamu-attributes
-      EXCEPTIONS
-        object_not_changeable = 1
-        object_deleted        = 2
-        object_invalid        = 3
-        author_not_existing   = 4
-        authorize_failure     = 5
-        error_occured         = 6
-        OTHERS                = 7 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_attributes| ).
-    ENDIF.
-
-    mo_mime_api->set_source(
-      EXPORTING
-        p_source              = ls_iamu-source
-        p_datalength          = ls_iamu-length
-      EXCEPTIONS
-        object_not_changeable = 1
-        object_deleted        = 2
-        object_invalid        = 3
-        authorize_failure     = 4
-        invalid_content       = 5
-        error_occured         = 6
-        OTHERS                = 7 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_attributes| ).
-    ENDIF.
-
-    mo_mime_api->if_w3_api_object~save(
-      EXCEPTIONS
-        object_invalid        = 1
-        object_not_changeable = 2
-        action_cancelled      = 3
-        permission_failure    = 4
-        not_changed           = 5
-        data_invalid          = 6
-        error_occured         = 7
-        OTHERS                = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~save| ).
-    ENDIF.
-
-    release_lock( ).
+    save( ls_internet_appl_comp_binary ).
 
   ENDMETHOD.
 
   METHOD lif_object~delete.
 
-    load( ).
+    load_mime_api( ).
 
     mo_mime_api->if_w3_api_object~set_changeable(
       EXPORTING
@@ -275,7 +187,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD load.
+  METHOD load_mime_api.
 
     DATA: ls_mime_name TYPE iacikeym.
 
@@ -299,8 +211,89 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD read.
+
+    load_mime_api( ).
+
+    mo_mime_api->get_attributes(
+      IMPORTING
+        p_attributes   = rs_internet_appl_comp_binary-attributes
+      EXCEPTIONS
+        object_invalid = 1
+        mime_deleted   = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_attributes| ).
+    ENDIF.
+
+    CLEAR: rs_internet_appl_comp_binary-attributes-chname,
+           rs_internet_appl_comp_binary-attributes-tdate,
+           rs_internet_appl_comp_binary-attributes-ttime,
+           rs_internet_appl_comp_binary-attributes-devclass.
+
+    mo_mime_api->get_source(
+      IMPORTING
+        p_source       = rs_internet_appl_comp_binary-source
+        p_datalength   = rs_internet_appl_comp_binary-length
+      EXCEPTIONS
+        object_invalid = 1
+        mime_deleted   = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_source| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    cl_w3_api_mime=>if_w3_api_mime~create_new(
+      EXPORTING
+        p_mime_data             = is_internet_appl_comp_binary-attributes
+        p_mime_content          = is_internet_appl_comp_binary-source
+        p_datalength            = is_internet_appl_comp_binary-length
+      IMPORTING
+        p_mime                  = mo_mime_api
+      EXCEPTIONS
+        object_already_existing = 1
+        object_just_created     = 2
+        not_authorized          = 3
+        undefined_name          = 4
+        author_not_existing     = 5
+        action_cancelled        = 6
+        error_occured           = 7
+        OTHERS                  = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_ne| ).
+    ENDIF.
+
+    mo_mime_api->if_w3_api_object~save(
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        action_cancelled      = 3
+        permission_failure    = 4
+        not_changed           = 5
+        data_invalid          = 6
+        error_occured         = 7
+        OTHERS                = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~save| ).
+    ENDIF.
+
+    release_lock( ).
+
+  ENDMETHOD.
+
   METHOD release_lock.
 
+    " As a side effect this method removes also existing locks
     mo_mime_api->if_w3_api_object~set_changeable(
       EXPORTING
         p_changeable                 = abap_false
