@@ -144,6 +144,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
         iv_branch_name = 'refs/heads/master'
         iv_package     = iv_package ) ##NO_TEXT.
 
+      lo_repo->initialize( ).
       lo_repo->find_remote_dot_abapgit( ).
       lo_repo->status( ). " check for errors
       lo_repo->deserialize( ).
