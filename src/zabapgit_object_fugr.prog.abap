@@ -333,8 +333,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
                            it_tpool   = lt_tpool
                            iv_package = iv_package ).
 
-      deserialize_textpool( iv_program = <lv_include>
-                            it_tpool   = lt_tpool ).
+      deserialize_textpool( iv_program    = <lv_include>
+                            it_tpool      = lt_tpool
+                            iv_is_include = abap_true ).
 
     ENDLOOP.
 
