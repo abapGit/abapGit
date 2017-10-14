@@ -73,6 +73,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     toggle_favorite( lo_repo->get_key( ) ).
 
+    lo_repo->find_remote_dot_abapgit( ).
     lo_repo->status( ). " check for errors
     lo_repo->deserialize( ).
 
