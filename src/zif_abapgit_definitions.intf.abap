@@ -259,4 +259,11 @@ INTERFACE zif_abapgit_definitions
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
     END OF gc_action .
+
+  CONSTANTS:
+    BEGIN OF gc_version,
+      active   TYPE r3state VALUE 'A',
+      inactive TYPE r3state VALUE 'I',
+    END OF gc_version.
+
 ENDINTERFACE.
