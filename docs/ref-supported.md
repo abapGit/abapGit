@@ -67,7 +67,7 @@ SSST | SAP Smart Style | Yes
 STYL | SAPscript style | Yes
 SUSC | Authorization object class | Yes
 SUSO | Authorization object | Yes
-SXCI | Business Add-Ins - Implementations | [#156](https://github.com/larshp/abapGit/issues/156)
+SXCI | Business Add-Ins - Implementations | Yes
 TABL | Table | Yes
 TOBJ | Definition of a Maintenance and Transport Object | Yes
 TRAN | Transaction | Yes
