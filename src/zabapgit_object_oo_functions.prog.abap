@@ -169,6 +169,11 @@ CLASS lcl_oo_serializer DEFINITION.
       IMPORTING is_clskey        TYPE seoclskey
       RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING   zcx_abapgit_exception.
+    METHODS calculate_skip_testclass
+      IMPORTING
+        it_source                TYPE zif_abapgit_definitions=>ty_string_tt
+      RETURNING
+        VALUE(rv_skip_testclass) TYPE abap_bool.
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old
@@ -341,39 +346,10 @@ CLASS lcl_oo_serializer IMPLEMENTATION.
 
   METHOD serialize_testclasses.
 
-    DATA: lv_line1 LIKE LINE OF rt_source,
-          lv_line2 LIKE LINE OF rt_source.
-
-
     rt_source = read_include( is_clskey = is_clskey
                               iv_type = seop_ext_class_testclasses ).
 
-* when creating classes in Eclipse it automatically generates the
-* testclass include, but it is not needed, so skip to avoid
-* creating an extra file in the repository.
-* Also remove it if the content is manually removed, but
-* the class still thinks it contains tests
-    "@TODO: Put under test
-    mv_skip_testclass = abap_false.
-    IF lines( rt_source ) = 2.
-      READ TABLE rt_source INDEX 1 INTO lv_line1.
-      ASSERT sy-subrc = 0.
-      READ TABLE rt_source INDEX 2 INTO lv_line2.
-      ASSERT sy-subrc = 0.
-      IF lv_line1(3) = '*"*' AND lv_line2 IS INITIAL.
-        mv_skip_testclass = abap_true.
-      ENDIF.
-    ELSEIF lines( rt_source ) = 1.
-      READ TABLE rt_source INDEX 1 INTO lv_line1.
-      ASSERT sy-subrc = 0.
-      IF lv_line1 IS INITIAL
-          OR ( strlen( lv_line1 ) >= 3 AND lv_line1(3) = '*"*' )
-          OR ( strlen( lv_line1 ) = 1 AND lv_line1(1) = '*' ).
-        mv_skip_testclass = abap_true.
-      ENDIF.
-    ELSEIF lines( rt_source ) = 0.
-      mv_skip_testclass = abap_true.
-    ENDIF.
+    mv_skip_testclass = calculate_skip_testclass( rt_source ).
 
   ENDMETHOD.                    "serialize_test
 
@@ -385,8 +361,44 @@ CLASS lcl_oo_serializer IMPLEMENTATION.
     reduce( CHANGING ct_source = rt_source ).
 
   ENDMETHOD.                    "serialize_macro
+
   METHOD are_test_classes_skipped.
     rv_return = mv_skip_testclass.
+  ENDMETHOD.
+
+
+  METHOD calculate_skip_testclass.
+
+    DATA: lv_line1 LIKE LINE OF it_source,
+          lv_line2 LIKE LINE OF it_source.
+
+* when creating classes in Eclipse it automatically generates the
+* testclass include, but it is not needed, so skip to avoid
+* creating an extra file in the repository.
+* Also remove it if the content is manually removed, but
+* the class still thinks it contains tests
+
+    rv_skip_testclass = abap_false.
+    IF lines( it_source ) = 2.
+      READ TABLE it_source INDEX 1 INTO lv_line1.
+      ASSERT sy-subrc = 0.
+      READ TABLE it_source INDEX 2 INTO lv_line2.
+      ASSERT sy-subrc = 0.
+      IF strlen( lv_line1 ) >= 3 AND lv_line1(3) = '*"*' AND lv_line2 IS INITIAL.
+        rv_skip_testclass = abap_true.
+      ENDIF.
+    ELSEIF lines( it_source ) = 1.
+      READ TABLE it_source INDEX 1 INTO lv_line1.
+      ASSERT sy-subrc = 0.
+      IF lv_line1 IS INITIAL
+          OR ( strlen( lv_line1 ) >= 3 AND lv_line1(3) = '*"*' )
+          OR ( strlen( lv_line1 ) = 1 AND lv_line1(1) = '*' ).
+        rv_skip_testclass = abap_true.
+      ENDIF.
+    ELSEIF lines( it_source ) = 0.
+      rv_skip_testclass = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 
 ENDCLASS.
