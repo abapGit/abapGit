@@ -14,21 +14,23 @@ CLASS lcl_object_iamu DEFINITION INHERITING FROM lcl_objects_super FINAL.
     ALIASES mo_files FOR lif_object~mo_files.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_iamu,
+             attributes TYPE w3mimeattr,
+             source     TYPE w3mimetabtype,
+             length     TYPE i,
+           END OF ty_iamu.
+    DATA: mo_mime_api TYPE REF TO if_w3_api_mime.
+
     METHODS:
       load
-        RETURNING VALUE(ro_mime) TYPE REF TO if_w3_api_mime
-        RAISING   zcx_abapgit_exception,
+        RAISING
+          zcx_abapgit_exception,
 
-      read
-        EXPORTING es_attr       TYPE w3resoattr
-                  et_parameters TYPE w3resopara_tabletype
-        RAISING   zcx_abapgit_exception,
-      save
-        IMPORTING is_attr       TYPE w3resoattr
-                  it_parameters TYPE w3resopara_tabletype
-        RAISING   zcx_abapgit_exception.
+      release_lock
+        RAISING
+          zcx_abapgit_exception.
 
-ENDCLASS.                    "lcl_object_dtel DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_iamu IMPLEMENTATION
@@ -39,13 +41,13 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   METHOD lif_object~has_changed_since.
 
-
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+
+  ENDMETHOD.
 
   METHOD lif_object~changed_by.
 
-    rv_user = c_user_unknown. " todo
+    rv_user = c_user_unknown.
 
   ENDMETHOD.
 
@@ -53,135 +55,209 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
     rs_metadata = get_metadata( ).
 
-  ENDMETHOD.                    "lif_object~get_metadata
-
-  METHOD read.
-
-*    DATA: li_resource TYPE REF TO if_w3_api_resource,
-*          ls_name     TYPE w3resokey.
-*
-*
-*    ls_name = ms_item-obj_name.
-*
-*    cl_w3_api_resource=>if_w3_api_resource~load(
-*      EXPORTING
-*        p_resource_name     = ls_name
-*      IMPORTING
-*        p_resource          = li_resource
-*      EXCEPTIONS
-*        object_not_existing = 1
-*        permission_failure  = 2
-*        error_occured       = 3
-*        OTHERS              = 4 ).
-*    IF sy-subrc <> 0.
-*      zcx_abapgit_exception=>raise( 'error from w3api_resource~load' ).
-*    ENDIF.
-*
-*    li_resource->get_attributes( IMPORTING p_attributes = es_attr ).
-*
-*    CLEAR: es_attr-chname,
-*           es_attr-tdate,
-*           es_attr-ttime,
-*           es_attr-devclass.
-*
-*    li_resource->get_parameters( IMPORTING p_parameters = et_parameters ).
-
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
   METHOD lif_object~serialize.
 
-*    DATA: ls_attr       TYPE w3resoattr,
-*          lt_parameters TYPE w3resopara_tabletype.
-*
-*
-*    IF lif_object~exists( ) = abap_false.
-*      RETURN.
-*    ENDIF.
-*
-*    read( IMPORTING es_attr       = ls_attr
-*                    et_parameters = lt_parameters ).
-*
-*    io_xml->add( iv_name = 'ATTR'
-*                 ig_data = ls_attr ).
-*    io_xml->add( iv_name = 'PARAMETERS'
-*                 ig_data = lt_parameters ).
+    DATA: ls_iamu TYPE ty_iamu.
 
-  ENDMETHOD.                    "lif_object~serialize
+    load( ).
 
-  METHOD save.
+    mo_mime_api->get_attributes(
+      IMPORTING
+        p_attributes   = ls_iamu-attributes
+      EXCEPTIONS
+        object_invalid = 1
+        mime_deleted   = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
 
-*    DATA: li_resource TYPE REF TO if_w3_api_resource.
-*
-*
-*    cl_w3_api_resource=>if_w3_api_resource~create_new(
-*      EXPORTING p_resource_data = is_attr
-*      IMPORTING p_resource = li_resource ).
-*
-*    li_resource->set_attributes( is_attr ).
-*    li_resource->set_parameters( it_parameters ).
-*
-*    li_resource->if_w3_api_object~save( ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_attributes| ).
+    ENDIF.
 
-  ENDMETHOD.                    "save
+    CLEAR: ls_iamu-attributes-chname,
+           ls_iamu-attributes-tdate,
+           ls_iamu-attributes-ttime,
+           ls_iamu-attributes-devclass.
+
+    mo_mime_api->get_source(
+      IMPORTING
+        p_source       = ls_iamu-source
+        p_datalength   = ls_iamu-length
+      EXCEPTIONS
+        object_invalid = 1
+        mime_deleted   = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~get_source| ).
+    ENDIF.
+
+    io_xml->add( iv_name = 'IAMU'
+                 ig_data = ls_iamu ).
+
+  ENDMETHOD.
 
   METHOD lif_object~deserialize.
 
-*    DATA: ls_attr       TYPE w3resoattr,
-*          lt_parameters TYPE w3resopara_tabletype.
-*
-*
-*    io_xml->read( EXPORTING iv_name = 'ATTR'
-*                  CHANGING cg_data = ls_attr ).
-*    io_xml->read( EXPORTING iv_name = 'PARAMETERS'
-*                  CHANGING cg_data = lt_parameters ).
-*
-*    ls_attr-devclass = iv_package.
-*    save( is_attr       = ls_attr
-*          it_parameters = lt_parameters ).
+    DATA: ls_iamu TYPE ty_iamu.
 
-  ENDMETHOD.                    "lif_object~deserialize
+    io_xml->read(
+      EXPORTING
+        iv_name = 'IAMU'
+      CHANGING
+        cg_data = ls_iamu ).
+
+    ls_iamu-attributes-devclass = iv_package.
+
+    cl_w3_api_mime=>if_w3_api_mime~create_new(
+      EXPORTING
+        p_mime_data             = ls_iamu-attributes
+        p_mime_content          = ls_iamu-source
+        p_datalength            = ls_iamu-length
+      IMPORTING
+        p_mime                  = mo_mime_api
+      EXCEPTIONS
+        object_already_existing = 1
+        object_just_created     = 2
+        not_authorized          = 3
+        undefined_name          = 4
+        author_not_existing     = 5
+        action_cancelled        = 6
+        error_occured           = 7
+        OTHERS                  = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_ne| ).
+    ENDIF.
+
+    mo_mime_api->set_attributes(
+      EXPORTING
+        p_attributes          = ls_iamu-attributes
+      EXCEPTIONS
+        object_not_changeable = 1
+        object_deleted        = 2
+        object_invalid        = 3
+        author_not_existing   = 4
+        authorize_failure     = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_attributes| ).
+    ENDIF.
+
+    mo_mime_api->set_source(
+      EXPORTING
+        p_source              = ls_iamu-source
+        p_datalength          = ls_iamu-length
+      EXCEPTIONS
+        object_not_changeable = 1
+        object_deleted        = 2
+        object_invalid        = 3
+        authorize_failure     = 4
+        invalid_content       = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_attributes| ).
+    ENDIF.
+
+    mo_mime_api->if_w3_api_object~save(
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        action_cancelled      = 3
+        permission_failure    = 4
+        not_changed           = 5
+        data_invalid          = 6
+        error_occured         = 7
+        OTHERS                = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~save| ).
+    ENDIF.
+
+    release_lock( ).
+
+  ENDMETHOD.
 
   METHOD lif_object~delete.
 
-*    DATA: li_resource TYPE REF TO if_w3_api_resource,
-*          ls_name     TYPE w3resokey.
-*
-*
-*    ls_name = ms_item-obj_name.
-*
-*    cl_w3_api_resource=>if_w3_api_resource~load(
-*      EXPORTING
-*        p_resource_name     = ls_name
-*      IMPORTING
-*        p_resource          = li_resource
-*      EXCEPTIONS
-*        object_not_existing = 1
-*        permission_failure  = 2
-*        error_occured       = 3
-*        OTHERS              = 4 ).
-*    IF sy-subrc <> 0.
-*      zcx_abapgit_exception=>raise( 'error from if_w3_api_resource~load' ).
-*    ENDIF.
-*
-*    li_resource->if_w3_api_object~set_changeable( abap_true ).
-*    li_resource->if_w3_api_object~delete( ).
-*    li_resource->if_w3_api_object~save( ).
+    load( ).
 
-  ENDMETHOD.                    "lif_object~delete
+    mo_mime_api->if_w3_api_object~set_changeable(
+      EXPORTING
+        p_changeable                 = abap_true
+      EXCEPTIONS
+        action_cancelled             = 1
+        object_locked_by_other_user  = 2
+        permission_failure           = 3
+        object_already_changeable    = 4
+        object_already_unlocked      = 5
+        object_just_created          = 6
+        object_deleted               = 7
+        object_modified              = 8
+        object_not_existing          = 9
+        object_invalid               = 10
+        error_occured                = 11
+        content_data_error           = 12
+        OTHERS                       = 13 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_changeable| ).
+    ENDIF.
+
+    mo_mime_api->if_w3_api_object~delete(
+      EXCEPTIONS
+        object_not_empty      = 1
+        object_not_changeable = 2
+        object_invalid        = 3
+        error_occured         = 4
+        OTHERS                = 5 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~delete| ).
+    ENDIF.
+
+    mo_mime_api->if_w3_api_object~save(
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        action_cancelled      = 3
+        permission_failure    = 4
+        not_changed           = 5
+        data_invalid          = 6
+        error_occured         = 7
+        OTHERS                = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~save| ).
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD lif_object~exists.
 
+    DATA: ls_mime_name TYPE iacikeym.
+
+    ls_mime_name = ms_item-obj_name.
+
     TRY.
-        load( ).
+        cl_w3_api_mime=>s_check_exist(
+          EXPORTING
+            p_mime_name = ls_mime_name
+          IMPORTING
+            p_exists    = rv_bool ).
 
       CATCH zcx_abapgit_exception.
         rv_bool = abap_false.
         RETURN.
     ENDTRY.
 
-    rv_bool = abap_true.
-
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.
 
   METHOD lif_object~jump.
 
@@ -191,7 +267,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
 
@@ -209,13 +285,13 @@ CLASS lcl_object_iamu IMPLEMENTATION.
       EXPORTING
         p_mime_name         = ls_mime_name
       IMPORTING
-        p_mime              = ro_mime
+        p_mime              = mo_mime_api
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
         data_corrupt        = 3
         error_occured       = 4
-        OTHERS              = 5 ).
+        OTHERS              = 6 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from if_w3_api_mime~load' ).
@@ -223,4 +299,30 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "lcl_object_iamu IMPLEMENTATION
+  METHOD release_lock.
+
+    mo_mime_api->if_w3_api_object~set_changeable(
+      EXPORTING
+        p_changeable                 = abap_false
+      EXCEPTIONS
+        action_cancelled             = 1
+        object_locked_by_other_user  = 2
+        permission_failure           = 3
+        object_already_changeable    = 4
+        object_already_unlocked      = 5
+        object_just_created          = 6
+        object_deleted               = 7
+        object_modified              = 8
+        object_not_existing          = 9
+        object_invalid               = 10
+        error_occured                = 11
+        content_data_error           = 12
+        OTHERS                       = 13 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_changeable| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
