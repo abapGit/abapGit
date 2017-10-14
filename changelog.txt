@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2017-10-14 v1.45.0
+------------------
++ SRFC supported
++ USCA supported
+* fix dump when serializing local test classes
+* CLAS fix reordering of methods
+* Fix dump when installing abapGit dev version
+* Fix error with textpools
+
 2017-10-10 v1.44.0
 ------------------
 * WAPA: fixes for so2_controller
