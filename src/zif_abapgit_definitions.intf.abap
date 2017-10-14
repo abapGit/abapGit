@@ -1,6 +1,8 @@
 INTERFACE zif_abapgit_definitions
   PUBLIC .
 
+  CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.45.0' ##NO_TEXT.
 
   TYPES:
     ty_type    TYPE c LENGTH 6 .
@@ -148,8 +150,6 @@ INTERFACE zif_abapgit_definitions
       commit_text TYPE string,
     END OF ty_transport_to_branch .
 
-  CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.44.0' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
