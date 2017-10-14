@@ -73,6 +73,7 @@ TOBJ | Definition of a Maintenance and Transport Object | Yes
 TRAN | Transaction | Yes
 TTYP | Table Type | Yes
 TYPE | Type Group | Yes
+UCSA | Unified Connectivity Service Assembly | Yes
 VCLS | View cluster | Yes
 VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
