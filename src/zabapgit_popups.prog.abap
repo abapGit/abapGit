@@ -84,10 +84,6 @@ CLASS lcl_popups DEFINITION FINAL.
                   it_columns_to_display TYPE stringtab
         EXPORTING VALUE(et_list)        TYPE STANDARD TABLE
         RAISING   zcx_abapgit_exception,
-      popup_select_obj_overwrite
-        IMPORTING it_list        TYPE lif_defs=>ty_results_tt
-        RETURNING VALUE(rt_list) TYPE lif_defs=>ty_results_tt
-        RAISING   zcx_abapgit_exception,
       popup_to_decide_callback_exec
         IMPORTING iv_methname           TYPE abap_methname
                   iv_callback_classname TYPE abap_classname
