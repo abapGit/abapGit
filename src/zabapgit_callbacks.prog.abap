@@ -52,6 +52,8 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
                               RAISING   zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS:
+      gc_intfname TYPE abap_intfname VALUE 'LIF_CALLBACK_LISTENER'.
     CLASS-METHODS:
       dyn_call_method IMPORTING io_object     TYPE REF TO object
                                 iv_methname   TYPE abap_methname
@@ -60,11 +62,14 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
       constructor IMPORTING io_repo TYPE REF TO lcl_repo
                   RAISING   zcx_abapgit_exception,
       init_listener RAISING cx_sy_create_object_error,
-      is_dummy_listener RETURNING VALUE(rv_is_dummy) TYPE abap_bool.
+      is_dummy_listener RETURNING VALUE(rv_is_dummy) TYPE abap_bool,
+      check_listener_impl_method IMPORTING iv_methname           TYPE abap_methname
+                                 RETURNING VALUE(rv_implemented) TYPE abap_bool.
     DATA:
       mo_repository         TYPE REF TO lcl_repo,
       mo_listener           TYPE REF TO object,
-      mv_callback_classname TYPE abap_classname.
+      mv_callback_classname TYPE abap_classname,
+      mo_listener_descr     TYPE REF TO cl_abap_classdescr.
 ENDCLASS.
 
 CLASS lcl_callback_adapter IMPLEMENTATION.
@@ -129,6 +134,10 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     ELSE.
       CREATE OBJECT mo_listener TYPE lcl_dummy_callback_listener.
     ENDIF.
+
+    ASSERT mo_listener IS BOUND.
+    mo_listener_descr ?= cl_abap_typedescr=>describe_by_object_ref( mo_listener ).
+    ASSERT mo_listener_descr IS BOUND.
   ENDMETHOD.
 
   METHOD lif_callback_listener~on_after_pull.
@@ -187,7 +196,15 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
   METHOD check_execution_allowed.
     IF is_dummy_listener( ) = abap_true.
+      " Dummy listener is always allowed because it doesn't do anything
       rv_allowed = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF check_listener_impl_method( iv_methname ) = abap_false.
+      " Listener does not implement the callback method (because it was added later or the listener
+      " is not interested in this type of callback). -> No execution
+      rv_allowed = abap_false.
       RETURN.
     ENDIF.
 
@@ -206,6 +223,22 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     lo_ref_descr ?= cl_abap_typedescr=>describe_by_data( lo_dummy ).
     lo_class_descr ?= lo_ref_descr->get_referenced_type( ).
     rv_is_dummy = lo_class_descr->applies_to( mo_listener ).
+  ENDMETHOD.
+
+  METHOD check_listener_impl_method.
+    rv_implemented = abap_false.
+
+    READ TABLE mo_listener_descr->methods WITH KEY name = iv_methname
+                                          TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_implemented = abap_true.
+    ELSE.
+      READ TABLE mo_listener_descr->methods WITH KEY name = |{ gc_intfname }~{ iv_methname }|
+                                            TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        rv_implemented = abap_true.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 
   METHOD dyn_call_method.
