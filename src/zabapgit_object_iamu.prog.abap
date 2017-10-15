@@ -157,17 +157,11 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
     ls_mime_name = ms_item-obj_name.
 
-    TRY.
-        cl_w3_api_mime=>s_check_exist(
-          EXPORTING
-            p_mime_name = ls_mime_name
-          IMPORTING
-            p_exists    = rv_bool ).
-
-      CATCH zcx_abapgit_exception.
-        rv_bool = abap_false.
-        RETURN.
-    ENDTRY.
+    cl_w3_api_mime=>s_check_exist(
+      EXPORTING
+        p_mime_name = ls_mime_name
+      IMPORTING
+        p_exists    = rv_bool ).
 
   ENDMETHOD.
 
