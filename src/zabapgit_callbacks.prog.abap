@@ -6,7 +6,8 @@ INTERFACE lif_callback_listener.
   METHODS:
     on_after_pull IMPORTING iv_package     TYPE devclass
                             iv_old_version TYPE string
-                            iv_new_version TYPE string.
+                            iv_new_version TYPE string,
+    on_before_uninstall IMPORTING iv_package TYPE devclass.
 ENDINTERFACE.
 
 CLASS lcl_dummy_callback_listener DEFINITION.
@@ -14,13 +15,17 @@ CLASS lcl_dummy_callback_listener DEFINITION.
     INTERFACES:
       lif_callback_listener.
     ALIASES:
-      on_after_pull FOR lif_callback_listener~on_after_pull.
+      on_after_pull FOR lif_callback_listener~on_after_pull,
+      on_before_uninstall FOR lif_callback_listener~on_before_uninstall.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 CLASS lcl_dummy_callback_listener IMPLEMENTATION.
   METHOD lif_callback_listener~on_after_pull.
+  ENDMETHOD.
+
+  METHOD lif_callback_listener~on_before_uninstall.
   ENDMETHOD.
 ENDCLASS.
 
@@ -29,9 +34,13 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
     INTERFACES:
       lif_callback_listener.
     ALIASES:
-      on_after_pull FOR lif_callback_listener~on_after_pull.
+      on_after_pull FOR lif_callback_listener~on_after_pull,
+      on_before_uninstall FOR lif_callback_listener~on_before_uninstall.
     CONSTANTS:
-      gc_methname_on_after_pull TYPE abap_methname VALUE 'ON_AFTER_PULL'.
+      BEGIN OF gc_methnames,
+        on_after_pull       TYPE abap_methname VALUE 'ON_AFTER_PULL',
+        on_before_uninstall TYPE abap_methname VALUE 'ON_BEFORE_UNINSTALL',
+      END OF gc_methnames.
     CLASS-METHODS:
       get_instance IMPORTING io_repo            TYPE REF TO lcl_repo
                              iv_force_new       TYPE abap_bool DEFAULT abap_false
@@ -153,7 +162,26 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     INSERT ls_parameter INTO TABLE lt_parameters.
 
     dyn_call_method( io_object     = mo_listener
-                     iv_methname   = gc_methname_on_after_pull
+                     iv_methname   = gc_methnames-on_after_pull
+                     it_parameters = lt_parameters ).
+  ENDMETHOD.
+
+  METHOD lif_callback_listener~on_before_uninstall.
+    CONSTANTS: lc_parmname_package TYPE abap_parmname VALUE 'IV_PACKAGE'.
+    DATA: lt_parameters TYPE abap_parmbind_tab,
+          ls_parameter  TYPE abap_parmbind,
+          lr_package    TYPE REF TO devclass.
+
+    CREATE DATA: lr_package.
+
+    ls_parameter-name = lc_parmname_package.
+    ls_parameter-kind = cl_abap_objectdescr=>exporting.
+    lr_package->* = iv_package.
+    ls_parameter-value = lr_package.
+    INSERT ls_parameter INTO TABLE lt_parameters.
+
+    dyn_call_method( io_object     = mo_listener
+                     iv_methname   = gc_methnames-on_before_uninstall
                      it_parameters = lt_parameters ).
   ENDMETHOD.
 

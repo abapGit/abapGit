@@ -125,11 +125,12 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD purge.
 
-    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
+    DATA: lt_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lv_answer           TYPE c LENGTH 1,
+          lo_repo             TYPE REF TO lcl_repo,
+          lv_package          TYPE devclass,
+          lv_question         TYPE c LENGTH 100,
+          lo_callback_adapter TYPE REF TO lcl_callback_adapter.
 
 
     lo_repo = lcl_app=>repo_srv( )->get( iv_key ).
@@ -158,6 +159,13 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE lcx_cancel.
+      ENDIF.
+
+      lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
+      IF lo_callback_adapter->check_execution_allowed(
+           lcl_callback_adapter=>gc_methnames-on_before_uninstall
+         ) = abap_true.
+        lo_callback_adapter->on_before_uninstall( iv_package = lo_repo->get_package( ) ).
       ENDIF.
 
       lcl_objects=>delete( lt_tadir ).
