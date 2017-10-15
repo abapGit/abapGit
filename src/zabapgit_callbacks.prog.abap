@@ -4,9 +4,9 @@
 
 INTERFACE lif_callback_listener.
   METHODS:
-    on_after_install IMPORTING iv_package     TYPE devclass
-                               iv_old_version TYPE string
-                               iv_new_version TYPE string.
+    on_after_pull IMPORTING iv_package     TYPE devclass
+                            iv_old_version TYPE string
+                            iv_new_version TYPE string.
 ENDINTERFACE.
 
 CLASS lcl_dummy_callback_listener DEFINITION.
@@ -14,13 +14,13 @@ CLASS lcl_dummy_callback_listener DEFINITION.
     INTERFACES:
       lif_callback_listener.
     ALIASES:
-      on_after_install FOR lif_callback_listener~on_after_install.
+      on_after_pull FOR lif_callback_listener~on_after_pull.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 CLASS lcl_dummy_callback_listener IMPLEMENTATION.
-  METHOD lif_callback_listener~on_after_install.
+  METHOD lif_callback_listener~on_after_pull.
   ENDMETHOD.
 ENDCLASS.
 
@@ -29,9 +29,9 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
     INTERFACES:
       lif_callback_listener.
     ALIASES:
-      on_after_install FOR lif_callback_listener~on_after_install.
+      on_after_pull FOR lif_callback_listener~on_after_pull.
     CONSTANTS:
-      gc_methname_on_after_install TYPE abap_methname VALUE 'ON_AFTER_INSTALL'.
+      gc_methname_on_after_pull TYPE abap_methname VALUE 'ON_AFTER_PULL'.
     CLASS-METHODS:
       get_instance IMPORTING io_repo            TYPE REF TO lcl_repo
                              iv_force_new       TYPE abap_bool DEFAULT abap_false
@@ -99,7 +99,7 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
   METHOD constructor.
     DATA: lx_ex TYPE REF TO cx_sy_create_object_error.
 
-    ASSERT: io_repo IS BOUND.
+    ASSERT io_repo IS BOUND.
     mo_repository = io_repo.
 
     TRY.
@@ -122,7 +122,7 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_callback_listener~on_after_install.
+  METHOD lif_callback_listener~on_after_pull.
     CONSTANTS: lc_parmname_package     TYPE abap_parmname VALUE 'IV_PACKAGE',
                lc_parmname_old_version TYPE abap_parmname VALUE 'IV_OLD_VERSION',
                lc_parmname_new_version TYPE abap_parmname VALUE 'IV_NEW_VERSION'.
@@ -153,7 +153,7 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     INSERT ls_parameter INTO TABLE lt_parameters.
 
     dyn_call_method( io_object     = mo_listener
-                     iv_methname   = gc_methname_on_after_install
+                     iv_methname   = gc_methname_on_after_pull
                      it_parameters = lt_parameters ).
   ENDMETHOD.
 

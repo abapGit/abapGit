@@ -153,11 +153,11 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
     IF lo_callback_adapter->check_execution_allowed(
-         lcl_callback_adapter=>gc_methname_on_after_install
+         lcl_callback_adapter=>gc_methname_on_after_pull
        ) = abap_true.
-      lo_callback_adapter->on_after_install( iv_package     = lo_repo->get_package( )
-                                             iv_old_version = lv_old_version
-                                             iv_new_version = lv_new_version ).
+      lo_callback_adapter->on_after_pull( iv_package     = lo_repo->get_package( )
+                                          iv_old_version = lv_old_version
+                                          iv_new_version = lv_new_version ).
     ENDIF.
 
     COMMIT WORK.
