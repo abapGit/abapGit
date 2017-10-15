@@ -31,7 +31,7 @@ ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
 FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
-IAMU | Language-Independent IAC Binary Data | [#81](https://github.com/larshp/abapGit/issues/81)
+IAMU | Language-Independent IAC Binary Data | Yes
 IARP | Parameters of IAC Language Resource | Yes
 IASP | Parameters of an IAC service | Yes
 IATU | Language-Independent IAC Templates | Yes
