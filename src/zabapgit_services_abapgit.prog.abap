@@ -8,7 +8,7 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
     CONSTANTS c_abapgit_homepage TYPE string
       VALUE 'http://www.abapgit.org' ##NO_TEXT.
     CONSTANTS c_abapgit_wikipage TYPE string
-      VALUE 'http://larshp.github.io/abapGit'.
+      VALUE 'http://docs.abapgit.org'.
     CONSTANTS c_package_abapgit  TYPE devclass
       VALUE '$ABAPGIT'.
     CONSTANTS c_package_plugins  TYPE devclass
