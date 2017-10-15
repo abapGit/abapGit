@@ -149,7 +149,7 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     ls_parameter-name = lc_parmname_new_version.
     ls_parameter-kind = cl_abap_objectdescr=>exporting.
     lr_new_version->* = iv_new_version.
-    ls_parameter-value = lr_old_version.
+    ls_parameter-value = lr_new_version.
     INSERT ls_parameter INTO TABLE lt_parameters.
 
     dyn_call_method( io_object     = mo_listener
