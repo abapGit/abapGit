@@ -19,7 +19,7 @@ Latest build: [zabapgit.abap](https://raw.githubusercontent.com/larshp/abapGit/b
 - Code readable in git repository
 
 ## Documentation/Guides 
-http://larshp.github.io/abapGit/
+http://docs.abapgit.org
 
 ## Projects using abapGit 
 
