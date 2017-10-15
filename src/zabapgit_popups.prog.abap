@@ -995,9 +995,9 @@ CLASS lcl_popups IMPLEMENTATION.
           text_question         = |The repository wants to execute the callback "| &&
                                   |{ iv_methname }". Allow execution?|
           text_button_1         = 'Allow'
-          icon_button_1         = icon_checked
-          text_button_2         = 'Display callback implementation'
-          icon_button_2         = icon_select_detail
+          icon_button_1         = 'ICON_CHECKED'
+          text_button_2         = 'View code'
+          icon_button_2         = 'ICON_SELECT_DETAIL'
           default_button        = '2'
           display_cancel_button = abap_true
           popup_type            = 'ICON_MESSAGE_QUESTION'
