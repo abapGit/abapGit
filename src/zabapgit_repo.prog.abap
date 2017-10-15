@@ -235,4 +235,8 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
+    METHODS is_sap_object_allowed
+      RETURNING
+        value(r_is_sap_object_allowed) TYPE abap_bool.
+
 ENDCLASS.                    "lcl_repo_srv DEFINITION
