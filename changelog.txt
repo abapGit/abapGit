@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-10-15 v1.46.0
+------------------
++ IAMU supported
++ SXCI supported
+* fix unambiguous error message
+
 2017-10-14 v1.45.0
 ------------------
 + SRFC supported
