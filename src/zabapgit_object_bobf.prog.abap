@@ -109,7 +109,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode     = '/BOBF/CONF_UI'
+        tcode     = 'BOBX'
         mode_val  = 'E'
       TABLES
         using_tab = lt_bcdata
