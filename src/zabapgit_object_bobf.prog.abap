@@ -22,7 +22,16 @@ CLASS lcl_object_bobf DEFINITION INHERITING FROM lcl_objects_super FINAL.
         RETURNING
           VALUE(rs_details) TYPE /bobf/s_conf_model_api_bo
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+      create_bcdata
+        IMPORTING
+          iv_program       TYPE bdc_prog OPTIONAL
+          iv_dynpro        TYPE bdc_dynr OPTIONAL
+          iv_dynbegin      TYPE bdc_start OPTIONAL
+          iv_fnam          TYPE fnam_____4 OPTIONAL
+          iv_fval          TYPE bdc_fval OPTIONAL
+        RETURNING
+          VALUE(rs_bcdata) TYPE bdcdata.
 ENDCLASS.
 
 CLASS lcl_object_bobf IMPLEMENTATION.
@@ -63,7 +72,52 @@ CLASS lcl_object_bobf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~jump.
-*   TODO
+    DATA:
+      lv_field_value TYPE bdc_fval,
+      lt_bcdata TYPE STANDARD TABLE OF bdcdata.
+
+    APPEND create_bcdata(
+      iv_program  = '/BOBF/CONF_UI'
+      iv_dynpro   = '0100'
+      iv_dynbegin = 'X'
+    ) TO lt_bcdata.
+    APPEND create_bcdata(
+      iv_fnam = 'BDC_OKCODE'
+      iv_fval = '=OPEN'
+    ) TO lt_bcdata.
+    APPEND create_bcdata(
+      iv_fnam = 'BDC_SUBSCR'
+      iv_fval = '/BOBF/CONF_UI'
+    ) TO lt_bcdata.
+
+    APPEND create_bcdata(
+      iv_program  = '/BOBF/CONF_UI'
+      iv_dynpro   = '0110'
+      iv_dynbegin = 'X'
+    ) TO lt_bcdata.
+    APPEND create_bcdata(
+      iv_fnam = 'BDC_CURSOR'
+      iv_fval = '/BOBF/S_CONF_UI-BO_NAME'
+    ) TO lt_bcdata.
+
+    lv_field_value = ms_item-obj_name.
+    APPEND create_bcdata(
+      iv_fnam = '/BOBF/S_CONF_UI-BO_NAME'
+      iv_fval = lv_field_value
+    ) TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode     = '/BOBF/CONF_UI'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
+      EXCEPTIONS
+        OTHERS    = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, BOBF' ).
+    ENDIF.
   ENDMETHOD.
 
   METHOD lif_object~delete.
@@ -154,4 +208,13 @@ CLASS lcl_object_bobf IMPLEMENTATION.
       zcx_abapgit_exception=>raise( `Error from BOBF, GET_BO ` && ms_item-obj_name ).
     ENDIF.
   ENDMETHOD.
+
+  METHOD create_bcdata.
+    rs_bcdata-dynbegin = iv_dynbegin.
+    rs_bcdata-dynpro   = iv_dynpro.
+    rs_bcdata-fnam     = iv_fnam.
+    rs_bcdata-fval     = iv_fval.
+    rs_bcdata-program  = iv_program.
+  ENDMETHOD.
+
 ENDCLASS.
