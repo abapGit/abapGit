@@ -2,14 +2,44 @@
 *& Include zabapgit_callbacks
 *&---------------------------------------------------------------------*
 
+"! Callback interface for abapGit repository events
+"! <p>
+"! To subscribe to abapGit repository events create a preferrably global class in your repository
+"! and <em>copy</em> the method signatures of this interface. You only need to copy the ones you
+"! want to subscribe to. Specify the name of the class (full name for local classes) in the
+"! .abapgit.xml attribute <em>CALLBACK_CLASSNAME</em>.
+"! </p>
+"! <p>
+"! This interface is intentionally defined locally. If it were global users might be inclined to
+"! instead of copying the interface's methods to just implement it in their callback class. Since
+"! abapGit most of the time only exists in the development system this would cause a compiler error
+"! on import in QA / production systems.
+"! </p>
+"! <p>
+"! Version parameters are always taken from the <em>VERSION</em> attribute in .abapgit.xml.
+"! </p>
 INTERFACE lif_callback_listener.
   METHODS:
+    "! Pull event listener
+    "! <p>
+    "! Only works in online repositories. This method gets called after the activation of just
+    "! pulled changes. Activation of all objects in the repository is not guaranteed.
+    "! </p>
+    "! @parameter iv_package | Installation package name
+    "! @parameter iv_old_version | Old version
+    "! @parameter iv_new_version | New version
     on_after_pull IMPORTING iv_package     TYPE devclass
                             iv_old_version TYPE string
                             iv_new_version TYPE string,
+    "! Uninstall event listener
+    "! <p>
+    "! This method is called just before a repository gets uninstalled.
+    "! </p>
+    "! @parameter iv_package | Installation package name
     on_before_uninstall IMPORTING iv_package TYPE devclass.
 ENDINTERFACE.
 
+"! Dummy callback listener
 CLASS lcl_dummy_callback_listener DEFINITION.
   PUBLIC SECTION.
     INTERFACES:
@@ -29,6 +59,12 @@ CLASS lcl_dummy_callback_listener IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+"! Callback adapter
+"! <p>
+"! Adapter class to encapsulate the triggering of callback events. Either redirects a callback
+"! event to an empty dummy implementation of <em>LIF_CALLBACK_LISTENER</em> or to a concrete class
+"! in the repository.
+"! </p>
 CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
   PUBLIC SECTION.
     INTERFACES:
@@ -42,11 +78,24 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
         on_before_uninstall TYPE abap_methname VALUE 'ON_BEFORE_UNINSTALL',
       END OF gc_methnames.
     CLASS-METHODS:
+      "! Gets an adapter instance (used for callback class instance reuse / caching)
+      "! @parameter io_repo | Repository
+      "! @parameter iv_force_new | Force new instance
+      "! @parameter ro_instance | Instance
+      "! @raising zcx_abapgit_exception | Callback class initialization error
       get_instance IMPORTING io_repo            TYPE REF TO lcl_repo
                              iv_force_new       TYPE abap_bool DEFAULT abap_false
                    RETURNING VALUE(ro_instance) TYPE REF TO lcl_callback_adapter
                    RAISING   zcx_abapgit_exception.
     METHODS:
+      "! Check if a callback is allowed to be executed
+      "! <p>
+      "! See <em>GC_METHNAMES</em> for method name constants.<br/>
+      "! <strong>Contains a SAP GUI dialog!</strong>
+      "! </p>
+      "! @parameter iv_methname | Callback method name
+      "! @parameter rv_allowed | Execution is allowed
+      "! @raising zcx_abapgit_exception | Dialog error
       check_execution_allowed IMPORTING iv_methname       TYPE abap_methname
                               RETURNING VALUE(rv_allowed) TYPE abap_bool
                               RAISING   zcx_abapgit_exception.
