@@ -4,7 +4,7 @@
 
 "! Callback interface for abapGit repository events
 "! <p>
-"! To subscribe to abapGit repository events create a preferrably global class in your repository
+"! To subscribe to abapGit repository events create a preferably global class in your repository
 "! and <em>copy</em> the method signatures of this interface. You only need to copy the ones you
 "! want to subscribe to. Specify the name of the class (full name for local classes) in the
 "! .abapgit.xml attribute <em>CALLBACK_CLASSNAME</em>.
@@ -65,6 +65,11 @@ ENDCLASS.
 "! event to an empty dummy implementation of <em>LIF_CALLBACK_LISTENER</em> or to a concrete class
 "! in the repository.
 "! </p>
+"! <p>
+"! Method calls are <em>upward compatible</em>, meaning that parameters that are added to the
+"! callback interface method definition at a later point and were not copied to the callback class
+"! implementation will not be supplied / used at all in the callback method call.
+"! </p>
 CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
   PUBLIC SECTION.
     INTERFACES:
@@ -101,19 +106,21 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
                               RAISING   zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS:
-      gc_intfname TYPE abap_intfname VALUE 'LIF_CALLBACK_LISTENER'.
     CLASS-METHODS:
       dyn_call_method IMPORTING io_object     TYPE REF TO object
                                 iv_methname   TYPE abap_methname
-                                it_parameters TYPE abap_parmbind_tab.
+                                it_parameters TYPE abap_parmbind_tab,
+      get_callback_intf_descr RETURNING VALUE(ro_descr) TYPE REF TO cl_abap_intfdescr.
     METHODS:
       constructor IMPORTING io_repo TYPE REF TO lcl_repo
                   RAISING   zcx_abapgit_exception,
       init_listener RAISING cx_sy_create_object_error,
       is_dummy_listener RETURNING VALUE(rv_is_dummy) TYPE abap_bool,
       check_listener_impl_method IMPORTING iv_methname           TYPE abap_methname
-                                 RETURNING VALUE(rv_implemented) TYPE abap_bool.
+                                 RETURNING VALUE(rv_implemented) TYPE abap_bool,
+      check_listener_methimp_has_par IMPORTING iv_methname          TYPE abap_methname
+                                               iv_parmname          TYPE abap_parmname
+                                     RETURNING VALUE(rv_par_exists) TYPE abap_bool.
     DATA:
       mo_repository         TYPE REF TO lcl_repo,
       mo_listener           TYPE REF TO object,
@@ -201,23 +208,32 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     CREATE DATA: lr_package, lr_old_version, lr_new_version.
 
-    ls_parameter-name = lc_parmname_package.
-    ls_parameter-kind = cl_abap_objectdescr=>exporting.
-    lr_package->* = iv_package.
-    ls_parameter-value = lr_package.
-    INSERT ls_parameter INTO TABLE lt_parameters.
+    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
+                                       iv_parmname = lc_parmname_package ).
+      ls_parameter-name = lc_parmname_package.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      lr_package->* = iv_package.
+      ls_parameter-value = lr_package.
+      INSERT ls_parameter INTO TABLE lt_parameters.
+    ENDIF.
 
-    ls_parameter-name = lc_parmname_old_version.
-    ls_parameter-kind = cl_abap_objectdescr=>exporting.
-    lr_old_version->* = iv_old_version.
-    ls_parameter-value = lr_old_version.
-    INSERT ls_parameter INTO TABLE lt_parameters.
+    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
+                                       iv_parmname = lc_parmname_old_version ).
+      ls_parameter-name = lc_parmname_old_version.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      lr_old_version->* = iv_old_version.
+      ls_parameter-value = lr_old_version.
+      INSERT ls_parameter INTO TABLE lt_parameters.
+    ENDIF.
 
-    ls_parameter-name = lc_parmname_new_version.
-    ls_parameter-kind = cl_abap_objectdescr=>exporting.
-    lr_new_version->* = iv_new_version.
-    ls_parameter-value = lr_new_version.
-    INSERT ls_parameter INTO TABLE lt_parameters.
+    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
+                                       iv_parmname = lc_parmname_new_version ).
+      ls_parameter-name = lc_parmname_new_version.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      lr_new_version->* = iv_new_version.
+      ls_parameter-value = lr_new_version.
+      INSERT ls_parameter INTO TABLE lt_parameters.
+    ENDIF.
 
     dyn_call_method( io_object     = mo_listener
                      iv_methname   = gc_methnames-on_after_pull
@@ -232,11 +248,14 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     CREATE DATA: lr_package.
 
-    ls_parameter-name = lc_parmname_package.
-    ls_parameter-kind = cl_abap_objectdescr=>exporting.
-    lr_package->* = iv_package.
-    ls_parameter-value = lr_package.
-    INSERT ls_parameter INTO TABLE lt_parameters.
+    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_before_uninstall
+                                       iv_parmname = lc_parmname_package ).
+      ls_parameter-name = lc_parmname_package.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      lr_package->* = iv_package.
+      ls_parameter-value = lr_package.
+      INSERT ls_parameter INTO TABLE lt_parameters.
+    ENDIF.
 
     dyn_call_method( io_object     = mo_listener
                      iv_methname   = gc_methnames-on_before_uninstall
@@ -282,11 +301,46 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     IF sy-subrc = 0.
       rv_implemented = abap_true.
     ELSE.
-      READ TABLE mo_listener_descr->methods WITH KEY name = |{ gc_intfname }~{ iv_methname }|
-                                            TRANSPORTING NO FIELDS.
+      READ TABLE mo_listener_descr->methods
+           WITH KEY name = |{ get_callback_intf_descr( )->get_relative_name( ) }~{ iv_methname }|
+           TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
         rv_implemented = abap_true.
       ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD check_listener_methimp_has_par.
+    DATA: lo_intf_descr TYPE REF TO cl_abap_intfdescr.
+    FIELD-SYMBOLS: <ls_method>        TYPE abap_methdescr,
+                   <ls_parameter>     TYPE abap_parmdescr,
+                   <ls_method_def>    TYPE abap_methdescr,
+                   <ls_parameter_def> TYPE abap_parmdescr.
+
+    " Method must exist, check with check_listener_impl_method
+    READ TABLE mo_listener_descr->methods WITH KEY name = iv_methname ASSIGNING <ls_method>.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT <ls_method>-parameters ASSIGNING <ls_parameter> WHERE name = iv_parmname.
+      " Get parameter definition
+      lo_intf_descr = get_callback_intf_descr( ).
+      READ TABLE lo_intf_descr->methods WITH KEY name = iv_methname ASSIGNING <ls_method_def>.
+      ASSERT sy-subrc = 0.
+      READ TABLE <ls_method_def>-parameters WITH KEY name = iv_parmname
+                                            ASSIGNING <ls_parameter_def>.
+      ASSERT sy-subrc = 0.
+
+      " Check if parameters are of the same kind (-> at least somewhat compatible).
+      " All other parameter type mismatches will raise a dynamic call exception, which seems better
+      " than just hiding the error by not calling the callback at all.
+      rv_par_exists = boolc( <ls_parameter>-parm_kind = <ls_parameter_def>-parm_kind ).
+
+      EXIT.
+    ENDLOOP.
+
+    IF sy-subrc <> 0.
+      " Parameter does not exist
+      rv_par_exists = abap_false.
     ENDIF.
   ENDMETHOD.
 
@@ -303,5 +357,19 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
         " correctly, see LIF_CALLBACK_LISTENER for the method signatures.
         RAISE EXCEPTION lx_ex.
     ENDTRY.
+  ENDMETHOD.
+
+  METHOD get_callback_intf_descr.
+    DATA: li_dummy     TYPE REF TO lif_callback_listener ##NEEDED,
+          lo_ref_descr TYPE REF TO cl_abap_refdescr.
+    STATICS: so_intf_descr TYPE REF TO cl_abap_intfdescr.
+
+    IF so_intf_descr IS NOT BOUND.
+      lo_ref_descr ?= cl_abap_typedescr=>describe_by_data( li_dummy ).
+      so_intf_descr ?= lo_ref_descr->get_referenced_type( ).
+    ENDIF.
+
+    ASSERT so_intf_descr IS BOUND.
+    ro_descr = so_intf_descr.
   ENDMETHOD.
 ENDCLASS.
