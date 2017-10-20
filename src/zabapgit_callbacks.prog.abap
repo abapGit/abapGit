@@ -36,7 +36,14 @@ INTERFACE lif_callback_listener.
     "! This method is called just before a repository gets uninstalled.
     "! </p>
     "! @parameter iv_package | Installation package name
-    on_before_uninstall IMPORTING iv_package TYPE devclass.
+    on_before_uninstall IMPORTING iv_package TYPE devclass,
+    "! Install event listener
+    "! <p>
+    "! This method is called after the initial installation of an online repository. Note that
+    "! <em>on_after_pull</em> does not get called after or before this method.
+    "! </p>
+    "! @parameter iv_package | Installation package
+    on_after_install IMPORTING iv_package TYPE devclass.
 ENDINTERFACE.
 
 "! Dummy callback listener
@@ -46,7 +53,8 @@ CLASS lcl_dummy_callback_listener DEFINITION.
       lif_callback_listener.
     ALIASES:
       on_after_pull FOR lif_callback_listener~on_after_pull,
-      on_before_uninstall FOR lif_callback_listener~on_before_uninstall.
+      on_before_uninstall FOR lif_callback_listener~on_before_uninstall,
+      on_after_install FOR lif_callback_listener~on_after_install.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -56,6 +64,9 @@ CLASS lcl_dummy_callback_listener IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_callback_listener~on_before_uninstall.
+  ENDMETHOD.
+
+  METHOD lif_callback_listener~on_after_install.
   ENDMETHOD.
 ENDCLASS.
 
@@ -76,11 +87,13 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
       lif_callback_listener.
     ALIASES:
       on_after_pull FOR lif_callback_listener~on_after_pull,
-      on_before_uninstall FOR lif_callback_listener~on_before_uninstall.
+      on_before_uninstall FOR lif_callback_listener~on_before_uninstall,
+      on_after_install FOR lif_callback_listener~on_after_install.
     CONSTANTS:
       BEGIN OF gc_methnames,
         on_after_pull       TYPE abap_methname VALUE 'ON_AFTER_PULL',
         on_before_uninstall TYPE abap_methname VALUE 'ON_BEFORE_UNINSTALL',
+        on_after_install    TYPE abap_methname VALUE 'ON_AFTER_INSTALL',
       END OF gc_methnames.
     CLASS-METHODS:
       "! Gets an adapter instance (used for callback class instance reuse / caching)
@@ -259,6 +272,28 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     dyn_call_method( io_object     = mo_listener
                      iv_methname   = gc_methnames-on_before_uninstall
+                     it_parameters = lt_parameters ).
+  ENDMETHOD.
+
+  METHOD lif_callback_listener~on_after_install.
+    CONSTANTS: lc_parmname_package TYPE abap_parmname VALUE 'IV_PACKAGE'.
+    DATA: lt_parameters TYPE abap_parmbind_tab,
+          ls_parameter  TYPE abap_parmbind,
+          lr_package    TYPE REF TO devclass.
+
+    CREATE DATA: lr_package.
+
+    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_install
+                                       iv_parmname = lc_parmname_package ).
+      ls_parameter-name = lc_parmname_package.
+      ls_parameter-kind = cl_abap_objectdescr=>exporting.
+      lr_package->* = iv_package.
+      ls_parameter-value = lr_package.
+      INSERT ls_parameter INTO TABLE lt_parameters.
+    ENDIF.
+
+    dyn_call_method( io_object     = mo_listener
+                     iv_methname   = gc_methnames-on_after_install
                      it_parameters = lt_parameters ).
   ENDMETHOD.
 
