@@ -59,7 +59,12 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   zcx_abapgit_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      set_callback_trust_level
+        IMPORTING iv_level TYPE zif_abapgit_definitions=>gty_trust_level
+        RAISING   zcx_abapgit_exception,
+      get_callback_trust_level
+        RETURNING VALUE(rv_level) TYPE zif_abapgit_definitions=>gty_trust_level.
 
   PROTECTED SECTION.
     DATA: mt_local              TYPE zif_abapgit_definitions=>ty_files_item_tt,
@@ -70,13 +75,14 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
 
     METHODS:
       set
-        IMPORTING iv_sha1        TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                  it_checksums   TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
-                  iv_url         TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
-                  iv_branch_name TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
-                  iv_head_branch TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
-                  iv_offline     TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
-                  is_dot_abapgit TYPE lcl_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
+        IMPORTING iv_sha1                 TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+                  it_checksums            TYPE lcl_persistence_repo=>ty_local_checksum_tt OPTIONAL
+                  iv_url                  TYPE lcl_persistence_repo=>ty_repo-url OPTIONAL
+                  iv_branch_name          TYPE lcl_persistence_repo=>ty_repo-branch_name OPTIONAL
+                  iv_head_branch          TYPE lcl_persistence_repo=>ty_repo-head_branch OPTIONAL
+                  iv_offline              TYPE lcl_persistence_repo=>ty_repo-offline OPTIONAL
+                  is_dot_abapgit          TYPE lcl_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
+                  iv_callback_trust_level TYPE lcl_persistence_repo=>ty_repo-callback_trust_level OPTIONAL
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo DEFINITION
@@ -134,7 +140,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
                   io_stage   TYPE REF TO lcl_stage
         RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
-        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>TY_TADIR_TT
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -237,6 +243,6 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS is_sap_object_allowed
       RETURNING
-        value(r_is_sap_object_allowed) TYPE abap_bool.
+        VALUE(r_is_sap_object_allowed) TYPE abap_bool.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION

@@ -266,4 +266,20 @@ INTERFACE zif_abapgit_definitions
       inactive TYPE r3state VALUE 'I',
     END OF gc_version.
 
+  TYPES:
+    gty_trust_level TYPE string.
+  CONSTANTS:
+    "! Trust levels for repository callback execution
+    "! <p>
+    "! These can be changed for each repository in the repo settings page. Default is ASK.
+    "! </p>
+    BEGIN OF gc_trust_levels,
+      "! Ask wether the callback should be executed or not
+      ask    TYPE gty_trust_level VALUE 'ASK',
+      "! Always execute callbacks for the repository without confirmation dialog
+      always TYPE gty_trust_level VALUE 'ALWAYS',
+      "! Never execute callbacks for the repository
+      never  TYPE gty_trust_level VALUE 'NEVER',
+    END OF gc_trust_levels.
+
 ENDINTERFACE.

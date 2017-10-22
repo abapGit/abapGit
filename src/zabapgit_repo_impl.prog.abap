@@ -413,7 +413,8 @@ CLASS lcl_repo IMPLEMENTATION.
       OR iv_branch_name IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
-      OR is_dot_abapgit IS SUPPLIED.
+      OR is_dot_abapgit IS SUPPLIED
+      OR iv_callback_trust_level IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
@@ -464,6 +465,13 @@ CLASS lcl_repo IMPLEMENTATION.
         iv_key         = ms_data-key
         is_dot_abapgit = is_dot_abapgit ).
       ms_data-dot_abapgit = is_dot_abapgit.
+    ENDIF.
+
+    IF iv_callback_trust_level IS SUPPLIED.
+      lo_persistence->update_callback_trust_level(
+        iv_key                  = ms_data-key
+        iv_callback_trust_level = iv_callback_trust_level ).
+      ms_data-callback_trust_level = iv_callback_trust_level.
     ENDIF.
 
   ENDMETHOD.
@@ -797,6 +805,14 @@ CLASS lcl_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.  " rebuild_local_checksums.
+
+  METHOD get_callback_trust_level.
+    rv_level = ms_data-callback_trust_level.
+  ENDMETHOD.
+
+  METHOD set_callback_trust_level.
+    set( iv_callback_trust_level = iv_level ).
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_repo IMPLEMENTATION
 

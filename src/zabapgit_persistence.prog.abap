@@ -101,16 +101,17 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_repo_xml,
-             url                TYPE string,
-             branch_name        TYPE string,
-             sha1               TYPE zif_abapgit_definitions=>ty_sha1,
-             package            TYPE devclass,
-             offline            TYPE sap_bool,
-             local_checksums    TYPE ty_local_checksum_tt,
-             dot_abapgit        TYPE lcl_dot_abapgit=>ty_dot_abapgit,
-             head_branch        TYPE string,   " HEAD symref of the repo, master branch
-             write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
-             ignore_subpackages TYPE sap_bool,
+             url                  TYPE string,
+             branch_name          TYPE string,
+             sha1                 TYPE zif_abapgit_definitions=>ty_sha1,
+             package              TYPE devclass,
+             offline              TYPE sap_bool,
+             local_checksums      TYPE ty_local_checksum_tt,
+             dot_abapgit          TYPE lcl_dot_abapgit=>ty_dot_abapgit,
+             head_branch          TYPE string,   " HEAD symref of the repo, master branch
+             write_protect        TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
+             ignore_subpackages   TYPE sap_bool,
+             callback_trust_level TYPE zif_abapgit_definitions=>gty_trust_level,
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
@@ -159,6 +160,11 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
     METHODS update_dot_abapgit
       IMPORTING iv_key         TYPE ty_repo-key
                 is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
+      RAISING   zcx_abapgit_exception.
+
+    METHODS update_callback_trust_level
+      IMPORTING iv_key                  TYPE ty_repo-key
+                iv_callback_trust_level TYPE ty_repo-callback_trust_level
       RAISING   zcx_abapgit_exception.
 
     METHODS add
@@ -1081,6 +1087,8 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-offline      = iv_offline.
     ls_repo-dot_abapgit  = is_dot_abapgit.
 
+    ls_repo-callback_trust_level = zif_abapgit_definitions=>gc_trust_levels-ask.
+
     lv_repo_as_xml = to_xml( ls_repo ).
 
     rv_key = get_next_id( ).
@@ -1113,6 +1121,26 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
+  ENDMETHOD.
+
+  METHOD update_callback_trust_level.
+    DATA: ls_content TYPE lcl_persistence_db=>ty_content,
+          ls_repo    TYPE ty_repo.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH lcx_not_found.
+        zcx_abapgit_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-callback_trust_level = iv_callback_trust_level.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
   ENDMETHOD.
 
   METHOD delete.
@@ -1348,6 +1376,10 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     IF rs_repo IS INITIAL.
       zcx_abapgit_exception=>raise( 'Inconsistent repo metadata' ).
+    ENDIF.
+
+    IF rs_repo-callback_trust_level IS INITIAL.
+      rs_repo-callback_trust_level = zif_abapgit_definitions=>gc_trust_levels-ask.
     ENDIF.
 
   ENDMETHOD.
