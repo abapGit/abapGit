@@ -15,9 +15,6 @@
 "! abapGit most of the time only exists in the development system this would cause a compiler error
 "! on import in QA / production systems.
 "! </p>
-"! <p>
-"! Version parameters are always taken from the <em>VERSION</em> attribute in .abapgit.xml.
-"! </p>
 INTERFACE lif_callback_listener.
   METHODS:
     "! Pull event listener
@@ -26,11 +23,7 @@ INTERFACE lif_callback_listener.
     "! pulled changes. Activation of all objects in the repository is not guaranteed.
     "! </p>
     "! @parameter iv_package | Installation package name
-    "! @parameter iv_old_version | Old version
-    "! @parameter iv_new_version | New version
-    on_after_pull IMPORTING iv_package     TYPE devclass
-                            iv_old_version TYPE string
-                            iv_new_version TYPE string,
+    on_after_pull IMPORTING iv_package     TYPE devclass,
     "! Uninstall event listener
     "! <p>
     "! This method is called just before a repository gets uninstalled.
@@ -210,16 +203,12 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_callback_listener~on_after_pull.
-    CONSTANTS: lc_parmname_package     TYPE abap_parmname VALUE 'IV_PACKAGE',
-               lc_parmname_old_version TYPE abap_parmname VALUE 'IV_OLD_VERSION',
-               lc_parmname_new_version TYPE abap_parmname VALUE 'IV_NEW_VERSION'.
+    CONSTANTS: lc_parmname_package     TYPE abap_parmname VALUE 'IV_PACKAGE'.
     DATA: lt_parameters  TYPE abap_parmbind_tab,
           ls_parameter   TYPE abap_parmbind,
-          lr_package     TYPE REF TO devclass,
-          lr_old_version TYPE REF TO string,
-          lr_new_version TYPE REF TO string.
+          lr_package     TYPE REF TO devclass.
 
-    CREATE DATA: lr_package, lr_old_version, lr_new_version.
+    CREATE DATA: lr_package.
 
     IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
                                        iv_parmname = lc_parmname_package ).
@@ -227,24 +216,6 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
       ls_parameter-kind = cl_abap_objectdescr=>exporting.
       lr_package->* = iv_package.
       ls_parameter-value = lr_package.
-      INSERT ls_parameter INTO TABLE lt_parameters.
-    ENDIF.
-
-    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
-                                       iv_parmname = lc_parmname_old_version ).
-      ls_parameter-name = lc_parmname_old_version.
-      ls_parameter-kind = cl_abap_objectdescr=>exporting.
-      lr_old_version->* = iv_old_version.
-      ls_parameter-value = lr_old_version.
-      INSERT ls_parameter INTO TABLE lt_parameters.
-    ENDIF.
-
-    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_pull
-                                       iv_parmname = lc_parmname_new_version ).
-      ls_parameter-name = lc_parmname_new_version.
-      ls_parameter-kind = cl_abap_objectdescr=>exporting.
-      lr_new_version->* = iv_new_version.
-      ls_parameter-value = lr_new_version.
       INSERT ls_parameter INTO TABLE lt_parameters.
     ENDIF.
 
