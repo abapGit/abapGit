@@ -139,7 +139,8 @@ function StageHelper(params) {
   };
   
   // Table columns (autodetection)
-  this.col = this.detectColumns();
+  this.colIndex      = this.detectColumns();
+  this.filterTargets = ["name", "user"];
 
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
@@ -173,13 +174,13 @@ StageHelper.prototype.setHooks = function() {
 // Detect column index
 StageHelper.prototype.detectColumns = function() {
   var dataRow  = this.dom.stageTab.tBodies[0].rows[0];
-  var cols     = {};
+  var colIndex = {};
 
   for (var i = dataRow.cells.length - 1; i >= 0; i--) {
-    if (dataRow.cells[i].className) cols[dataRow.cells[i].className] = i;
+    if (dataRow.cells[i].className) colIndex[dataRow.cells[i].className] = i;
   }
 
-  return cols;
+  return colIndex;
 }
 
 // Store table state on leaving the page
@@ -195,7 +196,7 @@ StageHelper.prototype.onPageLoad = function() {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageSeed));
 
   this.iterateStageTab(true, function (row) {
-    var status = data && data[row.cells[this.col.name].innerText];
+    var status = data && data[row.cells[this.colIndex["name"]].innerText];
     this.updateRow(row, status || this.STATUS.reset);
   });
 
@@ -250,22 +251,33 @@ StageHelper.prototype.onSearch = function (e) {
 
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
-  var td      = row.cells[this.col.name];
-  var origTxt = td.innerText; // without tags
-  var newTxt  = "";
+  // Collect data cells
+  var targets = this.filterTargets.map(function(attr) {
+    var elem = row.cells[this.colIndex[attr]];
+    if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
+    return {
+      elem:      elem,
+      plainText: elem.innerText, // without tags
+      curHtml:   elem.innerHTML
+    };
+  }, this);
 
-  if (filter) {
-    newTxt = origTxt.replace(filter, "<mark>"+filter+"</mark>");
-    row.style.display = (newTxt !== origTxt) ? "" : "none";
-  } else { // No filter -> just reset the value
-    newTxt            = origTxt;
-    row.style.display = ""; // default, visible
+  var isVisible = false; 
+
+  // Apply filter to cells, mark filtered text
+  for (var i = targets.length - 1; i >= 0; i--) {
+    var target = targets[i];
+    target.newHtml = (filter)
+      ? target.plainText.replace(filter, "<mark>"+filter+"</mark>")
+      : target.plainText;
+    target.isChanged = target.newHtml !== target.curHtml;
+    isVisible        = isVisible || !filter || target.newHtml !== target.plainText;
   }
 
-  if (td.firstChild.tagName === "A") {
-    td.firstChild.innerHTML = newTxt;
-  } else {
-    td.innerHTML = newTxt;
+  // Update DOM
+  row.style.display = isVisible ? "" : "none";
+  for (var i = targets.length - 1; i >= 0; i--) {
+    if (targets[i].isChanged) targets[i].elem.innerHTML = targets[i].newHtml;
   }
 }
 
@@ -282,12 +294,12 @@ StageHelper.prototype.getStatusImpact = function (status) {
 
 // Update table line
 StageHelper.prototype.updateRow = function (row, newStatus) {
-  var oldStatus = row.cells[this.col.status].innerText;
+  var oldStatus = row.cells[this.colIndex["status"]].innerText;
 
   if (oldStatus !== newStatus) {
     this.updateRowStatus(row, newStatus);
     this.updateRowCommand(row, newStatus);
-  } else if (!row.cells[this.col.cmd].children.length) {
+  } else if (!row.cells[this.colIndex["cmd"]].children.length) {
     this.updateRowCommand(row, newStatus); // For initial run
   }
 
@@ -296,17 +308,17 @@ StageHelper.prototype.updateRow = function (row, newStatus) {
 
 // Update Status cell (render set of commands)
 StageHelper.prototype.updateRowStatus = function (row, status) {
-  row.cells[this.col.status].innerText = status;
+  row.cells[this.colIndex["status"]].innerText = status;
   if (status === this.STATUS.reset) {
-    row.cells[this.col.status].classList.remove(this.HIGHLIGHT_STYLE);
+    row.cells[this.colIndex["status"]].classList.remove(this.HIGHLIGHT_STYLE);
   } else {
-    row.cells[this.col.status].classList.add(this.HIGHLIGHT_STYLE);
+    row.cells[this.colIndex["status"]].classList.add(this.HIGHLIGHT_STYLE);
   }
 }
 
 // Update Command cell (render set of commands)
 StageHelper.prototype.updateRowCommand = function (row, status) {
-  var cell = row.cells[this.col.cmd];
+  var cell = row.cells[this.colIndex["cmd"]];
   if (status === this.STATUS.reset) {
     cell.innerHTML = (row.className == "local") 
       ? this.TEMPLATES.cmdLocal 
@@ -318,7 +330,7 @@ StageHelper.prototype.updateRowCommand = function (row, status) {
 
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
-  this.dom.commitBtn.style.display    = (this.choiseCount > 0) ? "" : "none";
+  this.dom.commitBtn.style.display    = (this.choiseCount > 0) ? ""     : "none";
   this.dom.commitAllBtn.style.display = (this.choiseCount > 0) ? "none" : "";
   this.dom.fileCounter.innerHTML      = this.choiseCount.toString();
 }
@@ -332,22 +344,19 @@ StageHelper.prototype.submit = function () {
 StageHelper.prototype.collectData = function () {
   var data  = {};
   this.iterateStageTab(false, function (row) {
-    data[row.cells[this.col.name].innerText] = row.cells[this.col.status].innerText;
+    data[row.cells[this.colIndex["name"]].innerText] = row.cells[this.colIndex["status"]].innerText;
   });
   return data;
 }
 
 // Table iteration helper
-StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
-  
+StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {  
   var restArgs = Array.prototype.slice.call(arguments, 2);
   var table    = this.dom.stageTab;
 
   if (changeMode) {
     var scrollOffset = window.pageYOffset;
     this.dom.stageTab.style.display = "none";
-    // var stageTabParent = this.dom.stageTab.parentNode;
-    // table = stageTabParent.removeChild(this.dom.stageTab);
   }
 
   for (var b = 0, bN = table.tBodies.length; b < bN; b++) {
@@ -360,7 +369,6 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
 
   if (changeMode) {
     this.dom.stageTab.style.display = "";
-    // stageTabParent.appendChild(table);
     window.scrollTo(0, scrollOffset);
   }
 }
