@@ -25,7 +25,6 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
              ignore             TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
              requirements       TYPE ty_requirement_tt,
              callback_classname TYPE abap_classname,
-             version            TYPE string,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:
@@ -72,11 +71,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
       get_callback_classname
         RETURNING VALUE(rv_classname) TYPE abap_classname,
       set_callback_classname
-        IMPORTING iv_classname TYPE abap_classname,
-      get_version
-        RETURNING VALUE(rv_version) TYPE string,
-      set_version
-        IMPORTING iv_version TYPE string.
+        IMPORTING iv_classname TYPE abap_classname.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
@@ -282,13 +277,5 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
   METHOD set_callback_classname.
     ms_data-callback_classname = iv_classname.
-  ENDMETHOD.
-
-  METHOD get_version.
-    rv_version = ms_data-version.
-  ENDMETHOD.
-
-  METHOD set_version.
-    ms_data-version = iv_version.
   ENDMETHOD.
 ENDCLASS.
