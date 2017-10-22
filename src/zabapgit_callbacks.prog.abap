@@ -247,11 +247,24 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Prevent arbitrary code execution by allowing the user to take a look at the (possibly just
-    " pulled) callback implementation.
-    rv_allowed = lcl_popups=>popup_to_decide_callback_exec(
-                   iv_methname           = iv_methname
-                   iv_callback_classname = mv_callback_classname ).
+    CASE mo_repository->get_callback_trust_level( ).
+      WHEN zif_abapgit_definitions=>gc_trust_levels-ask.
+        " Prevent arbitrary code execution by allowing the user to take a look at the (possibly just
+        " pulled) callback implementation.
+        rv_allowed = lcl_popups=>popup_to_decide_callback_exec(
+                       iv_methname           = iv_methname
+                       iv_callback_classname = mv_callback_classname ).
+
+      WHEN zif_abapgit_definitions=>gc_trust_levels-always.
+        rv_allowed = abap_true.
+
+      WHEN zif_abapgit_definitions=>gc_trust_levels-never.
+        rv_allowed = abap_false.
+
+      WHEN OTHERS.
+        ASSERT 1 = 2.
+
+    ENDCASE.
   ENDMETHOD.
 
   METHOD is_dummy_listener.
