@@ -58,8 +58,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
   METHOD clone.
 
     DATA: lo_repo             TYPE REF TO lcl_repo_online,
-          ls_popup            TYPE lcl_popups=>ty_popup,
-          lo_callback_adapter TYPE REF TO lcl_callback_adapter.
+          ls_popup            TYPE lcl_popups=>ty_popup.
 
 
     ls_popup = lcl_popups=>repo_popup( iv_url ).
@@ -82,13 +81,6 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
 
     COMMIT WORK.
-
-    lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
-    IF lo_callback_adapter->check_execution_allowed(
-         lcl_callback_adapter=>gc_methnames-on_after_install
-       ) = abap_true.
-      lo_callback_adapter->on_after_install( iv_package = lo_repo->get_package( ) ).
-    ENDIF.
 
   ENDMETHOD.  "clone
 

@@ -548,8 +548,9 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement.
+    DATA: lt_updated_files    TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lt_requirements     TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement,
+          lo_callback_adapter TYPE REF TO lcl_callback_adapter.
 
 
     find_remote_dot_abapgit( ).
@@ -571,6 +572,13 @@ CLASS lcl_repo IMPLEMENTATION.
     CLEAR: mt_local, mv_last_serialization.
 
     update_local_checksums( lt_updated_files ).
+
+    lo_callback_adapter = lcl_callback_adapter=>get_instance( me ).
+    IF lo_callback_adapter->check_execution_allowed(
+         lcl_callback_adapter=>gc_methnames-on_after_deserialize
+       ) = abap_true.
+      lo_callback_adapter->on_after_deserialize( get_package( ) ).
+    ENDIF.
 
   ENDMETHOD.
 

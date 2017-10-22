@@ -134,8 +134,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo             TYPE REF TO lcl_repo_online,
-          lo_callback_adapter TYPE REF TO lcl_callback_adapter.
+    DATA: lo_repo             TYPE REF TO lcl_repo_online.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -145,13 +144,6 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     lo_repo->refresh( ).
     lo_repo->deserialize( ).
-
-    lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
-    IF lo_callback_adapter->check_execution_allowed(
-         lcl_callback_adapter=>gc_methnames-on_after_pull
-       ) = abap_true.
-      lo_callback_adapter->on_after_pull( lo_repo->get_package( ) ).
-    ENDIF.
 
     COMMIT WORK.
 
