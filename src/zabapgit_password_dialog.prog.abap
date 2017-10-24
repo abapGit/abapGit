@@ -6,7 +6,7 @@ TABLES sscrfields.
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_url FOR FIELD p_url.
-PARAMETERS: p_url  TYPE string LOWER CASE VISIBLE LENGTH 40 ##SEL_WRONG.
+PARAMETERS: p_url  TYPE string LOWER CASE VISIBLE LENGTH 60 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_user FOR FIELD p_user.
@@ -28,10 +28,24 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 
     CLASS-METHODS popup
       IMPORTING
+        iv_modal    TYPE abap_bool DEFAULT abap_true
         iv_repo_url TYPE string
       CHANGING
         cv_user     TYPE string
         cv_pass     TYPE string.
+
+    CLASS-METHODS popup_modal
+      RETURNING VALUE(rv_dialog_executed) TYPE abap_bool.
+    CLASS-METHODS export_param
+      IMPORTING iv_code TYPE c
+                iv_user TYPE string
+                iv_pass TYPE string
+                iv_url  TYPE string.
+    CLASS-METHODS import_param
+      EXPORTING ev_code TYPE c
+                ev_user TYPE string
+                ev_pass TYPE string
+                ev_url  TYPE string.
 
     CLASS-METHODS on_screen_init.
     CLASS-METHODS on_screen_output.
@@ -46,6 +60,65 @@ ENDCLASS. "lcl_password_dialog DEFINITION
 
 CLASS lcl_password_dialog IMPLEMENTATION.
 
+  METHOD export_param.
+    EXPORT code = iv_code
+           url  = iv_url
+           user = iv_user
+           pass = iv_pass
+      TO MEMORY ID 'ZABAPGIT_PASS'.
+  ENDMETHOD.
+
+  METHOD import_param.
+    IMPORT code  = ev_code
+           url   = ev_url
+           user  = ev_user
+           pass  = ev_pass
+      FROM MEMORY ID 'ZABAPGIT_PASS'.
+  ENDMETHOD.
+
+  METHOD popup_modal.
+
+    DATA: user TYPE string,
+          pass TYPE string,
+          url  TYPE string,
+          code TYPE c.
+
+    CALL METHOD import_param(
+      IMPORTING
+        ev_code = code
+        ev_user = user
+        ev_pass = pass
+        ev_url  = url ).
+
+    IF code = '?'. "Popup is requested
+
+      " Popup Dialog
+      CALL METHOD popup(
+        EXPORTING
+          iv_repo_url = url
+          iv_modal    = abap_false
+        CHANGING
+          cv_user     = user
+          cv_pass     = pass ).
+
+      " Export Results
+      CALL METHOD export_param(
+        EXPORTING
+          iv_code = mv_confirm
+          iv_url  = url
+          iv_user = user
+          iv_pass = pass ).
+
+      rv_dialog_executed = abap_true.
+
+    ELSE.
+
+      rv_dialog_executed = abap_false.
+
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD popup.
 
     CLEAR p_pass.
@@ -53,13 +126,49 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     p_user     = cv_user.
     mv_confirm = abap_false.
 
-    CALL SELECTION-SCREEN dynnr STARTING AT 5 5 ENDING AT 60 8.
+    DATA: user TYPE string,
+          pass TYPE string,
+          code TYPE c.
 
-    IF mv_confirm = abap_true.
-      cv_user = p_user.
-      cv_pass = p_pass.
+    IF iv_modal = abap_true.
+
+      " Modal Dialog requested
+      CALL METHOD export_param(
+          iv_code = '?'
+          iv_user = cv_user
+          iv_pass = space
+          iv_url  = iv_repo_url ).
+
+      SUBMIT (sy-repid)
+        AND RETURN.
+
+      CALL METHOD import_param(
+        IMPORTING
+          ev_code = code
+          ev_user = user
+          ev_pass = pass ).
+      FREE MEMORY ID 'ZABAPGIT_PASS'.
+
+      IF code = 'X'.
+        cv_user = user.
+        cv_pass = pass.
+      ELSE.
+        CLEAR: cv_user, cv_pass.
+      ENDIF.
+
     ELSE.
-      CLEAR: cv_user, cv_pass.
+
+      " Amodal Dialog is fine
+
+      CALL SELECTION-SCREEN dynnr STARTING AT 5 5 ENDING AT 80 8.
+
+      IF mv_confirm = abap_true.
+        cv_user = p_user.
+        cv_pass = p_pass.
+      ELSE.
+        CLEAR: cv_user, cv_pass.
+      ENDIF.
+
     ENDIF.
 
     CLEAR: p_url, p_user, p_pass.
