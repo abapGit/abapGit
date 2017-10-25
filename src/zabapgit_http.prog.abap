@@ -209,7 +209,13 @@ CLASS lcl_http_client IMPLEMENTATION.
         http_invalid_state         = 2
         http_processing_failed     = 3
         OTHERS                     = 4 ).
+
     IF sy-subrc <> 0.
+      " in case of HTTP_COMMUNICATION_FAILURE
+      " make sure:
+      " a) SSL is setup properly in STRUST
+      " b) no firewalls
+      " check trace file in transaction SMICM
 
       mi_client->get_last_error(
         IMPORTING
@@ -217,21 +223,6 @@ CLASS lcl_http_client IMPLEMENTATION.
           message = lv_message ).
 
       lv_text = |HTTP error { lv_code } occured: { lv_message }|.
-
-*      CASE sy-subrc.
-*        WHEN 1.
-*          " make sure:
-*          " a) SSL is setup properly in STRUST
-*          " b) no firewalls
-*          " check trace file in transaction SMICM
-*          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-*        WHEN 2.
-*          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-*        WHEN 3.
-*          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-*        WHEN OTHERS.
-*          lv_text = 'Another error occured'.                "#EC NOTEXT
-*      ENDCASE.
 
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
