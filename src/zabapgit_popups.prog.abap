@@ -127,7 +127,12 @@ CLASS lcl_popups DEFINITION FINAL.
         EXPORTING
           ev_url     TYPE abaptxt255-line
           ev_package TYPE tdevc-devclass
-          ev_branch  TYPE textl-line.
+          ev_branch  TYPE textl-line,
+
+      validate
+        IMPORTING
+          iv_package TYPE tdevc-devclass
+          iv_url     TYPE abaptxt255-line.
 
 ENDCLASS.
 
@@ -597,10 +602,8 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-
-          " validate
-          lcl_url=>name( |{ lv_url }| ).
-          lcl_app=>repo_srv( )->validate_package( lv_package ).
+          validate( iv_url     = lv_url
+                    iv_package = lv_package ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
           MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
@@ -1033,6 +1036,11 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     ev_branch = <ls_field>-value.
+
+  ENDMETHOD.
+
+
+  METHOD validate.
 
   ENDMETHOD.
 
