@@ -132,7 +132,9 @@ CLASS lcl_popups DEFINITION FINAL.
       validate
         IMPORTING
           iv_package TYPE tdevc-devclass
-          iv_url     TYPE abaptxt255-line.
+          iv_url     TYPE abaptxt255-line
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -1041,6 +1043,9 @@ CLASS lcl_popups IMPLEMENTATION.
 
 
   METHOD validate.
+
+    lcl_url=>name( |{ iv_url }| ).
+    lcl_app=>repo_srv( )->validate_package( iv_package ).
 
   ENDMETHOD.
 
