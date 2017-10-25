@@ -1,12 +1,12 @@
-class zcx_abapgit_not_found definition
-  public
-  inheriting from CX_STATIC_CHECK
-  final
-  create public .
+CLASS zcx_abapgit_not_found DEFINITION
+  PUBLIC
+  INHERITING FROM cx_static_check
+  FINAL
+  CREATE PUBLIC .
 
-public section.
-protected section.
-private section.
+  PUBLIC SECTION.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
