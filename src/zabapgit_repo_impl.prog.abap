@@ -879,7 +879,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
-      CATCH lcx_not_found.
+      CATCH ZCX_ABAPGIT_NOT_FOUND.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
@@ -908,7 +908,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
-      CATCH lcx_not_found.
+      CATCH ZCX_ABAPGIT_NOT_FOUND.
         zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 

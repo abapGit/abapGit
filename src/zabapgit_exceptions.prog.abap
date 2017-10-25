@@ -5,16 +5,16 @@
 *----------------------------------------------------------------------*
 *       CLASS LCX_NOT_FOUND DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcx_not_found DEFINITION INHERITING FROM cx_static_check FINAL.
+CLASS ZCX_ABAPGIT_NOT_FOUND DEFINITION INHERITING FROM cx_static_check FINAL.
 
 ENDCLASS.                    "CX_LOCAL_EXCEPTION DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS LCX_NOT_FOUND IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcx_not_found IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_NOT_FOUND IMPLEMENTATION.
 
-ENDCLASS.                    "lcx_not_found IMPLEMENTATION
+ENDCLASS.                    "ZCX_ABAPGIT_NOT_FOUND IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS LCX_CANCEL DEFINITION
