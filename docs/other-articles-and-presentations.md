@@ -55,5 +55,5 @@ SAUG National Summit 2017, September 5th
 SAP Teched Las Vegas
 -Graham Robinson
 
-abapGit, [IT Conference on SAP Technologies](http://www.itconferencesap.com/), Cluj
+[abapGit](https://larshp.github.io/Presentations/itsapcluj2017/abapgit/), [IT Conference on SAP Technologies](http://www.itconferencesap.com/), Cluj
 -Lars Hvam

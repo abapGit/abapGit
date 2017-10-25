@@ -13,6 +13,7 @@
     <item>/package.json</item>
     <item>/changelog.txt</item>
     <item>/.gitignore</item>
+    <item>/CODE_OF_CONDUCT.md</item>
    </IGNORE>
   </DATA>
  </asx:values>
