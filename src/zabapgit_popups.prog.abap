@@ -74,7 +74,7 @@ CLASS lcl_popups DEFINITION FINAL.
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
         RETURNING VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
         RAISING   zcx_abapgit_exception
-                  ZCX_ABAPGIT_CANCEL,
+                  zcx_abapgit_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_to_select_from_list
@@ -720,7 +720,7 @@ CLASS lcl_popups IMPLEMENTATION.
     ENDIF.
 
     IF lv_returncode = 'A'.
-      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.

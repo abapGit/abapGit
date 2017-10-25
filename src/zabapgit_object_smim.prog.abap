@@ -30,7 +30,7 @@ CLASS lcl_object_smim DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS get_url_for_io
       EXPORTING ev_url       TYPE string
                 ev_is_folder TYPE boole_d
-      RAISING   ZCX_ABAPGIT_NOT_FOUND
+      RAISING   zcx_abapgit_not_found
                 zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_smim DEFINITION
@@ -94,7 +94,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
     SELECT SINGLE * FROM smimloio INTO ls_smimloio
       WHERE loio_id = lv_loio.                          "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE ZCX_ABAPGIT_NOT_FOUND.
+      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
 
     IF ls_smimloio-lo_class = wbmr_c_skwf_folder_class.
@@ -180,7 +180,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
           IMPORTING
             ev_url       = lv_url
             ev_is_folder = lv_folder ).
-      CATCH ZCX_ABAPGIT_NOT_FOUND.
+      CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 
@@ -308,7 +308,7 @@ CLASS lcl_object_smim IMPLEMENTATION.
         get_url_for_io(
           IMPORTING
             ev_url  = lv_url ).
-      CATCH ZCX_ABAPGIT_NOT_FOUND.
+      CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 

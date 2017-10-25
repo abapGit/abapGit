@@ -1,4 +1,4 @@
-class ZCX_ABAPGIT_NOT_FOUND definition
+class zcx_abapgit_not_found definition
   public
   inheriting from CX_STATIC_CHECK
   final
@@ -11,5 +11,5 @@ ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_NOT_FOUND IMPLEMENTATION.
+CLASS zcx_abapgit_not_found IMPLEMENTATION.
 ENDCLASS.
