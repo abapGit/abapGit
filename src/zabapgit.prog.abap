@@ -48,6 +48,7 @@ INCLUDE zabapgit_folder_logic.
 INCLUDE zabapgit_requirements.
 INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
+INCLUDE zabapgit_proxy.
 
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.

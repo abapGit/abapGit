@@ -2,7 +2,9 @@
 *&  Include           ZABAPGIT_PERSISTENCE
 *&---------------------------------------------------------------------*
 
+INTERFACE lif_exit DEFERRED.
 CLASS lcl_settings DEFINITION DEFERRED.
+CLASS lcl_exit DEFINITION DEFERRED.
 
 CLASS lcl_persist_migrate DEFINITION FINAL.
 
