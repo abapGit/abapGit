@@ -57,7 +57,7 @@ CLASS lcl_app IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD proxy.
-   IF go_proxy IS NOT BOUND.
+    IF go_proxy IS NOT BOUND.
       CREATE OBJECT go_proxy.
     ENDIF.
     ro_proxy = go_proxy.
