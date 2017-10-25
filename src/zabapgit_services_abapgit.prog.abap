@@ -25,10 +25,10 @@ CLASS lcl_services_abapgit DEFINITION FINAL.
       RAISING zcx_abapgit_exception.
 
     CLASS-METHODS install_abapgit
-      RAISING zcx_abapgit_exception lcx_cancel.
+      RAISING zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS install_abapgit_pi
-      RAISING zcx_abapgit_exception lcx_cancel.
+      RAISING zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS is_installed
       RETURNING VALUE(rv_installed) TYPE abap_bool.

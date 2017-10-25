@@ -19,13 +19,13 @@ ENDCLASS.                    "lcx_not_found IMPLEMENTATION
 *----------------------------------------------------------------------*
 *       CLASS LCX_CANCEL DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcx_cancel DEFINITION INHERITING FROM cx_static_check FINAL.
+CLASS ZCX_ABAPGIT_CANCEL DEFINITION INHERITING FROM cx_static_check FINAL.
 
-ENDCLASS.                    "lcx_cancel DEFINITION
+ENDCLASS.                    "ZCX_ABAPGIT_CANCEL DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS LCX_CANCEL IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcx_cancel IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_CANCEL IMPLEMENTATION.
 
-ENDCLASS.                    "lcx_cancel IMPLEMENTATION
+ENDCLASS.                    "ZCX_ABAPGIT_CANCEL IMPLEMENTATION

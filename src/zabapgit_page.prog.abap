@@ -14,7 +14,7 @@ INTERFACE lif_gui_page.
               it_postdata  TYPE cnht_post_data_tab OPTIONAL
     EXPORTING ei_page      TYPE REF TO lif_gui_page
               ev_state     TYPE i
-    RAISING   zcx_abapgit_exception lcx_cancel.
+    RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
   METHODS render
     RETURNING VALUE(ro_html) TYPE REF TO lcl_html

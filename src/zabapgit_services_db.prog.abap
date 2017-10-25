@@ -7,7 +7,7 @@ CLASS lcl_services_db DEFINITION FINAL.
 
     CLASS-METHODS delete
       IMPORTING is_key TYPE lcl_persistence_db=>ty_content
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS update
       IMPORTING is_content TYPE lcl_persistence_db=>ty_content
@@ -35,7 +35,7 @@ CLASS lcl_services_db IMPLEMENTATION.
       display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     lcl_app=>db( )->delete(

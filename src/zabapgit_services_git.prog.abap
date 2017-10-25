@@ -17,29 +17,29 @@ CLASS lcl_services_git DEFINITION FINAL.
 
     CLASS-METHODS pull
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS reset
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS create_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS switch_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS delete_branch
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS commit
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_commit TYPE ty_commit_fields
                 io_stage  TYPE REF TO lcl_stage
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
 ENDCLASS. " lcl_services_git
 
@@ -70,7 +70,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     lt_unnecessary_local_objs = lo_repo->get_unnecessary_local_objs( ).
@@ -115,7 +115,7 @@ CLASS lcl_services_git IMPLEMENTATION.
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
     IF lv_cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     ASSERT lv_name CP 'refs/heads/+*'.
@@ -162,7 +162,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       iv_default_branch  = lo_repo->get_branch_name( )
       iv_show_new_option = abap_true ).
     IF ls_branch IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     IF ls_branch-name = lcl_popups=>c_new_branch_label.
@@ -188,7 +188,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     ls_branch = lcl_popups=>branch_list_popup( lo_repo->get_url( ) ).
     IF ls_branch IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     IF ls_branch-name = 'HEAD'.

@@ -20,10 +20,10 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export_package
-      RAISING zcx_abapgit_exception lcx_cancel.
+      RAISING zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
     CLASS-METHODS export_object
-      RAISING zcx_abapgit_exception lcx_cancel.
+      RAISING zcx_abapgit_exception ZCX_ABAPGIT_CANCEL.
 
   PRIVATE SECTION.
     CLASS-METHODS file_upload
@@ -396,7 +396,7 @@ CLASS lcl_zip IMPLEMENTATION.
         ev_package      = ls_data-package
         ev_folder_logic = ls_data-dot_abapgit-folder_logic ).
     IF ls_data-package IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     CREATE OBJECT lo_repo
@@ -424,7 +424,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
     ls_tadir = lcl_popups=>popup_object( ).
     IF ls_tadir IS INITIAL.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE ZCX_ABAPGIT_CANCEL.
     ENDIF.
 
     ls_item-obj_type = ls_tadir-object.
