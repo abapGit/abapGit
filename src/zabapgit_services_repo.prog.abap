@@ -9,7 +9,8 @@ CLASS lcl_services_repo DEFINITION FINAL.
       RAISING   zcx_abapgit_exception lcx_cancel.
 
     CLASS-METHODS refresh
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key        TYPE lcl_persistence_repo=>ty_repo-key
+                iv_drop_cache TYPE abap_bool DEFAULT abap_false
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS remove
@@ -86,7 +87,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD refresh.
 
-    lcl_app=>repo_srv( )->get( iv_key )->refresh( ).
+    lcl_app=>repo_srv( )->get( iv_key )->refresh( iv_drop_cache ).
 
   ENDMETHOD.  "refresh
 
@@ -111,7 +112,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -144,7 +145,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     IF lines( lt_tadir ) > 0.
 
       lv_question = |This will DELETE all objects in package { lv_package }|
-                 && | ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
+                 && | ({ lines( lt_tadir ) } objects) from the system|.                   "#EC NOTEXT
 
       lv_answer = lcl_popups=>popup_to_confirm(
         titlebar              = 'Uninstall'
@@ -154,7 +155,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
         text_button_2         = 'Cancel'
         icon_button_2         = 'ICON_CANCEL'
         default_button        = '2'
-        display_cancel_button = abap_false ).               "#EC NOTEXT
+        display_cancel_button = abap_false ).                                             "#EC NOTEXT
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE lcx_cancel.
@@ -203,7 +204,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.
@@ -292,7 +293,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       text_button_2         = 'Cancel'
       icon_button_2         = 'ICON_CANCEL'
       default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE lcx_cancel.

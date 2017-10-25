@@ -939,6 +939,259 @@ ENDCLASS.
 
 
 *----------------------------------------------------------------------*
+*       CLASS lcl_persistence_objm DEFINITION
+*----------------------------------------------------------------------*
+CLASS lcl_persistence_objm DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
+
+  PUBLIC SECTION.
+
+    TYPES: BEGIN OF ty_objm,
+             last_serial TYPE timestamp,
+             item        TYPE zif_abapgit_definitions=>ty_item,
+             files       TYPE zif_abapgit_definitions=>ty_files_tt,
+           END OF ty_objm.
+    TYPES: tt_objm TYPE SORTED TABLE OF ty_objm
+               WITH UNIQUE KEY item.
+
+    CLASS-METHODS class_constructor.
+
+    CLASS-METHODS drop_cache
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key.
+
+    CLASS-METHODS delete
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key.
+
+    CLASS-METHODS save
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key.
+
+    CLASS-METHODS get
+      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rt_meta) TYPE tt_objm.
+
+    CLASS-METHODS set
+      IMPORTING iv_key  TYPE lcl_persistence_repo=>ty_repo-key
+                it_meta TYPE tt_objm.
+
+    CLASS-METHODS update_item
+      IMPORTING iv_key  TYPE lcl_persistence_repo=>ty_repo-key
+                is_objm TYPE ty_objm.
+
+  PRIVATE SECTION.
+
+    CONSTANTS c_type_objm TYPE lcl_persistence_db=>ty_type VALUE 'OBJ_SER_META'.
+
+    TYPES: BEGIN OF ty_cache,
+             key  TYPE lcl_persistence_repo=>ty_repo-key,
+             meta TYPE tt_objm,
+           END OF ty_cache.
+
+    CLASS-DATA mo_db     TYPE REF TO lcl_persistence_db.
+    CLASS-DATA mt_cache TYPE SORTED TABLE OF ty_cache
+                                WITH UNIQUE KEY key.
+    CLASS-DATA mt_cache_db LIKE mt_cache.
+
+    CLASS-METHODS read
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key.
+
+    CLASS-METHODS from_xml
+      IMPORTING iv_xml         TYPE string
+      RETURNING VALUE(rt_objm) TYPE tt_objm.
+
+    CLASS-METHODS to_xml
+      IMPORTING it_objm       TYPE tt_objm
+      RETURNING VALUE(rv_xml) TYPE string.
+
+ENDCLASS.             "lcl_persistence_objm DEFINITION
+
+CLASS lcl_persistence_objm IMPLEMENTATION.
+
+  METHOD  class_constructor.
+    mo_db = lcl_app=>db( ).
+  ENDMETHOD.
+
+  METHOD delete.
+    TRY.
+        mo_db->delete( iv_type  = c_type_objm
+                       iv_value = iv_key ).
+      CATCH cx_root.
+    ENDTRY.
+  ENDMETHOD.
+
+  METHOD drop_cache.
+    DELETE TABLE mt_cache WITH TABLE KEY key = iv_key.
+    DELETE TABLE mt_cache_db WITH TABLE KEY key = iv_key.
+    delete( iv_key ).
+  ENDMETHOD.
+
+  METHOD read.
+
+    DATA: data_str TYPE string.
+
+    READ TABLE mt_cache TRANSPORTING NO FIELDS
+      WITH TABLE KEY key = iv_key.
+    IF sy-subrc = 0.
+      " Data is already in the local buffer
+      RETURN.
+    ENDIF.
+
+    TRY.
+        data_str = mo_db->read( iv_type       = c_type_objm
+                                iv_value      = iv_key ).
+      CATCH lcx_not_found.
+        CLEAR: data_str.
+    ENDTRY.
+
+    DATA: st_cache TYPE ty_cache.
+    st_cache-key  = iv_key.
+    st_cache-meta = from_xml( data_str ).
+    INSERT st_cache INTO TABLE mt_cache.
+
+    INSERT st_cache INTO TABLE mt_cache_db.
+
+  ENDMETHOD.
+
+  METHOD save.
+
+    FIELD-SYMBOLS: <st_cache> LIKE LINE  OF mt_cache.
+    DATA: st_cache_db LIKE LINE OF mt_cache_db.
+
+    " Get Repo Buffer
+    READ TABLE mt_cache ASSIGNING <st_cache>
+      WITH TABLE KEY key = iv_key.
+    IF sy-subrc <> 0.
+      delete( iv_key ).
+      RETURN.
+    ENDIF.
+
+    READ TABLE mt_cache_db INTO st_cache_db
+      WITH TABLE KEY key = iv_key.
+    IF sy-subrc <> 0 OR st_cache_db-meta <> <st_cache>-meta.
+
+      TRY.
+          mo_db->modify(
+              iv_type               = c_type_objm
+              iv_value              = iv_key
+              iv_data               = to_xml( it_objm = <st_cache>-meta ) ).
+        CATCH cx_root.
+      ENDTRY.
+
+    ENDIF.
+
+    "Reset DB State
+    INSERT <st_cache> INTO TABLE mt_cache_db.
+    IF sy-subrc <> 0.
+      MODIFY TABLE mt_cache_db FROM <st_cache>.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD get.
+
+    DATA: st_cache TYPE ty_cache.
+
+    " Get Data from DB if required
+    read( iv_key ).
+
+    " Access Buffer
+    READ TABLE mt_cache INTO st_cache
+      WITH TABLE KEY key = iv_key.
+    IF sy-subrc <> 0.
+      CLEAR: st_cache.
+    ENDIF.
+
+    rt_meta = st_cache-meta.
+
+  ENDMETHOD.
+
+  METHOD set.
+
+    DATA: st_cache TYPE ty_cache.
+    st_cache-key = iv_key.
+    st_cache-meta = it_meta.
+
+    DELETE TABLE mt_cache
+      WITH TABLE KEY key = iv_key.
+    INSERT st_cache INTO TABLE mt_cache.
+
+  ENDMETHOD.
+
+  METHOD update_item.
+
+    FIELD-SYMBOLS: <st_cache> LIKE LINE OF mt_cache.
+    DATA: st_cache LIKE LINE OF mt_cache.
+
+    READ TABLE mt_cache ASSIGNING <st_cache>
+      WITH TABLE KEY key = iv_key.
+    IF sy-subrc = 0.
+
+      "Update
+      DELETE TABLE <st_cache>-meta
+        WITH TABLE KEY item = is_objm-item.
+      INSERT is_objm INTO TABLE <st_cache>-meta.
+
+    ELSE.
+
+      "Insert
+      st_cache-key = iv_key.
+      INSERT is_objm INTO TABLE st_cache-meta.
+      INSERT st_cache INTO TABLE mt_cache.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    CLEAR: rt_objm.
+
+    IF iv_xml IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lv_xml = iv_xml.
+
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML lv_xml
+      RESULT itab = rt_objm.
+
+  ENDMETHOD.
+
+  METHOD to_xml.
+
+    DATA: o_writer TYPE REF TO cl_sxml_string_writer.
+
+    CLEAR: rv_xml.
+
+    IF it_objm IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    o_writer = cl_sxml_string_writer=>create( type = if_sxml=>co_xt_json ).
+
+    CALL TRANSFORMATION id
+      SOURCE itab = it_objm
+      RESULT XML o_writer.
+
+    TRY.
+        rv_xml = cl_abap_codepage=>convert_from(
+            source                        = o_writer->get_output( )
+            codepage                      = 'UTF-8'
+            replacement                   = '#'
+            ignore_cerr                   = abap_true ).
+      CATCH cx_root.
+        CLEAR: rv_xml.
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+*----------------------------------------------------------------------*
 *       CLASS lcl_persistence_db
 *----------------------------------------------------------------------*
 
@@ -947,12 +1200,12 @@ CLASS lcl_persistence_db IMPLEMENTATION.
   METHOD list_by_type.
     SELECT * FROM (c_tabname)
       INTO TABLE rt_content
-      WHERE type = iv_type.                               "#EC CI_SUBRC
+      WHERE type = iv_type.                                                               "#EC CI_SUBRC
   ENDMETHOD.
 
   METHOD list.
     SELECT * FROM (c_tabname)
-      INTO TABLE rt_content.                              "#EC CI_SUBRC
+      INTO TABLE rt_content.                                                              "#EC CI_SUBRC
   ENDMETHOD.
 
   METHOD lock.
@@ -984,7 +1237,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
     ls_table-value = iv_value.
     ls_table-data_str = iv_data.
 
-    INSERT (c_tabname) FROM ls_table.                     "#EC CI_SUBRC
+    INSERT (c_tabname) FROM ls_table.                                                     "#EC CI_SUBRC
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
@@ -1052,7 +1305,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
     SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
       WHERE type = iv_type
-      AND value = iv_value.                               "#EC CI_SUBRC
+      AND value = iv_value.                                                               "#EC CI_SUBRC
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE lcx_not_found.
     ENDIF.
@@ -1124,6 +1377,9 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     mo_db->delete( iv_type  = c_type_repo
                    iv_value = iv_key ).
+
+    "Remove Serialization Cache
+    lcl_persistence_objm=>delete( iv_key ).
 
   ENDMETHOD.
 

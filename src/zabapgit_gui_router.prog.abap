@@ -161,7 +161,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_services_repo=>new_offline( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_refresh.                    " Repo refresh
-        lcl_services_repo=>refresh( lv_key ).
+        lcl_services_repo=>refresh( iv_key        = lv_key
+                                    iv_drop_cache = abap_true ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE lcl_gui_page_syntax_check

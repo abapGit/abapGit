@@ -629,11 +629,24 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
 
+    " Get Serialization Buffer
+    DATA: lt_buffer TYPE lcl_persistence_objm=>tt_objm,
+          st_buffer LIKE LINE OF lt_buffer.
+    DATA: ls_file LIKE LINE OF rt_files.
+    FIELD-SYMBOLS: <st_buffer> LIKE LINE OF lt_buffer.
+
+    lt_buffer = lcl_persistence_objm=>get( get_key( ) ).
+
+**    DATA: start TYPE timestampl .
+**    GET TIME STAMP FIELD start.
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+
       IF lv_filter_exist = abap_true.
-        READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
-                                                             obj_name = <ls_tadir>-obj_name
-                                                    BINARY SEARCH.
+        READ TABLE lt_filter TRANSPORTING NO FIELDS
+          WITH KEY object = <ls_tadir>-object
+                   obj_name = <ls_tadir>-obj_name
+          BINARY SEARCH.
         IF sy-subrc <> 0.
           CONTINUE.
         ENDIF.
@@ -648,39 +661,75 @@ CLASS lcl_repo IMPLEMENTATION.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
 
-      IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
-        READ TABLE lt_cache TRANSPORTING NO FIELDS
-          WITH KEY item = ls_item. " type+name+package key
-        " There is something in cache and the object is unchanged
-        IF sy-subrc = 0
-            AND abap_false = lcl_objects=>has_changed_since(
-            is_item      = ls_item
-            iv_timestamp = mv_last_serialization ).
-          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.
-            APPEND <ls_cache> TO rt_files.
-          ENDLOOP.
+      " Check if we can use buffered data
+      READ TABLE lt_buffer ASSIGNING <st_buffer>
+        WITH TABLE KEY item = ls_item. " type+name+package key
+      IF sy-subrc = 0 AND
+         abap_false = lcl_objects=>has_changed_since( is_item      = ls_item
+                                                      iv_timestamp = <st_buffer>-last_serial ).
+        " Object Unchanged: Use Buffered Data
+        ls_file-item = ls_item.
+        LOOP AT <st_buffer>-files INTO ls_file-file.
+          INSERT ls_file INTO TABLE rt_files.
+        ENDLOOP.
+        DATA(buffered) = abap_true.
+        CONTINUE.
 
-          CONTINUE.
-        ENDIF.
       ENDIF.
 
+      " Object is New or Changed: Serialize
       lt_files = lcl_objects=>serialize(
         is_item     = ls_item
         iv_language = get_master_language( )
         io_log      = io_log ).
+
+      " Prepare Serialization Buffer Entry
+      CLEAR: st_buffer.
+      st_buffer-item = ls_item.
+      GET TIME STAMP FIELD st_buffer-last_serial.
+
       LOOP AT lt_files ASSIGNING <ls_file>.
+
         <ls_file>-path = <ls_tadir>-path.
         <ls_file>-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
         <ls_return>-item = ls_item.
+
+        " Supplement Serialization Buffer Entry
+        INSERT <ls_file> INTO TABLE st_buffer-files.
+
       ENDLOOP.
+
+      " Write Serialization Buffer Entry
+      lcl_persistence_objm=>update_item( iv_key  = get_key( )
+                                         is_objm = st_buffer ).
+
     ENDLOOP.
+
+**    DATA: end TYPE timestampl.
+**    GET TIME STAMP FIELD end.
+
+**    IF sy-uname = 'MKAESEMANN'.
+**      IF buffered = abap_true.
+**        DATA(msg) = |Serialization with Buffering: { end - start }|.
+**      ELSE.
+**        msg = |Serialization without Buffering: { end - start }|.
+**      ENDIF.
+**      MESSAGE msg TYPE 'I'.
+**    ENDIF.
 
     GET TIME STAMP FIELD mv_last_serialization.
     mt_local            = rt_files.
     mv_do_local_refresh = abap_false. " Fulfill refresh
+
+    lcl_progress=>show( iv_key     = 'Buffering'
+                        iv_current = 9
+                        iv_total   = 10
+                        iv_text    = 'Serialization Data' ) ##NO_TEXT.
+
+    lcl_persistence_objm=>save( get_key( ) ).
 
   ENDMETHOD.
 
@@ -715,6 +764,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     IF iv_drop_cache = abap_true.
       CLEAR: mv_last_serialization, mt_local.
+      lcl_persistence_objm=>drop_cache( get_key( ) ).
     ENDIF.
 
   ENDMETHOD.                    "refresh
@@ -954,7 +1004,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
     SELECT SINGLE *
            FROM tdevc
            INTO ls_devclass
-           WHERE devclass = iv_package.                 "#EC CI_GENBUFF
+           WHERE devclass = iv_package.                                                   "#EC CI_GENBUFF
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Package { iv_package } not found| ).
