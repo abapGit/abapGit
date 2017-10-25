@@ -53,17 +53,23 @@ CLASS lcl_object_clas IMPLEMENTATION.
     DATA:
       lt_includes TYPE seoincl_t.
 
+    DATA: changed TYPE abap_bool.
+
     FIELD-SYMBOLS <incl> LIKE LINE OF lt_includes.
 
     lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
     LOOP AT lt_includes ASSIGNING <incl>.
-      rv_changed = check_prog_changed_since(
+
+      changed = check_prog_changed_since(
         iv_program   = <incl>
         iv_timestamp = iv_timestamp
-        iv_skip_gui  = abap_true ).
-      IF rv_changed = abap_true.
+        iv_skip_gui  = abap_true
+        iv_detect_delete = abap_false ).
+      IF changed = abap_true.
+        rv_changed = changed.
         RETURN.
       ENDIF.
+
     ENDLOOP.
   ENDMETHOD.  "lif_object~has_changed_since
 
@@ -158,7 +164,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       iv_type      = seop_ext_class_locals_def ).
     IF NOT lt_source[] IS INITIAL.
       mo_files->add_abap( iv_extra = 'locals_def'
-                          it_abap  = lt_source ).           "#EC NOTEXT
+                          it_abap  = lt_source ).                                         "#EC NOTEXT
     ENDIF.
 
     lt_source = mo_object_oriented_object_fct->serialize_abap(
@@ -166,7 +172,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       iv_type      = seop_ext_class_locals_imp ).
     IF NOT lt_source[] IS INITIAL.
       mo_files->add_abap( iv_extra = 'locals_imp'
-                          it_abap  = lt_source ).           "#EC NOTEXT
+                          it_abap  = lt_source ).                                         "#EC NOTEXT
     ENDIF.
 
     lt_source = mo_object_oriented_object_fct->serialize_abap(
@@ -176,7 +182,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     mv_skip_testclass = mo_object_oriented_object_fct->get_skip_test_classes( ).
     IF NOT lt_source[] IS INITIAL AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
-                          it_abap  = lt_source ).           "#EC NOTEXT
+                          it_abap  = lt_source ).                                         "#EC NOTEXT
     ENDIF.
 
     lt_source = mo_object_oriented_object_fct->serialize_abap(
@@ -184,7 +190,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
       iv_type      = seop_ext_class_macros ).
     IF NOT lt_source[] IS INITIAL.
       mo_files->add_abap( iv_extra = 'macros'
-                          it_abap  = lt_source ).           "#EC NOTEXT
+                          it_abap  = lt_source ).                                         "#EC NOTEXT
     ENDIF.
 
     serialize_xml( io_xml ).
@@ -352,16 +358,16 @@ CLASS lcl_object_clas IMPLEMENTATION.
     lt_source = mo_files->read_abap( ).
 
     lt_local_definitions = mo_files->read_abap( iv_extra = 'locals_def'
-                                                iv_error = abap_false ). "#EC NOTEXT
+                                                iv_error = abap_false ).                  "#EC NOTEXT
 
     lt_local_implementations = mo_files->read_abap( iv_extra = 'locals_imp'
-                                                    iv_error = abap_false ). "#EC NOTEXT
+                                                    iv_error = abap_false ).              "#EC NOTEXT
 
     lt_local_macros = mo_files->read_abap( iv_extra = 'macros'
-                                           iv_error = abap_false ). "#EC NOTEXT
+                                           iv_error = abap_false ).                       "#EC NOTEXT
 
     lt_test_classes = mo_files->read_abap( iv_extra = 'testclasses'
-                                           iv_error = abap_false ). "#EC NOTEXT
+                                           iv_error = abap_false ).                       "#EC NOTEXT
 
     ls_class_key-clsname = ms_item-obj_name.
 
@@ -611,7 +617,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
      lv_cp TYPE program.
 
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
-    READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
+    READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language.                           "#EC CI_READ_REP
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~read_sotr.
@@ -632,7 +638,7 @@ CLASS lcl_oo_class IMPLEMENTATION.
       AND exposure = '2'
       AND attdecltyp = '2'
       AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+      ORDER BY PRIMARY KEY.                                                               "#EC CI_SUBRC
 
     LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
 

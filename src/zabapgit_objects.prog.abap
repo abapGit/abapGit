@@ -342,7 +342,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
           lv_data     TYPE xstring.
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).            "#EC NOTEXT
+                            iv_ext   = iv_ext ).                                          "#EC NOTEXT
 
     read_file( EXPORTING iv_filename = lv_filename
                IMPORTING ev_data     = lv_data ).
@@ -359,7 +359,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'abap' ).            "#EC NOTEXT
+                            iv_ext   = 'abap' ).                                          "#EC NOTEXT
 
     read_file( EXPORTING iv_filename = lv_filename
                          iv_error    = iv_error
@@ -387,7 +387,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'abap' ).       "#EC NOTEXT
+                                 iv_ext   = 'abap' ).                                     "#EC NOTEXT
     ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
 
     APPEND ls_file TO mt_files.
@@ -401,7 +401,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).       "#EC NOTEXT
+                                 iv_ext   = iv_ext ).                                     "#EC NOTEXT
     ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_string ).
 
     APPEND ls_file TO mt_files.
@@ -419,7 +419,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ls_file-path = '/'.
 
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'xml' ).        "#EC NOTEXT
+                                 iv_ext   = 'xml' ).                                      "#EC NOTEXT
 
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
@@ -440,7 +440,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
           lv_xml      TYPE string.
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'xml' ).             "#EC NOTEXT
+                            iv_ext   = 'xml' ).                                           "#EC NOTEXT
 
     read_file( EXPORTING iv_filename = lv_filename
                IMPORTING ev_data     = lv_data ).
@@ -468,10 +468,10 @@ CLASS lcl_objects_files IMPLEMENTATION.
 
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
-        INTO rv_filename.                                   "#EC NOTEXT
+        INTO rv_filename.                                                                 "#EC NOTEXT
     ELSE.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra '.' iv_ext
-        INTO rv_filename.                                   "#EC NOTEXT
+        INTO rv_filename.                                                                 "#EC NOTEXT
     ENDIF.
 
 * handle namespaces
@@ -753,7 +753,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
       FROM vseoextend AS ext
       INTO TABLE lt_plugin_class
       WHERE ext~refclsname LIKE 'ZCL_ABAPGIT_OBJECT%'
-      AND ext~version = '1'.                              "#EC CI_SUBRC
+      AND ext~version = '1'.                                                              "#EC CI_SUBRC
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class
@@ -922,6 +922,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
       IMPORTING iv_program        TYPE programm
                 iv_timestamp      TYPE timestamp
                 iv_skip_gui       TYPE abap_bool DEFAULT abap_false
+                iv_detect_delete  TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_changed) TYPE abap_bool.
 
     CLASS-METHODS:
@@ -1105,7 +1106,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
-    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.                                  "#EC CI_SUBRC
     IF sy-subrc = 0.
 * there is a bug in RPY_PROGRAM_UPDATE, the header line of TTAB is not
 * cleared, so the title length might be inherited from a different program.
@@ -1234,7 +1235,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 * function module UPDATE_PROGDIR does not update VARCL
       UPDATE progdir SET varcl = is_progdir-varcl
         WHERE name = ls_progdir_new-name
-        AND state = ls_progdir_new-state.                 "#EC CI_SUBRC
+        AND state = ls_progdir_new-state.                                                 "#EC CI_SUBRC
     ENDIF.
 
     lcl_objects_activation=>add( iv_type = 'REPS'
@@ -1535,7 +1536,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       FROM tadir
       WHERE pgmid = 'R3TR'
       AND object = ms_item-obj_type
-      AND obj_name = ms_item-obj_name.                  "#EC CI_GENBUFF
+      AND obj_name = ms_item-obj_name.                                                    "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'not found in tadir' ).
     ENDIF.
@@ -1592,6 +1593,12 @@ CLASS lcl_objects_program IMPLEMENTATION.
       INTO (lv_date, lv_time)
       WHERE progname = iv_program
       AND   r3state = 'A'.
+    IF sy-subrc <> 0 AND iv_detect_delete = abap_true.
+      "Program does not exist and may be deleted or have never existed
+      "to begin with
+      rv_changed = abap_undefined.
+      RETURN.
+    ENDIF.
 
     rv_changed = check_timestamp(
       iv_timestamp = iv_timestamp
@@ -1622,7 +1629,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     SELECT dgen tgen FROM d020s           " Screens
       INTO CORRESPONDING FIELDS OF TABLE lt_screens
-      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.     "#EC CI_SUBRC
+      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.                                     "#EC CI_SUBRC
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
       rv_changed = check_timestamp(
@@ -1638,7 +1645,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_eudb
       WHERE relid = 'CU'
       AND   name  = iv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.             "#EC CI_SUBRC
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.                                             "#EC CI_SUBRC
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
       rv_changed = check_timestamp(
