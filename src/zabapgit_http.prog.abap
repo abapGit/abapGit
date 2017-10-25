@@ -216,7 +216,7 @@ CLASS lcl_http_client IMPLEMENTATION.
           code    = lv_code
           message = lv_message ).
 
-      lv_text = |HTTP error { lv_code } occured: { lv_code }|.
+      lv_text = |HTTP error { lv_code } occured: { lv_message }|.
 
 *      CASE sy-subrc.
 *        WHEN 1.
