@@ -179,6 +179,11 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
   METHOD handle_function.
 
+    CONSTANTS: BEGIN OF co_parameter_type,
+                 import TYPE vepparamtype VALUE 'I',
+                 export TYPE vepparamtype VALUE 'O',
+               END OF co_parameter_type.
+
     DATA: li_parameter TYPE REF TO if_ws_md_vif_param,
           li_soap      TYPE REF TO if_ws_md_soap_ext_func,
           li_fault     TYPE REF TO if_ws_md_vif_fault,
@@ -205,16 +210,22 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
       LOOP AT is_webi-pvepparameter ASSIGNING <ls_parameter>
           WHERE function = <ls_function>-function.
+
         CASE <ls_parameter>-vepparamtype.
-          WHEN 'I'.
+          WHEN co_parameter_type-import.
+
             li_parameter = li_function->create_incoming_parameter(
               <ls_parameter>-vepparam ).
-          WHEN 'E'.
+
+          WHEN co_parameter_type-export.
+
             li_parameter = li_function->create_outgoing_parameter(
               <ls_parameter>-vepparam ).
+
           WHEN OTHERS.
             ASSERT 0 = 1.
         ENDCASE.
+
         li_parameter->set_name_mapped_to( <ls_parameter>-mappedname ).
         li_parameter->set_is_exposed( <ls_parameter>-is_exposed ).
         li_parameter->set_is_optional( <ls_parameter>-is_optional ).
