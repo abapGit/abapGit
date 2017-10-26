@@ -372,8 +372,9 @@ CLASS lcl_persist_settings DEFINITION FINAL.
     METHODS read
       RETURNING
         VALUE(ro_settings) TYPE REF TO lcl_settings.
-  PRIVATE SECTION.
 
+  PRIVATE SECTION.
+    DATA: mo_settings TYPE REF TO lcl_settings.
 
 ENDCLASS.
 
@@ -2135,15 +2136,30 @@ CLASS lcl_persist_settings IMPLEMENTATION.
 
   METHOD modify.
 
+    DATA: settings TYPE string.
+    settings = io_settings->get_settings_xml( ).
+
     lcl_app=>db( )->modify(
       iv_type       = lcl_settings=>c_dbtype_settings
       iv_value      = ''
-      iv_data       = io_settings->get_settings_xml( ) ).
+      iv_data       = settings ).
+
+    " Settings have been modified: Update Buffered Settings
+    IF mo_settings IS BOUND.
+      mo_settings->set_xml_settings( settings ).
+    ENDIF.
 
   ENDMETHOD.
 
   METHOD read.
 
+    IF mo_settings IS BOUND.
+      " Return Buffered Settings
+      ro_settings = mo_settings.
+      RETURN.
+    ENDIF.
+
+    " Settings have changed or have not yet been loaded
     CREATE OBJECT ro_settings.
 
     TRY.
@@ -2157,6 +2173,8 @@ CLASS lcl_persist_settings IMPLEMENTATION.
         ro_settings->set_defaults( ).
 
     ENDTRY.
+
+    mo_settings = ro_settings.
 
   ENDMETHOD.
 
