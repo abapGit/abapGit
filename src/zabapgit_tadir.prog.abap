@@ -212,6 +212,8 @@ CLASS lcl_tadir IMPLEMENTATION.
                       iv_ignore_subpackages = iv_ignore_subpackages
                       io_log                = io_log ).
 
+    lcl_objects_store=>read( rt_tadir ).
+
     rt_tadir = check_exists( rt_tadir ).
 
   ENDMETHOD.                    "read

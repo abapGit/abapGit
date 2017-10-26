@@ -2,6 +2,131 @@
 *&  Include           ZABAPGIT_OBJECTS
 *&---------------------------------------------------------------------*
 
+CLASS lcl_objects_store DEFINITION CREATE PRIVATE FINAL .
+
+  PUBLIC SECTION.
+
+    CLASS-DATA mt_dd04l TYPE SORTED TABLE OF dd04l
+                 WITH UNIQUE KEY rollname
+                 READ-ONLY.
+
+    CLASS-DATA mt_dd02l TYPE SORTED TABLE OF dd02l
+                 WITH UNIQUE KEY tabname
+                 READ-ONLY.
+
+    CLASS-DATA mt_dd40l TYPE SORTED TABLE OF dd40l
+                 WITH UNIQUE KEY typename
+                 READ-ONLY.
+
+    CLASS-DATA mt_dd01l TYPE SORTED TABLE OF dd01l
+                 WITH UNIQUE KEY domname.
+
+    CLASS-METHODS active
+      RETURNING VALUE(r_active) TYPE abap_bool.
+
+    CLASS-METHODS read
+      IMPORTING it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+    CLASS-METHODS clear.
+
+  PRIVATE SECTION.
+
+    CLASS-DATA: m_active TYPE abap_bool VALUE abap_false.
+
+
+ENDCLASS.
+
+CLASS lcl_objects_store IMPLEMENTATION.
+
+  METHOD clear.
+    CLEAR: mt_dd04l, mt_dd01l, mt_dd02l, mt_dd40l.
+    m_active = abap_false.
+  ENDMETHOD.
+
+  METHOD active.
+    r_active = m_active.
+  ENDMETHOD.
+
+  METHOD read.
+
+**    IF sy-uname <> 'MKAESEMANN'.
+**      RETURN.
+**    ENDIF.
+
+    m_active = abap_true.
+
+    DATA: rt_rollname TYPE STANDARD TABLE OF rollname.
+    DATA: rt_tabname TYPE STANDARD TABLE OF tabname.
+    DATA: rt_typename TYPE STANDARD TABLE OF ttypename.
+    DATA: rt_domname TYPE STANDARD TABLE OF domname.
+
+    "Prepare Select Conditions
+    LOOP AT it_tadir ASSIGNING FIELD-SYMBOL(<st_tadir>).
+
+      CASE <st_tadir>-object.
+
+        WHEN 'DOMA'.
+          INSERT CONV #( <st_tadir>-obj_name ) INTO TABLE rt_domname.
+
+        WHEN 'DTEL'.
+          INSERT CONV #( <st_tadir>-obj_name ) INTO TABLE rt_rollname.
+
+        WHEN 'TABL'.
+          INSERT CONV #( <st_tadir>-obj_name ) INTO TABLE rt_tabname.
+
+        WHEN 'TTYP'.
+          INSERT CONV #( <st_tadir>-obj_name ) INTO TABLE rt_typename.
+
+        WHEN OTHERS. "Not Buffered: Ignore
+          CONTINUE.
+
+      ENDCASE.
+
+    ENDLOOP.
+
+    "DOMA: Domain Elements
+    IF rt_domname IS NOT INITIAL.
+      SELECT * FROM dd01l
+        INTO CORRESPONDING FIELDS OF TABLE mt_dd01l
+        FOR ALL ENTRIES IN rt_domname
+        WHERE domname = rt_domname-table_line
+          AND as4local = 'A'
+          AND as4vers  = '0000'.
+    ENDIF.
+
+    "DTEL: Data Elements
+    IF rt_rollname IS NOT INITIAL.
+      SELECT * FROM dd04l
+        INTO CORRESPONDING FIELDS OF TABLE mt_dd04l
+        FOR ALL ENTRIES IN rt_rollname
+        WHERE rollname = rt_rollname-table_line
+          AND as4local = 'A'
+          AND as4vers  = '0000'.
+    ENDIF.
+
+    "TABL: Table Entries
+    IF rt_tabname IS NOT INITIAL.
+      SELECT * FROM dd02l
+        INTO CORRESPONDING FIELDS OF TABLE mt_dd02l
+        FOR ALL ENTRIES IN rt_tabname
+        WHERE tabname = rt_tabname-table_line
+          AND as4local = 'A'
+          AND as4vers  = '0000'.
+    ENDIF.
+
+    "TTYP: Table Type Entries
+    IF rt_typename IS NOT INITIAL.
+      SELECT * FROM dd40l
+        INTO CORRESPONDING FIELDS OF TABLE mt_dd40l
+        FOR ALL ENTRIES IN rt_typename
+        WHERE typename = rt_typename-table_line
+          AND as4local = 'A'.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_activation DEFINITION
 *----------------------------------------------------------------------*

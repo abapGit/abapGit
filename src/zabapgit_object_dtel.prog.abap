@@ -48,11 +48,21 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     DATA: lv_date TYPE dats,
           lv_time TYPE tims.
 
-    SELECT SINGLE as4date as4time FROM dd04l
-      INTO (lv_date, lv_time)
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ) = abap_true.
+      FIELD-SYMBOLS: <st_line> TYPE dd04l.
+      READ TABLE lcl_objects_store=>mt_dd04l ASSIGNING <st_line>
+        WITH TABLE KEY rollname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        lv_date = <st_line>-as4date.
+        lv_time = <st_line>-as4time.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4date as4time FROM dd04l
+        INTO (lv_date, lv_time)
+        WHERE rollname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
 
     rv_changed = check_timestamp(
       iv_timestamp = iv_timestamp
@@ -63,10 +73,20 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    SELECT SINGLE as4user FROM dd04l INTO rv_user
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ) = abap_true.
+      FIELD-SYMBOLS: <st_line> TYPE dd04l.
+      READ TABLE lcl_objects_store=>mt_dd04l ASSIGNING <st_line>
+        WITH TABLE KEY rollname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        rv_user = <st_line>-as4user.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4user FROM dd04l INTO rv_user
+        WHERE rollname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
+
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
@@ -82,11 +102,15 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     DATA: lv_rollname TYPE dd04l-rollname.
 
-
-    SELECT SINGLE rollname FROM dd04l INTO lv_rollname
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ) = abap_true.
+      READ TABLE lcl_objects_store=>mt_dd04l TRANSPORTING NO FIELDS
+        WITH TABLE KEY rollname = ms_item-obj_name.
+    ELSE.
+      SELECT SINGLE rollname FROM dd04l INTO lv_rollname
+        WHERE rollname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists
@@ -131,12 +155,24 @@ CLASS lcl_object_dtel IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
+    IF lcl_objects_store=>active( ) = abap_true.
+      FIELD-SYMBOLS: <st_line> TYPE dd04l.
+      READ TABLE lcl_objects_store=>mt_dd04l ASSIGNING <st_line>
+        WITH TABLE KEY rollname = lv_name.
+      IF sy-subrc = 0.
+        MOVE-CORRESPONDING <st_line> TO ls_dd04v.
+      ENDIF.
 
-    SELECT SINGLE * FROM dd04l
-      INTO CORRESPONDING FIELDS OF ls_dd04v
-      WHERE rollname = lv_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    ELSE.
+
+      SELECT SINGLE * FROM dd04l
+        INTO CORRESPONDING FIELDS OF ls_dd04v
+        WHERE rollname = lv_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+
+    ENDIF.
+
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
       zcx_abapgit_exception=>raise( 'Not found in DD04L' ).
     ENDIF.
@@ -154,7 +190,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
         ON tparat~paramid = tpara~paramid AND
         tparat~sprache = mv_language
         INTO ls_tpara
-        WHERE tpara~paramid = ls_dd04v-memoryid.       "#EC CI_BUFFJOIN
+        WHERE tpara~paramid = ls_dd04v-memoryid.                                          "#EC CI_BUFFJOIN
     ENDIF.
 
     CLEAR: ls_dd04v-as4user,
@@ -246,7 +282,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
-      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
+      AND   ddlanguage <> mv_language.                                                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.

@@ -55,11 +55,21 @@ CLASS lcl_object_doma IMPLEMENTATION.
     DATA: lv_date TYPE dats,
           lv_time TYPE tims.
 
-    SELECT SINGLE as4date as4time FROM dd01l
-      INTO (lv_date, lv_time)
-      WHERE domname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd01l.
+      READ TABLE lcl_objects_store=>mt_dd01l ASSIGNING <st_line>
+        WITH TABLE KEY domname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        lv_date = <st_line>-as4date.
+        lv_time = <st_line>-as4time.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4date as4time FROM dd01l
+        INTO (lv_date, lv_time)
+        WHERE domname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers  = '0000'.
+    ENDIF.
 
     rv_changed = check_timestamp(
       iv_timestamp = iv_timestamp
@@ -70,10 +80,20 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    SELECT SINGLE as4user FROM dd01l INTO rv_user
-      WHERE domname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd01l.
+      READ TABLE lcl_objects_store=>mt_dd01l ASSIGNING <st_line>
+        WITH TABLE KEY domname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        rv_user = <st_line>-as4user.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4user FROM dd01l INTO rv_user
+        WHERE domname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
+
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
@@ -89,11 +109,16 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     DATA: lv_domname TYPE dd01l-domname.
 
+    IF lcl_objects_store=>active( ).
+      READ TABLE lcl_objects_store=>mt_dd01l TRANSPORTING NO FIELDS
+        WITH TABLE KEY domname = ms_item-obj_name.
+    ELSE.
+      SELECT SINGLE domname FROM dd01l INTO lv_domname
+        WHERE domname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
 
-    SELECT SINGLE domname FROM dd01l INTO lv_domname
-      WHERE domname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists
@@ -249,7 +274,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
-      AND   ddlanguage <> mv_language.                    "#EC CI_SUBRC
+      AND   ddlanguage <> mv_language.                                                    "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lang>.
       lv_index = sy-tabix.

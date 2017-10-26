@@ -2,6 +2,46 @@
 *&  Include           ZABAPGIT_REPO_IMPL
 *&---------------------------------------------------------------------*
 
+CLASS lcl_runtime DEFINITION FINAL.
+
+  PUBLIC SECTION.
+    METHODS constructor.
+    METHODS measure
+      RETURNING VALUE(r_time) TYPE timestampl.
+    METHODS stop.
+
+  PRIVATE SECTION.
+    DATA: m_start TYPE timestampl.
+    DATA: m_end TYPE timestampl.
+
+ENDCLASS.
+
+CLASS lcl_runtime IMPLEMENTATION.
+
+  METHOD constructor.
+    GET TIME STAMP FIELD m_start.
+  ENDMETHOD.
+
+  METHOD stop.
+    GET TIME STAMP FIELD m_end.
+  ENDMETHOD.
+
+  METHOD measure.
+
+    IF m_end IS NOT INITIAL.
+      r_time = m_end - m_start.
+      RETURN.
+    ENDIF.
+
+    DATA: end TYPE timestampl.
+    GET TIME STAMP FIELD end.
+
+    r_time = end - m_start.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_offline IMPLEMENTATION
 *----------------------------------------------------------------------*
@@ -605,6 +645,7 @@ CLASS lcl_repo IMPLEMENTATION.
                    <ls_cache>  LIKE LINE OF lt_cache,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
 
+SET RUN TIME ANALYZER ON.
 
     " Serialization happened before and no refresh request
     IF mv_last_serialization IS NOT INITIAL AND mv_do_local_refresh = abap_false.
@@ -619,12 +660,21 @@ CLASS lcl_repo IMPLEMENTATION.
     <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
                                                 iv_data = <ls_return>-file-data ).
 
+    lcl_progress=>show( iv_key     = 'Objects'
+                        iv_current = 1
+                        iv_total   = 100
+                        iv_text    = 'Collecting' ) ##NO_TEXT.
+
+    DATA(o_tadir) = NEW lcl_runtime( ).
+
     lt_cache = mt_local.
     lt_tadir = lcl_tadir=>read(
       iv_package            = get_package( )
       iv_ignore_subpackages = ignore_subpackages( )
       io_dot                = get_dot_abapgit( )
       io_log                = io_log ).
+
+    o_tadir->stop( ).
 
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
@@ -637,8 +687,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_buffer = lcl_persistence_objm=>get( get_key( ) ).
 
-**    DATA: start TYPE timestampl .
-**    GET TIME STAMP FIELD start.
+    DATA(o_serial) = NEW lcl_runtime( ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
 
@@ -708,17 +757,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     ENDLOOP.
 
-**    DATA: end TYPE timestampl.
-**    GET TIME STAMP FIELD end.
-
-**    IF sy-uname = 'MKAESEMANN'.
-**      IF buffered = abap_true.
-**        DATA(msg) = |Serialization with Buffering: { end - start }|.
-**      ELSE.
-**        msg = |Serialization without Buffering: { end - start }|.
-**      ENDIF.
-**      MESSAGE msg TYPE 'I'.
-**    ENDIF.
+    o_serial->stop( ).
 
     GET TIME STAMP FIELD mv_last_serialization.
     mt_local            = rt_files.
@@ -730,6 +769,20 @@ CLASS lcl_repo IMPLEMENTATION.
                         iv_text    = 'Serialization Data' ) ##NO_TEXT.
 
     lcl_persistence_objm=>save( get_key( ) ).
+
+    lcl_progress=>show( iv_key     = 'Runtime'
+                        iv_current = 9
+                        iv_total   = 10
+                        iv_text    = |Read: { o_tadir->measure( ) } / Serialize: { o_serial->measure( ) }| ) ##NO_TEXT.
+
+    lcl_objects_store=>clear( ).
+
+SET RUN TIME ANALYZER OFF.
+
+**    IF sy-uname = 'MKAESEMANN'.
+**      DATA(msg) = |Read: { o_tadir->measure( ) } / Serialize: { o_serial->measure( ) }|.
+**      MESSAGE msg TYPE  'I'.
+**    ENDIF.
 
   ENDMETHOD.
 

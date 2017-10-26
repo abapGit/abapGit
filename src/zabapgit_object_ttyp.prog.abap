@@ -27,10 +27,20 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
     DATA: lv_date TYPE dats,
           lv_time TYPE tims.
 
-    SELECT SINGLE as4date as4time FROM dd40l
-      INTO (lv_date, lv_time)
-      WHERE typename = ms_item-obj_name
-      AND as4local = 'A'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd40l.
+      READ TABLE lcl_objects_store=>mt_dd40l ASSIGNING <st_line>
+        WITH TABLE KEY typename = ms_item-obj_name.
+      IF sy-subrc = 0.
+        lv_date = <st_line>-as4date.
+        lv_time = <st_line>-as4time.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4date as4time FROM dd40l
+        INTO (lv_date, lv_time)
+        WHERE typename = ms_item-obj_name
+        AND as4local = 'A'.
+    ENDIF.
 
     rv_changed = check_timestamp(
       iv_timestamp = iv_timestamp
@@ -41,9 +51,19 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    SELECT SINGLE as4user FROM dd40l INTO rv_user
-      WHERE typename = ms_item-obj_name
-      AND as4local = 'A'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd40l.
+      READ TABLE lcl_objects_store=>mt_dd40l ASSIGNING <st_line>
+        WITH TABLE KEY typename = ms_item-obj_name.
+      IF sy-subrc = 0.
+        rv_user = <st_line>-as4user.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4user FROM dd40l INTO rv_user
+        WHERE typename = ms_item-obj_name
+        AND as4local = 'A'.
+    ENDIF.
+
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
@@ -59,10 +79,15 @@ CLASS lcl_object_ttyp IMPLEMENTATION.
 
     DATA: lv_typename TYPE dd40l-typename.
 
+    IF lcl_objects_store=>active( ).
+      READ TABLE lcl_objects_store=>mt_dd40l TRANSPORTING NO FIELDS
+        WITH TABLE KEY typename = ms_item-obj_name.
+    ELSE.
+      SELECT SINGLE typename FROM dd40l INTO lv_typename
+        WHERE typename = ms_item-obj_name
+        AND as4local = 'A'.
+    ENDIF.
 
-    SELECT SINGLE typename FROM dd40l INTO lv_typename
-      WHERE typename = ms_item-obj_name
-      AND as4local = 'A'.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists

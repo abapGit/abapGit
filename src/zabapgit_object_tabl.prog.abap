@@ -31,11 +31,21 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
 
-    SELECT SINGLE as4date as4time FROM dd02l " Table
-      INTO (lv_date, lv_time)
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd02l.
+      READ TABLE lcl_objects_store=>mt_dd02l ASSIGNING <st_line>
+        WITH TABLE KEY tabname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        lv_date = <st_line>-as4date.
+        lv_time = <st_line>-as4time.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4date as4time FROM dd02l " Table
+        INTO (lv_date, lv_time)
+        WHERE tabname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers  = '0000'.
+    ENDIF.
 
     rv_changed = check_timestamp(
       iv_timestamp = iv_timestamp
@@ -82,12 +92,22 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     DATA: lv_as4date TYPE dd02l-as4date,
           lv_as4time TYPE dd02l-as4time.
 
-
-    SELECT SINGLE as4user as4date as4time
-      FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd02l.
+      READ TABLE lcl_objects_store=>mt_dd02l ASSIGNING <st_line>
+        WITH TABLE KEY tabname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        rv_user = <st_line>-as4user.
+        lv_as4date = <st_line>-as4date.
+        lv_as4time = <st_line>-as4time.
+      ENDIF.
+    ELSE.
+      SELECT SINGLE as4user as4date as4time
+        FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
+        WHERE tabname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
       RETURN.
@@ -111,11 +131,15 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
     DATA: lv_tabname TYPE dd02l-tabname.
 
-
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    IF lcl_objects_store=>active( ).
+      READ TABLE lcl_objects_store=>mt_dd02l TRANSPORTING NO FIELDS
+        WITH TABLE KEY tabname = ms_item-obj_name.
+    ELSE.
+      SELECT SINGLE tabname FROM dd02l INTO lv_tabname
+        WHERE tabname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.                    "lif_object~exists
@@ -140,10 +164,22 @@ CLASS lcl_object_tabl IMPLEMENTATION.
     lv_objname = ms_item-obj_name.
 
     lv_no_ask = abap_true.
-    SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+
+    IF lcl_objects_store=>active( ).
+      FIELD-SYMBOLS: <st_line> TYPE dd02l.
+      READ TABLE lcl_objects_store=>mt_dd02l ASSIGNING <st_line>
+        WITH TABLE KEY tabname = ms_item-obj_name.
+      IF sy-subrc = 0.
+        lv_tabclass = <st_line>-tabclass.
+      ENDIF.
+    ELSE.
+
+      SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
+        WHERE tabname = ms_item-obj_name
+        AND as4local = 'A'
+        AND as4vers = '0000'.
+    ENDIF.
+
     IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
 * it cannot delete table with table wihtout asking
       CREATE DATA lr_data TYPE (lv_objname).
