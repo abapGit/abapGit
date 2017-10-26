@@ -198,7 +198,9 @@ CLASS lcl_http_client IMPLEMENTATION.
 
   METHOD send_receive.
 
-    DATA lv_text TYPE string.
+    DATA: lv_text    TYPE string,
+          lv_code    TYPE i,
+          lv_message TYPE string.
 
     mi_client->send( ).
     mi_client->receive(
@@ -207,21 +209,21 @@ CLASS lcl_http_client IMPLEMENTATION.
         http_invalid_state         = 2
         http_processing_failed     = 3
         OTHERS                     = 4 ).
+
     IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-          " make sure:
-          " a) SSL is setup properly in STRUST
-          " b) no firewalls
-          " check trace file in transaction SMICM
-          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-        WHEN 2.
-          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-        WHEN 3.
-          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-        WHEN OTHERS.
-          lv_text = 'Another error occured'.                "#EC NOTEXT
-      ENDCASE.
+      " in case of HTTP_COMMUNICATION_FAILURE
+      " make sure:
+      " a) SSL is setup properly in STRUST
+      " b) no firewalls
+      " check trace file in transaction SMICM
+
+      mi_client->get_last_error(
+        IMPORTING
+          code    = lv_code
+          message = lv_message ).
+
+      lv_text = |HTTP error { lv_code } occured: { lv_message }|.
+
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
@@ -502,7 +504,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     DATA: lv_host TYPE string,
           lt_list TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
-          li_exit TYPE ref to lif_exit.
+          li_exit TYPE REF TO lif_exit.
 
     CALL FUNCTION 'ICM_GET_INFO2'
       TABLES
