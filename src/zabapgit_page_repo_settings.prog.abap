@@ -46,22 +46,48 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: ls_dot TYPE lcl_dot_abapgit=>ty_dot_abapgit.
+    DATA: ls_dot         TYPE lcl_dot_abapgit=>ty_dot_abapgit,
+          lv_trust_level TYPE zif_abapgit_definitions=>gty_trust_level.
 
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
+    lv_trust_level = mo_repo->get_callback_trust_level( ).
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="settings_container">' ).
     ro_html->add( '<form id="settings_form" method="post" action="sapevent:' &&
       c_action-save_settings && '">' ).
-    ro_html->add( '<br>' ).
+    ro_html->add( '<h2>Repository settings</h2>' ).
     ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' &&
       ls_dot-folder_logic && '">' ).
     ro_html->add( '<br>' ).
     ro_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
       ls_dot-starting_folder && '">' ).
     ro_html->add( '<br>' ).
+
+    ro_html->add( |<hr>| ).
+    ro_html->add( |<h2>Local installation settings</h2>| ).
+    ro_html->add( |<label>Callback execution:| ).
+    ro_html->add( |<select name="callback_trust" size="1">| ).
+    ro_html->add( |<option value="{ zif_abapgit_definitions=>gc_trust_levels-ask }"| ).
+    IF lv_trust_level = zif_abapgit_definitions=>gc_trust_levels-ask.
+      ro_html->add( | selected| ).
+    ENDIF.
+    ro_html->add( |>Ask every time</option>| ).
+    ro_html->add( |<option value="{ zif_abapgit_definitions=>gc_trust_levels-always }"| ).
+    IF lv_trust_level = zif_abapgit_definitions=>gc_trust_levels-always.
+      ro_html->add( | selected| ).
+    ENDIF.
+    ro_html->add( |>Always execute</option>| ).
+    ro_html->add( |<option value="{ zif_abapgit_definitions=>gc_trust_levels-never }"| ).
+    IF lv_trust_level = zif_abapgit_definitions=>gc_trust_levels-never.
+      ro_html->add( | selected| ).
+    ENDIF.
+    ro_html->add( |>Never execute</option>| ).
+    ro_html->add( |</select>| ).
+    ro_html->add( |</label>| ).
+
+    ro_html->add( '<br><br>' ).
     ro_html->add( '<input type="submit" value="Save" class="submit">' ).
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
@@ -90,6 +116,11 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
         lo_dot->set_starting_folder( ls_post_field-value ).
 
         mo_repo->set_dot_abapgit( lo_dot ).
+
+        READ TABLE lt_post_fields INTO ls_post_field WITH KEY name = 'callback_trust'.
+        ASSERT sy-subrc = 0.
+        mo_repo->set_callback_trust_level( ls_post_field-value ).
+
         mo_repo->refresh( ).
 
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.

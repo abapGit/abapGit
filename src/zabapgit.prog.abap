@@ -61,6 +61,7 @@ INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
 INCLUDE zabapgit_file_status.
 INCLUDE zabapgit_popups.
+INCLUDE zabapgit_callbacks.
 INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 

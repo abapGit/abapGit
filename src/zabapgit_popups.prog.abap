@@ -83,6 +83,11 @@ CLASS lcl_popups DEFINITION FINAL.
                   i_select_column_text  TYPE csequence
                   it_columns_to_display TYPE stringtab
         EXPORTING VALUE(et_list)        TYPE STANDARD TABLE
+        RAISING   zcx_abapgit_exception,
+      popup_to_decide_callback_exec
+        IMPORTING iv_methname           TYPE abap_methname
+                  iv_callback_classname TYPE string
+        RETURNING VALUE(rv_execute)     TYPE abap_bool
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -978,4 +983,58 @@ CLASS lcl_popups IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD popup_to_decide_callback_exec.
+    CONSTANTS: lc_pattern TYPE string VALUE `\\PROGRAM\=(.+)\\CLASS\=.+`.
+    DATA: lv_answer TYPE c LENGTH 1,
+          lv_prog   TYPE progname.
+
+    FIND FIRST OCCURRENCE OF REGEX lc_pattern IN iv_callback_classname SUBMATCHES lv_prog.
+
+    rv_execute = abap_undefined.
+
+    WHILE rv_execute = abap_undefined.
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Allow callback execution?'
+          text_question         = |The repository wants to execute the callback "| &&
+                                  |{ iv_methname }". Allow execution?|
+          text_button_1         = 'Allow'
+          icon_button_1         = 'ICON_CHECKED'
+          text_button_2         = 'View code'
+          icon_button_2         = 'ICON_SELECT_DETAIL'
+          default_button        = '2'
+          display_cancel_button = abap_true
+          popup_type            = 'ICON_MESSAGE_QUESTION'
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error from POPUP_TO_CONFIRM { sy-subrc }| ).
+      ENDIF.
+
+      IF lv_answer = '1'.
+        rv_execute = abap_true.
+      ELSEIF lv_answer = 'A'.
+        rv_execute = abap_false.
+      ELSEIF lv_answer = '2'.
+        IF lv_prog IS NOT INITIAL.
+          CALL FUNCTION 'RS_TOOL_ACCESS'
+            EXPORTING
+              operation     = 'SHOW'
+              object_name   = lv_prog
+              object_type   = 'PROG'
+              in_new_window = abap_true.
+        ELSE.
+          CALL FUNCTION 'RS_TOOL_ACCESS'
+            EXPORTING
+              operation     = 'SHOW'
+              object_name   = iv_callback_classname
+              object_type   = 'CLAS'
+              in_new_window = abap_true.
+        ENDIF.
+      ENDIF.
+    ENDWHILE.
+  ENDMETHOD.
 ENDCLASS.
