@@ -86,7 +86,7 @@ CLASS lcl_popups DEFINITION FINAL.
         RAISING   zcx_abapgit_exception,
       popup_to_decide_callback_exec
         IMPORTING iv_methname           TYPE abap_methname
-                  iv_callback_classname TYPE abap_classname
+                  iv_callback_classname TYPE string
         RETURNING VALUE(rv_execute)     TYPE abap_bool
         RAISING   zcx_abapgit_exception.
 
@@ -984,7 +984,11 @@ CLASS lcl_popups IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD popup_to_decide_callback_exec.
-    DATA: lv_answer TYPE c LENGTH 1.
+    CONSTANTS: lc_pattern TYPE string VALUE `\\PROGRAM\=(.+)\\CLASS\=.+`.
+    DATA: lv_answer TYPE c LENGTH 1,
+          lv_prog   TYPE progname.
+
+    FIND FIRST OCCURRENCE OF REGEX lc_pattern IN iv_callback_classname SUBMATCHES lv_prog.
 
     rv_execute = abap_undefined.
 
@@ -1012,15 +1016,24 @@ CLASS lcl_popups IMPLEMENTATION.
 
       IF lv_answer = '1'.
         rv_execute = abap_true.
-      ELSEIF lv_answer = 'C'.
+      ELSEIF lv_answer = 'A'.
         rv_execute = abap_false.
       ELSEIF lv_answer = '2'.
-        CALL FUNCTION 'RS_TOOL_ACCESS'
-          EXPORTING
-            operation     = 'SHOW'
-            object_name   = iv_callback_classname
-            object_type   = 'CLAS'
-            in_new_window = abap_true.
+        IF lv_prog IS NOT INITIAL.
+          CALL FUNCTION 'RS_TOOL_ACCESS'
+            EXPORTING
+              operation     = 'SHOW'
+              object_name   = lv_prog
+              object_type   = 'PROG'
+              in_new_window = abap_true.
+        ELSE.
+          CALL FUNCTION 'RS_TOOL_ACCESS'
+            EXPORTING
+              operation     = 'SHOW'
+              object_name   = iv_callback_classname
+              object_type   = 'CLAS'
+              in_new_window = abap_true.
+        ENDIF.
       ENDIF.
     ENDWHILE.
   ENDMETHOD.

@@ -117,7 +117,7 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
     DATA:
       mo_repository         TYPE REF TO lcl_repo,
       mo_listener           TYPE REF TO object,
-      mv_callback_classname TYPE abap_classname,
+      mv_callback_classname TYPE string,
       mo_listener_descr     TYPE REF TO cl_abap_classdescr.
 ENDCLASS.
 

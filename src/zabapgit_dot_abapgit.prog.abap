@@ -24,7 +24,7 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
              folder_logic       TYPE string,
              ignore             TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
              requirements       TYPE ty_requirement_tt,
-             callback_classname TYPE abap_classname,
+             callback_classname TYPE string,
            END OF ty_dot_abapgit.
 
     CLASS-METHODS:
@@ -69,9 +69,9 @@ CLASS lcl_dot_abapgit DEFINITION FINAL FRIENDS ltcl_dot_abapgit.
         RETURNING VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
         RAISING   zcx_abapgit_exception,
       get_callback_classname
-        RETURNING VALUE(rv_classname) TYPE abap_classname,
+        RETURNING VALUE(rv_classname) TYPE string,
       set_callback_classname
-        IMPORTING iv_classname TYPE abap_classname.
+        IMPORTING iv_classname TYPE string.
 
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
