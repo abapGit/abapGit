@@ -134,7 +134,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo             TYPE REF TO lcl_repo_online.
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 

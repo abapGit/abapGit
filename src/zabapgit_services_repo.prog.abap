@@ -57,8 +57,8 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD clone.
 
-    DATA: lo_repo             TYPE REF TO lcl_repo_online,
-          ls_popup            TYPE lcl_popups=>ty_popup.
+    DATA: lo_repo  TYPE REF TO lcl_repo_online,
+          ls_popup TYPE lcl_popups=>ty_popup.
 
 
     ls_popup = lcl_popups=>repo_popup( iv_url ).
