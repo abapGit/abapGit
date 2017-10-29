@@ -49,7 +49,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
         lv_data = lcl_app=>db( )->read(
           iv_type = ms_key-type
           iv_value = ms_key-value ).
-      CATCH lcx_not_found ##NO_HANDLER.
+      CATCH zcx_abapgit_not_found ##NO_HANDLER.
     ENDTRY.
 
     " Create syntax highlighter
@@ -110,7 +110,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
         lv_data = lcl_app=>db( )->read(
           iv_type  = ms_key-type
           iv_value = ms_key-value ).
-      CATCH lcx_not_found ##NO_HANDLER.
+      CATCH zcx_abapgit_not_found ##NO_HANDLER.
     ENDTRY.
 
     lcl_app=>db( )->lock(

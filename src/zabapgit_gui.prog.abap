@@ -136,7 +136,7 @@ CLASS lcl_gui IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_exception.
         ROLLBACK WORK.
         MESSAGE lx_exception->text TYPE 'S' DISPLAY LIKE 'E'.
-      CATCH lcx_cancel ##NO_HANDLER.
+      CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.
 

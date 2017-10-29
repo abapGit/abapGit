@@ -1,40 +1,40 @@
-class ZCX_ABAPGIT_EXCEPTION definition
-  public
-  inheriting from CX_STATIC_CHECK
-  create public .
+CLASS zcx_abapgit_exception DEFINITION
+  PUBLIC
+  INHERITING FROM cx_static_check
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  data TEXT type STRING .
+    DATA text TYPE string .
 
-  methods CONSTRUCTOR
-    importing
-      !TEXTID like TEXTID optional
-      !PREVIOUS like PREVIOUS optional
-      !TEXT type STRING optional .
-  class-methods RAISE
-    importing
-      !IV_TEXT type CLIKE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-protected section.
-private section.
+    METHODS constructor
+      IMPORTING
+        !textid   LIKE textid OPTIONAL
+        !previous LIKE previous OPTIONAL
+        !text     TYPE string OPTIONAL.
+
+    CLASS-METHODS raise
+      IMPORTING
+        !iv_text TYPE clike
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
+CLASS zcx_abapgit_exception IMPLEMENTATION.
 
+  METHOD constructor ##ADT_SUPPRESS_GENERATION.
 
-  method CONSTRUCTOR ##ADT_SUPPRESS_GENERATION.
-CALL METHOD SUPER->CONSTRUCTOR
-EXPORTING
-TEXTID = TEXTID
-PREVIOUS = PREVIOUS
-.
-me->TEXT = TEXT .
-  endmethod.
+    CALL METHOD super->constructor
+      EXPORTING
+        textid   = textid
+        previous = previous.
 
+    me->text = text .
+
+  ENDMETHOD.
 
   METHOD raise.
 
@@ -43,4 +43,5 @@ me->TEXT = TEXT .
         text = iv_text.
 
   ENDMETHOD.
+
 ENDCLASS.
