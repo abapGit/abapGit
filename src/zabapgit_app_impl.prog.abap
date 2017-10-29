@@ -56,4 +56,11 @@ CLASS lcl_app IMPLEMENTATION.
     ro_settings = go_settings.
   ENDMETHOD.
 
+  METHOD proxy.
+    IF go_proxy IS NOT BOUND.
+      CREATE OBJECT go_proxy.
+    ENDIF.
+    ro_proxy = go_proxy.
+  ENDMETHOD.
+
 ENDCLASS.   "lcl_app

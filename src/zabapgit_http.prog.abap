@@ -416,21 +416,20 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri      TYPE string,
-          lv_scheme   TYPE string,
-          li_client   TYPE REF TO if_http_client,
-          lo_settings TYPE REF TO lcl_settings,
-          lv_text     TYPE string.
+    DATA: lv_uri    TYPE string,
+          lv_scheme TYPE string,
+          li_client TYPE REF TO if_http_client,
+          lo_proxy_configuration  TYPE REF TO lcl_proxy_configuration,
+          lv_text   TYPE string.
 
-
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_proxy_configuration = lcl_app=>proxy( ).
 
     cl_http_client=>create_by_url(
       EXPORTING
         url           = lcl_url=>host( iv_url )
         ssl_id        = 'ANONYM'
-        proxy_host    = lo_settings->get_proxy_url( )
-        proxy_service = lo_settings->get_proxy_port( )
+        proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url )
+        proxy_service = lo_proxy_configuration->get_proxy_port( iv_url )
       IMPORTING
         client        = li_client
       EXCEPTIONS
@@ -451,7 +450,7 @@ CLASS lcl_http IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    IF lo_settings->get_proxy_authentication( ) = abap_true.
+    IF lo_proxy_configuration->get_proxy_authentication( iv_url ) = abap_true.
       lcl_proxy_auth=>run( li_client ).
     ENDIF.
 
