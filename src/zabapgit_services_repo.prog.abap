@@ -162,11 +162,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       ENDIF.
 
       lo_callback_adapter = lcl_callback_adapter=>get_instance( lo_repo ).
-      IF lo_callback_adapter->check_execution_allowed(
-           lcl_callback_adapter=>gc_methnames-on_before_uninstall
-         ) = abap_true.
-        lo_callback_adapter->on_before_uninstall( iv_package = lo_repo->get_package( ) ).
-      ENDIF.
+      lo_callback_adapter->on_before_uninstall( iv_package = lo_repo->get_package( ) ).
 
       lcl_objects=>delete( lt_tadir ).
 

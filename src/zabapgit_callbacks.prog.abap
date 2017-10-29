@@ -76,36 +76,43 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
         on_before_uninstall  TYPE abap_methname VALUE 'ON_BEFORE_UNINSTALL',
       END OF gc_methnames.
     CLASS-METHODS:
-      "! Gets an adapter instance (used for callback class instance reuse / caching)
+      "! Gets an adapter instance
       "! @parameter io_repo | Repository
       "! @parameter iv_force_new | Force new instance
+      "! @parameter iv_use_submit | Call callbacks in new internal mode
       "! @parameter ro_instance | Instance
       "! @raising zcx_abapgit_exception | Callback class initialization error
       get_instance IMPORTING io_repo            TYPE REF TO lcl_repo
                              iv_force_new       TYPE abap_bool DEFAULT abap_false
+                             iv_use_submit      TYPE abap_bool DEFAULT abap_true
                    RETURNING VALUE(ro_instance) TYPE REF TO lcl_callback_adapter
                    RAISING   zcx_abapgit_exception.
     METHODS:
-      "! Check if a callback is allowed to be executed
-      "! <p>
-      "! See <em>GC_METHNAMES</em> for method name constants.<br/>
-      "! <strong>Contains a SAP GUI dialog!</strong>
-      "! </p>
+      "! Internal
       "! @parameter iv_methname | Callback method name
-      "! @parameter rv_allowed | Execution is allowed
-      "! @raising zcx_abapgit_exception | Dialog error
-      check_execution_allowed IMPORTING iv_methname       TYPE abap_methname
-                              RETURNING VALUE(rv_allowed) TYPE abap_bool
-                              RAISING   zcx_abapgit_exception.
+      "! @parameter iv_args | Arguments
+      submit IMPORTING iv_methname TYPE abap_methname
+                       iv_args     TYPE xstring.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    TYPES:
+      BEGIN OF gty_parmbind,
+        name  TYPE abap_parmname,
+        kind  TYPE abap_parmkind,
+        value TYPE string,
+      END OF gty_parmbind,
+      gty_parmbind_tab TYPE HASHED TABLE OF gty_parmbind WITH UNIQUE KEY name.
     CLASS-METHODS:
       dyn_call_method IMPORTING io_object     TYPE REF TO object
                                 iv_methname   TYPE abap_methname
                                 it_parameters TYPE abap_parmbind_tab,
-      get_callback_intf_descr RETURNING VALUE(ro_descr) TYPE REF TO cl_abap_intfdescr.
+      get_callback_intf_descr RETURNING VALUE(ro_descr) TYPE REF TO cl_abap_intfdescr,
+      parmbind_val_to_ref IMPORTING it_parameters_val        TYPE gty_parmbind_tab
+                                    iv_methname              TYPE abap_methname
+                          RETURNING VALUE(rt_parameters_ref) TYPE abap_parmbind_tab.
     METHODS:
-      constructor IMPORTING io_repo TYPE REF TO lcl_repo
+      constructor IMPORTING io_repo       TYPE REF TO lcl_repo
+                            iv_use_submit TYPE abap_bool
                   RAISING   zcx_abapgit_exception,
       init_listener RAISING cx_sy_create_object_error,
       is_dummy_listener RETURNING VALUE(rv_is_dummy) TYPE abap_bool,
@@ -113,12 +120,17 @@ CLASS lcl_callback_adapter DEFINITION CREATE PRIVATE.
                                  RETURNING VALUE(rv_implemented) TYPE abap_bool,
       check_listener_methimp_has_par IMPORTING iv_methname          TYPE abap_methname
                                                iv_parmname          TYPE abap_parmname
-                                     RETURNING VALUE(rv_par_exists) TYPE abap_bool.
+                                     RETURNING VALUE(rv_par_exists) TYPE abap_bool,
+      exec_callback IMPORTING iv_methname   TYPE abap_methname
+                              it_parameters TYPE gty_parmbind_tab,
+      check_execution_allowed IMPORTING iv_methname       TYPE abap_methname
+                              RETURNING VALUE(rv_allowed) TYPE abap_bool.
     DATA:
       mo_repository         TYPE REF TO lcl_repo,
       mo_listener           TYPE REF TO object,
       mv_callback_classname TYPE string,
-      mo_listener_descr     TYPE REF TO cl_abap_classdescr.
+      mo_listener_descr     TYPE REF TO cl_abap_classdescr,
+      mv_use_submit         TYPE abap_bool.
 ENDCLASS.
 
 CLASS lcl_callback_adapter IMPLEMENTATION.
@@ -144,7 +156,8 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     IF ro_instance IS NOT BOUND.
       CREATE OBJECT ro_instance
         EXPORTING
-          io_repo = io_repo.
+          io_repo       = io_repo
+          iv_use_submit = iv_use_submit.
 
       CREATE DATA lr_cache.
       lr_cache->instance = ro_instance.
@@ -164,6 +177,8 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     ASSERT io_repo IS BOUND.
     mo_repository = io_repo.
+    mv_callback_classname = mo_repository->get_dot_abapgit( )->get_callback_classname( ).
+    mv_use_submit = iv_use_submit.
 
     TRY.
         init_listener( ).
@@ -176,7 +191,9 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD init_listener.
-    mv_callback_classname = mo_repository->get_dot_abapgit( )->get_callback_classname( ).
+    IF mv_use_submit = abap_true.
+      RETURN.
+    ENDIF.
 
     IF mv_callback_classname IS NOT INITIAL.
       CREATE OBJECT mo_listener TYPE (mv_callback_classname).
@@ -191,46 +208,30 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
   METHOD lif_callback_listener~on_after_deserialize.
     CONSTANTS: lc_parmname_package     TYPE abap_parmname VALUE 'IV_PACKAGE'.
-    DATA: lt_parameters TYPE abap_parmbind_tab,
-          ls_parameter  TYPE abap_parmbind,
-          lr_package    TYPE REF TO devclass.
+    DATA: lt_parameters TYPE gty_parmbind_tab,
+          ls_parameter  TYPE gty_parmbind.
 
-    CREATE DATA: lr_package.
+    ls_parameter-name = lc_parmname_package.
+    ls_parameter-kind = cl_abap_objectdescr=>exporting.
+    ls_parameter-value = iv_package.
+    INSERT ls_parameter INTO TABLE lt_parameters.
 
-    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_after_deserialize
-                                       iv_parmname = lc_parmname_package ).
-      ls_parameter-name = lc_parmname_package.
-      ls_parameter-kind = cl_abap_objectdescr=>exporting.
-      lr_package->* = iv_package.
-      ls_parameter-value = lr_package.
-      INSERT ls_parameter INTO TABLE lt_parameters.
-    ENDIF.
-
-    dyn_call_method( io_object     = mo_listener
-                     iv_methname   = gc_methnames-on_after_deserialize
-                     it_parameters = lt_parameters ).
+    exec_callback( iv_methname   = gc_methnames-on_after_deserialize
+                   it_parameters = lt_parameters ).
   ENDMETHOD.
 
   METHOD lif_callback_listener~on_before_uninstall.
     CONSTANTS: lc_parmname_package TYPE abap_parmname VALUE 'IV_PACKAGE'.
-    DATA: lt_parameters TYPE abap_parmbind_tab,
-          ls_parameter  TYPE abap_parmbind,
-          lr_package    TYPE REF TO devclass.
+    DATA: lt_parameters TYPE gty_parmbind_tab,
+          ls_parameter  TYPE gty_parmbind.
 
-    CREATE DATA: lr_package.
+    ls_parameter-name = lc_parmname_package.
+    ls_parameter-kind = cl_abap_objectdescr=>exporting.
+    ls_parameter-value = iv_package.
+    INSERT ls_parameter INTO TABLE lt_parameters.
 
-    IF check_listener_methimp_has_par( iv_methname = gc_methnames-on_before_uninstall
-                                       iv_parmname = lc_parmname_package ).
-      ls_parameter-name = lc_parmname_package.
-      ls_parameter-kind = cl_abap_objectdescr=>exporting.
-      lr_package->* = iv_package.
-      ls_parameter-value = lr_package.
-      INSERT ls_parameter INTO TABLE lt_parameters.
-    ENDIF.
-
-    dyn_call_method( io_object     = mo_listener
-                     iv_methname   = gc_methnames-on_before_uninstall
-                     it_parameters = lt_parameters ).
+    exec_callback( iv_methname   = gc_methnames-on_before_uninstall
+                   it_parameters = lt_parameters ).
   ENDMETHOD.
 
   METHOD check_execution_allowed.
@@ -249,11 +250,15 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     CASE mo_repository->get_callback_trust_level( ).
       WHEN zif_abapgit_definitions=>gc_trust_levels-ask.
-        " Prevent arbitrary code execution by allowing the user to take a look at the (possibly just
-        " pulled) callback implementation.
-        rv_allowed = lcl_popups=>popup_to_decide_callback_exec(
-                       iv_methname           = iv_methname
-                       iv_callback_classname = mv_callback_classname ).
+        TRY.
+            " Prevent arbitrary code execution by allowing the user to take a look at the (possibly
+            " just pulled) callback implementation.
+            rv_allowed = lcl_popups=>popup_to_decide_callback_exec(
+                           iv_methname           = iv_methname
+                           iv_callback_classname = mv_callback_classname ).
+          CATCH zcx_abapgit_exception.
+            ASSERT 1 = 2.
+        ENDTRY.
 
       WHEN zif_abapgit_definitions=>gc_trust_levels-always.
         rv_allowed = abap_true.
@@ -265,6 +270,16 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
         ASSERT 1 = 2.
 
     ENDCASE.
+  ENDMETHOD.
+
+  METHOD submit.
+    DATA: lt_parameters     TYPE gty_parmbind_tab,
+          lt_parameters_ref TYPE abap_parmbind_tab.
+    IMPORT args = lt_parameters FROM DATA BUFFER iv_args.
+    lt_parameters_ref = parmbind_val_to_ref( it_parameters_val = lt_parameters
+                                             iv_methname       = iv_methname ).
+
+    exec_callback( iv_methname = iv_methname it_parameters = lt_parameters ).
   ENDMETHOD.
 
   METHOD is_dummy_listener.
@@ -328,6 +343,36 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+  METHOD exec_callback.
+    DATA: ls_submit         TYPE zif_abapgit_definitions=>gty_callback_submit,
+          lt_parameters_ref TYPE abap_parmbind_tab.
+    FIELD-SYMBOLS: <ls_parameter> TYPE abap_parmbind.
+
+    IF mv_use_submit = abap_true.
+      EXPORT args = it_parameters TO DATA BUFFER ls_submit-args.
+      ls_submit-repokey = mo_repository->get_key( ).
+      ls_submit-callback = iv_methname.
+
+      EXPORT submit FROM ls_submit TO MEMORY ID 'AGT'.
+      SUBMIT (sy-repid) AND RETURN.
+
+    ELSE.
+      IF check_execution_allowed( iv_methname ).
+        lt_parameters_ref = parmbind_val_to_ref( it_parameters_val = it_parameters
+                                                 iv_methname       = iv_methname ).
+        LOOP AT lt_parameters_ref ASSIGNING <ls_parameter>.
+          IF check_listener_methimp_has_par( iv_methname = iv_methname
+                                             iv_parmname = <ls_parameter>-name ) = abap_false.
+            DELETE TABLE lt_parameters_ref WITH TABLE KEY name = <ls_parameter>-name.
+          ENDIF.
+        ENDLOOP.
+        dyn_call_method( io_object     = mo_listener
+                         iv_methname   = iv_methname
+                         it_parameters = lt_parameters_ref ).
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
   METHOD dyn_call_method.
     DATA: lx_ex TYPE REF TO cx_sy_dyn_call_error.
 
@@ -355,5 +400,33 @@ CLASS lcl_callback_adapter IMPLEMENTATION.
 
     ASSERT so_intf_descr IS BOUND.
     ro_descr = so_intf_descr.
+  ENDMETHOD.
+
+  METHOD parmbind_val_to_ref.
+    DATA: ls_parameter TYPE abap_parmbind,
+          lo_descr     TYPE REF TO cl_abap_intfdescr,
+          li_type      TYPE REF TO if_abap_data_type_handle.
+    FIELD-SYMBOLS: <ls_parmbind> TYPE gty_parmbind,
+                   <lg_data>     TYPE data.
+
+    lo_descr = get_callback_intf_descr( ).
+
+    LOOP AT it_parameters_val ASSIGNING <ls_parmbind>.
+      ls_parameter-name = <ls_parmbind>-name.
+      ls_parameter-kind = <ls_parmbind>-kind.
+
+      li_type = lo_descr->get_method_parameter_type( p_method_name    = iv_methname
+                                                     p_parameter_name = <ls_parmbind>-name ).
+      CREATE DATA ls_parameter-value TYPE HANDLE li_type.
+      ASSIGN ls_parameter-value->* TO <lg_data>.
+      ASSERT sy-subrc = 0.
+      <lg_data> = <ls_parmbind>-value.
+
+      FREE li_type.
+      UNASSIGN <lg_data>.
+
+      INSERT ls_parameter INTO TABLE rt_parameters_ref.
+      CLEAR ls_parameter.
+    ENDLOOP.
   ENDMETHOD.
 ENDCLASS.

@@ -86,6 +86,20 @@ INCLUDE zabapgit_migrations.          " Data migration routines
 INCLUDE zabapgit_forms.
 
 **********************************************************************
+LOAD-OF-PROGRAM.
+  DATA: gs_submit           TYPE zif_abapgit_definitions=>gty_callback_submit,
+        go_callback_adapter TYPE REF TO lcl_callback_adapter.
+
+  IMPORT submit = gs_submit FROM MEMORY ID 'AGT'.
+
+  IF sy-subrc = 0 AND gs_submit IS NOT INITIAL.
+    go_callback_adapter = lcl_callback_adapter=>get_instance(
+      io_repo = lcl_app=>repo_srv( )->get( gs_submit-repokey )
+      iv_use_submit = abap_false ).
+    go_callback_adapter->submit( iv_methname = gs_submit-callback iv_args = gs_submit-args ).
+    LEAVE PROGRAM.
+  ENDIF.
+
 INITIALIZATION.
   lcl_password_dialog=>on_screen_init( ).
 

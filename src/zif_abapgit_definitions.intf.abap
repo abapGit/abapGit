@@ -267,7 +267,12 @@ INTERFACE zif_abapgit_definitions
     END OF gc_version.
 
   TYPES:
-    gty_trust_level TYPE string.
+    gty_trust_level TYPE string,
+    BEGIN OF gty_callback_submit,
+      repokey  TYPE c LENGTH 12,
+      callback TYPE abap_methname,
+      args     TYPE xstring,
+    END OF gty_callback_submit.
   CONSTANTS:
     "! Trust levels for repository callback execution
     "! <p>

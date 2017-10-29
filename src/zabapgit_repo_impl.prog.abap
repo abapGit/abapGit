@@ -582,11 +582,7 @@ CLASS lcl_repo IMPLEMENTATION.
     update_local_checksums( lt_updated_files ).
 
     lo_callback_adapter = lcl_callback_adapter=>get_instance( me ).
-    IF lo_callback_adapter->check_execution_allowed(
-         lcl_callback_adapter=>gc_methnames-on_after_deserialize
-       ) = abap_true.
-      lo_callback_adapter->on_after_deserialize( get_package( ) ).
-    ENDIF.
+    lo_callback_adapter->on_after_deserialize( get_package( ) ).
 
   ENDMETHOD.
 
