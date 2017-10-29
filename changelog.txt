@@ -8,6 +8,17 @@ Legend
 + : added
 - : removed
 
+2017-10-29 v1.48.0
+------------------
+* WEBI fixes
+* IMAU fix
+! Better http errors errors
+* downport
+* Improve usability of repository popup
+! More global exception classes
++ proxy configuration user exit
+* Buffer settings
+
 2017-10-22 v1.47.0
 ------------------
 * fix FUGR include diffs
