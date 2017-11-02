@@ -88,7 +88,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         li_enh_object_docu->set_shorttext( lv_enh_shtext ).
 
         CASE lv_tool.
-          WHEN cl_enh_tool_badi_def=>tooltype..
+          WHEN cl_enh_tool_badi_def=>tooltype.
 
             io_xml->read( EXPORTING iv_name = 'PARENT_COMP'
                           CHANGING  cg_data = lv_parent ).
