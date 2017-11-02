@@ -48,19 +48,22 @@ CLASS lcl_object_enhs IMPLEMENTATION.
           ls_enh_badi     TYPE enh_badi_data,
           lt_enh_badi     TYPE enh_badi_data_it,
           lx_root         TYPE REF TO cx_root,
+          lv_tool         TYPE enhspottooltype,
           lv_package      LIKE iv_package,
           li_spot_ref     TYPE REF TO if_enh_spot_tool,
-          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def,
+          lo_badi_hook    TYPE REF TO cl_enh_tool_hook_def,
+          lt_hook_defs    TYPE enh_hook_def_ext_it.
 
 
     lv_spot_name = ms_item-obj_name.
 
+    io_xml->read( EXPORTING iv_name = 'TOOL'
+                  CHANGING  cg_data = lv_tool ).
     io_xml->read( EXPORTING iv_name = 'PARENT_COMP'
                   CHANGING  cg_data = lv_parent ).
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING  cg_data = lv_enh_shtext ).
-    io_xml->read( EXPORTING iv_name = 'BADI_DATA'
-                  CHANGING  cg_data = lt_enh_badi ).
 
     IF lif_object~exists( ) = abap_true.
       lif_object~delete( ).
@@ -72,7 +75,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         cl_enh_factory=>create_enhancement_spot(
           EXPORTING
             spot_name      = lv_spot_name
-            tooltype       = cl_enh_tool_badi_def=>tooltype
+            tooltype       = lv_tool
             dark           = abap_false
             compositename  = lv_parent
           IMPORTING
@@ -80,17 +83,42 @@ CLASS lcl_object_enhs IMPLEMENTATION.
           CHANGING
             devclass       = lv_package ).
 
-        lo_badidef_tool ?= li_spot_ref.
+        CASE lv_tool.
+          WHEN cl_enh_tool_badi_def=>tooltype..
 
-        lo_badidef_tool->if_enh_object_docu~set_shorttext( lv_enh_shtext ).
+            io_xml->read( EXPORTING iv_name = 'BADI_DATA'
+                          CHANGING  cg_data = lt_enh_badi ).
 
-        LOOP AT lt_enh_badi INTO ls_enh_badi.
-          lo_badidef_tool->add_badi_def( ls_enh_badi ).
-        ENDLOOP.
+            lo_badidef_tool ?= li_spot_ref.
 
-        lo_badidef_tool->if_enh_object~save( ).
-        lo_badidef_tool->if_enh_object~activate( ).
-        lo_badidef_tool->if_enh_object~unlock( ).
+            lo_badidef_tool->if_enh_object_docu~set_shorttext( lv_enh_shtext ).
+
+            LOOP AT lt_enh_badi INTO ls_enh_badi.
+              lo_badidef_tool->add_badi_def( ls_enh_badi ).
+            ENDLOOP.
+
+            lo_badidef_tool->if_enh_object~save( ).
+            lo_badidef_tool->if_enh_object~activate( ).
+            lo_badidef_tool->if_enh_object~unlock( ).
+
+          WHEN cl_enh_tool_hook_def=>tool_type.
+
+            io_xml->read( EXPORTING iv_name = 'BADI_DATA'
+                          CHANGING  cg_data = lt_hook_defs ).
+
+            lo_badi_hook ?= li_spot_ref.
+
+            lo_badi_hook->if_enh_object_docu~set_shorttext( lv_enh_shtext ).
+
+            LOOP AT lt_hook_defs ASSIGNING FIELD-SYMBOL(<ls_hook_def>).
+              lo_badi_hook->add_hook_def( CORRESPONDING #( <ls_hook_def> ) ).
+            ENDLOOP.
+
+            lo_badi_hook->if_enh_object~save( ).
+            lo_badi_hook->if_enh_object~activate( ).
+            lo_badi_hook->if_enh_object~unlock( ).
+
+        ENDCASE.
 
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deserializing EHNS: `
@@ -109,7 +137,9 @@ CLASS lcl_object_enhs IMPLEMENTATION.
           lv_tool         TYPE enhspottooltype,
           lx_root         TYPE REF TO cx_root,
           li_spot_ref     TYPE REF TO if_enh_spot_tool,
-          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def,
+          lo_badi_hook    TYPE REF TO cl_enh_tool_hook_def,
+          lt_hook_defs    TYPE enh_hook_def_ext_it.
 
 
     lv_spot_name = ms_item-obj_name.
@@ -118,13 +148,33 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
         lv_tool = li_spot_ref->get_tool( ).
 
-        lo_badidef_tool ?= li_spot_ref.
-        lv_enh_shtext = lo_badidef_tool->if_enh_object_docu~get_shorttext( ).
+        CASE lv_tool.
+          WHEN cl_enh_tool_badi_def=>tooltype.
 
-        "get parent = composite enhs (ENHC)
-        lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
-        "get subsequent BADI definitions
-        lt_enh_badi = lo_badidef_tool->get_badi_defs( ).
+            lo_badidef_tool ?= li_spot_ref.
+            lv_enh_shtext = lo_badidef_tool->if_enh_object_docu~get_shorttext( ).
+
+            "get parent = composite enhs (ENHC)
+            lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
+            "get subsequent BADI definitions
+            lt_enh_badi = lo_badidef_tool->get_badi_defs( ).
+
+            io_xml->add( ig_data = lt_enh_badi
+                         iv_name = 'BADI_DATA' ).
+
+          WHEN cl_enh_tool_hook_def=>tool_type.
+
+            lo_badi_hook ?= li_spot_ref.
+            lv_enh_shtext = lo_badi_hook->if_enh_object_docu~get_shorttext( ).
+
+            "get parent = composite enhs (ENHC)
+            lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
+            lt_hook_defs = lo_badi_hook->get_hook_defs( ).
+
+            io_xml->add( ig_data = lt_hook_defs
+                         iv_name = 'BADI_DATA' ).
+
+        ENDCASE.
 
         io_xml->add( ig_data = lv_tool
                      iv_name = 'TOOL' ).
@@ -132,8 +182,6 @@ CLASS lcl_object_enhs IMPLEMENTATION.
                      iv_name = 'PARENT_COMP' ).
         io_xml->add( ig_data = lv_enh_shtext
                      iv_name = 'SHORTTEXT' ).
-        io_xml->add( ig_data = lt_enh_badi
-                     iv_name = 'BADI_DATA' ).
 
       CATCH cx_enh_root INTO lx_root.
         zcx_abapgit_exception=>raise( `Error occured while serializing EHNS: `
@@ -158,6 +206,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         CASE lv_tool.
           WHEN cl_enh_tool_badi_def=>tooltype.
             rv_bool = abap_true.
+          WHEN cl_enh_tool_hook_def=>tool_type.
+            rv_bool = abap_true.
           WHEN OTHERS.
 * todo: implement additional tool types
             rv_bool = abap_false.
@@ -173,7 +223,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
     DATA: lv_spot_name    TYPE enhspotname,
           lx_root         TYPE REF TO cx_root,
           li_spot_ref     TYPE REF TO if_enh_spot_tool,
-          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def.
+          lo_badidef_tool TYPE REF TO cl_enh_tool_badi_def,
+          li_enh_object   TYPE REF TO if_enh_object.
 
     lv_spot_name = ms_item-obj_name.
 
@@ -183,12 +234,18 @@ CLASS lcl_object_enhs IMPLEMENTATION.
                       lock      = abap_true ).
 
         IF li_spot_ref IS BOUND.
-          lo_badidef_tool ?= li_spot_ref.
-          lo_badidef_tool->if_enh_object~delete(
+          li_enh_object ?= li_spot_ref.
+          li_enh_object->delete(
             nevertheless_delete = abap_true
             run_dark            = abap_true ).
+          li_enh_object->unlock( ).
+*          lo_badidef_tool ?= li_spot_ref.
+*          lo_badidef_tool->if_enh_object~delete(
+*            nevertheless_delete = abap_true
+*            run_dark            = abap_true ).
+*        lo_badidef_tool->if_enh_object~unlock( ).
         ENDIF.
-        lo_badidef_tool->if_enh_object~unlock( ).
+
       CATCH cx_enh_root INTO lx_root.
         zcx_abapgit_exception=>raise( `Error occured while deleting EHNS: `
           && lx_root->get_text( ) ) ##NO_TEXT.
