@@ -76,12 +76,12 @@ CLASS lcl_object_enhs IMPLEMENTATION.
     DATA: lv_spot_name TYPE enhspotname,
           li_spot_ref  TYPE REF TO if_enh_spot_tool.
 
-
     lv_spot_name = ms_item-obj_name.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
         li_spot_ref->get_attributes( IMPORTING changedby = rv_user ).
+
       CATCH cx_enh_root.
         rv_user = c_user_unknown.
     ENDTRY.
@@ -92,22 +92,21 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
     DATA: lv_parent    TYPE enhspotcompositename,
           lv_spot_name TYPE enhspotname,
-          lx_root      TYPE REF TO cx_root,
           lv_tool      TYPE enhspottooltype,
           lv_package   LIKE iv_package,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
-          li_enhs      TYPE REF TO lif_object_enhs.
-
-    lv_spot_name = ms_item-obj_name.
-
-    io_xml->read( EXPORTING iv_name = 'TOOL'
-                  CHANGING  cg_data = lv_tool ).
+          li_enhs      TYPE REF TO lif_object_enhs,
+          lx_root      TYPE REF TO cx_root.
 
     IF lif_object~exists( ) = abap_true.
       lif_object~delete( ).
     ENDIF.
 
-    lv_package = iv_package.
+    io_xml->read( EXPORTING iv_name = 'TOOL'
+                  CHANGING  cg_data = lv_tool ).
+
+    lv_spot_name = ms_item-obj_name.
+    lv_package   = iv_package.
 
     TRY.
         cl_enh_factory=>create_enhancement_spot(
@@ -136,9 +135,9 @@ CLASS lcl_object_enhs IMPLEMENTATION.
   METHOD lif_object~serialize.
 
     DATA: lv_spot_name TYPE enhspotname,
-          lx_root      TYPE REF TO cx_root,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
-          li_enhs      TYPE REF TO lif_object_enhs.
+          li_enhs      TYPE REF TO lif_object_enhs,
+          lx_root      TYPE REF TO cx_root.
 
     lv_spot_name = ms_item-obj_name.
 
@@ -159,15 +158,12 @@ CLASS lcl_object_enhs IMPLEMENTATION.
   METHOD lif_object~exists.
 
     DATA: lv_spot_name TYPE enhspotname,
-          lv_tool      TYPE enhspottooltype,
           li_spot_ref  TYPE REF TO if_enh_spot_tool.
 
     lv_spot_name = ms_item-obj_name.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
-
-        lv_tool = li_spot_ref->get_tool( ).
 
         rv_bool = abap_true.
 
@@ -180,10 +176,10 @@ CLASS lcl_object_enhs IMPLEMENTATION.
   METHOD lif_object~delete.
 
     DATA: lv_spot_name  TYPE enhspotname,
-          lx_root       TYPE REF TO cx_root,
-          li_enh_object TYPE REF TO if_enh_object.
+          li_enh_object TYPE REF TO if_enh_object,
+          lx_root       TYPE REF TO cx_root.
 
-    lv_spot_name = ms_item-obj_name.
+    lv_spot_name  = ms_item-obj_name.
 
     TRY.
         li_enh_object ?= cl_enh_factory=>get_enhancement_spot(
@@ -196,8 +192,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
         li_enh_object->unlock( ).
 
       CATCH cx_enh_root INTO lx_root.
-        zcx_abapgit_exception=>raise( `Error occured while deleting EHNS: `
-          && lx_root->get_text( ) ) ##NO_TEXT.
+        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
 
   ENDMETHOD.  "delete
@@ -251,8 +246,8 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
           lv_package         LIKE iv_package,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
-          lx_error           TYPE REF TO cx_enh_root,
-          lv_text            TYPE string.
+          lv_text            TYPE string,
+          lx_error           TYPE REF TO cx_enh_root.
 
     io_xml->read( EXPORTING iv_name = 'PARENT_COMP'
                   CHANGING  cg_data = lv_parent ).
