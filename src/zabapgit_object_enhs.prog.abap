@@ -58,6 +58,7 @@ CLASS lcl_object_enhs_hook_def DEFINITION.
 
   PUBLIC SECTION.
     INTERFACES: lif_object_enhs.
+
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_hook_def,
              pgmid     TYPE pgmid,
@@ -192,9 +193,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
     lv_spot_name  = ms_item-obj_name.
 
     TRY.
-        li_enh_object ?= cl_enh_factory=>get_enhancement_spot(
-                            spot_name = lv_spot_name
-                            lock      = abap_true ).
+        li_enh_object ?= cl_enh_factory=>get_enhancement_spot( spot_name = lv_spot_name
+                                                               lock      = abap_true ).
 
         li_enh_object->delete( nevertheless_delete = abap_true
                                run_dark            = abap_true ).
@@ -249,15 +249,16 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
   METHOD lif_object_enhs~deserialize.
 
     DATA: lv_parent          TYPE enhspotcompositename,
-          ls_enh_badi        TYPE enh_badi_data,
           lt_enh_badi        TYPE enh_badi_data_it,
           lo_badidef_tool    TYPE REF TO cl_enh_tool_badi_def,
-          lv_enh_shtext      TYPE string,
+          lv_enh_shorttext   TYPE string,
           lv_package         LIKE iv_package,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
           lv_text            TYPE string,
           lx_error           TYPE REF TO cx_enh_root.
+
+    FIELD-SYMBOLS: <ls_enh_badi> LIKE LINE OF lt_enh_badi.
 
     io_xml->read( EXPORTING iv_name = 'PARENT_COMP'
                   CHANGING  cg_data = lv_parent ).
@@ -266,7 +267,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
                   CHANGING  cg_data = lt_enh_badi ).
 
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING  cg_data = lv_enh_shtext ).
+                  CHANGING  cg_data = lv_enh_shorttext ).
 
     lv_package = iv_package.
 
@@ -274,12 +275,12 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
     li_enh_object_docu ?= ii_enh_spot_tool.
 
     TRY.
-        li_enh_object_docu->set_shorttext( lv_enh_shtext ).
+        li_enh_object_docu->set_shorttext( lv_enh_shorttext ).
 
         lo_badidef_tool ?= ii_enh_spot_tool.
 
-        LOOP AT lt_enh_badi INTO ls_enh_badi.
-          lo_badidef_tool->add_badi_def( ls_enh_badi ).
+        LOOP AT lt_enh_badi ASSIGNING <ls_enh_badi>.
+          lo_badidef_tool->add_badi_def( <ls_enh_badi> ).
         ENDLOOP.
 
         li_enh_object->save( ).
@@ -299,13 +300,13 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
           lv_parent          TYPE enhspotcompositename,
           lt_enh_badi        TYPE enh_badi_data_it,
           lo_badidef_tool    TYPE REF TO cl_enh_tool_badi_def,
-          lv_enh_shtext      TYPE string,
+          lv_enh_shorttext   TYPE string,
           li_enh_object_docu TYPE REF TO if_enh_object_docu.
 
     lo_badidef_tool ?= ii_enh_spot_tool.
 
     li_enh_object_docu ?= ii_enh_spot_tool.
-    lv_enh_shtext = li_enh_object_docu->get_shorttext( ).
+    lv_enh_shorttext = li_enh_object_docu->get_shorttext( ).
 
     "get parent = composite enhs (ENHC)
     lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
@@ -315,7 +316,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
     io_xml->add( ig_data = ii_enh_spot_tool->get_tool( )
                  iv_name = 'TOOL' ).
 
-    io_xml->add( ig_data = lv_enh_shtext
+    io_xml->add( ig_data = lv_enh_shorttext
                  iv_name = 'SHORTTEXT' ).
 
     io_xml->add( ig_data = lv_parent
@@ -335,32 +336,34 @@ CLASS lcl_object_enhs_hook_def IMPLEMENTATION.
 
   METHOD lif_object_enhs~deserialize.
 
-    DATA: lv_enh_shtext       TYPE string,
-          ls_hook_def         TYPE enh_hook_def,
-          ls_abapgit_hook_def TYPE ty_hook_def,
-          li_enh_object       TYPE REF TO if_enh_object,
-          li_enh_object_docu  TYPE REF TO if_enh_object_docu,
-          lo_hookdef_tool     TYPE REF TO cl_enh_tool_hook_def,
-          lx_error            TYPE REF TO cx_enh_root,
-          lv_text             TYPE string.
+    DATA: lv_enh_shorttext       TYPE string,
+          ls_enh_hook_definition TYPE enh_hook_def,
+          ls_hook_definition     TYPE ty_hook_def,
+          li_enh_object          TYPE REF TO if_enh_object,
+          li_enh_object_docu     TYPE REF TO if_enh_object_docu,
+          lo_hookdef_tool        TYPE REF TO cl_enh_tool_hook_def,
+          lx_error               TYPE REF TO cx_enh_root,
+          lv_text                TYPE string.
+
+    FIELD-SYMBOLS: <ls_hook_definition> TYPE enh_hook_def_ext.
 
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
-                  CHANGING  cg_data = lv_enh_shtext ).
+                  CHANGING  cg_data = lv_enh_shorttext ).
 
     io_xml->read( EXPORTING iv_name = 'BADI_DATA'
-                  CHANGING  cg_data = ls_abapgit_hook_def ).
+                  CHANGING  cg_data = ls_hook_definition ).
 
     li_enh_object ?= ii_enh_spot_tool.
     li_enh_object_docu ?= ii_enh_spot_tool.
 
     TRY.
-        li_enh_object_docu->set_shorttext( lv_enh_shtext ).
+        li_enh_object_docu->set_shorttext( lv_enh_shorttext ).
 
         lo_hookdef_tool ?= ii_enh_spot_tool.
 
-        LOOP AT ls_abapgit_hook_def-def_hooks ASSIGNING FIELD-SYMBOL(<ls_hook_def>).
-          MOVE-CORRESPONDING <ls_hook_def> TO ls_hook_def.
-          lo_hookdef_tool->add_hook_def( ls_hook_def ).
+        LOOP AT ls_hook_definition-def_hooks ASSIGNING <ls_hook_definition>.
+          MOVE-CORRESPONDING <ls_hook_definition> TO ls_enh_hook_definition.
+          lo_hookdef_tool->add_hook_def( ls_enh_hook_definition ).
         ENDLOOP.
 
         li_enh_object->save( ).
@@ -376,35 +379,36 @@ CLASS lcl_object_enhs_hook_def IMPLEMENTATION.
 
   METHOD lif_object_enhs~serialize.
 
-    DATA: lo_hookdef_tool     TYPE REF TO cl_enh_tool_hook_def,
-          lv_enh_shtext       TYPE string,
-          li_enh_object_docu  TYPE REF TO if_enh_object_docu,
-          lv_include_bound    TYPE enhboolean,
-          ls_abapgit_hook_def TYPE ty_hook_def.
+    DATA: lo_hookdef_tool    TYPE REF TO cl_enh_tool_hook_def,
+          lv_enh_shorttext   TYPE string,
+          li_enh_object_docu TYPE REF TO if_enh_object_docu,
+          lv_include_bound   TYPE enhboolean,
+          ls_hook_definition TYPE ty_hook_def.
 
     lo_hookdef_tool ?= ii_enh_spot_tool.
 
     li_enh_object_docu ?= ii_enh_spot_tool.
-    lv_enh_shtext = li_enh_object_docu->get_shorttext( ).
+    lv_enh_shorttext = li_enh_object_docu->get_shorttext( ).
 
-    ls_abapgit_hook_def-def_hooks = lo_hookdef_tool->get_hook_defs( ).
+    ls_hook_definition-def_hooks = lo_hookdef_tool->get_hook_defs( ).
     lv_include_bound = lo_hookdef_tool->get_include_bound( ).
+
     lo_hookdef_tool->get_original_object(
       IMPORTING
-        pgmid     = ls_abapgit_hook_def-pgmid
-        obj_name  = ls_abapgit_hook_def-obj_name
-        obj_type  = ls_abapgit_hook_def-obj_type
-        main_type = ls_abapgit_hook_def-main_type
-        main_name = ls_abapgit_hook_def-main_name
-        program   = ls_abapgit_hook_def-program       ).
+        pgmid     = ls_hook_definition-pgmid
+        obj_name  = ls_hook_definition-obj_name
+        obj_type  = ls_hook_definition-obj_type
+        main_type = ls_hook_definition-main_type
+        main_name = ls_hook_definition-main_name
+        program   = ls_hook_definition-program       ).
 
     io_xml->add( ig_data = ii_enh_spot_tool->get_tool( )
                  iv_name = 'TOOL' ).
 
-    io_xml->add( ig_data = lv_enh_shtext
+    io_xml->add( ig_data = lv_enh_shorttext
                  iv_name = 'SHORTTEXT' ).
 
-    io_xml->add( ig_data = ls_abapgit_hook_def
+    io_xml->add( ig_data = ls_hook_definition
                  iv_name = 'BADI_DATA' ).
 
   ENDMETHOD.
