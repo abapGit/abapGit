@@ -53,18 +53,110 @@ CLASS lcl_object_clas IMPLEMENTATION.
     DATA:
       lt_includes TYPE seoincl_t.
 
-    DATA: changed TYPE abap_bool.
+    DATA: changed TYPE abap_bool VALUE abap_false.
+
+    FIELD-SYMBOLS: <st_buffer> LIKE LINE OF it_serial_buffer.
+    DATA: filepattern TYPE string,
+          skip_check  TYPE abap_bool.
 
     FIELD-SYMBOLS <incl> LIKE LINE OF lt_includes.
 
+    TYPES: BEGIN OF ty_repo,
+             progname TYPE progname,
+             udat     TYPE rdir_udate,
+             utime    TYPE ddtime,
+           END OF ty_repo.
+    DATA: lt_repo TYPE SORTED TABLE OF ty_repo
+            WITH UNIQUE KEY progname.
+    FIELD-SYMBOLS: <st_repo> TYPE ty_repo.
+
     lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+
+    IF lt_includes IS NOT INITIAL.
+      SELECT progname udat utime
+        FROM reposrc
+        INTO TABLE lt_repo
+        FOR ALL ENTRIES IN lt_includes
+        WHERE progname = lt_includes-table_line
+          AND r3state  = 'A'.
+    ENDIF.
+
     LOOP AT lt_includes ASSIGNING <incl>.
 
-      changed = check_prog_changed_since(
-        iv_program   = <incl>
-        iv_timestamp = iv_timestamp
-        iv_skip_gui  = abap_true
-        iv_detect_delete = abap_false ).
+      " LT_INCLUDES may contain more files than actually exist
+      " We check against the serialization buffer so we can filter out files that
+      " are not in the serialization buffer and do not exist in the REPOSRC,
+      " because even if they have existed, they are irrelevant for a new serialization
+      skip_check = abap_false.
+
+      UNASSIGN: <st_repo>.
+      READ TABLE lt_repo ASSIGNING <st_repo>
+        WITH TABLE KEY progname = <incl>.
+      IF <st_repo> IS NOT ASSIGNED.
+        " Include does not exist in the system
+
+        IF it_serial_buffer IS NOT INITIAL.
+          " We can check against the serialization buffer if the include
+          " was previously serialized and has been deleted
+          READ TABLE it_serial_buffer ASSIGNING <st_buffer>
+            WITH TABLE KEY item = ms_item.
+          IF sy-subrc = 0.
+
+            "Check if the file is in the serialization buffer
+            CASE <incl>+30(5).
+              WHEN seop_ext_class_locals_def.  " Local Class Definition (CCDEF)
+                filepattern = '*.clas.locals_def.abap'.
+              WHEN seop_ext_class_locals_imp.  " Local Class Implementation (CCIMP)
+                filepattern = '*.clas.locals_imp.abap'.
+              WHEN seop_ext_class_macros.      " Macros (CCMAC)
+                filepattern = '*.clas.macros.abap'.
+              WHEN seop_ext_class_testclasses. " Test Classes (CCAU)
+                filepattern = '*.clas.testclasses.abap'.
+              WHEN OTHERS.
+                " Not an Optional File
+                CLEAR: filepattern.
+            ENDCASE.
+
+            "Evtl.
+*            APPEND cl_oo_classname_service=>get_cl_name( lv_class_name ) TO rt_includes.
+*            APPEND cl_oo_classname_service=>get_ct_name( lv_class_name ) TO rt_includes.
+
+            IF filepattern IS NOT INITIAL.
+              LOOP AT <st_buffer>-files TRANSPORTING NO FIELDS
+                WHERE filename CP filepattern.
+                EXIT.
+              ENDLOOP.
+              IF sy-subrc <> 0.
+                " File is not in the file list of the serialization buffer
+                " and has thus never been serialized
+                " We can ignore its non-existence/deletion because it triggers no change
+                skip_check = abap_true.
+              ENDIF.
+            ENDIF.
+
+          ENDIF.
+
+        ELSE.
+          " There is no serialization buffer: We have to assume the file has been deleted
+          changed = abap_true.
+          skip_check = abap_true.
+        ENDIF.
+      ENDIF.
+
+      IF skip_check = abap_false.
+
+        IF <st_repo> IS NOT ASSIGNED.
+          changed = abap_true.
+        ELSE.
+          " Check Timestamp of Last Change
+          changed = check_timestamp(
+            iv_timestamp = iv_timestamp
+            iv_date      = <st_repo>-udat
+            iv_time      = <st_repo>-utime ).
+        ENDIF.
+
+      ENDIF.
+
       IF changed = abap_true.
         rv_changed = changed.
         RETURN.

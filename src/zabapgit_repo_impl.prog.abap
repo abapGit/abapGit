@@ -645,8 +645,6 @@ CLASS lcl_repo IMPLEMENTATION.
                    <ls_cache>  LIKE LINE OF lt_cache,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
 
-SET RUN TIME ANALYZER ON.
-
     " Serialization happened before and no refresh request
     IF mv_last_serialization IS NOT INITIAL AND mv_do_local_refresh = abap_false.
       rt_files = mt_local.
@@ -714,8 +712,9 @@ SET RUN TIME ANALYZER ON.
       READ TABLE lt_buffer ASSIGNING <st_buffer>
         WITH TABLE KEY item = ls_item. " type+name+package key
       IF sy-subrc = 0 AND
-         abap_false = lcl_objects=>has_changed_since( is_item      = ls_item
-                                                      iv_timestamp = <st_buffer>-last_serial ).
+         abap_false = lcl_objects=>has_changed_since( is_item          = ls_item
+                                                      iv_timestamp     = <st_buffer>-last_serial
+                                                      it_serial_buffer = lt_buffer ).
         " Object Unchanged: Use Buffered Data
         ls_file-item = ls_item.
         LOOP AT <st_buffer>-files INTO ls_file-file.
@@ -776,8 +775,6 @@ SET RUN TIME ANALYZER ON.
                         iv_text    = |Read: { o_tadir->measure( ) } / Serialize: { o_serial->measure( ) }| ) ##NO_TEXT.
 
     lcl_objects_store=>clear( ).
-
-SET RUN TIME ANALYZER OFF.
 
 **    IF sy-uname = 'MKAESEMANN'.
 **      DATA(msg) = |Read: { o_tadir->measure( ) } / Serialize: { o_serial->measure( ) }|.

@@ -421,6 +421,7 @@ INTERFACE lif_object.
       RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
     has_changed_since
       IMPORTING iv_timestamp      TYPE timestamp
+                it_serial_buffer  TYPE lcl_persistence_objm=>tt_objm OPTIONAL
       RETURNING VALUE(rv_changed) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
   METHODS:
@@ -2442,6 +2443,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS has_changed_since
       IMPORTING is_item           TYPE zif_abapgit_definitions=>ty_item
                 iv_timestamp      TYPE timestamp
+                it_serial_buffer  TYPE lcl_persistence_objm=>tt_objm OPTIONAL
       RETURNING VALUE(rv_changed) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 

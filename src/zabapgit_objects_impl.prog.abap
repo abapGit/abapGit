@@ -182,7 +182,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     rv_changed = create_object(
       is_item     = is_item
-      iv_language = zif_abapgit_definitions=>gc_english )->has_changed_since( iv_timestamp ).
+      iv_language = zif_abapgit_definitions=>gc_english )->has_changed_since( iv_timestamp     = iv_timestamp
+                                                                              it_serial_buffer = it_serial_buffer ).
 
   ENDMETHOD.  "has_changed_since
 
