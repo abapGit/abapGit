@@ -478,6 +478,8 @@ CLASS lcl_objects IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'cancelled' ).
       ENDIF.
 
+      zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
+
       IF ls_item-obj_type = 'DEVC'.
         " Packages have the same filename across different folders. The path needs to be supplied
         " to find the correct file.
@@ -536,6 +538,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
+
+    zcl_abapgit_default_task=>get_instance( )->reset( ).
 
   ENDMETHOD.                    "deserialize
 
