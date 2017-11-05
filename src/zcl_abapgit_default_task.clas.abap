@@ -33,8 +33,8 @@ CLASS zcl_abapgit_default_task DEFINITION
           ms_save_default_task      TYPE e070use.
 
     METHODS restore_old_default_task
-              RAISING
-                zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -87,7 +87,11 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
     DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
 
-    CHECK mv_task_is_set_by_abapgit = abap_true.
+    IF mv_task_is_set_by_abapgit = abap_false.
+      " if the default transport request task isn't set
+      " by us there is nothing to do.
+      RETURN.
+    ENDIF.
 
     CALL FUNCTION 'TR_TASK_GET'
       TABLES
@@ -129,17 +133,21 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
   METHOD set.
 
+    " checks whether object changes of the package are rerorded in transport
+    " requests. If true then we set the default task, so that no annoying
+    " transport request popups are shown while deserializing.
+
     DATA: li_package TYPE REF TO if_package,
           lt_e071    TYPE STANDARD TABLE OF e071,
           lt_e071k   TYPE STANDARD TABLE OF e071k,
           lv_order   TYPE trkorr,
           lv_task    TYPE trkorr.
 
-    CHECK mv_task_is_set_by_abapgit = abap_false.
-
-    " checks whether object changes of the package are rerorded in transport
-    " requests. If true then we set the default task, so that no annoying
-    " transport request popups are shown while deserializing.
+    IF mv_task_is_set_by_abapgit = abap_true.
+      " the default transport request task is already set by us
+      " -> no reason to do it again.
+      RETURN.
+    ENDIF.
 
     cl_package_factory=>load_package(
       EXPORTING
@@ -206,7 +214,11 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
   METHOD restore_old_default_task.
 
-    CHECK ms_save_default_task IS NOT INITIAL.
+    IF ms_save_default_task IS INITIAL.
+      " There wasn't a default transport request before
+      " so we needn't restore anything.
+      RETURN.
+    ENDIF.
 
     CALL FUNCTION 'TR_TASK_SET'
       EXPORTING
