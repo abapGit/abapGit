@@ -32,43 +32,25 @@ CLASS zcl_abapgit_default_task DEFINITION
     DATA: mv_task_is_set_by_abapgit TYPE abap_bool,
           ms_save_default_task      TYPE e070use.
 
-    METHODS restore_old_default_task
-      RAISING
-        zcx_abapgit_exception.
+    METHODS:
+      store_current_default_task
+        RAISING
+          zcx_abapgit_exception,
+
+      restore_old_default_task
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
-
 
 
 CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
-
-    " Save the current default task to restore it later...
-    CALL FUNCTION 'TR_TASK_GET'
-      TABLES
-        tt_e070use       = lt_e070use     " Table of current settings
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_category = 2
-        invalid_client   = 3
-        OTHERS           = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
-    ENDIF.
-
-    IF lines( lt_e070use ) = 0.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_e070use INTO ms_save_default_task
-                          INDEX 1.
+    store_current_default_task( ).
 
   ENDMETHOD.
-
 
   METHOD get_instance.
 
@@ -236,6 +218,34 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD store_current_default_task.
+
+    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
+
+    " Save the current default task to restore it later...
+    CALL FUNCTION 'TR_TASK_GET'
+      TABLES
+        tt_e070use       = lt_e070use     " Table of current settings
+      EXCEPTIONS
+        invalid_username = 1
+        invalid_category = 2
+        invalid_client   = 3
+        OTHERS           = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
+    ENDIF.
+
+    IF lines( lt_e070use ) = 0.
+      RETURN.
+    ENDIF.
+
+    READ TABLE lt_e070use INTO ms_save_default_task
+                          INDEX 1.
 
   ENDMETHOD.
 
