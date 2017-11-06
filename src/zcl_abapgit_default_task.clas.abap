@@ -44,13 +44,16 @@ CLASS zcl_abapgit_default_task DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_default_task IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_DEFAULT_TASK IMPLEMENTATION.
+
 
   METHOD constructor.
 
     store_current_default_task( ).
 
   ENDMETHOD.
+
 
   METHOD get_instance.
 
@@ -113,6 +116,34 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD restore_old_default_task.
+
+    IF ms_save_default_task IS INITIAL.
+      " There wasn't a default transport request before
+      " so we needn't restore anything.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'TR_TASK_SET'
+      EXPORTING
+        iv_order          = ms_save_default_task-ordernum    " Request to be s et
+        iv_task           = ms_save_default_task-tasknum    " Task to be set
+      EXCEPTIONS
+        invalid_username  = 1
+        invalid_category  = 2
+        invalid_client    = 3
+        invalid_validdays = 4
+        invalid_order     = 5
+        invalid_task      = 6
+        OTHERS            = 7.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD set.
 
     " checks whether object changes of the package are rerorded in transport
@@ -169,7 +200,9 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
         wrong_order_type       = 5
         OTHERS                 = 6.
 
-    IF sy-subrc <> 0.
+    IF sy-subrc = 1.
+      zcx_abapgit_exception=>raise( 'cancelled' ).
+    ELSEIF sy-subrc > 1.
       zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
     ENDIF.
 
@@ -191,33 +224,6 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
     ENDIF.
 
     mv_task_is_set_by_abapgit = abap_true.
-
-  ENDMETHOD.
-
-  METHOD restore_old_default_task.
-
-    IF ms_save_default_task IS INITIAL.
-      " There wasn't a default transport request before
-      " so we needn't restore anything.
-      RETURN.
-    ENDIF.
-
-    CALL FUNCTION 'TR_TASK_SET'
-      EXPORTING
-        iv_order          = ms_save_default_task-ordernum    " Request to be s et
-        iv_task           = ms_save_default_task-tasknum    " Task to be set
-      EXCEPTIONS
-        invalid_username  = 1
-        invalid_category  = 2
-        invalid_client    = 3
-        invalid_validdays = 4
-        invalid_order     = 5
-        invalid_task      = 6
-        OTHERS            = 7.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -248,5 +254,4 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
                           INDEX 1.
 
   ENDMETHOD.
-
 ENDCLASS.
