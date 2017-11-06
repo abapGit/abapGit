@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEFAULT_TASK IMPLEMENTATION.
+CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -77,6 +77,8 @@ CLASS ZCL_ABAPGIT_DEFAULT_TASK IMPLEMENTATION.
       " by us there is nothing to do.
       RETURN.
     ENDIF.
+
+    CLEAR mv_task_is_set_by_abapgit.
 
     CALL FUNCTION 'TR_TASK_GET'
       TABLES
