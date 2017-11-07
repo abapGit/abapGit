@@ -37,7 +37,41 @@ CLASS zcl_abapgit_default_task DEFINITION
         RAISING
           zcx_abapgit_exception,
 
-      restore_old_default_task
+      restore_saved_default_task
+        RAISING
+          zcx_abapgit_exception,
+
+      get_default_task
+        RETURNING
+          VALUE(rs_default_task) TYPE e070use
+        RAISING
+          zcx_abapgit_exception,
+
+      set_default_task
+        IMPORTING
+          iv_order TYPE trkorr
+          iv_task  TYPE trkorr
+        RAISING
+          zcx_abapgit_exception,
+
+      call_transport_order_popup
+        EXPORTING
+          ev_order TYPE trkorr
+          ev_task  TYPE trkorr
+        RAISING
+          zcx_abapgit_exception,
+
+      are_objects_recorded_in_tr_req
+        IMPORTING
+          iv_package                     TYPE devclass
+        RETURNING
+          VALUE(rv_are_objects_recorded) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception,
+
+      clear_default_task
+        IMPORTING
+          is_default_task TYPE e070use
         RAISING
           zcx_abapgit_exception.
 
@@ -70,7 +104,7 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
+    DATA: ls_default_task TYPE e070use.
 
     IF mv_task_is_set_by_abapgit = abap_false.
       " if the default transport request task isn't set
@@ -80,45 +114,20 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
     CLEAR mv_task_is_set_by_abapgit.
 
-    CALL FUNCTION 'TR_TASK_GET'
-      TABLES
-        tt_e070use       = lt_e070use    " Table of current settings
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_category = 2
-        invalid_client   = 3
-        OTHERS           = 4.
+    ls_default_task = get_default_task( ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
+    IF ls_default_task IS NOT INITIAL.
+
+      clear_default_task( ls_default_task ).
+
     ENDIF.
 
-    READ TABLE lt_e070use ASSIGNING FIELD-SYMBOL(<ls_e070use>)
-                          INDEX 1.
-    ASSERT sy-subrc = 0.
-
-    CALL FUNCTION 'TR_TASK_RESET'
-      EXPORTING
-        iv_username      = <ls_e070use>-username
-        iv_order         = <ls_e070use>-ordernum
-        iv_task          = <ls_e070use>-tasknum
-        iv_dialog        = abap_false
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_order    = 2
-        invalid_task     = 3
-        OTHERS           = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET { sy-subrc }| ).
-    ENDIF.
-
-    restore_old_default_task( ).
+    restore_saved_default_task( ).
 
   ENDMETHOD.
 
 
-  METHOD restore_old_default_task.
+  METHOD restore_saved_default_task.
 
     IF ms_save_default_task IS INITIAL.
       " There wasn't a default transport request before
@@ -128,8 +137,8 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
     CALL FUNCTION 'TR_TASK_SET'
       EXPORTING
-        iv_order          = ms_save_default_task-ordernum    " Request to be s et
-        iv_task           = ms_save_default_task-tasknum    " Task to be set
+        iv_order          = ms_save_default_task-ordernum
+        iv_task           = ms_save_default_task-tasknum
       EXCEPTIONS
         invalid_username  = 1
         invalid_category  = 2
@@ -152,17 +161,121 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
     " requests. If true then we set the default task, so that no annoying
     " transport request popups are shown while deserializing.
 
-    DATA: li_package TYPE REF TO if_package,
-          lt_e071    TYPE STANDARD TABLE OF e071,
-          lt_e071k   TYPE STANDARD TABLE OF e071k,
-          lv_order   TYPE trkorr,
-          lv_task    TYPE trkorr.
+    DATA: lv_order TYPE trkorr,
+          lv_task  TYPE trkorr.
 
     IF mv_task_is_set_by_abapgit = abap_true.
       " the default transport request task is already set by us
       " -> no reason to do it again.
       RETURN.
     ENDIF.
+
+    IF are_objects_recorded_in_tr_req( iv_package ) = abap_false.
+      " Objects of package are not recorded in transport request,
+      " no need to proceed.
+      RETURN.
+    ENDIF.
+
+    call_transport_order_popup(
+      IMPORTING
+        ev_order = lv_order
+        ev_task  = lv_task ).
+
+    set_default_task( iv_order = lv_order
+                      iv_task  = lv_task ).
+
+    mv_task_is_set_by_abapgit = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD store_current_default_task.
+
+    ms_save_default_task = get_default_task( ).
+
+  ENDMETHOD.
+
+
+  METHOD get_default_task.
+
+    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
+
+    CALL FUNCTION 'TR_TASK_GET'
+      TABLES
+        tt_e070use       = lt_e070use
+      EXCEPTIONS
+        invalid_username = 1
+        invalid_category = 2
+        invalid_client   = 3
+        OTHERS           = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
+    ENDIF.
+
+    READ TABLE lt_e070use INTO rs_default_task
+                          INDEX 1.
+
+  ENDMETHOD.
+
+
+  METHOD set_default_task.
+
+    CALL FUNCTION 'TR_TASK_SET'
+      EXPORTING
+        iv_order          = iv_order
+        iv_task           = iv_task
+      EXCEPTIONS
+        invalid_username  = 1
+        invalid_category  = 2
+        invalid_client    = 3
+        invalid_validdays = 4
+        invalid_order     = 5
+        invalid_task      = 6
+        OTHERS            = 7.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD call_transport_order_popup.
+
+    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
+          lt_e071k TYPE STANDARD TABLE OF e071k.
+
+    CLEAR: ev_order,
+           ev_task.
+
+    CALL FUNCTION 'TRINT_ORDER_CHOICE'
+      IMPORTING
+        we_order               = ev_order
+        we_task                = ev_task
+      TABLES
+        wt_e071                = lt_e071
+        wt_e071k               = lt_e071k
+      EXCEPTIONS
+        no_correction_selected = 1
+        display_mode           = 2
+        object_append_error    = 3
+        recursive_call         = 4
+        wrong_order_type       = 5
+        OTHERS                 = 6.
+
+    IF sy-subrc = 1.
+      zcx_abapgit_exception=>raise( 'cancelled' ).
+    ELSEIF sy-subrc > 1.
+      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD are_objects_recorded_in_tr_req.
+
+    DATA: li_package TYPE REF TO if_package.
 
     cl_package_factory=>load_package(
       EXPORTING
@@ -181,79 +294,29 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
     ENDIF.
 
-    IF li_package->wbo_korr_flag = abap_false.
-      " Objects of package are not recorded in transport request,
-      " no need to proceed.
-      RETURN.
-    ENDIF.
-
-    CALL FUNCTION 'TRINT_ORDER_CHOICE'
-      IMPORTING
-        we_order               = lv_order     " Selected request
-        we_task                = lv_task    " Selected task
-      TABLES
-        wt_e071                = lt_e071    " Object table to be edited (for mass editing)
-        wt_e071k               = lt_e071k    " Key table to be edited (for mass editing)
-      EXCEPTIONS
-        no_correction_selected = 1
-        display_mode           = 2
-        object_append_error    = 3
-        recursive_call         = 4
-        wrong_order_type       = 5
-        OTHERS                 = 6.
-
-    IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( 'cancelled' ).
-    ELSEIF sy-subrc > 1.
-      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
-    ENDIF.
-
-    CALL FUNCTION 'TR_TASK_SET'
-      EXPORTING
-        iv_order          = lv_order    " Request to be s et
-        iv_task           = lv_task    " Task to be set
-      EXCEPTIONS
-        invalid_username  = 1
-        invalid_category  = 2
-        invalid_client    = 3
-        invalid_validdays = 4
-        invalid_order     = 5
-        invalid_task      = 6
-        OTHERS            = 7.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
-    ENDIF.
-
-    mv_task_is_set_by_abapgit = abap_true.
+    rv_are_objects_recorded = li_package->wbo_korr_flag.
 
   ENDMETHOD.
 
 
-  METHOD store_current_default_task.
+  METHOD clear_default_task.
 
-    DATA: lt_e070use TYPE STANDARD TABLE OF e070use.
+      CALL FUNCTION 'TR_TASK_RESET'
+        EXPORTING
+          iv_username      = is_default_task-username
+          iv_order         = is_default_task-ordernum
+          iv_task          = is_default_task-tasknum
+          iv_dialog        = abap_false
+        EXCEPTIONS
+          invalid_username = 1
+          invalid_order    = 2
+          invalid_task     = 3
+          OTHERS           = 4.
 
-    " Save the current default task to restore it later...
-    CALL FUNCTION 'TR_TASK_GET'
-      TABLES
-        tt_e070use       = lt_e070use     " Table of current settings
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_category = 2
-        invalid_client   = 3
-        OTHERS           = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
-    ENDIF.
-
-    IF lines( lt_e070use ) = 0.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_e070use INTO ms_save_default_task
-                          INDEX 1.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET { sy-subrc }| ).
+      ENDIF.
 
   ENDMETHOD.
+
 ENDCLASS.
