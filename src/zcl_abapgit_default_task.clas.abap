@@ -82,13 +82,6 @@ ENDCLASS.
 CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
 
-  METHOD constructor.
-
-    store_current_default_task( ).
-
-  ENDMETHOD.
-
-
   METHOD get_instance.
 
     IF mo_instance IS NOT BOUND.
@@ -102,55 +95,9 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reset.
+  METHOD constructor.
 
-    DATA: ls_default_task TYPE e070use.
-
-    IF mv_task_is_set_by_abapgit = abap_false.
-      " if the default transport request task isn't set
-      " by us there is nothing to do.
-      RETURN.
-    ENDIF.
-
-    CLEAR mv_task_is_set_by_abapgit.
-
-    ls_default_task = get_default_task( ).
-
-    IF ls_default_task IS NOT INITIAL.
-
-      clear_default_task( ls_default_task ).
-
-    ENDIF.
-
-    restore_saved_default_task( ).
-
-  ENDMETHOD.
-
-
-  METHOD restore_saved_default_task.
-
-    IF ms_save_default_task IS INITIAL.
-      " There wasn't a default transport request before
-      " so we needn't restore anything.
-      RETURN.
-    ENDIF.
-
-    CALL FUNCTION 'TR_TASK_SET'
-      EXPORTING
-        iv_order          = ms_save_default_task-ordernum
-        iv_task           = ms_save_default_task-tasknum
-      EXCEPTIONS
-        invalid_username  = 1
-        invalid_category  = 2
-        invalid_client    = 3
-        invalid_validdays = 4
-        invalid_order     = 5
-        invalid_task      = 6
-        OTHERS            = 7.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
-    ENDIF.
+    store_current_default_task( ).
 
   ENDMETHOD.
 
@@ -189,9 +136,62 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD reset.
+
+    DATA: ls_default_task TYPE e070use.
+
+    IF mv_task_is_set_by_abapgit = abap_false.
+      " if the default transport request task isn't set
+      " by us there is nothing to do.
+      RETURN.
+    ENDIF.
+
+    CLEAR mv_task_is_set_by_abapgit.
+
+    ls_default_task = get_default_task( ).
+
+    IF ls_default_task IS NOT INITIAL.
+
+      clear_default_task( ls_default_task ).
+
+    ENDIF.
+
+    restore_saved_default_task( ).
+
+  ENDMETHOD.
+
+
   METHOD store_current_default_task.
 
     ms_save_default_task = get_default_task( ).
+
+  ENDMETHOD.
+
+
+  METHOD restore_saved_default_task.
+
+    IF ms_save_default_task IS INITIAL.
+      " There wasn't a default transport request before
+      " so we needn't restore anything.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'TR_TASK_SET'
+      EXPORTING
+        iv_order          = ms_save_default_task-ordernum
+        iv_task           = ms_save_default_task-tasknum
+      EXCEPTIONS
+        invalid_username  = 1
+        invalid_category  = 2
+        invalid_client    = 3
+        invalid_validdays = 4
+        invalid_order     = 5
+        invalid_task      = 6
+        OTHERS            = 7.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -236,6 +236,27 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD clear_default_task.
+
+    CALL FUNCTION 'TR_TASK_RESET'
+      EXPORTING
+        iv_username      = is_default_task-username
+        iv_order         = is_default_task-ordernum
+        iv_task          = is_default_task-tasknum
+        iv_dialog        = abap_false
+      EXCEPTIONS
+        invalid_username = 1
+        invalid_order    = 2
+        invalid_task     = 3
+        OTHERS           = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -295,27 +316,6 @@ CLASS zcl_abapgit_default_task IMPLEMENTATION.
     ENDIF.
 
     rv_are_objects_recorded = li_package->wbo_korr_flag.
-
-  ENDMETHOD.
-
-
-  METHOD clear_default_task.
-
-    CALL FUNCTION 'TR_TASK_RESET'
-      EXPORTING
-        iv_username      = is_default_task-username
-        iv_order         = is_default_task-ordernum
-        iv_task          = is_default_task-tasknum
-        iv_dialog        = abap_false
-      EXCEPTIONS
-        invalid_username = 1
-        invalid_order    = 2
-        invalid_task     = 3
-        OTHERS           = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET { sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 
