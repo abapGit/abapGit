@@ -25,7 +25,8 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    mo_persistence = NEW cl_ddlx_adt_object_persist( ).
+    CREATE OBJECT mo_persistence
+      TYPE ('CL_DDLX_ADT_OBJECT_PERSIST').
 
   ENDMETHOD.
 
@@ -46,10 +47,14 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
+    DATA: lv_object_key TYPE seu_objkey.
+
+    lv_object_key = ms_item-obj_name.
+
     rv_bool = abap_true.
 
     TRY.
-        mo_persistence->get( p_object_key           = CONV #( ms_item-obj_name )
+        mo_persistence->get( p_object_key           = lv_object_key
                              p_version              = 'A'
                              p_existence_check_only = abap_true ).
 
@@ -74,14 +79,18 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lo_data_model TYPE REF TO if_wb_object_data_model,
+    DATA: lv_object_key TYPE seu_objkey,
+          lo_data_model TYPE REF TO if_wb_object_data_model,
           lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
-    TRY.
-        lo_data_model = NEW cl_ddlx_wb_object_data( ).
+    lv_object_key = ms_item-obj_name.
 
-        mo_persistence->delete( p_object_key = CONV #( ms_item-obj_name )
+    TRY.
+        CREATE OBJECT lo_data_model
+          TYPE ('CL_DDLX_WB_OBJECT_DATA').
+
+        mo_persistence->delete( p_object_key = lv_object_key
                                 p_version    = 'A' ).
 
       CATCH cx_root INTO lx_error.
@@ -93,17 +102,21 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD lif_object~serialize.
 
-    DATA: lo_data_model TYPE REF TO if_wb_object_data_model,
+    DATA: lv_object_key TYPE seu_objkey,
+          lo_data_model TYPE REF TO if_wb_object_data_model,
           ls_data       TYPE cl_ddlx_wb_object_data=>ty_object_data,
           lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
+    lv_object_key = ms_item-obj_name.
+
     TRY.
-        lo_data_model = NEW cl_ddlx_wb_object_data( ).
+        CREATE OBJECT lo_data_model
+          TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
         mo_persistence->get(
           EXPORTING
-            p_object_key           = CONV #( ms_item-obj_name )
+            p_object_key           = lv_object_key
             p_version              = 'A'
           CHANGING
             p_object_data          = lo_data_model ).
@@ -143,7 +156,8 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
         cg_data = ls_data ).
 
     TRY.
-        lo_data_model = NEW cl_ddlx_wb_object_data( ).
+        CREATE OBJECT lo_data_model
+          TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
         lo_data_model->set_data( ls_data ).
 
