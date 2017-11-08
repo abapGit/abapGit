@@ -32,7 +32,6 @@ ENDCLASS.
 
 CLASS lcl_object_ddlx IMPLEMENTATION.
 
-
   METHOD lif_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.
@@ -56,7 +55,7 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
     TRY.
         get_persistence( )->get( p_object_key           = lv_object_key
-                                 p_version              = 'A'
+                                 p_version              = swbm_version_active
                                  p_existence_check_only = abap_true ).
 
       CATCH cx_swb_exception.
@@ -68,7 +67,6 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
   METHOD lif_object~jump.
 
     TRY.
-
         jump_adt( i_obj_name = ms_item-obj_name
                   i_obj_type = ms_item-obj_type ).
 
@@ -92,7 +90,7 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
         get_persistence( )->delete( p_object_key = lv_object_key
-                                    p_version    = 'A' ).
+                                    p_version    = swbm_version_active ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -124,7 +122,7 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
         get_persistence( )->get(
           EXPORTING
             p_object_key           = lv_object_key
-            p_version              = 'A'
+            p_version              = swbm_version_active
           CHANGING
             p_object_data          = lo_data_model ).
 
