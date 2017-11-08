@@ -8,27 +8,30 @@ CLASS lcl_object_ddlx DEFINITION INHERITING FROM lcl_objects_super FINAL.
     INTERFACES lif_object.
     ALIASES mo_files FOR lif_object~mo_files.
 
-    METHODS:
-      constructor
-        IMPORTING
-          is_item     TYPE zif_abapgit_definitions=>ty_item
-          iv_language TYPE spras.
-
     DATA: mo_persistence TYPE REF TO if_wb_object_persist.
+
+  PRIVATE SECTION.
+    METHODS:
+      get_persistence
+        RETURNING
+          VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
+        RAISING
+          zcx_abapgit_exception,
+
+      clear_fields
+        CHANGING
+          cs_data TYPE any,
+
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE csequence
+        CHANGING
+          cs_metadata  TYPE any.
 
 ENDCLASS.
 
 CLASS lcl_object_ddlx IMPLEMENTATION.
 
-  METHOD constructor.
-
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
-
-    CREATE OBJECT mo_persistence
-      TYPE ('CL_DDLX_ADT_OBJECT_PERSIST').
-
-  ENDMETHOD.
 
   METHOD lif_object~has_changed_since.
     rv_changed = abap_true.
@@ -40,9 +43,7 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD lif_object~get_metadata.
     rs_metadata = get_metadata( ).
-
-    rs_metadata-ddic         = abap_true.
-    rs_metadata-delete_tadir = abap_true.
+    rs_metadata-ddic = abap_true.
   ENDMETHOD.
 
   METHOD lif_object~exists.
@@ -54,9 +55,9 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
     rv_bool = abap_true.
 
     TRY.
-        mo_persistence->get( p_object_key           = lv_object_key
-                             p_version              = 'A'
-                             p_existence_check_only = abap_true ).
+        get_persistence( )->get( p_object_key           = lv_object_key
+                                 p_version              = 'A'
+                                 p_existence_check_only = abap_true ).
 
       CATCH cx_swb_exception.
         rv_bool = abap_false.
@@ -90,8 +91,8 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
         CREATE OBJECT lo_data_model
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
-        mo_persistence->delete( p_object_key = lv_object_key
-                                p_version    = 'A' ).
+        get_persistence( )->delete( p_object_key = lv_object_key
+                                    p_version    = 'A' ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -104,17 +105,23 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
     DATA: lv_object_key TYPE seu_objkey,
           lo_data_model TYPE REF TO if_wb_object_data_model,
-          ls_data       TYPE cl_ddlx_wb_object_data=>ty_object_data,
+          lr_data       TYPE REF TO data,
           lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
+
+    FIELD-SYMBOLS: <ls_data> TYPE any.
 
     lv_object_key = ms_item-obj_name.
 
     TRY.
+        CREATE DATA lr_data
+          TYPE ('CL_DDLX_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+        ASSIGN lr_data->* TO <ls_data>.
+
         CREATE OBJECT lo_data_model
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
-        mo_persistence->get(
+        get_persistence( )->get(
           EXPORTING
             p_object_key           = lv_object_key
             p_version              = 'A'
@@ -123,17 +130,12 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
         lo_data_model->get_data(
           IMPORTING
-            p_data = ls_data ).
+            p_data = <ls_data> ).
 
-        CLEAR: ls_data-metadata-changed_at,
-               ls_data-metadata-changed_by,
-               ls_data-metadata-created_at,
-               ls_data-metadata-created_by,
-               ls_data-metadata-package_ref-name,
-               ls_data-metadata-container_ref-package_name.
+        clear_fields( CHANGING cs_data = <ls_data> ).
 
         io_xml->add( iv_name = 'DDLX'
-                     ig_data = ls_data ).
+                     ig_data = <ls_data> ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -145,23 +147,29 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
   METHOD lif_object~deserialize.
 
     DATA: lo_data_model TYPE REF TO if_wb_object_data_model,
-          ls_data       TYPE cl_ddlx_wb_object_data=>ty_object_data,
+          lr_data       TYPE REF TO data,
           lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'DDLX'
-      CHANGING
-        cg_data = ls_data ).
+    FIELD-SYMBOLS: <ls_data> TYPE any.
 
     TRY.
+        CREATE DATA lr_data
+          TYPE ('CL_DDLX_WB_OBJECT_DATA=>TY_OBJECT_DATA').
+        ASSIGN lr_data->* TO <ls_data>.
+
+        io_xml->read(
+          EXPORTING
+            iv_name = 'DDLX'
+          CHANGING
+            cg_data = <ls_data> ).
+
         CREATE OBJECT lo_data_model
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
-        lo_data_model->set_data( ls_data ).
+        lo_data_model->set_data( <ls_data> ).
 
-        mo_persistence->save( lo_data_model ).
+        get_persistence( )->save( lo_data_model ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -172,6 +180,72 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD get_persistence.
+
+    TRY.
+        IF mo_persistence IS NOT BOUND.
+
+          CREATE OBJECT mo_persistence
+                 TYPE ('CL_DDLX_ADT_OBJECT_PERSIST').
+
+        ENDIF.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( `DDLX not supported` ).
+    ENDTRY.
+
+    ri_persistence = mo_persistence.
+
+  ENDMETHOD.
+
+
+  METHOD clear_fields.
+
+    FIELD-SYMBOLS: <metadata> TYPE any.
+
+    ASSIGN COMPONENT 'METADATA'
+           OF STRUCTURE cs_data
+           TO <metadata>.
+    ASSERT sy-subrc = 0.
+
+    clear_field( EXPORTING iv_fieldname = 'CHANGED_AT'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'CHANGED_BY'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'CREATED_AT'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'CREATED_BY'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'RESPONSIBLE'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'PACKAGE_REF-NAME'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'CONTAINER_REF-PACKAGE_NAME'
+                 CHANGING  cs_metadata  = <metadata> ).
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <field> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname
+           OF STRUCTURE cs_metadata
+           TO <field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <field>.
+
   ENDMETHOD.
 
 ENDCLASS.
