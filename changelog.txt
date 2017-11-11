@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2017-11-11 v1.49.0
+------------------
++ DDLX support
+* ENHS fix
+* Fix changing remote
+
 2017-10-29 v1.48.0
 ------------------
 * WEBI fixes
