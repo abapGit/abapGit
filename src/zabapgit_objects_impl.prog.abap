@@ -440,6 +440,9 @@ CLASS lcl_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
+    lv_package = io_repo->get_package( ).
+
+    zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
 
     lcl_objects_activation=>clear( ).
 
@@ -477,8 +480,6 @@ CLASS lcl_objects IMPLEMENTATION.
       IF lv_cancel = abap_true.
         zcx_abapgit_exception=>raise( 'cancelled' ).
       ENDIF.
-
-      zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
 
       IF ls_item-obj_type = 'DEVC'.
         " Packages have the same filename across different folders. The path needs to be supplied
