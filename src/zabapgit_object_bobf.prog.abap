@@ -147,7 +147,6 @@ CLASS lcl_object_bobf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~delete.
-    BREAK copat.
     DATA lv_success TYPE abap_bool.
     lv_success = /bobf/cl_conf_model_api=>delete_business_object(
       iv_bo_key                     = mv_key
@@ -161,7 +160,6 @@ CLASS lcl_object_bobf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~serialize.
-    BREAK copat.
     DATA:
       ls_details   TYPE /bobf/s_conf_model_api_bo,
       lt_api_nodes TYPE /bobf/t_conf_model_api_node,
@@ -186,8 +184,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
         iv_bo_key        = mv_key
       IMPORTING
         et_node_tab      = lt_api_nodes
-        ev_success       = lv_success
-    ).
+        ev_success       = lv_success ).
     IF lv_success = abap_false.
       zcx_abapgit_exception=>raise( 'error from BOBF, GET_BO' ).
     ENDIF.
@@ -205,8 +202,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
         is_parent_node = ls_root_node
         it_api_nodes   = lt_api_nodes
       CHANGING
-        ct_nodes       = lt_nodes
-    ).
+        ct_nodes       = lt_nodes ).
 
     SORT lt_nodes BY id.
 
@@ -237,7 +233,6 @@ CLASS lcl_object_bobf IMPLEMENTATION.
 
     FIELD-SYMBOLS: <fs_root_node> LIKE LINE OF lt_nodes.
 
-    BREAK copat.
     io_xml->read( EXPORTING iv_name = 'DETAILS'
                   CHANGING cg_data = ls_details ).
     io_xml->read( EXPORTING iv_name = 'NODES'
@@ -318,7 +313,8 @@ CLASS lcl_object_bobf IMPLEMENTATION.
       lt_nodes     TYPE ty_nodes_tt,
       ls_node      TYPE LINE OF ty_nodes_tt,
       lv_success   TYPE abap_bool,
-      lv_child_id  TYPE int4.
+      lv_child_id  TYPE int4,
+      lv_node_key  TYPE /bobf/obm_bo_key.
 
     FIELD-SYMBOLS: <fs_node> TYPE ty_node.
 
@@ -326,6 +322,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
       READ TABLE lt_nodes ASSIGNING <fs_node>
         WITH KEY id = lv_child_id.
       lv_node_name = <fs_node>-node-node_name.
+
       /bobf/cl_conf_model_api=>create_node(
         EXPORTING
           iv_bo_key              = mv_key
@@ -347,9 +344,8 @@ CLASS lcl_object_bobf IMPLEMENTATION.
 *           iv_gen_data_table_type = ABAP_TRUE    " Generate combiend table type
 *           iv_gen_database        = ABAP_TRUE    " Generate database table
         IMPORTING
-         ev_node_key            = DATA(lv_node_key)
-          ev_success             = DATA(success)
-      ).
+          ev_node_key = lv_node_key
+          ev_success = lv_success ).
       IF lv_success = abap_false.
         zcx_abapgit_exception=>raise( `Error when deserializing BOBF ` && ms_item-obj_name ).
       ENDIF.
@@ -360,8 +356,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
         EXPORTING
           iv_parent_node = <fs_node>
         CHANGING
-          ct_nodes       = ct_nodes
-      ).
+          ct_nodes       = ct_nodes ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -396,8 +391,7 @@ CLASS lcl_object_bobf IMPLEMENTATION.
           is_parent_node = ls_node
           it_api_nodes   = it_api_nodes
         CHANGING
-          ct_nodes       = ct_nodes
-      ).
+          ct_nodes       = ct_nodes ).
     ENDLOOP.
 
   ENDMETHOD.
