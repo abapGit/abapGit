@@ -43,9 +43,11 @@ CLASS lcl_object_bobf DEFINITION INHERITING FROM lcl_objects_super FINAL.
           VALUE(rs_bcdata) TYPE bdcdata,
       deserialize_children_nodes
         IMPORTING
-          iv_old_parent_key TYPE /bobf/s_conf_model_api_bo-root_node_key
-          iv_new_parent_key TYPE /bobf/s_conf_model_api_bo-root_node_key
-          it_nodes          TYPE /bobf/t_conf_model_api_node,
+          iv_parent_node TYPE ty_node
+        CHANGING
+          ct_nodes       TYPE ty_nodes_tt
+        RAISING
+          zcx_abapgit_exception,
       get_next_id
         RETURNING
           VALUE(rv_id) TYPE i,
@@ -225,50 +227,54 @@ CLASS lcl_object_bobf IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~deserialize.
-*    DATA:
-*      ls_details   TYPE /bobf/s_conf_model_api_bo,
-*      ls_root_node TYPE /bobf/s_conf_model_api_node,
-*      lv_root_name TYPE /bobf/obm_name,
-*      ls_node_name TYPE /bobf/obm_name,
-*      lt_nodes     TYPE /bobf/t_conf_model_api_node,
-*      ls_node      TYPE LINE OF /bobf/t_conf_model_api_node,
-*      lv_success   TYPE abap_bool.
-*    BREAK copat.
-*    io_xml->read( EXPORTING iv_name = 'DETAILS'
-*                  CHANGING cg_data = ls_details ).
-*    io_xml->read( EXPORTING iv_name = 'NODES'
-*                  CHANGING cg_data = lt_nodes ).
+    DATA:
+      lt_nodes     TYPE ty_nodes_tt,
+      ls_node      LIKE LINE OF lt_nodes,
+      ls_details   TYPE /bobf/s_conf_model_api_bo,
+      lv_root_name TYPE /bobf/obm_name,
+      "@TODO move to private methods
+      lv_success   TYPE abap_bool.
+
+    FIELD-SYMBOLS: <fs_root_node> LIKE LINE OF lt_nodes.
+
+    BREAK copat.
+    io_xml->read( EXPORTING iv_name = 'DETAILS'
+                  CHANGING cg_data = ls_details ).
+    io_xml->read( EXPORTING iv_name = 'NODES'
+                  CHANGING cg_data = lt_nodes ).
 *
-*    READ TABLE lt_nodes INTO ls_root_node
-*      WITH KEY node_key = ls_details-root_node_key.
+    READ TABLE lt_nodes ASSIGNING <fs_root_node>
+      WITH KEY root = abap_true.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( `Error when deserializing BOBF: Root not found or two roots`).
+    ENDIF.
 *
-*    lv_root_name = ls_root_node-node_name.
-*    /bobf/cl_conf_model_api=>create_business_object(
-*      EXPORTING
-*        iv_business_object_name  = ls_details-bo_name
-*        iv_description           = ls_details-description
-*        iv_constant_interface    = ls_details-const_interface
-*        iv_root_name             = lv_root_name
-*        iv_root_description      = ls_root_node-description
-*        iv_root_data_type        = ls_root_node-data_type
-*        iv_root_data_data_type   = ls_root_node-data_data_type
-*        iv_root_data_data_type_t = ls_root_node-data_data_type_t
-*        iv_root_data_table_type  = ls_root_node-data_table_type
-*        iv_root_database_table   = ls_root_node-database_table
-*      IMPORTING
-*        ev_bo_key                = mv_key
-*        ev_success               = lv_success ).
-*    IF lv_success = abap_false.
-*      zcx_abapgit_exception=>raise( `Error when deserializing BOBF ` && ms_item-obj_name ).
-*    ENDIF.
+    lv_root_name = <fs_root_node>-node-node_name.
+    /bobf/cl_conf_model_api=>create_business_object(
+      EXPORTING
+        iv_business_object_name  = ls_details-bo_name
+        iv_description           = ls_details-description
+        iv_constant_interface    = ls_details-const_interface
+        iv_root_name             = lv_root_name
+        iv_root_description      = <fs_root_node>-node-description
+        iv_root_data_type        = <fs_root_node>-node-data_type
+        iv_root_data_data_type   = <fs_root_node>-node-data_data_type
+        iv_root_data_data_type_t = <fs_root_node>-node-data_data_type_t
+        iv_root_data_table_type  = <fs_root_node>-node-data_table_type
+        iv_root_database_table   = <fs_root_node>-node-database_table
+      IMPORTING
+        ev_bo_key                = mv_key
+        ev_success               = lv_success ).
+    <fs_root_node>-node-node_key = mv_key.
+    IF lv_success = abap_false.
+      zcx_abapgit_exception=>raise( `Error when deserializing BOBF ` && ms_item-obj_name ).
+    ENDIF.
 
-
-*    deserialize_children_nodes(
-*      iv_old_parent_key   = ls_details-root_node_key
-*      iv_new_parnet_key   =
-*      it_nodes        = lt_nodes ).
-
-
+    deserialize_children_nodes(
+      EXPORTING
+        iv_parent_node = <fs_root_node>
+      CHANGING
+        ct_nodes       = lt_nodes ).
   ENDMETHOD.
 
   METHOD lif_object~compare_to_remote_version.
@@ -304,51 +310,59 @@ CLASS lcl_object_bobf IMPLEMENTATION.
 
 
   METHOD deserialize_children_nodes.
+    DATA:
+      ls_details   TYPE /bobf/s_conf_model_api_bo,
+      ls_root_node TYPE /bobf/s_conf_model_api_node,
+      lv_root_name TYPE /bobf/obm_name,
+      lv_node_name TYPE /bobf/obm_name,
+      lt_nodes     TYPE ty_nodes_tt,
+      ls_node      TYPE LINE OF ty_nodes_tt,
+      lv_success   TYPE abap_bool,
+      lv_child_id  TYPE int4.
 
-*    DATA:
-*      ls_details   TYPE /bobf/s_conf_model_api_bo,
-*      ls_root_node TYPE /bobf/s_conf_model_api_node,
-*      lv_root_name TYPE /bobf/obm_name,
-*      ls_node_name TYPE /bobf/obm_name,
-*      lt_nodes     TYPE /bobf/t_conf_model_api_node,
-*      ls_node      TYPE LINE OF /bobf/t_conf_model_api_node,
-*      lv_success   TYPE abap_bool.
-*
-*    LOOP AT lt_nodes INTO ls_node WHERE parent_key = iv_parent_key.
-*      ls_node_name = ls_node-node_name.
-*      /bobf/cl_conf_model_api=>create_node(
-*        EXPORTING
-*          iv_bo_key              = mv_key
-**           iv_version_key         =     " NodeID
-*          iv_parent_node_key     = ls_node-parent_node_key
-*          iv_node_name           = ls_node_name
-*          iv_description         = ls_node-description
-*          iv_transient           = ls_node-transient
-*          iv_is_extendible       = ls_node-extensible
-**           iv_cardinality         =     " Association Cardinality
-*          iv_data_type           = ls_node-data_type
-*          iv_data_data_type      = ls_node-data_data_type
-*          iv_data_table_type     = ls_node-data_table_type
-*          iv_data_data_type_t    = ls_node-data_data_type_t
-*          iv_database_table      = ls_node-database_table
-*          iv_ext_incl_name       = ls_node-ext_incl_name
-*          iv_ext_incl_name_t     = ls_node-ext_incl_name_t
-**           iv_gen_data_type       = ABAP_TRUE    " Generate combined structure
-**           iv_gen_data_table_type = ABAP_TRUE    " Generate combiend table type
-**           iv_gen_database        = ABAP_TRUE    " Generate database table
-*        IMPORTING
-*         ev_node_key            = DATA(lv_node_key)
-*          ev_success             = DATA(success)
-*      ).
-*      IF lv_success = abap_false.
-*        zcx_abapgit_exception=>raise( `Error when deserializing BOBF ` && ms_item-obj_name ).
-*      ENDIF.
-*
-*      deserialize_children_nodes(
-*          iv_parent_key = lv_node_key
-*          it_nodes      = it_nodes ).
-*
-*    ENDLOOP.
+    FIELD-SYMBOLS: <fs_node> TYPE ty_node.
+
+    LOOP AT iv_parent_node-children_ids INTO lv_child_id.
+      READ TABLE lt_nodes ASSIGNING <fs_node>
+        WITH KEY id = lv_child_id.
+      lv_node_name = <fs_node>-node-node_name.
+      /bobf/cl_conf_model_api=>create_node(
+        EXPORTING
+          iv_bo_key              = mv_key
+*           iv_version_key         =     " NodeID
+          iv_parent_node_key     = iv_parent_node-node-node_key
+          iv_node_name           = lv_node_name
+          iv_description         = <fs_node>-node-description
+          iv_transient           = <fs_node>-node-transient
+          iv_is_extendible       = <fs_node>-node-extensible
+*           iv_cardinality         =     " Association Cardinality
+          iv_data_type           = <fs_node>-node-data_type
+          iv_data_data_type      = <fs_node>-node-data_data_type
+          iv_data_table_type     = <fs_node>-node-data_table_type
+          iv_data_data_type_t    = <fs_node>-node-data_data_type_t
+          iv_database_table      = <fs_node>-node-database_table
+          iv_ext_incl_name       = <fs_node>-node-ext_incl_name
+          iv_ext_incl_name_t     = <fs_node>-node-ext_incl_name_t
+*           iv_gen_data_type       = ABAP_TRUE    " Generate combined structure
+*           iv_gen_data_table_type = ABAP_TRUE    " Generate combiend table type
+*           iv_gen_database        = ABAP_TRUE    " Generate database table
+        IMPORTING
+         ev_node_key            = DATA(lv_node_key)
+          ev_success             = DATA(success)
+      ).
+      IF lv_success = abap_false.
+        zcx_abapgit_exception=>raise( `Error when deserializing BOBF ` && ms_item-obj_name ).
+      ENDIF.
+
+      <fs_node>-node-node_key = lv_node_key.
+
+      deserialize_children_nodes(
+        EXPORTING
+          iv_parent_node = <fs_node>
+        CHANGING
+          ct_nodes       = ct_nodes
+      ).
+    ENDLOOP.
   ENDMETHOD.
 
 
@@ -387,6 +401,4 @@ CLASS lcl_object_bobf IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
 ENDCLASS.
