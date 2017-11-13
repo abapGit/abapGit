@@ -52,6 +52,10 @@ CLASS lcl_file_status DEFINITION FINAL
                   it_state         TYPE zif_abapgit_definitions=>ty_file_signatures_ts
         RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result
         RAISING   zcx_abapgit_exception,
+      build_old_folder_deletion
+        IMPORTING is_local         TYPE zif_abapgit_definitions=>ty_file_item
+                  is_remote        TYPE zif_abapgit_definitions=>ty_file
+        RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result,
       identify_object
         IMPORTING iv_filename TYPE string
                   iv_path     TYPE string
@@ -151,8 +155,8 @@ CLASS lcl_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lv_index        LIKE sy-tabix,
-          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit.
+    DATA: lv_index       LIKE sy-tabix,
+          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
@@ -193,7 +197,8 @@ CLASS lcl_file_status IMPLEMENTATION.
           ls_item      LIKE LINE OF lt_items,
           lv_is_xml    TYPE abap_bool,
           lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts,
-          lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
+          lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts, " Sorted by path+filename
+          ls_result    LIKE LINE OF rt_results.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -223,6 +228,22 @@ CLASS lcl_file_status IMPLEMENTATION.
         CLEAR <ls_remote>-sha1. " Mark as processed
       ELSE.             " Only L exists
         <ls_result> = build_new_local( is_local = <ls_local> ).
+        "File still exists in remote but in a different path?
+        READ TABLE lt_remote ASSIGNING <ls_remote>
+          WITH KEY filename = <ls_local>-file-filename.
+        "Then this file was moved to another package/folder
+        IF sy-subrc = 0.
+          CLEAR <ls_remote>-sha1. " Mark as processed
+
+          "Ignore package files
+          IF <ls_local>-file-filename = 'package.devc.xml'.
+            CONTINUE.
+          ENDIF.
+          ls_result = build_old_folder_deletion(
+            is_local  = <ls_local>
+            is_remote = <ls_remote> ).
+          APPEND ls_result TO rt_results.
+        ENDIF.
       ENDIF.
     ENDLOOP.
 
@@ -408,5 +429,21 @@ CLASS lcl_file_status IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "build_new_remote
+
+  METHOD build_old_folder_deletion.
+    "Item
+    rs_result-obj_type = is_local-item-obj_type.
+    rs_result-obj_name = is_local-item-obj_name.
+    "Not needed and hard to infere
+    CLEAR rs_result-package.
+
+    " File
+    rs_result-path     = is_remote-path.
+    rs_result-filename = is_remote-filename.
+
+    " Match
+    rs_result-match    = abap_false.
+    rs_result-lstate   = zif_abapgit_definitions=>gc_state-deleted.
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_file_status IMPLEMENTATION
