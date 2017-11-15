@@ -370,10 +370,28 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD update_cs_number_of_methods.
-    DATA cs_cache_entry TYPE seo_cs_cache.
-    cs_cache_entry-clsname            = iv_classname.
-    cs_cache_entry-no_of_method_impls = iv_number_of_impl_methods.
-    MODIFY seo_cs_cache FROM cs_cache_entry.
+
+    " Indirect access to keep downward compatibility
+    DATA lr_cache_entry TYPE REF TO data.
+    FIELD-SYMBOLS: <ls_cache_entry> TYPE any,
+                   <field>          TYPE any.
+
+    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+    ASSIGN lr_cache_entry->* TO <ls_cache_entry>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <ls_cache_entry>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    <field> = iv_classname.
+
+    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <ls_cache_entry>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    <field> = iv_number_of_impl_methods.
+
+    MODIFY ('SEO_CS_CACHE') FROM <ls_cache_entry>.
+
   ENDMETHOD.
 
 ENDCLASS.
