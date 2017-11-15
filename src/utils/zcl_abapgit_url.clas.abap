@@ -44,11 +44,7 @@ CLASS zcl_abapgit_url DEFINITION
 
 ENDCLASS.
 
-
-
-
 CLASS zcl_abapgit_url IMPLEMENTATION.
-
 
   METHOD host.
 
@@ -57,7 +53,6 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD name.
 
     regex( EXPORTING iv_repo = iv_repo
@@ -65,21 +60,16 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD path_name.
-
 
     DATA: lv_host TYPE string ##NEEDED.
 
     FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
       SUBMATCHES lv_host rv_path_name.
 
-
   ENDMETHOD.
 
-
   METHOD regex.
-
 
     FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
       SUBMATCHES ev_host ev_path ev_name.
@@ -87,6 +77,6 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Malformed URL' ).
     ENDIF.
 
-
   ENDMETHOD.
+
 ENDCLASS.
