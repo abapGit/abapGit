@@ -492,11 +492,11 @@ CLASS lcl_path IMPLEMENTATION.
 ENDCLASS. "lcl_path
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_url DEFINITION
+*       CLASS zcl_abapgit_url DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_url DEFINITION FINAL.
+CLASS zcl_abapgit_url DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS host
@@ -525,11 +525,11 @@ CLASS lcl_url DEFINITION FINAL.
 ENDCLASS.                    "lcl_repo DEFINITION
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_url IMPLEMENTATION
+*       CLASS zcl_abapgit_url IMPLEMENTATION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_url IMPLEMENTATION.
+CLASS zcl_abapgit_url IMPLEMENTATION.
 
   METHOD host.
     regex( EXPORTING iv_repo = iv_repo
@@ -975,7 +975,7 @@ CLASS lcl_login_manager IMPLEMENTATION.
     DATA: ls_auth LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = lcl_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_authorization = ls_auth-authorization.
 
@@ -1008,11 +1008,11 @@ CLASS lcl_login_manager IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth WITH KEY uri = lcl_url=>host( iv_uri )
+    READ TABLE gt_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri )
       TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-      <ls_auth>-uri           = lcl_url=>host( iv_uri ).
+      <ls_auth>-uri           = zcl_abapgit_url=>host( iv_uri ).
       <ls_auth>-authorization = iv_auth.
     ENDIF.
 

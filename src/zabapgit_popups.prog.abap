@@ -597,7 +597,7 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          lcl_url=>name( |{ lv_url }| ).
+          zcl_abapgit_url=>name( |{ lv_url }| ).
           IF iv_freeze_package = abap_false.
             lcl_app=>repo_srv( )->validate_package( lv_package ).
           ENDIF.
