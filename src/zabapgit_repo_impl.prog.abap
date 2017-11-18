@@ -749,7 +749,7 @@ CLASS lcl_repo IMPLEMENTATION.
     IF ms_data-offline = abap_true.
       rv_name = ms_data-url.
     ELSE.
-      rv_name = lcl_url=>name( ms_data-url ).
+      rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
 
@@ -1037,7 +1037,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     IF iv_offline = abap_true. " On-line -> OFFline
       lo_repo->set(
-        iv_url         = lcl_url=>name( lo_repo->ms_data-url )
+        iv_url         = zcl_abapgit_url=>name( lo_repo->ms_data-url )
         iv_branch_name = ''
         iv_sha1        = ''
         iv_head_branch = ''

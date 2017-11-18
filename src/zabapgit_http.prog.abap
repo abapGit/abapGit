@@ -170,7 +170,7 @@ CLASS lcl_http_client IMPLEMENTATION.
         name  = '~request_method'
         value = 'POST' ).
 
-    lv_value = lcl_url=>path_name( iv_url ) &&
+    lv_value = zcl_abapgit_url=>path_name( iv_url ) &&
       '/git-' &&
       iv_service &&
       '-pack'.
@@ -426,7 +426,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url           = lcl_url=>host( iv_url )
+        url           = zcl_abapgit_url=>host( iv_url )
         ssl_id        = 'ANONYM'
         proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url )
         proxy_service = lo_proxy_configuration->get_proxy_port( iv_url )
@@ -469,7 +469,7 @@ CLASS lcl_http IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).                             "#EC NOTEXT
-    lv_uri = lcl_url=>path_name( iv_url ) &&
+    lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
              '/info/refs?service=git-' &&
              iv_service &&
              '-pack'.

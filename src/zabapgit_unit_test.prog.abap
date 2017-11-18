@@ -814,7 +814,7 @@ CLASS ltcl_url IMPLEMENTATION.
   METHOD repo_error.
 
     TRY.
-        lcl_url=>host( 'not a real url' ).                  "#EC NOTEXT
+        zcl_abapgit_url=>host( 'not a real url' ).                  "#EC NOTEXT
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
     ENDTRY.
@@ -825,7 +825,7 @@ CLASS ltcl_url IMPLEMENTATION.
 
     DATA: lv_host TYPE string.
 
-    lv_host = lcl_url=>host( 'https://github.com/larshp/Foobar.git' ).
+    lv_host = zcl_abapgit_url=>host( 'https://github.com/larshp/Foobar.git' ).
 
     cl_abap_unit_assert=>assert_equals(
         exp = 'https://github.com'
@@ -837,7 +837,7 @@ CLASS ltcl_url IMPLEMENTATION.
 
     DATA: lv_name TYPE string.
 
-    lv_name = lcl_url=>name( 'https://github.com/larshp/Foobar.git' ).
+    lv_name = zcl_abapgit_url=>name( 'https://github.com/larshp/Foobar.git' ).
 
     cl_abap_unit_assert=>assert_equals(
         exp = 'Foobar'
@@ -849,7 +849,7 @@ CLASS ltcl_url IMPLEMENTATION.
 
     DATA: lv_name TYPE string.
 
-    lv_name = lcl_url=>name( 'https://git.hanatrial.ondemand.com/p12345trial/yay' ).
+    lv_name = zcl_abapgit_url=>name( 'https://git.hanatrial.ondemand.com/p12345trial/yay' ).
 
     cl_abap_unit_assert=>assert_equals(
         exp = 'yay'

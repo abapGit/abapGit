@@ -249,7 +249,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           IN is_data-data_str IGNORING CASE MATCH COUNT lv_cnt.
         IF lv_cnt > 0.
           rv_text = |<strong>On-line</strong>, Name: <strong>{
-                    lcl_url=>name( rv_text ) }</strong>|.
+                    zcl_abapgit_url=>name( rv_text ) }</strong>|.
         ELSE.
           rv_text = |Off-line, Name: <strong>{ rv_text }</strong>|.
         ENDIF.
