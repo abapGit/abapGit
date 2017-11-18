@@ -440,6 +440,9 @@ CLASS lcl_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
+    lv_package = io_repo->get_package( ).
+
+    zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
 
     lcl_objects_activation=>clear( ).
 
@@ -536,6 +539,8 @@ CLASS lcl_objects IMPLEMENTATION.
 
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
+
+    zcl_abapgit_default_task=>get_instance( )->reset( ).
 
   ENDMETHOD.                    "deserialize
 

@@ -549,8 +549,8 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement.
-
+          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement,
+          lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
 
@@ -564,7 +564,16 @@ CLASS lcl_repo IMPLEMENTATION.
                                                   iv_show_popup   = abap_true ).
     ENDIF.
 
-    lt_updated_files = lcl_objects=>deserialize( me ).
+    TRY.
+        lt_updated_files = lcl_objects=>deserialize( me ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+
+        " ensure to reset default transport request task
+        zcl_abapgit_default_task=>get_instance( )->reset( ).
+        zcx_abapgit_exception=>raise( lx_error->text ).
+
+    ENDTRY.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
 
