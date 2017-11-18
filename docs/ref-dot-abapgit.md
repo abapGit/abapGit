@@ -55,7 +55,7 @@ Valid prefix:
   * **ZFOO**_BAR
     * **ZFOO_BAR**_QUX
 
-will give folder structure /foo/bar/qux/
+will give folder structure /bar/qux/
 
 Invalid prefix:
 * ZFOO
