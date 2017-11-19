@@ -72,7 +72,7 @@ Any package name is accepted
 
 will give folder structure /zsomething/zhello/
 
-The folder logic FULL forces the installation of the repository into packages with exactly the same name. This can be problematic for contributors who work on systems where specific prefixes are to be used.
+The folder logic FULL forces the installation of the repository into packages with exactly the same name. This can be problematic for contributors who use a system where specific prefixes for the package names are to be used.
 
 ## Ignore
 
