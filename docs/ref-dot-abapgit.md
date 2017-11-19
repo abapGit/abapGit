@@ -61,7 +61,7 @@ Invalid prefix:
 * ZFOO
   * ZBAR
 
-The folder logic PREFIX allows to install the repository into a different parent package. This can even be $tmp, in that case no transport order is required.
+The folder logic PREFIX allows to install the repository into a different parent package. This can even be local packages(`$*`), in that case no transport order is required.
 
 ### FULL
 
