@@ -252,7 +252,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
               lcl_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>gc_newline.                         "#EC NOTEXT
+              zif_abapgit_definitions=>gc_newline.          "#EC NOTEXT
     lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -348,17 +348,17 @@ CLASS lcl_git_transport IMPLEMENTATION.
         lv_capa = 'side-band-64k no-progress multi_ack agent='
           && lcl_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline.        "#EC NOTEXT
+          && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline. "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>gc_newline.                          "#EC NOTEXT
+          && zif_abapgit_definitions=>gc_newline.           "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && lcl_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>gc_newline ).                          "#EC NOTEXT
+        && zif_abapgit_definitions=>gc_newline ).           "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
@@ -1240,6 +1240,14 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     LOOP AT it_trees ASSIGNING <ls_tree>.
       CLEAR ls_object.
       ls_object-sha1 = <ls_tree>-sha1.
+
+      READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-tree sha1 = ls_object-sha1
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+* two identical trees added at the same time, only add one to the pack
+        CONTINUE.
+      ENDIF.
+
       ls_object-type = zif_abapgit_definitions=>gc_type-tree.
       ls_object-data = <ls_tree>-data.
       APPEND ls_object TO lt_objects.
