@@ -77,8 +77,8 @@ CLASS lcl_object_webi IMPLEMENTATION.
           li_vi      TYPE REF TO if_ws_md_vif,
           lv_name    TYPE vepname.
 
-    FIELD-SYMBOLS: <ls_header> LIKE LINE OF ls_webi-pvepheader.
-
+    FIELD-SYMBOLS: <ls_header>   LIKE LINE OF ls_webi-pvepheader,
+                   <ls_endpoint> LIKE LINE OF ls_webi-pvependpoint.
 
     CALL FUNCTION 'WEBI_GET_OBJECT'
       EXPORTING
@@ -133,6 +133,10 @@ CLASS lcl_object_webi IMPLEMENTATION.
       CLEAR <ls_header>-wsint_version.
     ENDLOOP.
 
+    LOOP AT ls_webi-pvependpoint ASSIGNING <ls_endpoint>.
+      CLEAR: <ls_endpoint>-clustd.
+    ENDLOOP.
+
     io_xml->add( iv_name = 'WEBI'
                  ig_data = ls_webi ).
 
@@ -179,6 +183,11 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
   METHOD handle_function.
 
+    CONSTANTS: BEGIN OF co_parameter_type,
+                 import TYPE vepparamtype VALUE 'I',
+                 export TYPE vepparamtype VALUE 'O',
+               END OF co_parameter_type.
+
     DATA: li_parameter TYPE REF TO if_ws_md_vif_param,
           li_soap      TYPE REF TO if_ws_md_soap_ext_func,
           li_fault     TYPE REF TO if_ws_md_vif_fault,
@@ -205,16 +214,22 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
       LOOP AT is_webi-pvepparameter ASSIGNING <ls_parameter>
           WHERE function = <ls_function>-function.
+
         CASE <ls_parameter>-vepparamtype.
-          WHEN 'I'.
+          WHEN co_parameter_type-import.
+
             li_parameter = li_function->create_incoming_parameter(
               <ls_parameter>-vepparam ).
-          WHEN 'E'.
+
+          WHEN co_parameter_type-export.
+
             li_parameter = li_function->create_outgoing_parameter(
               <ls_parameter>-vepparam ).
+
           WHEN OTHERS.
             ASSERT 0 = 1.
         ENDCASE.
+
         li_parameter->set_name_mapped_to( <ls_parameter>-mappedname ).
         li_parameter->set_is_exposed( <ls_parameter>-is_exposed ).
         li_parameter->set_is_optional( <ls_parameter>-is_optional ).

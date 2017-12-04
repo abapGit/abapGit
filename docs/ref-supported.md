@@ -10,13 +10,14 @@ Type   | Description   | Supported
 ACID | Checkpoint Group | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AUTH | Authorization Check Fields | Yes
-BOBF | BOPF: Business Object Model | [Plugin](https://github.com/larshp/abapGit-Plugins)
+BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
+DDLX | CDS metadata extension | Yes
 DEVC | Package | Yes
 DIAL | Dialog Module | Yes
 DOCT | General Text | Yes

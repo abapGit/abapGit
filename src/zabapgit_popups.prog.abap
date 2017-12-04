@@ -74,7 +74,7 @@ CLASS lcl_popups DEFINITION FINAL.
         IMPORTING it_transport_headers       TYPE trwbo_request_headers
         RETURNING VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
         RAISING   zcx_abapgit_exception
-                  lcx_cancel,
+                  zcx_abapgit_cancel,
       popup_to_select_transports
         RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers,
       popup_to_select_from_list
@@ -119,8 +119,15 @@ CLASS lcl_popups DEFINITION FINAL.
 
       on_select_list_function_click FOR EVENT added_function OF cl_salv_events_table
         IMPORTING
-            e_salv_function.
+            e_salv_function,
 
+      extract_field_values
+        IMPORTING
+          it_fields  TYPE ty_sval_tt
+        EXPORTING
+          ev_url     TYPE abaptxt255-line
+          ev_package TYPE tdevc-devclass
+          ev_branch  TYPE textl-line.
 
 ENDCLASS.
 
@@ -499,9 +506,12 @@ CLASS lcl_popups IMPLEMENTATION.
           lv_uattr      TYPE spo_fattr,
           lv_pattr      TYPE spo_fattr,
           lv_button2    TYPE svalbutton-buttontext,
-          lv_icon2      TYPE icon-name.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+          lv_icon2      TYPE icon-name,
+          lv_package    TYPE tdevc-devclass,
+          lv_url        TYPE abaptxt255-line,
+          lv_branch     TYPE textl-line,
+          lv_finished   TYPE abap_bool,
+          lx_error      TYPE REF TO zcx_abapgit_exception.
 
     IF iv_freeze_url = abap_true.
       lv_uattr = '05'.
@@ -516,69 +526,92 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_icon2   = icon_folder.
     ENDIF.
 
-    add_field( EXPORTING iv_tabname    = 'ABAPTXT255'
-                         iv_fieldname  = 'LINE'
-                         iv_fieldtext  = 'Git clone URL'
-                         iv_value      = iv_url
-                         iv_field_attr = lv_uattr
-               CHANGING ct_fields      = lt_fields ).
+    lv_package = iv_package.
+    lv_url     = iv_url.
+    lv_branch  = iv_branch.
 
-    add_field( EXPORTING iv_tabname    = 'TDEVC'
-                         iv_fieldname  = 'DEVCLASS'
-                         iv_fieldtext  = 'Target package'
-                         iv_value      = iv_package
-                         iv_field_attr = lv_pattr
-               CHANGING ct_fields      = lt_fields ).
+    WHILE lv_finished = abap_false.
 
-    add_field( EXPORTING iv_tabname    = 'TEXTL'
-                         iv_fieldname  = 'LINE'
-                         iv_fieldtext  = 'Branch'
-                         iv_value      = iv_branch
-                         iv_field_attr = '05'
-               CHANGING ct_fields      = lt_fields ).
+      CLEAR: lt_fields.
 
-    lv_icon_ok  = icon_okay.
-    lv_icon_br  = icon_workflow_fork.
+      add_field( EXPORTING iv_tabname    = 'ABAPTXT255'
+                           iv_fieldname  = 'LINE'
+                           iv_fieldtext  = 'Git clone URL'
+                           iv_value      = lv_url
+                           iv_field_attr = lv_uattr
+                 CHANGING ct_fields      = lt_fields ).
 
-    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
-      EXPORTING
-        popup_title       = iv_title
-        programname       = sy-repid
-        formname          = 'BRANCH_POPUP'
-        ok_pushbuttontext = 'OK'
-        icon_ok_push      = lv_icon_ok
-        first_pushbutton  = 'Select branch'
-        icon_button_1     = lv_icon_br
-        second_pushbutton = lv_button2
-        icon_button_2     = lv_icon2
-      IMPORTING
-        returncode        = lv_returncode
-      TABLES
-        fields            = lt_fields
-      EXCEPTIONS
-        error_in_fields   = 1
-        OTHERS            = 2.                              "#EC NOTEXT
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
-    ENDIF.
-    IF lv_returncode = 'A'.
-      rs_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
+      add_field( EXPORTING iv_tabname    = 'TDEVC'
+                           iv_fieldname  = 'DEVCLASS'
+                           iv_fieldtext  = 'Target package'
+                           iv_value      = lv_package
+                           iv_field_attr = lv_pattr
+                 CHANGING ct_fields      = lt_fields ).
 
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rs_popup-url = <ls_field>-value.
-    lcl_url=>name( rs_popup-url ).         " validate
+      add_field( EXPORTING iv_tabname    = 'TEXTL'
+                           iv_fieldname  = 'LINE'
+                           iv_fieldtext  = 'Branch'
+                           iv_value      = lv_branch
+                           iv_field_attr = '05'
+                 CHANGING ct_fields      = lt_fields ).
 
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rs_popup-package = <ls_field>-value.
-    TRANSLATE rs_popup-package TO UPPER CASE.
+      lv_icon_ok  = icon_okay.
+      lv_icon_br  = icon_workflow_fork.
 
-    READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rs_popup-branch_name = <ls_field>-value.
+      CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+        EXPORTING
+          popup_title       = iv_title
+          programname       = sy-repid
+          formname          = 'BRANCH_POPUP'
+          ok_pushbuttontext = 'OK'
+          icon_ok_push      = lv_icon_ok
+          first_pushbutton  = 'Select branch'
+          icon_button_1     = lv_icon_br
+          second_pushbutton = lv_button2
+          icon_button_2     = lv_icon2
+        IMPORTING
+          returncode        = lv_returncode
+        TABLES
+          fields            = lt_fields
+        EXCEPTIONS
+          error_in_fields   = 1
+          OTHERS            = 2.                              "#EC NOTEXT
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      ENDIF.
+
+      IF lv_returncode = 'A'.
+        rs_popup-cancel = abap_true.
+        RETURN.
+      ENDIF.
+
+      extract_field_values(
+        EXPORTING
+          it_fields  = lt_fields
+        IMPORTING
+          ev_url     = lv_url
+          ev_package = lv_package
+          ev_branch  = lv_branch ).
+
+      lv_finished = abap_true.
+
+      TRY.
+          zcl_abapgit_url=>name( |{ lv_url }| ).
+          IF iv_freeze_package = abap_false.
+            lcl_app=>repo_srv( )->validate_package( lv_package ).
+          ENDIF.
+        CATCH zcx_abapgit_exception INTO lx_error.
+          MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+          " in case of validation errors we display the popup again
+          CLEAR: lv_finished.
+      ENDTRY.
+
+    ENDWHILE.
+
+    rs_popup-url         = lv_url.
+    rs_popup-package     = lv_package.
+    rs_popup-branch_name = lv_branch.
 
   ENDMETHOD.
 
@@ -720,7 +753,7 @@ CLASS lcl_popups IMPLEMENTATION.
     ENDIF.
 
     IF lv_returncode = 'A'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
@@ -975,6 +1008,30 @@ CLASS lcl_popups IMPLEMENTATION.
       APPEND <ls_exporting> TO et_list.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD extract_field_values.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF it_fields.
+
+    CLEAR: ev_url,
+           ev_package,
+           ev_branch.
+
+    READ TABLE it_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_url = <ls_field>-value.
+
+    READ TABLE it_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_package = <ls_field>-value.
+    TRANSLATE ev_package TO UPPER CASE.
+
+    READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_branch = <ls_field>-value.
 
   ENDMETHOD.
 

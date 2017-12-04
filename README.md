@@ -6,7 +6,7 @@
 
 Git client for ABAP
 
-Works with: [GitHub](https://github.com/), [GitLab](https://gitlab.com/), [Assembla](https://www.assembla.com/git/), [Bitbucket](https://bitbucket.org/), [abapGitServer](https://github.com/larshp/abapGitServer), [HCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html), [TFS](https://www.visualstudio.com/team-services/git/) and more
+Works with: [GitHub](https://github.com/), [GitLab](https://gitlab.com/), [Assembla](https://www.assembla.com/git/), [Bitbucket](https://bitbucket.org/), [abapGitServer](https://github.com/larshp/abapGitServer), [SCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html), [TFS](https://www.visualstudio.com/team-services/git/) and more
 
 ABAP Version: 702 or higher
 

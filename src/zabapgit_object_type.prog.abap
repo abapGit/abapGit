@@ -20,7 +20,7 @@ CLASS lcl_object_type DEFINITION INHERITING FROM lcl_objects_super FINAL.
       EXPORTING ev_ddtext TYPE ddtypet-ddtext
                 et_source TYPE abaptxt255_tab
       RAISING   zcx_abapgit_exception
-                lcx_not_found.
+                zcx_abapgit_not_found.
 
     METHODS create
       IMPORTING iv_ddtext   TYPE ddtypet-ddtext
@@ -54,7 +54,7 @@ CLASS lcl_object_type IMPLEMENTATION.
     TRY.
         read( ).
         rv_bool = abap_true.
-      CATCH lcx_not_found zcx_abapgit_exception.
+      CATCH zcx_abapgit_not_found zcx_abapgit_exception.
         rv_bool = abap_false.
     ENDTRY.
 
@@ -73,7 +73,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       WHERE typegroup = ms_item-obj_name
       AND ddlanguage = mv_language.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_not_found.
+      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
 
     lv_typdname = ms_item-obj_name.
@@ -105,7 +105,7 @@ CLASS lcl_object_type IMPLEMENTATION.
         read( IMPORTING
                 ev_ddtext = lv_ddtext
                 et_source = lt_source ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 

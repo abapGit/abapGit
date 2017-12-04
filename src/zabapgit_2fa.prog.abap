@@ -446,17 +446,18 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_2fa_required.
-    DATA: li_client   TYPE REF TO if_http_client,
-          lo_settings TYPE REF TO lcl_settings.
 
-    lo_settings = lcl_app=>settings( )->read( ).
+    DATA: li_client TYPE REF TO if_http_client,
+          lo_proxy  TYPE REF TO lcl_proxy_configuration.
+
+    lo_proxy = lcl_app=>proxy( ).
 
     cl_http_client=>create_by_url(
       EXPORTING
         url                = gc_github_api_url
         ssl_id             = 'ANONYM'
-        proxy_host         = lo_settings->get_proxy_url( )
-        proxy_service      = lo_settings->get_proxy_port( )
+        proxy_host         = lo_proxy->get_proxy_url( )
+        proxy_service      = lo_proxy->get_proxy_port(  )
       IMPORTING
         client             = li_client
       EXCEPTIONS

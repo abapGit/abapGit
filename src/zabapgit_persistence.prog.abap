@@ -75,7 +75,7 @@ CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
         IMPORTING iv_type        TYPE ty_type
                   iv_value       TYPE ty_content-value
         RETURNING VALUE(rv_data) TYPE ty_content-data_str
-        RAISING   lcx_not_found,
+        RAISING   zcx_abapgit_not_found,
       lock
         IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
                   iv_type  TYPE ty_type
@@ -179,7 +179,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
       IMPORTING iv_key         TYPE ty_repo-key
       RETURNING VALUE(rs_repo) TYPE ty_repo
       RAISING   zcx_abapgit_exception
-                lcx_not_found.
+                zcx_abapgit_not_found.
 
     METHODS lock
       IMPORTING iv_mode TYPE enqmode
@@ -439,7 +439,7 @@ CLASS lcl_persist_background IMPLEMENTATION.
     TRY.
         mo_db->read( iv_type  = c_type
                      iv_value = iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 
@@ -673,7 +673,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
         lv_xml = lcl_app=>db( )->read(
           iv_type  = c_type_user
           iv_value = mv_user ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 
@@ -1308,7 +1308,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
       WHERE type = iv_type
       AND value = iv_value.                                                               "#EC CI_SUBRC
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_not_found.
+      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
 
   ENDMETHOD.
@@ -1356,7 +1356,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1395,7 +1395,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1423,7 +1423,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1447,7 +1447,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1471,7 +1471,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1494,7 +1494,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1518,7 +1518,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     TRY.
         ls_repo = read( iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'key not found' ).
     ENDTRY.
 
@@ -1539,7 +1539,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE lcx_not_found.
+      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
 
   ENDMETHOD.
@@ -1660,7 +1660,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
           iv_type  = 'SETTINGS'
           iv_value = '' ).
         rv_exists = abap_true.
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         rv_exists = abap_false.
     ENDTRY.
   ENDMETHOD.
@@ -1689,7 +1689,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_URL' ) ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
@@ -1697,7 +1697,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
           lcl_app=>db( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_PORT' ) ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
@@ -1705,7 +1705,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_AUTH' ).
         lr_settings->set_proxy_authentication( lv_flag ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
@@ -1714,7 +1714,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'CRIT_TESTS' ).
         lv_critical_tests_as_boolean = lv_critical_tests_as_string.
         lr_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
@@ -1723,7 +1723,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'MAX_LINES' ).
         lv_max_lines_as_integer = lv_max_lines_as_string.
         lr_settings->set_max_lines( lv_max_lines_as_integer ).
-      CATCH lcx_not_found cx_sy_conversion_no_number.
+      CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
     TRY.
@@ -1732,7 +1732,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'ADT_JUMP' ).
         lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
         lr_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
@@ -1741,7 +1741,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'COMMENT_LEN' ).
         lv_i_param_value = lv_s_param_value.
         lr_settings->set_commitmsg_comment_length( lv_i_param_value ).
-      CATCH lcx_not_found cx_sy_conversion_no_number.
+      CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
     TRY.
@@ -1750,7 +1750,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
            iv_value = 'BODY_SIZE' ).
         lv_i_param_value = lv_s_param_value.
         lr_settings->set_commitmsg_body_size( lv_i_param_value ).
-      CATCH lcx_not_found cx_sy_conversion_no_number.
+      CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
     lr_persist_settings->modify( io_settings = lr_settings ).
@@ -2168,7 +2168,7 @@ CLASS lcl_persist_settings IMPLEMENTATION.
           lcl_app=>db( )->read( iv_type  = lcl_settings=>c_dbtype_settings
                                 iv_value = '' ) ).
 
-      CATCH lcx_not_found zcx_abapgit_exception.
+      CATCH zcx_abapgit_not_found zcx_abapgit_exception.
 
         ro_settings->set_defaults( ).
 

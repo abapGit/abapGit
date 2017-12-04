@@ -170,7 +170,7 @@ CLASS lcl_http_client IMPLEMENTATION.
         name  = '~request_method'
         value = 'POST' ).
 
-    lv_value = lcl_url=>path_name( iv_url ) &&
+    lv_value = zcl_abapgit_url=>path_name( iv_url ) &&
       '/git-' &&
       iv_service &&
       '-pack'.
@@ -198,7 +198,9 @@ CLASS lcl_http_client IMPLEMENTATION.
 
   METHOD send_receive.
 
-    DATA lv_text TYPE string.
+    DATA: lv_text    TYPE string,
+          lv_code    TYPE i,
+          lv_message TYPE string.
 
     mi_client->send( ).
     mi_client->receive(
@@ -207,21 +209,21 @@ CLASS lcl_http_client IMPLEMENTATION.
         http_invalid_state         = 2
         http_processing_failed     = 3
         OTHERS                     = 4 ).
+
     IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-          " make sure:
-          " a) SSL is setup properly in STRUST
-          " b) no firewalls
-          " check trace file in transaction SMICM
-          lv_text = 'HTTP Communication Failure'.           "#EC NOTEXT
-        WHEN 2.
-          lv_text = 'HTTP Invalid State'.                   "#EC NOTEXT
-        WHEN 3.
-          lv_text = 'HTTP Processing failed'.               "#EC NOTEXT
-        WHEN OTHERS.
-          lv_text = 'Another error occured'.                "#EC NOTEXT
-      ENDCASE.
+      " in case of HTTP_COMMUNICATION_FAILURE
+      " make sure:
+      " a) SSL is setup properly in STRUST
+      " b) no firewalls
+      " check trace file in transaction SMICM
+
+      mi_client->get_last_error(
+        IMPORTING
+          code    = lv_code
+          message = lv_message ).
+
+      lv_text = |HTTP error { lv_code } occured: { lv_message }|.
+
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
@@ -414,21 +416,20 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri      TYPE string,
-          lv_scheme   TYPE string,
-          li_client   TYPE REF TO if_http_client,
-          lo_settings TYPE REF TO lcl_settings,
-          lv_text     TYPE string.
+    DATA: lv_uri    TYPE string,
+          lv_scheme TYPE string,
+          li_client TYPE REF TO if_http_client,
+          lo_proxy_configuration  TYPE REF TO lcl_proxy_configuration,
+          lv_text   TYPE string.
 
-
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_proxy_configuration = lcl_app=>proxy( ).
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url           = lcl_url=>host( iv_url )
+        url           = zcl_abapgit_url=>host( iv_url )
         ssl_id        = 'ANONYM'
-        proxy_host    = lo_settings->get_proxy_url( )
-        proxy_service = lo_settings->get_proxy_port( )
+        proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url )
+        proxy_service = lo_proxy_configuration->get_proxy_port( iv_url )
       IMPORTING
         client        = li_client
       EXCEPTIONS
@@ -449,7 +450,7 @@ CLASS lcl_http IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    IF lo_settings->get_proxy_authentication( ) = abap_true.
+    IF lo_proxy_configuration->get_proxy_authentication( iv_url ) = abap_true.
       lcl_proxy_auth=>run( li_client ).
     ENDIF.
 
@@ -468,7 +469,7 @@ CLASS lcl_http IMPLEMENTATION.
     li_client->request->set_header_field(
         name  = 'user-agent'
         value = get_agent( ) ).                             "#EC NOTEXT
-    lv_uri = lcl_url=>path_name( iv_url ) &&
+    lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
              '/info/refs?service=git-' &&
              iv_service &&
              '-pack'.
@@ -502,7 +503,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     DATA: lv_host TYPE string,
           lt_list TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
-          li_exit TYPE ref to lif_exit.
+          li_exit TYPE REF TO lif_exit.
 
     CALL FUNCTION 'ICM_GET_INFO2'
       TABLES

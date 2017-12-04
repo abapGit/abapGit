@@ -6,7 +6,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
   PUBLIC SECTION.
     CLASS-METHODS clone
       IMPORTING iv_url TYPE string
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS refresh
       IMPORTING iv_key        TYPE lcl_persistence_repo=>ty_repo-key
@@ -15,30 +15,30 @@ CLASS lcl_services_repo DEFINITION FINAL.
 
     CLASS-METHODS remove
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS purge
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS new_offline
-      RAISING zcx_abapgit_exception lcx_cancel.
+      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_attach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_detach
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_change
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS refresh_local_checksums
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS toggle_favorite
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
@@ -50,7 +50,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
 
     CLASS-METHODS transport_to_branch
       IMPORTING iv_repository_key TYPE lcl_persistence_db=>ty_value
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS. "lcl_services_repo
 
@@ -64,7 +64,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     ls_popup = lcl_popups=>repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lo_repo = lcl_app=>repo_srv( )->new_online(
@@ -115,7 +115,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lcl_app=>repo_srv( )->delete( lo_repo ).
@@ -158,7 +158,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
         display_cancel_button = abap_false ).                                             "#EC NOTEXT
 
       IF lv_answer = '2'.
-        RAISE EXCEPTION TYPE lcx_cancel.
+        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
       ENDIF.
 
       lcl_objects=>delete( lt_tadir ).
@@ -178,7 +178,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     ls_popup  = lcl_popups=>repo_new_offline( ).
     IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lo_repo = lcl_app=>repo_srv( )->new_offline(
@@ -207,7 +207,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lcl_app=>repo_srv( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_true ).
@@ -228,7 +228,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       iv_package        = lcl_app=>repo_srv( )->get( iv_key )->get_package( )
       iv_freeze_package = abap_true ).
     IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lcl_app=>repo_srv( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_false ).
@@ -254,7 +254,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       iv_package        = lo_repo->get_package( )
       iv_freeze_package = abap_true ).
     IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -296,7 +296,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       display_cancel_button = abap_false ).                                               "#EC NOTEXT
 
     IF lv_answer = '2'.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     lo_repo->rebuild_local_checksums( ).

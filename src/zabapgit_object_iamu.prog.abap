@@ -116,8 +116,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
         object_not_existing          = 9
         object_invalid               = 10
         error_occured                = 11
-        content_data_error           = 12
-        OTHERS                       = 13 ).
+        OTHERS                       = 12 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_changeable| ).
@@ -303,8 +302,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
         object_not_existing          = 9
         object_invalid               = 10
         error_occured                = 11
-        content_data_error           = 12
-        OTHERS                       = 13 ).
+        OTHERS                       = 12 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_changeable| ).

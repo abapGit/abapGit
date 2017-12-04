@@ -8,6 +8,30 @@ Legend
 + : added
 - : removed
 
+2017-11-18 v1.50.0
+------------------
++ Fewer transport popups
+* Downport
+* bugfix, change remote
+* URL to global class
+
+2017-11-11 v1.49.0
+------------------
++ DDLX support
+* ENHS fix
+* Fix changing remote
+
+2017-10-29 v1.48.0
+------------------
+* WEBI fixes
+* IMAU fix
+! Better http errors errors
+* downport
+* Improve usability of repository popup
+! More global exception classes
++ proxy configuration user exit
+* Buffer settings
+
 2017-10-22 v1.47.0
 ------------------
 * fix FUGR include diffs

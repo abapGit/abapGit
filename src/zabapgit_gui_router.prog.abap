@@ -15,7 +15,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 it_postdata  TYPE cnht_post_data_tab OPTIONAL
       EXPORTING ei_page      TYPE REF TO lif_gui_page
                 ev_state     TYPE i
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
   PRIVATE SECTION.
 
@@ -53,7 +53,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS get_page_playground
       RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
-      RAISING   zcx_abapgit_exception lcx_cancel.
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS.
 
@@ -372,7 +372,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     lcl_popups=>run_page_class_popup( IMPORTING ev_name   = lv_class_name
                                                 ev_cancel = lv_cancel ).
     IF lv_cancel = abap_true.
-      RAISE EXCEPTION TYPE lcx_cancel.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
     TRY.

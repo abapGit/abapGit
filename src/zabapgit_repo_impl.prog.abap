@@ -589,8 +589,8 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement.
-
+          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement,
+          lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
 
@@ -604,7 +604,16 @@ CLASS lcl_repo IMPLEMENTATION.
                                                   iv_show_popup   = abap_true ).
     ENDIF.
 
-    lt_updated_files = lcl_objects=>deserialize( me ).
+    TRY.
+        lt_updated_files = lcl_objects=>deserialize( me ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+
+        " ensure to reset default transport request task
+        zcl_abapgit_default_task=>get_instance( )->reset( ).
+        zcx_abapgit_exception=>raise( lx_error->text ).
+
+    ENDTRY.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
 
@@ -840,7 +849,7 @@ CLASS lcl_repo IMPLEMENTATION.
     IF ms_data-offline = abap_true.
       rv_name = ms_data-url.
     ELSE.
-      rv_name = lcl_url=>name( ms_data-url ).
+      rv_name = zcl_abapgit_url=>name( ms_data-url ).
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
 
@@ -979,7 +988,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
@@ -1008,7 +1017,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 
@@ -1128,7 +1137,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
     IF iv_offline = abap_true. " On-line -> OFFline
       lo_repo->set(
-        iv_url         = lcl_url=>name( lo_repo->ms_data-url )
+        iv_url         = zcl_abapgit_url=>name( lo_repo->ms_data-url )
         iv_branch_name = ''
         iv_sha1        = ''
         iv_head_branch = ''

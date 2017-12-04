@@ -492,77 +492,6 @@ CLASS lcl_path IMPLEMENTATION.
 ENDCLASS. "lcl_path
 
 *----------------------------------------------------------------------*
-*       CLASS lcl_url DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_url DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    CLASS-METHODS host
-      IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_host) TYPE string
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS name
-      IMPORTING iv_repo        TYPE string
-      RETURNING VALUE(rv_name) TYPE string
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS path_name
-      IMPORTING iv_repo             TYPE string
-      RETURNING VALUE(rv_path_name) TYPE string
-      RAISING   zcx_abapgit_exception.
-
-  PRIVATE SECTION.
-    CLASS-METHODS regex
-      IMPORTING iv_repo TYPE string
-      EXPORTING ev_host TYPE string
-                ev_path TYPE string
-                ev_name TYPE string
-      RAISING   zcx_abapgit_exception.
-
-ENDCLASS.                    "lcl_repo DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_url IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_url IMPLEMENTATION.
-
-  METHOD host.
-    regex( EXPORTING iv_repo = iv_repo
-           IMPORTING ev_host = rv_host ).
-  ENDMETHOD.                    "host
-
-  METHOD name.
-    regex( EXPORTING iv_repo = iv_repo
-           IMPORTING ev_name = rv_name ).
-  ENDMETHOD.                    "short_name
-
-  METHOD path_name.
-
-    DATA: lv_host TYPE string ##NEEDED.
-
-    FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
-      SUBMATCHES lv_host rv_path_name.
-
-  ENDMETHOD.                    "path_name
-
-  METHOD regex.
-
-    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
-      SUBMATCHES ev_host ev_path ev_name.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Malformed URL' ).
-    ENDIF.
-
-  ENDMETHOD.                    "url
-
-ENDCLASS.                    "lcl_repo IMPLEMENTATION
-
-*----------------------------------------------------------------------*
 *       CLASS lcl_diff DEFINITION
 *----------------------------------------------------------------------*
 *
@@ -975,7 +904,7 @@ CLASS lcl_login_manager IMPLEMENTATION.
     DATA: ls_auth LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = lcl_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_authorization = ls_auth-authorization.
 
@@ -1008,11 +937,11 @@ CLASS lcl_login_manager IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
 
 
-    READ TABLE gt_auth WITH KEY uri = lcl_url=>host( iv_uri )
+    READ TABLE gt_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri )
       TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
       APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-      <ls_auth>-uri           = lcl_url=>host( iv_uri ).
+      <ls_auth>-uri           = zcl_abapgit_url=>host( iv_uri ).
       <ls_auth>-authorization = iv_auth.
     ENDIF.
 

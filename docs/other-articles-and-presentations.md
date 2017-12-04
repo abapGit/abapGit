@@ -57,3 +57,10 @@ SAP Teched Las Vegas
 
 [abapGit](https://larshp.github.io/Presentations/itsapcluj2017/abapgit/), [IT Conference on SAP Technologies](http://www.itconferencesap.com/), Cluj
 -Lars Hvam
+
+[abapGit NET53819](https://larshp.github.io/Presentations/teched-2017-emea/)
+SAP Teched Barcelona
+-Lars Hvam
+
+[Getting started – Open sourcing ABAP code](https://blogs.sap.com/2017/11/19/getting-started-open-sourcing-abap-code/)
+-Lars Hvam

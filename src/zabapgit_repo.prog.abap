@@ -134,7 +134,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
                   io_stage   TYPE REF TO lcl_stage
         RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
-        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>TY_TADIR_TT
+        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -219,6 +219,10 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
                 iv_offline TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 
+    METHODS validate_package
+      IMPORTING iv_package TYPE devclass
+      RAISING   zcx_abapgit_exception.
+
   PRIVATE SECTION.
 
     METHODS constructor.
@@ -227,16 +231,12 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
           mo_persistence TYPE REF TO lcl_persistence_repo,
           mt_list        TYPE ty_repo_tt.
 
+    METHODS is_sap_object_allowed
+      RETURNING
+        VALUE(r_is_sap_object_allowed) TYPE abap_bool.
+
     METHODS add
       IMPORTING io_repo TYPE REF TO lcl_repo
       RAISING   zcx_abapgit_exception.
-
-    METHODS validate_package
-      IMPORTING iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
-    METHODS is_sap_object_allowed
-      RETURNING
-        value(r_is_sap_object_allowed) TYPE abap_bool.
 
 ENDCLASS.                    "lcl_repo_srv DEFINITION

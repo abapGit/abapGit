@@ -68,8 +68,8 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
         lv_create       TYPE boolean.
 
   FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
-                 <ls_fbranch> LIKE LINE OF tt_fields.
-
+                 <ls_fbranch> LIKE LINE OF tt_fields,
+                 <ls_fpackage> LIKE LINE OF tt_fields.
 
   CLEAR cs_error.
 
@@ -99,6 +99,10 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
 
   ELSEIF pv_code = 'COD2'.
     cv_show_popup = abap_true.
+
+    READ TABLE tt_fields ASSIGNING <ls_fpackage> WITH KEY fieldname = 'DEVCLASS'.
+    ASSERT sy-subrc = 0.
+    ls_package_data-devclass = <ls_fpackage>-value.
 
     lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
                                                    ev_create       = lv_create ).
