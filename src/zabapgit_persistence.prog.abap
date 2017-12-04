@@ -1038,7 +1038,7 @@ CLASS lcl_persistence_objm IMPLEMENTATION.
     TRY.
         data_str = mo_db->read( iv_type       = c_type_objm
                                 iv_value      = iv_key ).
-      CATCH lcx_not_found.
+      CATCH zcx_abapgit_not_found.
         CLEAR: data_str.
     ENDTRY.
 
