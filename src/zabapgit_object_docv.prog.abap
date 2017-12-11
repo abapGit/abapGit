@@ -38,7 +38,7 @@ CLASS lcl_object_docv IMPLEMENTATION.
   METHOD lif_object~changed_by.
     rv_user = read( )-head-tdluser.
     IF rv_user IS INITIAL.
-      rv_user = c_user_unkown.
+      rv_user = c_user_unknown.
     ENDIF.
   ENDMETHOD.                    "lif_object~changed_by
 
