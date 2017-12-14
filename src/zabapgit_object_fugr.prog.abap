@@ -151,19 +151,19 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT unam AS user udat AS date utime AS time FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND   r3state = 'A'.                                                                "#EC CI_SUBRC
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
       SELECT unam AS user udat AS date utime AS time FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         WHERE progname = <lv_include>
-        AND   r3state = 'A'.                              "#EC CI_SUBRC
+        AND   r3state = 'A'.                                                              "#EC CI_SUBRC
     ENDLOOP.
 
     SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
+      AND   r3state = 'A'.                                                                "#EC CI_SUBRC
 
     SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
@@ -222,12 +222,12 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         EXPORTING
-          complete_area                = lv_area
+          complete_area = lv_area
         IMPORTING
-          namespace                    = lv_namespace
-          group                        = lv_group
+          namespace     = lv_namespace
+          group         = lv_group
         EXCEPTIONS
-          OTHERS                       = 12.
+          OTHERS        = 12.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
@@ -413,7 +413,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     SELECT SINGLE areat INTO lv_areat
       FROM tlibt
       WHERE spras = mv_language
-      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
+      AND area = ms_item-obj_name.                                                        "#EC CI_GENBUFF "#EC CI_SUBRC
 
     lt_includes = includes( ).
 
@@ -485,14 +485,53 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       SORT lt_reposrc BY progname ASCENDING.
     ENDIF.
 
+    "Get Namespaces that are developed in the current system
+    SELECT namespace
+      FROM trnspacet
+      INTO TABLE @DATA(lt_producers)
+      WHERE role = 'P'
+      ORDER BY namespace.
+
     LOOP AT rt_includes ASSIGNING <lv_include>.
       lv_tabix = sy-tabix.
 
-* skip SAP standard includes and also make sure the include exists
+      "Check if the include exists
       READ TABLE lt_reposrc INTO ls_reposrc
-        WITH KEY progname = <lv_include> BINARY SEARCH.
-      IF sy-subrc <> 0 OR ls_reposrc-cnam = 'SAP'.
+        WITH KEY progname = <lv_include>
+        BINARY SEARCH.
+      IF sy-subrc <> 0.
+        "Include does not exist: Skip
         DELETE rt_includes INDEX lv_tabix.
+      ELSE.
+        "Include exists
+
+        IF <lv_include>(1) = '/'.
+          "Include is located in a namespace
+          lv_offset_ns = find( val = <lv_include>+1 sub = '/' ).
+          lv_offset_ns = lv_offset_ns + 2.
+
+          "Verify that this is an Include of the Function Group
+          DATA(lv_offset_fns) = lv_offset_ns + 1.
+          IF <lv_include>(lv_offset_fns) <> |{ <lv_include>(lv_offset_ns) }L|.
+            "Include is not a function group include and will be evaluated on package level
+            DELETE rt_includes INDEX lv_tabix.
+          ELSE.
+            "Check if include is developed in the current system
+            READ TABLE lt_producers TRANSPORTING NO FIELDS
+              WITH KEY table_line =  <lv_include>(lv_offset_ns)
+              BINARY SEARCH.
+            IF sy-subrc <> 0.
+              "Include is not developed here: Skip
+              DELETE rt_includes INDEX lv_tabix.
+            ENDIF.
+          ENDIF.
+        ELSE.
+          "Include does not have a namespace: Skip it if it is SAP
+          IF ls_reposrc-cnam = 'SAP'.
+            DELETE rt_includes INDEX lv_tabix.
+          ENDIF.
+        ENDIF.
+
       ENDIF.
 
     ENDLOOP.
