@@ -113,11 +113,16 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
         lv_path = iv_package+lv_len.
         IF strlen( lv_path ) = 0.
-          zcx_abapgit_exception=>raise( 'Folder logic: length = 0' ).
+          zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
+            lv_parentcl }, child: { iv_package }| ).
         ENDIF.
 
         IF lv_path(1) = '_'.
           lv_path = lv_path+1.
+        ENDIF.
+        IF strlen( lv_path ) = 0.
+          zcx_abapgit_exception=>raise( |Folder logic: length = 0, parent: {
+            lv_parentcl }, child: { iv_package }| ).
         ENDIF.
 
         TRANSLATE lv_path USING '/#'.
