@@ -814,7 +814,7 @@ CLASS ltcl_url IMPLEMENTATION.
   METHOD repo_error.
 
     TRY.
-        zcl_abapgit_url=>host( 'not a real url' ).                  "#EC NOTEXT
+        zcl_abapgit_url=>host( 'not a real url' ).          "#EC NOTEXT
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
     ENDTRY.
@@ -2757,16 +2757,20 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD _then_should_be_skipped.
 
-    cl_abap_unit_assert=>assert_true( act = mv_skip_testclass
-                                      msg = |Testclass should be skipped| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_skip_testclass
+      exp = abap_true
+      msg = |Testclass should be skipped| ).
 
   ENDMETHOD.
 
 
   METHOD _then_should_not_be_skipped.
 
-    cl_abap_unit_assert=>assert_false( act = mv_skip_testclass
-                                       msg = |Testclass should not be skipped| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mv_skip_testclass
+      exp = abap_false
+      msg = |Testclass should not be skipped| ).
 
   ENDMETHOD.
 
