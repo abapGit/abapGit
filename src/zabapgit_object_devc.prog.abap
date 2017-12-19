@@ -199,7 +199,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           invalid_translation_depth  = 18
           wrong_mainpack_value       = 19
           superpackage_invalid       = 20
-          error_in_cts_checks        = 21
+*          error_in_cts_checks        = 21 downport, does not exist in 7.31
           OTHERS                     = 22 ).
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>CREATE_NEW_PACKAGE { sy-subrc }| ).
