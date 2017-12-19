@@ -335,7 +335,9 @@ CLASS lcl_popups IMPLEMENTATION.
           lt_fields     TYPE TABLE OF sval,
           lv_icon_ok    TYPE icon-name,
           lv_button1    TYPE svalbutton-buttontext,
-          lv_icon1      TYPE icon-name.
+          lv_icon1      TYPE icon-name,
+          lv_finished   TYPE abap_bool,
+          lx_error      TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
@@ -350,45 +352,60 @@ CLASS lcl_popups IMPLEMENTATION.
                          iv_fieldtext = 'Package'
                CHANGING ct_fields     = lt_fields ).
 
-    lv_icon_ok  = icon_okay.
-    lv_button1 = 'Create package' ##NO_TEXT.
-    lv_icon1   = icon_folder.
+    WHILE lv_finished = abap_false.
 
-    CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
-      EXPORTING
-        popup_title       = 'New Offline Project'
-        programname       = sy-repid
-        formname          = 'PACKAGE_POPUP'
-        ok_pushbuttontext = ''
-        icon_ok_push      = lv_icon_ok
-        first_pushbutton  = lv_button1
-        icon_button_1     = lv_icon1
-        second_pushbutton = ''
-        icon_button_2     = ''
-      IMPORTING
-        returncode        = lv_returncode
-      TABLES
-        fields            = lt_fields
-      EXCEPTIONS
-        error_in_fields   = 1
-        OTHERS            = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
-    ENDIF.
+      lv_icon_ok  = icon_okay.
+      lv_button1 = 'Create package' ##NO_TEXT.
+      lv_icon1   = icon_folder.
 
-    IF lv_returncode = 'A'.
-      rs_popup-cancel = abap_true.
-      RETURN.
-    ENDIF.
+      CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
+        EXPORTING
+          popup_title       = 'New Offline Project'
+          programname       = sy-repid
+          formname          = 'PACKAGE_POPUP'
+          ok_pushbuttontext = ''
+          icon_ok_push      = lv_icon_ok
+          first_pushbutton  = lv_button1
+          icon_button_1     = lv_icon1
+          second_pushbutton = ''
+          icon_button_2     = ''
+        IMPORTING
+          returncode        = lv_returncode
+        TABLES
+          fields            = lt_fields
+        EXCEPTIONS
+          error_in_fields   = 1
+          OTHERS            = 2.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
+      ENDIF.
 
-    READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rs_popup-url = <ls_field>-value.
+      IF lv_returncode = 'A'.
+        rs_popup-cancel = abap_true.
+        RETURN.
+      ENDIF.
 
-    READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    rs_popup-package = <ls_field>-value.
-    TRANSLATE rs_popup-package TO UPPER CASE.
+      READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      rs_popup-url = <ls_field>-value.
+
+      READ TABLE lt_fields INDEX 2 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      TRANSLATE <ls_field>-value TO UPPER CASE.
+      rs_popup-package = <ls_field>-value.
+
+      lv_finished = abap_true.
+
+      TRY.
+          lcl_app=>repo_srv( )->validate_package( rs_popup-package ).
+
+        CATCH zcx_abapgit_exception INTO lx_error.
+          " in case of validation errors we display the popup again
+          MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+          CLEAR lv_finished.
+      ENDTRY.
+
+    ENDWHILE.
 
   ENDMETHOD.                    "repo_new_offline
 

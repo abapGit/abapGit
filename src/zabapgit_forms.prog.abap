@@ -67,8 +67,8 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
         ls_branch       TYPE lcl_git_branch_list=>ty_git_branch,
         lv_create       TYPE boolean.
 
-  FIELD-SYMBOLS: <ls_furl>    LIKE LINE OF tt_fields,
-                 <ls_fbranch> LIKE LINE OF tt_fields,
+  FIELD-SYMBOLS: <ls_furl>     LIKE LINE OF tt_fields,
+                 <ls_fbranch>  LIKE LINE OF tt_fields,
                  <ls_fpackage> LIKE LINE OF tt_fields.
 
   CLEAR cs_error.
@@ -113,9 +113,7 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
 
-    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TDEVC'.
-    ASSERT sy-subrc = 0.
-    <ls_fbranch>-value = ls_package_data-devclass.
+    <ls_fpackage>-value = ls_package_data-devclass.
   ENDIF.
 
 ENDFORM.                    "branch_popup
@@ -130,12 +128,16 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
   DATA: ls_package_data TYPE scompkdtln,
         lv_create       TYPE boolean.
 
-  FIELD-SYMBOLS: <ls_fbranch> LIKE LINE OF tt_fields.
+  FIELD-SYMBOLS: <ls_fpackage> LIKE LINE OF tt_fields.
 
   CLEAR cs_error.
 
   IF pv_code = 'COD1'.
     cv_show_popup = abap_true.
+
+    READ TABLE tt_fields ASSIGNING <ls_fpackage> WITH KEY fieldname = 'DEVCLASS'.
+    ASSERT sy-subrc = 0.
+    ls_package_data-devclass = <ls_fpackage>-value.
 
     lcl_popups=>popup_to_create_package( IMPORTING es_package_data = ls_package_data
                                                    ev_create       = lv_create ).
@@ -146,10 +148,9 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
     lcl_sap_package=>create( ls_package_data ).
     COMMIT WORK.
 
-    READ TABLE tt_fields ASSIGNING <ls_fbranch> WITH KEY tabname = 'TDEVC'.
-    ASSERT sy-subrc = 0.
-    <ls_fbranch>-value = ls_package_data-devclass.
+    <ls_fpackage>-value = ls_package_data-devclass.
   ENDIF.
+
 ENDFORM.                    "package_popup
 
 FORM output.
