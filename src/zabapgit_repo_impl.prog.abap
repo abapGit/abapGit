@@ -205,10 +205,12 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
 * pushing to the branch currently represented by this repository object
+      mv_branch = lv_branch.
       set( iv_sha1 = lv_branch ).
+    ELSE.
+      refresh( ).
     ENDIF.
 
-    refresh( ).
     update_local_checksums( lt_updated_files ).
 
     IF lcl_stage_logic=>count( me ) = 0.
