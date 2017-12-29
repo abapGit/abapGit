@@ -59,6 +59,9 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RAISING   zcx_abapgit_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
+      set_files_remote
+        IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
         RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
@@ -126,6 +129,9 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       reset_status,
+      set_objects
+        IMPORTING it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+        RAISING   zcx_abapgit_exception,
       initialize
         RAISING zcx_abapgit_exception,
       rebuild_local_checksums REDEFINITION,
@@ -163,10 +169,6 @@ ENDCLASS.                    "lcl_repo_online DEFINITION
 CLASS lcl_repo_offline DEFINITION INHERITING FROM lcl_repo FINAL.
 
   PUBLIC SECTION.
-    METHODS:
-      set_files_remote
-        IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
-        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_repo_offline DEFINITION
 

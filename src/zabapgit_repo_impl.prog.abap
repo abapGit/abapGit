@@ -7,12 +7,6 @@
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
 
-  METHOD set_files_remote.
-
-    mt_remote = it_files.
-
-  ENDMETHOD.
-
 ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -69,6 +63,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD reset_status.
     CLEAR mt_status.
   ENDMETHOD.  " reset_status.
+
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
 
   METHOD refresh.
 
@@ -716,6 +714,12 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD is_offline.
     rv_offline = ms_data-offline.
+  ENDMETHOD.
+
+  METHOD set_files_remote.
+
+    mt_remote = it_files.
+
   ENDMETHOD.
 
   METHOD refresh.
