@@ -45,8 +45,9 @@ CLASS lcl_popups DEFINITION FINAL.
         RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   zcx_abapgit_exception,
       tag_list_popup
-        IMPORTING iv_url        TYPE string
-        RETURNING VALUE(rs_tag) TYPE lcl_git_branch_list=>ty_git_branch
+        IMPORTING iv_url         TYPE string
+                  iv_select_mode TYPE abap_bool DEFAULT abap_true
+        RETURNING VALUE(rs_tag)  TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   zcx_abapgit_exception,
       repo_popup
         IMPORTING iv_url            TYPE string
@@ -331,7 +332,7 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = to_lower( |refs/tags/{ <ls_field>-value }| ).
+      ev_name = to_lower( |{ zif_abapgit_definitions=>gc_tag_prefix }{ <ls_field>-value }| ).
     ENDIF.
   ENDMETHOD.
 
@@ -562,54 +563,97 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD tag_list_popup.
 
-    DATA: lo_branches  TYPE REF TO lcl_git_branch_list,
-          lt_tags      TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
-          lv_answer    TYPE c LENGTH 1,
-          lt_selection TYPE TABLE OF spopli.
+    DATA: lo_branches         TYPE REF TO lcl_git_branch_list,
+          lt_tags             TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+          lv_answer           TYPE c LENGTH 1,
+          lt_selection        TYPE TABLE OF spopli,
+          lv_name_with_prefix TYPE string,
+          lo_alv              TYPE REF TO cl_salv_table,
+          lo_table_header     TYPE REF TO cl_salv_form_text,
+          lx_alv              TYPE REF TO cx_salv_error.
 
     FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
                    <ls_tag> LIKE LINE OF lt_tags.
 
-    lo_branches    = lcl_git_transport=>branches( iv_url ).
-    lt_tags        = lo_branches->get_tags_only( ).
+    lo_branches = lcl_git_transport=>branches( iv_url ).
+    lt_tags     = lo_branches->get_tags_only( ).
 
     LOOP AT lt_tags ASSIGNING <ls_tag>.
 
       INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = <ls_tag>-name.
+      <ls_sel>-varoption = replace( val  = <ls_tag>-name
+                                    sub  = zif_abapgit_definitions=>gc_tag_prefix
+                                    with = '' ).
 
     ENDLOOP.
 
-    CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-      EXPORTING
-        textline1          = 'Select tag'
-        titel              = 'Select tag'
-        start_col          = 30
-        start_row          = 5
-      IMPORTING
-        answer             = lv_answer
-      TABLES
-        t_spopli           = lt_selection
-      EXCEPTIONS
-        not_enough_answers = 1
-        too_much_answers   = 2
-        too_much_marks     = 3
-        OTHERS             = 4.                             "#EC NOTEXT
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+    IF iv_select_mode = abap_true.
+
+      CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+        EXPORTING
+          textline1          = 'Select tag'
+          titel              = 'Select tag'
+          start_col          = 30
+          start_row          = 5
+        IMPORTING
+          answer             = lv_answer
+        TABLES
+          t_spopli           = lt_selection
+        EXCEPTIONS
+          not_enough_answers = 1
+          too_much_answers   = 2
+          too_much_marks     = 3
+          OTHERS             = 4.                             "#EC NOTEXT
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+      ENDIF.
+
+      IF lv_answer = 'A'. " cancel
+        RETURN.
+      ENDIF.
+
+      READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+      ASSERT sy-subrc = 0.
+
+      lv_name_with_prefix = zif_abapgit_definitions=>gc_tag_prefix &&  <ls_sel>-varoption.
+
+      READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
+      ASSERT sy-subrc = 0.
+
+      rs_tag = <ls_tag>.
+
+    ELSE.
+
+      TRY.
+          cl_salv_table=>factory(
+            IMPORTING
+              r_salv_table   = lo_alv
+            CHANGING
+              t_table        = lt_selection ).
+
+          DATA(lo_columns) = lo_alv->get_columns( ).
+
+          lo_columns->get_column( `SELFLAG` )->set_technical( ).
+          lo_columns->get_column( `INACTIVE` )->set_technical( ).
+
+          lo_alv->set_screen_popup( start_column = 5
+                                    end_column   = 50
+                                    start_line   = 5
+                                    end_line     = 20 ).
+
+          CREATE OBJECT lo_table_header
+            EXPORTING
+              text = `Tags`.
+
+          lo_alv->set_top_of_list( lo_table_header ).
+
+          lo_alv->display( ).
+
+        CATCH cx_salv_error INTO lx_alv.
+          zcx_abapgit_exception=>raise( lx_alv->get_text( ) ).
+      ENDTRY.
+
     ENDIF.
-
-    IF lv_answer = 'A'. " cancel
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
-    ASSERT sy-subrc = 0.
-
-    READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = <ls_sel>-varoption.
-    ASSERT sy-subrc = 0.
-
-    rs_tag = <ls_tag>.
 
   ENDMETHOD.
 

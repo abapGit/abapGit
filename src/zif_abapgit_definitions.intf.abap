@@ -269,4 +269,6 @@ INTERFACE zif_abapgit_definitions
       inactive TYPE r3state VALUE 'I',
     END OF gc_version.
 
+  CONSTANTS: gc_tag_prefix TYPE string VALUE 'refs/tags/'.
+
 ENDINTERFACE.

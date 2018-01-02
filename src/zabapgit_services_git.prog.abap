@@ -245,7 +245,9 @@ CLASS lcl_services_git IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
     ENDTRY.
 
-    MESSAGE |Tag { lv_name } created| TYPE 'S' ##NO_TEXT.
+    MESSAGE |Tag { replace( val  = lv_name
+                            sub  = zif_abapgit_definitions=>gc_tag_prefix
+                            with = '' ) } created| TYPE 'S' ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -265,7 +267,9 @@ CLASS lcl_services_git IMPLEMENTATION.
       io_repo = lo_repo
       is_tag  = ls_tag ).
 
-    MESSAGE |Tag { ls_tag-name } deleted| TYPE 'S'.
+    MESSAGE |Tag { replace( val  = ls_tag-name
+                            sub  = zif_abapgit_definitions=>gc_tag_prefix
+                            with = '' ) } deleted| TYPE 'S'.
 
   ENDMETHOD.
 
@@ -275,9 +279,8 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
-    DATA(lt_tag) = lo_repo->get_branches( )->get_tags_only( ).
-
-    cl_demo_output=>display( lt_tag ).
+    lcl_popups=>tag_list_popup( iv_url         = lo_repo->get_url( )
+                                iv_select_mode = abap_false ).
 
   ENDMETHOD.
 
