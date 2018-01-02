@@ -174,7 +174,6 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lo_advsub  TYPE REF TO lcl_html_toolbar,
           lo_helpsub TYPE REF TO lcl_html_toolbar.
 
-
     CREATE OBJECT ro_menu.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.

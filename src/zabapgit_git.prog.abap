@@ -269,6 +269,8 @@ CLASS lcl_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
     ELSEIF lv_string CP '*funny refname*'.
       zcx_abapgit_exception=>raise( 'funny refname' ).
+    ELSEIF lv_string CP '*failed to update ref*'.
+      zcx_abapgit_exception=>raise( 'failed to update ref' ).
     ENDIF.
 
   ENDMETHOD.                    "receive_pack
@@ -1125,9 +1127,20 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 iv_from TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
+    CLASS-METHODS create_tag
+      IMPORTING io_repo TYPE REF TO lcl_repo_online
+                iv_name TYPE string
+                iv_from TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING   zcx_abapgit_exception.
+
     CLASS-METHODS delete_branch
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_branch TYPE lcl_git_branch_list=>ty_git_branch
+      RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS delete_tag
+      IMPORTING io_repo TYPE REF TO lcl_repo_online
+                is_tag  TYPE lcl_git_branch_list=>ty_git_branch
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS full_tree
@@ -1304,6 +1317,25 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD delete_tag.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_pack    TYPE xstring.
+
+
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
+    lv_pack = lcl_git_pack=>encode( lt_objects ).
+
+    lcl_git_transport=>receive_pack(
+      iv_url         = io_repo->get_url( )
+      iv_old         = is_tag-sha1
+      iv_new         = c_zero
+      iv_branch_name = is_tag-name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
+
   METHOD create_branch.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
@@ -1311,6 +1343,28 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     IF iv_name CS ` `.
       zcx_abapgit_exception=>raise( 'Branch name cannot contain blank spaces' ).
+    ENDIF.
+
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
+    lv_pack = lcl_git_pack=>encode( lt_objects ).
+
+    lcl_git_transport=>receive_pack(
+      iv_url         = io_repo->get_url( )
+      iv_old         = c_zero
+      iv_new         = iv_from
+      iv_branch_name = iv_name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
+
+  METHOD create_tag.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_pack    TYPE xstring.
+
+    IF iv_name CS ` `.
+      zcx_abapgit_exception=>raise( 'Tag name cannot contain blank spaces' ).
     ENDIF.
 
 * "client MUST send an empty packfile"

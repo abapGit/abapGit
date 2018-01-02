@@ -234,6 +234,8 @@ INTERFACE zif_abapgit_definitions
       git_branch_create        TYPE string VALUE 'git_branch_create',
       git_branch_switch        TYPE string VALUE 'git_branch_switch',
       git_branch_delete        TYPE string VALUE 'git_branch_delete',
+      git_tag_create           TYPE string VALUE 'git_tag_create',
+      git_tag_delete           TYPE string VALUE 'git_tag_delete',
       git_commit               TYPE string VALUE 'git_commit',
 
       db_delete                TYPE string VALUE 'db_delete',
@@ -251,6 +253,7 @@ INTERFACE zif_abapgit_definitions
       go_stage                 TYPE string VALUE 'go_stage',
       go_commit                TYPE string VALUE 'go_commit',
       go_branch_overview       TYPE string VALUE 'go_branch_overview',
+      go_tag_overview          TYPE string VALUE 'go_tag_overview',
       go_playground            TYPE string VALUE 'go_playground',
       go_debuginfo             TYPE string VALUE 'go_debuginfo',
       go_settings              TYPE string VALUE 'go_settings',

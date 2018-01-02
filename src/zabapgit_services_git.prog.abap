@@ -35,6 +35,18 @@ CLASS lcl_services_git DEFINITION FINAL.
       IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
+    CLASS-METHODS create_tag
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS delete_tag
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS tag_overview
+      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
     CLASS-METHODS commit
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_commit TYPE ty_commit_fields
@@ -204,6 +216,70 @@ CLASS lcl_services_git IMPLEMENTATION.
     MESSAGE 'Branch deleted' TYPE 'S'.
 
   ENDMETHOD.  "delete_branch
+
+  METHOD create_tag.
+
+    DATA: lv_name   TYPE string,
+          lv_cancel TYPE abap_bool,
+          lo_repo   TYPE REF TO lcl_repo_online,
+          lx_error  TYPE REF TO zcx_abapgit_exception.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    lcl_popups=>create_tag_popup(
+      IMPORTING
+        ev_name   = lv_name
+        ev_cancel = lv_cancel ).
+    IF lv_cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    ASSERT lv_name CP 'refs/tags/+*'.
+
+    TRY.
+        lcl_git_porcelain=>create_tag( io_repo = lo_repo
+                                       iv_name = lv_name
+                                       iv_from = lo_repo->get_sha1_local( ) ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
+    ENDTRY.
+
+    MESSAGE |Tag { lv_name } created| TYPE 'S' ##NO_TEXT.
+
+  ENDMETHOD.
+
+  METHOD delete_tag.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online,
+          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
+    IF ls_tag IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    lcl_git_porcelain=>delete_tag(
+      io_repo = lo_repo
+      is_tag  = ls_tag ).
+
+    MESSAGE |Tag { ls_tag-name } deleted| TYPE 'S'.
+
+  ENDMETHOD.
+
+  METHOD tag_overview.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    DATA(lt_tag) = lo_repo->get_branches( )->get_tags_only( ).
+
+    cl_demo_output=>display( lt_tag ).
+
+  ENDMETHOD.
 
   METHOD commit.
 
