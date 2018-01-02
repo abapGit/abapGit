@@ -301,15 +301,18 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD create_tag_popup.
 
-    DATA: lv_answer TYPE c LENGTH 1,
-          lt_fields TYPE TABLE OF sval.
+    DATA: lv_answer        TYPE c LENGTH 1,
+          lt_fields        TYPE TABLE OF sval,
+          lv_text_question TYPE string.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
     CLEAR: ev_name, ev_cancel.
 
+    lv_text_question = `You create a tag from current commit ` && iv_sha1(7) && ` continue?`.
+
     lv_answer = lcl_popups=>popup_to_confirm( titlebar      = `Create a tag?`
-                                              text_question = `You create a tag from current commit ` && iv_sha1(7) && ` continue?` ).
+                                              text_question = lv_text_question ).
     IF lv_answer <> '1'.
       ev_cancel = abap_true.
       RETURN.
