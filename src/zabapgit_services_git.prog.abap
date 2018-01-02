@@ -219,6 +219,14 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD create_tag.
 
+    " Here we create a 'lightweight' tag. Which means that
+    " the tag only contains the commit checksum but no meta data
+    "
+    " Later we probably want to add also 'annotated' tags.
+    " Which include more detailed information besides the commit. Like message, date and the tagger
+    "
+    " https://git-scm.com/book/en/v2/Git-Basics-Tagging
+
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
           lo_repo   TYPE REF TO lcl_repo_online,
@@ -227,6 +235,8 @@ CLASS lcl_services_git IMPLEMENTATION.
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
     lcl_popups=>create_tag_popup(
+      EXPORTING
+        iv_sha1   = lo_repo->get_sha1_local( )
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).

@@ -366,11 +366,8 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
       ENDTRY.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
-
-      IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true.
-        ro_toolbar->add( iv_txt = 'Tag'
-                         io_sub = lo_tb_tag ) ##NO_TEXT.
-      ENDIF.
+      ro_toolbar->add( iv_txt = 'Tag'
+                       io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
       ro_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |{ zif_abapgit_definitions=>gc_action-zip_import }?{ lv_key }|
