@@ -264,6 +264,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     DATA: lo_tb_advanced TYPE REF TO lcl_html_toolbar,
           lo_tb_branch   TYPE REF TO lcl_html_toolbar,
+          lo_tb_tag      TYPE REF TO lcl_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_definitions=>gc_html_opt-crossout,
           lv_crossout    LIKE zif_abapgit_definitions=>gc_html_opt-crossout,
@@ -272,6 +273,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
+    CREATE OBJECT lo_tb_tag.
 
     lv_key = mo_repo->get_key( ).
 
@@ -293,6 +295,14 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>gc_action-git_branch_create }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Delete'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-git_branch_delete }?{ lv_key }| ).
+
+      lo_tb_tag->add( iv_txt = 'Overview'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-go_tag_overview }?{ lv_key }| ).
+      lo_tb_tag->add( iv_txt = 'Create'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_create }?{ lv_key }| ).
+      lo_tb_tag->add( iv_txt = 'Delete'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_delete }?{ lv_key }| ).
+
     ENDIF.
 
     " Build advanced drop-down ========================
@@ -356,6 +366,8 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
       ENDTRY.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
+      ro_toolbar->add( iv_txt = 'Tag'
+                       io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
       ro_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |{ zif_abapgit_definitions=>gc_action-zip_import }?{ lv_key }|

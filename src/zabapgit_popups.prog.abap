@@ -27,6 +27,11 @@ CLASS lcl_popups DEFINITION FINAL.
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
         RAISING   zcx_abapgit_exception,
+      create_tag_popup
+        IMPORTING iv_sha1   TYPE zif_abapgit_definitions=>ty_sha1
+        EXPORTING ev_name   TYPE string
+                  ev_cancel TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
       run_page_class_popup
         EXPORTING ev_name   TYPE string
                   ev_cancel TYPE abap_bool
@@ -39,6 +44,11 @@ CLASS lcl_popups DEFINITION FINAL.
                   iv_default_branch  TYPE string OPTIONAL
                   iv_show_new_option TYPE abap_bool OPTIONAL
         RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
+        RAISING   zcx_abapgit_exception,
+      tag_list_popup
+        IMPORTING iv_url         TYPE string
+                  iv_select_mode TYPE abap_bool DEFAULT abap_true
+        RETURNING VALUE(rs_tag)  TYPE lcl_git_branch_list=>ty_git_branch
         RAISING   zcx_abapgit_exception,
       repo_popup
         IMPORTING iv_url            TYPE string
@@ -289,6 +299,55 @@ CLASS lcl_popups IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD create_tag_popup.
+
+    DATA: lv_answer        TYPE c LENGTH 1,
+          lt_fields        TYPE TABLE OF sval,
+          lv_text_question TYPE string.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
+
+    CLEAR: ev_name, ev_cancel.
+
+    lv_text_question = `You create a tag from current commit ` && iv_sha1(7) && ` continue?`.
+
+    lv_answer = lcl_popups=>popup_to_confirm( titlebar      = `Create a tag?`
+                                              text_question = lv_text_question ).
+    IF lv_answer <> '1'.
+      ev_cancel = abap_true.
+      RETURN.
+    ENDIF.
+
+    add_field( EXPORTING iv_tabname   = 'TEXTL'
+                         iv_fieldname = 'LINE'
+                         iv_fieldtext = 'Name'
+                         iv_value     = 'new-tag-name'
+               CHANGING ct_fields     = lt_fields ).
+
+    CALL FUNCTION 'POPUP_GET_VALUES'
+      EXPORTING
+        popup_title     = 'Create tag'
+      IMPORTING
+        returncode      = lv_answer
+      TABLES
+        fields          = lt_fields
+      EXCEPTIONS
+        error_in_fields = 1
+        OTHERS          = 2 ##NO_TEXT.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
+    ENDIF.
+
+    IF lv_answer = 'A'.
+      ev_cancel = abap_true.
+    ELSE.
+      READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      ev_name = |{ zif_abapgit_definitions=>gc_tag_prefix }{ <ls_field>-value }|.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD run_page_class_popup.
 
     DATA: lv_answer TYPE c LENGTH 1,
@@ -510,6 +569,120 @@ CLASS lcl_popups IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD tag_list_popup.
+
+    DATA: lo_branches         TYPE REF TO lcl_git_branch_list,
+          lt_tags             TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+          lv_answer           TYPE c LENGTH 1,
+          lt_selection        TYPE TABLE OF spopli,
+          lv_name_with_prefix TYPE string,
+          lo_alv              TYPE REF TO cl_salv_table,
+          lo_table_header     TYPE REF TO cl_salv_form_text,
+          lo_columns          TYPE REF TO cl_salv_columns_table,
+          lx_alv              TYPE REF TO cx_salv_error.
+
+    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
+                   <ls_tag> LIKE LINE OF lt_tags.
+
+    lo_branches = lcl_git_transport=>branches( iv_url ).
+    lt_tags     = lo_branches->get_tags_only( ).
+
+    IF iv_select_mode = abap_true.
+
+      LOOP AT lt_tags ASSIGNING <ls_tag>.
+
+        INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
+        <ls_sel>-varoption = replace( val  = <ls_tag>-name
+                                      sub  = zif_abapgit_definitions=>gc_tag_prefix
+                                      with = '' ).
+
+      ENDLOOP.
+
+      CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+        EXPORTING
+          textline1          = 'Select tag'
+          titel              = 'Select tag'
+          start_col          = 30
+          start_row          = 5
+        IMPORTING
+          answer             = lv_answer
+        TABLES
+          t_spopli           = lt_selection
+        EXCEPTIONS
+          not_enough_answers = 1
+          too_much_answers   = 2
+          too_much_marks     = 3
+          OTHERS             = 4.                             "#EC NOTEXT
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
+      ENDIF.
+
+      IF lv_answer = 'A'. " cancel
+        RETURN.
+      ENDIF.
+
+      READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
+      ASSERT sy-subrc = 0.
+
+      lv_name_with_prefix = zif_abapgit_definitions=>gc_tag_prefix &&  <ls_sel>-varoption.
+
+      READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
+      ASSERT sy-subrc = 0.
+
+      rs_tag = <ls_tag>.
+
+    ELSE.
+
+      LOOP AT lt_tags ASSIGNING <ls_tag>.
+
+        <ls_tag>-name = replace( val  = <ls_tag>-name
+                                 sub  = zif_abapgit_definitions=>gc_tag_prefix
+                                 with = '' ).
+        <ls_tag>-sha1 = <ls_tag>-sha1(7).
+
+      ENDLOOP.
+
+      TRY.
+          cl_salv_table=>factory(
+            IMPORTING
+              r_salv_table   = lo_alv
+            CHANGING
+              t_table        = lt_tags ).
+
+          lo_columns = lo_alv->get_columns( ).
+
+          lo_columns->get_column( `TYPE` )->set_technical( ).
+          lo_columns->get_column( `IS_HEAD` )->set_technical( ).
+          lo_columns->get_column( `DISPLAY_NAME` )->set_technical( ).
+
+          lo_columns->get_column( `SHA1` )->set_output_length( 10 ).
+          lo_columns->get_column( `SHA1` )->set_medium_text( 'SHA' ).
+
+          lo_columns->get_column( `NAME` )->set_medium_text( 'Tag name' ).
+
+          lo_columns->set_optimize( ).
+
+          lo_alv->set_screen_popup( start_column = 5
+                                    end_column   = 50
+                                    start_line   = 5
+                                    end_line     = 20 ).
+
+          CREATE OBJECT lo_table_header
+            EXPORTING
+              text = `Tags`.
+
+          lo_alv->set_top_of_list( lo_table_header ).
+
+          lo_alv->display( ).
+
+        CATCH cx_salv_error INTO lx_alv.
+          zcx_abapgit_exception=>raise( lx_alv->get_text( ) ).
+      ENDTRY.
+
     ENDIF.
 
   ENDMETHOD.
