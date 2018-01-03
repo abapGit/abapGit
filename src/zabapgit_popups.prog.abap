@@ -664,6 +664,8 @@ CLASS lcl_popups IMPLEMENTATION.
 
           lo_columns->get_column( `NAME` )->set_medium_text( 'Tag name' ).
 
+          lo_columns->set_optimize( ).
+
           lo_alv->set_screen_popup( start_column = 5
                                     end_column   = 50
                                     start_line   = 5
