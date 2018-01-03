@@ -301,22 +301,19 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD create_tag_popup.
 
-    DATA: lv_answer        TYPE c LENGTH 1,
-          lt_fields        TYPE TABLE OF sval,
-          lv_text_question TYPE string.
+    DATA: lv_answer TYPE c LENGTH 1,
+          lt_fields TYPE TABLE OF sval.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
     CLEAR: ev_name, ev_cancel.
 
-    lv_text_question = `You create a tag from current commit ` && iv_sha1(7) && ` continue?`.
-
-    lv_answer = lcl_popups=>popup_to_confirm( titlebar      = `Create a tag?`
-                                              text_question = lv_text_question ).
-    IF lv_answer <> '1'.
-      ev_cancel = abap_true.
-      RETURN.
-    ENDIF.
+    add_field( EXPORTING iv_tabname    = 'TOAVALUE'
+                         iv_fieldname  = 'REFER_CODE'
+                         iv_fieldtext  = 'SHA'
+                         iv_value      = iv_sha1(7)
+                         iv_field_attr = '05'
+               CHANGING ct_fields      = lt_fields ).
 
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
@@ -341,7 +338,8 @@ CLASS lcl_popups IMPLEMENTATION.
     IF lv_answer = 'A'.
       ev_cancel = abap_true.
     ELSE.
-      READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
+      READ TABLE lt_fields WITH KEY fieldname = 'LINE'
+                           ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
       ev_name = |{ zif_abapgit_definitions=>gc_tag_prefix }{ <ls_field>-value }|.
     ENDIF.
@@ -590,6 +588,10 @@ CLASS lcl_popups IMPLEMENTATION.
 
     lo_branches = lcl_git_transport=>branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
+
+    IF lines( lt_tags ) = 0.
+      zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
+    ENDIF.
 
     IF iv_select_mode = abap_true.
 
