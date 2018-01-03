@@ -443,6 +443,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD body.
+    DATA: tag TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -501,11 +502,18 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
           escape_message( <ls_commit>-message )
           }", dotColor: "black", dotSize: 15, messageHashDisplay: false, messageAuthorDisplay: false\});| ).
       ELSEIF <ls_commit>-merge IS INITIAL.
+
+        " gitgraph doesn't support multiple tags per commit yet.
+        " Therefore we concatenate them.
+        " https://github.com/nicoespeon/gitgraph.js/issues/143
+
+        tag = concat_lines_of( table = <ls_commit>-tags
+                               sep   = ` | ` ).
+
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
           escape_message( <ls_commit>-message ) }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }", tag: "{ concat_lines_of( table = <ls_commit>-tags
-                                                           sep   = ` | ` ) }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ tag }"\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
