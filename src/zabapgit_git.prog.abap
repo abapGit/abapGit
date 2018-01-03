@@ -602,6 +602,8 @@ CLASS lcl_git_pack IMPLEMENTATION.
         rv_type = zif_abapgit_definitions=>gc_type-tree.
       WHEN '011'.
         rv_type = zif_abapgit_definitions=>gc_type-blob.
+      WHEN '100'.
+        rv_type = zif_abapgit_definitions=>gc_type-tag.
       WHEN '111'.
         rv_type = zif_abapgit_definitions=>gc_type-ref_d.
       WHEN OTHERS.
