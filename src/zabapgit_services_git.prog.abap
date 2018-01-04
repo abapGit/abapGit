@@ -230,7 +230,8 @@ CLASS lcl_services_git IMPLEMENTATION.
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
           lo_repo   TYPE REF TO lcl_repo_online,
-          lx_error  TYPE REF TO zcx_abapgit_exception.
+          lx_error  TYPE REF TO zcx_abapgit_exception,
+          lv_text   TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -255,9 +256,11 @@ CLASS lcl_services_git IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
     ENDTRY.
 
-    MESSAGE |Tag { replace( val  = lv_name
-                            sub  = zif_abapgit_definitions=>gc_tag_prefix
-                            with = '' ) } created| TYPE 'S' ##NO_TEXT.
+    lv_text = |Tag { replace( val  = lv_name
+                              sub  = zif_abapgit_definitions=>gc_tag_prefix
+                              with = '' ) } created| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 
