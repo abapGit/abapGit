@@ -230,7 +230,8 @@ CLASS lcl_services_git IMPLEMENTATION.
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
           lo_repo   TYPE REF TO lcl_repo_online,
-          lx_error  TYPE REF TO zcx_abapgit_exception.
+          lx_error  TYPE REF TO zcx_abapgit_exception,
+          lv_text   TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -255,16 +256,17 @@ CLASS lcl_services_git IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
     ENDTRY.
 
-    MESSAGE |Tag { replace( val  = lv_name
-                            sub  = zif_abapgit_definitions=>gc_tag_prefix
-                            with = '' ) } created| TYPE 'S' ##NO_TEXT.
+    lv_text = |Tag { lcl_tag=>remove_tag_prefix( lv_name ) } created| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 
   METHOD delete_tag.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
-          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch,
+          lv_text TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -277,9 +279,9 @@ CLASS lcl_services_git IMPLEMENTATION.
       io_repo = lo_repo
       is_tag  = ls_tag ).
 
-    MESSAGE |Tag { replace( val  = ls_tag-name
-                            sub  = zif_abapgit_definitions=>gc_tag_prefix
-                            with = '' ) } deleted| TYPE 'S'.
+    lv_text = |Tag { lcl_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 

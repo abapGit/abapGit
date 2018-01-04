@@ -137,13 +137,7 @@ CLASS lcl_popups DEFINITION FINAL.
         EXPORTING
           ev_url     TYPE abaptxt255-line
           ev_package TYPE tdevc-devclass
-          ev_branch  TYPE textl-line,
-
-      remove_tag_prefix
-        IMPORTING
-          iv_text        TYPE string
-        RETURNING
-          VALUE(rv_text) TYPE spopli-varoption.
+          ev_branch  TYPE textl-line.
 
 ENDCLASS.
 
@@ -347,7 +341,7 @@ CLASS lcl_popups IMPLEMENTATION.
       READ TABLE lt_fields WITH KEY fieldname = 'LINE'
                            ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = |{ zif_abapgit_definitions=>gc_tag_prefix }{ <ls_field>-value }|.
+      ev_name = lcl_tag=>add_tag_prefix( <ls_field>-value ).
     ENDIF.
 
   ENDMETHOD.
@@ -604,7 +598,7 @@ CLASS lcl_popups IMPLEMENTATION.
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
         INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-        <ls_sel>-varoption = remove_tag_prefix( <ls_tag>-name ).
+        <ls_sel>-varoption = lcl_tag=>remove_tag_prefix( <ls_tag>-name ).
 
       ENDLOOP.
 
@@ -634,7 +628,7 @@ CLASS lcl_popups IMPLEMENTATION.
       READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
       ASSERT sy-subrc = 0.
 
-      lv_name_with_prefix = zif_abapgit_definitions=>gc_tag_prefix &&  <ls_sel>-varoption.
+      lv_name_with_prefix = lcl_tag=>add_Tag_prefix( <ls_sel>-varoption ).
 
       READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
       ASSERT sy-subrc = 0.
@@ -645,7 +639,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
-        <ls_tag>-name = remove_tag_prefix( <ls_tag>-name ).
+        <ls_tag>-name = lcl_tag=>remove_tag_prefix( <ls_tag>-name ).
         <ls_tag>-sha1 = <ls_tag>-sha1(7).
 
       ENDLOOP.
@@ -1229,15 +1223,5 @@ CLASS lcl_popups IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD remove_tag_prefix.
-
-    rv_text = iv_text.
-
-    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
-            IN rv_text
-            WITH ''.
-
-  ENDMETHOD.
 
 ENDCLASS.
