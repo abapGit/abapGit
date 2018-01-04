@@ -256,9 +256,11 @@ CLASS lcl_services_git IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
     ENDTRY.
 
-    lv_text = |Tag { replace( val  = lv_name
-                              sub  = zif_abapgit_definitions=>gc_tag_prefix
-                              with = '' ) } created| ##NO_TEXT.
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
+            IN lv_name
+            WITH ''.
+
+    lv_text = |Tag { lv_name } created| ##NO_TEXT.
 
     MESSAGE lv_text TYPE 'S'.
 
