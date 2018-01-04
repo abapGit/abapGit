@@ -49,6 +49,7 @@ INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
 INCLUDE zabapgit_proxy.
 
+INCLUDE zabapgit_tag.
 INCLUDE zabapgit_stage.
 INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
