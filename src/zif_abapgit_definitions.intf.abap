@@ -155,6 +155,7 @@ INTERFACE zif_abapgit_definitions
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
       tree   TYPE zif_abapgit_definitions=>ty_type VALUE 'tree', "#EC NOTEXT
       ref_d  TYPE zif_abapgit_definitions=>ty_type VALUE 'ref_d', "#EC NOTEXT
+      tag    TYPE zif_abapgit_definitions=>ty_type VALUE 'tag', "#EC NOTEXT
       blob   TYPE zif_abapgit_definitions=>ty_type VALUE 'blob', "#EC NOTEXT
     END OF gc_type .
   CONSTANTS:

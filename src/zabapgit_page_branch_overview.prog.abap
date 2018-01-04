@@ -20,6 +20,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
              message    TYPE string,
              branch     TYPE string,
              merge      TYPE string,
+             tags       TYPE stringtab,
              create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
              compressed TYPE abap_bool,
            END OF ty_commit.
@@ -54,11 +55,14 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
         RETURNING VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      determine_tags
+        RAISING zcx_abapgit_exception.
 
     CLASS-DATA:
       gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
-      gt_commits  TYPE TABLE OF ty_commit.
+      gt_commits  TYPE TABLE OF ty_commit,
+      gt_tags     TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
 
 ENDCLASS.
 
@@ -143,6 +147,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     determine_branch( ).
     determine_merges( ).
+    determine_tags( ).
     fixes( ).
 
     SORT gt_commits BY time ASCENDING.
@@ -153,6 +158,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD get_git_objects.
 
+    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
+
     lcl_progress=>show( iv_key     = 'Get git objects'
                         iv_current = 1
                         iv_total   = 1
@@ -162,12 +169,16 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 * the selected branch
 
     "TODO refactor
-    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->get_branches_only( ).
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
-                                              iv_deepen = abap_false
+    lo_branch_list = lcl_git_transport=>branches( io_repo->get_url( ) ).
+
+    gt_branches = lo_branch_list->get_branches_only( ).
+    gt_tags = lo_branch_list->get_tags_only( ).
+
+    lcl_git_transport=>upload_pack( EXPORTING io_repo     = io_repo
+                                              iv_deepen   = abap_false
                                               it_branches = gt_branches
-                                    IMPORTING et_objects = rt_objects ).
+                                    IMPORTING et_objects  = rt_objects ).
 
     DELETE rt_objects WHERE type = zif_abapgit_definitions=>gc_type-blob.
 
@@ -298,6 +309,26 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD determine_tags.
+
+    FIELD-SYMBOLS: <ls_tag>    TYPE lcl_git_branch_list=>ty_git_branch,
+                   <ls_commit> TYPE lcl_branch_overview=>ty_commit.
+
+    LOOP AT gt_tags ASSIGNING <ls_tag>.
+
+      READ TABLE gt_commits WITH KEY sha1 = <ls_tag>-sha1
+                            ASSIGNING <ls_commit>.
+      CHECK sy-subrc = 0.
+
+      INSERT replace( val  = <ls_tag>-name
+                      sub  = zif_abapgit_definitions=>gc_tag_prefix
+                      with = `` ) INTO TABLE <ls_commit>-tags.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 ***********************
@@ -412,6 +443,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD body.
+    DATA: tag TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -470,10 +502,18 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
           escape_message( <ls_commit>-message )
           }", dotColor: "black", dotSize: 15, messageHashDisplay: false, messageAuthorDisplay: false\});| ).
       ELSEIF <ls_commit>-merge IS INITIAL.
+
+        " gitgraph doesn't support multiple tags per commit yet.
+        " Therefore we concatenate them.
+        " https://github.com/nicoespeon/gitgraph.js/issues/143
+
+        tag = concat_lines_of( table = <ls_commit>-tags
+                               sep   = ` | ` ).
+
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
           escape_message( <ls_commit>-message ) }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ tag }"\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
