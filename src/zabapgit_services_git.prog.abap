@@ -269,7 +269,8 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD delete_tag.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
-          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch,
+          lv_text TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -282,9 +283,13 @@ CLASS lcl_services_git IMPLEMENTATION.
       io_repo = lo_repo
       is_tag  = ls_tag ).
 
-    MESSAGE |Tag { replace( val  = ls_tag-name
-                            sub  = zif_abapgit_definitions=>gc_tag_prefix
-                            with = '' ) } deleted| TYPE 'S'.
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
+            IN ls_tag-name
+            WITH ''.
+
+    lv_text = |Tag { ls_tag-name } deleted| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
 
   ENDMETHOD.
 
