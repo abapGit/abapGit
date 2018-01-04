@@ -312,6 +312,8 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD determine_tags.
 
+    DATA: lv_tag TYPE LINE OF lcl_branch_overview=>ty_commit-tags.
+
     FIELD-SYMBOLS: <ls_tag>    TYPE lcl_git_branch_list=>ty_git_branch,
                    <ls_commit> TYPE lcl_branch_overview=>ty_commit.
 
@@ -321,9 +323,12 @@ CLASS lcl_branch_overview IMPLEMENTATION.
                             ASSIGNING <ls_commit>.
       CHECK sy-subrc = 0.
 
-      INSERT replace( val  = <ls_tag>-name
-                      sub  = zif_abapgit_definitions=>gc_tag_prefix
-                      with = `` ) INTO TABLE <ls_commit>-tags.
+      lv_tag = <ls_tag>-name.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
+              IN lv_tag
+              WITH ''.
+
+      INSERT lv_tag INTO TABLE <ls_commit>-tags.
 
     ENDLOOP.
 
