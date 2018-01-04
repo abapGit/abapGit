@@ -137,7 +137,13 @@ CLASS lcl_popups DEFINITION FINAL.
         EXPORTING
           ev_url     TYPE abaptxt255-line
           ev_package TYPE tdevc-devclass
-          ev_branch  TYPE textl-line.
+          ev_branch  TYPE textl-line,
+
+      remove_tag_prefix
+        IMPORTING
+          iv_text        TYPE string
+        RETURNING
+          VALUE(rv_text) TYPE spopli-varoption.
 
 ENDCLASS.
 
@@ -598,9 +604,7 @@ CLASS lcl_popups IMPLEMENTATION.
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
         INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-        <ls_sel>-varoption = replace( val  = <ls_tag>-name
-                                      sub  = zif_abapgit_definitions=>gc_tag_prefix
-                                      with = '' ).
+        <ls_sel>-varoption = remove_tag_prefix( <ls_tag>-name ).
 
       ENDLOOP.
 
@@ -641,9 +645,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
-        <ls_tag>-name = replace( val  = <ls_tag>-name
-                                 sub  = zif_abapgit_definitions=>gc_tag_prefix
-                                 with = '' ).
+        <ls_tag>-name = remove_tag_prefix( <ls_tag>-name ).
         <ls_tag>-sha1 = <ls_tag>-sha1(7).
 
       ENDLOOP.
@@ -1224,6 +1226,17 @@ CLASS lcl_popups IMPLEMENTATION.
     READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     ev_branch = <ls_field>-value.
+
+  ENDMETHOD.
+
+
+  METHOD remove_tag_prefix.
+
+    rv_text = iv_text.
+
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
+            IN rv_text
+            WITH ''.
 
   ENDMETHOD.
 
