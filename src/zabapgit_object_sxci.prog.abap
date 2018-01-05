@@ -114,23 +114,24 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
     CALL FUNCTION 'SXO_IMPL_FOR_BADI_READ'
       EXPORTING
-        imp_name          = lv_implementation_name
-        exit_name         = lv_exit_name
-        inter_name        = ls_badi_definition-inter_name
-        filter_obj        = lo_filter_object
+        imp_name                    = lv_implementation_name
+        exit_name                   = lv_exit_name
+        inter_name                  = ls_badi_definition-inter_name
+        filter_obj                  = lo_filter_object
+        no_create_filter_values_obj = abap_true
       IMPORTING
-        impl              = ls_classic_badi_implementation-implementation_data
-        filter_values_obj = lo_filter_values_object
+        impl                        = ls_classic_badi_implementation-implementation_data
+        filter_values_obj           = lo_filter_values_object
       TABLES
-        fcodes            = ls_classic_badi_implementation-function_codes
-        cocos             = ls_classic_badi_implementation-control_composites
-        intas             = ls_classic_badi_implementation-customer_includes
-        scrns             = ls_classic_badi_implementation-screens
+        fcodes                      = ls_classic_badi_implementation-function_codes
+        cocos                       = ls_classic_badi_implementation-control_composites
+        intas                       = ls_classic_badi_implementation-customer_includes
+        scrns                       = ls_classic_badi_implementation-screens
       CHANGING
-        methods           = lt_methods
+        methods                     = lt_methods
       EXCEPTIONS
-        read_failure      = 1
-        OTHERS            = 2.
+        read_failure                = 1
+        OTHERS                      = 2.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from SXO_IMPL_FOR_BADI_READ' ).
