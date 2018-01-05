@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2018-01-05 v1.51.1
+------------------
+* minor fixes for tags
+* downport
+* fix serilization of SXCI in background mode
+
 2018-01-03 v1.51.0
 ------------------
 + support for lightweight tags
