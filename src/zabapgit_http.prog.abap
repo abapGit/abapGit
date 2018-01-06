@@ -347,7 +347,7 @@ CLASS lcl_http_digest IMPLEMENTATION.
           lv_hash TYPE xstring.
 
 
-    lv_xstr = lcl_convert=>string_to_xstring_utf8( iv_data ).
+    lv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( iv_data ).
 
     CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
       EXPORTING

@@ -151,8 +151,8 @@ CLASS lcl_news IMPLEMENTATION.
       RETURN. " Internal format of program version is not correct -> abort parsing
     ENDIF.
 
-    lv_string = lcl_convert=>xstring_to_string_utf8( iv_rawdata ).
-    lt_lines  = lcl_convert=>split_string( lv_string ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_rawdata ).
+    lt_lines  = zcl_abapgit_convert=>split_string( lv_string ).
     mt_log    = parse( it_lines = lt_lines iv_current_version = mv_current_version ).
 
     READ TABLE mt_log INTO ls_log_line INDEX 1.
