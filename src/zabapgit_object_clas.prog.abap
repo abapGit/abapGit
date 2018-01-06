@@ -207,17 +207,17 @@ CLASS lcl_object_clas IMPLEMENTATION.
     "If class was deserialized with a previous versions of abapGit and current language was different
     "from master language at this time, this call would return SY-LANGU as master language. To fix
     "these objects, set SY-LANGU to master language temporarily.
-    lcl_language=>set_current_language( mv_language ).
+    zcl_abapgit_language=>set_current_language( mv_language ).
 
     TRY.
         ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
 
       CLEANUP.
-        lcl_language=>restore_login_language( ).
+        zcl_abapgit_language=>restore_login_language( ).
 
     ENDTRY.
 
-    lcl_language=>restore_login_language( ).
+    zcl_abapgit_language=>restore_login_language( ).
 
     CLEAR: ls_vseoclass-uuid,
            ls_vseoclass-author,
