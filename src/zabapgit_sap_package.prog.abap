@@ -236,19 +236,18 @@ CLASS lcl_sap_package IMPLEMENTATION.
 
   METHOD lif_sap_package~list_superpackages.
 
-    DATA: lt_list     LIKE rt_list,
-          lv_parent   TYPE tdevc-parentcl,
-          lv_devclass LIKE LINE OF rt_list.
+    DATA: lt_list   LIKE rt_list,
+          lv_parent TYPE tdevc-parentcl.
 
 
     APPEND mv_package TO rt_list.
 
     SELECT SINGLE parentcl INTO lv_parent
-      FROM tdevc WHERE devclass = mv_package. "#EC CI_GENBUFF "#EC CI_SUBRC
+      FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
 
-    IF NOT lv_parent IS INITIAL.
+    IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
       APPEND lv_parent TO rt_list.
-      lt_list = get( lv_devclass )->list_superpackages( ).
+      lt_list = get( lv_parent )->list_superpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDIF.
 
