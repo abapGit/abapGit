@@ -555,45 +555,6 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
 
 ENDCLASS.
 
-*----------------------------------------------------------------------*
-*       CLASS ltcl_zlib DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_zlib DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
-
-  PRIVATE SECTION.
-    METHODS:
-      decompress FOR TESTING RAISING cx_dynamic_check.
-
-ENDCLASS.                    "ltcl_zlib DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS ltcl_zlib IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_zlib IMPLEMENTATION.
-
-  METHOD decompress.
-
-    DATA: ls_data TYPE lcl_zlib=>ty_decompress.
-
-    CONSTANTS:
-      lc_raw        TYPE xstring VALUE '48656C6C6F20576F726C64210D0A',
-      lc_compressed TYPE xstring VALUE 'F348CDC9C95708CF2FCA4951E4E5020024E90455'.
-
-
-    ls_data = lcl_zlib=>decompress( lc_compressed ).
-
-    cl_abap_unit_assert=>assert_not_initial( ls_data-raw ).
-    cl_abap_unit_assert=>assert_equals( act = ls_data-raw
-                                        exp = lc_raw ).
-
-  ENDMETHOD.                    "decompress
-
-ENDCLASS.                    "ltcl_zlib IMPLEMENTATION
-
 CLASS ltcl_xml DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PUBLIC SECTION.
