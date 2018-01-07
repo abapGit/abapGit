@@ -342,8 +342,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
       <ls_file>-data = lv_data.
 
-      <ls_file>-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
-                                       iv_data = <ls_file>-data ).
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+                                               iv_data = <ls_file>-data ).
 
     ENDLOOP.
 

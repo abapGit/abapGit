@@ -793,7 +793,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     ENDWHILE.
 
-    lv_sha1 = lcl_hash=>sha1( iv_type = <ls_object>-type iv_data = lv_result ).
+    lv_sha1 = zcl_abapgit_hash=>sha1( iv_type = <ls_object>-type iv_data = lv_result ).
 
     CLEAR ls_object.
     ls_object-sha1 = lv_sha1.
@@ -882,7 +882,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     DATA: ls_data           TYPE lcl_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
-          lv_adler32        TYPE lcl_hash=>ty_adler32.
+          lv_adler32        TYPE zcl_abapgit_hash=>ty_adler32.
 
 
     ls_data = lcl_zlib=>decompress( cv_data ).
@@ -895,7 +895,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     cv_data = cv_data+lv_compressed_len.
 
-    lv_adler32 = lcl_hash=>adler32( cv_decompressed ).
+    lv_adler32 = zcl_abapgit_hash=>adler32( cv_decompressed ).
     IF cv_data(4) <> lv_adler32.
       cv_data = cv_data+1.
     ENDIF.
@@ -1014,7 +1014,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
-        ls_object-sha1 = lcl_hash=>sha1(
+        ls_object-sha1 = zcl_abapgit_hash=>sha1(
           iv_type = lv_type
           iv_data = lv_decompressed ).
       ENDIF.
@@ -1026,7 +1026,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 * check SHA1 at end of pack
     lv_len = xstrlen( iv_data ) - 20.
     lv_xstring = iv_data(lv_len).
-    lv_sha1 = lcl_hash=>sha1_raw( lv_xstring ).
+    lv_sha1 = zcl_abapgit_hash=>sha1_raw( lv_xstring ).
     IF to_upper( lv_sha1 ) <> lv_data.
       zcx_abapgit_exception=>raise( 'SHA1 at end of pack doesnt match' ).
     ENDIF.
@@ -1038,7 +1038,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
   METHOD encode.
 
     DATA: lv_sha1              TYPE x LENGTH 20,
-          lv_adler32           TYPE lcl_hash=>ty_adler32,
+          lv_adler32           TYPE zcl_abapgit_hash=>ty_adler32,
           lv_compressed        TYPE xstring,
           lv_xstring           TYPE xstring,
           lv_objects_total     TYPE i,
@@ -1076,12 +1076,12 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
       CONCATENATE rv_data c_zlib lv_compressed INTO rv_data IN BYTE MODE.
 
-      lv_adler32 = lcl_hash=>adler32( <ls_object>-data ).
+      lv_adler32 = zcl_abapgit_hash=>adler32( <ls_object>-data ).
       CONCATENATE rv_data lv_adler32 INTO rv_data IN BYTE MODE.
 
     ENDLOOP.
 
-    lv_sha1 = to_upper( lcl_hash=>sha1_raw( rv_data ) ).
+    lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( rv_data ) ).
     CONCATENATE rv_data lv_sha1 INTO rv_data IN BYTE MODE.
 
   ENDMETHOD.                    "encode
@@ -1248,7 +1248,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     lv_commit = lcl_git_pack=>encode_commit( ls_commit ).
 
     CLEAR ls_object.
-    ls_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-commit iv_data = lv_commit ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-commit iv_data = lv_commit ).
     ls_object-type = zif_abapgit_definitions=>gc_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO lt_objects.
@@ -1271,7 +1271,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     LOOP AT it_blobs ASSIGNING <ls_blob>.
       CLEAR ls_object.
-      ls_object-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = <ls_blob>-data ).
+      ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = <ls_blob>-data ).
 
       READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-blob sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
@@ -1288,7 +1288,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     lv_pack = lcl_git_pack=>encode( lt_objects ).
 
-    rv_branch = lcl_hash=>sha1(
+    rv_branch = zcl_abapgit_hash=>sha1(
       iv_type = zif_abapgit_definitions=>gc_type-commit
       iv_data = lv_commit ).
 
@@ -1448,8 +1448,8 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
             <ls_exp>-chmod = zif_abapgit_definitions=>gc_chmod-file.
           ENDIF.
 
-          lv_sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
-                                    iv_data = <ls_stage>-file-data ).
+          lv_sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+                                            iv_data = <ls_stage>-file-data ).
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
@@ -1652,7 +1652,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       CLEAR ls_tree.
       ls_tree-path = <ls_folder>-path.
       ls_tree-data = lcl_git_pack=>encode_tree( lt_nodes ).
-      ls_tree-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-tree iv_data = ls_tree-data ).
+      ls_tree-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-tree iv_data = ls_tree-data ).
       APPEND ls_tree TO rt_trees.
 
       <ls_folder>-sha1 = ls_tree-sha1.
