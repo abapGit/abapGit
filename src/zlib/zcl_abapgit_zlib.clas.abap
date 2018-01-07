@@ -1,20 +1,21 @@
-class ZCL_ABAPGIT_ZLIB definition
-  public
-  create public .
+CLASS zcl_abapgit_zlib DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    BEGIN OF ty_decompress,
-             raw            TYPE xstring,
-             compressed_len TYPE i,
-           END OF ty_decompress .
+    TYPES:
+      BEGIN OF ty_decompress,
+        raw            TYPE xstring,
+        compressed_len TYPE i,
+      END OF ty_decompress .
 
-  class-methods DECOMPRESS
-    importing
-      !IV_COMPRESSED type XSEQUENCE
-    returning
-      value(RS_DATA) type TY_DECOMPRESS .
+    CLASS-METHODS decompress
+      IMPORTING
+        !iv_compressed TYPE xsequence
+      RETURNING
+        VALUE(rs_data) TYPE ty_decompress .
+
   PRIVATE SECTION.
     CONSTANTS: c_maxdcodes TYPE i VALUE 30.
 
