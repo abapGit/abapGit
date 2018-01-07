@@ -151,10 +151,10 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                                           iv_changes_only = mv_changes_only ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
-          lcl_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
-                             CHANGING cv_prev = lv_lstate ).
-          lcl_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
-                             CHANGING cv_prev = lv_rstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
+                                     CHANGING cv_prev = lv_lstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
+                                     CHANGING cv_prev = lv_rstate ).
         ENDLOOP.
 
         ro_html->add( render_head_line( iv_lstate = lv_lstate
