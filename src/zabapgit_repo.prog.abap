@@ -235,7 +235,7 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     METHODS is_sap_object_allowed
       RETURNING
-        VALUE(r_is_sap_object_allowed) TYPE abap_bool.
+        VALUE(rv_allowed) TYPE abap_bool.
 
     METHODS add
       IMPORTING io_repo TYPE REF TO lcl_repo

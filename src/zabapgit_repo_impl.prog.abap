@@ -1052,7 +1052,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         EXPORTING
           is_data = lo_repo->ms_data.
     ELSE. " OFFline -> On-line
-      lo_repo->set( iv_offline     = abap_false ).
+      lo_repo->set( iv_offline = abap_false ).
       CREATE OBJECT <repo> TYPE lcl_repo_online
         EXPORTING
           is_data = lo_repo->ms_data.
@@ -1063,7 +1063,12 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD is_sap_object_allowed.
 
-    r_is_sap_object_allowed = lcl_exit=>get_instance( )->allow_sap_objects( ).
+    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
+    IF rv_allowed = abap_true.
+      RETURN.
+    ENDIF.
+
+    rv_allowed = lcl_exit=>get_instance( )->allow_sap_objects( ).
 
   ENDMETHOD.
 
