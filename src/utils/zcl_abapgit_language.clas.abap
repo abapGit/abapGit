@@ -19,13 +19,13 @@ CLASS zcl_abapgit_language DEFINITION
       restore_login_language,
       set_current_language
         IMPORTING
-          !iv_language TYPE langu .
+          !iv_language TYPE langu.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LANGUAGE IMPLEMENTATION.
+CLASS zcl_abapgit_language IMPLEMENTATION.
 
 
   METHOD class_constructor.
