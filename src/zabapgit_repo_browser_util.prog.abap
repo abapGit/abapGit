@@ -113,7 +113,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
       lv_index = sy-tabix.
       CHECK <item>-path <> iv_cur_dir. " files in target dir - just leave them be
 
-      IF lcl_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
+      IF zcl_abapgit_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
         ls_subitem-changes = <item>-changes.
         ls_subitem-path    = <item>-path.
         ls_subitem-lstate  = <item>-lstate.
