@@ -136,10 +136,10 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
       ls_folder-changes = ls_folder-changes + <item>-changes.
 
-      lcl_state=>reduce( EXPORTING iv_cur = <item>-lstate
-                         CHANGING cv_prev = ls_folder-lstate ).
-      lcl_state=>reduce( EXPORTING iv_cur = <item>-rstate
-                         CHANGING cv_prev = ls_folder-rstate ).
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-lstate
+                                 CHANGING cv_prev = ls_folder-lstate ).
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-rstate
+                                 CHANGING cv_prev = ls_folder-rstate ).
 
       AT END OF path.
         APPEND ls_folder TO ct_repo_items.
@@ -222,10 +222,10 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
 
-          lcl_state=>reduce( EXPORTING iv_cur = ls_file-lstate
-                             CHANGING cv_prev = <ls_repo_item>-lstate ).
-          lcl_state=>reduce( EXPORTING iv_cur = ls_file-rstate
-                             CHANGING cv_prev = <ls_repo_item>-rstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-lstate
+                                     CHANGING cv_prev = <ls_repo_item>-lstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-rstate
+                                     CHANGING cv_prev = <ls_repo_item>-rstate ).
         ENDIF.
       ENDIF.
 
