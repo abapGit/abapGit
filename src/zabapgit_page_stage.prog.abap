@@ -139,9 +139,13 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     LOOP AT lt_fields ASSIGNING <ls_item>.
 
-      lcl_path=>split_file_location( EXPORTING iv_fullpath = <ls_item>-name
-                                     IMPORTING ev_path     = ls_file-path
-                                               ev_filename = ls_file-filename ).
+      zcl_abapgit_path=>split_file_location(
+        EXPORTING
+          iv_fullpath = <ls_item>-name
+        IMPORTING
+          ev_path     = ls_file-path
+          ev_filename = ls_file-filename ).
+
       CASE <ls_item>-value.
         WHEN lcl_stage=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>

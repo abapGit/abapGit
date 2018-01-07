@@ -463,7 +463,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     " Remove path from filename
     find_param( it_params = ct_params iv_name = c_param_names-filename ). " Check exists
     READ TABLE ct_params ASSIGNING <param> WITH KEY name = c_param_names-filename.
-    <param>-value = lcl_path=>get_filename_from_syspath( |{ <param>-value }| ).
+    <param>-value = zcl_abapgit_path=>get_filename_from_syspath( |{ <param>-value }| ).
 
     " Clear version & filesize
     DELETE ct_params WHERE name = c_param_names-version.

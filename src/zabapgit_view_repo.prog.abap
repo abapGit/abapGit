@@ -105,7 +105,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
-        mv_cur_dir      = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
@@ -172,7 +172,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         " Repo content table
         ro_html->add( '<table class="repo_tab">' ).
 
-        IF lcl_path=>is_root( mv_cur_dir ) = abap_false.
+        IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
         ENDIF.
 
