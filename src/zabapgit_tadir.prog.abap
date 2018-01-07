@@ -170,7 +170,7 @@ CLASS lcl_tadir IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc = 0.
-      rv_hash = lcl_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
+      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
     ENDIF.
 
   ENDMETHOD.
