@@ -1011,7 +1011,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       lv_program_name = iv_program.
     ENDIF.
 
-    lcl_language=>set_current_language( mv_language ).
+    zcl_abapgit_language=>set_current_language( mv_language ).
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
@@ -1027,14 +1027,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
         OTHERS           = 4.
 
     IF sy-subrc = 2.
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
       zcx_abapgit_exception=>raise( 'Error reading program' ).
     ENDIF.
 
-    lcl_language=>restore_login_language( ).
+    zcl_abapgit_language=>restore_login_language( ).
 
     ls_progdir = read_progdir( lv_program_name ).
 
@@ -1127,7 +1127,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_exists = abap_true.
-      lcl_language=>set_current_language( mv_language ).
+      zcl_abapgit_language=>set_current_language( mv_language ).
 
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
@@ -1143,7 +1143,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           OTHERS           = 4.
 
       IF sy-subrc <> 0.
-        lcl_language=>restore_login_language( ).
+        zcl_abapgit_language=>restore_login_language( ).
 
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           zcx_abapgit_exception=>raise( 'User is currently editing program' ).
@@ -1152,7 +1152,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
     ELSE.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
