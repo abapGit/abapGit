@@ -880,12 +880,12 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
   METHOD zlib_decompress.
 
-    DATA: ls_data           TYPE lcl_zlib=>ty_decompress,
+    DATA: ls_data           TYPE zcl_abapgit_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
           lv_adler32        TYPE zcl_abapgit_hash=>ty_adler32.
 
 
-    ls_data = lcl_zlib=>decompress( cv_data ).
+    ls_data = zcl_abapgit_zlib=>decompress( cv_data ).
     lv_compressed_len = ls_data-compressed_len.
     cv_decompressed = ls_data-raw.
 
