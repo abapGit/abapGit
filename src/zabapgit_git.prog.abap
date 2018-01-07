@@ -1271,7 +1271,9 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
     LOOP AT it_blobs ASSIGNING <ls_blob>.
       CLEAR ls_object.
-      ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = <ls_blob>-data ).
+      ls_object-sha1 = zcl_abapgit_hash=>sha1(
+        iv_type = zif_abapgit_definitions=>gc_type-blob
+        iv_data = <ls_blob>-data ).
 
       READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-blob sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
