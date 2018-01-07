@@ -347,7 +347,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     read_file( EXPORTING iv_filename = lv_filename
                IMPORTING ev_data     = lv_data ).
 
-    rv_string = lcl_convert=>xstring_to_string_utf8( lv_data ).
+    rv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
   ENDMETHOD.                    "read_string
 
@@ -369,7 +369,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_abap = lcl_convert=>xstring_to_string_utf8( lv_data ).
+    lv_abap = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
     SPLIT lv_abap AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_abap.
 
@@ -388,7 +388,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
                                  iv_ext   = 'abap' ).       "#EC NOTEXT
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
+    ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_source ).
 
     APPEND ls_file TO mt_files.
 
@@ -402,7 +402,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
                                  iv_ext   = iv_ext ).       "#EC NOTEXT
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_string ).
+    ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string ).
 
     APPEND ls_file TO mt_files.
 
@@ -427,7 +427,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
 
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
+    ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
 
     APPEND ls_file TO mt_files.
 
@@ -445,7 +445,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
     read_file( EXPORTING iv_filename = lv_filename
                IMPORTING ev_data     = lv_data ).
 
-    lv_xml = lcl_convert=>xstring_to_string_utf8( lv_data ).
+    lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
     CREATE OBJECT ro_xml
       EXPORTING

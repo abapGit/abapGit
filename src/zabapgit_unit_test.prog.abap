@@ -41,72 +41,6 @@ END-OF-DEFINITION.
 * todo, should the tests be in the same include as the classes
 * they are testing?
 
-*----------------------------------------------------------------------*
-*       CLASS ltcl_convert DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
-
-  PRIVATE SECTION.
-    METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
-    METHODS split_string FOR TESTING.
-
-ENDCLASS.                    "ltcl_convert DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS ltcl_convert IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS ltcl_convert IMPLEMENTATION.
-
-  METHOD convert_int.
-
-    DATA: lv_xstring TYPE xstring,
-          lv_input   TYPE i,
-          lv_result  TYPE i.
-
-
-    DO 1000 TIMES.
-      lv_input = sy-index.
-      lv_xstring = lcl_convert=>int_to_xstring4( lv_input ).
-      lv_result = lcl_convert=>xstring_to_int( lv_xstring ).
-
-      cl_abap_unit_assert=>assert_equals(
-          exp = lv_input
-          act = lv_result ).
-    ENDDO.
-
-  ENDMETHOD.                    "convert_int
-
-  METHOD split_string.
-
-    DATA: lt_act TYPE string_table,
-          lt_exp TYPE string_table.
-
-    APPEND 'ABC' TO lt_exp.
-    APPEND '123' TO lt_exp.
-
-    " Case 1. String separated by CRLF
-    lt_act = lcl_convert=>split_string( 'ABC' && cl_abap_char_utilities=>cr_lf && '123' ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_exp
-                                        act = lt_act
-                                        msg = ' Error during string split: CRLF' ).
-
-    CLEAR: lt_act.
-
-    " Case 2. String separated by LF
-    lt_act = lcl_convert=>split_string( 'ABC' && cl_abap_char_utilities=>newline && '123' ).
-
-    cl_abap_unit_assert=>assert_equals( exp = lt_exp
-                                        act = lt_act
-                                        msg = ' Error during string split: LF' ).
-
-  ENDMETHOD.                    "split_string.
-
-ENDCLASS.                    "ltcl_convert IMPLEMENTATION
 
 CLASS ltcl_critical_tests DEFINITION FINAL FOR TESTING.
   PUBLIC SECTION.
@@ -298,8 +232,8 @@ CLASS ltcl_diff IMPLEMENTATION.
     CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY zif_abapgit_definitions=>gc_newline.
     CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY zif_abapgit_definitions=>gc_newline.
 
-    lv_xnew = lcl_convert=>string_to_xstring_utf8( lv_new ).
-    lv_xold = lcl_convert=>string_to_xstring_utf8( lv_old ).
+    lv_xnew = zcl_abapgit_convert=>string_to_xstring_utf8( lv_new ).
+    lv_xold = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ).
 
     CREATE OBJECT lo_diff
       EXPORTING
@@ -977,7 +911,7 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
     DATA: lv_xstr TYPE xstring.
 
 
-    lv_xstr = lcl_convert=>string_to_xstring_utf8( mv_str ).
+    lv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( mv_str ).
 
     ms_raw = lcl_git_pack=>decode_commit( lv_xstr ).
 

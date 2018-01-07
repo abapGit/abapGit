@@ -590,7 +590,7 @@ CLASS lcl_objects IMPLEMENTATION.
       IF sy-subrc = 0.
         CREATE OBJECT lo_remote_version
           EXPORTING
-            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+            iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
         lo_comparison_result = io_object->compare_to_remote_version( lo_remote_version ).
         lo_comparison_result->show_confirmation_dialog( ).
 

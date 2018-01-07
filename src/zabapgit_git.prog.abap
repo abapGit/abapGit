@@ -256,13 +256,13 @@ CLASS lcl_git_transport IMPLEMENTATION.
     lv_cmd_pkt = lcl_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
-    lv_tmp = lcl_convert=>string_to_xstring_utf8( lv_buffer ).
+    lv_tmp = zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ).
 
     CONCATENATE lv_tmp iv_pack INTO lv_xstring IN BYTE MODE.
 
     lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
-    lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
       zcx_abapgit_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
@@ -368,7 +368,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
              && '0009done' && zif_abapgit_definitions=>gc_newline.
 
     lv_xstring = lo_client->send_receive_close(
-      lcl_convert=>string_to_xstring_utf8( lv_buffer ) ).
+      zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
     parse( IMPORTING ev_pack = lv_pack
            CHANGING cv_data = lv_xstring ).
@@ -494,19 +494,19 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 
     lv_x = cv_data(1).
-    lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+    lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
 
     cv_data = cv_data+1.
     lv_length_bits = lv_bitbyte+4.
 
     WHILE lv_bitbyte(1) <> '0'.
       lv_x = cv_data(1).
-      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+      lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
       cv_data = cv_data+1.
       CONCATENATE lv_bitbyte+1 lv_length_bits INTO lv_length_bits.
     ENDWHILE.
 
-    ev_length = lcl_convert=>bitbyte_to_int( lv_length_bits ).
+    ev_length = zcl_abapgit_convert=>bitbyte_to_int( lv_length_bits ).
 
   ENDMETHOD.                    "get_length
 
@@ -530,7 +530,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
       ASSERT NOT <ls_node>-sha1 IS INITIAL.
 
       CONCATENATE <ls_node>-chmod <ls_node>-name INTO lv_string SEPARATED BY space.
-      lv_xstring = lcl_convert=>string_to_xstring_utf8( lv_string ).
+      lv_xstring = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
       lv_hex20 = to_upper( <ls_node>-sha1 ).
       CONCATENATE rv_data lv_xstring lc_null lv_hex20 INTO rv_data IN BYTE MODE.
@@ -582,7 +582,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     CONCATENATE lv_string zif_abapgit_definitions=>gc_newline is_commit-body INTO lv_string.
 
-    rv_data = lcl_convert=>string_to_xstring_utf8( lv_string ).
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.                    "encode_commit
 
@@ -592,7 +592,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lv_bitbyte TYPE zif_abapgit_definitions=>ty_bitbyte.
 
 
-    lv_bitbyte = lcl_convert=>x_to_bitbyte( iv_x ).
+    lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( iv_x ).
     lv_char3 = lv_bitbyte+1.
 
     CASE lv_char3.
@@ -623,7 +623,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
 
 
-    lv_string = lcl_convert=>xstring_to_string_utf8( iv_data ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
 
     SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_string.
 
@@ -683,13 +683,13 @@ CLASS lcl_git_pack IMPLEMENTATION.
     DO.
       lv_x = cv_delta(1).
       cv_delta = cv_delta+1.
-      lv_bitbyte = lcl_convert=>x_to_bitbyte( lv_x ).
+      lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_x ).
       CONCATENATE lv_bitbyte+1 lv_bits INTO lv_bits.
       IF lv_bitbyte(1) = '0'.
         EXIT. " current loop
       ENDIF.
     ENDDO.
-    ev_header = lcl_convert=>bitbyte_to_int( lv_bits ).
+    ev_header = zcl_abapgit_convert=>bitbyte_to_int( lv_bits ).
 
   ENDMETHOD.                    "delta_header
 
@@ -851,7 +851,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
         lv_len = lv_cursor - lv_start.
         lv_xstring = iv_data+lv_start(lv_len).
 
-        lv_string = lcl_convert=>xstring_to_string_utf8( lv_xstring ).
+        lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
         SPLIT lv_string AT space INTO lv_chmod lv_name.
 
         lv_offset = lv_cursor + 1.
@@ -942,7 +942,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
 * number of objects
     lv_xstring = lv_data(4).
-    lv_objects = lcl_convert=>xstring_to_int( lv_xstring ).
+    lv_objects = zcl_abapgit_convert=>xstring_to_int( lv_xstring ).
     lv_data = lv_data+4.
 
 
@@ -1050,7 +1050,7 @@ CLASS lcl_git_pack IMPLEMENTATION.
 
     CONCATENATE rv_data c_version INTO rv_data IN BYTE MODE.
 
-    lv_xstring = lcl_convert=>int_to_xstring4( lines( it_objects ) ).
+    lv_xstring = zcl_abapgit_convert=>int_to_xstring4( lines( it_objects ) ).
     CONCATENATE rv_data lv_xstring INTO rv_data IN BYTE MODE.
 
     lv_objects_total = lines( it_objects ).

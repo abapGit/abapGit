@@ -94,7 +94,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
           ls_data TYPE ty_dot_abapgit.
 
 
-    lv_xml = lcl_convert=>xstring_to_string_utf8( iv_xstr ).
+    lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xstr ).
 
     ls_data = from_xml( lv_xml ).
 
@@ -110,7 +110,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
 
     lv_xml = to_xml( ms_data ).
 
-    rv_xstr = lcl_convert=>string_to_xstring_utf8( lv_xml ).
+    rv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
 
   ENDMETHOD.
 
