@@ -67,3 +67,7 @@ SAP Teched Barcelona
 
 [Innovative, Disruptive, Enterprise Focused and Boring – Choose Four. Reflections on SAP TechEd](https://redmonk.com/fryan/2017/12/11/innovative-disruptive-enterprise-focused-and-boring-choose-four-reflections-on-sap-teched/)
 -RedMonk
+
+### 2018
+
+?
