@@ -79,7 +79,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       RAISING   zcx_abapgit_exception.
     METHODS build_menu
       IMPORTING iv_supress_stage TYPE abap_bool
-      RETURNING VALUE(ro_menu)   TYPE REF TO lcl_html_toolbar.
+      RETURNING VALUE(ro_menu)   TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS is_binary
       IMPORTING iv_d1         TYPE xstring
                 iv_d2         TYPE xstring
@@ -275,7 +275,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD build_menu.
 
-    DATA: lo_sub   TYPE REF TO lcl_html_toolbar,
+    DATA: lo_sub   TYPE REF TO zcl_abapgit_html_toolbar,
           lt_types TYPE string_table,
           lt_users TYPE string_table.
 

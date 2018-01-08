@@ -234,7 +234,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_menu.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
