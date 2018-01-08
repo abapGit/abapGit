@@ -75,10 +75,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     super->refresh( iv_drop_cache ).
     reset_status( ).
 
-    lcl_progress=>show( iv_key     = 'Fetch'
-                        iv_current = 1
-                        iv_total   = 1
-                        iv_text    = 'Remote files' ) ##NO_TEXT.
+    zcl_abapgit_progress=>show( iv_key     = 'Fetch'
+                                iv_current = 1
+                                iv_total   = 1
+                                iv_text    = 'Remote files' ) ##NO_TEXT.
 
     TRY.
 
@@ -648,10 +648,10 @@ CLASS lcl_repo IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lcl_progress=>show( iv_key     = 'Serialize'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_tadir )
-                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Serialize'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_tadir )
+                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
 
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.

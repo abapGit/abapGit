@@ -809,10 +809,10 @@ CLASS lcl_git_pack IMPLEMENTATION.
           lt_deltas LIKE ct_objects.
 
 
-    lcl_progress=>show( iv_key     = 'Decode'
-                        iv_current = 1
-                        iv_total   = 1
-                        iv_text    = 'Deltas' ) ##NO_TEXT.
+    zcl_abapgit_progress=>show( iv_key     = 'Decode'
+                                iv_current = 1
+                                iv_total   = 1
+                                iv_text    = 'Deltas' ) ##NO_TEXT.
 
     LOOP AT ct_objects INTO ls_object WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
       DELETE ct_objects INDEX sy-tabix.

@@ -160,10 +160,10 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
 
-    lcl_progress=>show( iv_key     = 'Get git objects'
-                        iv_current = 1
-                        iv_total   = 1
-                        iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
+    zcl_abapgit_progress=>show( iv_key     = 'Get git objects'
+                                iv_current = 1
+                                iv_total   = 1
+                                iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
 
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
