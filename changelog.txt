@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2018-01-08 v1.51.2
+------------------
+* some local classes moved to global in abapGit dev version
+* fix finding superpackages
+* SAP systems recognized as SAP
+
 2018-01-05 v1.51.1
 ------------------
 * minor fixes for tags
