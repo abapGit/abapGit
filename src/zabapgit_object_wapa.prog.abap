@@ -195,7 +195,10 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     ls_attributes-devclass = iv_package.
 
-* todo: overwrite existing
+    IF me->lif_object~exists( ) EQ abap_true.
+      me->lif_object~delete( ).
+    ENDIF.
+
     cl_o2_api_application=>create_new(
       EXPORTING
         p_application_data      = ls_attributes
