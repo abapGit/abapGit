@@ -55,11 +55,11 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING   zcx_abapgit_exception.
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_xml
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
@@ -67,7 +67,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING zcx_abapgit_exception.
 
     METHODS deserialize_includes
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
@@ -299,7 +299,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_includes.
 
-    DATA: lo_xml       TYPE REF TO lcl_xml_input,
+    DATA: lo_xml       TYPE REF TO zcl_abapgit_xml_input,
           ls_progdir   TYPE ty_progdir,
           lt_includes  TYPE rso_t_objnm,
           lt_tpool     TYPE textpool_table,

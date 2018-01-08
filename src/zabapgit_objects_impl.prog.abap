@@ -343,7 +343,7 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD serialize.
 
     DATA: li_obj   TYPE REF TO lif_object,
-          lo_xml   TYPE REF TO lcl_xml_output,
+          lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO lcl_objects_files.
 
 
@@ -430,7 +430,7 @@ CLASS lcl_objects IMPLEMENTATION.
           lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package TYPE devclass,
           lo_files   TYPE REF TO lcl_objects_files,
-          lo_xml     TYPE REF TO lcl_xml_input,
+          lo_xml     TYPE REF TO zcl_abapgit_xml_input,
           lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,
           lt_rest    TYPE TABLE OF ty_deserialization,
@@ -572,7 +572,7 @@ CLASS lcl_objects IMPLEMENTATION.
 * only the main XML file is used for comparison
 
     DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
-          lo_remote_version    TYPE REF TO lcl_xml_input,
+          lo_remote_version    TYPE REF TO zcl_abapgit_xml_input,
           lv_count             TYPE i,
           lo_comparison_result TYPE REF TO lif_comparison_result.
 

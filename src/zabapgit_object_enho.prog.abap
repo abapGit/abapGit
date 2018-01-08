@@ -8,11 +8,11 @@ INTERFACE lif_object_enho.
 
   METHODS:
     deserialize
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception,
     serialize
-      IMPORTING io_xml      TYPE REF TO lcl_xml_output
+      IMPORTING io_xml      TYPE REF TO zcl_abapgit_xml_output
                 ii_enh_tool TYPE REF TO if_enh_tool
       RAISING   zcx_abapgit_exception.
 
@@ -269,12 +269,12 @@ CLASS lcl_object_enho_clif DEFINITION.
   PUBLIC SECTION.
     CLASS-METHODS:
       deserialize
-        IMPORTING io_xml  TYPE REF TO lcl_xml_input
+        IMPORTING io_xml  TYPE REF TO zcl_abapgit_xml_input
                   io_clif TYPE REF TO cl_enh_tool_clif
         RAISING   zcx_abapgit_exception
                   cx_enh_root,
       serialize
-        IMPORTING io_xml   TYPE REF TO lcl_xml_output
+        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_output
                   io_files TYPE REF TO lcl_objects_files
                   io_clif  TYPE REF TO cl_enh_tool_clif
         RAISING   zcx_abapgit_exception.

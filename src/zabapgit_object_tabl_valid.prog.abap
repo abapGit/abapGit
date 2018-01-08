@@ -6,8 +6,8 @@ CLASS lcl_object_tabl_valid DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS validate
       IMPORTING
-        io_remote_version TYPE REF TO lcl_xml_input
-        io_local_version  TYPE REF TO lcl_xml_input
+        io_remote_version TYPE REF TO zcl_abapgit_xml_input
+        io_local_version  TYPE REF TO zcl_abapgit_xml_input
       RETURNING
         VALUE(rv_message) TYPE string
       RAISING
@@ -105,10 +105,10 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
           zcx_abapgit_exception.
 
     DATA: mo_table_validator            TYPE REF TO lcl_object_tabl_valid,
-          mo_previous_version_out_xml   TYPE REF TO lcl_xml_output,
-          mo_previous_version_input_xml TYPE REF TO lcl_xml_input,
-          mo_current_version_out_xml    TYPE REF TO lcl_xml_output,
-          mo_current_version_input_xml  TYPE REF TO lcl_xml_input,
+          mo_previous_version_out_xml   TYPE REF TO zcl_abapgit_xml_output,
+          mo_previous_version_input_xml TYPE REF TO zcl_abapgit_xml_input,
+          mo_current_version_out_xml    TYPE REF TO zcl_abapgit_xml_output,
+          mo_current_version_input_xml  TYPE REF TO zcl_abapgit_xml_input,
           mt_previous_table_fields      TYPE TABLE OF dd03p,
           mt_current_table_fields       TYPE TABLE OF dd03p,
           mv_validation_message         TYPE string.

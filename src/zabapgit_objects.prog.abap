@@ -181,7 +181,7 @@ CLASS lcl_objects_files DEFINITION.
         RAISING   zcx_abapgit_exception,
       add_xml
         IMPORTING iv_extra     TYPE clike OPTIONAL
-                  io_xml       TYPE REF TO lcl_xml_output
+                  io_xml       TYPE REF TO zcl_abapgit_xml_output
                   iv_normalize TYPE sap_bool DEFAULT abap_true
                   is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         RAISING   zcx_abapgit_exception,
@@ -193,7 +193,7 @@ CLASS lcl_objects_files DEFINITION.
         RAISING   zcx_abapgit_exception ##called,
       read_xml
         IMPORTING iv_extra      TYPE clike OPTIONAL
-        RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml_input
+        RETURNING VALUE(ro_xml) TYPE REF TO zcl_abapgit_xml_input
         RAISING   zcx_abapgit_exception,
       read_abap
         IMPORTING iv_extra       TYPE clike OPTIONAL
@@ -276,11 +276,11 @@ INTERFACE lif_object.
 
   METHODS:
     serialize
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception,
     deserialize
       IMPORTING iv_package TYPE devclass
-                io_xml     TYPE REF TO lcl_xml_input
+                io_xml     TYPE REF TO zcl_abapgit_xml_input
       RAISING   zcx_abapgit_exception,
     delete
       RAISING zcx_abapgit_exception,
@@ -300,7 +300,7 @@ INTERFACE lif_object.
       RAISING   zcx_abapgit_exception.
   METHODS:
     compare_to_remote_version
-      IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
+      IMPORTING io_remote_version_xml       TYPE REF TO zcl_abapgit_xml_input
       RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_comparison_result
       RAISING   zcx_abapgit_exception.
 
@@ -485,7 +485,7 @@ CLASS lcl_objects_files IMPLEMENTATION.
 *    xml-object in the plugin can only be typed to object.
 *    ABAP does not perform implicit type casts (also if compatible) in signatures,
 *    therefore this method's signature is typed ref to object
-    DATA lo_xml TYPE REF TO lcl_xml_output.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
 
     lo_xml ?= io_xml.
 
@@ -845,7 +845,7 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
            END OF ty_progdir.
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO lcl_xml_output OPTIONAL
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_output OPTIONAL
                 is_item    TYPE zif_abapgit_definitions=>ty_item
                 io_files   TYPE REF TO lcl_objects_files
                 iv_program TYPE programm OPTIONAL
@@ -1003,7 +1003,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO lcl_xml_output.
+          lo_xml          TYPE REF TO zcl_abapgit_xml_output.
 
     IF iv_program IS INITIAL.
       lv_program_name = is_item-obj_name.
@@ -2275,7 +2275,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_deserialization,
              obj     TYPE REF TO lif_object,
-             xml     TYPE REF TO lcl_xml_input,
+             xml     TYPE REF TO zcl_abapgit_xml_input,
              package TYPE devclass,
              item    TYPE zif_abapgit_definitions=>ty_item,
            END OF ty_deserialization.
