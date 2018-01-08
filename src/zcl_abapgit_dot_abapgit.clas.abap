@@ -1,89 +1,89 @@
-class ZCL_ABAPGIT_DOT_ABAPGIT definition
-  public
-  create public .
+CLASS zcl_abapgit_dot_abapgit DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    BEGIN OF ty_requirement,
-             component   TYPE dlvunit,
-             min_release TYPE saprelease,
-             min_patch   TYPE sappatchlv,
-           END OF ty_requirement .
-  types:
-    ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY .
-  types:
-    BEGIN OF ty_dot_abapgit,
-             master_language TYPE spras,
-             starting_folder TYPE string,
-             folder_logic    TYPE string,
-             ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-             requirements    TYPE ty_requirement_tt,
-           END OF ty_dot_abapgit .
+    TYPES:
+      BEGIN OF ty_requirement,
+        component   TYPE dlvunit,
+        min_release TYPE saprelease,
+        min_patch   TYPE sappatchlv,
+      END OF ty_requirement .
+    TYPES:
+      ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_dot_abapgit,
+        master_language TYPE spras,
+        starting_folder TYPE string,
+        folder_logic    TYPE string,
+        ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+        requirements    TYPE ty_requirement_tt,
+      END OF ty_dot_abapgit .
 
-  constants:
-    BEGIN OF c_folder_logic,
-                 prefix TYPE string VALUE 'PREFIX',
-                 full   TYPE string VALUE 'FULL',
-               END OF c_folder_logic .
+    CONSTANTS:
+      BEGIN OF c_folder_logic,
+        prefix TYPE string VALUE 'PREFIX',
+        full   TYPE string VALUE 'FULL',
+      END OF c_folder_logic .
 
-  class-methods BUILD_DEFAULT
-    returning
-      value(RO_DOT_ABAPGIT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT .
-  class-methods DESERIALIZE
-    importing
-      !IV_XSTR type XSTRING
-    returning
-      value(RO_DOT_ABAPGIT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CONSTRUCTOR
-    importing
-      !IS_DATA type TY_DOT_ABAPGIT .
-  methods SERIALIZE
-    returning
-      value(RV_XSTR) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_DATA
-    returning
-      value(RS_DATA) type TY_DOT_ABAPGIT .
-  methods ADD_IGNORE
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING .
-  methods IS_IGNORED
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING
-    returning
-      value(RV_IGNORED) type ABAP_BOOL .
-  methods REMOVE_IGNORE
-    importing
-      !IV_PATH type STRING
-      !IV_FILENAME type STRING .
-  methods GET_STARTING_FOLDER
-    returning
-      value(RV_PATH) type STRING .
-  methods GET_FOLDER_LOGIC
-    returning
-      value(RV_LOGIC) type STRING .
-  methods SET_FOLDER_LOGIC
-    importing
-      !IV_LOGIC type STRING .
-  methods SET_STARTING_FOLDER
-    importing
-      !IV_PATH type STRING .
-  methods GET_MASTER_LANGUAGE
-    returning
-      value(RV_LANGUAGE) type SPRAS .
+    CLASS-METHODS build_default
+      RETURNING
+        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
+    CLASS-METHODS deserialize
+      IMPORTING
+        !iv_xstr              TYPE xstring
+      RETURNING
+        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !is_data TYPE ty_dot_abapgit .
+    METHODS serialize
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_data
+      RETURNING
+        VALUE(rs_data) TYPE ty_dot_abapgit .
+    METHODS add_ignore
+      IMPORTING
+        !iv_path     TYPE string
+        !iv_filename TYPE string .
+    METHODS is_ignored
+      IMPORTING
+        !iv_path          TYPE string
+        !iv_filename      TYPE string
+      RETURNING
+        VALUE(rv_ignored) TYPE abap_bool .
+    METHODS remove_ignore
+      IMPORTING
+        !iv_path     TYPE string
+        !iv_filename TYPE string .
+    METHODS get_starting_folder
+      RETURNING
+        VALUE(rv_path) TYPE string .
+    METHODS get_folder_logic
+      RETURNING
+        VALUE(rv_logic) TYPE string .
+    METHODS set_folder_logic
+      IMPORTING
+        !iv_logic TYPE string .
+    METHODS set_starting_folder
+      IMPORTING
+        !iv_path TYPE string .
+    METHODS get_master_language
+      RETURNING
+        VALUE(rv_language) TYPE spras .
 *      set_master_language
 *        IMPORTING iv_language TYPE spras,
-  methods GET_SIGNATURE
-    returning
-      value(RS_SIGNATURE) type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE_SIGNATURE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS get_signature
+      RETURNING
+        VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     DATA: ms_data TYPE ty_dot_abapgit.
 
