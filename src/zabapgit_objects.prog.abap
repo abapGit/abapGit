@@ -2285,7 +2285,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
                 iv_language     TYPE spras
-                io_log          TYPE REF TO lcl_log OPTIONAL
+                io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
       RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING   zcx_abapgit_exception.
 

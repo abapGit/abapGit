@@ -17,7 +17,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
         RETURNING VALUE(rv_name) TYPE string
         RAISING   zcx_abapgit_exception,
       get_files_local
-        IMPORTING io_log          TYPE REF TO lcl_log OPTIONAL
+        IMPORTING io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
                   it_filter       TYPE scts_tadir OPTIONAL
         RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
         RAISING   zcx_abapgit_exception,
@@ -125,7 +125,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
         RAISING   zcx_abapgit_exception,
       deserialize REDEFINITION,
       status
-        IMPORTING io_log            TYPE REF TO lcl_log OPTIONAL
+        IMPORTING io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       reset_status,
