@@ -480,7 +480,7 @@ CLASS lcl_http IMPLEMENTATION.
     " Disable internal auth dialog (due to its unclarity)
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    lcl_login_manager=>load( iv_uri    = iv_url
+    zcl_abapgit_login_manager=>load( iv_uri    = iv_url
                              ii_client = li_client ).
 
     ro_client->send_receive( ).
@@ -493,7 +493,7 @@ CLASS lcl_http IMPLEMENTATION.
     ro_client->check_http_200( ).
 
     IF lv_scheme <> gc_scheme-digest.
-      lcl_login_manager=>save( iv_uri    = iv_url
+      zcl_abapgit_login_manager=>save( iv_uri    = iv_url
                                ii_client = li_client ).
     ENDIF.
 
