@@ -23,19 +23,19 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
       mv_error    TYPE abap_bool.
 
     METHODS render_proxy
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_development_internals
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_form_begin
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_form_end
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_max_lines
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_adt_jump_enabled
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_commit_msg
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS build_settings
       IMPORTING
         it_post_fields TYPE tihttpnvp.

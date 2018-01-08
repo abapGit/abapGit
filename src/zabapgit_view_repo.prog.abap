@@ -33,7 +33,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
       render_head_line
         IMPORTING iv_lstate      TYPE char1
                   iv_rstate      TYPE char1
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_head_menu
         IMPORTING iv_lstate         TYPE char1
@@ -45,14 +45,14 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
         RAISING   zcx_abapgit_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_item_files
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_item_command
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       get_item_class
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
@@ -62,7 +62,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
 
     METHODS:
@@ -199,9 +199,9 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
           ro_html->add( |Only { lv_max_str } shown in list. Display {
-            lcl_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
+            zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
-            lcl_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>gc_action-go_settings )
+            zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>gc_action-go_settings )
             } )| ).
           ro_html->add( '</div>' ).
         ENDIF.
@@ -381,7 +381,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>gc_action-repo_refresh }?{ lv_key }| ).
-    ro_toolbar->add( iv_txt = lcl_html=>icon( iv_name = 'settings/grey70' )
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'settings/grey70' )
                      io_sub = build_grid_menu( ) ).
 
   ENDMETHOD.  "build_head_menu
@@ -408,17 +408,17 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     CASE is_item-obj_type.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
-        rv_html = lcl_html=>icon( 'file-code/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
       WHEN 'W3MI' OR 'W3HT'.
-        rv_html = lcl_html=>icon( 'file-binary/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-binary/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = lcl_html=>icon( 'file/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = lcl_html=>icon( 'file-directory/darkgrey' ).
+      rv_html = zcl_abapgit_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
   ENDMETHOD. "get_item_icon
@@ -551,7 +551,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<tr class="folder">' ).
-    ro_html->add( |<td class="icon">{ lcl_html=>icon( 'dir' ) }</td>| ).
+    ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'dir' ) }</td>| ).
     ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->is_offline( ) = abap_false.
       ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
@@ -569,8 +569,8 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
 
-    rv_html = lcl_html=>a( iv_txt = lv_path
-                           iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
+                                   iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_dir_jump_link
 
@@ -581,8 +581,8 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
-    rv_html = lcl_html=>a( iv_txt = |{ is_item-obj_name }|
-                           iv_act = |{ zif_abapgit_definitions=>gc_action-jump }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|
+                                   iv_act = |{ zif_abapgit_definitions=>gc_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_obj_jump_link
 

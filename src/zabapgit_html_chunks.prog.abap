@@ -9,7 +9,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
     CLASS-METHODS render_error
         IMPORTING ix_error            TYPE REF TO zcx_abapgit_exception OPTIONAL
                   iv_error            TYPE string OPTIONAL
-        RETURNING VALUE(ro_html)      TYPE REF TO lcl_html.
+        RETURNING VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
 
     CLASS-METHODS render_repo_top
       IMPORTING io_repo               TYPE REF TO lcl_repo
@@ -18,7 +18,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
                 iv_branch             TYPE string OPTIONAL
                 io_news               TYPE REF TO lcl_news OPTIONAL
-      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_item_state
@@ -30,17 +30,17 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
       IMPORTING iv_branch             TYPE string
                 io_repo               TYPE REF TO lcl_repo_online
                 iv_interactive        TYPE abap_bool
-      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_js_error_banner
-      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_news
       IMPORTING
                 io_news               TYPE REF TO lcl_news
-      RETURNING VALUE(ro_html)        TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_gui_chunk_lib
@@ -87,9 +87,9 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       ENDIF.
       ro_html->add_a( iv_act = 'displayNews()'
                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
-                      iv_txt = lcl_html=>icon( iv_name  = lv_icon
-                                               iv_class = 'pad-sides'
-                                               iv_hint  = 'Display changelog' ) ).
+                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
+                                                       iv_class = 'pad-sides'
+                                                      iv_hint  = 'Display changelog' ) ).
     ENDIF.
     ro_html->add( '</td>' ).
 
@@ -102,9 +102,9 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
       lv_icon = 'star/grey' ##NO_TEXT.
     ENDIF.
     ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
-                    iv_txt = lcl_html=>icon( iv_name  = lv_icon
-                                             iv_class = 'pad-sides'
-                                             iv_hint  = 'Click to toggle favorite' ) ).
+                    iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
+                                                     iv_class = 'pad-sides'
+                                                     iv_hint  = 'Click to toggle favorite' ) ).
 
     " BG
     IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
@@ -229,7 +229,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( '<div class="dummydiv error">' ).
-    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD. "render_error
@@ -237,7 +237,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_js_error_banner.
     CREATE OBJECT ro_html.
     ro_html->add( '<div id="js-error-banner" class="dummydiv error">' ).
-    ro_html->add( |{ lcl_html=>icon( 'alert/red' ) }| &&
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) }| &&
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
@@ -267,7 +267,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( '<div class="headbar title">Announcement of the latest changes'
                && '<div class="float-right">'
-               && lcl_html=>a(
+               && zcl_abapgit_html=>a(
                     iv_txt   = '&#x274c;'
                     iv_typ   = zif_abapgit_definitions=>gc_action_type-onclick
                     iv_act   = 'displayNews()'
@@ -276,7 +276,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     IF io_news->has_important( ) = abap_true.
       ro_html->add( '<div class="headbar important">'
-        && lcl_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
+        && zcl_abapgit_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
         && 'Please note changes marked with "!"'
         && '</div>' ).
     ENDIF.

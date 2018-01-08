@@ -30,16 +30,16 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       render_list
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
       render_file
         IMPORTING iv_context     TYPE string
                   is_file        TYPE zif_abapgit_definitions=>ty_file
                   is_item        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
       render_actions
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
       read_last_changed_by
         IMPORTING is_file        TYPE zif_abapgit_definitions=>ty_file
@@ -248,8 +248,9 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
       WHEN 'local'.
         lv_param    = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
                                                           ig_file = is_file ).
-        lv_filename = lcl_html=>a( iv_txt = lv_filename
-                                   iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_param }| ).
+        lv_filename = zcl_abapgit_html=>a(
+          iv_txt = lv_filename
+          iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ro_html->add( |<td class="name">{ lv_filename }</td>| ).
         ro_html->add( |<td class="user">{ read_last_changed_by( is_file ) }</td>| ).

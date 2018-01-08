@@ -17,7 +17,7 @@ INTERFACE lif_gui_page.
     RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
   METHODS render
-    RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+    RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
     RAISING   zcx_abapgit_exception.
 
 ENDINTERFACE.
@@ -37,27 +37,27 @@ CLASS lcl_gui_page DEFINITION ABSTRACT.
     DATA: ms_control TYPE ty_control.
 
     METHODS render_content ABSTRACT
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
     METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
     METHODS html_head
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS title
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 
     METHODS footer
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS redirect
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS. "lcl_gui_page
 
@@ -90,8 +90,8 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( |<td class="logo">{
-                  lcl_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                               iv_act = zif_abapgit_definitions=>gc_action-abapgit_home )
+                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+                                       iv_act = zif_abapgit_definitions=>gc_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
     ro_html->add( |<td><span class="page_title"> &#x25BA; {
@@ -151,7 +151,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
 
   METHOD lif_gui_page~render.
 
-    DATA lo_script TYPE REF TO lcl_html.
+    DATA lo_script TYPE REF TO zcl_abapgit_html.
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
