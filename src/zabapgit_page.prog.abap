@@ -31,7 +31,7 @@ CLASS lcl_gui_page DEFINITION ABSTRACT.
     TYPES: BEGIN OF ty_control,
              redirect_url TYPE string,
              page_title   TYPE string,
-             page_menu    TYPE REF TO lcl_html_toolbar,
+             page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
            END OF  ty_control.
 
     DATA: ms_control TYPE ty_control.

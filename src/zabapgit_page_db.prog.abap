@@ -40,7 +40,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
 
     DATA:
       lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
-      lo_toolbar      TYPE REF TO lcl_html_toolbar,
+      lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
       lv_data         TYPE lcl_persistence_db=>ty_content-data_str,
       ls_action       TYPE lcl_persistence_db=>ty_content,
       lv_action       TYPE string.
@@ -104,7 +104,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
   METHOD render_content.
 
     DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
+          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     TRY.
         lv_data = lcl_app=>db( )->read(
@@ -178,7 +178,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
           lv_action  TYPE string,
           lv_trclass TYPE string,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
+          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 

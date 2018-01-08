@@ -38,10 +38,10 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
       build_head_menu
         IMPORTING iv_lstate         TYPE char1
                   iv_rstate         TYPE char1
-        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
+        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       build_grid_menu
-        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
+        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
@@ -217,7 +217,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD render_head_line.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_html.
     lo_toolbar = build_head_menu( iv_lstate = iv_lstate iv_rstate = iv_rstate ).
@@ -262,9 +262,9 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD build_head_menu.
 
-    DATA: lo_tb_advanced TYPE REF TO lcl_html_toolbar,
-          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
-          lo_tb_tag      TYPE REF TO lcl_html_toolbar,
+    DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
           lv_key         TYPE lcl_persistence_db=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_definitions=>gc_html_opt-crossout,
           lv_crossout    LIKE zif_abapgit_definitions=>gc_html_opt-crossout,

@@ -380,7 +380,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING VALUE(rs_merge) TYPE ty_merge
         RAISING   zcx_abapgit_exception,
       build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       escape_branch
         IMPORTING iv_string        TYPE string
         RETURNING VALUE(rv_string) TYPE string,

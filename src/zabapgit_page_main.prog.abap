@@ -32,7 +32,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -171,8 +171,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    DATA: lo_advsub  TYPE REF TO lcl_html_toolbar,
-          lo_helpsub TYPE REF TO lcl_html_toolbar.
+    DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_menu.
     CREATE OBJECT lo_advsub.
@@ -206,8 +206,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
           lv_icon       TYPE string,
           lo_repo       LIKE LINE OF it_repo_list,
-          lo_favbar     TYPE REF TO lcl_html_toolbar,
-          lo_allbar     TYPE REF TO lcl_html_toolbar,
+          lo_favbar     TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_allbar     TYPE REF TO zcl_abapgit_html_toolbar,
           lt_favorites  TYPE lcl_persistence_user=>tt_favorites,
           lv_repo_title TYPE string.
 

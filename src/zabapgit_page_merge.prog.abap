@@ -339,7 +339,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
 ENDCLASS.                       "lcl_gui_page_merge DEFINITION
 

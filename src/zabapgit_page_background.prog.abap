@@ -89,7 +89,7 @@ CLASS lcl_gui_page_bkg DEFINITION FINAL
 
     METHODS:
       build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_data
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
