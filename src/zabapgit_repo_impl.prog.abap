@@ -222,7 +222,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD handle_stage_ignore.
 
     DATA: lv_add         TYPE abap_bool,
-          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
           lt_stage       TYPE lcl_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
@@ -392,7 +392,7 @@ CLASS lcl_repo IMPLEMENTATION.
       WITH KEY path = zif_abapgit_definitions=>gc_root_dir
       filename = zif_abapgit_definitions=>gc_dot_abapgit.
     IF sy-subrc = 0.
-      ro_dot = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
+      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
     ENDIF.
 
@@ -549,7 +549,7 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement,
+          lt_requirements  TYPE STANDARD TABLE OF zcl_abapgit_dot_abapgit=>ty_requirement,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
@@ -893,7 +893,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_branch_name = iv_branch_name
       iv_package     = iv_package
       iv_offline     = abap_false
-      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH zcx_abapgit_not_found.
@@ -921,7 +921,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_branch_name = ''
       iv_package     = iv_package
       iv_offline     = abap_true
-      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).

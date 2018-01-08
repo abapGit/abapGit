@@ -55,7 +55,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     ls_data-key         = 'TZIP'.
     ls_data-package     = lv_package.
-    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
+    ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
     CREATE OBJECT lo_repo
       EXPORTING

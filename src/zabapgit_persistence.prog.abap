@@ -107,7 +107,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
              package            TYPE devclass,
              offline            TYPE sap_bool,
              local_checksums    TYPE ty_local_checksum_tt,
-             dot_abapgit        TYPE lcl_dot_abapgit=>ty_dot_abapgit,
+             dot_abapgit        TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit,
              head_branch        TYPE string,   " HEAD symref of the repo, master branch
              write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
              ignore_subpackages TYPE sap_bool,
@@ -158,7 +158,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
 
     METHODS update_dot_abapgit
       IMPORTING iv_key         TYPE ty_repo-key
-                is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
+                is_dot_abapgit TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit
       RAISING   zcx_abapgit_exception.
 
     METHODS add
@@ -167,7 +167,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
                 iv_branch      TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
-                is_dot_abapgit TYPE lcl_dot_abapgit=>ty_dot_abapgit
+                is_dot_abapgit TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit
       RETURNING VALUE(rv_key)  TYPE ty_repo-key
       RAISING   zcx_abapgit_exception.
 
