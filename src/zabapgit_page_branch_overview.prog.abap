@@ -367,13 +367,13 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
       refresh
         RAISING zcx_abapgit_exception,
       body
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       form_select
         IMPORTING iv_name        TYPE string
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_merge
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       decode_merge
         IMPORTING it_postdata     TYPE cnht_post_data_tab

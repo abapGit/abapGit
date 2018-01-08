@@ -9,7 +9,7 @@ CLASS lcl_gui_view_tutorial DEFINITION FINAL.
 
   PRIVATE SECTION.
     METHODS render_content
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.                       "lcl_gui_view_tutorial
 
@@ -58,9 +58,9 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     ro_html->add( '<h2>Repository list and favorites</h2>' ).
     ro_html->add( '<p><ul>' ).
     ro_html->add( |<li>To choose a repo press {
-                  lcl_html=>icon( 'three-bars/blue' ) } at the favorite bar.</li>| ).
+                  zcl_abapgit_html=>icon( 'three-bars/blue' ) } at the favorite bar.</li>| ).
     ro_html->add( |<li>To favorite a repo click {
-                  lcl_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
+                  zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
     ro_html->add( '</ul></p>' ).
 
     ro_html->add( '<h2>abapGit related repositories</h2>' ).

@@ -52,26 +52,26 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_diff_head
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_table_head
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_lines
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_beacon
       IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
                 is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_split
       IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
                 iv_fstate      TYPE char1
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_unified
       IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS append_diff
       IMPORTING it_remote TYPE zif_abapgit_definitions=>ty_files_tt
                 it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt

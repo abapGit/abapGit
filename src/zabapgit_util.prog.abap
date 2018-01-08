@@ -185,7 +185,7 @@ CLASS lcl_log DEFINITION FINAL.
       count
         RETURNING VALUE(rv_count) TYPE i,
       to_html
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       clear,
       has_rc "For unit tests mainly
         IMPORTING iv_rc         TYPE balsort

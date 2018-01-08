@@ -29,13 +29,13 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RAISING zcx_abapgit_exception,
       render_toc
         IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -267,7 +267,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  lcl_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
+                  zcl_abapgit_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
@@ -275,14 +275,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    lcl_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
+                    zcl_abapgit_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td>' ).
     ro_html->add( lo_allbar->render_as_droplist(
-      iv_label = lcl_html=>icon( iv_name = 'three-bars/blue' )
+      iv_label = zcl_abapgit_html=>icon( iv_name = 'three-bars/blue' )
       iv_right = abap_true
       iv_sort  = abap_true ) ).
     ro_html->add( '</td>' ).

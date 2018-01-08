@@ -29,19 +29,19 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_stage
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_form
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_text_input
         IMPORTING iv_name       TYPE string
                   iv_label      TYPE string
                   iv_value      TYPE string OPTIONAL
                   iv_max_length TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
