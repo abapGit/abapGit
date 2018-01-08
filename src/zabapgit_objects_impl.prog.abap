@@ -303,10 +303,10 @@ CLASS lcl_objects IMPLEMENTATION.
     zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      lcl_progress=>show( iv_key     = 'Delete'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_tadir )
-                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Delete'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_tadir )
+                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
@@ -459,10 +459,10 @@ CLASS lcl_objects IMPLEMENTATION.
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
         AND NOT ( lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL ).
-      lcl_progress=>show( iv_key     = 'Deserialize'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_results )
-                          iv_text    = <ls_result>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Deserialize'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_results )
+                                  iv_text    = <ls_result>-obj_name ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -552,10 +552,10 @@ CLASS lcl_objects IMPLEMENTATION.
     lcl_objects_activation=>clear( ).
 
     LOOP AT it_objects ASSIGNING <ls_obj>.
-      lcl_progress=>show( iv_key     = |Deserialize { iv_descr }|
-                          iv_current = sy-tabix
-                          iv_total   = lines( it_objects )
-                          iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = |Deserialize { iv_descr }|
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( it_objects )
+                                  iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
 
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
                                  io_xml     = <ls_obj>-xml ).

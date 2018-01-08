@@ -35,7 +35,6 @@ INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 INCLUDE zabapgit_macros.
 INCLUDE zabapgit_zlib.
 INCLUDE zabapgit_html.
-INCLUDE zabapgit_util.
 INCLUDE zabapgit_xml.
 
 INCLUDE zabapgit_app.              " Some deferred definitions here

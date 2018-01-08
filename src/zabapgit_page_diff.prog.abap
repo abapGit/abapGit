@@ -353,10 +353,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
-      lcl_progress=>show( iv_key     = 'Diff'
-                          iv_current = sy-tabix
-                          iv_total   = lines( mt_diff_files )
-                          iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+      zcl_abapgit_progress=>show( iv_key     = 'Diff'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( mt_diff_files )
+                                  iv_text    = |Render Diff - { ls_diff_file-filename }| ).
 
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
