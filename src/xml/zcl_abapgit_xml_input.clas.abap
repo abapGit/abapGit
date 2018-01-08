@@ -1,29 +1,29 @@
-class ZCL_ABAPGIT_XML_INPUT definition
-  public
-  inheriting from ZCL_ABAPGIT_XML
-  create public .
+CLASS zcl_abapgit_xml_input DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_xml
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  methods CONSTRUCTOR
-    importing
-      !IV_XML type CLIKE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods READ
-    importing
-      !IV_NAME type CLIKE
-    changing
-      !CG_DATA type ANY
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_RAW
-    returning
-      value(RI_RAW) type ref to IF_IXML_DOCUMENT .
+    METHODS constructor
+      IMPORTING
+        !iv_xml TYPE clike
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read
+      IMPORTING
+        !iv_name TYPE clike
+      CHANGING
+        !cg_data TYPE any
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_raw
+      RETURNING
+        VALUE(ri_raw) TYPE REF TO if_ixml_document .
 * todo, add read_xml to match add_xml in lcl_xml_output
-  methods GET_METADATA
-    returning
-      value(RS_METADATA) type ZIF_ABAPGIT_DEFINITIONS=>TY_METADATA .
+    METHODS get_metadata
+      RETURNING
+        VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
   PRIVATE SECTION.
     METHODS: fix_xml.
 
