@@ -457,8 +457,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   METHOD lif_object~compare_to_remote_version.
     DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_valid,
-          lo_local_version_output TYPE REF TO lcl_xml_output,
-          lo_local_version_input  TYPE REF TO lcl_xml_input,
+          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
+          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input,
           lv_validation_text      TYPE string.
 
     CREATE OBJECT lo_local_version_output.

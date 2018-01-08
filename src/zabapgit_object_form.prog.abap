@@ -192,7 +192,7 @@ CLASS lcl_object_form IMPLEMENTATION.
     DATA: ls_form_data              TYPE tys_form_data.
     DATA: lt_text_header            TYPE tyt_text_header.
     DATA: lt_lines                  TYPE tyt_lines.
-    DATA: lo_xml                    TYPE REF TO lcl_xml_output.
+    DATA: lo_xml                    TYPE REF TO zcl_abapgit_xml_output.
     DATA: lv_form_found             TYPE flag.
     FIELD-SYMBOLS: <ls_text_header> LIKE LINE OF lt_text_header.
 
@@ -315,7 +315,7 @@ CLASS lcl_object_form IMPLEMENTATION.
   METHOD _extract_tdlines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO lcl_xml_input.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_input.
 
     lv_string = mo_files->read_string( iv_extra =
                                _build_extra_from_header( is_form_data-form_header )
@@ -353,7 +353,7 @@ CLASS lcl_object_form IMPLEMENTATION.
   METHOD _compress_lines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO lcl_xml_output.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
 
     CREATE OBJECT lo_xml.
     lo_xml->add( iv_name = c_objectname_tdlines

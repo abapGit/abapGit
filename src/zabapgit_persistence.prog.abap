@@ -1006,7 +1006,7 @@ CLASS lcl_persistence_db IMPLEMENTATION.
 
   METHOD validate_and_unprettify_xml.
 
-    rv_xml = lcl_xml_pretty=>print(
+    rv_xml = zcl_abapgit_xml_pretty=>print(
       iv_xml           = iv_xml
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
@@ -1836,7 +1836,7 @@ CLASS lcl_settings IMPLEMENTATION.
 
   METHOD get_settings_xml.
 
-    DATA: lr_output TYPE REF TO lcl_xml_output.
+    DATA: lr_output TYPE REF TO zcl_abapgit_xml_output.
 
     CREATE OBJECT lr_output.
 
@@ -1849,7 +1849,7 @@ CLASS lcl_settings IMPLEMENTATION.
 
   METHOD set_xml_settings.
 
-    DATA: lr_input TYPE REF TO lcl_xml_input.
+    DATA: lr_input TYPE REF TO zcl_abapgit_xml_input.
 
     CREATE OBJECT lr_input EXPORTING iv_xml = iv_settings_xml.
 

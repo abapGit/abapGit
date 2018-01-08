@@ -27,10 +27,10 @@ CLASS lcl_object_dtel DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS:
       serialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
       deserialize_texts
-        IMPORTING io_xml   TYPE REF TO lcl_xml_input
+        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
                   is_dd04v TYPE dd04v
         RAISING   zcx_abapgit_exception.
 

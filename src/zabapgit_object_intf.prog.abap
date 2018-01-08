@@ -17,19 +17,19 @@ CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
         iv_language TYPE spras.
   PROTECTED SECTION.
     METHODS deserialize_abap
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_docu
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc.
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_intf DEFINITION

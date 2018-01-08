@@ -40,11 +40,11 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
         CHANGING  cg_value TYPE any,
 
       serialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
 
       deserialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION

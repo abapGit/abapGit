@@ -146,7 +146,7 @@ CLASS lcl_dot_abapgit IMPLEMENTATION.
       SOURCE data = is_data
       RESULT XML rv_xml.
 
-    rv_xml = lcl_xml_pretty=>print( rv_xml ).
+    rv_xml = zcl_abapgit_xml_pretty=>print( rv_xml ).
 
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
