@@ -39,9 +39,9 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       delete
         RAISING zcx_abapgit_exception,
       get_dot_abapgit
-        RETURNING VALUE(ro_dot_abapgit) TYPE REF TO lcl_dot_abapgit,
+        RETURNING VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit,
       set_dot_abapgit
-        IMPORTING io_dot_abapgit TYPE REF TO lcl_dot_abapgit
+        IMPORTING io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
         RAISING   zcx_abapgit_exception,
       deserialize
         RAISING zcx_abapgit_exception,
@@ -55,7 +55,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       rebuild_local_checksums
         RAISING zcx_abapgit_exception,
       find_remote_dot_abapgit
-        RETURNING VALUE(ro_dot) TYPE REF TO lcl_dot_abapgit
+        RETURNING VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
         RAISING   zcx_abapgit_exception,
       is_offline
         RETURNING VALUE(rv_offline) TYPE abap_bool

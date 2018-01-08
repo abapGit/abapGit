@@ -160,71 +160,6 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
 
-CLASS ltcl_dot_abapgit DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
-
-  PRIVATE SECTION.
-    METHODS:
-      identity FOR TESTING
-        RAISING zcx_abapgit_exception,
-      ignore FOR TESTING.
-
-ENDCLASS.
-
-CLASS ltcl_dot_abapgit IMPLEMENTATION.
-
-  METHOD identity.
-
-    DATA: lo_dot    TYPE REF TO lcl_dot_abapgit,
-          ls_before TYPE lcl_dot_abapgit=>ty_dot_abapgit,
-          ls_after  TYPE lcl_dot_abapgit=>ty_dot_abapgit.
-
-
-    lo_dot = lcl_dot_abapgit=>build_default( ).
-    ls_before = lo_dot->ms_data.
-
-    lo_dot = lcl_dot_abapgit=>deserialize( lo_dot->serialize( ) ).
-    ls_after = lo_dot->ms_data.
-
-    cl_abap_unit_assert=>assert_equals(
-      act = ls_after
-      exp = ls_before ).
-
-  ENDMETHOD.
-
-  METHOD ignore.
-
-    CONSTANTS: lc_path     TYPE string VALUE '/',
-               lc_filename TYPE string VALUE 'foobar.txt'.
-
-    DATA: lv_ignored TYPE abap_bool,
-          lo_dot     TYPE REF TO lcl_dot_abapgit.
-
-
-    lo_dot = lcl_dot_abapgit=>build_default( ).
-
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_ignored
-      exp = abap_false ).
-
-    lo_dot->add_ignore( iv_path = lc_path iv_filename = lc_filename ).
-
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_ignored
-      exp = abap_true ).
-
-    lo_dot->remove_ignore( iv_path = lc_path iv_filename = lc_filename ).
-
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_ignored
-      exp = abap_false ).
-
-  ENDMETHOD.
-
-ENDCLASS.
-
 CLASS ltcl_git_porcelain DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -1656,7 +1591,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
           lt_state       TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lt_results     TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_results_exp TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_dot         TYPE REF TO lcl_dot_abapgit.
+          lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
 
     FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
                    <remote> LIKE LINE OF lt_remote,
@@ -1728,7 +1663,7 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_result 'DOMA' 'XFELD'     'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
     lt_results_exp = lt_results.
 
-    lo_dot = lcl_dot_abapgit=>build_default( ).
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 *    lo_dot->set_starting_folder( 'SRC' ).
 *    lo_dot->set_folder_logic( lcl_dot_abapgit=>c_folder_logic-prefix ).
 
@@ -1775,7 +1710,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( )
+                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 0 ).
@@ -1793,7 +1728,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( )
+                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
@@ -1813,7 +1748,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( )
+                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -1832,7 +1767,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( )
+                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( ) exp = 1 ).
@@ -1850,7 +1785,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
 
     lcl_file_status=>run_checks( io_log     = lo_log
                                  it_results = lt_results
-                                 io_dot     = lcl_dot_abapgit=>build_default( )
+                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
     assert_equals( act = lo_log->count( )

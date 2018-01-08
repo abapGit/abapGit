@@ -24,7 +24,7 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS:
       calculate_status
         IMPORTING iv_devclass       TYPE devclass
-                  io_dot            TYPE REF TO lcl_dot_abapgit
+                  io_dot            TYPE REF TO zcl_abapgit_dot_abapgit
                   it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
                   it_remote         TYPE zif_abapgit_definitions=>ty_files_tt
                   it_cur_state      TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -33,7 +33,7 @@ CLASS lcl_file_status DEFINITION FINAL
       run_checks
         IMPORTING io_log     TYPE REF TO lcl_log
                   it_results TYPE zif_abapgit_definitions=>ty_results_tt
-                  io_dot     TYPE REF TO lcl_dot_abapgit
+                  io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_top     TYPE devclass
         RAISING   zcx_abapgit_exception,
       build_existing
@@ -46,7 +46,7 @@ CLASS lcl_file_status DEFINITION FINAL
         RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result,
       build_new_remote
         IMPORTING iv_devclass      TYPE devclass
-                  io_dot           TYPE REF TO lcl_dot_abapgit
+                  io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
                   is_remote        TYPE zif_abapgit_definitions=>ty_file
                   it_items         TYPE zif_abapgit_definitions=>ty_items_ts
                   it_state         TYPE zif_abapgit_definitions=>ty_file_signatures_ts
@@ -56,7 +56,7 @@ CLASS lcl_file_status DEFINITION FINAL
         IMPORTING iv_filename TYPE string
                   iv_path     TYPE string
                   iv_devclass TYPE devclass
-                  io_dot      TYPE REF TO lcl_dot_abapgit
+                  io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
         EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
                   ev_is_xml   TYPE abap_bool
         RAISING   zcx_abapgit_exception.
@@ -152,7 +152,7 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD status.
 
     DATA: lv_index        LIKE sy-tabix,
-          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit.
+          lo_dot_abapgit  TYPE REF TO zcl_abapgit_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 

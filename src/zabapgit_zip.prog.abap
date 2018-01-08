@@ -389,7 +389,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
 
     ls_data-key = 'DUMMY'.
-    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
+    ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
     lcl_popups=>popup_package_export(
       IMPORTING

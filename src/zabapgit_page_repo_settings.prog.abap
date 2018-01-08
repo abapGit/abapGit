@@ -46,7 +46,7 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: ls_dot TYPE lcl_dot_abapgit=>ty_dot_abapgit.
+    DATA: ls_dot TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
@@ -71,7 +71,7 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
   METHOD lif_gui_page~on_event.
 
     DATA: lt_post_fields TYPE tihttpnvp,
-          lo_dot         TYPE REF TO lcl_dot_abapgit,
+          lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field  LIKE LINE OF lt_post_fields.
 
 
