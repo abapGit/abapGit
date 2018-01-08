@@ -1572,7 +1572,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
   METHOD check.
 
     DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_log     TYPE REF TO lcl_log.
+          lo_log     TYPE REF TO zcl_abapgit_log.
 
     FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.
 

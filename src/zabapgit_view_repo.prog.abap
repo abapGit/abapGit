@@ -131,7 +131,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
           lv_max        TYPE abap_bool,
           lv_max_str    TYPE string,
           lv_add_str    TYPE string,
-          lo_log        TYPE REF TO lcl_log.
+          lo_log        TYPE REF TO zcl_abapgit_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 

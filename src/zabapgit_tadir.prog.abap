@@ -13,7 +13,7 @@ CLASS lcl_skip_objects DEFINITION.
       skip_sadl_generated_objects
         IMPORTING
           it_tadir          TYPE zif_abapgit_definitions=>ty_tadir_tt
-          io_log            TYPE REF TO lcl_log OPTIONAL
+          io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING
           VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
@@ -33,7 +33,7 @@ CLASS lcl_tadir DEFINITION FINAL.
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
                   io_dot                TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
-                  io_log                TYPE REF TO lcl_log OPTIONAL
+                  io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception,
       read_single
@@ -69,7 +69,7 @@ CLASS lcl_tadir DEFINITION FINAL.
                   iv_top                TYPE tadir-devclass
                   io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-                  io_log                TYPE REF TO lcl_log OPTIONAL
+                  io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 

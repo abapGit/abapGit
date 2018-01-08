@@ -15,7 +15,7 @@ CLASS lcl_file_status DEFINITION FINAL
 
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO lcl_repo
-                io_log            TYPE REF TO lcl_log OPTIONAL
+                io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
 
@@ -31,7 +31,7 @@ CLASS lcl_file_status DEFINITION FINAL
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       run_checks
-        IMPORTING io_log     TYPE REF TO lcl_log
+        IMPORTING io_log     TYPE REF TO zcl_abapgit_log
                   it_results TYPE zif_abapgit_definitions=>ty_results_tt
                   io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_top     TYPE devclass

@@ -1,50 +1,48 @@
-CLASS zcl_abapgit_url DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_URL definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS:
-      host
-        IMPORTING
-          !iv_repo       TYPE string
-        RETURNING
-          VALUE(rv_host) TYPE string
-        RAISING
-          zcx_abapgit_exception,
+  class-methods HOST
+    importing
+      !IV_REPO type STRING
+    returning
+      value(RV_HOST) type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods NAME
+    importing
+      !IV_REPO type STRING
+    returning
+      value(RV_NAME) type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods PATH_NAME
+    importing
+      !IV_REPO type STRING
+    returning
+      value(RV_PATH_NAME) type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+private section.
 
-      name
-        IMPORTING
-          !iv_repo       TYPE string
-        RETURNING
-          VALUE(rv_name) TYPE string
-        RAISING
-          zcx_abapgit_exception,
-
-      path_name
-        IMPORTING
-          !iv_repo            TYPE string
-        RETURNING
-          VALUE(rv_path_name) TYPE string
-        RAISING
-          zcx_abapgit_exception .
-
-  PRIVATE SECTION.
-    CLASS-METHODS:
-      regex
-        IMPORTING
-          !iv_repo TYPE string
-        EXPORTING
-          !ev_host TYPE string
-          !ev_path TYPE string
-          !ev_name TYPE string
-        RAISING
-          zcx_abapgit_exception .
-
+  class-methods REGEX
+    importing
+      !IV_REPO type STRING
+    exporting
+      !EV_HOST type STRING
+      !EV_PATH type STRING
+      !EV_NAME type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
-CLASS zcl_abapgit_url IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
+
 
   METHOD host.
 
@@ -53,12 +51,14 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD name.
 
     regex( EXPORTING iv_repo = iv_repo
            IMPORTING ev_name = rv_name ).
 
   ENDMETHOD.
+
 
   METHOD path_name.
 
@@ -69,6 +69,7 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD regex.
 
     FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
@@ -78,5 +79,4 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

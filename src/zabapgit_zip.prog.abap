@@ -353,7 +353,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log TYPE REF TO lcl_log,
+    DATA: lo_log TYPE REF TO zcl_abapgit_log,
           lt_zip TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
 

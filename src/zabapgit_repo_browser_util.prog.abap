@@ -38,11 +38,11 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     METHODS get_log
-      RETURNING VALUE(ro_log) TYPE REF TO lcl_log.
+      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
 
   PRIVATE SECTION.
     DATA: mo_repo TYPE REF TO lcl_repo,
-          mo_log  TYPE REF TO lcl_log.
+          mo_log  TYPE REF TO zcl_abapgit_log.
 
     METHODS build_repo_items_offline
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
