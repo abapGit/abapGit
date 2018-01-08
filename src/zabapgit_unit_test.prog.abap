@@ -1149,18 +1149,18 @@ ENDCLASS.
 CLASS ltcl_login_manager IMPLEMENTATION.
 
   METHOD setup.
-    lcl_login_manager=>clear( ).
+    zcl_abapgit_login_manager=>clear( ).
   ENDMETHOD.
 
   METHOD teardown.
-    lcl_login_manager=>clear( ).
+    zcl_abapgit_login_manager=>clear( ).
   ENDMETHOD.
 
   METHOD encoding.
 
     DATA: lv_auth TYPE string.
 
-    lv_auth = lcl_login_manager=>set(
+    lv_auth = zcl_abapgit_login_manager=>set(
       iv_uri      = 'https://github.com/larshp/abapGit.git'
       iv_username = c_username
       iv_password = c_password ).
@@ -1180,13 +1180,13 @@ CLASS ltcl_login_manager IMPLEMENTATION.
           lv_auth2 TYPE string.
 
 
-    lcl_login_manager=>set(
+    zcl_abapgit_login_manager=>set(
       iv_uri      = lc_github1
       iv_username = c_username
       iv_password = c_password ).
 
-    lv_auth1 = lcl_login_manager=>load( lc_github1 ).
-    lv_auth2 = lcl_login_manager=>load( lc_github2 ).
+    lv_auth1 = zcl_abapgit_login_manager=>load( lc_github1 ).
+    lv_auth2 = zcl_abapgit_login_manager=>load( lc_github2 ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_auth1
