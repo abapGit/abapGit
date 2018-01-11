@@ -38,7 +38,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: get_branches
-      RETURNING VALUE(rt_branches) TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+      RETURNING VALUE(rt_branches) TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
   PRIVATE SECTION.
 
@@ -60,9 +60,9 @@ CLASS lcl_branch_overview DEFINITION FINAL.
         RAISING zcx_abapgit_exception.
 
     CLASS-DATA:
-      gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+      gt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
       gt_commits  TYPE TABLE OF ty_commit,
-      gt_tags     TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+      gt_tags     TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
 ENDCLASS.
 
@@ -158,7 +158,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD get_git_objects.
 
-    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list.
+    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
 
     zcl_abapgit_progress=>show( iv_key     = 'Get git objects'
                                 iv_current = 1
@@ -188,13 +188,13 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     DATA: ls_commit LIKE LINE OF gt_commits,
           lv_trash  TYPE string ##NEEDED,
-          ls_raw    TYPE lcl_git_pack=>ty_commit.
+          ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> WHERE type = zif_abapgit_definitions=>gc_type-commit.
-      ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
+      ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
       ls_commit-sha1 = <ls_object>-sha1.
@@ -314,7 +314,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     DATA: lv_tag TYPE LINE OF lcl_branch_overview=>ty_commit-tags.
 
-    FIELD-SYMBOLS: <ls_tag>    TYPE lcl_git_branch_list=>ty_git_branch,
+    FIELD-SYMBOLS: <ls_tag>    TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
                    <ls_commit> TYPE lcl_branch_overview=>ty_commit.
 
     LOOP AT gt_tags ASSIGNING <ls_tag>.
@@ -411,7 +411,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
   METHOD form_select.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+          lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 

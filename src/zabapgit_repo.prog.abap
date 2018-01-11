@@ -102,7 +102,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       get_head_branch_name
         RETURNING VALUE(rv_name) TYPE lcl_persistence_repo=>ty_repo-head_branch,
       get_branches
-        RETURNING VALUE(ro_branches) TYPE REF TO lcl_git_branch_list
+        RETURNING VALUE(ro_branches) TYPE REF TO zcl_abapgit_git_branch_list
         RAISING   zcx_abapgit_exception,
       set_url
         IMPORTING iv_url TYPE lcl_persistence_repo=>ty_repo-url
@@ -148,7 +148,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       mt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt,
       mv_branch      TYPE zif_abapgit_definitions=>ty_sha1,
       mv_initialized TYPE abap_bool,
-      mo_branches    TYPE REF TO lcl_git_branch_list,
+      mo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
       mt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
 
     METHODS:

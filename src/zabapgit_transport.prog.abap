@@ -292,8 +292,8 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
       ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
-        lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
+    lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
+        zcl_abapgit_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
 
     create_new_branch(
       io_repository  = io_repository

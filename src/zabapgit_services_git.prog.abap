@@ -164,7 +164,7 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD switch_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -193,7 +193,7 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -265,7 +265,7 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD delete_tag.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
-          ls_tag  TYPE lcl_git_branch_list=>ty_git_branch,
+          ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
           lv_text TYPE string.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
