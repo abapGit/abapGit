@@ -298,8 +298,10 @@ CLASS lcl_merge IMPLEMENTATION.
           lt_upload      TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
     lo_branch_list  = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
-    gs_merge-source = lo_branch_list->find_by_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_source ) ).
-    gs_merge-target = lo_branch_list->find_by_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target ) ).
+    gs_merge-source = lo_branch_list->find_by_name(
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_source ) ).
+    gs_merge-target = lo_branch_list->find_by_name(
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target ) ).
 
     APPEND gs_merge-source TO lt_upload.
     APPEND gs_merge-target TO lt_upload.
