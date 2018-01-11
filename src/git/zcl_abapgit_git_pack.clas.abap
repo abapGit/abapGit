@@ -1,73 +1,73 @@
-class ZCL_ABAPGIT_GIT_PACK definition
-  public
-  create public .
+CLASS zcl_abapgit_git_pack DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    BEGIN OF ty_node,
-             chmod TYPE zif_abapgit_definitions=>ty_chmod,
-             name  TYPE string,
-             sha1  TYPE zif_abapgit_definitions=>ty_sha1,
-           END OF ty_node .
-  types:
-    ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY .
-  types:
-    BEGIN OF ty_commit,
-             tree      TYPE zif_abapgit_definitions=>ty_sha1,
-             parent    TYPE zif_abapgit_definitions=>ty_sha1,
-             parent2   TYPE zif_abapgit_definitions=>ty_sha1,
-             author    TYPE string,
-             committer TYPE string,
-             body      TYPE string,
-           END OF ty_commit .
+    TYPES:
+      BEGIN OF ty_node,
+        chmod TYPE zif_abapgit_definitions=>ty_chmod,
+        name  TYPE string,
+        sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+      END OF ty_node .
+    TYPES:
+      ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_commit,
+        tree      TYPE zif_abapgit_definitions=>ty_sha1,
+        parent    TYPE zif_abapgit_definitions=>ty_sha1,
+        parent2   TYPE zif_abapgit_definitions=>ty_sha1,
+        author    TYPE string,
+        committer TYPE string,
+        body      TYPE string,
+      END OF ty_commit .
 
-  class-methods DECODE
-    importing
-      !IV_DATA type XSTRING
-    returning
-      value(RT_OBJECTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJECTS_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods DECODE_TREE
-    importing
-      !IV_DATA type XSTRING
-    returning
-      value(RT_NODES) type TY_NODES_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods DECODE_COMMIT
-    importing
-      !IV_DATA type XSTRING
-    returning
-      value(RS_COMMIT) type TY_COMMIT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods ENCODE
-    importing
-      !IT_OBJECTS type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJECTS_TT
-    returning
-      value(RV_DATA) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods ENCODE_TREE
-    importing
-      !IT_NODES type TY_NODES_TT
-    returning
-      value(RV_DATA) type XSTRING .
-  class-methods ENCODE_COMMIT
-    importing
-      !IS_COMMIT type TY_COMMIT
-    returning
-      value(RV_DATA) type XSTRING .
-  class-methods TYPE_AND_LENGTH
-    importing
-      !IV_TYPE type ZIF_ABAPGIT_DEFINITIONS=>TY_TYPE
-      !IV_LENGTH type I
-    returning
-      value(RV_XSTRING) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    CLASS-METHODS decode
+      IMPORTING
+        !iv_data          TYPE xstring
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS decode_tree
+      IMPORTING
+        !iv_data        TYPE xstring
+      RETURNING
+        VALUE(rt_nodes) TYPE ty_nodes_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS decode_commit
+      IMPORTING
+        !iv_data         TYPE xstring
+      RETURNING
+        VALUE(rs_commit) TYPE ty_commit
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS encode
+      IMPORTING
+        !it_objects    TYPE zif_abapgit_definitions=>ty_objects_tt
+      RETURNING
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS encode_tree
+      IMPORTING
+        !it_nodes      TYPE ty_nodes_tt
+      RETURNING
+        VALUE(rv_data) TYPE xstring .
+    CLASS-METHODS encode_commit
+      IMPORTING
+        !is_commit     TYPE ty_commit
+      RETURNING
+        VALUE(rv_data) TYPE xstring .
+    CLASS-METHODS type_and_length
+      IMPORTING
+        !iv_type          TYPE zif_abapgit_definitions=>ty_type
+        !iv_length        TYPE i
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     CONSTANTS: c_pack_start TYPE x LENGTH 4 VALUE '5041434B', " PACK
                c_zlib       TYPE x LENGTH 2 VALUE '789C',
