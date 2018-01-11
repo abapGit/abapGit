@@ -2,7 +2,7 @@ INTERFACE zif_abapgit_definitions
   PUBLIC .
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.51.2' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.52.0' ##NO_TEXT.
 
   TYPES:
     ty_type    TYPE c LENGTH 6 .
