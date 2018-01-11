@@ -110,14 +110,15 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   METHOD lif_object~delete.
 
-    DATA: lv_name    TYPE o2applname,
-          lo_bsp     TYPE REF TO cl_o2_api_application,
-          ls_pagekey TYPE o2pagkey,
-          lv_object  TYPE seu_objkey,
-          lt_pages   TYPE o2pagelist.
+    DATA: lv_name        TYPE o2applname,
+          lo_bsp         TYPE REF TO cl_o2_api_application,
+          ls_pagekey     TYPE o2pagkey,
+          lv_object      TYPE seu_objkey,
+          lt_pages       TYPE o2pagelist,
+          lt_local_mimes TYPE o2pagename_table.
 
-    FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
-
+    FIELD-SYMBOLS: <ls_page>       LIKE LINE OF lt_pages,
+                   <ls_local_mime> TYPE o2pagename.
 
     lv_name = ms_item-obj_name.
 
@@ -157,7 +158,42 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
-    lo_bsp->delete( ).
+    lo_bsp->get_local_mimes(
+      IMPORTING
+        p_local_mimes  = lt_local_mimes
+      EXCEPTIONS
+        object_invalid = 1
+        object_deleted = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
+
+    LOOP AT lt_local_mimes ASSIGNING <ls_local_mime>.
+      CLEAR ls_pagekey.
+      ls_pagekey-applname = <ls_local_mime>-applname.
+      ls_pagekey-pagekey  = <ls_local_mime>-pagekey.
+
+      cl_o2_page=>delete_page_for_application(
+        EXPORTING
+          p_pagekey           = ls_pagekey
+        EXCEPTIONS
+          object_not_existing = 1
+          error_occured       = 2 ).
+      ASSERT sy-subrc = 0.
+    ENDLOOP.
+
+    lo_bsp->delete(
+      EXCEPTIONS
+        object_not_empty      = 1
+        object_not_changeable = 2
+        object_invalid        = 3
+        action_cancelled      = 4
+        permission_failure    = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |WAPA - error from delete: { sy-subrc }| ).
+    ENDIF.
 
 * release lock
     lv_object = lv_name.
@@ -243,7 +279,8 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       IF <ls_page>-attributes-pagetype <> so2_controller.
 
         SPLIT <ls_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
-        REPLACE ALL OCCURRENCES OF '_-' IN lv_extra WITH '/'.
+        REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
+        REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
         lv_content = mo_files->read_raw( iv_extra = lv_extra
                                          iv_ext   = lv_ext ).
         lo_page->set_page( to_page_content( lv_content ) ).
@@ -390,6 +427,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
       lv_content = get_page_content( lo_page ).
       SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
+      REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       mo_files->add_raw(
         iv_extra = lv_extra
