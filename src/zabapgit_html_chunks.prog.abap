@@ -192,12 +192,12 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_text  TYPE string,
           lv_class TYPE string.
 
-    lv_text = lcl_git_branch_list=>get_display_name( iv_branch ).
+    lv_text = zcl_abapgit_git_branch_list=>get_display_name( iv_branch ).
 
-    IF iv_branch    = io_repo->get_head_branch_name( )
-       OR iv_branch = lcl_git_branch_list=>c_head_name.
+    IF iv_branch = io_repo->get_head_branch_name( )
+       OR iv_branch = zcl_abapgit_git_branch_list=>c_head_name.
       lv_class = 'branch branch_head'.
-    ELSEIF lcl_git_branch_list=>get_type( iv_branch ) = lcl_git_branch_list=>c_type-branch.
+    ELSEIF zcl_abapgit_git_branch_list=>get_type( iv_branch ) = zcl_abapgit_git_branch_list=>c_type-branch.
       lv_class = 'branch branch_branch'.
     ELSE.
       lv_class = 'branch'.

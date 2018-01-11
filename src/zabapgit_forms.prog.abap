@@ -64,7 +64,7 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
   DATA: lv_url          TYPE string,
         lx_error        TYPE REF TO zcx_abapgit_exception,
         ls_package_data TYPE scompkdtln,
-        ls_branch       TYPE lcl_git_branch_list=>ty_git_branch,
+        ls_branch       TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
         lv_create       TYPE boolean.
 
   FIELD-SYMBOLS: <ls_furl>     LIKE LINE OF tt_fields,

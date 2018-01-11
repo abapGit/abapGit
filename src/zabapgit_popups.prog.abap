@@ -43,12 +43,12 @@ CLASS lcl_popups DEFINITION FINAL.
         IMPORTING iv_url             TYPE string
                   iv_default_branch  TYPE string OPTIONAL
                   iv_show_new_option TYPE abap_bool OPTIONAL
-        RETURNING VALUE(rs_branch)   TYPE lcl_git_branch_list=>ty_git_branch
+        RETURNING VALUE(rs_branch)   TYPE zcl_abapgit_git_branch_list=>ty_git_branch
         RAISING   zcx_abapgit_exception,
       tag_list_popup
         IMPORTING iv_url         TYPE string
                   iv_select_mode TYPE abap_bool DEFAULT abap_true
-        RETURNING VALUE(rs_tag)  TYPE lcl_git_branch_list=>ty_git_branch
+        RETURNING VALUE(rs_tag)  TYPE zcl_abapgit_git_branch_list=>ty_git_branch
         RAISING   zcx_abapgit_exception,
       repo_popup
         IMPORTING iv_url            TYPE string
@@ -293,8 +293,8 @@ CLASS lcl_popups IMPLEMENTATION.
     ELSE.
       READ TABLE lt_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = lcl_git_branch_list=>complete_heads_branch_name(
-        lcl_git_branch_list=>normalize_branch_name( <ls_field>-value ) ).
+      ev_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
+        zcl_abapgit_git_branch_list=>normalize_branch_name( <ls_field>-value ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -468,8 +468,8 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD branch_list_popup.
 
-    DATA: lo_branches    TYPE REF TO lcl_git_branch_list,
-          lt_branches    TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+    DATA: lo_branches    TYPE REF TO zcl_abapgit_git_branch_list,
+          lt_branches    TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
           lv_answer      TYPE c LENGTH 1,
           lv_default     TYPE i,
           lv_head_suffix TYPE string,
@@ -482,7 +482,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
     lo_branches    = lcl_git_transport=>branches( iv_url ).
     lt_branches    = lo_branches->get_branches_only( ).
-    lv_head_suffix = | ({ lcl_git_branch_list=>c_head_name })|.
+    lv_head_suffix = | ({ zcl_abapgit_git_branch_list=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.
@@ -491,7 +491,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
       IF <ls_branch>-is_head = abap_true.
 
-        IF <ls_branch>-name = lcl_git_branch_list=>c_head_name. " HEAD
+        IF <ls_branch>-name = zcl_abapgit_git_branch_list=>c_head_name. " HEAD
           IF <ls_branch>-name <> lv_head_symref AND lv_head_symref IS NOT INITIAL.
             " HEAD but other HEAD symref exists - ignore
             CONTINUE.
@@ -573,8 +573,8 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD tag_list_popup.
 
-    DATA: lo_branches         TYPE REF TO lcl_git_branch_list,
-          lt_tags             TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
+    DATA: lo_branches         TYPE REF TO zcl_abapgit_git_branch_list,
+          lt_tags             TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
           lv_answer           TYPE c LENGTH 1,
           lt_selection        TYPE TABLE OF spopli,
           lv_name_with_prefix TYPE string,
