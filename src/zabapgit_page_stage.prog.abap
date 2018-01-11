@@ -16,7 +16,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
                   io_repo TYPE REF TO lcl_repo_online
                   iv_seed TYPE string OPTIONAL
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -88,7 +88,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   ENDMETHOD. "build_menu
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA lo_stage TYPE REF TO lcl_stage.
 

@@ -3,9 +3,11 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_gui_view_repo DEFINITION FINAL.
+
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
-    ALIASES render FOR lif_gui_page~render.
+    INTERFACES zif_abapgit_gui_page.
+
+    ALIASES render FOR zif_abapgit_gui_page~render.
 
     CONSTANTS: BEGIN OF c_actions,
                  change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
@@ -95,7 +97,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   ENDMETHOD. "constructor
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lv_path TYPE string.
 
@@ -121,7 +123,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   ENDMETHOD. "lif_gui_page~on_event
 
-  METHOD lif_gui_page~render.
+  METHOD zif_abapgit_gui_page~render.
 
     DATA: lt_repo_items TYPE lcl_repo_content_list=>tt_repo_items,
           lo_browser    TYPE REF TO lcl_repo_content_list,

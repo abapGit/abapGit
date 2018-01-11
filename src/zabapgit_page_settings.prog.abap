@@ -11,7 +11,7 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
       END OF c_action.
 
     METHODS constructor.
-    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -106,7 +106,7 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 * todo, check input values eg INT
 
     DATA:
