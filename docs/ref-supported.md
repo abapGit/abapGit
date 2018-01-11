@@ -15,6 +15,9 @@ CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
+CUS0 | Customizing IMG Activity | Yes
+CUS1 | Customizing Transactions | Yes
+CUS2 | Customizing Attributes | Yes
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
 DDLX | CDS metadata extension | Yes
