@@ -23,6 +23,8 @@ CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
     METHODS jump_se43
       RAISING zcx_abapgit_exception.
 
+
+
     METHODS clear_fields
       CHANGING cs_head  TYPE ttree
                ct_nodes TYPE hier_iface_t.
@@ -100,7 +102,22 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
   ENDMETHOD.                    "jump_se43
 
   METHOD lif_object~jump.
-    jump_se43( ).
+
+    DATA: ls_head TYPE ttree.
+
+    CALL FUNCTION 'STREE_STRUCTURE_READ'
+      EXPORTING
+        structure_id     = mv_tree_id
+      IMPORTING
+        structure_header = ls_head.
+
+    CASE ls_head-type.
+      WHEN 'BMENU'.
+        jump_se43( ).
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |Jump for type { ls_head-type } not implemented| ).
+    ENDCASE.
+
   ENDMETHOD.                    "jump
 
   METHOD lif_object~exists.
@@ -229,7 +246,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
     CALL FUNCTION 'STREE_HIERARCHY_SAVE'
       EXPORTING
         structure_id             = mv_tree_id
-        structure_type           = 'BMENU'
+        structure_type           = ls_head-type
         structure_description    = space
         structure_masterlanguage = mv_language
         structure_responsible    = sy-uname

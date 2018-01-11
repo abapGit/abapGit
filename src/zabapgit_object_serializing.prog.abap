@@ -10,6 +10,9 @@ INCLUDE zabapgit_object_oo_functions.
 INCLUDE zabapgit_object_clas.
 INCLUDE zabapgit_object_clas_new.
 INCLUDE zabapgit_object_cmpt.
+INCLUDE zabapgit_object_cus0.
+INCLUDE zabapgit_object_cus1.
+INCLUDE zabapgit_object_cus2.
 INCLUDE zabapgit_object_dcls.
 INCLUDE zabapgit_object_ddls.
 INCLUDE zabapgit_object_ddlx.
