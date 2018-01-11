@@ -7,7 +7,7 @@ CLASS lcl_gui_page_bkg_run DEFINITION FINAL
 
   PUBLIC SECTION.
     METHODS constructor.
-    METHODS lif_gui_page~on_event REDEFINITION.
+    METHODS zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content        REDEFINITION.
@@ -26,7 +26,7 @@ CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
     ms_control-page_title = 'BACKGROUND_RUN'.
   ENDMETHOD.  " constructor.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
     RETURN.
   ENDMETHOD.
 
@@ -78,7 +78,7 @@ CLASS lcl_gui_page_bkg DEFINITION FINAL
   PUBLIC SECTION.
     METHODS:
       constructor IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -114,7 +114,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
                   iv_act = zif_abapgit_definitions=>gc_action-go_background_run ) ##NO_TEXT.
   ENDMETHOD. "build_menu
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA ls_bg_task TYPE lcl_persist_background=>ty_background.
 

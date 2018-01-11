@@ -32,7 +32,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
                   is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -334,7 +334,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.  " build_menu.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay

@@ -13,7 +13,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 iv_prev_page TYPE clike
                 iv_getdata   TYPE clike OPTIONAL
                 it_postdata  TYPE cnht_post_data_tab OPTIONAL
-      EXPORTING ei_page      TYPE REF TO lif_gui_page
+      EXPORTING ei_page      TYPE REF TO zif_abapgit_gui_page
                 ev_state     TYPE i
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
@@ -21,38 +21,38 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS get_page_by_name
       IMPORTING iv_name        TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
                 iv_prev_page   TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_branch_overview
       IMPORTING iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_stage
       IMPORTING iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_db_by_name
       IMPORTING iv_name        TYPE clike
                 iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_background
       IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_playground
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS.

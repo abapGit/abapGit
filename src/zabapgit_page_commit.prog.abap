@@ -16,7 +16,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
                   io_stage TYPE REF TO lcl_stage
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -56,7 +56,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ms_control-page_title = 'COMMIT'.
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: ls_commit TYPE lcl_services_git=>ty_commit_fields.
 

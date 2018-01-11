@@ -8,7 +8,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
-      lif_gui_page~on_event   REDEFINITION.
+      zif_abapgit_gui_page~on_event   REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -49,13 +49,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ms_control-page_menu  = build_main_menu( ).
   ENDMETHOD.  " constructor
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
 
 
     IF NOT mo_repo_content IS INITIAL.
-      mo_repo_content->lif_gui_page~on_event(
+      mo_repo_content->zif_abapgit_gui_page~on_event(
         EXPORTING
           iv_action    = iv_action
           iv_prev_page = iv_prev_page

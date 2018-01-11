@@ -341,7 +341,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -593,7 +593,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: ls_merge TYPE ty_merge,
           lo_merge TYPE REF TO lcl_gui_page_merge.

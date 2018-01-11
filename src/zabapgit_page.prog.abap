@@ -2,29 +2,9 @@
 *&  Include           ZABAPGIT_PAGE
 *&---------------------------------------------------------------------*
 
-*----------------------------------------------------------------------*
-*       INTERFACE lif_gui_page DEFINITION
-*----------------------------------------------------------------------*
-INTERFACE lif_gui_page.
-
-  METHODS on_event
-    IMPORTING iv_action    TYPE clike
-              iv_prev_page TYPE clike
-              iv_getdata   TYPE clike OPTIONAL
-              it_postdata  TYPE cnht_post_data_tab OPTIONAL
-    EXPORTING ei_page      TYPE REF TO lif_gui_page
-              ev_state     TYPE i
-    RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-  METHODS render
-    RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-    RAISING   zcx_abapgit_exception.
-
-ENDINTERFACE.
-
 CLASS lcl_gui_page DEFINITION ABSTRACT.
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
+    INTERFACES zif_abapgit_gui_page.
 
   PROTECTED SECTION.
 
@@ -145,11 +125,11 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ASSERT 1 = 1. " Dummy
   ENDMETHOD. "scripts
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
     ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
   ENDMETHOD. "lif_gui_page~on_event
 
-  METHOD lif_gui_page~render.
+  METHOD zif_abapgit_gui_page~render.
 
     DATA lo_script TYPE REF TO zcl_abapgit_html.
 

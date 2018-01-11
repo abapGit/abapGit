@@ -7,7 +7,7 @@ CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     CONSTANTS:
@@ -68,7 +68,7 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   ENDMETHOD.  "render_content
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lt_post_fields TYPE tihttpnvp,
           lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit,
