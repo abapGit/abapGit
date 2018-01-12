@@ -19,7 +19,7 @@ CLASS lcl_gui_page_settings DEFINITION FINAL INHERITING FROM lcl_gui_page.
   PRIVATE SECTION.
 
     DATA:
-      mo_settings TYPE REF TO lcl_settings,
+      mo_settings TYPE REF TO zcl_abapgit_settings,
       mv_error    TYPE abap_bool.
 
     METHODS render_proxy
@@ -189,27 +189,26 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
-      IF lv_i_param_value < lcl_settings=>c_commitmsg_comment_length_dft.
-        lv_i_param_value = lcl_settings=>c_commitmsg_comment_length_dft.
+      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
+        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
       ENDIF.
       mo_settings->set_commitmsg_comment_length( lv_i_param_value ).
     ELSE.
-      mo_settings->set_commitmsg_comment_length( lcl_settings=>c_commitmsg_comment_length_dft ).
+      mo_settings->set_commitmsg_comment_length( zcl_abapgit_settings=>c_commitmsg_comment_length_dft ).
     ENDIF.
 
     READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
-      IF lv_i_param_value < lcl_settings=>c_commitmsg_body_size_dft.
-        lv_i_param_value = lcl_settings=>c_commitmsg_body_size_dft.
+      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_body_size_dft.
+        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_body_size_dft.
       ENDIF.
       mo_settings->set_commitmsg_body_size( lv_i_param_value ).
     ELSE.
-      mo_settings->set_commitmsg_body_size( lcl_settings=>c_commitmsg_body_size_dft ).
+      mo_settings->set_commitmsg_body_size( zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
     ENDIF.
 
   ENDMETHOD.
-
 
   METHOD validate_settings.
 
@@ -220,7 +219,6 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD parse_post.
 
     DATA lv_serialized_post_data TYPE string.
@@ -229,7 +227,6 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
     rt_post_fields = lcl_html_action_utils=>parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
-
 
   METHOD persist_settings.
 

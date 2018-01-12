@@ -81,7 +81,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO lcl_settings.
+    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
 
     super->constructor( ).
 

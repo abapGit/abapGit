@@ -37,10 +37,10 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_text_input
-        IMPORTING iv_name       TYPE string
-                  iv_label      TYPE string
-                  iv_value      TYPE string OPTIONAL
-                  iv_max_length TYPE string OPTIONAL
+        IMPORTING iv_name        TYPE string
+                  iv_label       TYPE string
+                  iv_value       TYPE string OPTIONAL
+                  iv_max_length  TYPE string OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
@@ -161,8 +161,8 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     DATA: lv_user      TYPE string.
     DATA: lv_email     TYPE string.
     DATA: lv_s_param   TYPE string.
-    DATA: lo_settings  TYPE REF TO lcl_settings.
-    data: lv_body_size type i.
+    DATA: lo_settings  TYPE REF TO zcl_abapgit_settings.
+    DATA: lv_body_size TYPE i.
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters

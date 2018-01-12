@@ -51,7 +51,7 @@ ENDCLASS.
 CLASS ltcl_critical_tests IMPLEMENTATION.
 
   METHOD check_run_permission.
-    DATA: lo_settings TYPE REF TO lcl_settings.
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings.
     lo_settings = lcl_app=>settings( )->read( ).
 
     "Objects will be created and deleted, do not run in customer system!
@@ -1376,7 +1376,7 @@ CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
       read_not_found_critical_tests FOR TESTING RAISING cx_static_check.
     DATA:
       mo_persistence_settings TYPE REF TO lcl_persist_settings,
-      mo_settings             TYPE REF TO lcl_settings.
+      mo_settings             TYPE REF TO zcl_abapgit_settings.
 ENDCLASS.
 
 CLASS ltcl_persistence_settings IMPLEMENTATION.
