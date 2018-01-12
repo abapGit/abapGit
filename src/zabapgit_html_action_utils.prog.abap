@@ -67,16 +67,16 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS dbkey_encode
-      IMPORTING is_key           TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_key           TYPE zcl_abapgit_persistence_db=>ty_content
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS dbkey_decode
       IMPORTING iv_string     TYPE clike
-      RETURNING VALUE(rs_key) TYPE lcl_persistence_db=>ty_content.
+      RETURNING VALUE(rs_key) TYPE zcl_abapgit_persistence_db=>ty_content.
 
     CLASS-METHODS dbcontent_decode
       IMPORTING it_postdata       TYPE cnht_post_data_tab
-      RETURNING VALUE(rs_content) TYPE lcl_persistence_db=>ty_content.
+      RETURNING VALUE(rs_content) TYPE zcl_abapgit_persistence_db=>ty_content.
 
     CLASS-METHODS parse_commit_request
       IMPORTING it_postdata TYPE cnht_post_data_tab

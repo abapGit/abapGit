@@ -29,67 +29,6 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_db DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
-
-  PUBLIC SECTION.
-    CONSTANTS:
-      c_tabname TYPE tabname VALUE 'ZABAPGIT',
-      c_lock    TYPE viewname VALUE 'EZABAPGIT'.
-
-    TYPES: ty_type  TYPE c LENGTH 12.
-    TYPES: ty_value TYPE c LENGTH 12.
-
-    TYPES: BEGIN OF ty_content,
-             type     TYPE ty_type,
-             value    TYPE ty_value,
-             data_str TYPE string,
-           END OF ty_content,
-           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value.
-
-    METHODS:
-      list_by_type
-        IMPORTING iv_type           TYPE ty_type
-        RETURNING VALUE(rt_content) TYPE tt_content,
-      list
-        RETURNING VALUE(rt_content) TYPE tt_content,
-      add
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      delete
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-        RAISING   zcx_abapgit_exception,
-      update
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      modify
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      read
-        IMPORTING iv_type        TYPE ty_type
-                  iv_value       TYPE ty_content-value
-        RETURNING VALUE(rv_data) TYPE ty_content-data_str
-        RAISING   zcx_abapgit_not_found,
-      lock
-        IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
-                  iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-        RAISING   zcx_abapgit_exception.
-
-  PRIVATE SECTION.
-    METHODS: validate_and_unprettify_xml
-      IMPORTING iv_xml        TYPE string
-      RETURNING VALUE(rv_xml) TYPE string
-      RAISING   zcx_abapgit_exception.
-
-ENDCLASS.
-
 CLASS lcl_persistence_repo DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -114,7 +53,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
            END OF ty_repo_xml.
 
     TYPES: BEGIN OF ty_repo,
-             key TYPE lcl_persistence_db=>ty_value.
+             key TYPE zcl_abapgit_persistence_db=>ty_value.
         INCLUDE TYPE ty_repo_xml.
     TYPES: END OF ty_repo.
     TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
@@ -187,9 +126,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    CONSTANTS c_type_repo TYPE lcl_persistence_db=>ty_type VALUE 'REPO'.
-
-    DATA: mo_db TYPE REF TO lcl_persistence_db.
+    DATA: mo_db TYPE REF TO zcl_abapgit_persistence_db.
 
     METHODS from_xml
       IMPORTING iv_repo_xml_string TYPE string
@@ -201,7 +138,7 @@ CLASS lcl_persistence_repo DEFINITION FINAL.
       RETURNING VALUE(rv_repo_xml_string) TYPE string.
 
     METHODS get_next_id
-      RETURNING VALUE(rv_next_repo_id) TYPE lcl_persistence_db=>ty_content-value
+      RETURNING VALUE(rv_next_repo_id) TYPE zcl_abapgit_persistence_db=>ty_content-value
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -231,7 +168,7 @@ CLASS lcl_persist_background DEFINITION FINAL.
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,
-             key TYPE lcl_persistence_db=>ty_value.
+             key TYPE zcl_abapgit_persistence_db=>ty_value.
         INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
@@ -256,9 +193,7 @@ CLASS lcl_persist_background DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    CONSTANTS c_type TYPE lcl_persistence_db=>ty_type VALUE 'BACKGROUND'.
-
-    DATA: mo_db   TYPE REF TO lcl_persistence_db,
+    DATA: mo_db   TYPE REF TO zcl_abapgit_persistence_db,
           mt_jobs TYPE tt_background.
 
     METHODS from_xml
@@ -278,7 +213,6 @@ CLASS lcl_settings DEFINITION FINAL.
   PUBLIC SECTION.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
-    CONSTANTS: c_dbtype_settings TYPE lcl_persistence_db=>ty_type VALUE 'SETTINGS' ##NO_TEXT.
 
     METHODS: set_proxy_url
       IMPORTING
@@ -386,7 +320,7 @@ CLASS lcl_persist_background IMPLEMENTATION.
 
   METHOD list.
 
-    DATA: lt_list TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_list TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_xml  TYPE ty_xml.
 
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
@@ -398,7 +332,7 @@ CLASS lcl_persist_background IMPLEMENTATION.
     ENDIF.
 
 
-    lt_list = mo_db->list_by_type( c_type ).
+    lt_list = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_background ).
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       ls_xml = from_xml( <ls_list>-data_str ).
@@ -425,7 +359,7 @@ CLASS lcl_persist_background IMPLEMENTATION.
     ASSERT NOT is_data-key IS INITIAL.
 
     mo_db->modify(
-      iv_type  = c_type
+      iv_type  = zcl_abapgit_persistence_db=>c_type_background
       iv_value = is_data-key
       iv_data  = to_xml( is_data ) ).
 
@@ -437,13 +371,13 @@ CLASS lcl_persist_background IMPLEMENTATION.
   METHOD delete.
 
     TRY.
-        mo_db->read( iv_type  = c_type
+        mo_db->read( iv_type  = zcl_abapgit_persistence_db=>c_type_background
                      iv_value = iv_key ).
       CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
 
-    mo_db->delete( iv_type  = c_type
+    mo_db->delete( iv_type  = zcl_abapgit_persistence_db=>c_type_background
                    iv_value = iv_key ).
 
     DELETE mt_jobs WHERE key = iv_key.
@@ -580,8 +514,6 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    CONSTANTS c_type_user TYPE lcl_persistence_db=>ty_type VALUE 'USER'.
-
     DATA: mv_user TYPE xubname.
 
     TYPES:
@@ -671,7 +603,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     TRY.
         lv_xml = lcl_app=>db( )->read(
-          iv_type  = c_type_user
+          iv_type  = zcl_abapgit_persistence_db=>c_type_user
           iv_value = mv_user ).
       CATCH zcx_abapgit_not_found.
         RETURN.
@@ -707,7 +639,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     lv_xml = to_xml( is_user ).
 
     lcl_app=>db( )->modify(
-      iv_type  = c_type_user
+      iv_type  = zcl_abapgit_persistence_db=>c_type_user
       iv_value = mv_user
       iv_data  = lv_xml ).
 
@@ -938,131 +870,6 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
 ENDCLASS.
 
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_persistence_db
-*----------------------------------------------------------------------*
-
-CLASS lcl_persistence_db IMPLEMENTATION.
-
-  METHOD list_by_type.
-    SELECT * FROM (c_tabname)
-      INTO TABLE rt_content
-      WHERE type = iv_type.                               "#EC CI_SUBRC
-  ENDMETHOD.
-
-  METHOD list.
-    SELECT * FROM (c_tabname)
-      INTO TABLE rt_content.                              "#EC CI_SUBRC
-  ENDMETHOD.
-
-  METHOD lock.
-
-    CALL FUNCTION 'ENQUEUE_EZABAPGIT'
-      EXPORTING
-        mode_zabapgit  = iv_mode
-        type           = iv_type
-        value          = iv_value
-      EXCEPTIONS
-        foreign_lock   = 1
-        system_failure = 2
-        OTHERS         = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
-    ENDIF.
-
-* trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'BANK_OBJ_WORKL_RELEASE_LOCKS'
-      IN UPDATE TASK.
-
-  ENDMETHOD.
-
-  METHOD add.
-
-    DATA ls_table TYPE ty_content.
-
-    ls_table-type  = iv_type.
-    ls_table-value = iv_value.
-    ls_table-data_str = iv_data.
-
-    INSERT (c_tabname) FROM ls_table.                     "#EC CI_SUBRC
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-  METHOD delete.
-
-    lock( iv_type  = iv_type
-          iv_value = iv_value ).
-
-    DELETE FROM (c_tabname)
-      WHERE type = iv_type
-      AND value = iv_value.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'DB Delete failed' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD validate_and_unprettify_xml.
-
-    rv_xml = zcl_abapgit_xml_pretty=>print(
-      iv_xml           = iv_xml
-      iv_unpretty      = abap_true
-      iv_ignore_errors = abap_false ).
-
-  ENDMETHOD.  " validate_and_unprettify_xml
-
-  METHOD update.
-
-    DATA lv_data LIKE iv_data.
-
-    lv_data = validate_and_unprettify_xml( iv_data ).
-
-    lock( iv_type  = iv_type
-          iv_value = iv_value ).
-
-    UPDATE (c_tabname) SET data_str = lv_data
-      WHERE type  = iv_type
-      AND   value = iv_value.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'DB update failed' ).
-    ENDIF.
-
-  ENDMETHOD.  "update
-
-  METHOD modify.
-
-    DATA: ls_content TYPE ty_content.
-
-    lock( iv_type  = iv_type
-          iv_value = iv_value ).
-
-    ls_content-type  = iv_type.
-    ls_content-value = iv_value.
-    ls_content-data_str = iv_data.
-
-    MODIFY (c_tabname) FROM ls_content.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'DB modify failed' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD read.
-
-    SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
-      WHERE type = iv_type
-      AND value = iv_value.                               "#EC CI_SUBRC
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
-    ENDIF.
-
-  ENDMETHOD.
-
-ENDCLASS.
-
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_persistence_repo
 *----------------------------------------------------------------------*
@@ -1086,7 +893,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
     rv_key = get_next_id( ).
 
-    mo_db->add( iv_type  = c_type_repo
+    mo_db->add( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                 iv_value = rv_key
                 iv_data  = lv_repo_as_xml ).
 
@@ -1094,7 +901,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_dot_abapgit.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1110,7 +917,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-dot_abapgit = is_dot_abapgit.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1123,14 +930,14 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     CREATE OBJECT lo_background.
     lo_background->delete( iv_key ).
 
-    mo_db->delete( iv_type  = c_type_repo
+    mo_db->delete( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key ).
 
   ENDMETHOD.
 
   METHOD update_local_checksums.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1146,7 +953,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-local_checksums = it_checksums.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1154,7 +961,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_url.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1174,7 +981,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-url = iv_url.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1182,7 +989,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_branch_name.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1198,7 +1005,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-branch_name = iv_branch_name.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1206,7 +1013,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_head_branch.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1222,7 +1029,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-head_branch = iv_head_branch.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1230,7 +1037,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_offline.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1245,7 +1052,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-offline = iv_offline.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1253,7 +1060,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD update_sha1.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    TYPE ty_repo.
 
@@ -1269,7 +1076,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
     ls_repo-sha1 = iv_branch_sha1.
     ls_content-data_str = to_xml( ls_repo ).
 
-    mo_db->update( iv_type  = c_type_repo
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
@@ -1293,14 +1100,14 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 * todo: Lock the complete persistence in order to prevent concurrent repo-creation
 * however the current approach will most likely work in almost all cases
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content.
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content.
 
     FIELD-SYMBOLS: <ls_content> LIKE LINE OF lt_content.
 
 
     rv_next_repo_id = 1.
 
-    lt_content = mo_db->list_by_type( c_type_repo ).
+    lt_content = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_repo ).
     LOOP AT lt_content ASSIGNING <ls_content>.
       IF <ls_content>-value >= rv_next_repo_id.
         rv_next_repo_id = <ls_content>-value + 1.
@@ -1317,12 +1124,12 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
 
   METHOD list.
 
-    DATA: lt_content TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
           ls_content LIKE LINE OF lt_content,
           ls_repo    LIKE LINE OF rt_repos.
 
 
-    lt_content = mo_db->list_by_type( c_type_repo ).
+    lt_content = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_repo ).
 
     LOOP AT lt_content INTO ls_content.
       MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO ls_repo.
@@ -1372,7 +1179,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   METHOD lock.
 
     mo_db->lock( iv_mode  = iv_mode
-                 iv_type  = c_type_repo
+                 iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                  iv_value = iv_key ).
 
   ENDMETHOD.
@@ -1563,7 +1370,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
 
     SELECT SINGLE viewname FROM dd25l INTO lv_viewname
-      WHERE viewname = lcl_persistence_db=>c_lock.
+      WHERE viewname = zcl_abapgit_persistence_db=>c_lock.
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -1579,38 +1386,38 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
                    <ls_dd27p> LIKE LINE OF lt_dd27p.
 
 
-    ls_dd25v-viewname   = lcl_persistence_db=>c_lock.
+    ls_dd25v-viewname   = zcl_abapgit_persistence_db=>c_lock.
     ls_dd25v-aggtype    = 'E'.
-    ls_dd25v-roottab    = lcl_persistence_db=>c_tabname.
+    ls_dd25v-roottab    = zcl_abapgit_persistence_db=>c_tabname.
     ls_dd25v-ddlanguage = zif_abapgit_definitions=>gc_english.
     ls_dd25v-ddtext     = c_text.
 
     APPEND INITIAL LINE TO lt_dd26e ASSIGNING <ls_dd26e>.
-    <ls_dd26e>-viewname   = lcl_persistence_db=>c_lock.
-    <ls_dd26e>-tabname    = lcl_persistence_db=>c_tabname.
+    <ls_dd26e>-viewname   = zcl_abapgit_persistence_db=>c_lock.
+    <ls_dd26e>-tabname    = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd26e>-tabpos     = '0001'.
-    <ls_dd26e>-fortabname = lcl_persistence_db=>c_tabname.
+    <ls_dd26e>-fortabname = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd26e>-enqmode    = 'E'.
 
     APPEND INITIAL LINE TO lt_dd27p ASSIGNING <ls_dd27p>.
-    <ls_dd27p>-viewname  = lcl_persistence_db=>c_lock.
+    <ls_dd27p>-viewname  = zcl_abapgit_persistence_db=>c_lock.
     <ls_dd27p>-objpos    = '0001'.
     <ls_dd27p>-viewfield = 'TYPE'.
-    <ls_dd27p>-tabname   = lcl_persistence_db=>c_tabname.
+    <ls_dd27p>-tabname   = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd27p>-fieldname = 'TYPE'.
     <ls_dd27p>-keyflag   = abap_true.
 
     APPEND INITIAL LINE TO lt_dd27p ASSIGNING <ls_dd27p>.
-    <ls_dd27p>-viewname  = lcl_persistence_db=>c_lock.
+    <ls_dd27p>-viewname  = zcl_abapgit_persistence_db=>c_lock.
     <ls_dd27p>-objpos    = '0002'.
     <ls_dd27p>-viewfield = 'VALUE'.
-    <ls_dd27p>-tabname   = lcl_persistence_db=>c_tabname.
+    <ls_dd27p>-tabname   = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd27p>-fieldname = 'VALUE'.
     <ls_dd27p>-keyflag   = abap_true.
 
     CALL FUNCTION 'DDIF_ENQU_PUT'
       EXPORTING
-        name              = lcl_persistence_db=>c_lock
+        name              = zcl_abapgit_persistence_db=>c_lock
         dd25v_wa          = ls_dd25v
       TABLES
         dd26e_tab         = lt_dd26e
@@ -1626,7 +1433,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'migrate, error from DDIF_ENQU_PUT' ).
     ENDIF.
 
-    lv_obj_name = lcl_persistence_db=>c_lock.
+    lv_obj_name = zcl_abapgit_persistence_db=>c_lock.
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
         wi_tadir_pgmid    = 'R3TR'
@@ -1643,7 +1450,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     CALL FUNCTION 'DDIF_ENQU_ACTIVATE'
       EXPORTING
-        name        = lcl_persistence_db=>c_lock
+        name        = zcl_abapgit_persistence_db=>c_lock
       EXCEPTIONS
         not_found   = 1
         put_failure = 2
@@ -1659,7 +1466,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     DATA: lv_tabname TYPE dd02l-tabname.
 
     SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = lcl_persistence_db=>c_tabname.
+      WHERE tabname = zcl_abapgit_persistence_db=>c_tabname.
     rv_exists = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -1674,21 +1481,21 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
-    ls_dd02v-tabname    = lcl_persistence_db=>c_tabname.
+    ls_dd02v-tabname    = zcl_abapgit_persistence_db=>c_tabname.
     ls_dd02v-ddlanguage = zif_abapgit_definitions=>gc_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
     ls_dd02v-contflag   = 'A'.
     ls_dd02v-exclass    = '1'.
 
-    ls_dd09l-tabname  = lcl_persistence_db=>c_tabname.
+    ls_dd09l-tabname  = zcl_abapgit_persistence_db=>c_tabname.
     ls_dd09l-as4local = 'A'.
     ls_dd09l-tabkat   = '1'.
     ls_dd09l-tabart   = 'APPL1'.
     ls_dd09l-bufallow = 'N'.
 
     APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
-    <ls_dd03p>-tabname   = lcl_persistence_db=>c_tabname.
+    <ls_dd03p>-tabname   = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd03p>-fieldname = 'TYPE'.
     <ls_dd03p>-position  = '0001'.
     <ls_dd03p>-keyflag   = 'X'.
@@ -1696,7 +1503,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     <ls_dd03p>-leng      = '000012'.
 
     APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
-    <ls_dd03p>-tabname   = lcl_persistence_db=>c_tabname.
+    <ls_dd03p>-tabname   = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd03p>-fieldname = 'VALUE'.
     <ls_dd03p>-position  = '0002'.
     <ls_dd03p>-keyflag   = 'X'.
@@ -1704,14 +1511,14 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     <ls_dd03p>-leng      = '000012'.
 
     APPEND INITIAL LINE TO lt_dd03p ASSIGNING <ls_dd03p>.
-    <ls_dd03p>-tabname   = lcl_persistence_db=>c_tabname.
+    <ls_dd03p>-tabname   = zcl_abapgit_persistence_db=>c_tabname.
     <ls_dd03p>-fieldname = 'DATA_STR'.
     <ls_dd03p>-position  = '0003'.
     <ls_dd03p>-datatype  = 'STRG'.
 
     CALL FUNCTION 'DDIF_TABL_PUT'
       EXPORTING
-        name              = lcl_persistence_db=>c_tabname
+        name              = zcl_abapgit_persistence_db=>c_tabname
         dd02v_wa          = ls_dd02v
         dd09l_wa          = ls_dd09l
       TABLES
@@ -1727,7 +1534,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'migrate, error from DDIF_TABL_PUT' ).
     ENDIF.
 
-    lv_obj_name = lcl_persistence_db=>c_tabname.
+    lv_obj_name = zcl_abapgit_persistence_db=>c_tabname.
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
         wi_tadir_pgmid    = 'R3TR'
@@ -1744,7 +1551,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     CALL FUNCTION 'DDIF_TABL_ACTIVATE'
       EXPORTING
-        name        = lcl_persistence_db=>c_tabname
+        name        = zcl_abapgit_persistence_db=>c_tabname
         auth_chk    = abap_false
       IMPORTING
         rc          = lv_rc
@@ -1840,7 +1647,7 @@ CLASS lcl_settings IMPLEMENTATION.
 
     CREATE OBJECT lr_output.
 
-    lr_output->add( iv_name = lcl_settings=>c_dbtype_settings
+    lr_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
                     ig_data = ms_settings ).
 
     ev_settings_xml = lr_output->render( ).
@@ -1855,7 +1662,7 @@ CLASS lcl_settings IMPLEMENTATION.
 
     CLEAR ms_settings.
 
-    lr_input->read( EXPORTING iv_name = lcl_settings=>c_dbtype_settings
+    lr_input->read( EXPORTING iv_name = zcl_abapgit_persistence_db=>c_type_settings
                     CHANGING  cg_data = ms_settings ).
 
   ENDMETHOD.
@@ -1884,7 +1691,7 @@ CLASS lcl_persist_settings IMPLEMENTATION.
     settings = io_settings->get_settings_xml( ).
 
     lcl_app=>db( )->modify(
-      iv_type       = lcl_settings=>c_dbtype_settings
+      iv_type       = zcl_abapgit_persistence_db=>c_type_settings
       iv_value      = ''
       iv_data       = settings ).
 
@@ -1909,7 +1716,7 @@ CLASS lcl_persist_settings IMPLEMENTATION.
     TRY.
 
         ro_settings->set_xml_settings(
-          lcl_app=>db( )->read( iv_type  = lcl_settings=>c_dbtype_settings
+          lcl_app=>db( )->read( iv_type  = zcl_abapgit_persistence_db=>c_type_settings
                                 iv_value = '' ) ).
 
       CATCH zcx_abapgit_not_found zcx_abapgit_exception.

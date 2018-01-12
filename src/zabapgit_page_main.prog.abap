@@ -19,7 +19,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
                  changed_by TYPE string VALUE 'changed_by',
                END OF c_actions.
 
-    DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
+    DATA: mv_show         TYPE zcl_abapgit_persistence_db=>ty_value,
           mo_repo_content TYPE REF TO lcl_gui_view_repo.
 
     METHODS:

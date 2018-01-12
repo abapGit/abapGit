@@ -6,11 +6,11 @@ CLASS lcl_services_db DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS delete
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_key TYPE zcl_abapgit_persistence_db=>ty_content
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS update
-      IMPORTING is_content TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_content TYPE zcl_abapgit_persistence_db=>ty_content
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_services_db
