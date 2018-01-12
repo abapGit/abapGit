@@ -80,8 +80,8 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD find_top_package.
 * assumption: all objects in transport share a common super package
 
-    DATA: lt_obj   TYPE lif_sap_package=>ty_devclass_tt,
-          lt_super TYPE lif_sap_package=>ty_devclass_tt,
+    DATA: lt_obj   TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lt_super TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_super LIKE LINE OF lt_super,
           lv_index TYPE i.
 
@@ -90,10 +90,10 @@ CLASS lcl_transport IMPLEMENTATION.
 
     READ TABLE it_tadir INDEX 1 ASSIGNING <ls_tadir>.
     ASSERT sy-subrc = 0.
-    lt_super = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+    lt_super = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      lt_obj = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+      lt_obj = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
 * filter out possibilities from lt_super
       LOOP AT lt_super INTO lv_super.
