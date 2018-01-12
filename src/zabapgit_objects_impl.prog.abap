@@ -93,12 +93,12 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD update_package_tree.
 
-    DATA: lt_packages TYPE lif_sap_package=>ty_devclass_tt,
+    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
           lv_tree     TYPE dirtree-tname.
 
 
-    lt_packages = lcl_sap_package=>get( iv_package )->list_subpackages( ).
+    lt_packages = zcl_abapgit_sap_package=>get( iv_package )->list_subpackages( ).
     APPEND iv_package TO lt_packages.
 
     LOOP AT lt_packages INTO lv_package.

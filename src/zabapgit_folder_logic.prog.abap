@@ -65,10 +65,10 @@ CLASS lcl_folder_logic IMPLEMENTATION.
 
       TRANSLATE rv_package TO UPPER CASE.
 
-      IF lcl_sap_package=>get( rv_package )->exists( ) = abap_false AND
+      IF zcl_abapgit_sap_package=>get( rv_package )->exists( ) = abap_false AND
           iv_create_if_not_exists = abap_true.
 
-        lcl_sap_package=>get( lv_parent )->create_child( rv_package ).
+        zcl_abapgit_sap_package=>get( lv_parent )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.
@@ -86,7 +86,7 @@ CLASS lcl_folder_logic IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = lcl_sap_package=>get( iv_package )->read_parent( ).
+      lv_parentcl = zcl_abapgit_sap_package=>get( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
@@ -193,7 +193,7 @@ ENDCLASS.
 CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PUBLIC SECTION.
-    INTERFACES: lif_sap_package.
+    INTERFACES: zif_abapgit_sap_package.
 
   PRIVATE SECTION.
     CONSTANTS: lc_top TYPE devclass VALUE '$TOP',
@@ -212,46 +212,46 @@ ENDCLASS.                    "ltcl_convert DEFINITION
 
 CLASS ltcl_folder_logic IMPLEMENTATION.
 
-  METHOD lif_sap_package~list_subpackages.
+  METHOD zif_abapgit_sap_package~list_subpackages.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~list_superpackages.
+  METHOD zif_abapgit_sap_package~list_superpackages.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~read_parent.
+  METHOD zif_abapgit_sap_package~read_parent.
     rv_parentcl = '$TOP'.
   ENDMETHOD.
 
-  METHOD lif_sap_package~create_child.
+  METHOD zif_abapgit_sap_package~create_child.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~exists.
+  METHOD zif_abapgit_sap_package~exists.
     rv_bool = abap_true.
   ENDMETHOD.
 
   METHOD setup.
-    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF lcl_sap_package=>gt_injected.
+    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF zcl_abapgit_sap_package=>gt_injected.
 
-    CLEAR lcl_sap_package=>gt_injected.
+    CLEAR zcl_abapgit_sap_package=>gt_injected.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '$TOP'.
     <ls_inject>-object  = me.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '$TOP_FOO'.
     <ls_inject>-object  = me.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '$FOOBAR'.
     <ls_inject>-object  = me.
   ENDMETHOD.
 
   METHOD teardown.
-    CLEAR lcl_sap_package=>gt_injected.
+    CLEAR zcl_abapgit_sap_package=>gt_injected.
   ENDMETHOD.
 
   METHOD prefix1.
@@ -309,7 +309,7 @@ ENDCLASS.
 CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PUBLIC SECTION.
-    INTERFACES: lif_sap_package.
+    INTERFACES: zif_abapgit_sap_package.
 
   PRIVATE SECTION.
     CONSTANTS: lc_top TYPE devclass VALUE '/TEST/TOOLS',
@@ -327,46 +327,46 @@ ENDCLASS.                    "ltcl_convert DEFINITION
 
 CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
 
-  METHOD lif_sap_package~list_subpackages.
+  METHOD zif_abapgit_sap_package~list_subpackages.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~list_superpackages.
+  METHOD zif_abapgit_sap_package~list_superpackages.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~read_parent.
+  METHOD zif_abapgit_sap_package~read_parent.
     rv_parentcl = lc_top.
   ENDMETHOD.
 
-  METHOD lif_sap_package~create_child.
+  METHOD zif_abapgit_sap_package~create_child.
     RETURN.
   ENDMETHOD.
 
-  METHOD lif_sap_package~exists.
+  METHOD zif_abapgit_sap_package~exists.
     rv_bool = abap_true.
   ENDMETHOD.
 
   METHOD setup.
-    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF lcl_sap_package=>gt_injected.
+    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF zcl_abapgit_sap_package=>gt_injected.
 
-    CLEAR lcl_sap_package=>gt_injected.
+    CLEAR zcl_abapgit_sap_package=>gt_injected.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '/TEST/TOOLS'.
     <ls_inject>-object  = me.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '/TEST/T1'.
     <ls_inject>-object  = me.
 
-    APPEND INITIAL LINE TO lcl_sap_package=>gt_injected ASSIGNING <ls_inject>.
+    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
     <ls_inject>-package = '/TEST/TOOLS_T1'.
     <ls_inject>-object  = me.
   ENDMETHOD.
 
   METHOD teardown.
-    CLEAR lcl_sap_package=>gt_injected.
+    CLEAR zcl_abapgit_sap_package=>gt_injected.
   ENDMETHOD.
 
   METHOD prefix1.

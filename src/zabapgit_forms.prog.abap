@@ -110,7 +110,7 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
       RETURN.
     ENDIF.
 
-    lcl_sap_package=>create( ls_package_data ).
+    zcl_abapgit_sap_package=>create( ls_package_data ).
     COMMIT WORK.
 
     <ls_fpackage>-value = ls_package_data-devclass.
@@ -145,7 +145,7 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
       RETURN.
     ENDIF.
 
-    lcl_sap_package=>create( ls_package_data ).
+    zcl_abapgit_sap_package=>create( ls_package_data ).
     COMMIT WORK.
 
     <ls_fpackage>-value = ls_package_data-devclass.

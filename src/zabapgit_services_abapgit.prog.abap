@@ -137,7 +137,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
         iv_url              = iv_url
         iv_target_package   = iv_package ).
 
-      lcl_sap_package=>create_local( iv_package ).
+      zcl_abapgit_sap_package=>create_local( iv_package ).
 
       lo_repo = lcl_app=>repo_srv( )->new_online(
         iv_url         = iv_url
