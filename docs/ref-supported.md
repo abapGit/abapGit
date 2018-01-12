@@ -26,6 +26,7 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
+DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
 ECTD | eCATT Test Data Container | [#105](https://github.com/larshp/abapGit/issues/105)
