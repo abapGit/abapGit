@@ -46,19 +46,44 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: ls_dot TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit.
-
+    DATA: ls_dot          TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_selected     TYPE string,
+          lt_folder_logic TYPE stringtab.
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    INSERT zcl_abapgit_dot_abapgit=>c_folder_logic-full
+           INTO TABLE lt_folder_logic.
+
+    INSERT zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+           INTO TABLE lt_folder_logic.
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="settings_container">' ).
     ro_html->add( '<form id="settings_form" method="post" action="sapevent:' &&
       c_action-save_settings && '">' ).
+
     ro_html->add( '<br>' ).
-    ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' &&
-      ls_dot-folder_logic && '">' ).
+    ro_html->add( 'Folder logic: <select name="folder_logic">' ).
+
+    LOOP AT lt_folder_logic ASSIGNING <lv_folder_logic>.
+
+      IF ls_dot-folder_logic = <lv_folder_logic>.
+        lv_selected = 'selected'.
+      ELSE.
+        CLEAR: lv_selected.
+      ENDIF.
+
+      ro_html->add( |<option value="{ <lv_folder_logic> }" |
+                 && |{ lv_selected }>|
+                 && |{ <lv_folder_logic> }</option>| ).
+
+    ENDLOOP.
+
+    ro_html->add( '</select>' ).
     ro_html->add( '<br>' ).
+
     ro_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
       ls_dot-starting_folder && '">' ).
     ro_html->add( '<br>' ).
