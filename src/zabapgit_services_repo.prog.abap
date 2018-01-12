@@ -48,7 +48,7 @@ CLASS lcl_services_repo DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS transport_to_branch
-      IMPORTING iv_repository_key TYPE lcl_persistence_db=>ty_value
+      IMPORTING iv_repository_key TYPE zcl_abapgit_persistence_db=>ty_value
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS. "lcl_services_repo

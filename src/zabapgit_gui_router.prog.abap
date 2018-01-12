@@ -66,7 +66,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_url  TYPE string,
           lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_db   TYPE lcl_persistence_db=>ty_content,
+          ls_db   TYPE zcl_abapgit_persistence_db=>ty_content,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     lv_key = iv_getdata. " TODO refactor
@@ -276,7 +276,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_page_class TYPE string,
           lv_message    TYPE string,
-          ls_key        TYPE lcl_persistence_db=>ty_content.
+          ls_key        TYPE zcl_abapgit_persistence_db=>ty_content.
 
     lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
     ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).

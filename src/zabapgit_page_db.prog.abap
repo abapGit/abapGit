@@ -6,17 +6,17 @@ CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+      IMPORTING is_key TYPE zcl_abapgit_persistence_db=>ty_content.
 
     CLASS-METHODS: render_record_banner
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_key TYPE zcl_abapgit_persistence_db=>ty_content
       RETURNING VALUE(rv_html) TYPE string.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: ms_key TYPE lcl_persistence_db=>ty_content.
+    DATA: ms_key TYPE zcl_abapgit_persistence_db=>ty_content.
 
 ENDCLASS.
 
@@ -41,8 +41,8 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
     DATA:
       lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
       lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
-      lv_data         TYPE lcl_persistence_db=>ty_content-data_str,
-      ls_action       TYPE lcl_persistence_db=>ty_content,
+      lv_data         TYPE zcl_abapgit_persistence_db=>ty_content-data_str,
+      ls_action       TYPE zcl_abapgit_persistence_db=>ty_content,
       lv_action       TYPE string.
 
     TRY.
@@ -83,13 +83,13 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+      IMPORTING is_key TYPE zcl_abapgit_persistence_db=>ty_content.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: ms_key TYPE lcl_persistence_db=>ty_content.
+    DATA: ms_key TYPE zcl_abapgit_persistence_db=>ty_content.
 
 ENDCLASS.
 
@@ -103,7 +103,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
+    DATA: lv_data    TYPE zcl_abapgit_persistence_db=>ty_content-data_str,
           lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     TRY.
@@ -160,7 +160,7 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     METHODS explain_content
-      IMPORTING is_data TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_data TYPE zcl_abapgit_persistence_db=>ty_content
       RETURNING VALUE(rv_text) TYPE string
       RAISING   zcx_abapgit_exception.
 
@@ -175,7 +175,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_data    TYPE zcl_abapgit_persistence_db=>tt_content,
           lv_action  TYPE string,
           lv_trclass TYPE string,
           lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
