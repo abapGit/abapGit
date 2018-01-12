@@ -59,6 +59,7 @@ SFPF | Form Object: Form | Yes
 SFPI | Form Object: Interface | Yes
 SFSW | Switch + Assignment of Objects to the Switch | Yes
 SHI3 | General structure storage: Definition of a structure | Yes
+SHI5 | Gen. hierarchy storage extrension name | Yes
 SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
