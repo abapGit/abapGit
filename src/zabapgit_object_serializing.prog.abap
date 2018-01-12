@@ -22,6 +22,7 @@ INCLUDE zabapgit_object_doct.
 INCLUDE zabapgit_object_docv.
 INCLUDE zabapgit_object_doma.
 INCLUDE zabapgit_object_dtel.
+INCLUDE zabapgit_object_dsys.
 INCLUDE zabapgit_object_enho.
 INCLUDE zabapgit_object_enhs.
 INCLUDE zabapgit_object_enqu.
