@@ -293,7 +293,7 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD delete.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_tabclass TYPE dd02l-tabclass,
+*          lv_tabclass TYPE dd02l-tabclass,
           lt_tadir    LIKE it_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.

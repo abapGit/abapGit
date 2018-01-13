@@ -59,8 +59,8 @@ CLASS lcl_object_shma IMPLEMENTATION.
         CLEAR: ls_area_attributes-chg_user,
                ls_area_attributes-chg_date,
                ls_area_attributes-chg_time,
-               ls_area_attributes-cls_gen_user ,
-               ls_area_attributes-cls_gen_date ,
+               ls_area_attributes-cls_gen_user,
+               ls_area_attributes-cls_gen_date,
                ls_area_attributes-cls_gen_time.
 
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
@@ -107,7 +107,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
     " lifecycle. Therefore we have to reimplement most of the
     " FMs logic
 
-    CONSTANTS: lc_request_delete TYPE i VALUE '4'.
+    CONSTANTS: lc_request_delete TYPE i VALUE 4.
 
     DATA: lv_request   TYPE i,
           lv_area_name TYPE shm_area_name,
@@ -192,7 +192,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
           EXCEPTIONS
             OTHERS      = 1.
 
-        IF  sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
+        IF sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
 
           " TADIR entries for local objects must be deleted 'by hand'
 

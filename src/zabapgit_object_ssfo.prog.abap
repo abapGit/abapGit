@@ -129,7 +129,6 @@ CLASS lcl_object_ssfo IMPLEMENTATION.
           li_node     TYPE REF TO if_ixml_node,
           li_element  TYPE REF TO if_ixml_element,
           li_iterator TYPE REF TO if_ixml_node_iterator,
-          li_attr     TYPE REF TO if_ixml_named_node_map,
           lv_formname TYPE tdsfname,
           li_ixml     TYPE REF TO if_ixml,
           li_xml_doc  TYPE REF TO if_ixml_document.

@@ -33,8 +33,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    DATA: lv_state TYPE objstate,
-          li_ddl   TYPE REF TO object,
+    DATA: li_ddl   TYPE REF TO object,
           lr_data  TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_data>  TYPE any,

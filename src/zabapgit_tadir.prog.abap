@@ -12,8 +12,8 @@ CLASS lcl_skip_objects DEFINITION.
     METHODS:
       skip_sadl_generated_objects
         IMPORTING
-          it_tadir          TYPE zif_abapgit_definitions=>ty_tadir_tt
-          io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
+          it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
+          io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING
           VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
@@ -84,11 +84,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read_single.
 
-    DATA: lv_obj_name TYPE tadir-obj_name.
-
-
     IF iv_object = 'SICF'.
-      rs_tadir = read_single_sicf( iv_pgmid = iv_pgmid
+      rs_tadir = read_single_sicf( iv_pgmid    = iv_pgmid
                                    iv_obj_name = iv_obj_name ).
     ELSE.
       SELECT SINGLE * FROM tadir INTO rs_tadir
@@ -114,7 +111,8 @@ CLASS lcl_tadir IMPLEMENTATION.
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
-      AND obj_name LIKE lv_obj_name.
+      AND obj_name LIKE lv_obj_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.

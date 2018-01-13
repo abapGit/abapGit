@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA: lv_type TYPE c,
           lo_html TYPE REF TO zcl_abapgit_html.
 
-    FIELD-SYMBOLS: <tab> TYPE string_table.
+    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
 
     DESCRIBE FIELD iv_chunk TYPE lv_type. " Describe is faster than RTTI classes
 
@@ -159,8 +159,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       WHEN 'C' OR 'g'.  " Char or string
         APPEND iv_chunk TO mt_buffer.
       WHEN 'h'.         " Table
-        ASSIGN iv_chunk TO <tab>. " Assuming table of strings ! Will dump otherwise
-        APPEND LINES OF <tab> TO mt_buffer.
+        ASSIGN iv_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
+        APPEND LINES OF <lt_tab> TO mt_buffer.
       WHEN 'r'.         " Object ref
         ASSERT iv_chunk IS BOUND. " Dev mistake
         TRY.
@@ -288,14 +288,14 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA: ls_context TYPE ty_indent_context,
           lt_temp    TYPE string_table.
 
-    FIELD-SYMBOLS: <line>   LIKE LINE OF lt_temp,
-                   <line_c> LIKE LINE OF lt_temp.
+    FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
+                   <lv_line_c> LIKE LINE OF lt_temp.
 
     ls_context-no_indent_jscss = iv_no_indent_jscss.
 
-    LOOP AT mt_buffer ASSIGNING <line>.
-      APPEND <line> TO lt_temp ASSIGNING <line_c>.
-      indent_line( CHANGING cs_context = ls_context cv_line = <line_c> ).
+    LOOP AT mt_buffer ASSIGNING <lv_line>.
+      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
+      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
     ENDLOOP.
 
     CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>gc_newline.

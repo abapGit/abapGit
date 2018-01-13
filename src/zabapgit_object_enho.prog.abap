@@ -33,8 +33,7 @@ CLASS lcl_object_enho_wdyc DEFINITION.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
@@ -47,7 +46,6 @@ CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~deserialize.
@@ -146,8 +144,7 @@ CLASS lcl_object_enho_wdyn DEFINITION.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
@@ -160,7 +157,6 @@ CLASS lcl_object_enho_wdyn IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~deserialize.
@@ -439,8 +435,7 @@ CLASS lcl_object_enho_badi DEFINITION.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_badi DEFINITION
 
@@ -453,7 +448,6 @@ CLASS lcl_object_enho_badi IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.

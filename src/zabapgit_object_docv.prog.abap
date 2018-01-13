@@ -20,7 +20,7 @@ CLASS lcl_object_docv DEFINITION INHERITING FROM lcl_objects_super FINAL.
            END OF ty_data.
 
     METHODS: read
-      RETURNING value(rs_data) TYPE ty_data.
+      RETURNING VALUE(rs_data) TYPE ty_data.
 
 ENDCLASS.                    "lcl_object_msag DEFINITION
 

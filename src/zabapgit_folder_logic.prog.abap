@@ -19,7 +19,7 @@ CLASS lcl_folder_logic DEFINITION.
           io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
           iv_path                 TYPE string
           iv_create_if_not_exists TYPE abap_bool DEFAULT abap_true
-          iv_local_path           TYPE abap_bool DEFAULT abap_true
+*          iv_local_path           TYPE abap_bool DEFAULT abap_true
         RETURNING
           VALUE(rv_package)       TYPE devclass
         RAISING

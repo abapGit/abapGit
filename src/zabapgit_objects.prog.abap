@@ -1622,7 +1622,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     SELECT dgen tgen FROM d020s           " Screens
       INTO CORRESPONDING FIELDS OF TABLE lt_screens
-      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.     "#EC CI_SUBRC
+      WHERE prog = iv_program
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.        "#EC CI_SUBRC
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
       rv_changed = check_timestamp(
@@ -1638,7 +1639,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_eudb
       WHERE relid = 'CU'
       AND   name  = iv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.             "#EC CI_SUBRC
+      AND   srtf2 = 0
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.        "#EC CI_SUBRC
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
       rv_changed = check_timestamp(
@@ -1950,15 +1952,15 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
     DATA: lr_data TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_data>    TYPE any,
-                   <ls_header>  TYPE any,
-                   <changed_by> TYPE any.
+    FIELD-SYMBOLS: <lg_data>    TYPE any,
+                   <lg_header>  TYPE any,
+                   <lg_changed_by> TYPE any.
 
     create_channel_objects( ).
 
     TRY.
         CREATE DATA lr_data TYPE (mv_data_structure_name).
-        ASSIGN lr_data->* TO <ls_data>.
+        ASSIGN lr_data->* TO <lg_data>.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_name } not supported| ).
@@ -1966,14 +1968,14 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
     get_data(
       IMPORTING
-        p_data = <ls_data> ).
+        p_data = <lg_data> ).
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <ls_data> TO <ls_header>.
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
-    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_header> TO <changed_by>.
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_changed_by>.
     ASSERT sy-subrc = 0.
 
-    rv_user = <changed_by>.
+    rv_user = <lg_changed_by>.
 
   ENDMETHOD.
 
