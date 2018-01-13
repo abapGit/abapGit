@@ -1,20 +1,20 @@
-class ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER definition
-  public
-  abstract
-  create public .
+CLASS zcl_abapgit_syntax_highlighter DEFINITION
+  PUBLIC
+  ABSTRACT
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods CREATE
-    importing
-      !IV_FILENAME type STRING
-    returning
-      value(RO_INSTANCE) type ref to ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER .
-  methods PROCESS_LINE
-    importing
-      !IV_LINE type STRING
-    returning
-      value(RV_LINE) type STRING .
+    CLASS-METHODS create
+      IMPORTING
+        !iv_filename       TYPE string
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_syntax_highlighter .
+    METHODS process_line
+      IMPORTING
+        !iv_line       TYPE string
+      RETURNING
+        VALUE(rv_line) TYPE string .
   PROTECTED SECTION.
 
     TYPES:
