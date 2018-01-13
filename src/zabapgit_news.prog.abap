@@ -110,7 +110,7 @@ CLASS lcl_news IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_last_seen = lcl_app=>user( )->get_repo_last_change_seen( lv_url ).
+    lv_last_seen = zcl_abapgit_persistence_user=>get_instance( )->get_repo_last_change_seen( lv_url ).
 
     TRY.
         " Find changelog
@@ -131,7 +131,7 @@ CLASS lcl_news IMPLEMENTATION.
     ENDIF.
 
     IF ro_instance IS BOUND.
-      lcl_app=>user( )->set_repo_last_change_seen(
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_last_change_seen(
         iv_url     = lv_url
         iv_version = ro_instance->latest_version( ) ).
     ENDIF.

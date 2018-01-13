@@ -74,7 +74,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-show.              " Change displayed repo
-        lcl_app=>user( )->set_repo_show( lv_key ).
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
             lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -150,14 +150,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDTRY.
 
     lv_show_old = mv_show.
-    mv_show     = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+    mv_show     = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ). " Get default repo from user cfg
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
           lcl_app=>repo_srv( )->get( mv_show ).
         CATCH zcx_abapgit_exception.
           CLEAR mv_show.
-          lcl_app=>user( )->set_repo_show( mv_show ).
+          zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( mv_show ).
       ENDTRY.
     ENDIF.
 
@@ -208,7 +208,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           lo_repo       LIKE LINE OF it_repo_list,
           lo_favbar     TYPE REF TO zcl_abapgit_html_toolbar,
           lo_allbar     TYPE REF TO zcl_abapgit_html_toolbar,
-          lt_favorites  TYPE lcl_persistence_user=>tt_favorites,
+          lt_favorites  TYPE zcl_abapgit_persistence_user=>tt_favorites,
           lv_repo_title TYPE string.
 
 
@@ -217,7 +217,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_allbar.
     CREATE OBJECT lo_pback.
 
-    lt_favorites = lcl_app=>user( )->get_favorites( ).
+    lt_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
 
     LOOP AT it_repo_list INTO lo_repo.
       lv_key     = lo_repo->get_key( ).
@@ -255,7 +255,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     " Cleanup orphan favorites (for removed repos)
     LOOP AT lt_favorites INTO lv_key.
-      lcl_app=>user( )->toggle_favorite( lv_key ).
+      zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( lv_key ).
     ENDLOOP.
 
     " Render HTML

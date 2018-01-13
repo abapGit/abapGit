@@ -101,7 +101,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     super->constructor( ).
     ms_control-page_title = 'DIFF'.
-    mv_unified            = lcl_app=>user( )->get_diff_unified( ).
+    mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
     mv_repo_key           = iv_key.
 
     GET TIME STAMP FIELD lv_ts.
@@ -338,7 +338,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
-        mv_unified = lcl_app=>user( )->toggle_diff_unified( ).
+        mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
         ev_state   = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 

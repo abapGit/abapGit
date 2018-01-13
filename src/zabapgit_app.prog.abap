@@ -3,7 +3,6 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_gui DEFINITION DEFERRED.
-CLASS lcl_persistence_user DEFINITION DEFERRED.
 CLASS lcl_repo_srv DEFINITION DEFERRED.
 CLASS lcl_proxy_configuration DEFINITION DEFERRED.
 
@@ -17,11 +16,6 @@ CLASS lcl_app DEFINITION FINAL.
       RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
       RAISING   zcx_abapgit_exception.
 
-    CLASS-METHODS user
-      IMPORTING iv_user        TYPE xubname DEFAULT sy-uname
-      RETURNING VALUE(ro_user) TYPE REF TO lcl_persistence_user
-      RAISING   zcx_abapgit_exception.
-
     CLASS-METHODS repo_srv
       RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
 
@@ -30,7 +24,6 @@ CLASS lcl_app DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
-                go_current_user TYPE REF TO lcl_persistence_user,
                 go_repo_srv     TYPE REF TO lcl_repo_srv,
                 go_proxy        TYPE REF TO lcl_proxy_configuration.
 

@@ -78,7 +78,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repo->status( ). " check for errors
     lo_repo->deserialize( ).
 
-    lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
 
     COMMIT WORK.
 
@@ -184,7 +184,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       iv_url     = ls_popup-url
       iv_package = ls_popup-package ).
 
-    lcl_app=>user( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
     toggle_favorite( lo_repo->get_key( ) ).
 
     COMMIT WORK.
@@ -304,7 +304,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD toggle_favorite.
 
-    lcl_app=>user( )->toggle_favorite( iv_key ).
+    zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( iv_key ).
 
   ENDMETHOD.  " toggle_favorite.
 

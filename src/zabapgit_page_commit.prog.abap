@@ -157,7 +157,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CONSTANTS: lc_body_col_max TYPE i VALUE 150.
 
-    DATA: lo_user      TYPE REF TO lcl_persistence_user.
+    DATA: lo_user      TYPE REF TO zcl_abapgit_persistence_user.
     DATA: lv_user      TYPE string.
     DATA: lv_email     TYPE string.
     DATA: lv_s_param   TYPE string.
@@ -168,7 +168,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    lo_user  = lcl_app=>user( ).
+    lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
 
     lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.

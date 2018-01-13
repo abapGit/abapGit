@@ -96,7 +96,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<td class="repo_attr right">' ).
 
     " Fav
-    IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
+    IF abap_true = zcl_abapgit_persistence_user=>get_instance( )->is_favorite_repo( io_repo->get_key( ) ).
       lv_icon = 'star/blue' ##NO_TEXT.
     ELSE.
       lv_icon = 'star/grey' ##NO_TEXT.

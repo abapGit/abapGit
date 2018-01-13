@@ -395,7 +395,7 @@ CLASS lcl_http IMPLEMENTATION.
           lo_digest       TYPE REF TO zcl_abapgit_http_digest.
 
 
-    lv_default_user = lcl_app=>user( )->get_repo_login( iv_url ).
+    lv_default_user = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
@@ -410,8 +410,9 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_login( iv_url   = iv_url
-                                        iv_login = lv_user ).
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
+        iv_url   = iv_url
+        iv_login = lv_user ).
     ENDIF.
 
     " Offer two factor authentication if it is available and required

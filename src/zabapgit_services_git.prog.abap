@@ -299,9 +299,9 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD commit.
 
     DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
-          lo_user    TYPE REF TO lcl_persistence_user.
+          lo_user    TYPE REF TO zcl_abapgit_persistence_user.
 
-    lo_user = lcl_app=>user( ).
+    lo_user = zcl_abapgit_persistence_user=>get_instance( ).
     lo_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
                                      iv_username = is_commit-committer_name ).
     lo_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )
