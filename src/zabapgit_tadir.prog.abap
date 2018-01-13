@@ -84,11 +84,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read_single.
 
-    DATA: lv_obj_name TYPE tadir-obj_name.
-
-
     IF iv_object = 'SICF'.
-      rs_tadir = read_single_sicf( iv_pgmid = iv_pgmid
+      rs_tadir = read_single_sicf( iv_pgmid    = iv_pgmid
                                    iv_obj_name = iv_obj_name ).
     ELSE.
       SELECT SINGLE * FROM tadir INTO rs_tadir

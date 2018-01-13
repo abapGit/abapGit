@@ -192,7 +192,7 @@ CLASS lcl_object_form IMPLEMENTATION.
     DATA: ls_form_data              TYPE tys_form_data.
     DATA: lt_text_header            TYPE tyt_text_header.
     DATA: lt_lines                  TYPE tyt_lines.
-    DATA: lo_xml                    TYPE REF TO zcl_abapgit_xml_output.
+*    DATA: lo_xml                    TYPE REF TO zcl_abapgit_xml_output.
     DATA: lv_form_found             TYPE flag.
     FIELD-SYMBOLS: <ls_text_header> LIKE LINE OF lt_text_header.
 
@@ -201,7 +201,7 @@ CLASS lcl_object_form IMPLEMENTATION.
     LOOP AT lt_text_header ASSIGNING <ls_text_header>.
       CLEAR lt_lines.
       CLEAR ls_form_data.
-      FREE lo_xml.
+*      FREE lo_xml.
 
       _read_form( EXPORTING is_text_header = <ls_text_header>
                   IMPORTING ev_form_found = lv_form_found

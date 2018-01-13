@@ -42,7 +42,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
 
   METHOD lif_object~changed_by.
 
-    SELECT SINGLE AS4USER FROM dd25l
+    SELECT SINGLE as4user FROM dd25l
       INTO rv_user
       WHERE viewname = ms_item-obj_name
       AND as4local = 'A'

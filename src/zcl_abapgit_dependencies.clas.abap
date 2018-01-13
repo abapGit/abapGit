@@ -53,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dependencies IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -151,17 +151,18 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           lv_index        TYPE i,
           lv_before       TYPE i,
           lt_founds       TYPE TABLE OF rsfindlst,
-          lt_scope        TYPE STANDARD TABLE OF seu_obj.
+          lt_scope        TYPE STANDARD TABLE OF seu_obj,
+          lt_dependency   TYPE tty_dedenpency.
+
+    FIELD-SYMBOLS: <tadir_ddls>      TYPE ty_tadir,
+                   <dependency>      TYPE ty_dependency,
+                   <tadir_dependent> TYPE ty_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir,
                    <ls_edge>  LIKE LINE OF lt_edges,
                    <ls_found> LIKE LINE OF lt_founds,
                    <ls_node>  LIKE LINE OF lt_nodes.
 
-    DATA: lt_dependency TYPE tty_dedenpency.
-    FIELD-SYMBOLS: <tadir_ddls>      TYPE ty_tadir,
-                   <dependency>      TYPE ty_dependency,
-                   <tadir_dependent> TYPE ty_tadir.
 
 * build nodes
     LOOP AT ct_tadir ASSIGNING <ls_tadir>

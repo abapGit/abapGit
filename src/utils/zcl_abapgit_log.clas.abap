@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
       ENDCASE.
 
       ro_html->add( |<span class="{ lv_class }">| ).
-      ro_html->add_icon( iv_name = lv_icon ).
+      ro_html->add_icon( lv_icon ).
       ro_html->add( <ls_log>-msg ).
       ro_html->add( '</span>' ).
     ENDLOOP.

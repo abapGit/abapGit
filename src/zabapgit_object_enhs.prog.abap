@@ -252,7 +252,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
           lt_enh_badi        TYPE enh_badi_data_it,
           lo_badidef_tool    TYPE REF TO cl_enh_tool_badi_def,
           lv_enh_shorttext   TYPE string,
-          lv_package         LIKE iv_package,
+*          lv_package         LIKE iv_package,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
           lv_text            TYPE string,
@@ -269,7 +269,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING  cg_data = lv_enh_shorttext ).
 
-    lv_package = iv_package.
+*    lv_package = iv_package.
 
     li_enh_object ?= ii_enh_spot_tool.
     li_enh_object_docu ?= ii_enh_spot_tool.

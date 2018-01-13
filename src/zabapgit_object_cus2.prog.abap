@@ -72,8 +72,6 @@ CLASS lcl_object_cus2 IMPLEMENTATION.
 
   METHOD lif_object~exists.
 
-    DATA: ls_message TYPE hier_mess.
-
     CALL FUNCTION 'S_CUS_ATTRIBUTES_EXIST'
       EXPORTING
         img_attribute         = mv_img_attribute

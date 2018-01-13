@@ -628,7 +628,7 @@ CLASS lcl_popups IMPLEMENTATION.
       READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
       ASSERT sy-subrc = 0.
 
-      lv_name_with_prefix = lcl_tag=>add_Tag_prefix( <ls_sel>-varoption ).
+      lv_name_with_prefix = lcl_tag=>add_tag_prefix( <ls_sel>-varoption ).
 
       READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
       ASSERT sy-subrc = 0.
@@ -1060,8 +1060,8 @@ CLASS lcl_popups IMPLEMENTATION.
     <component>-name = co_fieldname_selected.
     <component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
 
-    struct_descr = cl_abap_structdescr=>create( p_components = lt_components ).
-    mo_table_descr = cl_abap_tabledescr=>create( p_line_type = struct_descr ).
+    struct_descr = cl_abap_structdescr=>create( lt_components ).
+    mo_table_descr = cl_abap_tabledescr=>create( struct_descr ).
 
     CREATE DATA mr_table TYPE HANDLE mo_table_descr.
     ASSIGN mr_table->* TO <table>.

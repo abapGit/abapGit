@@ -47,8 +47,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
     SELECT SINGLE lastuser FROM t100a INTO rv_user
       WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
-    IF sy-subrc <> 0 OR
-       rv_user EQ ''.
+    IF sy-subrc <> 0 OR rv_user = ''.
       rv_user = c_user_unknown.
     ENDIF.
 

@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
       CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
-    lr_persist_settings->modify( io_settings = lr_settings ).
+    lr_persist_settings->modify( lr_settings ).
 
     TRY.
         zcl_abapgit_persistence_db=>get_instance( )->delete(

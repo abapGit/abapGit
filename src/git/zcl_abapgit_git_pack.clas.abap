@@ -381,6 +381,15 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD delta.
 
+    CONSTANTS: lc_1   TYPE x VALUE '01',
+               lc_2   TYPE x VALUE '02',
+               lc_4   TYPE x VALUE '04',
+               lc_8   TYPE x VALUE '08',
+               lc_16  TYPE x VALUE '10',
+               lc_32  TYPE x VALUE '20',
+               lc_64  TYPE x VALUE '40',
+               lc_128 TYPE x VALUE '80'.
+
     DEFINE _eat_byte.
       lv_x = lv_delta(1).
       lv_delta = lv_delta+1.
@@ -415,15 +424,6 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 * skip the 2 headers
     delta_header( CHANGING cv_delta = lv_delta ).
     delta_header( CHANGING cv_delta = lv_delta ).
-
-    CONSTANTS: lc_1   TYPE x VALUE '01',
-               lc_2   TYPE x VALUE '02',
-               lc_4   TYPE x VALUE '04',
-               lc_8   TYPE x VALUE '08',
-               lc_16  TYPE x VALUE '10',
-               lc_32  TYPE x VALUE '20',
-               lc_64  TYPE x VALUE '40',
-               lc_128 TYPE x VALUE '80'.
 
     WHILE xstrlen( lv_delta ) > 0.
 

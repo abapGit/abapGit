@@ -117,7 +117,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
         CREATE OBJECT lo_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
         CREATE OBJECT lo_object_data TYPE ('CL_UCONRFC_OBJECT_DATA').
 
-        lo_object_data->set_data( p_data = <ls_srfc_data> ).
+        lo_object_data->set_data( <ls_srfc_data> ).
 
         lo_srfc_persist->save( lo_object_data ).
 

@@ -231,7 +231,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     ls_attributes-devclass = iv_package.
 
-    IF me->lif_object~exists( ) EQ abap_true.
+    IF me->lif_object~exists( ) = abap_true.
       me->lif_object~delete( ).
     ENDIF.
 

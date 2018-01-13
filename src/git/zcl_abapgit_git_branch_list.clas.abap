@@ -80,19 +80,23 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       RETURNING
         VALUE(rv_name)  TYPE string .
   PRIVATE SECTION.
-    DATA mt_branches    TYPE ty_git_branch_list_tt.
-    DATA mv_head_symref TYPE string.
+
+    DATA mt_branches TYPE ty_git_branch_list_tt .
+    DATA mv_head_symref TYPE string .
 
     CLASS-METHODS parse_branch_list
-      IMPORTING iv_data        TYPE string
-      EXPORTING et_list        TYPE ty_git_branch_list_tt
-                ev_head_symref TYPE string
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_data        TYPE string
+      EXPORTING
+        !et_list        TYPE ty_git_branch_list_tt
+        !ev_head_symref TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS parse_head_params
-      IMPORTING iv_data        TYPE string
-      EXPORTING ev_head_symref TYPE string.
-
+      IMPORTING
+        !iv_data              TYPE string
+      RETURNING
+        VALUE(rv_head_symref) TYPE string .
 ENDCLASS.
 
 
@@ -245,9 +249,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
         lv_char = zcl_abapgit_git_utils=>get_null( ).
 
         SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
-        parse_head_params(
-          EXPORTING iv_data        = lv_head_params
-          IMPORTING ev_head_symref = ev_head_symref ).
+        ev_head_symref = parse_head_params( lv_head_params ).
       ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
@@ -281,7 +283,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF REGEX '\ssymref=HEAD:([^\s]+)' IN iv_data RESULTS ls_match.
     READ TABLE ls_match-submatches INTO ls_submatch INDEX 1.
     IF sy-subrc IS INITIAL.
-      ev_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
+      rv_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
     ENDIF.
 
   ENDMETHOD.  "parse_head_params

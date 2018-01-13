@@ -79,14 +79,11 @@ CLASS lcl_object_devc IMPLEMENTATION.
     DATA: li_package         TYPE REF TO if_package,
           ls_package_data    TYPE scompkdtln,
           ls_data_sign       TYPE scompksign,
-          lv_changeable      TYPE abap_bool,
           lt_usage_data      TYPE scomppdata,
-          lt_permissions     TYPE tpak_permission_to_use_list,
-          li_usage           TYPE REF TO if_package_permission_to_use,
-          ls_usage_data_sign TYPE scomppsign,
           ls_save_sign       TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
+
 
     mv_local_devclass = iv_package.
 
@@ -242,7 +239,6 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_object~exists.
-    DATA: lv_check_devclass TYPE devclass.
 
     " Check remote package if deserialize has not been called before this
     IF mv_local_devclass IS INITIAL.
