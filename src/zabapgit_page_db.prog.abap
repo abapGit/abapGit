@@ -39,7 +39,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
   METHOD render_content.
 
     DATA:
-      lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
+      lo_highlighter  TYPE REF TO zcl_abapgit_syntax_highlighter,
       lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
       lv_data         TYPE zcl_abapgit_persistence_db=>ty_content-data_str,
       ls_action       TYPE zcl_abapgit_persistence_db=>ty_content,
@@ -53,7 +53,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
     ENDTRY.
 
     " Create syntax highlighter
-    lo_highlighter  = lcl_syntax_highlighter=>create( '*.xml' ).
+    lo_highlighter  = zcl_abapgit_syntax_highlighter=>create( '*.xml' ).
 
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
