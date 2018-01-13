@@ -53,7 +53,7 @@ CLASS lcl_background IMPLEMENTATION.
 
     DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
           ls_files   TYPE zif_abapgit_definitions=>ty_stage_files,
-          lo_stage   TYPE REF TO lcl_stage.
+          lo_stage   TYPE REF TO zcl_abapgit_stage.
 
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
 
@@ -125,7 +125,7 @@ CLASS lcl_background IMPLEMENTATION.
           lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by TYPE xubname,
-          lo_stage      TYPE REF TO lcl_stage.
+          lo_stage      TYPE REF TO zcl_abapgit_stage.
 
     FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
                    <ls_local>   LIKE LINE OF ls_files-local.

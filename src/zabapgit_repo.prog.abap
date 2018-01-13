@@ -137,7 +137,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
       rebuild_local_checksums REDEFINITION,
       push
         IMPORTING is_comment TYPE zif_abapgit_definitions=>ty_comment
-                  io_stage   TYPE REF TO lcl_stage
+                  io_stage   TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
       get_unnecessary_local_objs
         RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -153,7 +153,7 @@ CLASS lcl_repo_online DEFINITION INHERITING FROM lcl_repo FINAL.
 
     METHODS:
       handle_stage_ignore
-        IMPORTING io_stage TYPE REF TO lcl_stage
+        IMPORTING io_stage TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
       actualize_head_branch
         RAISING zcx_abapgit_exception,

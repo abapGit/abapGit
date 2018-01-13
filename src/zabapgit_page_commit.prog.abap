@@ -14,7 +14,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
-                  io_stage TYPE REF TO lcl_stage
+                  io_stage TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
 
@@ -25,7 +25,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          mo_stage TYPE REF TO lcl_stage.
+          mo_stage TYPE REF TO zcl_abapgit_stage.
 
     METHODS:
       render_menu
@@ -99,7 +99,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_stage.
 
-    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
+    DATA: lt_stage TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -119,7 +119,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
       ro_html->add( '<td class="method">' ).
-      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
+      ro_html->add( zcl_abapgit_stage=>method_description( <ls_stage>-method ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '<td>' ).
       ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).

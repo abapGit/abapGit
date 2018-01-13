@@ -314,7 +314,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
     CLASS-METHODS push
       IMPORTING io_repo          TYPE REF TO lcl_repo_online
                 is_comment       TYPE zif_abapgit_definitions=>ty_comment
-                io_stage         TYPE REF TO lcl_stage
+                io_stage         TYPE REF TO zcl_abapgit_stage
       EXPORTING ev_branch        TYPE zif_abapgit_definitions=>ty_sha1
                 et_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING   zcx_abapgit_exception.
@@ -395,7 +395,7 @@ CLASS lcl_git_porcelain DEFINITION FINAL FRIENDS ltcl_git_porcelain.
                 io_repo          TYPE REF TO lcl_repo_online
                 it_trees         TYPE ty_trees_tt
                 it_blobs         TYPE zif_abapgit_definitions=>ty_files_tt
-                io_stage         TYPE REF TO lcl_stage
+                io_stage         TYPE REF TO zcl_abapgit_stage
       RETURNING VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
@@ -598,7 +598,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt,
           lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
-          lt_stage    TYPE lcl_stage=>ty_stage_tt.
+          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,
                    <ls_updated> LIKE LINE OF et_updated_files,
@@ -632,7 +632,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
 
       CASE <ls_stage>-method.
-        WHEN lcl_stage=>c_method-add.
+        WHEN zcl_abapgit_stage=>c_method-add.
 
           APPEND <ls_stage>-file TO lt_blobs.
 
@@ -654,7 +654,7 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
 
           <ls_updated>-sha1 = lv_sha1.   "New sha1
 
-        WHEN lcl_stage=>c_method-rm.
+        WHEN zcl_abapgit_stage=>c_method-rm.
           DELETE lt_expanded
             WHERE name = <ls_stage>-file-filename
             AND   path = <ls_stage>-file-path.
