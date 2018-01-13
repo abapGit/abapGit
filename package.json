@@ -8,7 +8,7 @@
     "url": "git+https://github.com/larshp/abapGit.git"
   },  
   "devDependencies": {
-    "abapmerge": "^0.8.0",
+    "abapmerge": "^0.9.0",
     "abaplint": ">=0.26.7"
   }
 }
