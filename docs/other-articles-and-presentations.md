@@ -70,4 +70,4 @@ SAP Teched Barcelona
 
 ### 2018
 
-?
+[abapGit](http://www.tricktresor.de/blog/abapgit) (in German) -Enno Wulff
