@@ -131,7 +131,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                    <ls_item> LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-    lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
     IF lines( lt_fields ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
@@ -246,8 +246,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CASE iv_context.
       WHEN 'local'.
-        lv_param    = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                          ig_file = is_file ).
+        lv_param = zcl_abapgit_html_action_utils=>file_encode(
+          iv_key  = mo_repo->get_key( )
+          ig_file = is_file ).
+
         lv_filename = zcl_abapgit_html=>a(
           iv_txt = lv_filename
           iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_param }| ).

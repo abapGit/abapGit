@@ -63,8 +63,9 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CASE iv_action.
       WHEN c_action-commit_post.
 
-        lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
-                                                     IMPORTING es_fields   = ls_commit ).
+        zcl_abapgit_html_action_utils=>parse_commit_request(
+          EXPORTING it_postdata = it_postdata
+          IMPORTING es_fields   = ls_commit ).
 
         ls_commit-repo_key = mo_repo->get_key( ).
 
