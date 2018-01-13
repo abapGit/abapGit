@@ -226,7 +226,7 @@ ENDCLASS.
 CLASS lcl_persist_background IMPLEMENTATION.
 
   METHOD constructor.
-    mo_db = lcl_app=>db( ).
+    mo_db = zcl_abapgit_persistence_db=>get_instance( ).
   ENDMETHOD.
 
   METHOD list.
@@ -513,7 +513,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
     DATA: lv_xml TYPE string.
 
     TRY.
-        lv_xml = lcl_app=>db( )->read(
+        lv_xml = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = zcl_abapgit_persistence_db=>c_type_user
           iv_value = mv_user ).
       CATCH zcx_abapgit_not_found.
@@ -549,7 +549,7 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
     lv_xml = to_xml( is_user ).
 
-    lcl_app=>db( )->modify(
+    zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type  = zcl_abapgit_persistence_db=>c_type_user
       iv_value = mv_user
       iv_data  = lv_xml ).
@@ -1084,7 +1084,7 @@ CLASS lcl_persistence_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    mo_db = lcl_app=>db( ).
+    mo_db = zcl_abapgit_persistence_db=>get_instance( ).
   ENDMETHOD.
 
   METHOD lock.
@@ -1118,7 +1118,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
   METHOD settings_exists.
 
     TRY.
-        lcl_app=>db( )->read(
+        zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = 'SETTINGS'
           iv_value = '' ).
         rv_exists = abap_true.
@@ -1148,7 +1148,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     TRY.
         lr_settings->set_proxy_url(
-          lcl_app=>db( )->read(
+          zcl_abapgit_persistence_db=>get_instance( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_URL' ) ).
       CATCH zcx_abapgit_not_found.
@@ -1156,14 +1156,14 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
 
     TRY.
         lr_settings->set_proxy_port(
-          lcl_app=>db( )->read(
+          zcl_abapgit_persistence_db=>get_instance( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_PORT' ) ).
       CATCH zcx_abapgit_not_found.
     ENDTRY.
 
     TRY.
-        lv_flag = lcl_app=>db( )->read(
+        lv_flag = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_AUTH' ).
         lr_settings->set_proxy_authentication( lv_flag ).
@@ -1171,7 +1171,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lv_critical_tests_as_string = lcl_app=>db( )->read(
+        lv_critical_tests_as_string = zcl_abapgit_persistence_db=>get_instance( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'CRIT_TESTS' ).
         lv_critical_tests_as_boolean = lv_critical_tests_as_string.
@@ -1180,7 +1180,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lv_max_lines_as_string = lcl_app=>db( )->read(
+        lv_max_lines_as_string = zcl_abapgit_persistence_db=>get_instance( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'MAX_LINES' ).
         lv_max_lines_as_integer = lv_max_lines_as_string.
@@ -1189,7 +1189,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lv_adt_jump_enabled_as_string = lcl_app=>db( )->read(
+        lv_adt_jump_enabled_as_string = zcl_abapgit_persistence_db=>get_instance( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'ADT_JUMP' ).
         lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
@@ -1198,7 +1198,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lv_s_param_value = lcl_app=>db( )->read(
+        lv_s_param_value = zcl_abapgit_persistence_db=>get_instance( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'COMMENT_LEN' ).
         lv_i_param_value = lv_s_param_value.
@@ -1207,7 +1207,7 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lv_s_param_value = lcl_app=>db( )->read(
+        lv_s_param_value = zcl_abapgit_persistence_db=>get_instance( )->read(
            iv_type  = 'SETTINGS'
            iv_value = 'BODY_SIZE' ).
         lv_i_param_value = lv_s_param_value.
@@ -1218,56 +1218,56 @@ CLASS lcl_persist_migrate IMPLEMENTATION.
     lr_persist_settings->modify( io_settings = lr_settings ).
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_URL' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_PORT' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_AUTH' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'CRIT_TESTS' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'MAX_LINES' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'ADT_JUMP' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'COMMENT_LEN' ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
            iv_type  = 'SETTINGS'
            iv_value = 'BODY_SIZE' ).
       CATCH zcx_abapgit_exception.
@@ -1485,7 +1485,7 @@ CLASS lcl_persist_settings IMPLEMENTATION.
     DATA: settings TYPE string.
     settings = io_settings->get_settings_xml( ).
 
-    lcl_app=>db( )->modify(
+    zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type       = zcl_abapgit_persistence_db=>c_type_settings
       iv_value      = ''
       iv_data       = settings ).
@@ -1511,8 +1511,9 @@ CLASS lcl_persist_settings IMPLEMENTATION.
     TRY.
 
         ro_settings->set_xml_settings(
-          lcl_app=>db( )->read( iv_type  = zcl_abapgit_persistence_db=>c_type_settings
-                                iv_value = '' ) ).
+          zcl_abapgit_persistence_db=>get_instance( )->read(
+            iv_type  = zcl_abapgit_persistence_db=>c_type_settings
+            iv_value = '' ) ).
 
       CATCH zcx_abapgit_not_found zcx_abapgit_exception.
 

@@ -46,7 +46,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
       lv_action       TYPE string.
 
     TRY.
-        lv_data = lcl_app=>db( )->read(
+        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type = ms_key-type
           iv_value = ms_key-value ).
       CATCH zcx_abapgit_not_found ##NO_HANDLER.
@@ -107,13 +107,13 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
           lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     TRY.
-        lv_data = lcl_app=>db( )->read(
+        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = ms_key-type
           iv_value = ms_key-value ).
       CATCH zcx_abapgit_not_found ##NO_HANDLER.
     ENDTRY.
 
-    lcl_app=>db( )->lock(
+    zcl_abapgit_persistence_db=>get_instance( )->lock(
       iv_type  = ms_key-type
       iv_value = ms_key-value ).
 
@@ -183,7 +183,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
 
-    lt_data = lcl_app=>db( )->list( ).
+    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
     CREATE OBJECT ro_html.
 

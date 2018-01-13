@@ -26,9 +26,6 @@ CLASS lcl_app DEFINITION FINAL.
     CLASS-METHODS repo_srv
       RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
 
-    CLASS-METHODS db
-      RETURNING VALUE(ro_db) TYPE REF TO zcl_abapgit_persistence_db.
-
     CLASS-METHODS settings
       RETURNING VALUE(ro_settings) TYPE REF TO lcl_persist_settings.
 
@@ -38,7 +35,6 @@ CLASS lcl_app DEFINITION FINAL.
   PRIVATE SECTION.
     CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
                 go_current_user TYPE REF TO lcl_persistence_user,
-                go_db           TYPE REF TO zcl_abapgit_persistence_db,
                 go_repo_srv     TYPE REF TO lcl_repo_srv,
                 go_settings     TYPE REF TO lcl_persist_settings,
                 go_proxy        TYPE REF TO lcl_proxy_configuration.

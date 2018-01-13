@@ -40,15 +40,6 @@ CLASS lcl_app IMPLEMENTATION.
 
   ENDMETHOD.      "repo_srv
 
-  METHOD db.
-
-    IF go_db IS NOT BOUND.
-      CREATE OBJECT go_db.
-    ENDIF.
-    ro_db = go_db.
-
-  ENDMETHOD.      "repo_srv
-
   METHOD settings.
     IF go_settings IS NOT BOUND.
       CREATE OBJECT go_settings.

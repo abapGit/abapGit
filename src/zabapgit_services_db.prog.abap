@@ -38,7 +38,7 @@ CLASS lcl_services_db IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_app=>db( )->delete(
+    zcl_abapgit_persistence_db=>get_instance( )->delete(
       iv_type  = is_key-type
       iv_value = is_key-value ).
 
@@ -50,7 +50,7 @@ CLASS lcl_services_db IMPLEMENTATION.
 
     ASSERT is_content-type IS NOT INITIAL.
 
-    lcl_app=>db( )->update(
+    zcl_abapgit_persistence_db=>get_instance( )->update(
       iv_type  = is_content-type
       iv_value = is_content-value
       iv_data  = is_content-data_str ).

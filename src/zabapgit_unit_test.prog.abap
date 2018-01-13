@@ -1398,7 +1398,7 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
     mo_persistence_settings->modify( mo_settings ).
 
-    lv_proxy_url = lcl_app=>db( )->read(
+    lv_proxy_url = zcl_abapgit_persistence_db=>get_instance( )->read(
       iv_type  = 'SETTINGS'
       iv_value = 'PROXY_URL' ).
 
@@ -1413,7 +1413,7 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
     mo_persistence_settings->modify( mo_settings ).
 
-    lv_proxy_port = lcl_app=>db( )->read(
+    lv_proxy_port = zcl_abapgit_persistence_db=>get_instance( )->read(
       iv_type  = 'SETTINGS'
       iv_value = 'PROXY_PORT' ).
 
@@ -1423,12 +1423,12 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD read_proxy_settings.
-    lcl_app=>db( )->modify(
+    zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_URL'
       iv_data       = 'A_URL' ).
 
-    lcl_app=>db( )->modify(
+    zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'PROXY_PORT'
       iv_data       = '1000' ).
@@ -1466,7 +1466,7 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
 
     mo_persistence_settings->modify( mo_settings ).
 
-    lv_run_critical_tests = lcl_app=>db( )->read(
+    lv_run_critical_tests = zcl_abapgit_persistence_db=>get_instance( )->read(
       iv_type  = 'SETTINGS'
       iv_value = 'CRIT_TESTS' ).
 
@@ -1476,7 +1476,7 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD read_run_critical_tests.
-    lcl_app=>db( )->modify(
+    zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type       = 'SETTINGS'
       iv_value      = 'CRIT_TESTS'
       iv_data       = 'X' ).
@@ -1498,21 +1498,21 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
   METHOD clear_settings_database.
 
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_URL' ).
       CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'PROXY_PORT' ).
       CATCH cx_static_check ##NO_HANDLER.
         "If entry didn't exist, that's okay
     ENDTRY.
     TRY.
-        lcl_app=>db( )->delete(
+        zcl_abapgit_persistence_db=>get_instance( )->delete(
           iv_type       = 'SETTINGS'
           iv_value      = 'CRIT_TESTS' ).
       CATCH cx_static_check ##NO_HANDLER.
