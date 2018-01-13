@@ -77,7 +77,7 @@ CLASS lcl_gui_page_bkg DEFINITION FINAL
 
   PUBLIC SECTION.
     METHODS:
-      constructor IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key,
+      constructor IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
       zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -85,7 +85,7 @@ CLASS lcl_gui_page_bkg DEFINITION FINAL
 
   PRIVATE SECTION.
     DATA:
-      mv_key TYPE lcl_persistence_repo=>ty_repo-key.
+      mv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
     METHODS:
       build_menu
@@ -116,7 +116,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA ls_bg_task TYPE lcl_persist_background=>ty_background.
+    DATA ls_bg_task TYPE zcl_abapgit_persist_background=>ty_background.
 
     CASE iv_action.
       WHEN zif_abapgit_definitions=>gc_action-bg_update.
@@ -131,8 +131,8 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
   METHOD render_data.
 
     DATA: lo_repo    TYPE REF TO lcl_repo_online,
-          lo_per     TYPE REF TO lcl_persist_background,
-          lt_per     TYPE lcl_persist_background=>tt_background,
+          lo_per     TYPE REF TO zcl_abapgit_persist_background,
+          lt_per     TYPE zcl_abapgit_persist_background=>tt_background,
           ls_per     LIKE LINE OF lt_per,
           lv_nothing TYPE string,
           lv_push    TYPE string,
@@ -163,16 +163,16 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     ENDIF.
 
     CASE ls_per-method.
-      WHEN lcl_persist_background=>c_method-push.
+      WHEN zcl_abapgit_persist_background=>c_method-push.
         lv_push = ' checked' ##NO_TEXT.
-      WHEN lcl_persist_background=>c_method-pull.
+      WHEN zcl_abapgit_persist_background=>c_method-pull.
         lv_pull = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_nothing = ' checked' ##NO_TEXT.
     ENDCASE.
 
     CASE ls_per-amethod.
-      WHEN lcl_persist_background=>c_amethod-auto.
+      WHEN zcl_abapgit_persist_background=>c_amethod-auto.
         lv_aauto = ' checked' ##NO_TEXT.
       WHEN OTHERS.
         lv_afixed = ' checked' ##NO_TEXT.

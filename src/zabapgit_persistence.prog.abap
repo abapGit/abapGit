@@ -27,185 +27,6 @@ CLASS lcl_persist_migrate DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persistence_repo DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    TYPES: BEGIN OF ty_local_checksum,
-             item  TYPE zif_abapgit_definitions=>ty_item,
-             files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-           END OF ty_local_checksum.
-
-    TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_repo_xml,
-             url                TYPE string,
-             branch_name        TYPE string,
-             sha1               TYPE zif_abapgit_definitions=>ty_sha1,
-             package            TYPE devclass,
-             offline            TYPE sap_bool,
-             local_checksums    TYPE ty_local_checksum_tt,
-             dot_abapgit        TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit,
-             head_branch        TYPE string,   " HEAD symref of the repo, master branch
-             write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
-             ignore_subpackages TYPE sap_bool,
-           END OF ty_repo_xml.
-
-    TYPES: BEGIN OF ty_repo,
-             key TYPE zcl_abapgit_persistence_db=>ty_value.
-        INCLUDE TYPE ty_repo_xml.
-    TYPES: END OF ty_repo.
-    TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
-    TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
-
-    METHODS constructor.
-
-    METHODS list
-      RETURNING VALUE(rt_repos) TYPE tt_repo
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_sha1
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_branch_sha1 TYPE ty_repo_xml-sha1
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_local_checksums
-      IMPORTING iv_key       TYPE ty_repo-key
-                it_checksums TYPE ty_repo_xml-local_checksums
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_url
-      IMPORTING iv_key TYPE ty_repo-key
-                iv_url TYPE ty_repo_xml-url
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_branch_name
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_branch_name TYPE ty_repo_xml-branch_name
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_head_branch
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_head_branch TYPE ty_repo_xml-head_branch
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_offline
-      IMPORTING iv_key     TYPE ty_repo-key
-                iv_offline TYPE ty_repo_xml-offline
-      RAISING   zcx_abapgit_exception.
-
-    METHODS update_dot_abapgit
-      IMPORTING iv_key         TYPE ty_repo-key
-                is_dot_abapgit TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit
-      RAISING   zcx_abapgit_exception.
-
-    METHODS add
-      IMPORTING iv_url         TYPE string
-                iv_branch_name TYPE string
-                iv_branch      TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                iv_package     TYPE devclass
-                iv_offline     TYPE sap_bool DEFAULT abap_false
-                is_dot_abapgit TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit
-      RETURNING VALUE(rv_key)  TYPE ty_repo-key
-      RAISING   zcx_abapgit_exception.
-
-    METHODS delete
-      IMPORTING iv_key TYPE ty_repo-key
-      RAISING   zcx_abapgit_exception.
-
-    METHODS read
-      IMPORTING iv_key         TYPE ty_repo-key
-      RETURNING VALUE(rs_repo) TYPE ty_repo
-      RAISING   zcx_abapgit_exception
-                zcx_abapgit_not_found.
-
-    METHODS lock
-      IMPORTING iv_mode TYPE enqmode
-                iv_key  TYPE ty_repo-key
-      RAISING   zcx_abapgit_exception.
-
-  PRIVATE SECTION.
-    DATA: mo_db TYPE REF TO zcl_abapgit_persistence_db.
-
-    METHODS from_xml
-      IMPORTING iv_repo_xml_string TYPE string
-      RETURNING VALUE(rs_repo)     TYPE ty_repo_xml
-      RAISING   zcx_abapgit_exception.
-
-    METHODS to_xml
-      IMPORTING is_repo                   TYPE ty_repo
-      RETURNING VALUE(rv_repo_xml_string) TYPE string.
-
-    METHODS get_next_id
-      RETURNING VALUE(rv_next_repo_id) TYPE zcl_abapgit_persistence_db=>ty_content-value
-      RAISING   zcx_abapgit_exception.
-
-ENDCLASS.
-
-CLASS lcl_persist_background DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing' ##NO_TEXT,
-                 pull    TYPE string VALUE 'pull' ##NO_TEXT,
-                 push    TYPE string VALUE 'push' ##NO_TEXT,
-               END OF c_method.
-
-    CONSTANTS: BEGIN OF c_amethod,
-                 fixed TYPE string VALUE 'fixed' ##NO_TEXT,
-                 auto  TYPE string VALUE 'auto' ##NO_TEXT,
-               END OF c_amethod.
-
-    TYPES: BEGIN OF ty_xml,
-             method   TYPE string,
-             username TYPE string,
-             password TYPE string,
-             amethod  TYPE string,
-             aname    TYPE string,
-             amail    TYPE string,
-           END OF ty_xml.
-
-    TYPES: BEGIN OF ty_background,
-             key TYPE zcl_abapgit_persistence_db=>ty_value.
-        INCLUDE TYPE ty_xml.
-    TYPES: END OF ty_background.
-    TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
-
-    METHODS constructor.
-
-    METHODS list
-      RETURNING VALUE(rt_list) TYPE tt_background
-      RAISING   zcx_abapgit_exception.
-
-    METHODS modify
-      IMPORTING is_data TYPE ty_background
-      RAISING   zcx_abapgit_exception.
-
-    METHODS delete
-      IMPORTING iv_key TYPE ty_background-key
-      RAISING   zcx_abapgit_exception.
-
-    METHODS exists
-      IMPORTING iv_key        TYPE ty_background-key
-      RETURNING VALUE(rv_yes) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
-  PRIVATE SECTION.
-    DATA: mo_db   TYPE REF TO zcl_abapgit_persistence_db,
-          mt_jobs TYPE tt_background.
-
-    METHODS from_xml
-      IMPORTING iv_string     TYPE string
-      RETURNING VALUE(rs_xml) TYPE ty_xml
-      RAISING   zcx_abapgit_exception.
-
-    METHODS to_xml
-      IMPORTING is_background    TYPE ty_background
-      RETURNING VALUE(rv_string) TYPE string.
-
-ENDCLASS.     "lcl_persistence_background DEFINITION
-
-
 CLASS lcl_persist_settings DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -223,97 +44,6 @@ CLASS lcl_persist_settings DEFINITION FINAL.
 
 ENDCLASS.
 
-CLASS lcl_persist_background IMPLEMENTATION.
-
-  METHOD constructor.
-    mo_db = zcl_abapgit_persistence_db=>get_instance( ).
-  ENDMETHOD.
-
-  METHOD list.
-
-    DATA: lt_list TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_xml  TYPE ty_xml.
-
-    FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,
-                   <ls_output> LIKE LINE OF rt_list.
-
-    IF lines( mt_jobs ) > 0.
-      rt_list = mt_jobs.
-      RETURN.
-    ENDIF.
-
-
-    lt_list = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_background ).
-
-    LOOP AT lt_list ASSIGNING <ls_list>.
-      ls_xml = from_xml( <ls_list>-data_str ).
-
-      APPEND INITIAL LINE TO rt_list ASSIGNING <ls_output>.
-      MOVE-CORRESPONDING ls_xml TO <ls_output>.
-      <ls_output>-key = <ls_list>-value.
-    ENDLOOP.
-
-    mt_jobs = rt_list.
-
-  ENDMETHOD.
-
-  METHOD exists.
-
-    list( ). " Ensure mt_jobs is populated
-    READ TABLE mt_jobs WITH KEY key = iv_key TRANSPORTING NO FIELDS.
-    rv_yes = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.  "exists
-
-  METHOD modify.
-
-    ASSERT NOT is_data-key IS INITIAL.
-
-    mo_db->modify(
-      iv_type  = zcl_abapgit_persistence_db=>c_type_background
-      iv_value = is_data-key
-      iv_data  = to_xml( is_data ) ).
-
-    DELETE mt_jobs WHERE key = is_data-key.
-    APPEND is_data TO mt_jobs.
-
-  ENDMETHOD.
-
-  METHOD delete.
-
-    TRY.
-        mo_db->read( iv_type  = zcl_abapgit_persistence_db=>c_type_background
-                     iv_value = iv_key ).
-      CATCH zcx_abapgit_not_found.
-        RETURN.
-    ENDTRY.
-
-    mo_db->delete( iv_type  = zcl_abapgit_persistence_db=>c_type_background
-                   iv_value = iv_key ).
-
-    DELETE mt_jobs WHERE key = iv_key.
-
-  ENDMETHOD.
-
-  METHOD from_xml.
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML iv_string
-      RESULT data = rs_xml ##NO_TEXT.
-  ENDMETHOD.
-
-  METHOD to_xml.
-    DATA: ls_xml TYPE ty_xml.
-
-    MOVE-CORRESPONDING is_background TO ls_xml.
-
-    CALL TRANSFORMATION id
-      SOURCE data = ls_xml
-      RESULT XML rv_string.
-  ENDMETHOD.
-
-ENDCLASS.         " lcl_persistence_background IMPLEMENTATION
-
 *----------------------------------------------------------------------*
 *       CLASS lcl_persistence_user DEFINITION
 *----------------------------------------------------------------------*
@@ -321,7 +51,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
-    TYPES: tt_favorites TYPE lcl_persistence_repo=>tt_repo_keys.
+    TYPES: tt_favorites TYPE zcl_abapgit_persistence_repo=>tt_repo_keys.
 
     METHODS set_default_git_user_name
       IMPORTING iv_username TYPE string
@@ -340,50 +70,50 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_show
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_show
-      RETURNING VALUE(rv_key) TYPE lcl_persistence_repo=>ty_repo-key
+      RETURNING VALUE(rv_key) TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_git_user_name
-      IMPORTING iv_url      TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url      TYPE zcl_abapgit_persistence_repo=>ty_repo-url
                 iv_username TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_git_user_name
-      IMPORTING iv_url             TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url             TYPE zcl_abapgit_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_username) TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_login
-      IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url   TYPE zcl_abapgit_persistence_repo=>ty_repo-url
                 iv_login TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_login
-      IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url          TYPE zcl_abapgit_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_login) TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_git_user_email
-      IMPORTING iv_url   TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url   TYPE zcl_abapgit_persistence_repo=>ty_repo-url
                 iv_email TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_git_user_email
-      IMPORTING iv_url          TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url          TYPE zcl_abapgit_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_email) TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS set_repo_last_change_seen
-      IMPORTING iv_url     TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url     TYPE zcl_abapgit_persistence_repo=>ty_repo-url
                 iv_version TYPE string
       RAISING   zcx_abapgit_exception.
 
     METHODS get_repo_last_change_seen
-      IMPORTING iv_url            TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url            TYPE zcl_abapgit_persistence_repo=>ty_repo-url
       RETURNING VALUE(rv_version) TYPE string
       RAISING   zcx_abapgit_exception.
 
@@ -416,11 +146,11 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
     METHODS toggle_favorite
-      IMPORTING iv_repo_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_repo_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     METHODS is_favorite_repo
-      IMPORTING iv_repo_key   TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_repo_key   TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RETURNING VALUE(rv_yes) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 
@@ -429,7 +159,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
     TYPES:
       BEGIN OF ty_repo_config,
-        url              TYPE lcl_persistence_repo=>ty_repo-url,
+        url              TYPE zcl_abapgit_persistence_repo=>ty_repo-url,
         login            TYPE string,
         git_user         TYPE zif_abapgit_definitions=>ty_git_user,
         last_change_seen TYPE string,
@@ -440,7 +170,7 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
     TYPES:
       BEGIN OF ty_user,
         default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
-        repo_show        TYPE lcl_persistence_repo=>ty_repo-key,
+        repo_show        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
@@ -469,12 +199,12 @@ CLASS lcl_persistence_user DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
     METHODS read_repo_config
-      IMPORTING iv_url                TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url                TYPE zcl_abapgit_persistence_repo=>ty_repo-url
       RETURNING VALUE(rs_repo_config) TYPE ty_repo_config
       RAISING   zcx_abapgit_exception.
 
     METHODS update_repo_config
-      IMPORTING iv_url         TYPE lcl_persistence_repo=>ty_repo-url
+      IMPORTING iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
                 is_repo_config TYPE ty_repo_config
       RAISING   zcx_abapgit_exception.
 
@@ -781,321 +511,6 @@ CLASS lcl_persistence_user IMPLEMENTATION.
 
 ENDCLASS.
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_persistence_repo
-*----------------------------------------------------------------------*
-
-CLASS lcl_persistence_repo IMPLEMENTATION.
-
-  METHOD add.
-
-    DATA: ls_repo        TYPE ty_repo,
-          lv_repo_as_xml TYPE string.
-
-
-    ls_repo-url          = iv_url.
-    ls_repo-branch_name  = iv_branch_name.
-    ls_repo-sha1         = iv_branch.
-    ls_repo-package      = iv_package.
-    ls_repo-offline      = iv_offline.
-    ls_repo-dot_abapgit  = is_dot_abapgit.
-
-    lv_repo_as_xml = to_xml( ls_repo ).
-
-    rv_key = get_next_id( ).
-
-    mo_db->add( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                iv_value = rv_key
-                iv_data  = lv_repo_as_xml ).
-
-  ENDMETHOD.
-
-  METHOD update_dot_abapgit.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-dot_abapgit = is_dot_abapgit.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-  METHOD delete.
-
-    DATA: lo_background TYPE REF TO lcl_persist_background.
-
-    CREATE OBJECT lo_background.
-    lo_background->delete( iv_key ).
-
-    mo_db->delete( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key ).
-
-  ENDMETHOD.
-
-  METHOD update_local_checksums.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-local_checksums = it_checksums.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-  METHOD update_url.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    IF iv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( 'update, url empty' ).
-    ENDIF.
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-url = iv_url.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-  METHOD update_branch_name.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-branch_name = iv_branch_name.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-  METHOD update_head_branch.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-head_branch = iv_head_branch.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.  "update_head_branch
-
-  METHOD update_offline.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-offline = iv_offline.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.  "update_offline
-
-  METHOD update_sha1.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-sha1 = iv_branch_sha1.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-  METHOD read.
-
-    DATA lt_repo TYPE tt_repo.
-
-    lt_repo = list( ).
-
-    READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD get_next_id.
-
-* todo: Lock the complete persistence in order to prevent concurrent repo-creation
-* however the current approach will most likely work in almost all cases
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content.
-
-    FIELD-SYMBOLS: <ls_content> LIKE LINE OF lt_content.
-
-
-    rv_next_repo_id = 1.
-
-    lt_content = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_repo ).
-    LOOP AT lt_content ASSIGNING <ls_content>.
-      IF <ls_content>-value >= rv_next_repo_id.
-        rv_next_repo_id = <ls_content>-value + 1.
-      ENDIF.
-    ENDLOOP.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
-      EXPORTING
-        input  = rv_next_repo_id
-      IMPORTING
-        output = rv_next_repo_id.
-
-  ENDMETHOD.
-
-  METHOD list.
-
-    DATA: lt_content TYPE zcl_abapgit_persistence_db=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    LIKE LINE OF rt_repos.
-
-
-    lt_content = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_repo ).
-
-    LOOP AT lt_content INTO ls_content.
-      MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO ls_repo.
-      ls_repo-key = ls_content-value.
-      INSERT ls_repo INTO TABLE rt_repos.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-  METHOD from_xml.
-
-    DATA: lv_xml TYPE string.
-
-    lv_xml = iv_repo_xml_string.
-
-* fix downward compatibility
-    REPLACE ALL OCCURRENCES OF '<_--28C_TYPE_REPO_--29>' IN lv_xml WITH '<REPO>'.
-    REPLACE ALL OCCURRENCES OF '</_--28C_TYPE_REPO_--29>' IN lv_xml WITH '</REPO>'.
-
-    CALL TRANSFORMATION id
-      OPTIONS value_handling = 'accept_data_loss'
-      SOURCE XML lv_xml
-      RESULT repo = rs_repo ##NO_TEXT.
-
-    IF rs_repo IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Inconsistent repo metadata' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD to_xml.
-
-    DATA: ls_xml TYPE ty_repo_xml.
-
-
-    MOVE-CORRESPONDING is_repo TO ls_xml.
-
-    CALL TRANSFORMATION id
-      SOURCE repo = ls_xml
-      RESULT XML rv_repo_xml_string.
-  ENDMETHOD.
-
-  METHOD constructor.
-    mo_db = zcl_abapgit_persistence_db=>get_instance( ).
-  ENDMETHOD.
-
-  METHOD lock.
-
-    mo_db->lock( iv_mode  = iv_mode
-                 iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                 iv_value = iv_key ).
-
-  ENDMETHOD.
-
-ENDCLASS.
 
 CLASS lcl_persist_migrate IMPLEMENTATION.
 

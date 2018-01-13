@@ -47,7 +47,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_background
-      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key         TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
@@ -65,7 +65,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD on_event.
 
     DATA: lv_url  TYPE string,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           ls_db   TYPE zcl_abapgit_persistence_db=>ty_content,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
 
@@ -297,7 +297,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
           lo_page TYPE REF TO lcl_gui_page_boverview,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     lv_key = iv_getdata.
@@ -317,7 +317,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: ls_file   TYPE zif_abapgit_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
           lo_page   TYPE REF TO lcl_gui_page_diff,
-          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+          lv_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     lcl_html_action_utils=>file_obj_decode( EXPORTING iv_string = iv_getdata
@@ -339,7 +339,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_stage.
 
     DATA: lo_repo       TYPE REF TO lcl_repo_online,
-          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           lv_seed       TYPE string,
           lo_stage_page TYPE REF TO lcl_gui_page_stage.
 

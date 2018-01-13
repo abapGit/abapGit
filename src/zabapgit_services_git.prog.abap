@@ -6,7 +6,7 @@ CLASS lcl_services_git DEFINITION FINAL.
   PUBLIC SECTION.
 
     TYPES: BEGIN OF ty_commit_fields,
-             repo_key        TYPE lcl_persistence_repo=>ty_repo-key,
+             repo_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
              committer_name  TYPE string,
              committer_email TYPE string,
              author_name     TYPE string,
@@ -16,35 +16,35 @@ CLASS lcl_services_git DEFINITION FINAL.
            END OF ty_commit_fields.
 
     CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS reset
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS create_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS switch_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS delete_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS create_tag
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS delete_tag
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS tag_overview
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS commit

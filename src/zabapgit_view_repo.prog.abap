@@ -18,7 +18,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
                END OF c_actions.
 
     METHODS constructor
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.

@@ -16,11 +16,11 @@ CLASS lcl_background DEFINITION FINAL.
         RETURNING VALUE(rv_comment) TYPE string,
       push
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                  is_settings TYPE lcl_persist_background=>ty_background
+                  is_settings TYPE zcl_abapgit_persist_background=>ty_background
         RAISING   zcx_abapgit_exception,
       push_fixed
         IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                  is_settings TYPE lcl_persist_background=>ty_background
+                  is_settings TYPE zcl_abapgit_persist_background=>ty_background
         RAISING   zcx_abapgit_exception,
       push_auto
         IMPORTING io_repo TYPE REF TO lcl_repo_online
@@ -38,10 +38,10 @@ CLASS lcl_background IMPLEMENTATION.
     ENDIF.
 
     CASE is_settings-amethod.
-      WHEN lcl_persist_background=>c_amethod-fixed.
+      WHEN zcl_abapgit_persist_background=>c_amethod-fixed.
         push_fixed( io_repo     = io_repo
                     is_settings = is_settings ).
-      WHEN lcl_persist_background=>c_amethod-auto.
+      WHEN zcl_abapgit_persist_background=>c_amethod-auto.
         push_auto( io_repo ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'unknown push method' ).
@@ -189,9 +189,9 @@ CLASS lcl_background IMPLEMENTATION.
 
     CONSTANTS: c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 
-    DATA: lo_per       TYPE REF TO lcl_persist_background,
+    DATA: lo_per       TYPE REF TO zcl_abapgit_persist_background,
           lo_repo      TYPE REF TO lcl_repo_online,
-          lt_list      TYPE lcl_persist_background=>tt_background,
+          lt_list      TYPE zcl_abapgit_persist_background=>tt_background,
           lv_repo_name TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
@@ -227,9 +227,9 @@ CLASS lcl_background IMPLEMENTATION.
         iv_password = <ls_list>-password ).
 
       CASE <ls_list>-method.
-        WHEN lcl_persist_background=>c_method-pull.
+        WHEN zcl_abapgit_persist_background=>c_method-pull.
           lo_repo->deserialize( ).
-        WHEN lcl_persist_background=>c_method-push.
+        WHEN zcl_abapgit_persist_background=>c_method-push.
           push( io_repo     = lo_repo
                 is_settings = <ls_list> ).
         WHEN OTHERS.

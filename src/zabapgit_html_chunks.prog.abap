@@ -50,7 +50,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_repo_top.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          lo_pback       TYPE REF TO lcl_persist_background,
+          lo_pback       TYPE REF TO zcl_abapgit_persist_background,
           lv_hint        TYPE string,
           lv_icon        TYPE string.
 

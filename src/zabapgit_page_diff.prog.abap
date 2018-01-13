@@ -27,7 +27,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       constructor
-        IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+        IMPORTING iv_key           TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                   is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
                   is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
@@ -47,7 +47,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
     DATA: mt_diff_files    TYPE tt_file_diff,
           mt_delayed_lines TYPE zcl_abapgit_diff=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
-          mv_repo_key      TYPE lcl_persistence_repo=>ty_repo-key,
+          mv_repo_key      TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           mv_seed          TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS render_diff

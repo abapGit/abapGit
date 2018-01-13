@@ -50,18 +50,18 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS file_encode
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key           TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                 ig_file          TYPE any "assuming ty_file
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS obj_encode
-      IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key           TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                 ig_object        TYPE any "assuming ty_item
       RETURNING VALUE(rv_string) TYPE string.
 
     CLASS-METHODS file_obj_decode
       IMPORTING iv_string TYPE clike
-      EXPORTING ev_key    TYPE lcl_persistence_repo=>ty_repo-key
+      EXPORTING ev_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                 eg_file   TYPE any "assuming ty_file
                 eg_object TYPE any "assuming ty_item
       RAISING   zcx_abapgit_exception.
@@ -84,11 +84,11 @@ CLASS lcl_html_action_utils DEFINITION FINAL.
 
     CLASS-METHODS decode_bg_update
       IMPORTING iv_getdata       TYPE clike
-      RETURNING VALUE(rs_fields) TYPE lcl_persist_background=>ty_background.
+      RETURNING VALUE(rs_fields) TYPE zcl_abapgit_persist_background=>ty_background.
 
     CLASS-METHODS stage_decode
       IMPORTING iv_getdata TYPE clike
-      EXPORTING ev_key     TYPE lcl_persistence_repo=>ty_repo-key
+      EXPORTING ev_key     TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                 ev_seed    TYPE string
       RAISING   zcx_abapgit_exception.
 
