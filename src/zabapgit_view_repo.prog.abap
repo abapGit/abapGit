@@ -18,7 +18,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
                END OF c_actions.
 
     METHODS constructor
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -87,11 +87,11 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     mo_repo         = lcl_app=>repo_srv( )->get( iv_key ).
     mv_cur_dir      = '/'. " Root
-    mv_hide_files   = lcl_app=>user( )->get_hide_files( ).
-    mv_changes_only = lcl_app=>user( )->get_changes_only( ).
+    mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
 
     " Read global settings to get max # of objects to be listed
-    lo_settings     = lcl_app=>settings( )->read( ).
+    lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
 
@@ -103,7 +103,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
-        mv_hide_files   = lcl_app=>user( )->toggle_hide_files( ).
+        mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
@@ -114,7 +114,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         mv_cur_dir      = '/'. " Root
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
-        mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
+        mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.

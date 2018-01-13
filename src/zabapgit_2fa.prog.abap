@@ -570,7 +570,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
 
     " Try to login to GitHub API with username, password and 2fa token
 
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     cl_http_client=>create_by_url(
       EXPORTING

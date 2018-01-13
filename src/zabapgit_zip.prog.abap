@@ -385,7 +385,7 @@ CLASS lcl_zip IMPLEMENTATION.
   METHOD export_package.
 
     DATA: lo_repo TYPE REF TO lcl_repo_offline,
-          ls_data TYPE lcl_persistence_repo=>ty_repo.
+          ls_data TYPE zcl_abapgit_persistence_repo=>ty_repo.
 
 
     ls_data-key = 'DUMMY'.

@@ -36,7 +36,7 @@ CLASS lcl_proxy_configuration IMPLEMENTATION.
 
   METHOD constructor.
 
-    mo_settings = lcl_app=>settings( )->read( ).
+    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     mi_exit = lcl_exit=>get_instance( ).
 

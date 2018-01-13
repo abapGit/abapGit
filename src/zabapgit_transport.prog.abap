@@ -32,7 +32,7 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: lt_requests TYPE trwbo_requests,
           lt_tadir    TYPE scts_tadir,
           lv_package  TYPE devclass,
-          ls_data     TYPE lcl_persistence_repo=>ty_repo,
+          ls_data     TYPE zcl_abapgit_persistence_repo=>ty_repo,
           lo_repo     TYPE REF TO lcl_repo_offline,
           lt_trkorr   TYPE trwbo_request_headers.
 

@@ -261,7 +261,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_branch_equal TYPE abap_bool,
-          lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums    TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
@@ -330,7 +330,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_status       TYPE zif_abapgit_definitions=>ty_results_tt,
-          lv_package      TYPE lcl_persistence_repo=>ty_repo-package.
+          lv_package      TYPE zcl_abapgit_persistence_repo=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE zif_abapgit_definitions=>ty_result,
                    <tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
@@ -404,7 +404,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD set.
 
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
     ASSERT iv_sha1 IS SUPPLIED
@@ -474,7 +474,7 @@ CLASS lcl_repo IMPLEMENTATION.
     " Push fills it from local files before pushing, deserialize from remote
     " If this is not true that there is an error somewhere but not here
 
-    DATA: lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+    DATA: lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt,
           lt_files_idx TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lv_chks_row  TYPE i,
@@ -707,7 +707,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
     CREATE OBJECT lo_persistence.
@@ -775,7 +775,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DATA: lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-          lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
@@ -852,7 +852,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list    TYPE lcl_persistence_repo=>tt_repo,
+    DATA: lt_list    TYPE zcl_abapgit_persistence_repo=>tt_repo,
           lo_online  TYPE REF TO lcl_repo_online,
           lo_offline TYPE REF TO lcl_repo_offline.
 
@@ -882,8 +882,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -910,8 +910,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -958,7 +958,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   METHOD validate_package.
 
     DATA: ls_devclass TYPE tdevc,
-          lt_repos    TYPE lcl_persistence_repo=>tt_repo.
+          lt_repos    TYPE zcl_abapgit_persistence_repo=>tt_repo.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).

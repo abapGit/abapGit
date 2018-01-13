@@ -3,23 +3,16 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_PERSISTENCE_DB</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_PERSIST_BACKGROUND</CLSNAME>
     <VERSION>1</VERSION>
     <LANGU>E</LANGU>
-    <DESCRIPT>Database persistence</DESCRIPT>
+    <DESCRIPT>Persist background</DESCRIPT>
+    <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_PERSISTENCE_DB</CLSNAME>
-     <CMPNAME>MO_DB</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Database persistence</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

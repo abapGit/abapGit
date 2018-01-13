@@ -1,70 +1,93 @@
 CLASS zcl_abapgit_persistence_db DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
-    CONSTANTS:
-      c_tabname TYPE tabname VALUE 'ZABAPGIT',
-      c_lock    TYPE viewname VALUE 'EZABAPGIT'.
 
-    TYPES: ty_type  TYPE c LENGTH 12.
-    TYPES: ty_value TYPE c LENGTH 12.
+    TYPES:
+      ty_type  TYPE c LENGTH 12 .
+    TYPES:
+      ty_value TYPE c LENGTH 12 .
+    TYPES:
+      BEGIN OF ty_content,
+        type     TYPE ty_type,
+        value    TYPE ty_value,
+        data_str TYPE string,
+      END OF ty_content .
+    TYPES:
+      tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
 
-    TYPES: BEGIN OF ty_content,
-             type     TYPE ty_type,
-             value    TYPE ty_value,
-             data_str TYPE string,
-           END OF ty_content,
-           tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value.
+    CONSTANTS c_tabname TYPE tabname VALUE 'ZABAPGIT' ##NO_TEXT.
+    CONSTANTS c_lock TYPE viewname VALUE 'EZABAPGIT' ##NO_TEXT.
+    CONSTANTS c_type_settings TYPE ty_type VALUE 'SETTINGS' ##NO_TEXT.
+    CONSTANTS c_type_repo TYPE ty_type VALUE 'REPO' ##NO_TEXT.
+    CONSTANTS c_type_background TYPE ty_type VALUE 'BACKGROUND' ##NO_TEXT.
+    CONSTANTS c_type_user TYPE ty_type VALUE 'USER' ##NO_TEXT.
 
-    CONSTANTS:
-      c_type_settings   TYPE ty_type VALUE 'SETTINGS',
-      c_type_repo       TYPE ty_type VALUE 'REPO',
-      c_type_background TYPE ty_type VALUE 'BACKGROUND',
-      c_type_user       TYPE ty_type VALUE 'USER'.
-
-    METHODS:
-      list_by_type
-        IMPORTING iv_type           TYPE ty_type
-        RETURNING VALUE(rt_content) TYPE tt_content,
-      list
-        RETURNING VALUE(rt_content) TYPE tt_content,
-      add
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      delete
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-        RAISING   zcx_abapgit_exception,
-      update
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      modify
-        IMPORTING iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-                  iv_data  TYPE ty_content-data_str
-        RAISING   zcx_abapgit_exception,
-      read
-        IMPORTING iv_type        TYPE ty_type
-                  iv_value       TYPE ty_content-value
-        RETURNING VALUE(rv_data) TYPE ty_content-data_str
-        RAISING   zcx_abapgit_not_found,
-      lock
-        IMPORTING iv_mode  TYPE enqmode DEFAULT 'E'
-                  iv_type  TYPE ty_type
-                  iv_value TYPE ty_content-value
-        RAISING   zcx_abapgit_exception.
-
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(ro_db) TYPE REF TO zcl_abapgit_persistence_db .
+    METHODS add
+      IMPORTING
+        !iv_type  TYPE ty_type
+        !iv_value TYPE ty_content-value
+        !iv_data  TYPE ty_content-data_str
+      RAISING
+        zcx_abapgit_exception .
+    METHODS delete
+      IMPORTING
+        !iv_type  TYPE ty_type
+        !iv_value TYPE ty_content-value
+      RAISING
+        zcx_abapgit_exception .
+    METHODS list
+      RETURNING
+        VALUE(rt_content) TYPE tt_content .
+    METHODS list_by_type
+      IMPORTING
+        !iv_type          TYPE ty_type
+      RETURNING
+        VALUE(rt_content) TYPE tt_content .
+    METHODS lock
+      IMPORTING
+        !iv_mode  TYPE enqmode DEFAULT 'E'
+        !iv_type  TYPE ty_type
+        !iv_value TYPE ty_content-value
+      RAISING
+        zcx_abapgit_exception .
+    METHODS modify
+      IMPORTING
+        !iv_type  TYPE ty_type
+        !iv_value TYPE ty_content-value
+        !iv_data  TYPE ty_content-data_str
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read
+      IMPORTING
+        !iv_type       TYPE ty_type
+        !iv_value      TYPE ty_content-value
+      RETURNING
+        VALUE(rv_data) TYPE ty_content-data_str
+      RAISING
+        zcx_abapgit_not_found .
+    METHODS update
+      IMPORTING
+        !iv_type  TYPE ty_type
+        !iv_value TYPE ty_content-value
+        !iv_data  TYPE ty_content-data_str
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    METHODS: validate_and_unprettify_xml
-      IMPORTING iv_xml        TYPE string
-      RETURNING VALUE(rv_xml) TYPE string
-      RAISING   zcx_abapgit_exception.
 
+    CLASS-DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
+
+    METHODS validate_and_unprettify_xml
+      IMPORTING
+        !iv_xml       TYPE string
+      RETURNING
+        VALUE(rv_xml) TYPE string
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -73,8 +96,6 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD add.
-
-* todo, change instantiation back to private? make sure this class is a singleton?
 
     DATA ls_table TYPE ty_content.
 
@@ -99,6 +120,16 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'DB Delete failed' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_instance.
+
+    IF mo_db IS NOT BOUND.
+      CREATE OBJECT mo_db.
+    ENDIF.
+    ro_db = mo_db.
 
   ENDMETHOD.
 

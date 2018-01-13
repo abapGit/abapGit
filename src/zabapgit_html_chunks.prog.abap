@@ -50,7 +50,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
   METHOD render_repo_top.
 
     DATA: lo_repo_online TYPE REF TO lcl_repo_online,
-          lo_pback       TYPE REF TO lcl_persist_background,
+          lo_pback       TYPE REF TO zcl_abapgit_persist_background,
           lv_hint        TYPE string,
           lv_icon        TYPE string.
 
@@ -96,7 +96,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '<td class="repo_attr right">' ).
 
     " Fav
-    IF abap_true = lcl_app=>user( )->is_favorite_repo( io_repo->get_key( ) ).
+    IF abap_true = zcl_abapgit_persistence_user=>get_instance( )->is_favorite_repo( io_repo->get_key( ) ).
       lv_icon = 'star/blue' ##NO_TEXT.
     ELSE.
       lv_icon = 'star/grey' ##NO_TEXT.
