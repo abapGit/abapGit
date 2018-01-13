@@ -3,78 +3,66 @@ CLASS zcl_abapgit_persistence_db DEFINITION
   CREATE PRIVATE .
 
   PUBLIC SECTION.
-
-    TYPES:
-      ty_type  TYPE c LENGTH 12 .
-    TYPES:
-      ty_value TYPE c LENGTH 12 .
-    TYPES:
-      BEGIN OF ty_content,
-        type     TYPE ty_type,
-        value    TYPE ty_value,
-        data_str TYPE string,
-      END OF ty_content .
-    TYPES:
-      tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
-
     CONSTANTS c_tabname TYPE tabname VALUE 'ZABAPGIT' ##NO_TEXT.
     CONSTANTS c_lock TYPE viewname VALUE 'EZABAPGIT' ##NO_TEXT.
-    CONSTANTS c_type_settings TYPE ty_type VALUE 'SETTINGS' ##NO_TEXT.
-    CONSTANTS c_type_repo TYPE ty_type VALUE 'REPO' ##NO_TEXT.
-    CONSTANTS c_type_background TYPE ty_type VALUE 'BACKGROUND' ##NO_TEXT.
-    CONSTANTS c_type_user TYPE ty_type VALUE 'USER' ##NO_TEXT.
+
+    CONSTANTS:
+      c_type_settings TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
+      c_type_repo TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
+      c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
+      c_type_user TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
 
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ro_db) TYPE REF TO zcl_abapgit_persistence_db .
     METHODS add
       IMPORTING
-        !iv_type  TYPE ty_type
-        !iv_value TYPE ty_content-value
-        !iv_data  TYPE ty_content-data_str
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_value TYPE zif_abapgit_persistence=>ty_content-value
+        !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
     METHODS delete
       IMPORTING
-        !iv_type  TYPE ty_type
-        !iv_value TYPE ty_content-value
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_value TYPE zif_abapgit_persistence=>ty_content-value
       RAISING
         zcx_abapgit_exception .
     METHODS list
       RETURNING
-        VALUE(rt_content) TYPE tt_content .
+        VALUE(rt_content) TYPE zif_abapgit_persistence=>tt_content .
     METHODS list_by_type
       IMPORTING
-        !iv_type          TYPE ty_type
+        !iv_type          TYPE zif_abapgit_persistence=>ty_type
       RETURNING
-        VALUE(rt_content) TYPE tt_content .
+        VALUE(rt_content) TYPE zif_abapgit_persistence=>tt_content .
     METHODS lock
       IMPORTING
         !iv_mode  TYPE enqmode DEFAULT 'E'
-        !iv_type  TYPE ty_type
-        !iv_value TYPE ty_content-value
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_value TYPE zif_abapgit_persistence=>ty_content-value
       RAISING
         zcx_abapgit_exception .
     METHODS modify
       IMPORTING
-        !iv_type  TYPE ty_type
-        !iv_value TYPE ty_content-value
-        !iv_data  TYPE ty_content-data_str
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_value TYPE zif_abapgit_persistence=>ty_content-value
+        !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
     METHODS read
       IMPORTING
-        !iv_type       TYPE ty_type
-        !iv_value      TYPE ty_content-value
+        !iv_type       TYPE zif_abapgit_persistence=>ty_type
+        !iv_value      TYPE zif_abapgit_persistence=>ty_content-value
       RETURNING
-        VALUE(rv_data) TYPE ty_content-data_str
+        VALUE(rv_data) TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_not_found .
     METHODS update
       IMPORTING
-        !iv_type  TYPE ty_type
-        !iv_value TYPE ty_content-value
-        !iv_data  TYPE ty_content-data_str
+        !iv_type  TYPE zif_abapgit_persistence=>ty_type
+        !iv_value TYPE zif_abapgit_persistence=>ty_content-value
+        !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -97,7 +85,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
   METHOD add.
 
-    DATA ls_table TYPE ty_content.
+    DATA ls_table TYPE zif_abapgit_persistence=>ty_content.
 
     ls_table-type  = iv_type.
     ls_table-value = iv_value.
@@ -171,7 +159,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
   METHOD modify.
 
-    DATA: ls_content TYPE ty_content.
+    DATA: ls_content TYPE zif_abapgit_persistence=>ty_content.
 
     lock( iv_type  = iv_type
           iv_value = iv_value ).

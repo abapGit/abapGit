@@ -11,7 +11,7 @@ CLASS lcl_zip DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS import
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_db=>ty_value
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_value
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export

@@ -549,7 +549,7 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF zcl_abapgit_dot_abapgit=>ty_requirement,
+          lt_requirements  TYPE STANDARD TABLE OF zif_abapgit_dot_abapgit=>ty_requirement,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).

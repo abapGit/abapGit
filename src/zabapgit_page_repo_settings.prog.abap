@@ -46,17 +46,17 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: ls_dot          TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit,
+    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
           lv_selected     TYPE string,
           lt_folder_logic TYPE stringtab.
     FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
 
-    INSERT zcl_abapgit_dot_abapgit=>c_folder_logic-full
+    INSERT zif_abapgit_dot_abapgit=>c_folder_logic-full
            INTO TABLE lt_folder_logic.
 
-    INSERT zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+    INSERT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
            INTO TABLE lt_folder_logic.
 
     CREATE OBJECT ro_html.

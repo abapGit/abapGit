@@ -12,7 +12,7 @@ CLASS lcl_repo DEFINITION ABSTRACT FRIENDS lcl_repo_srv.
       constructor
         IMPORTING is_data TYPE zcl_abapgit_persistence_repo=>ty_repo,
       get_key
-        RETURNING VALUE(rv_key) TYPE zcl_abapgit_persistence_db=>ty_value,
+        RETURNING VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value,
       get_name
         RETURNING VALUE(rv_name) TYPE string
         RAISING   zcx_abapgit_exception,
@@ -206,7 +206,7 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
     METHODS get
-      IMPORTING iv_key         TYPE zcl_abapgit_persistence_db=>ty_value
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_value
       RETURNING VALUE(ro_repo) TYPE REF TO lcl_repo
       RAISING   zcx_abapgit_exception.
 
@@ -217,7 +217,7 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
     METHODS switch_repo_type
-      IMPORTING iv_key     TYPE zcl_abapgit_persistence_db=>ty_value
+      IMPORTING iv_key     TYPE zif_abapgit_persistence=>ty_value
                 iv_offline TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 

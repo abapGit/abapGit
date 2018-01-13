@@ -4,29 +4,6 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_requirement,
-        component   TYPE dlvunit,
-        min_release TYPE saprelease,
-        min_patch   TYPE sappatchlv,
-      END OF ty_requirement .
-    TYPES:
-      ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY .
-    TYPES:
-      BEGIN OF ty_dot_abapgit,
-        master_language TYPE spras,
-        starting_folder TYPE string,
-        folder_logic    TYPE string,
-        ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-        requirements    TYPE ty_requirement_tt,
-      END OF ty_dot_abapgit .
-
-    CONSTANTS:
-      BEGIN OF c_folder_logic,
-        prefix TYPE string VALUE 'PREFIX',
-        full   TYPE string VALUE 'FULL',
-      END OF c_folder_logic .
-
     CLASS-METHODS build_default
       RETURNING
         VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
@@ -39,7 +16,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !is_data TYPE ty_dot_abapgit .
+        !is_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
     METHODS serialize
       RETURNING
         VALUE(rv_xstr) TYPE xstring
@@ -47,7 +24,7 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         zcx_abapgit_exception .
     METHODS get_data
       RETURNING
-        VALUE(rs_data) TYPE ty_dot_abapgit .
+        VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit .
     METHODS add_ignore
       IMPORTING
         !iv_path     TYPE string
@@ -85,16 +62,16 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    DATA: ms_data TYPE ty_dot_abapgit.
+    DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
     CLASS-METHODS:
       to_xml
-        IMPORTING is_data       TYPE ty_dot_abapgit
+        IMPORTING is_data       TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
         RETURNING VALUE(rv_xml) TYPE string
         RAISING   zcx_abapgit_exception,
       from_xml
         IMPORTING iv_xml         TYPE string
-        RETURNING VALUE(rs_data) TYPE ty_dot_abapgit.
+        RETURNING VALUE(rs_data) TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 ENDCLASS.
 
@@ -125,12 +102,12 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD build_default.
 
-    DATA: ls_data TYPE ty_dot_abapgit.
+    DATA: ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     ls_data-master_language = sy-langu.
     ls_data-starting_folder = '/'.
-    ls_data-folder_logic    = c_folder_logic-prefix.
+    ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
     APPEND '/.gitignore' TO ls_data-ignore.
     APPEND '/LICENSE' TO ls_data-ignore.
@@ -153,7 +130,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lv_xml  TYPE string,
-          ls_data TYPE ty_dot_abapgit.
+          ls_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xstr ).
@@ -184,7 +161,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 * downward compatibility
     IF rs_data-folder_logic IS INITIAL.
-      rs_data-folder_logic = c_folder_logic-prefix.
+      rs_data-folder_logic = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
     ENDIF.
 
   ENDMETHOD.

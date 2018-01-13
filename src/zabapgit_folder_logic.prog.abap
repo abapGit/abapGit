@@ -51,13 +51,13 @@ CLASS lcl_folder_logic IMPLEMENTATION.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
 
       CASE io_dot->get_folder_logic( ).
-        WHEN zcl_abapgit_dot_abapgit=>c_folder_logic-full.
+        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
           rv_package = lv_new.
           TRANSLATE rv_package USING '#/'.
           IF iv_top(1) = '$'.
             CONCATENATE '$' rv_package INTO rv_package.
           ENDIF.
-        WHEN zcl_abapgit_dot_abapgit=>c_folder_logic-prefix.
+        WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
           CONCATENATE rv_package '_' lv_new INTO rv_package.
         WHEN OTHERS.
           ASSERT 0 = 1.
@@ -92,12 +92,12 @@ CLASS lcl_folder_logic IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
       ELSE.
         CASE io_dot->get_folder_logic( ).
-          WHEN zcl_abapgit_dot_abapgit=>c_folder_logic-full.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
             lv_len = 0.
             IF iv_package(1) = '$'.
               lv_len = 1.
             ENDIF.
-          WHEN zcl_abapgit_dot_abapgit=>c_folder_logic-prefix.
+          WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
             lv_len = strlen( lv_parentcl ).
 
             IF iv_package(lv_len) <> lv_parentcl.
@@ -258,7 +258,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       iv_package  = lc_top
       iv_path     = lc_src ).
   ENDMETHOD.
@@ -267,7 +267,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       iv_package  = '$TOP_FOO'
       iv_path     = '/src/foo/' ).
   ENDMETHOD.
@@ -278,7 +278,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
         ltcl_folder_logic_helper=>test(
           iv_starting = lc_src
           iv_top      = lc_top
-          iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+          iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
           iv_package  = '$FOOBAR'
           iv_path     = '/src/' ).
         cl_abap_unit_assert=>fail( 'Error expected' ).
@@ -290,7 +290,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-full
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-full
       iv_package  = lc_top
       iv_path     = lc_src ).
   ENDMETHOD.
@@ -299,7 +299,7 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-full
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-full
       iv_package  = '$TOP_FOO'
       iv_path     = '/src/top_foo/' ).
   ENDMETHOD.
@@ -373,7 +373,7 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       iv_package  = lc_top
       iv_path     = lc_src ).
   ENDMETHOD.
@@ -382,7 +382,7 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-prefix
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
       iv_package  = '/TEST/TOOLS_T1'
       iv_path     = '/src/t1/' ).
   ENDMETHOD.
@@ -391,7 +391,7 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-full
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-full
       iv_package  = lc_top
       iv_path     = lc_src ).
   ENDMETHOD.
@@ -400,7 +400,7 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     ltcl_folder_logic_helper=>test(
       iv_starting = lc_src
       iv_top      = lc_top
-      iv_logic    = zcl_abapgit_dot_abapgit=>c_folder_logic-full
+      iv_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-full
       iv_package  = '/TEST/T1'
       iv_path     = '/src/#test#t1/' ).
   ENDMETHOD.
