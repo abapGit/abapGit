@@ -140,69 +140,69 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         VALUE(rv_hide) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-PRIVATE SECTION.
+  PRIVATE SECTION.
 
-  TYPES:
-    BEGIN OF ty_repo_config,
-      url              TYPE zcl_abapgit_persistence_repo=>ty_repo-url,
-      login            TYPE string,
-      git_user         TYPE zif_abapgit_definitions=>ty_git_user,
-      last_change_seen TYPE string,
-    END OF ty_repo_config .
-  TYPES:
-    ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_user,
-      default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
-      repo_show        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
-      hide_files       TYPE abap_bool,
-      changes_only     TYPE abap_bool,
-      diff_unified     TYPE abap_bool,
-      favorites        TYPE tt_favorites,
-      repo_config      TYPE ty_repo_config_tt,
-    END OF ty_user .
+    TYPES:
+      BEGIN OF ty_repo_config,
+        url              TYPE zcl_abapgit_persistence_repo=>ty_repo-url,
+        login            TYPE string,
+        git_user         TYPE zif_abapgit_definitions=>ty_git_user,
+        last_change_seen TYPE string,
+      END OF ty_repo_config .
+    TYPES:
+      ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_user,
+        default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
+        repo_show        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+        hide_files       TYPE abap_bool,
+        changes_only     TYPE abap_bool,
+        diff_unified     TYPE abap_bool,
+        favorites        TYPE tt_favorites,
+        repo_config      TYPE ty_repo_config_tt,
+      END OF ty_user .
 
-  DATA mv_user TYPE xubname .
-  CLASS-DATA go_current_user TYPE REF TO zcl_abapgit_persistence_user .
+    DATA mv_user TYPE xubname .
+    CLASS-DATA go_current_user TYPE REF TO zcl_abapgit_persistence_user .
 
-  METHODS constructor
-    IMPORTING
-      !iv_user TYPE xubname DEFAULT sy-uname .
-  METHODS from_xml
-    IMPORTING
-      !iv_xml        TYPE string
-    RETURNING
-      VALUE(rs_user) TYPE ty_user
-    RAISING
-      zcx_abapgit_exception .
-  METHODS read
-    RETURNING
-      VALUE(rs_user) TYPE ty_user
-    RAISING
-      zcx_abapgit_exception .
-  METHODS read_repo_config
-    IMPORTING
-      !iv_url               TYPE zcl_abapgit_persistence_repo=>ty_repo-url
-    RETURNING
-      VALUE(rs_repo_config) TYPE ty_repo_config
-    RAISING
-      zcx_abapgit_exception .
-  METHODS to_xml
-    IMPORTING
-      !is_user      TYPE ty_user
-    RETURNING
-      VALUE(rv_xml) TYPE string .
-  METHODS update
-    IMPORTING
-      !is_user TYPE ty_user
-    RAISING
-      zcx_abapgit_exception .
-  METHODS update_repo_config
-    IMPORTING
-      !iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
-      !is_repo_config TYPE ty_repo_config
-    RAISING
-      zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !iv_user TYPE xubname DEFAULT sy-uname .
+    METHODS from_xml
+      IMPORTING
+        !iv_xml        TYPE string
+      RETURNING
+        VALUE(rs_user) TYPE ty_user
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read
+      RETURNING
+        VALUE(rs_user) TYPE ty_user
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_repo_config
+      IMPORTING
+        !iv_url               TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+      RETURNING
+        VALUE(rs_repo_config) TYPE ty_repo_config
+      RAISING
+        zcx_abapgit_exception .
+    METHODS to_xml
+      IMPORTING
+        !is_user      TYPE ty_user
+      RETURNING
+        VALUE(rv_xml) TYPE string .
+    METHODS update
+      IMPORTING
+        !is_user TYPE ty_user
+      RAISING
+        zcx_abapgit_exception .
+    METHODS update_repo_config
+      IMPORTING
+        !iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !is_repo_config TYPE ty_repo_config
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -210,12 +210,12 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
 
-  METHOD CONSTRUCTOR.
+  METHOD constructor.
     mv_user = iv_user.
   ENDMETHOD.
 
 
-  METHOD FROM_XML.
+  METHOD from_xml.
 
     DATA: lv_xml TYPE string.
 
@@ -232,49 +232,49 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD GET_CHANGES_ONLY.
+  METHOD get_changes_only.
 
     rv_changes_only = read( )-changes_only.
 
   ENDMETHOD. "get_changes_only
 
 
-  METHOD GET_DEFAULT_GIT_USER_EMAIL.
+  METHOD get_default_git_user_email.
 
     rv_email = read( )-default_git_user-email.
 
   ENDMETHOD.
 
 
-  METHOD GET_DEFAULT_GIT_USER_NAME.
+  METHOD get_default_git_user_name.
 
     rv_username = read( )-default_git_user-name.
 
   ENDMETHOD.
 
 
-  METHOD GET_DIFF_UNIFIED.
+  METHOD get_diff_unified.
 
     rv_diff_unified = read( )-diff_unified.
 
   ENDMETHOD. "get_diff_unified
 
 
-  METHOD GET_FAVORITES.
+  METHOD get_favorites.
 
     rt_favorites = read( )-favorites.
 
   ENDMETHOD.  "get_favorites
 
 
-  METHOD GET_HIDE_FILES.
+  METHOD get_hide_files.
 
     rv_hide = read( )-hide_files.
 
   ENDMETHOD. "get_hide_files
 
 
-  METHOD GET_INSTANCE.
+  METHOD get_instance.
 
     IF iv_user = sy-uname ##USER_OK.
       IF go_current_user IS NOT BOUND.
@@ -290,42 +290,42 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD GET_REPO_GIT_USER_EMAIL.
+  METHOD get_repo_git_user_email.
 
     rv_email = read_repo_config( iv_url )-git_user-email.
 
   ENDMETHOD.  "get_repo_email
 
 
-  METHOD GET_REPO_GIT_USER_NAME.
+  METHOD get_repo_git_user_name.
 
     rv_username = read_repo_config( iv_url )-git_user-name.
 
   ENDMETHOD.  "get_repo_username
 
 
-  METHOD GET_REPO_LAST_CHANGE_SEEN.
+  METHOD get_repo_last_change_seen.
 
     rv_version = read_repo_config( iv_url )-last_change_seen.
 
   ENDMETHOD.  "get_last_change_seen
 
 
-  METHOD GET_REPO_LOGIN.
+  METHOD get_repo_login.
 
     rv_login = read_repo_config( iv_url )-login.
 
   ENDMETHOD.  "get_repo_login
 
 
-  METHOD GET_REPO_SHOW.
+  METHOD get_repo_show.
 
     rv_key = read( )-repo_show.
 
   ENDMETHOD.
 
 
-  METHOD IS_FAVORITE_REPO.
+  METHOD is_favorite_repo.
 
     DATA: lt_favorites TYPE tt_favorites.
 
@@ -339,7 +339,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  " is_favorite_repo.
 
 
-  METHOD READ.
+  METHOD read.
 
     DATA: lv_xml TYPE string.
 
@@ -356,7 +356,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD READ_REPO_CONFIG.
+  METHOD read_repo_config.
     DATA: lt_repo_config TYPE ty_repo_config_tt,
           lv_key         TYPE string.
 
@@ -367,7 +367,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  "read_repo_config
 
 
-  METHOD SET_DEFAULT_GIT_USER_EMAIL.
+  METHOD set_default_git_user_email.
 
     DATA: ls_user TYPE ty_user.
 
@@ -379,7 +379,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SET_DEFAULT_GIT_USER_NAME.
+  METHOD set_default_git_user_name.
 
     DATA: ls_user TYPE ty_user.
 
@@ -393,7 +393,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SET_REPO_GIT_USER_EMAIL.
+  METHOD set_repo_git_user_email.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
@@ -404,7 +404,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  "set_repo_email
 
 
-  METHOD SET_REPO_GIT_USER_NAME.
+  METHOD set_repo_git_user_name.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
@@ -415,7 +415,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  "set_repo_username
 
 
-  METHOD SET_REPO_LAST_CHANGE_SEEN.
+  METHOD set_repo_last_change_seen.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
@@ -426,7 +426,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  "set_last_change_seen
 
 
-  METHOD SET_REPO_LOGIN.
+  METHOD set_repo_login.
 
     DATA: ls_repo_config TYPE ty_repo_config.
 
@@ -437,7 +437,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  "set_repo_login
 
 
-  METHOD SET_REPO_SHOW.
+  METHOD set_repo_show.
 
     DATA: ls_user TYPE ty_user.
 
@@ -451,7 +451,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD TOGGLE_CHANGES_ONLY.
+  METHOD toggle_changes_only.
 
     DATA ls_user TYPE ty_user.
 
@@ -464,7 +464,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD. "toggle_changes_only
 
 
-  METHOD TOGGLE_DIFF_UNIFIED.
+  METHOD toggle_diff_unified.
 
     DATA ls_user TYPE ty_user.
 
@@ -477,7 +477,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD. "toggle_diff_unified
 
 
-  METHOD TOGGLE_FAVORITE.
+  METHOD toggle_favorite.
 
     DATA: ls_user TYPE ty_user.
 
@@ -497,7 +497,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.  " toggle_favorite.
 
 
-  METHOD TOGGLE_HIDE_FILES.
+  METHOD toggle_hide_files.
 
     DATA ls_user TYPE ty_user.
 
@@ -510,14 +510,14 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD. "toggle_hide_files
 
 
-  METHOD TO_XML.
+  METHOD to_xml.
     CALL TRANSFORMATION id
       SOURCE user = is_user
       RESULT XML rv_xml.
   ENDMETHOD.
 
 
-  METHOD UPDATE.
+  METHOD update.
 
     DATA: lv_xml TYPE string.
 
@@ -531,7 +531,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD UPDATE_REPO_CONFIG.
+  METHOD update_repo_config.
     DATA: ls_user TYPE ty_user,
           lv_key  TYPE string.
     FIELD-SYMBOLS <repo_config> TYPE ty_repo_config.
