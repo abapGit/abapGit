@@ -184,7 +184,7 @@ CLASS lcl_transport_objects DEFINITION.
         it_transport_objects TYPE scts_tadir.
     METHODS to_stage
       IMPORTING
-        io_stage           TYPE REF TO lcl_stage
+        io_stage           TYPE REF TO zcl_abapgit_stage
         is_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files
         it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -275,7 +275,7 @@ CLASS lcl_transport_2_branch DEFINITION.
     METHODS stage_transport_objects
       IMPORTING
         it_transport_objects TYPE scts_tadir
-        io_stage             TYPE REF TO lcl_stage
+        io_stage             TYPE REF TO zcl_abapgit_stage
         is_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files
         it_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -288,7 +288,7 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
     DATA:
       lv_branch_name     TYPE string,
       ls_comment         TYPE zif_abapgit_definitions=>ty_comment,
-      lo_stage           TYPE REF TO lcl_stage,
+      lo_stage           TYPE REF TO zcl_abapgit_stage,
       ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
 

@@ -47,7 +47,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
       process_stage_list
         IMPORTING it_postdata TYPE cnht_post_data_tab
-                  io_stage    TYPE REF TO lcl_stage
+                  io_stage    TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
 
       build_menu
@@ -90,7 +90,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA lo_stage TYPE REF TO lcl_stage.
+    DATA lo_stage TYPE REF TO zcl_abapgit_stage.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
@@ -131,7 +131,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
                    <ls_item> LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
-    lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
     IF lines( lt_fields ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
@@ -147,7 +147,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           ev_filename = ls_file-filename ).
 
       CASE <ls_item>-value.
-        WHEN lcl_stage=>c_method-add.
+        WHEN zcl_abapgit_stage=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
             WITH KEY file-path     = ls_file-path
                      file-filename = ls_file-filename.
@@ -155,13 +155,13 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
           io_stage->add(    iv_path     = <ls_file>-file-path
                             iv_filename = <ls_file>-file-filename
                             iv_data     = <ls_file>-file-data ).
-        WHEN lcl_stage=>c_method-ignore.
+        WHEN zcl_abapgit_stage=>c_method-ignore.
           io_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
-        WHEN lcl_stage=>c_method-rm.
+        WHEN zcl_abapgit_stage=>c_method-rm.
           io_stage->rm(     iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
-        WHEN lcl_stage=>c_method-skip.
+        WHEN zcl_abapgit_stage=>c_method-skip.
           " Do nothing
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
@@ -246,8 +246,10 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     CASE iv_context.
       WHEN 'local'.
-        lv_param    = lcl_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                          ig_file = is_file ).
+        lv_param = zcl_abapgit_html_action_utils=>file_encode(
+          iv_key  = mo_repo->get_key( )
+          ig_file = is_file ).
+
         lv_filename = zcl_abapgit_html=>a(
           iv_txt = lv_filename
           iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_param }| ).

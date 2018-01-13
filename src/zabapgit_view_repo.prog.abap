@@ -106,7 +106,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
-        lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
+        lv_path         = zcl_abapgit_html_action_utils=>dir_decode( iv_getdata ).
         mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
@@ -505,7 +505,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
 
-        lv_difflink = lcl_html_action_utils=>obj_encode(
+        lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
           iv_key    = mo_repo->get_key( )
           ig_object = is_item ).
 
@@ -521,7 +521,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
           ro_html->add( '<div>' ).
           IF ls_file-is_changed = abap_true.
-            lv_difflink = lcl_html_action_utils=>file_encode(
+            lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
             ro_html->add_a( iv_txt = 'view diff'
@@ -569,7 +569,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
-    lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
+    lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
     rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
                                    iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
@@ -580,7 +580,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     DATA: lv_encode TYPE string.
 
-    lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
+    lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
     rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|

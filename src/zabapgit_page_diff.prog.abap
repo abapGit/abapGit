@@ -486,13 +486,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lo_highlighter TYPE REF TO lcl_syntax_highlighter,
+    DATA: lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
           lt_diffs       TYPE zcl_abapgit_diff=>ty_diffs_tt,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-    lo_highlighter = lcl_syntax_highlighter=>create( is_diff-filename ).
+    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( is_diff-filename ).
     CREATE OBJECT ro_html.
 
     lt_diffs = is_diff-o_diff->get( ).

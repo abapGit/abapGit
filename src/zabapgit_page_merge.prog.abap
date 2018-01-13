@@ -21,7 +21,7 @@ CLASS lcl_merge DEFINITION FINAL.
              ttree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              ctree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              result   TYPE lcl_git_porcelain=>ty_expanded_tt,
-             stage    TYPE REF TO lcl_stage,
+             stage    TYPE REF TO zcl_abapgit_stage,
              conflict TYPE string,
            END OF ty_merge.
 

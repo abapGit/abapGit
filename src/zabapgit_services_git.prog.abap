@@ -50,7 +50,7 @@ CLASS lcl_services_git DEFINITION FINAL.
     CLASS-METHODS commit
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_commit TYPE ty_commit_fields
-                io_stage  TYPE REF TO lcl_stage
+                io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS. " lcl_services_git

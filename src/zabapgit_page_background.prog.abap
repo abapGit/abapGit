@@ -120,7 +120,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
     CASE iv_action.
       WHEN zif_abapgit_definitions=>gc_action-bg_update.
-        ls_bg_task     = lcl_html_action_utils=>decode_bg_update( iv_getdata ).
+        ls_bg_task     = zcl_abapgit_html_action_utils=>decode_bg_update( iv_getdata ).
         ls_bg_task-key = mv_key.
         lcl_services_bkg=>update_task( ls_bg_task ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.

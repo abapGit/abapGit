@@ -39,7 +39,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
   METHOD render_content.
 
     DATA:
-      lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
+      lo_highlighter  TYPE REF TO zcl_abapgit_syntax_highlighter,
       lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
       lv_data         TYPE zcl_abapgit_persistence_db=>ty_content-data_str,
       ls_action       TYPE zcl_abapgit_persistence_db=>ty_content,
@@ -53,11 +53,11 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
     ENDTRY.
 
     " Create syntax highlighter
-    lo_highlighter  = lcl_syntax_highlighter=>create( '*.xml' ).
+    lo_highlighter  = zcl_abapgit_syntax_highlighter=>create( '*.xml' ).
 
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
-    lv_action       = lcl_html_action_utils=>dbkey_encode( ls_action ).
+    lv_action       = zcl_abapgit_html_action_utils=>dbkey_encode( ls_action ).
     lv_data         = lo_highlighter->process_line( zcl_abapgit_xml_pretty=>print( lv_data ) ).
 
     CREATE OBJECT ro_html.
@@ -208,7 +208,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lv_trclass = ' class="firstrow"' ##NO_TEXT.
       ENDIF.
 
-      lv_action  = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
+      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
       lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>gc_action-db_display }?{ lv_action }| ).

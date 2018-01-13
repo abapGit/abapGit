@@ -111,7 +111,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " SAP GUI actions
       WHEN zif_abapgit_definitions=>gc_action-jump.                          " Open object editor
-        lcl_html_action_utils=>jump_decode(
+        zcl_abapgit_html_action_utils=>jump_decode(
           EXPORTING iv_string   = iv_getdata
           IMPORTING ev_obj_type = ls_item-obj_type
                     ev_obj_name = ls_item-obj_name ).
@@ -134,11 +134,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
                                        iv_getdata = iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-db_delete.                       " DB Delete
-        ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+        ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         lcl_services_db=>delete( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-db_update.                       " DB Update
-        ls_db = lcl_html_action_utils=>dbcontent_decode( it_postdata ).
+        ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
         lcl_services_db=>update( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
 
@@ -279,7 +279,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           ls_key        TYPE zcl_abapgit_persistence_db=>ty_content.
 
     lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
-    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+    ls_key        = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
 
     TRY.
         CREATE OBJECT ri_page TYPE (lv_page_class)
@@ -320,10 +320,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
           lv_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
-    lcl_html_action_utils=>file_obj_decode( EXPORTING iv_string = iv_getdata
-                                            IMPORTING ev_key    = lv_key
-                                                      eg_file   = ls_file
-                                                      eg_object = ls_object ).
+    zcl_abapgit_html_action_utils=>file_obj_decode(
+      EXPORTING
+        iv_string = iv_getdata
+      IMPORTING
+        ev_key    = lv_key
+        eg_file   = ls_file
+        eg_object = ls_object ).
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -347,7 +350,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     IF sy-subrc <> 0. " Not found ? -> just repo key in params
       lv_key = iv_getdata.
     ELSE.
-      lcl_html_action_utils=>stage_decode(
+      zcl_abapgit_html_action_utils=>stage_decode(
         EXPORTING iv_getdata = iv_getdata
         IMPORTING ev_key     = lv_key
                   ev_seed    = lv_seed ).
