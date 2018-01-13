@@ -91,7 +91,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     mv_changes_only = lcl_app=>user( )->get_changes_only( ).
 
     " Read global settings to get max # of objects to be listed
-    lo_settings     = lcl_app=>settings( )->read( ).
+    lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
 

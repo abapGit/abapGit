@@ -40,13 +40,6 @@ CLASS lcl_app IMPLEMENTATION.
 
   ENDMETHOD.      "repo_srv
 
-  METHOD settings.
-    IF go_settings IS NOT BOUND.
-      CREATE OBJECT go_settings.
-    ENDIF.
-    ro_settings = go_settings.
-  ENDMETHOD.
-
   METHOD proxy.
     IF go_proxy IS NOT BOUND.
       CREATE OBJECT go_proxy.

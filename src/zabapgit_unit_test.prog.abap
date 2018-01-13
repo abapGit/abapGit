@@ -52,7 +52,8 @@ CLASS ltcl_critical_tests IMPLEMENTATION.
 
   METHOD check_run_permission.
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings.
-    lo_settings = lcl_app=>settings( )->read( ).
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     "Objects will be created and deleted, do not run in customer system!
     "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
@@ -1375,7 +1376,7 @@ CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
       read_run_critical_tests       FOR TESTING RAISING cx_static_check,
       read_not_found_critical_tests FOR TESTING RAISING cx_static_check.
     DATA:
-      mo_persistence_settings TYPE REF TO lcl_persist_settings,
+      mo_persistence_settings TYPE REF TO zcl_abapgit_persist_settings,
       mo_settings             TYPE REF TO zcl_abapgit_settings.
 ENDCLASS.
 
@@ -1386,7 +1387,7 @@ CLASS ltcl_persistence_settings IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD setup.
-    CREATE OBJECT mo_persistence_settings.
+    mo_persistence_settings = zcl_abapgit_persist_settings=>get_instance( ).
     CREATE OBJECT mo_settings.
     clear_settings_database( ).
   ENDMETHOD.

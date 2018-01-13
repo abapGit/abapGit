@@ -230,9 +230,9 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD persist_settings.
 
-    DATA lo_settings_persistence TYPE REF TO lcl_persist_settings.
+    DATA lo_settings_persistence TYPE REF TO zcl_abapgit_persist_settings.
 
-    lo_settings_persistence = lcl_app=>settings( ).
+    lo_settings_persistence = zcl_abapgit_persist_settings=>get_instance( ).
     lo_settings_persistence->modify( mo_settings ).
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
 
@@ -258,9 +258,9 @@ CLASS lcl_gui_page_settings IMPLEMENTATION.
 
   METHOD read_settings.
 
-    DATA lo_settings_persistence TYPE REF TO lcl_persist_settings.
+    DATA lo_settings_persistence TYPE REF TO zcl_abapgit_persist_settings.
 
-    lo_settings_persistence = lcl_app=>settings( ).
+    lo_settings_persistence = zcl_abapgit_persist_settings=>get_instance( ).
     mo_settings = lo_settings_persistence->read( ).
 
   ENDMETHOD.

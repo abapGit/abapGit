@@ -146,7 +146,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = class_name( is_item ).
     ENDIF.
 
-    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true
         AND is_item-obj_type = 'CLAS'.
       lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
     ENDIF.
@@ -255,7 +255,7 @@ CLASS lcl_objects IMPLEMENTATION.
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>gc_english ).
 
-    lv_adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
 
     IF lv_adt_jump_enabled = abap_true.
       TRY.

@@ -194,7 +194,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                      iv_label = 'committer e-mail'
                                      iv_value = lv_email ) ).
 
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 
