@@ -25,7 +25,7 @@ CLASS zcl_abapgit_persist_background DEFINITION
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,
-             key TYPE zcl_abapgit_persistence_db=>ty_value.
+             key TYPE zif_abapgit_persistence=>ty_value.
         INCLUDE TYPE ty_xml.
     TYPES: END OF ty_background.
     TYPES: tt_background TYPE STANDARD TABLE OF ty_background WITH DEFAULT KEY.
@@ -48,7 +48,6 @@ CLASS zcl_abapgit_persist_background DEFINITION
       IMPORTING iv_key        TYPE ty_background-key
       RETURNING VALUE(rv_yes) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
-
   PRIVATE SECTION.
     DATA: mo_db   TYPE REF TO zcl_abapgit_persistence_db,
           mt_jobs TYPE tt_background.
@@ -110,7 +109,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
 
   METHOD list.
 
-    DATA: lt_list TYPE zcl_abapgit_persistence_db=>tt_content,
+    DATA: lt_list TYPE zif_abapgit_persistence=>tt_content,
           ls_xml  TYPE ty_xml.
 
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,

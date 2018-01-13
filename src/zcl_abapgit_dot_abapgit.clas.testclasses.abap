@@ -17,8 +17,8 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
   METHOD identity.
 
     DATA: lo_dot    TYPE REF TO zcl_abapgit_dot_abapgit,
-          ls_before TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit,
-          ls_after  TYPE zcl_abapgit_dot_abapgit=>ty_dot_abapgit.
+          ls_before TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          ls_after  TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
