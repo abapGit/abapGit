@@ -137,11 +137,11 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD get_branches_only.
-    FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
-    LOOP AT mt_branches ASSIGNING <branch>.
-      IF <branch>-type = c_type-branch.
-        APPEND <branch> TO rt_branches.
+    LOOP AT mt_branches ASSIGNING <ls_branch>.
+      IF <ls_branch>-type = c_type-branch.
+        APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.  "get_branches_only
@@ -176,11 +176,11 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD get_tags_only.
-    FIELD-SYMBOLS <branch> LIKE LINE OF mt_branches.
+    FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
-    LOOP AT mt_branches ASSIGNING <branch>.
-      IF <branch>-type = c_type-tag.
-        APPEND <branch> TO rt_branches.
+    LOOP AT mt_branches ASSIGNING <ls_branch>.
+      IF <ls_branch>-type = c_type-tag.
+        APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.  "get_tags_only

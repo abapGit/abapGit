@@ -161,7 +161,7 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
           lv_aux       TYPE string,
           lv_has_icons TYPE abap_bool.
 
-    FIELD-SYMBOLS <item> LIKE LINE OF mt_items.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
     CREATE OBJECT ro_html.
 
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
     ENDIF.
 
     " Check has icons or check boxes
-    LOOP AT mt_items ASSIGNING <item> WHERE ico IS NOT INITIAL OR chk <> abap_undefined.
+    LOOP AT mt_items ASSIGNING <ls_item> WHERE ico IS NOT INITIAL OR chk <> abap_undefined.
       lv_has_icons = abap_true.
       lv_class     = ' class="with-icons"'.
       EXIT.
@@ -183,48 +183,48 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
     ro_html->add( |<ul{ lv_id }{ lv_class }>| ).
 
     " Render items
-    LOOP AT mt_items ASSIGNING <item>.
+    LOOP AT mt_items ASSIGNING <ls_item>.
       CLEAR: lv_class, lv_icon.
 
-      IF <item>-typ = zif_abapgit_definitions=>gc_action_type-separator.
-        ro_html->add( |<li class="separator">{ <item>-txt }</li>| ).
+      IF <ls_item>-typ = zif_abapgit_definitions=>gc_action_type-separator.
+        ro_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
         CONTINUE.
       ENDIF.
 
       IF lv_has_icons = abap_true.
-        IF <item>-chk = abap_true.
+        IF <ls_item>-chk = abap_true.
           lv_icon  = zcl_abapgit_html=>icon( 'check/blue' ).
           lv_check = ' data-check="X"'.
-        ELSEIF <item>-chk = abap_false.
+        ELSEIF <ls_item>-chk = abap_false.
           lv_icon = zcl_abapgit_html=>icon( 'check/grey' ).
           lv_check = ' data-check=""'.
         ELSE. " abap_undefined -> not a check box
-          lv_icon = zcl_abapgit_html=>icon( <item>-ico ).
+          lv_icon = zcl_abapgit_html=>icon( <ls_item>-ico ).
         ENDIF.
       ENDIF.
 
-      IF <item>-cur = abap_true.
+      IF <ls_item>-cur = abap_true.
         lv_class = ' class="current-menu-item"'.
       ENDIF.
 
-      IF <item>-aux IS NOT INITIAL.
-        lv_aux = | data-aux="{ <item>-aux }"|.
+      IF <ls_item>-aux IS NOT INITIAL.
+        lv_aux = | data-aux="{ <ls_item>-aux }"|.
       ENDIF.
 
       ro_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
-      IF <item>-sub IS INITIAL.
-        ro_html->add_a( iv_txt   = lv_icon && <item>-txt
-                        iv_typ   = <item>-typ
-                        iv_act   = <item>-act
-                        iv_id    = <item>-id
-                        iv_opt   = <item>-opt ).
+      IF <ls_item>-sub IS INITIAL.
+        ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
+                        iv_typ   = <ls_item>-typ
+                        iv_act   = <ls_item>-act
+                        iv_id    = <ls_item>-id
+                        iv_opt   = <ls_item>-opt ).
       ELSE.
-        ro_html->add_a( iv_txt   = lv_icon && <item>-txt
+        ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = zif_abapgit_definitions=>gc_action_type-dummy
                         iv_act   = ''
-                        iv_id    = <item>-id
-                        iv_opt   = <item>-opt ).
-        ro_html->add( <item>-sub->render_items( iv_sort = iv_sort ) ).
+                        iv_id    = <ls_item>-id
+                        iv_opt   = <ls_item>-opt ).
+        ro_html->add( <ls_item>-sub->render_items( iv_sort ) ).
       ENDIF.
       ro_html->add( '</li>' ).
 

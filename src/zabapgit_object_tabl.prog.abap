@@ -63,7 +63,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_indexes
       WHERE sqltab = ms_item-obj_name
       AND as4local = 'A'
-      AND as4vers  = '0000' ##TOO_MANY_ITAB_FIELDS.
+      AND as4vers  = '0000'
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_indexes ASSIGNING <ls_index>.
       rv_changed = check_timestamp(
