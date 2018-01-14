@@ -470,7 +470,7 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      lv_package = lcl_folder_logic=>path_to_package(
+      lv_package = zcl_abapgit_folder_logic=>path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).

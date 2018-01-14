@@ -117,9 +117,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Check that objects are created in package corresponding to folder
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = lcl_folder_logic=>package_to_path( iv_top     = iv_top
-                                                   io_dot     = io_dot
-                                                   iv_package = <ls_res1>-package ).
+      lv_path = zcl_abapgit_folder_logic=>package_to_path(
+        iv_top     = iv_top
+        io_dot     = io_dot
+        iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
         io_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
@@ -281,9 +282,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = lcl_folder_logic=>path_to_package( iv_top  = iv_devclass
-                                                   io_dot  = io_dot
-                                                   iv_path = iv_path ).
+      lv_name = zcl_abapgit_folder_logic=>path_to_package(
+        iv_top  = iv_devclass
+        io_dot  = io_dot
+        iv_path = iv_path ).
     ENDIF.
 
     CLEAR es_item.
