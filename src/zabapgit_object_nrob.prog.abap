@@ -10,8 +10,8 @@
 CLASS lcl_object_nrob DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -27,11 +27,11 @@ ENDCLASS.                    "lcl_object_nrob DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_nrob IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_objectid TYPE cdhdr-objectid,
           lt_cdhdr    TYPE cdhdr_tab.
@@ -66,12 +66,12 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-late_deser = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_object TYPE tnro-object.
 
@@ -80,9 +80,9 @@ CLASS lcl_object_nrob IMPLEMENTATION.
       WHERE object = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_object     TYPE tnro-object,
           ls_attributes TYPE tnro,
@@ -114,7 +114,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lt_errors     TYPE TABLE OF inoer,
           ls_attributes TYPE tnro,
@@ -224,7 +224,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_object TYPE tnro-object.
 
@@ -248,7 +248,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_bcdata   TYPE bdcdata,
           lt_bcdata   TYPE STANDARD TABLE OF bdcdata.
@@ -284,7 +284,7 @@ CLASS lcl_object_nrob IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

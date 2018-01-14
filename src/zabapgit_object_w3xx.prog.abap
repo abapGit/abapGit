@@ -10,7 +10,7 @@
 CLASS lcl_object_w3super DEFINITION INHERITING FROM lcl_objects_super ABSTRACT.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
     TYPES ty_wwwparams_tt TYPE STANDARD TABLE OF wwwparams WITH DEFAULT KEY.
 
@@ -76,11 +76,11 @@ CLASS lcl_object_w3super IMPLEMENTATION.
     ms_key-objid = ms_item-obj_name.
   ENDMETHOD.  " constructor.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE chname INTO rv_user
       FROM wwwdata
@@ -94,7 +94,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_bdcdata TYPE bdcdata,
           lt_bdcdata TYPE tty_bdcdata.
@@ -144,16 +144,16 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD get_metadata. "Redefinition
     rs_metadata         = super->get_metadata( ).
     rs_metadata-version = 'v2.0.0'. " Seriazation v2, separate data file
   ENDMETHOD.  " get_metadata. "Redefinition
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     SELECT SINGLE objid INTO ms_key-objid
       FROM wwwdata
@@ -167,9 +167,9 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
     rv_bool = abap_true.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
@@ -255,13 +255,13 @@ CLASS lcl_object_w3super IMPLEMENTATION.
                  ig_data = lt_w3params ).
 
     " Seriazation v2, separate data file. 'extra' added to prevent conflict with .xml
-    lif_object~mo_files->add_raw( iv_data  = lv_xstring
+    zif_abapgit_object~mo_files->add_raw( iv_data  = lv_xstring
                                   iv_extra = 'data'
                                   iv_ext   = get_ext( lt_w3params ) ).
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA lv_base64str TYPE string.
     DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
@@ -284,7 +284,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
                       CHANGING  cg_data = lv_base64str ).
         lv_xstring = cl_http_utility=>decode_x_base64( lv_base64str ).
       WHEN 'v2.0.0'.
-        lv_xstring = lif_object~mo_files->read_raw( iv_extra = 'data'
+        lv_xstring = zif_abapgit_object~mo_files->read_raw( iv_extra = 'data'
                                                     iv_ext   = get_ext( lt_w3params ) ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'W3xx: Unknown serializer version' ).
@@ -400,9 +400,9 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot update TADIR for W3xx' ).
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     CALL FUNCTION 'WWWDATA_DELETE'
       EXPORTING
@@ -425,7 +425,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot delete W3xx params' ).
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
   METHOD get_ext.
 
@@ -484,7 +484,7 @@ CLASS lcl_object_w3super IMPLEMENTATION.
 
   ENDMETHOD.  " find_param.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

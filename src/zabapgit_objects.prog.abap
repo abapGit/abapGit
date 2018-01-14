@@ -157,71 +157,23 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 
-INTERFACE lif_comparison_result.
-  METHODS:
-    show_confirmation_dialog,
-    is_result_complete_halt
-      RETURNING VALUE(rv_response) TYPE abap_bool.
-ENDINTERFACE.
-
 "Null Object Pattern
 CLASS lcl_comparison_null DEFINITION FINAL.
   PUBLIC SECTION.
-    INTERFACES lif_comparison_result.
+    INTERFACES zif_abapgit_comparison_result.
 ENDCLASS.
 
 CLASS lcl_comparison_null IMPLEMENTATION.
 
-  METHOD lif_comparison_result~is_result_complete_halt.
+  METHOD zif_abapgit_comparison_result~is_result_complete_halt.
     rv_response = abap_false.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~show_confirmation_dialog.
+  METHOD zif_abapgit_comparison_result~show_confirmation_dialog.
     RETURN.
   ENDMETHOD.
 
 ENDCLASS.
-
-*----------------------------------------------------------------------*
-*       INTERFACE lif_object DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-INTERFACE lif_object.
-
-  METHODS:
-    serialize
-      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-      RAISING   zcx_abapgit_exception,
-    deserialize
-      IMPORTING iv_package TYPE devclass
-                io_xml     TYPE REF TO zcl_abapgit_xml_input
-      RAISING   zcx_abapgit_exception,
-    delete
-      RAISING zcx_abapgit_exception,
-    exists
-      RETURNING VALUE(rv_bool) TYPE abap_bool
-      RAISING   zcx_abapgit_exception,
-    changed_by
-      RETURNING VALUE(rv_user) TYPE xubname
-      RAISING   zcx_abapgit_exception,
-    jump
-      RAISING zcx_abapgit_exception,
-    get_metadata
-      RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
-    has_changed_since
-      IMPORTING iv_timestamp      TYPE timestamp
-      RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-  METHODS:
-    compare_to_remote_version
-      IMPORTING io_remote_version_xml       TYPE REF TO zcl_abapgit_xml_input
-      RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_comparison_result
-      RAISING   zcx_abapgit_exception.
-
-  DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
-
-ENDINTERFACE.                    "lif_object DEFINITION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_super DEFINITION
@@ -296,8 +248,8 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   cx_sy_create_object_error.
 
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
@@ -319,11 +271,11 @@ ENDCLASS.                    "lcl_objects_bridge DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_objects_bridge IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.  "lif_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~GET_METADATA')
       RECEIVING
@@ -331,7 +283,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
@@ -359,7 +311,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "constructor
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     CALL METHOD mo_plugin->('WRAP_SERIALIZE')
       EXPORTING
@@ -367,7 +319,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lx_plugin        TYPE REF TO cx_static_check.
 
@@ -381,7 +333,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.                    "lif_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     DATA lx_plugin TYPE REF TO cx_static_check.
 
     TRY.
@@ -392,7 +344,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~EXISTS')
       RECEIVING
@@ -400,7 +352,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~JUMP').
 
@@ -466,7 +418,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -1562,7 +1514,7 @@ CLASS lcl_objects_saxx_super DEFINITION ABSTRACT
 
   PUBLIC SECTION.
     INTERFACES:
-      lif_object.
+      zif_abapgit_object.
 
   PROTECTED SECTION.
     METHODS:
@@ -1610,11 +1562,11 @@ ENDCLASS.
 
 CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lr_data TYPE REF TO data.
 
@@ -1645,12 +1597,12 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: object_key TYPE seu_objkey.
 
@@ -1672,7 +1624,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lr_data             TYPE REF TO data.
 
@@ -1734,7 +1686,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_data TYPE REF TO data.
 
@@ -1756,8 +1708,8 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     TRY.
@@ -1793,7 +1745,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: object_key TYPE seu_objkey.
 
@@ -1814,7 +1766,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -1824,7 +1776,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -1942,7 +1894,7 @@ CLASS lcl_objects DEFINITION FINAL.
     TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_deserialization,
-             obj     TYPE REF TO lif_object,
+             obj     TYPE REF TO zif_abapgit_object,
              xml     TYPE REF TO zcl_abapgit_xml_input,
              package TYPE devclass,
              item    TYPE zif_abapgit_definitions=>ty_item,
@@ -2004,7 +1956,7 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_language    TYPE spras
                 is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
                 iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
+      RETURNING VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS
@@ -2035,7 +1987,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS compare_remote_to_local
       IMPORTING
-        io_object TYPE REF TO lif_object
+        io_object TYPE REF TO zif_abapgit_object
         it_remote TYPE zif_abapgit_definitions=>ty_files_tt
         is_result TYPE zif_abapgit_definitions=>ty_result
       RAISING

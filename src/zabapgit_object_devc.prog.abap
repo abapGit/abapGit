@@ -8,9 +8,9 @@ CLASS lcl_object_devc DEFINITION
 
   PUBLIC SECTION.
     INTERFACES:
-      lif_object.
+      zif_abapgit_object.
     ALIASES:
-      mo_files FOR lif_object~mo_files.
+      mo_files FOR zif_abapgit_object~mo_files.
     METHODS:
       constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
                             iv_language TYPE spras.
@@ -37,7 +37,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_package.
-    IF me->lif_object~exists( ) = abap_true.
+    IF me->zif_abapgit_object~exists( ) = abap_true.
       cl_package_factory=>load_package(
         EXPORTING
           i_package_name             = mv_local_devclass
@@ -59,15 +59,15 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = get_package( )->changed_by.
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     " Package deletion is a bit tricky. A package can only be deleted if there are no objects
     " contained in it. This includes subpackages, so first the leaf packages need to be deleted.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
@@ -75,7 +75,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     " -> Package deletion is currently not supported by abapGit
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
     DATA: li_package         TYPE REF TO if_package,
           ls_package_data    TYPE scompkdtln,
           ls_data_sign       TYPE scompksign,
@@ -238,7 +238,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     set_lock( ii_package = li_package iv_lock = abap_false ).
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     " Check remote package if deserialize has not been called before this
     IF mv_local_devclass IS INITIAL.
@@ -259,15 +259,15 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation           = 'SHOW'
@@ -283,7 +283,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
     DATA: ls_package_data TYPE scompkdtln,
           li_package      TYPE REF TO if_package,
           lt_intf_usages  TYPE tpak_permission_to_use_list,

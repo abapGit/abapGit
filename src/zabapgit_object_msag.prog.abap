@@ -10,8 +10,8 @@
 CLASS lcl_object_msag DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_t100_texts,
@@ -39,11 +39,11 @@ ENDCLASS.                    "lcl_object_msag DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_msag IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE lastuser FROM t100a INTO rv_user
       WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
@@ -53,11 +53,11 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_arbgb TYPE t100a-arbgb.
 
@@ -66,9 +66,9 @@ CLASS lcl_object_msag IMPLEMENTATION.
       WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -79,7 +79,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions
     CALL FUNCTION 'RS_DELETE_MESSAGE_ID'
@@ -96,7 +96,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 * fm RPY_MESSAGE_ID_INSERT almost works, but not in older versions
 
     DATA: ls_t100a  TYPE t100a,
@@ -178,7 +178,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_msg_id TYPE rglif-message_id,
           ls_inf    TYPE t100a,
@@ -298,7 +298,7 @@ CLASS lcl_object_msag IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

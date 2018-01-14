@@ -10,8 +10,8 @@
 CLASS lcl_object_ssst DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
     CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
 
   PRIVATE SECTION.
@@ -28,11 +28,11 @@ ENDCLASS.                    "lcl_object_ssst DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_ssst IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE lastuser FROM stxsadm INTO rv_user
       WHERE stylename = ms_item-obj_name.
@@ -42,12 +42,12 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_stylename TYPE stxsadm-stylename.
 
@@ -58,7 +58,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
         AND vari      = ''.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD validate_font.
 
@@ -73,7 +73,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.                    "validate_font
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 * see fm SSF_DOWNLOAD_STYLE
 
     DATA: lv_style_name TYPE tdssname,
@@ -132,7 +132,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 * see fm SSF_UPLOAD_STYLE
 
     DATA: ls_header     TYPE ssfcats,
@@ -198,7 +198,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_stylename TYPE tdssname.
 
@@ -224,7 +224,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_bcdata TYPE bdcdata,
           lt_bcdata TYPE STANDARD TABLE OF bdcdata.
@@ -260,7 +260,7 @@ CLASS lcl_object_ssst IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

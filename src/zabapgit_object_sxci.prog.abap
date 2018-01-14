@@ -5,7 +5,7 @@
 CLASS lcl_object_sxci DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_classic_badi_implementation,
@@ -29,25 +29,25 @@ ENDCLASS.
 
 CLASS lcl_object_sxci IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_implementation_name TYPE rsexscrn-imp_name.
 
@@ -65,7 +65,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_implementation_name         TYPE rsexscrn-imp_name,
           lv_exit_name                   TYPE rsexscrn-exit_name,
@@ -150,7 +150,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_badi_definition             TYPE badi_data,
           lo_filter_object               TYPE REF TO cl_badi_flt_struct,
@@ -231,7 +231,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_implementation_name TYPE rsexscrn-imp_name.
 
@@ -255,7 +255,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -274,7 +274,7 @@ CLASS lcl_object_sxci IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

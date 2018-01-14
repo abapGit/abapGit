@@ -8,8 +8,8 @@
 CLASS lcl_object_shi3 DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -36,11 +36,11 @@ ENDCLASS.                    "lcl_object_shi3 DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_shi3 IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_head TYPE ttree.
 
@@ -59,9 +59,9 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
     mv_tree_id = ms_item-obj_name.
   ENDMETHOD.                    "constructor
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD jump_se43.
 
@@ -101,7 +101,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "jump_se43
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_head TYPE ttree.
 
@@ -120,7 +120,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_msg    TYPE hier_mess,
           ls_header TYPE ttree,
@@ -137,9 +137,9 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
     rv_bool = boolc( ls_header-id IS NOT INITIAL ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     CALL FUNCTION 'BMENU_DELETE_TREE'
       EXPORTING
@@ -155,7 +155,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_msg    TYPE hier_mess,
           ls_head   TYPE ttree,
@@ -219,7 +219,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "strip_stamps
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_msg    TYPE hier_mess,
           ls_head   TYPE ttree,
@@ -239,8 +239,8 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TREE_TEXTS'
                   CHANGING  cg_data = lt_texts ).
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_SAVE'
@@ -267,7 +267,7 @@ CLASS lcl_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
