@@ -261,7 +261,7 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
     IF NOT io_dot IS INITIAL.
-      lv_path = lcl_folder_logic=>package_to_path(
+      lv_path = zcl_abapgit_folder_logic=>package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
         iv_package = iv_package ).
