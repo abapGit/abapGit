@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2018-01-14 v1.53.0
+------------------
++ SHI5 support
++ DSYS support
+* dropdown for selecting folder logic
+* more classes to global
+
 2018-01-11 v1.52.0
 ------------------
 + CUS0 + CUS1 + CUS2 support
