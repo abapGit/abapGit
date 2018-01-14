@@ -344,7 +344,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: li_obj   TYPE REF TO lif_object,
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
-          lo_files TYPE REF TO lcl_objects_files.
+          lo_files TYPE REF TO zcl_abapgit_objects_files.
 
 
     IF is_supported( is_item ) = abap_false.
@@ -429,7 +429,7 @@ CLASS lcl_objects IMPLEMENTATION.
           li_obj     TYPE REF TO lif_object,
           lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package TYPE devclass,
-          lo_files   TYPE REF TO lcl_objects_files,
+          lo_files   TYPE REF TO zcl_abapgit_objects_files,
           lo_xml     TYPE REF TO zcl_abapgit_xml_input,
           lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,

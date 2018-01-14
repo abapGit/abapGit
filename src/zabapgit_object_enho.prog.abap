@@ -29,7 +29,7 @@ CLASS lcl_object_enho_wdyc DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
@@ -140,7 +140,7 @@ CLASS lcl_object_enho_wdyn DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
@@ -271,13 +271,13 @@ CLASS lcl_object_enho_clif DEFINITION.
                   cx_enh_root,
       serialize
         IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_output
-                  io_files TYPE REF TO lcl_objects_files
+                  io_files TYPE REF TO zcl_abapgit_objects_files
                   io_clif  TYPE REF TO cl_enh_tool_clif
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS: serialize_includes
-      IMPORTING io_files TYPE REF TO lcl_objects_files
+      IMPORTING io_files TYPE REF TO zcl_abapgit_objects_files
                 io_clif  TYPE REF TO cl_enh_tool_clif
       RAISING   zcx_abapgit_exception.
 
@@ -431,7 +431,7 @@ CLASS lcl_object_enho_badi DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
@@ -552,7 +552,7 @@ CLASS lcl_object_enho_hook DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
 
     INTERFACES: lif_object_enho.
 
@@ -565,7 +565,7 @@ CLASS lcl_object_enho_hook DEFINITION.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA: mo_files TYPE REF TO lcl_objects_files.
+    DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
 
     METHODS hook_impl_deserialize
       IMPORTING it_spaces TYPE ty_spaces_tt
@@ -760,12 +760,12 @@ CLASS lcl_object_enho_intf DEFINITION.
       constructor
         IMPORTING
           is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO lcl_objects_files.
+          io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+          mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_interface DEFINITION
 
@@ -865,12 +865,12 @@ CLASS lcl_object_enho_class DEFINITION.
       constructor
         IMPORTING
           is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO lcl_objects_files.
+          io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA: mo_files TYPE REF TO lcl_objects_files.
+    DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_class DEFINITION
 
@@ -1005,12 +1005,12 @@ CLASS lcl_object_enho_fugr DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+          mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
