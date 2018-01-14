@@ -10,8 +10,8 @@
 CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
@@ -49,7 +49,7 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_clas IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     DATA:
       lt_includes TYPE seoincl_t.
 
@@ -65,13 +65,13 @@ CLASS lcl_object_clas IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDLOOP.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_includes,
              programm TYPE programm,
@@ -106,14 +106,14 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
     DATA: ls_class_key TYPE seoclskey.
     ls_class_key-clsname = ms_item-obj_name.
 
     rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation     = 'SHOW'
@@ -122,21 +122,21 @@ CLASS lcl_object_clas IMPLEMENTATION.
         in_new_window = abap_true.
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     DATA: ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
 
     mo_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lt_source    TYPE seop_source_string,
           ls_class_key TYPE seoclskey.
 
     ls_class_key-clsname = ms_item-obj_name.
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -265,7 +265,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_xml
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -396,7 +396,7 @@ CLASS lcl_object_clas IMPLEMENTATION.
     mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

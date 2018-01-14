@@ -11,8 +11,8 @@
 CLASS lcl_object_tabl DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -23,7 +23,7 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tabl IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     DATA: lv_date    TYPE dats,
           lv_time    TYPE tims,
@@ -76,9 +76,9 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_as4date TYPE dd02l-as4date,
           lv_as4time TYPE dd02l-as4time.
@@ -103,12 +103,12 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_tabname TYPE dd02l-tabname.
 
@@ -119,16 +119,16 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DDTYPE'
                iv_field = 'RSRD1-DDTYPE_VAL' ).
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_objname  TYPE rsedd0-ddobjname,
           lv_tabclass TYPE dd02l-tabclass,
@@ -171,7 +171,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name    TYPE ddobjname,
           ls_dd02v   TYPE dd02v,
@@ -347,7 +347,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_name      TYPE ddobjname,
           lv_tname     TYPE trobj_name,
@@ -456,14 +456,14 @@ CLASS lcl_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     DATA: lo_table_validation     TYPE REF TO lcl_object_tabl_valid,
           lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
           lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input,
           lv_validation_text      TYPE string.
 
     CREATE OBJECT lo_local_version_output.
-    me->lif_object~serialize( lo_local_version_output ).
+    me->zif_abapgit_object~serialize( lo_local_version_output ).
 
     CREATE OBJECT lo_local_version_input
       EXPORTING

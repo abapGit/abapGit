@@ -10,7 +10,7 @@
 CLASS lcl_object_sfsw DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     METHODS:
@@ -27,11 +27,11 @@ ENDCLASS.                    "lcl_object_sfsw DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sfsw IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_data TYPE sfw_switch.
 
@@ -45,12 +45,12 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_tadir     TYPE tadir,
           lv_switch_id TYPE sfw_switch_id.
@@ -69,7 +69,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
     ENDIF.
 
     rv_bool = abap_true.
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD get.
 
@@ -85,7 +85,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lo_switch    TYPE REF TO cl_sfw_sw,
           ls_header    TYPE sfw_switch,
@@ -95,7 +95,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
           lt_conflicts TYPE sfw_confl_outtab.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -130,7 +130,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lo_switch    TYPE REF TO cl_sfw_sw,
           lv_switch_id TYPE sfw_switch_id,
@@ -186,7 +186,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_switch_id TYPE sfw_switch_id,
           lo_switch    TYPE REF TO cl_sfw_sw.
@@ -203,7 +203,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -214,7 +214,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

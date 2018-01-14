@@ -10,7 +10,7 @@
 CLASS lcl_object_webi DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_webi,
@@ -62,15 +62,15 @@ ENDCLASS.                    "lcl_object_SFBS DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_webi IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "lif_object~changed_by
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_webi    TYPE ty_webi,
           lt_modilog TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
@@ -140,7 +140,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
     io_xml->add( iv_name = 'WEBI'
                  ig_data = ls_webi ).
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.                    "zif_abapgit_object~serialize
 
   METHOD handle_endpoint.
 
@@ -357,7 +357,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "handle_soap
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_webi   TYPE ty_webi,
           lv_name   TYPE vepname,
@@ -411,9 +411,9 @@ CLASS lcl_object_webi IMPLEMENTATION.
 
     lcl_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_name TYPE vepname,
           lo_vif  TYPE REF TO cl_ws_md_vif_root.
@@ -428,9 +428,9 @@ CLASS lcl_object_webi IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error deleting WEBI' ).
     ENDTRY.
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_name TYPE vepname.
 
@@ -441,9 +441,9 @@ CLASS lcl_object_webi IMPLEMENTATION.
       name      = lv_name
       i_version = sews_c_vif_version-active ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -452,13 +452,13 @@ CLASS lcl_object_webi IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

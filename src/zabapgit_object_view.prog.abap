@@ -10,8 +10,8 @@
 CLASS lcl_object_view DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
 ENDCLASS.                    "lcl_object_dtel DEFINITION
 
@@ -22,7 +22,7 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_view IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     DATA: lv_date TYPE dats,
           lv_time TYPE tims.
@@ -55,9 +55,9 @@ CLASS lcl_object_view IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE as4user FROM dd25l INTO rv_user
       WHERE viewname = ms_item-obj_name
@@ -67,14 +67,14 @@ CLASS lcl_object_view IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~changed_by
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_viewname TYPE dd25l-viewname,
           lv_ddl_view TYPE abap_bool.
@@ -101,16 +101,16 @@ CLASS lcl_object_view IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-VIMA'
                iv_field = 'RSRD1-VIMA_VAL' ).
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_objname TYPE rsedd0-ddobjname.
 
@@ -133,7 +133,7 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
@@ -218,7 +218,7 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
@@ -271,8 +271,8 @@ CLASS lcl_object_view IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
-  ENDMETHOD.                    "lif_object~compare_to_remote_version
+  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_view IMPLEMENTATION

@@ -222,7 +222,7 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       mo_fake_object_files       TYPE REF TO ltd_fake_object_files,
       mo_xml_input               TYPE REF TO zcl_abapgit_xml_input,
       mo_xml_out                 TYPE REF TO zcl_abapgit_xml_output,
-      mo_oo_object               TYPE REF TO lif_object,
+      mo_oo_object               TYPE REF TO zif_abapgit_object,
       ms_item                    TYPE zif_abapgit_definitions=>ty_item.
 
     METHODS: when_deserializing

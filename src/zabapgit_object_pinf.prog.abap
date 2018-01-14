@@ -10,7 +10,7 @@
 CLASS lcl_object_pinf DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_pinf,
@@ -47,11 +47,11 @@ ENDCLASS.                    "lcl_object_PINF DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_pinf IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE changed_by FROM intf INTO rv_user
       WHERE intf_name = ms_item-obj_name.
@@ -61,11 +61,11 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_pack_name TYPE intf-pack_name,
           lv_main_pack TYPE tdevc-mainpack.
@@ -81,9 +81,9 @@ CLASS lcl_object_pinf IMPLEMENTATION.
       rv_bool = boolc( sy-subrc = 0 ).
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_pinf      TYPE ty_pinf,
           lv_name      TYPE scomifnam,
@@ -138,7 +138,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: li_interface TYPE REF TO if_package_interface,
           ls_pinf      TYPE ty_pinf.
@@ -252,7 +252,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   METHOD create_or_load.
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       cl_package_interface=>create_new_package_interface(
         EXPORTING
           i_pkg_interface_name    = is_pinf-attributes-intf_name
@@ -308,7 +308,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_name      TYPE scomifnam,
           li_interface TYPE REF TO if_package_interface.
@@ -344,7 +344,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -355,7 +355,7 @@ CLASS lcl_object_pinf IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

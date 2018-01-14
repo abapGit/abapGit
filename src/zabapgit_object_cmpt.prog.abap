@@ -11,7 +11,7 @@ CLASS lcl_object_cmpt DEFINITION INHERITING FROM lcl_objects_super FINAL.
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     DATA: mo_cmp_db TYPE REF TO object.
@@ -35,13 +35,13 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: mi_cmp_template TYPE REF TO object.
 
@@ -63,14 +63,14 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: name TYPE c LENGTH 30.
 
@@ -90,7 +90,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lr_template TYPE REF TO data.
     FIELD-SYMBOLS: <template> TYPE any.
@@ -116,7 +116,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_template TYPE REF TO data.
     FIELD-SYMBOLS: <template> TYPE any.
@@ -161,7 +161,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: deleted TYPE abap_bool.
 
@@ -186,7 +186,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -204,7 +204,7 @@ CLASS lcl_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

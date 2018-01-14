@@ -1131,8 +1131,8 @@ ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
 CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -1154,19 +1154,19 @@ ENDCLASS.                    "lcl_object_enho DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_enho IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "lif_object~changed_by
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_enh_id TYPE enhname.
 
@@ -1181,16 +1181,16 @@ CLASS lcl_object_enho IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_enh_id   TYPE enhname,
           li_enho     TYPE REF TO lif_object_enho,
           li_enh_tool TYPE REF TO if_enh_tool.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -1254,14 +1254,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "factory
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_tool TYPE enhtooltype,
           li_enho TYPE REF TO lif_object_enho.
 
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
@@ -1276,7 +1276,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_enh_id     TYPE enhname,
           li_enh_object TYPE REF TO if_enh_object.
@@ -1296,7 +1296,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -1307,8 +1307,8 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
-  ENDMETHOD.                    "lif_object~compare_to_remote_version
+  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION

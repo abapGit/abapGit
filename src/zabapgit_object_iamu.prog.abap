@@ -10,8 +10,8 @@
 CLASS lcl_object_iamu DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_internet_appl_comp_binary,
@@ -52,25 +52,25 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_object_iamu IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_internet_appl_comp_binary TYPE ty_internet_appl_comp_binary.
 
@@ -81,7 +81,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_internet_appl_comp_binary TYPE ty_internet_appl_comp_binary.
 
@@ -97,7 +97,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     load_mime_api( ).
 
@@ -150,7 +150,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_mime_name TYPE iacikeym.
 
@@ -164,7 +164,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -174,7 +174,7 @@ CLASS lcl_object_iamu IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

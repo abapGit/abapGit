@@ -227,7 +227,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD exists.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     TRY.
@@ -249,7 +249,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: li_obj              TYPE REF TO lif_object,
+    DATA: li_obj              TYPE REF TO zif_abapgit_object,
           lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
@@ -272,7 +272,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD changed_by.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     IF is_item IS INITIAL.
@@ -318,7 +318,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete_obj.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     IF is_supported( is_item ) = abap_true.
@@ -342,7 +342,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: li_obj   TYPE REF TO lif_object,
+    DATA: li_obj   TYPE REF TO zif_abapgit_object,
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
@@ -426,7 +426,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_cancel  TYPE abap_bool,
-          li_obj     TYPE REF TO lif_object,
+          li_obj     TYPE REF TO zif_abapgit_object,
           lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package TYPE devclass,
           lo_files   TYPE REF TO zcl_abapgit_objects_files,
@@ -574,7 +574,7 @@ CLASS lcl_objects IMPLEMENTATION.
     DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
           lo_remote_version    TYPE REF TO zcl_abapgit_xml_input,
           lv_count             TYPE i,
-          lo_comparison_result TYPE REF TO lif_comparison_result.
+          lo_comparison_result TYPE REF TO zif_abapgit_comparison_result.
 
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.

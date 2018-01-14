@@ -8,8 +8,8 @@
 CLASS lcl_object_shi5 DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -43,23 +43,23 @@ CLASS lcl_object_shi5 IMPLEMENTATION.
 
   ENDMETHOD.                    "constructor
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( |TODO: Jump { ms_item-obj_type }| ).
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_extension_header TYPE ttree_ext.
 
@@ -71,9 +71,9 @@ CLASS lcl_object_shi5 IMPLEMENTATION.
 
     rv_bool = boolc( ls_extension_header IS NOT INITIAL ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: ls_message             TYPE hier_mess,
           lv_deletion_successful TYPE hier_yesno.
@@ -91,7 +91,7 @@ CLASS lcl_object_shi5 IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_extension TYPE ty_extension.
 
@@ -110,7 +110,7 @@ CLASS lcl_object_shi5 IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     " We cannot use STREE_EXTENSION_NAME_CREATE
     " the create logic is directly tied to the UI
@@ -132,7 +132,7 @@ CLASS lcl_object_shi5 IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

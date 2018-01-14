@@ -8,8 +8,8 @@
 CLASS lcl_object_dsys DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -50,23 +50,23 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.                    "constructor
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = read( )-head-tdluser.
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'DSYS_SHOW'
       EXPORTING
@@ -83,7 +83,7 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     SELECT SINGLE object FROM dokil INTO mv_object
            WHERE id   = c_id
@@ -91,9 +91,9 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     CALL FUNCTION 'DOCU_DEL'
       EXPORTING
@@ -111,7 +111,7 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_data   TYPE ty_data.
 
@@ -131,7 +131,7 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_data TYPE ty_data.
 
@@ -151,7 +151,7 @@ CLASS lcl_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

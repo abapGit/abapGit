@@ -20,7 +20,7 @@ CLASS lcl_tabl_valid_dialog DEFINITION FINAL.
       constructor
         IMPORTING
           iv_message TYPE string.
-    INTERFACES: lif_comparison_result.
+    INTERFACES: zif_abapgit_comparison_result.
 
   PRIVATE SECTION.
     DATA mv_message TYPE string.
@@ -65,11 +65,11 @@ CLASS lcl_tabl_valid_dialog IMPLEMENTATION.
     mv_message = iv_message.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~is_result_complete_halt.
+  METHOD zif_abapgit_comparison_result~is_result_complete_halt.
     rv_response = mv_halt.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~show_confirmation_dialog.
+  METHOD zif_abapgit_comparison_result~show_confirmation_dialog.
     DATA lv_answer TYPE string.
     TRY.
         lv_answer = lcl_popups=>popup_to_confirm(

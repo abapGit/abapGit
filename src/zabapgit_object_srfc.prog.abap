@@ -6,32 +6,32 @@
 CLASS lcl_object_srfc DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
 ENDCLASS.
 
 CLASS lcl_object_srfc IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
           lo_srfc_persist TYPE REF TO if_wb_object_persist.
@@ -55,7 +55,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lo_object_data  TYPE REF TO if_wb_object_data_model,
           lo_srfc_persist TYPE REF TO if_wb_object_persist,
@@ -93,7 +93,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
           lo_object_data  TYPE REF TO if_wb_object_data_model,
@@ -130,7 +130,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lo_srfc_persist TYPE REF TO if_wb_object_persist,
           lx_error        TYPE REF TO cx_root,
@@ -150,7 +150,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -169,7 +169,7 @@ CLASS lcl_object_srfc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 
