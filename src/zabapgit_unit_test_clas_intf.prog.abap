@@ -157,7 +157,8 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
 ENDCLASS.
 
 CLASS ltd_fake_object_files DEFINITION FOR TESTING
-  INHERITING FROM  lcl_objects_files.
+  INHERITING FROM zcl_abapgit_objects_files.
+
   PUBLIC SECTION.
     METHODS constructor.
     METHODS add_abap REDEFINITION.
