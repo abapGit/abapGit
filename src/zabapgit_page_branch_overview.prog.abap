@@ -323,7 +323,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
                             ASSIGNING <ls_commit>.
       CHECK sy-subrc = 0.
 
-      lv_tag = lcl_tag=>remove_tag_prefix( <ls_tag>-name ).
+      lv_tag = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
       INSERT lv_tag INTO TABLE <ls_commit>-tags.
 
     ENDLOOP.

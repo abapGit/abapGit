@@ -341,7 +341,7 @@ CLASS lcl_popups IMPLEMENTATION.
       READ TABLE lt_fields WITH KEY fieldname = 'LINE'
                            ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
-      ev_name = lcl_tag=>add_tag_prefix( <ls_field>-value ).
+      ev_name = zcl_abapgit_tag=>add_tag_prefix( <ls_field>-value ).
     ENDIF.
 
   ENDMETHOD.
@@ -598,7 +598,7 @@ CLASS lcl_popups IMPLEMENTATION.
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
         INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-        <ls_sel>-varoption = lcl_tag=>remove_tag_prefix( <ls_tag>-name ).
+        <ls_sel>-varoption = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
 
       ENDLOOP.
 
@@ -628,7 +628,7 @@ CLASS lcl_popups IMPLEMENTATION.
       READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
       ASSERT sy-subrc = 0.
 
-      lv_name_with_prefix = lcl_tag=>add_tag_prefix( <ls_sel>-varoption ).
+      lv_name_with_prefix = zcl_abapgit_tag=>add_tag_prefix( <ls_sel>-varoption ).
 
       READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
       ASSERT sy-subrc = 0.
@@ -639,7 +639,7 @@ CLASS lcl_popups IMPLEMENTATION.
 
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
-        <ls_tag>-name = lcl_tag=>remove_tag_prefix( <ls_tag>-name ).
+        <ls_tag>-name = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
         <ls_tag>-sha1 = <ls_tag>-sha1(7).
 
       ENDLOOP.
