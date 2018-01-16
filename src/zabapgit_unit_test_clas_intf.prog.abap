@@ -157,7 +157,8 @@ CLASS ltd_spy_oo_object IMPLEMENTATION.
 ENDCLASS.
 
 CLASS ltd_fake_object_files DEFINITION FOR TESTING
-  INHERITING FROM  lcl_objects_files.
+  INHERITING FROM zcl_abapgit_objects_files.
+
   PUBLIC SECTION.
     METHODS constructor.
     METHODS add_abap REDEFINITION.
@@ -219,10 +220,11 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
     DATA:
       mo_spy_oo_object_functions TYPE REF TO ltd_spy_oo_object,
       mo_fake_object_files       TYPE REF TO ltd_fake_object_files,
-      mo_xml_input               TYPE REF TO lcl_xml_input,
-      mo_xml_out                 TYPE REF TO lcl_xml_output,
-      mo_oo_object               TYPE REF TO lif_object,
+      mo_xml_input               TYPE REF TO zcl_abapgit_xml_input,
+      mo_xml_out                 TYPE REF TO zcl_abapgit_xml_output,
+      mo_oo_object               TYPE REF TO zif_abapgit_object,
       ms_item                    TYPE zif_abapgit_definitions=>ty_item.
+
     METHODS: when_deserializing
       RAISING
         zcx_abapgit_exception,
@@ -247,6 +249,7 @@ CLASS ltc_oo_test DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       should_serialize_with_obj_key.
 
 ENDCLASS.
+
 CLASS ltc_oo_test IMPLEMENTATION.
 
   METHOD should_serialize_with_obj_key.

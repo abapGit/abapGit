@@ -6,11 +6,11 @@ CLASS lcl_services_db DEFINITION FINAL.
   PUBLIC SECTION.
 
     CLASS-METHODS delete
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS update
-      IMPORTING is_content TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_content TYPE zif_abapgit_persistence=>ty_content
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS. "lcl_services_db
@@ -38,7 +38,7 @@ CLASS lcl_services_db IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_app=>db( )->delete(
+    zcl_abapgit_persistence_db=>get_instance( )->delete(
       iv_type  = is_key-type
       iv_value = is_key-value ).
 
@@ -50,7 +50,7 @@ CLASS lcl_services_db IMPLEMENTATION.
 
     ASSERT is_content-type IS NOT INITIAL.
 
-    lcl_app=>db( )->update(
+    zcl_abapgit_persistence_db=>get_instance( )->update(
       iv_type  = is_content-type
       iv_value = is_content-value
       iv_data  = is_content-data_str ).

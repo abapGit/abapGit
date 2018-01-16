@@ -3,18 +3,21 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZABAPGIT_UTIL</NAME>
+    <NAME>ZABAPGIT_OBJECT_CUS0</NAME>
     <STATE>A</STATE>
     <VARCL>X</VARCL>
+    <DBAPL>S</DBAPL>
+    <DBNA>D$</DBNA>
     <SUBC>I</SUBC>
-    <RLOAD>E</RLOAD>
+    <FIXPT>X</FIXPT>
+    <LDBNAME>D$S</LDBNAME>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>
     <item>
      <ID>R</ID>
-     <ENTRY>Include ZABAPGIT_UTIL</ENTRY>
-     <LENGTH>21</LENGTH>
+     <ENTRY>ZABAPGIT_OBJECT_CUS0</ENTRY>
+     <LENGTH>20</LENGTH>
     </item>
    </TPOOL>
   </asx:values>

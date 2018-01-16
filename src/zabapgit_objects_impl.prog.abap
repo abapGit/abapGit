@@ -93,12 +93,12 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD update_package_tree.
 
-    DATA: lt_packages TYPE lif_sap_package=>ty_devclass_tt,
+    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_package  LIKE LINE OF lt_packages,
           lv_tree     TYPE dirtree-tname.
 
 
-    lt_packages = lcl_sap_package=>get( iv_package )->list_subpackages( ).
+    lt_packages = zcl_abapgit_sap_package=>get( iv_package )->list_subpackages( ).
     APPEND iv_package TO lt_packages.
 
     LOOP AT lt_packages INTO lv_package.
@@ -146,7 +146,7 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = class_name( is_item ).
     ENDIF.
 
-    IF lcl_app=>settings( )->read( )->get_experimental_features( ) = abap_true
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true
         AND is_item-obj_type = 'CLAS'.
       lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
     ENDIF.
@@ -228,7 +228,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD exists.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     TRY.
@@ -250,13 +250,13 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: li_obj              TYPE REF TO lif_object,
+    DATA: li_obj              TYPE REF TO zif_abapgit_object,
           lv_adt_jump_enabled TYPE abap_bool.
 
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>gc_english ).
 
-    lv_adt_jump_enabled = lcl_app=>settings( )->read( )->get_adt_jump_enabled( ).
+    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
 
     IF lv_adt_jump_enabled = abap_true.
       TRY.
@@ -273,7 +273,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD changed_by.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     IF is_item IS INITIAL.
@@ -294,7 +294,7 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD delete.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_tabclass TYPE dd02l-tabclass,
+*          lv_tabclass TYPE dd02l-tabclass,
           lt_tadir    LIKE it_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -304,10 +304,10 @@ CLASS lcl_objects IMPLEMENTATION.
     zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      lcl_progress=>show( iv_key     = 'Delete'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_tadir )
-                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Delete'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_tadir )
+                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
@@ -319,7 +319,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD delete_obj.
 
-    DATA: li_obj TYPE REF TO lif_object.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
 
     IF is_supported( is_item ) = abap_true.
@@ -343,9 +343,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: li_obj   TYPE REF TO lif_object,
-          lo_xml   TYPE REF TO lcl_xml_output,
-          lo_files TYPE REF TO lcl_objects_files.
+    DATA: li_obj   TYPE REF TO zif_abapgit_object,
+          lo_xml   TYPE REF TO zcl_abapgit_xml_output,
+          lo_files TYPE REF TO zcl_abapgit_objects_files.
 
 
     IF is_supported( is_item ) = abap_false.
@@ -427,11 +427,11 @@ CLASS lcl_objects IMPLEMENTATION.
 
     DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_cancel  TYPE abap_bool,
-          li_obj     TYPE REF TO lif_object,
+          li_obj     TYPE REF TO zif_abapgit_object,
           lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package TYPE devclass,
-          lo_files   TYPE REF TO lcl_objects_files,
-          lo_xml     TYPE REF TO lcl_xml_input,
+          lo_files   TYPE REF TO zcl_abapgit_objects_files,
+          lo_xml     TYPE REF TO zcl_abapgit_xml_input,
           lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_ddic    TYPE TABLE OF ty_deserialization,
           lt_rest    TYPE TABLE OF ty_deserialization,
@@ -460,10 +460,10 @@ CLASS lcl_objects IMPLEMENTATION.
 
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
         AND NOT ( lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL ).
-      lcl_progress=>show( iv_key     = 'Deserialize'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_results )
-                          iv_text    = <ls_result>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Deserialize'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_results )
+                                  iv_text    = <ls_result>-obj_name ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -471,7 +471,7 @@ CLASS lcl_objects IMPLEMENTATION.
 * handle namespaces
       REPLACE ALL OCCURRENCES OF '#' IN ls_item-obj_name WITH '/'.
 
-      lv_package = lcl_folder_logic=>path_to_package(
+      lv_package = zcl_abapgit_folder_logic=>path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
@@ -553,10 +553,10 @@ CLASS lcl_objects IMPLEMENTATION.
     lcl_objects_activation=>clear( ).
 
     LOOP AT it_objects ASSIGNING <ls_obj>.
-      lcl_progress=>show( iv_key     = |Deserialize { iv_descr }|
-                          iv_current = sy-tabix
-                          iv_total   = lines( it_objects )
-                          iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = |Deserialize { iv_descr }|
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( it_objects )
+                                  iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
 
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
                                  io_xml     = <ls_obj>-xml ).
@@ -573,9 +573,9 @@ CLASS lcl_objects IMPLEMENTATION.
 * only the main XML file is used for comparison
 
     DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
-          lo_remote_version    TYPE REF TO lcl_xml_input,
+          lo_remote_version    TYPE REF TO zcl_abapgit_xml_input,
           lv_count             TYPE i,
-          lo_comparison_result TYPE REF TO lif_comparison_result.
+          lo_comparison_result TYPE REF TO zif_abapgit_comparison_result.
 
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
@@ -591,7 +591,7 @@ CLASS lcl_objects IMPLEMENTATION.
       IF sy-subrc = 0.
         CREATE OBJECT lo_remote_version
           EXPORTING
-            iv_xml = lcl_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+            iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
         lo_comparison_result = io_object->compare_to_remote_version( lo_remote_version ).
         lo_comparison_result->show_confirmation_dialog( ).
 

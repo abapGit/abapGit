@@ -10,8 +10,8 @@
 CLASS lcl_object_auth DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
 ENDCLASS.                    "lcl_object_auth DEFINITION
 
@@ -22,20 +22,20 @@ ENDCLASS.                    "lcl_object_auth DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_auth IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.  "lif_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_authx TYPE authx.
 
@@ -51,7 +51,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 * see include LSAUT_FIELDF02
 
     DATA: ls_authx TYPE authx,
@@ -77,7 +77,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_fieldname TYPE authx-fieldname.
 
@@ -101,7 +101,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_fieldname TYPE authx-fieldname.
 
@@ -113,7 +113,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: field TYPE fieldname.
 
@@ -126,7 +126,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

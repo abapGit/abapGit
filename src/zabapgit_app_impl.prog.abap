@@ -16,21 +16,6 @@ CLASS lcl_app IMPLEMENTATION.
 
   ENDMETHOD.      "gui
 
-  METHOD user.
-
-    IF iv_user = sy-uname ##USER_OK.
-      IF go_current_user IS NOT BOUND.
-        CREATE OBJECT go_current_user.
-      ENDIF.
-      ro_user = go_current_user.
-    ELSE.
-      CREATE OBJECT ro_user
-        EXPORTING
-          iv_user = iv_user.
-    ENDIF.
-
-  ENDMETHOD.      "user
-
   METHOD repo_srv.
 
     IF go_repo_srv IS NOT BOUND.
@@ -39,22 +24,6 @@ CLASS lcl_app IMPLEMENTATION.
     ro_repo_srv = go_repo_srv.
 
   ENDMETHOD.      "repo_srv
-
-  METHOD db.
-
-    IF go_db IS NOT BOUND.
-      CREATE OBJECT go_db.
-    ENDIF.
-    ro_db = go_db.
-
-  ENDMETHOD.      "repo_srv
-
-  METHOD settings.
-    IF go_settings IS NOT BOUND.
-      CREATE OBJECT go_settings.
-    ENDIF.
-    ro_settings = go_settings.
-  ENDMETHOD.
 
   METHOD proxy.
     IF go_proxy IS NOT BOUND.

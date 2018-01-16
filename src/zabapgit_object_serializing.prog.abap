@@ -10,6 +10,9 @@ INCLUDE zabapgit_object_oo_functions.
 INCLUDE zabapgit_object_clas.
 INCLUDE zabapgit_object_clas_new.
 INCLUDE zabapgit_object_cmpt.
+INCLUDE zabapgit_object_cus0.
+INCLUDE zabapgit_object_cus1.
+INCLUDE zabapgit_object_cus2.
 INCLUDE zabapgit_object_dcls.
 INCLUDE zabapgit_object_ddls.
 INCLUDE zabapgit_object_ddlx.
@@ -19,6 +22,7 @@ INCLUDE zabapgit_object_doct.
 INCLUDE zabapgit_object_docv.
 INCLUDE zabapgit_object_doma.
 INCLUDE zabapgit_object_dtel.
+INCLUDE zabapgit_object_dsys.
 INCLUDE zabapgit_object_enho.
 INCLUDE zabapgit_object_enhs.
 INCLUDE zabapgit_object_enqu.
@@ -45,6 +49,8 @@ INCLUDE zabapgit_object_sfpf.
 INCLUDE zabapgit_object_sfpi.
 INCLUDE zabapgit_object_sfsw.
 INCLUDE zabapgit_object_shi3.
+INCLUDE zabapgit_object_shi5.
+INCLUDE zabapgit_object_shi8.
 INCLUDE zabapgit_object_shlp.
 INCLUDE zabapgit_object_shma.
 INCLUDE zabapgit_object_sicf.

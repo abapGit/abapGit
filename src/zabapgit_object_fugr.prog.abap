@@ -10,8 +10,8 @@
 CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY.
@@ -55,11 +55,11 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING   zcx_abapgit_exception.
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_xml
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
@@ -67,7 +67,7 @@ CLASS lcl_object_fugr DEFINITION INHERITING FROM lcl_objects_program FINAL.
       RAISING zcx_abapgit_exception.
 
     METHODS deserialize_includes
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
@@ -85,7 +85,7 @@ ENDCLASS.                    "lcl_object_fugr DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_fugr IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     DATA: lt_functab  TYPE ty_rs38l_incl_tt,
           lt_includes TYPE rso_t_objnm.
@@ -115,9 +115,9 @@ CLASS lcl_object_fugr IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_stamps,
              user TYPE xubname,
@@ -184,11 +184,11 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_pool  TYPE tlibg-area.
 
@@ -201,7 +201,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
         pool_not_exists = 1.
     rv_bool = boolc( sy-subrc <> 1 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD deserialize_functions.
 
@@ -299,7 +299,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_includes.
 
-    DATA: lo_xml       TYPE REF TO lcl_xml_input,
+    DATA: lo_xml       TYPE REF TO zcl_abapgit_xml_input,
           ls_progdir   TYPE ty_progdir,
           lt_includes  TYPE rso_t_objnm,
           lt_tpool     TYPE textpool_table,
@@ -718,7 +718,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
 * function group SEUF
 * function group SIFP
@@ -730,7 +730,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
           lt_dynpros      TYPE ty_dynpro_tt,
           ls_cua          TYPE ty_cua.
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -757,7 +757,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_program_name TYPE programm,
           lt_functions    TYPE ty_function_tt,
@@ -790,7 +790,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_area TYPE rs38l-area.
 
@@ -819,7 +819,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -830,7 +830,7 @@ CLASS lcl_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

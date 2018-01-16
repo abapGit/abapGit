@@ -10,8 +10,8 @@
 CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -33,10 +33,10 @@ CLASS lcl_object_doma DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
     METHODS:
       serialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
       deserialize_texts
-        IMPORTING io_xml   TYPE REF TO lcl_xml_input
+        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
                   is_dd01v TYPE dd01v
                   it_dd07v TYPE dd07v_tab
         RAISING   zcx_abapgit_exception.
@@ -50,7 +50,7 @@ ENDCLASS.                    "lcl_object_doma DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_doma IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     DATA: lv_date TYPE dats,
           lv_time TYPE tims.
@@ -76,9 +76,9 @@ CLASS lcl_object_doma IMPLEMENTATION.
       iv_date      = lv_date
       iv_time      = lv_time ).
 
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     IF lcl_objects_store=>active( ).
       FIELD-SYMBOLS: <st_line> TYPE dd01l.
@@ -100,12 +100,12 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_domname TYPE dd01l-domname.
 
@@ -121,16 +121,16 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DOMA'
                iv_field = 'RSRD1-DOMA_VAL' ).
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 * see class CL_WB_DDIC
 
     DATA: lv_objname TYPE rsedd0-ddobjname.
@@ -154,7 +154,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name    TYPE ddobjname,
           ls_dd01v   TYPE dd01v,
@@ -206,7 +206,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
 * package SEDD
 * package SDIC
@@ -390,7 +390,7 @@ CLASS lcl_object_doma IMPLEMENTATION.
 
   ENDMETHOD.  "deserialize_texts
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

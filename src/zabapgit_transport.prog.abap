@@ -32,7 +32,7 @@ CLASS lcl_transport IMPLEMENTATION.
     DATA: lt_requests TYPE trwbo_requests,
           lt_tadir    TYPE scts_tadir,
           lv_package  TYPE devclass,
-          ls_data     TYPE lcl_persistence_repo=>ty_repo,
+          ls_data     TYPE zcl_abapgit_persistence_repo=>ty_repo,
           lo_repo     TYPE REF TO lcl_repo_offline,
           lt_trkorr   TYPE trwbo_request_headers.
 
@@ -55,7 +55,7 @@ CLASS lcl_transport IMPLEMENTATION.
 
     ls_data-key         = 'TZIP'.
     ls_data-package     = lv_package.
-    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
+    ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
     CREATE OBJECT lo_repo
       EXPORTING
@@ -80,8 +80,8 @@ CLASS lcl_transport IMPLEMENTATION.
   METHOD find_top_package.
 * assumption: all objects in transport share a common super package
 
-    DATA: lt_obj   TYPE lif_sap_package=>ty_devclass_tt,
-          lt_super TYPE lif_sap_package=>ty_devclass_tt,
+    DATA: lt_obj   TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lt_super TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lv_super LIKE LINE OF lt_super,
           lv_index TYPE i.
 
@@ -90,10 +90,10 @@ CLASS lcl_transport IMPLEMENTATION.
 
     READ TABLE it_tadir INDEX 1 ASSIGNING <ls_tadir>.
     ASSERT sy-subrc = 0.
-    lt_super = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+    lt_super = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      lt_obj = lcl_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+      lt_obj = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
 
 * filter out possibilities from lt_super
       LOOP AT lt_super INTO lv_super.
@@ -184,7 +184,7 @@ CLASS lcl_transport_objects DEFINITION.
         it_transport_objects TYPE scts_tadir.
     METHODS to_stage
       IMPORTING
-        io_stage           TYPE REF TO lcl_stage
+        io_stage           TYPE REF TO zcl_abapgit_stage
         is_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files
         it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -275,7 +275,7 @@ CLASS lcl_transport_2_branch DEFINITION.
     METHODS stage_transport_objects
       IMPORTING
         it_transport_objects TYPE scts_tadir
-        io_stage             TYPE REF TO lcl_stage
+        io_stage             TYPE REF TO zcl_abapgit_stage
         is_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files
         it_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -288,12 +288,12 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
     DATA:
       lv_branch_name     TYPE string,
       ls_comment         TYPE zif_abapgit_definitions=>ty_comment,
-      lo_stage           TYPE REF TO lcl_stage,
+      lo_stage           TYPE REF TO zcl_abapgit_stage,
       ls_stage_objects   TYPE zif_abapgit_definitions=>ty_stage_files,
       lt_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    lv_branch_name = lcl_git_branch_list=>complete_heads_branch_name(
-        lcl_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
+    lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
+        zcl_abapgit_git_branch_list=>normalize_branch_name( is_transport_to_branch-branch_name ) ).
 
     create_new_branch(
       io_repository  = io_repository

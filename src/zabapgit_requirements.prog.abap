@@ -29,22 +29,22 @@ CLASS lcl_requirement_helper DEFINITION FINAL.
       "! @parameter it_requirements | The requirements to check
       "! @parameter iv_show_popup | Show popup with requirements
       "! @raising zcx_abapgit_exception | Cancelled by user or internal error
-      check_requirements IMPORTING it_requirements TYPE lcl_dot_abapgit=>ty_requirement_tt
+      check_requirements IMPORTING it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
                                    iv_show_popup   TYPE abap_bool DEFAULT abap_true
                          RAISING   zcx_abapgit_exception,
       "! Get a table with information about each requirement
       "! @parameter it_requirements | Requirements
       "! @parameter rt_status | Result
       "! @raising zcx_abapgit_exception | Internal error
-      get_requirement_met_status IMPORTING it_requirements  TYPE lcl_dot_abapgit=>ty_requirement_tt
-                                 RETURNING value(rt_status) TYPE ty_requirement_status_tt
+      get_requirement_met_status IMPORTING it_requirements  TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
+                                 RETURNING VALUE(rt_status) TYPE ty_requirement_status_tt
                                  RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-METHODS:
       show_requirement_popup IMPORTING it_requirements TYPE ty_requirement_status_tt
                              RAISING   zcx_abapgit_exception,
       version_greater_or_equal IMPORTING is_status      TYPE ty_requirement_status
-                               RETURNING value(rv_true) TYPE abap_bool.
+                               RETURNING VALUE(rv_true) TYPE abap_bool.
 ENDCLASS.                    "lcl_requirement_helper DEFINITION
 
 *----------------------------------------------------------------------*
@@ -80,10 +80,13 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
   ENDMETHOD.                    "check_requirements
 
   METHOD get_requirement_met_status.
+
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
-    FIELD-SYMBOLS: <ls_requirement>    TYPE lcl_dot_abapgit=>ty_requirement,
+
+    FIELD-SYMBOLS: <ls_requirement>    TYPE zif_abapgit_dot_abapgit=>ty_requirement,
                    <ls_status>         TYPE ty_requirement_status,
                    <ls_installed_comp> TYPE cvers_sdu.
+
 
     CALL FUNCTION 'DELIVERY_GET_INSTALLED_COMPS'
       TABLES
@@ -148,7 +151,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
 
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-            INCLUDE TYPE ty_requirement_status.
+        INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line,
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
@@ -161,7 +164,7 @@ CLASS lcl_requirement_helper IMPLEMENTATION.
           ls_color          TYPE lvc_s_scol,
           lx_ex             TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_line> TYPE lty_color_line,
+    FIELD-SYMBOLS: <ls_line>        TYPE lty_color_line,
                    <ls_requirement> LIKE LINE OF it_requirements.
 
 

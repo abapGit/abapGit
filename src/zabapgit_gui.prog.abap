@@ -23,11 +23,11 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_page_stack,
-             page     TYPE REF TO lif_gui_page,
+             page     TYPE REF TO zif_abapgit_gui_page,
              bookmark TYPE abap_bool,
            END OF ty_page_stack.
 
-    DATA: mi_cur_page    TYPE REF TO lif_gui_page,
+    DATA: mi_cur_page    TYPE REF TO zif_abapgit_gui_page,
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
           mo_router      TYPE REF TO lcl_gui_router,
           mo_asset_man   TYPE REF TO lcl_gui_asset_manager,
@@ -58,7 +58,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RETURNING VALUE(rv_page_name) TYPE string.
 
     METHODS call_page
-      IMPORTING ii_page          TYPE REF TO lif_gui_page
+      IMPORTING ii_page          TYPE REF TO zif_abapgit_gui_page
                 iv_with_bookmark TYPE abap_bool DEFAULT abap_false
                 iv_replacing     TYPE abap_bool DEFAULT abap_false
       RAISING   zcx_abapgit_exception.
@@ -86,7 +86,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD handle_action.
 
     DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-          li_page      TYPE REF TO lif_gui_page,
+          li_page      TYPE REF TO zif_abapgit_gui_page,
           lv_state     TYPE i.
 
     TRY.
@@ -252,7 +252,7 @@ CLASS lcl_gui IMPLEMENTATION.
   METHOD render.
 
     DATA: lv_url  TYPE w3url,
-          lo_html TYPE REF TO lcl_html.
+          lo_html TYPE REF TO zcl_abapgit_html.
 
     lo_html = mi_cur_page->render( ).
     lv_url  = cache_html( lo_html->render( iv_no_indent_jscss = abap_true ) ).

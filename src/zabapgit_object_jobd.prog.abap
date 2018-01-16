@@ -5,7 +5,7 @@
 CLASS lcl_object_jobd DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     TYPES: ty_jd_name TYPE c LENGTH 32.
@@ -14,26 +14,26 @@ ENDCLASS.
 
 CLASS lcl_object_jobd IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: jd_name TYPE ty_jd_name.
 
@@ -52,7 +52,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
@@ -106,7 +106,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_job_definition TYPE REF TO data,
           lo_job_definition TYPE REF TO object,
@@ -149,7 +149,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lo_job_definition TYPE REF TO object,
           jd_name           TYPE c LENGTH 32.
@@ -169,7 +169,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: obj_name TYPE e071-obj_name.
 
@@ -191,7 +191,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

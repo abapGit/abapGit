@@ -10,7 +10,7 @@
 CLASS lcl_object_vcls DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
 * See include MTOBJCON:
@@ -26,19 +26,19 @@ ENDCLASS.                    "lcl_object_vcls DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_vcls IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA lv_changedate TYPE vcldir-changedate.
 
@@ -52,9 +52,9 @@ CLASS lcl_object_vcls IMPLEMENTATION.
       rv_bool = abap_false.
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_vclname      TYPE vcl_name,
           ls_vcldir_entry TYPE v_vcldir,
@@ -63,7 +63,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
           lt_vclmf        TYPE TABLE OF v_vclmf.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -99,7 +99,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_vcldir_entry TYPE v_vcldir,
           lt_vclstruc     TYPE TABLE OF v_vclstruc,
@@ -147,7 +147,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 * Do the same as in VIEWCLUSTER_SAVE_DEFINITION
     DATA: lv_vclname TYPE vcl_name.
 
@@ -163,7 +163,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: lv_vclname      TYPE  vcl_name.
 
@@ -195,7 +195,7 @@ CLASS lcl_object_vcls IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

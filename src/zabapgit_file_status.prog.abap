@@ -15,7 +15,7 @@ CLASS lcl_file_status DEFINITION FINAL
 
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO lcl_repo
-                io_log            TYPE REF TO lcl_log OPTIONAL
+                io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
 
@@ -24,16 +24,16 @@ CLASS lcl_file_status DEFINITION FINAL
     CLASS-METHODS:
       calculate_status
         IMPORTING iv_devclass       TYPE devclass
-                  io_dot            TYPE REF TO lcl_dot_abapgit
+                  io_dot            TYPE REF TO zcl_abapgit_dot_abapgit
                   it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
                   it_remote         TYPE zif_abapgit_definitions=>ty_files_tt
                   it_cur_state      TYPE zif_abapgit_definitions=>ty_file_signatures_tt
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       run_checks
-        IMPORTING io_log     TYPE REF TO lcl_log
+        IMPORTING io_log     TYPE REF TO zcl_abapgit_log
                   it_results TYPE zif_abapgit_definitions=>ty_results_tt
-                  io_dot     TYPE REF TO lcl_dot_abapgit
+                  io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_top     TYPE devclass
         RAISING   zcx_abapgit_exception,
       build_existing
@@ -46,7 +46,7 @@ CLASS lcl_file_status DEFINITION FINAL
         RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result,
       build_new_remote
         IMPORTING iv_devclass      TYPE devclass
-                  io_dot           TYPE REF TO lcl_dot_abapgit
+                  io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
                   is_remote        TYPE zif_abapgit_definitions=>ty_file
                   it_items         TYPE zif_abapgit_definitions=>ty_items_ts
                   it_state         TYPE zif_abapgit_definitions=>ty_file_signatures_ts
@@ -56,7 +56,7 @@ CLASS lcl_file_status DEFINITION FINAL
         IMPORTING iv_filename TYPE string
                   iv_path     TYPE string
                   iv_devclass TYPE devclass
-                  io_dot      TYPE REF TO lcl_dot_abapgit
+                  io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
         EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
                   ev_is_xml   TYPE abap_bool
         RAISING   zcx_abapgit_exception.
@@ -117,9 +117,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Check that objects are created in package corresponding to folder
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = lcl_folder_logic=>package_to_path( iv_top     = iv_top
-                                                   io_dot     = io_dot
-                                                   iv_package = <ls_res1>-package ).
+      lv_path = zcl_abapgit_folder_logic=>package_to_path(
+        iv_top     = iv_top
+        io_dot     = io_dot
+        iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
         io_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
@@ -152,7 +153,7 @@ CLASS lcl_file_status IMPLEMENTATION.
   METHOD status.
 
     DATA: lv_index        LIKE sy-tabix,
-          lo_dot_abapgit  TYPE REF TO lcl_dot_abapgit.
+          lo_dot_abapgit  TYPE REF TO zcl_abapgit_dot_abapgit.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
@@ -281,9 +282,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = lcl_folder_logic=>path_to_package( iv_top  = iv_devclass
-                                                   io_dot  = io_dot
-                                                   iv_path = iv_path ).
+      lv_name = zcl_abapgit_folder_logic=>path_to_package(
+        iv_top  = iv_devclass
+        io_dot  = io_dot
+        iv_path = iv_path ).
     ENDIF.
 
     CLEAR es_item.

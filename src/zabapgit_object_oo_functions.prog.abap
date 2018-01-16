@@ -501,7 +501,7 @@ CLASS lcl_oo_base IMPLEMENTATION.
         result                    = lo_settings.
 
     CREATE DATA lr_settings TYPE REF TO ('IF_OO_CLIF_SOURCE_SETTINGS').
-    ASSIGN lr_settings->* to <lo_settings>.
+    ASSIGN lr_settings->* TO <lo_settings>.
 
     <lo_settings> ?= lo_settings.
 

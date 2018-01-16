@@ -8,13 +8,13 @@ INTERFACE lif_object_enhs.
 
   METHODS:
     deserialize
-      IMPORTING io_xml           TYPE REF TO lcl_xml_input
+      IMPORTING io_xml           TYPE REF TO zcl_abapgit_xml_input
                 iv_package       TYPE devclass
                 ii_enh_spot_tool TYPE REF TO if_enh_spot_tool
       RAISING   zcx_abapgit_exception,
 
     serialize
-      IMPORTING io_xml           TYPE REF TO lcl_xml_output
+      IMPORTING io_xml           TYPE REF TO zcl_abapgit_xml_output
                 ii_enh_spot_tool TYPE REF TO if_enh_spot_tool
       RAISING   zcx_abapgit_exception.
 
@@ -26,8 +26,8 @@ ENDINTERFACE.                    "lif_object_enho
 CLASS lcl_object_enhs DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -78,11 +78,11 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_object_enhs IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_spot_name TYPE enhspotname,
           li_spot_ref  TYPE REF TO if_enh_spot_tool.
@@ -99,7 +99,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_parent    TYPE enhspotcompositename,
           lv_spot_name TYPE enhspotname,
@@ -109,8 +109,8 @@ CLASS lcl_object_enhs IMPLEMENTATION.
           li_enhs      TYPE REF TO lif_object_enhs,
           lx_root      TYPE REF TO cx_root.
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
@@ -143,7 +143,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "deserialize
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_spot_name TYPE enhspotname,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
@@ -166,7 +166,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "serialize
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_spot_name TYPE enhspotname,
           li_spot_ref  TYPE REF TO if_enh_spot_tool.
@@ -184,7 +184,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "exists
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_spot_name  TYPE enhspotname,
           li_enh_object TYPE REF TO if_enh_object,
@@ -207,11 +207,11 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "delete
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.  "get_metadata
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -222,7 +222,7 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.  "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -252,7 +252,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
           lt_enh_badi        TYPE enh_badi_data_it,
           lo_badidef_tool    TYPE REF TO cl_enh_tool_badi_def,
           lv_enh_shorttext   TYPE string,
-          lv_package         LIKE iv_package,
+*          lv_package         LIKE iv_package,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
           lv_text            TYPE string,
@@ -269,7 +269,7 @@ CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING  cg_data = lv_enh_shorttext ).
 
-    lv_package = iv_package.
+*    lv_package = iv_package.
 
     li_enh_object ?= ii_enh_spot_tool.
     li_enh_object_docu ?= ii_enh_spot_tool.

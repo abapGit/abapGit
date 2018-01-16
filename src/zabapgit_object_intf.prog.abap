@@ -9,27 +9,27 @@
 *----------------------------------------------------------------------*
 CLASS lcl_object_intf DEFINITION FINAL INHERITING FROM lcl_objects_program.
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
     METHODS constructor
       IMPORTING
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
   PROTECTED SECTION.
     METHODS deserialize_abap
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_docu
-      IMPORTING io_xml TYPE REF TO lcl_xml_input
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mo_object_oriented_object_fct TYPE REF TO lif_oo_object_fnc.
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
+      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_intf DEFINITION
@@ -43,7 +43,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
     mo_object_oriented_object_fct = lcl_oo_factory=>make( iv_object_type = ms_item-obj_type ).
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -102,7 +102,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
       iv_language    = mv_language ).
   ENDMETHOD.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     DATA:
       lv_program  TYPE program,
       lt_includes TYPE seoincl_t.
@@ -116,14 +116,14 @@ CLASS lcl_object_intf IMPLEMENTATION.
       iv_skip_gui  = abap_true ).
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lt_source        TYPE seop_source_string,
           ls_interface_key TYPE seoclskey.
 
     ls_interface_key-clsname = ms_item-obj_name.
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -180,7 +180,7 @@ CLASS lcl_object_intf IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     TYPES: BEGIN OF ty_includes,
              programm TYPE programm,
            END OF ty_includes.
@@ -213,18 +213,18 @@ CLASS lcl_object_intf IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     DATA: ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
 
     mo_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_class_key TYPE seoclskey,
           lv_category  TYPE seoclassdf-category.
@@ -245,11 +245,11 @@ CLASS lcl_object_intf IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
         operation     = 'SHOW'

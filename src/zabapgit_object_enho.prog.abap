@@ -8,11 +8,11 @@ INTERFACE lif_object_enho.
 
   METHODS:
     deserialize
-      IMPORTING io_xml     TYPE REF TO lcl_xml_input
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception,
     serialize
-      IMPORTING io_xml      TYPE REF TO lcl_xml_output
+      IMPORTING io_xml      TYPE REF TO zcl_abapgit_xml_output
                 ii_enh_tool TYPE REF TO if_enh_tool
       RAISING   zcx_abapgit_exception.
 
@@ -29,12 +29,11 @@ CLASS lcl_object_enho_wdyc DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
@@ -47,7 +46,6 @@ CLASS lcl_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~deserialize.
@@ -142,12 +140,11 @@ CLASS lcl_object_enho_wdyn DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
@@ -160,7 +157,6 @@ CLASS lcl_object_enho_wdyn IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~deserialize.
@@ -269,19 +265,19 @@ CLASS lcl_object_enho_clif DEFINITION.
   PUBLIC SECTION.
     CLASS-METHODS:
       deserialize
-        IMPORTING io_xml  TYPE REF TO lcl_xml_input
+        IMPORTING io_xml  TYPE REF TO zcl_abapgit_xml_input
                   io_clif TYPE REF TO cl_enh_tool_clif
         RAISING   zcx_abapgit_exception
                   cx_enh_root,
       serialize
-        IMPORTING io_xml   TYPE REF TO lcl_xml_output
-                  io_files TYPE REF TO lcl_objects_files
+        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_output
+                  io_files TYPE REF TO zcl_abapgit_objects_files
                   io_clif  TYPE REF TO cl_enh_tool_clif
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     CLASS-METHODS: serialize_includes
-      IMPORTING io_files TYPE REF TO lcl_objects_files
+      IMPORTING io_files TYPE REF TO zcl_abapgit_objects_files
                 io_clif  TYPE REF TO cl_enh_tool_clif
       RAISING   zcx_abapgit_exception.
 
@@ -435,12 +431,11 @@ CLASS lcl_object_enho_badi DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
-    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+    DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
 ENDCLASS.                    "lcl_object_enho_badi DEFINITION
 
@@ -453,7 +448,6 @@ CLASS lcl_object_enho_badi IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-    mo_files = io_files.
   ENDMETHOD.                    "constructor
 
   METHOD lif_object_enho~serialize.
@@ -558,7 +552,7 @@ CLASS lcl_object_enho_hook DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
 
     INTERFACES: lif_object_enho.
 
@@ -571,7 +565,7 @@ CLASS lcl_object_enho_hook DEFINITION.
     TYPES: ty_spaces_tt TYPE STANDARD TABLE OF ty_spaces WITH DEFAULT KEY.
 
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA: mo_files TYPE REF TO lcl_objects_files.
+    DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
 
     METHODS hook_impl_deserialize
       IMPORTING it_spaces TYPE ty_spaces_tt
@@ -766,12 +760,12 @@ CLASS lcl_object_enho_intf DEFINITION.
       constructor
         IMPORTING
           is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO lcl_objects_files.
+          io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+          mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_interface DEFINITION
 
@@ -871,12 +865,12 @@ CLASS lcl_object_enho_class DEFINITION.
       constructor
         IMPORTING
           is_item  TYPE zif_abapgit_definitions=>ty_item
-          io_files TYPE REF TO lcl_objects_files.
+          io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item TYPE zif_abapgit_definitions=>ty_item.
-    DATA: mo_files TYPE REF TO lcl_objects_files.
+    DATA: mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_class DEFINITION
 
@@ -1011,12 +1005,12 @@ CLASS lcl_object_enho_fugr DEFINITION.
     METHODS: constructor
       IMPORTING
         is_item  TYPE zif_abapgit_definitions=>ty_item
-        io_files TYPE REF TO lcl_objects_files.
+        io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: lif_object_enho.
 
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item,
-          mo_files TYPE REF TO lcl_objects_files.
+          mo_files TYPE REF TO zcl_abapgit_objects_files.
 
 ENDCLASS.                    "lcl_object_enho_wdyconf DEFINITION
 
@@ -1137,8 +1131,8 @@ ENDCLASS.                    "lcl_object_enho_wdyconf IMPLEMENTATION
 CLASS lcl_object_enho DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -1160,19 +1154,19 @@ ENDCLASS.                    "lcl_object_enho DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_enho IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "lif_object~changed_by
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_enh_id TYPE enhname.
 
@@ -1187,16 +1181,16 @@ CLASS lcl_object_enho IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_enh_id   TYPE enhname,
           li_enho     TYPE REF TO lif_object_enho,
           li_enh_tool TYPE REF TO if_enh_tool.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -1260,14 +1254,14 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "factory
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_tool TYPE enhtooltype,
           li_enho TYPE REF TO lif_object_enho.
 
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TOOL'
@@ -1282,7 +1276,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_enh_id     TYPE enhname,
           li_enh_object TYPE REF TO if_enh_object.
@@ -1302,7 +1296,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -1313,8 +1307,8 @@ CLASS lcl_object_enho IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
-  ENDMETHOD.                    "lif_object~compare_to_remote_version
+  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
 ENDCLASS.                    "lcl_object_enho IMPLEMENTATION

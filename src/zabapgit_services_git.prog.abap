@@ -6,7 +6,7 @@ CLASS lcl_services_git DEFINITION FINAL.
   PUBLIC SECTION.
 
     TYPES: BEGIN OF ty_commit_fields,
-             repo_key        TYPE lcl_persistence_repo=>ty_repo-key,
+             repo_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
              committer_name  TYPE string,
              committer_email TYPE string,
              author_name     TYPE string,
@@ -16,29 +16,41 @@ CLASS lcl_services_git DEFINITION FINAL.
            END OF ty_commit_fields.
 
     CLASS-METHODS pull
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS reset
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS create_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS switch_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS delete_branch
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS create_tag
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS delete_tag
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS tag_overview
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS commit
       IMPORTING io_repo   TYPE REF TO lcl_repo_online
                 is_commit TYPE ty_commit_fields
-                io_stage  TYPE REF TO lcl_stage
+                io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS. " lcl_services_git
@@ -152,7 +164,7 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD switch_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -181,7 +193,7 @@ CLASS lcl_services_git IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO lcl_repo_online,
-          ls_branch TYPE lcl_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
@@ -205,12 +217,91 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   ENDMETHOD.  "delete_branch
 
+  METHOD create_tag.
+
+    " Here we create a 'lightweight' tag. Which means that
+    " the tag only contains the commit checksum but no meta data
+    "
+    " Later we probably want to add also 'annotated' tags.
+    " Which include more detailed information besides the commit. Like message, date and the tagger
+    "
+    " https://git-scm.com/book/en/v2/Git-Basics-Tagging
+
+    DATA: lv_name   TYPE string,
+          lv_cancel TYPE abap_bool,
+          lo_repo   TYPE REF TO lcl_repo_online,
+          lx_error  TYPE REF TO zcx_abapgit_exception,
+          lv_text   TYPE string.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    lcl_popups=>create_tag_popup(
+      EXPORTING
+        iv_sha1   = lo_repo->get_sha1_local( )
+      IMPORTING
+        ev_name   = lv_name
+        ev_cancel = lv_cancel ).
+    IF lv_cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    ASSERT lv_name CP 'refs/tags/+*'.
+
+    TRY.
+        lcl_git_porcelain=>create_tag( io_repo = lo_repo
+                                       iv_name = lv_name
+                                       iv_from = lo_repo->get_sha1_local( ) ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
+    ENDTRY.
+
+    lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( lv_name ) } created| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
+
+  ENDMETHOD.
+
+  METHOD delete_tag.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online,
+          ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+          lv_text TYPE string.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
+    IF ls_tag IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    lcl_git_porcelain=>delete_tag(
+      io_repo = lo_repo
+      is_tag  = ls_tag ).
+
+    lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
+
+    MESSAGE lv_text TYPE 'S'.
+
+  ENDMETHOD.
+
+  METHOD tag_overview.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    lcl_popups=>tag_list_popup( iv_url         = lo_repo->get_url( )
+                                iv_select_mode = abap_false ).
+
+  ENDMETHOD.
+
   METHOD commit.
 
     DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
-          lo_user    TYPE REF TO lcl_persistence_user.
+          lo_user    TYPE REF TO zcl_abapgit_persistence_user.
 
-    lo_user = lcl_app=>user( ).
+    lo_user = zcl_abapgit_persistence_user=>get_instance( ).
     lo_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
                                      iv_username = is_commit-committer_name ).
     lo_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )

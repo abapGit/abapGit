@@ -10,8 +10,8 @@
 CLASS lcl_object_acid DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     METHODS: create_object
@@ -27,15 +27,15 @@ ENDCLASS.                    "lcl_object_acid DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_acid IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.  "lif_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.                    "lif_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
   ENDMETHOD.
@@ -59,13 +59,13 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "create_object
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lo_aab         TYPE REF TO cl_aab_id,
           lv_description TYPE aab_id_descript.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -80,7 +80,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_description TYPE aab_id_descript,
           lo_aab         TYPE REF TO cl_aab_id.
@@ -97,7 +97,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lo_aab TYPE REF TO cl_aab_id.
 
@@ -123,7 +123,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_state TYPE flag,
           lo_aab   TYPE REF TO cl_aab_id.
@@ -138,7 +138,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -149,7 +149,7 @@ CLASS lcl_object_acid IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

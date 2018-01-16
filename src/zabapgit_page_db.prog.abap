@@ -6,17 +6,17 @@ CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+      IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content.
 
     CLASS-METHODS: render_record_banner
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content
       RETURNING VALUE(rv_html) TYPE string.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: ms_key TYPE lcl_persistence_db=>ty_content.
+    DATA: ms_key TYPE zif_abapgit_persistence=>ty_content.
 
 ENDCLASS.
 
@@ -39,26 +39,26 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
   METHOD render_content.
 
     DATA:
-      lo_highlighter  TYPE REF TO lcl_syntax_highlighter,
-      lo_toolbar      TYPE REF TO lcl_html_toolbar,
-      lv_data         TYPE lcl_persistence_db=>ty_content-data_str,
-      ls_action       TYPE lcl_persistence_db=>ty_content,
+      lo_highlighter  TYPE REF TO zcl_abapgit_syntax_highlighter,
+      lo_toolbar      TYPE REF TO zcl_abapgit_html_toolbar,
+      lv_data         TYPE zif_abapgit_persistence=>ty_content-data_str,
+      ls_action       TYPE zif_abapgit_persistence=>ty_content,
       lv_action       TYPE string.
 
     TRY.
-        lv_data = lcl_app=>db( )->read(
+        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type = ms_key-type
           iv_value = ms_key-value ).
       CATCH zcx_abapgit_not_found ##NO_HANDLER.
     ENDTRY.
 
     " Create syntax highlighter
-    lo_highlighter  = lcl_syntax_highlighter=>create( '*.xml' ).
+    lo_highlighter  = zcl_abapgit_syntax_highlighter=>create( '*.xml' ).
 
     ls_action-type  = ms_key-type.
     ls_action-value = ms_key-value.
-    lv_action       = lcl_html_action_utils=>dbkey_encode( ls_action ).
-    lv_data         = lo_highlighter->process_line( lcl_xml_pretty=>print( lv_data ) ).
+    lv_action       = zcl_abapgit_html_action_utils=>dbkey_encode( ls_action ).
+    lv_data         = lo_highlighter->process_line( zcl_abapgit_xml_pretty=>print( lv_data ) ).
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
@@ -83,13 +83,13 @@ CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
-      IMPORTING is_key TYPE lcl_persistence_db=>ty_content.
+      IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: ms_key TYPE lcl_persistence_db=>ty_content.
+    DATA: ms_key TYPE zif_abapgit_persistence=>ty_content.
 
 ENDCLASS.
 
@@ -103,21 +103,21 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lv_data    TYPE lcl_persistence_db=>ty_content-data_str,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA: lv_data    TYPE zif_abapgit_persistence=>ty_content-data_str,
+          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     TRY.
-        lv_data = lcl_app=>db( )->read(
+        lv_data = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = ms_key-type
           iv_value = ms_key-value ).
       CATCH zcx_abapgit_not_found ##NO_HANDLER.
     ENDTRY.
 
-    lcl_app=>db( )->lock(
+    zcl_abapgit_persistence_db=>get_instance( )->lock(
       iv_type  = ms_key-type
       iv_value = ms_key-value ).
 
-    lv_data = escape( val    = lcl_xml_pretty=>print( lv_data )
+    lv_data = escape( val    = zcl_abapgit_xml_pretty=>print( lv_data )
                       format = cl_abap_format=>e_html_attr ).
 
     CREATE OBJECT ro_html.
@@ -160,7 +160,7 @@ CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     METHODS explain_content
-      IMPORTING is_data TYPE lcl_persistence_db=>ty_content
+      IMPORTING is_data TYPE zif_abapgit_persistence=>ty_content
       RETURNING VALUE(rv_text) TYPE string
       RAISING   zcx_abapgit_exception.
 
@@ -175,15 +175,15 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_data    TYPE lcl_persistence_db=>tt_content,
+    DATA: lt_data    TYPE zif_abapgit_persistence=>tt_content,
           lv_action  TYPE string,
           lv_trclass TYPE string,
-          lo_toolbar TYPE REF TO lcl_html_toolbar.
+          lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     FIELD-SYMBOLS: <ls_data> LIKE LINE OF lt_data.
 
 
-    lt_data = lcl_app=>db( )->list( ).
+    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
     CREATE OBJECT ro_html.
 
@@ -208,7 +208,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
         lv_trclass = ' class="firstrow"' ##NO_TEXT.
       ENDIF.
 
-      lv_action  = lcl_html_action_utils=>dbkey_encode( <ls_data> ).
+      lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
       lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>gc_action-db_display }?{ lv_action }| ).

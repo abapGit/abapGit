@@ -14,9 +14,9 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING io_repo  TYPE REF TO lcl_repo_online
-                  io_stage TYPE REF TO lcl_stage
+                  io_stage TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -25,23 +25,23 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO lcl_repo_online,
-          mo_stage TYPE REF TO lcl_stage.
+          mo_stage TYPE REF TO zcl_abapgit_stage.
 
     METHODS:
       render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_stage
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_form
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_text_input
-        IMPORTING iv_name       TYPE string
-                  iv_label      TYPE string
-                  iv_value      TYPE string OPTIONAL
-                  iv_max_length TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+        IMPORTING iv_name        TYPE string
+                  iv_label       TYPE string
+                  iv_value       TYPE string OPTIONAL
+                  iv_max_length  TYPE string OPTIONAL
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
@@ -56,15 +56,16 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     ms_control-page_title = 'COMMIT'.
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: ls_commit TYPE lcl_services_git=>ty_commit_fields.
 
     CASE iv_action.
       WHEN c_action-commit_post.
 
-        lcl_html_action_utils=>parse_commit_request( EXPORTING it_postdata = it_postdata
-                                                     IMPORTING es_fields   = ls_commit ).
+        zcl_abapgit_html_action_utils=>parse_commit_request(
+          EXPORTING it_postdata = it_postdata
+          IMPORTING es_fields   = ls_commit ).
 
         ls_commit-repo_key = mo_repo->get_key( ).
 
@@ -99,7 +100,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_stage.
 
-    DATA: lt_stage TYPE lcl_stage=>ty_stage_tt.
+    DATA: lt_stage TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -119,7 +120,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
       ro_html->add( '<td class="method">' ).
-      ro_html->add( lcl_stage=>method_description( <ls_stage>-method ) ).
+      ro_html->add( zcl_abapgit_stage=>method_description( <ls_stage>-method ) ).
       ro_html->add( '</td>' ).
       ro_html->add( '<td>' ).
       ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
@@ -157,18 +158,18 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
     CONSTANTS: lc_body_col_max TYPE i VALUE 150.
 
-    DATA: lo_user      TYPE REF TO lcl_persistence_user.
+    DATA: lo_user      TYPE REF TO zcl_abapgit_persistence_user.
     DATA: lv_user      TYPE string.
     DATA: lv_email     TYPE string.
     DATA: lv_s_param   TYPE string.
-    DATA: lo_settings  TYPE REF TO lcl_settings.
-    data: lv_body_size type i.
+    DATA: lo_settings  TYPE REF TO zcl_abapgit_settings.
+    DATA: lv_body_size TYPE i.
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    lo_user  = lcl_app=>user( ).
+    lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
 
     lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.
@@ -194,7 +195,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
                                      iv_label = 'committer e-mail'
                                      iv_value = lv_email ) ).
 
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 
@@ -234,7 +235,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD render_menu.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.

@@ -10,8 +10,8 @@
 CLASS lcl_object_wapa DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_page,
@@ -47,11 +47,11 @@ ENDCLASS.                    "lcl_object_TRAN DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wapa IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_name   TYPE o2applname,
           lt_pages  TYPE STANDARD TABLE OF o2pagdir WITH DEFAULT KEY,
@@ -75,11 +75,11 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_name TYPE o2applname.
 
@@ -95,9 +95,9 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         error_occured       = 3 ).
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -108,16 +108,17 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name    TYPE o2applname,
-          lo_bsp     TYPE REF TO cl_o2_api_application,
-          ls_pagekey TYPE o2pagkey,
-          lv_object  TYPE seu_objkey,
-          lt_pages   TYPE o2pagelist.
+    DATA: lv_name        TYPE o2applname,
+          lo_bsp         TYPE REF TO cl_o2_api_application,
+          ls_pagekey     TYPE o2pagkey,
+          lv_object      TYPE seu_objkey,
+          lt_pages       TYPE o2pagelist,
+          lt_local_mimes TYPE o2pagename_table.
 
-    FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
-
+    FIELD-SYMBOLS: <ls_page>       LIKE LINE OF lt_pages,
+                   <ls_local_mime> TYPE o2pagename.
 
     lv_name = ms_item-obj_name.
 
@@ -157,7 +158,42 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       ASSERT sy-subrc = 0.
     ENDLOOP.
 
-    lo_bsp->delete( ).
+    lo_bsp->get_local_mimes(
+      IMPORTING
+        p_local_mimes  = lt_local_mimes
+      EXCEPTIONS
+        object_invalid = 1
+        object_deleted = 2
+        error_occured  = 3
+        OTHERS         = 4 ).
+
+    LOOP AT lt_local_mimes ASSIGNING <ls_local_mime>.
+      CLEAR ls_pagekey.
+      ls_pagekey-applname = <ls_local_mime>-applname.
+      ls_pagekey-pagekey  = <ls_local_mime>-pagekey.
+
+      cl_o2_page=>delete_page_for_application(
+        EXPORTING
+          p_pagekey           = ls_pagekey
+        EXCEPTIONS
+          object_not_existing = 1
+          error_occured       = 2 ).
+      ASSERT sy-subrc = 0.
+    ENDLOOP.
+
+    lo_bsp->delete(
+      EXCEPTIONS
+        object_not_empty      = 1
+        object_not_changeable = 2
+        object_invalid        = 3
+        action_cancelled      = 4
+        permission_failure    = 5
+        error_occured         = 6
+        OTHERS                = 7 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |WAPA - error from delete: { sy-subrc }| ).
+    ENDIF.
 
 * release lock
     lv_object = lv_name.
@@ -168,7 +204,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lo_bsp        TYPE REF TO cl_o2_api_application,
           ls_attributes TYPE o2applattr,
@@ -195,7 +231,10 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     ls_attributes-devclass = iv_package.
 
-* todo: overwrite existing
+    IF me->zif_abapgit_object~exists( ) = abap_true.
+      me->zif_abapgit_object~delete( ).
+    ENDIF.
+
     cl_o2_api_application=>create_new(
       EXPORTING
         p_application_data      = ls_attributes
@@ -240,7 +279,8 @@ CLASS lcl_object_wapa IMPLEMENTATION.
       IF <ls_page>-attributes-pagetype <> so2_controller.
 
         SPLIT <ls_page>-attributes-pagename AT '.' INTO lv_extra lv_ext.
-        REPLACE ALL OCCURRENCES OF '_-' IN lv_extra WITH '/'.
+        REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
+        REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
         lv_content = mo_files->read_raw( iv_extra = lv_extra
                                          iv_ext   = lv_ext ).
         lo_page->set_page( to_page_content( lv_content ) ).
@@ -265,7 +305,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_name       TYPE o2applname,
           ls_attributes TYPE o2applattr,
@@ -387,6 +427,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
       lv_content = get_page_content( lo_page ).
       SPLIT is_page-pagename AT '.' INTO lv_extra lv_ext.
+      REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       mo_files->add_raw(
         iv_extra = lv_extra
@@ -413,7 +454,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
     DATA: lv_string TYPE string.
 
 
-    lv_string = lcl_convert=>xstring_to_string_utf8( iv_content ).
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_content ).
 
     SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_content.
 
@@ -438,11 +479,11 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     CONCATENATE LINES OF lt_content INTO lv_string SEPARATED BY zif_abapgit_definitions=>gc_newline RESPECTING BLANKS.
 
-    rv_content = lcl_convert=>string_to_xstring_utf8( lv_string ).
+    rv_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

@@ -20,6 +20,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
              message    TYPE string,
              branch     TYPE string,
              merge      TYPE string,
+             tags       TYPE stringtab,
              create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
              compressed TYPE abap_bool,
            END OF ty_commit.
@@ -37,7 +38,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: get_branches
-      RETURNING VALUE(rt_branches) TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+      RETURNING VALUE(rt_branches) TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
   PRIVATE SECTION.
 
@@ -54,11 +55,14 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       get_git_objects
         IMPORTING io_repo           TYPE REF TO lcl_repo_online
         RETURNING VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      determine_tags
+        RAISING zcx_abapgit_exception.
 
     CLASS-DATA:
-      gt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt,
-      gt_commits  TYPE TABLE OF ty_commit.
+      gt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
+      gt_commits  TYPE TABLE OF ty_commit,
+      gt_tags     TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
 ENDCLASS.
 
@@ -143,6 +147,7 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     determine_branch( ).
     determine_merges( ).
+    determine_tags( ).
     fixes( ).
 
     SORT gt_commits BY time ASCENDING.
@@ -153,21 +158,27 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD get_git_objects.
 
-    lcl_progress=>show( iv_key     = 'Get git objects'
-                        iv_current = 1
-                        iv_total   = 1
-                        iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
+    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
+
+    zcl_abapgit_progress=>show( iv_key     = 'Get git objects'
+                                iv_current = 1
+                                iv_total   = 1
+                                iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
 
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch
 
     "TODO refactor
-    gt_branches = lcl_git_transport=>branches( io_repo->get_url( ) )->get_branches_only( ).
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
-                                              iv_deepen = abap_false
+    lo_branch_list = lcl_git_transport=>branches( io_repo->get_url( ) ).
+
+    gt_branches = lo_branch_list->get_branches_only( ).
+    gt_tags = lo_branch_list->get_tags_only( ).
+
+    lcl_git_transport=>upload_pack( EXPORTING io_repo     = io_repo
+                                              iv_deepen   = abap_false
                                               it_branches = gt_branches
-                                    IMPORTING et_objects = rt_objects ).
+                                    IMPORTING et_objects  = rt_objects ).
 
     DELETE rt_objects WHERE type = zif_abapgit_definitions=>gc_type-blob.
 
@@ -177,13 +188,13 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     DATA: ls_commit LIKE LINE OF gt_commits,
           lv_trash  TYPE string ##NEEDED,
-          ls_raw    TYPE lcl_git_pack=>ty_commit.
+          ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> WHERE type = zif_abapgit_definitions=>gc_type-commit.
-      ls_raw = lcl_git_pack=>decode_commit( <ls_object>-data ).
+      ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
       ls_commit-sha1 = <ls_object>-sha1.
@@ -298,6 +309,27 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD determine_tags.
+
+    DATA: lv_tag TYPE LINE OF lcl_branch_overview=>ty_commit-tags.
+
+    FIELD-SYMBOLS: <ls_tag>    TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+                   <ls_commit> TYPE lcl_branch_overview=>ty_commit.
+
+    LOOP AT gt_tags ASSIGNING <ls_tag>.
+
+      READ TABLE gt_commits WITH KEY sha1 = <ls_tag>-sha1
+                            ASSIGNING <ls_commit>.
+      CHECK sy-subrc = 0.
+
+      lv_tag = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
+      INSERT lv_tag INTO TABLE <ls_commit>-tags.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 ***********************
@@ -309,7 +341,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo_online
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -335,20 +367,20 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM lcl_gui_page.
       refresh
         RAISING zcx_abapgit_exception,
       body
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       form_select
         IMPORTING iv_name        TYPE string
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_merge
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       decode_merge
         IMPORTING it_postdata     TYPE cnht_post_data_tab
         RETURNING VALUE(rs_merge) TYPE ty_merge
         RAISING   zcx_abapgit_exception,
       build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       escape_branch
         IMPORTING iv_string        TYPE string
         RETURNING VALUE(rv_string) TYPE string,
@@ -379,7 +411,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
   METHOD form_select.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+          lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
@@ -412,6 +444,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD body.
+    DATA: tag TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -470,10 +503,18 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
           escape_message( <ls_commit>-message )
           }", dotColor: "black", dotSize: 15, messageHashDisplay: false, messageAuthorDisplay: false\});| ).
       ELSEIF <ls_commit>-merge IS INITIAL.
+
+        " gitgraph doesn't support multiple tags per commit yet.
+        " Therefore we concatenate them.
+        " https://github.com/nicoespeon/gitgraph.js/issues/143
+
+        tag = concat_lines_of( table = <ls_commit>-tags
+                               sep   = ` | ` ).
+
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
           escape_message( <ls_commit>-message ) }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ tag }"\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
@@ -540,7 +581,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
 
-    lt_fields = lcl_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source' ##NO_TEXT.
     ASSERT sy-subrc = 0.
@@ -552,7 +593,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: ls_merge TYPE ty_merge,
           lo_merge TYPE REF TO lcl_gui_page_merge.

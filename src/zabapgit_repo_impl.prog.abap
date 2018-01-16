@@ -47,12 +47,6 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_repo_offline IMPLEMENTATION.
 
-  METHOD set_files_remote.
-
-    mt_remote = it_files.
-
-  ENDMETHOD.
-
 ENDCLASS.                    "lcl_repo_offline IMPLEMENTATION
 
 *----------------------------------------------------------------------*
@@ -110,6 +104,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     CLEAR mt_status.
   ENDMETHOD.  " reset_status.
 
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
   METHOD refresh.
 
     DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
@@ -117,10 +115,10 @@ CLASS lcl_repo_online IMPLEMENTATION.
     super->refresh( iv_drop_cache ).
     reset_status( ).
 
-    lcl_progress=>show( iv_key     = 'Fetch'
-                        iv_current = 1
-                        iv_total   = 1
-                        iv_text    = 'Remote files' ) ##NO_TEXT.
+    zcl_abapgit_progress=>show( iv_key     = 'Fetch'
+                                iv_current = 1
+                                iv_total   = 1
+                                iv_text    = 'Remote files' ) ##NO_TEXT.
 
     TRY.
 
@@ -247,10 +245,12 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
 * pushing to the branch currently represented by this repository object
+      mv_branch = lv_branch.
       set( iv_sha1 = lv_branch ).
+    ELSE.
+      refresh( ).
     ENDIF.
 
-    refresh( ).
     update_local_checksums( lt_updated_files ).
 
     IF lcl_stage_logic=>count( me ) = 0.
@@ -262,15 +262,15 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD handle_stage_ignore.
 
     DATA: lv_add         TYPE abap_bool,
-          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
-          lt_stage       TYPE lcl_stage=>ty_stage_tt.
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
 
     lo_dot_abapgit = get_dot_abapgit( ).
     lt_stage = io_stage->get_all( ).
-    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = lcl_stage=>c_method-ignore.
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
 
       lo_dot_abapgit->add_ignore(
         iv_path     = <ls_stage>-file-path
@@ -301,7 +301,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_branch_equal TYPE abap_bool,
-          lt_checksums    TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums    TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
@@ -370,7 +370,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_status       TYPE zif_abapgit_definitions=>ty_results_tt,
-          lv_package      TYPE lcl_persistence_repo=>ty_repo-package.
+          lv_package      TYPE zcl_abapgit_persistence_repo=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE zif_abapgit_definitions=>ty_result,
                    <tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
@@ -432,7 +432,7 @@ CLASS lcl_repo IMPLEMENTATION.
       WITH KEY path = zif_abapgit_definitions=>gc_root_dir
       filename = zif_abapgit_definitions=>gc_dot_abapgit.
     IF sy-subrc = 0.
-      ro_dot = lcl_dot_abapgit=>deserialize( <ls_remote>-data ).
+      ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
     ENDIF.
 
@@ -444,7 +444,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD set.
 
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
     ASSERT iv_sha1 IS SUPPLIED
@@ -514,7 +514,7 @@ CLASS lcl_repo IMPLEMENTATION.
     " Push fills it from local files before pushing, deserialize from remote
     " If this is not true that there is an error somewhere but not here
 
-    DATA: lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt,
+    DATA: lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt,
           lt_files_idx TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lv_chks_row  TYPE i,
@@ -589,7 +589,7 @@ CLASS lcl_repo IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF lcl_dot_abapgit=>ty_requirement,
+          lt_requirements  TYPE STANDARD TABLE OF zif_abapgit_dot_abapgit=>ty_requirement,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
     find_remote_dot_abapgit( ).
@@ -664,8 +664,8 @@ CLASS lcl_repo IMPLEMENTATION.
     <ls_return>-file-path     = zif_abapgit_definitions=>gc_root_dir.
     <ls_return>-file-filename = zif_abapgit_definitions=>gc_dot_abapgit.
     <ls_return>-file-data     = get_dot_abapgit( )->serialize( ).
-    <ls_return>-file-sha1     = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
-                                                iv_data = <ls_return>-file-data ).
+    <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+                                                        iv_data = <ls_return>-file-data ).
 
     lcl_progress=>show( iv_key     = 'Objects'
                         iv_current = 1
@@ -708,10 +708,10 @@ CLASS lcl_repo IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lcl_progress=>show( iv_key     = 'Serialize'
-                          iv_current = sy-tabix
-                          iv_total   = lines( lt_tadir )
-                          iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      zcl_abapgit_progress=>show( iv_key     = 'Serialize'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( lt_tadir )
+                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
 
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
@@ -748,7 +748,9 @@ CLASS lcl_repo IMPLEMENTATION.
       LOOP AT lt_files ASSIGNING <ls_file>.
 
         <ls_file>-path = <ls_tadir>-path.
-        <ls_file>-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = <ls_file>-data ).
+        <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
+          iv_type = zif_abapgit_definitions=>gc_type-blob
+          iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
@@ -804,7 +806,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lo_persistence TYPE REF TO lcl_persistence_repo.
+    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
     CREATE OBJECT lo_persistence.
@@ -815,6 +817,12 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD is_offline.
     rv_offline = ms_data-offline.
+  ENDMETHOD.
+
+  METHOD set_files_remote.
+
+    mt_remote = it_files.
+
   ENDMETHOD.
 
   METHOD refresh.
@@ -867,7 +875,7 @@ CLASS lcl_repo IMPLEMENTATION.
 
     DATA: lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-          lt_checksums TYPE lcl_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
@@ -944,7 +952,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list    TYPE lcl_persistence_repo=>tt_repo,
+    DATA: lt_list    TYPE zcl_abapgit_persistence_repo=>tt_repo,
           lo_online  TYPE REF TO lcl_repo_online,
           lo_offline TYPE REF TO lcl_repo_offline.
 
@@ -974,8 +982,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -985,7 +993,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_branch_name = iv_branch_name
       iv_package     = iv_package
       iv_offline     = abap_false
-      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
       CATCH zcx_abapgit_not_found.
@@ -1002,8 +1010,8 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: ls_repo TYPE lcl_persistence_repo=>ty_repo,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -1013,7 +1021,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       iv_branch_name = ''
       iv_package     = iv_package
       iv_offline     = abap_true
-      is_dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
 
     TRY.
         ls_repo = mo_persistence->read( lv_key ).
@@ -1050,7 +1058,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
   METHOD validate_package.
 
     DATA: ls_devclass TYPE tdevc,
-          lt_repos    TYPE lcl_persistence_repo=>tt_repo.
+          lt_repos    TYPE zcl_abapgit_persistence_repo=>tt_repo.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).
@@ -1146,7 +1154,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
         EXPORTING
           is_data = lo_repo->ms_data.
     ELSE. " OFFline -> On-line
-      lo_repo->set( iv_offline     = abap_false ).
+      lo_repo->set( iv_offline = abap_false ).
       CREATE OBJECT <repo> TYPE lcl_repo_online
         EXPORTING
           is_data = lo_repo->ms_data.
@@ -1157,7 +1165,12 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   METHOD is_sap_object_allowed.
 
-    r_is_sap_object_allowed = lcl_exit=>get_instance( )->allow_sap_objects( ).
+    rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
+    IF rv_allowed = abap_true.
+      RETURN.
+    ENDIF.
+
+    rv_allowed = lcl_exit=>get_instance( )->allow_sap_objects( ).
 
   ENDMETHOD.
 

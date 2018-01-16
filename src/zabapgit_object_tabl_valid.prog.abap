@@ -6,8 +6,8 @@ CLASS lcl_object_tabl_valid DEFINITION FINAL.
   PUBLIC SECTION.
     METHODS validate
       IMPORTING
-        io_remote_version TYPE REF TO lcl_xml_input
-        io_local_version  TYPE REF TO lcl_xml_input
+        io_remote_version TYPE REF TO zcl_abapgit_xml_input
+        io_local_version  TYPE REF TO zcl_abapgit_xml_input
       RETURNING
         VALUE(rv_message) TYPE string
       RAISING
@@ -20,7 +20,7 @@ CLASS lcl_tabl_valid_dialog DEFINITION FINAL.
       constructor
         IMPORTING
           iv_message TYPE string.
-    INTERFACES: lif_comparison_result.
+    INTERFACES: zif_abapgit_comparison_result.
 
   PRIVATE SECTION.
     DATA mv_message TYPE string.
@@ -65,11 +65,11 @@ CLASS lcl_tabl_valid_dialog IMPLEMENTATION.
     mv_message = iv_message.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~is_result_complete_halt.
+  METHOD zif_abapgit_comparison_result~is_result_complete_halt.
     rv_response = mv_halt.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~show_confirmation_dialog.
+  METHOD zif_abapgit_comparison_result~show_confirmation_dialog.
     DATA lv_answer TYPE string.
     TRY.
         lv_answer = lcl_popups=>popup_to_confirm(
@@ -92,7 +92,7 @@ CLASS lcl_tabl_valid_dialog IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+CLASS ltcl_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
   PRIVATE SECTION.
     METHODS:
       setup,
@@ -105,17 +105,17 @@ CLASS lct_table_validation DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION S
           zcx_abapgit_exception.
 
     DATA: mo_table_validator            TYPE REF TO lcl_object_tabl_valid,
-          mo_previous_version_out_xml   TYPE REF TO lcl_xml_output,
-          mo_previous_version_input_xml TYPE REF TO lcl_xml_input,
-          mo_current_version_out_xml    TYPE REF TO lcl_xml_output,
-          mo_current_version_input_xml  TYPE REF TO lcl_xml_input,
+          mo_previous_version_out_xml   TYPE REF TO zcl_abapgit_xml_output,
+          mo_previous_version_input_xml TYPE REF TO zcl_abapgit_xml_input,
+          mo_current_version_out_xml    TYPE REF TO zcl_abapgit_xml_output,
+          mo_current_version_input_xml  TYPE REF TO zcl_abapgit_xml_input,
           mt_previous_table_fields      TYPE TABLE OF dd03p,
           mt_current_table_fields       TYPE TABLE OF dd03p,
           mv_validation_message         TYPE string.
 
 ENDCLASS.
 
-CLASS lct_table_validation IMPLEMENTATION.
+CLASS ltcl_table_validation IMPLEMENTATION.
   METHOD setup.
     CREATE OBJECT mo_table_validator.
   ENDMETHOD.

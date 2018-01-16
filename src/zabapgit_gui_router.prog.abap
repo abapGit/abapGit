@@ -13,7 +13,7 @@ CLASS lcl_gui_router DEFINITION FINAL.
                 iv_prev_page TYPE clike
                 iv_getdata   TYPE clike OPTIONAL
                 it_postdata  TYPE cnht_post_data_tab OPTIONAL
-      EXPORTING ei_page      TYPE REF TO lif_gui_page
+      EXPORTING ei_page      TYPE REF TO zif_abapgit_gui_page
                 ev_state     TYPE i
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
@@ -21,38 +21,38 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
     METHODS get_page_by_name
       IMPORTING iv_name        TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
                 iv_prev_page   TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_branch_overview
       IMPORTING iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_stage
       IMPORTING iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_db_by_name
       IMPORTING iv_name        TYPE clike
                 iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_background
-      IMPORTING iv_key         TYPE lcl_persistence_repo=>ty_repo-key
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      IMPORTING iv_key         TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
     METHODS get_page_playground
-      RETURNING VALUE(ri_page) TYPE REF TO lif_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
 ENDCLASS.
@@ -65,8 +65,8 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD on_event.
 
     DATA: lv_url  TYPE string,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key,
-          ls_db   TYPE lcl_persistence_db=>ty_content,
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+          ls_db   TYPE zif_abapgit_persistence=>ty_content,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     lv_key = iv_getdata. " TODO refactor
@@ -106,12 +106,12 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ei_page  = get_page_playground( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_tutorial.                     " Go to tutorial
-        lcl_app=>user( )->set_repo_show( '' ).        " Clear show_id
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( '' ).        " Clear show_id
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.          " Assume we are on main page
 
         " SAP GUI actions
       WHEN zif_abapgit_definitions=>gc_action-jump.                          " Open object editor
-        lcl_html_action_utils=>jump_decode(
+        zcl_abapgit_html_action_utils=>jump_decode(
           EXPORTING iv_string   = iv_getdata
           IMPORTING ev_obj_type = ls_item-obj_type
                     ev_obj_name = ls_item-obj_name ).
@@ -134,11 +134,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
                                        iv_getdata = iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-db_delete.                       " DB Delete
-        ls_db = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+        ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         lcl_services_db=>delete( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-db_update.                       " DB Update
-        ls_db = lcl_html_action_utils=>dbcontent_decode( it_postdata ).
+        ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
         lcl_services_db=>update( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
 
@@ -237,6 +237,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-git_branch_switch.             " GIT Switch branch
         lcl_services_git=>switch_branch( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+      WHEN zif_abapgit_definitions=>gc_action-go_tag_overview.               " GIT Tag overview
+        lcl_services_git=>tag_overview( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+      WHEN zif_abapgit_definitions=>gc_action-git_tag_create.                " GIT Tag create
+        lcl_services_git=>create_tag( lv_key ).
+        lcl_services_repo=>refresh( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+      WHEN zif_abapgit_definitions=>gc_action-git_tag_delete.                " GIT Tag create
+        lcl_services_git=>delete_tag( lv_key ).
+        lcl_services_repo=>refresh( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
 
         "Others
       WHEN OTHERS.
@@ -266,10 +277,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lv_page_class TYPE string,
           lv_message    TYPE string,
-          ls_key        TYPE lcl_persistence_db=>ty_content.
+          ls_key        TYPE zif_abapgit_persistence=>ty_content.
 
     lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
-    ls_key        = lcl_html_action_utils=>dbkey_decode( iv_getdata ).
+    ls_key        = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
 
     TRY.
         CREATE OBJECT ri_page TYPE (lv_page_class)
@@ -287,7 +298,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online,
           lo_page TYPE REF TO lcl_gui_page_boverview,
-          lv_key  TYPE lcl_persistence_repo=>ty_repo-key.
+          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     lv_key = iv_getdata.
@@ -307,13 +318,16 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: ls_file   TYPE zif_abapgit_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
           lo_page   TYPE REF TO lcl_gui_page_diff,
-          lv_key    TYPE lcl_persistence_repo=>ty_repo-key.
+          lv_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
-    lcl_html_action_utils=>file_obj_decode( EXPORTING iv_string = iv_getdata
-                                            IMPORTING ev_key    = lv_key
-                                                      eg_file   = ls_file
-                                                      eg_object = ls_object ).
+    zcl_abapgit_html_action_utils=>file_obj_decode(
+      EXPORTING
+        iv_string = iv_getdata
+      IMPORTING
+        ev_key    = lv_key
+        eg_file   = ls_file
+        eg_object = ls_object ).
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -329,7 +343,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_stage.
 
     DATA: lo_repo       TYPE REF TO lcl_repo_online,
-          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           lv_seed       TYPE string,
           lo_stage_page TYPE REF TO lcl_gui_page_stage.
 
@@ -337,7 +351,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     IF sy-subrc <> 0. " Not found ? -> just repo key in params
       lv_key = iv_getdata.
     ELSE.
-      lcl_html_action_utils=>stage_decode(
+      zcl_abapgit_html_action_utils=>stage_decode(
         EXPORTING iv_getdata = iv_getdata
         IMPORTING ev_key     = lv_key
                   ev_seed    = lv_seed ).

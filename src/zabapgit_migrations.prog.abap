@@ -21,7 +21,7 @@ CLASS lcl_migrations IMPLEMENTATION.
   METHOD run.
 
     " Migrate STDTEXT to TABLE
-    lcl_persist_migrate=>run( ).
+    zcl_abapgit_persist_migrate=>run( ).
 
     " Rebuild local file checksums
     rebuild_local_checksums_161112( ).
@@ -36,7 +36,7 @@ CLASS lcl_migrations IMPLEMENTATION.
     DATA: lt_repos       TYPE lcl_repo_srv=>ty_repo_tt,
           lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
-          lo_dot_abapgit TYPE REF TO lcl_dot_abapgit,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
           lx_exception   TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
@@ -48,7 +48,7 @@ CLASS lcl_migrations IMPLEMENTATION.
       lo_dot_abapgit = <lo_repo>->get_dot_abapgit( ).
       IF lo_dot_abapgit->get_data( ) IS INITIAL.
         IF <lo_repo>->is_offline( ) = abap_true.
-          lo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
+          lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
         ELSE.
           IF lv_shown = abap_false.
             CALL FUNCTION 'POPUP_TO_INFORM'
@@ -78,7 +78,7 @@ CLASS lcl_migrations IMPLEMENTATION.
 
           lo_dot_abapgit = <lo_repo>->find_remote_dot_abapgit( ).
           IF lo_dot_abapgit IS INITIAL. " .abapgit.xml is not in the remote repo yet
-            lo_dot_abapgit = lcl_dot_abapgit=>build_default( ).
+            lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
           ENDIF.
         ENDIF.
         <lo_repo>->set_dot_abapgit( lo_dot_abapgit ).

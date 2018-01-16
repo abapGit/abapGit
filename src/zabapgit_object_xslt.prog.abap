@@ -10,8 +10,8 @@
 CLASS lcl_object_xslt DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -28,11 +28,11 @@ ENDCLASS.                    "lcl_object_xslt DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_xslt IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
@@ -58,7 +58,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
           lv_source     TYPE string,
@@ -84,9 +84,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
                           iv_ext    = 'xml'
                           iv_string = lv_source ) ##NO_TEXT.
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.                    "zif_abapgit_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_source     TYPE string,
           lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
@@ -94,8 +94,8 @@ CLASS lcl_object_xslt IMPLEMENTATION.
           ls_attributes TYPE o2xsltattr.
 
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
@@ -137,9 +137,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
     lcl_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lo_xslt TYPE REF TO cl_o2_api_xsltdesc,
           lv_name TYPE cxsltdesc.
@@ -166,9 +166,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
     lo_xslt->delete( ).
     lo_xslt->save( ).
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_name TYPE cxsltdesc.
 
@@ -182,9 +182,9 @@ CLASS lcl_object_xslt IMPLEMENTATION.
       rv_bool = abap_false.
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -192,13 +192,13 @@ CLASS lcl_object_xslt IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

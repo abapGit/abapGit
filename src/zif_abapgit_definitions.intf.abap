@@ -1,8 +1,7 @@
-INTERFACE zif_abapgit_definitions
-  PUBLIC .
+INTERFACE zif_abapgit_definitions PUBLIC.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.50.1' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.53.0' ##NO_TEXT.
 
   TYPES:
     ty_type    TYPE c LENGTH 6 .
@@ -155,6 +154,7 @@ INTERFACE zif_abapgit_definitions
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
       tree   TYPE zif_abapgit_definitions=>ty_type VALUE 'tree', "#EC NOTEXT
       ref_d  TYPE zif_abapgit_definitions=>ty_type VALUE 'ref_d', "#EC NOTEXT
+      tag    TYPE zif_abapgit_definitions=>ty_type VALUE 'tag', "#EC NOTEXT
       blob   TYPE zif_abapgit_definitions=>ty_type VALUE 'blob', "#EC NOTEXT
     END OF gc_type .
   CONSTANTS:
@@ -234,6 +234,8 @@ INTERFACE zif_abapgit_definitions
       git_branch_create        TYPE string VALUE 'git_branch_create',
       git_branch_switch        TYPE string VALUE 'git_branch_switch',
       git_branch_delete        TYPE string VALUE 'git_branch_delete',
+      git_tag_create           TYPE string VALUE 'git_tag_create',
+      git_tag_delete           TYPE string VALUE 'git_tag_delete',
       git_commit               TYPE string VALUE 'git_commit',
 
       db_delete                TYPE string VALUE 'db_delete',
@@ -251,6 +253,7 @@ INTERFACE zif_abapgit_definitions
       go_stage                 TYPE string VALUE 'go_stage',
       go_commit                TYPE string VALUE 'go_commit',
       go_branch_overview       TYPE string VALUE 'go_branch_overview',
+      go_tag_overview          TYPE string VALUE 'go_tag_overview',
       go_playground            TYPE string VALUE 'go_playground',
       go_debuginfo             TYPE string VALUE 'go_debuginfo',
       go_settings              TYPE string VALUE 'go_settings',
@@ -265,5 +268,7 @@ INTERFACE zif_abapgit_definitions
       active   TYPE r3state VALUE 'A',
       inactive TYPE r3state VALUE 'I',
     END OF gc_version.
+
+  CONSTANTS: gc_tag_prefix TYPE string VALUE 'refs/tags/'.
 
 ENDINTERFACE.

@@ -8,7 +8,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
-      lif_gui_page~on_event   REDEFINITION.
+      zif_abapgit_gui_page~on_event   REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -19,7 +19,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
                  changed_by TYPE string VALUE 'changed_by',
                END OF c_actions.
 
-    DATA: mv_show         TYPE lcl_persistence_db=>ty_value,
+    DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
           mo_repo_content TYPE REF TO lcl_gui_view_repo.
 
     METHODS:
@@ -29,13 +29,13 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
         RAISING zcx_abapgit_exception,
       render_toc
         IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar,
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO lcl_repo
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -49,13 +49,13 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ms_control-page_menu  = build_main_menu( ).
   ENDMETHOD.  " constructor
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: lv_key TYPE lcl_persistence_repo=>ty_repo-key.
+    DATA: lv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     IF NOT mo_repo_content IS INITIAL.
-      mo_repo_content->lif_gui_page~on_event(
+      mo_repo_content->zif_abapgit_gui_page~on_event(
         EXPORTING
           iv_action    = iv_action
           iv_prev_page = iv_prev_page
@@ -74,7 +74,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_actions-show.              " Change displayed repo
-        lcl_app=>user( )->set_repo_show( lv_key ).
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
             lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
@@ -150,14 +150,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ENDTRY.
 
     lv_show_old = mv_show.
-    mv_show     = lcl_app=>user( )->get_repo_show( ). " Get default repo from user cfg
+    mv_show     = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ). " Get default repo from user cfg
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
           lcl_app=>repo_srv( )->get( mv_show ).
         CATCH zcx_abapgit_exception.
           CLEAR mv_show.
-          lcl_app=>user( )->set_repo_show( mv_show ).
+          zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( mv_show ).
       ENDTRY.
     ENDIF.
 
@@ -171,9 +171,8 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    DATA: lo_advsub  TYPE REF TO lcl_html_toolbar,
-          lo_helpsub TYPE REF TO lcl_html_toolbar.
-
+    DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_menu.
     CREATE OBJECT lo_advsub.
@@ -202,14 +201,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_toc.
 
-    DATA: lo_pback      TYPE REF TO lcl_persist_background,
+    DATA: lo_pback      TYPE REF TO zcl_abapgit_persist_background,
           lv_current    TYPE abap_bool,
-          lv_key        TYPE lcl_persistence_repo=>ty_repo-key,
+          lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           lv_icon       TYPE string,
           lo_repo       LIKE LINE OF it_repo_list,
-          lo_favbar     TYPE REF TO lcl_html_toolbar,
-          lo_allbar     TYPE REF TO lcl_html_toolbar,
-          lt_favorites  TYPE lcl_persistence_user=>tt_favorites,
+          lo_favbar     TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_allbar     TYPE REF TO zcl_abapgit_html_toolbar,
+          lt_favorites  TYPE zcl_abapgit_persistence_user=>tt_favorites,
           lv_repo_title TYPE string.
 
 
@@ -218,7 +217,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_allbar.
     CREATE OBJECT lo_pback.
 
-    lt_favorites = lcl_app=>user( )->get_favorites( ).
+    lt_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
 
     LOOP AT it_repo_list INTO lo_repo.
       lv_key     = lo_repo->get_key( ).
@@ -256,7 +255,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     " Cleanup orphan favorites (for removed repos)
     LOOP AT lt_favorites INTO lv_key.
-      lcl_app=>user( )->toggle_favorite( lv_key ).
+      zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( lv_key ).
     ENDLOOP.
 
     " Render HTML
@@ -268,7 +267,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  lcl_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
+                  zcl_abapgit_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
@@ -276,14 +275,14 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    lcl_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
+                    zcl_abapgit_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
 
     ro_html->add( '<td>' ).
     ro_html->add( lo_allbar->render_as_droplist(
-      iv_label = lcl_html=>icon( iv_name = 'three-bars/blue' )
+      iv_label = zcl_abapgit_html=>icon( iv_name = 'three-bars/blue' )
       iv_right = abap_true
       iv_sort  = abap_true ) ).
     ro_html->add( '</td>' ).

@@ -10,8 +10,8 @@
 CLASS lcl_object_iarp DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     METHODS:
@@ -33,17 +33,17 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_iarp IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD read.
 
@@ -78,13 +78,13 @@ CLASS lcl_object_iarp IMPLEMENTATION.
 
   ENDMETHOD.                    "read
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_attr       TYPE w3resoattr,
           lt_parameters TYPE w3resopara_tabletype.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -96,7 +96,7 @@ CLASS lcl_object_iarp IMPLEMENTATION.
     io_xml->add( iv_name = 'PARAMETERS'
                  ig_data = lt_parameters ).
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.                    "zif_abapgit_object~serialize
 
   METHOD save.
 
@@ -114,7 +114,7 @@ CLASS lcl_object_iarp IMPLEMENTATION.
 
   ENDMETHOD.                    "save
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_attr       TYPE w3resoattr,
           lt_parameters TYPE w3resopara_tabletype.
@@ -129,9 +129,9 @@ CLASS lcl_object_iarp IMPLEMENTATION.
     save( is_attr       = ls_attr
           it_parameters = lt_parameters ).
 
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: li_resource TYPE REF TO if_w3_api_resource,
           ls_name     TYPE w3resokey.
@@ -157,9 +157,9 @@ CLASS lcl_object_iarp IMPLEMENTATION.
     li_resource->if_w3_api_object~delete( ).
     li_resource->if_w3_api_object~save( ).
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_name TYPE w3resokey.
 
@@ -182,9 +182,9 @@ CLASS lcl_object_iarp IMPLEMENTATION.
       rv_bool = abap_true.
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -192,9 +192,9 @@ CLASS lcl_object_iarp IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

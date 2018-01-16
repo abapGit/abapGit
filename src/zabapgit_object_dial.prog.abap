@@ -6,7 +6,7 @@
 CLASS lcl_object_dial DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_dialog_module,
@@ -24,25 +24,25 @@ ENDCLASS.
 
 CLASS lcl_object_dial IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_tdct TYPE tdct.
 
@@ -52,7 +52,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_dialog_module TYPE ty_dialog_module.
 
@@ -67,7 +67,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_dialog_module TYPE ty_dialog_module.
 
@@ -101,7 +101,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: ls_bcdata TYPE bdcdata,
           lt_bcdata TYPE STANDARD TABLE OF bdcdata.
@@ -163,7 +163,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: objectname TYPE tdct-dnam.
 
@@ -183,7 +183,7 @@ CLASS lcl_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

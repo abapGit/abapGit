@@ -10,8 +10,8 @@
 CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -40,11 +40,11 @@ CLASS lcl_object_tran DEFINITION INHERITING FROM lcl_objects_super FINAL.
         CHANGING  cg_value TYPE any,
 
       serialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_output
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
 
       deserialize_texts
-        IMPORTING io_xml TYPE REF TO lcl_xml_input
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.                    "lcl_object_TRAN DEFINITION
@@ -56,17 +56,17 @@ ENDCLASS.                    "lcl_object_TRAN DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_tran IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD split_parameters_comp.
     DATA: lv_off TYPE i.
@@ -209,7 +209,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "split_parameters
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_tcode TYPE tstc-tcode.
 
@@ -218,9 +218,9 @@ CLASS lcl_object_tran IMPLEMENTATION.
       WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: lt_bdcdata TYPE TABLE OF bdcdata.
 
@@ -256,7 +256,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_transaction TYPE tstc-tcode.
 
@@ -276,7 +276,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     CONSTANTS: lc_hex_tra TYPE x VALUE '00',
 *               c_hex_men TYPE x VALUE '01',
@@ -297,8 +297,8 @@ CLASS lcl_object_tran IMPLEMENTATION.
           ls_rsstcd       TYPE rsstcd.
 
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TSTC'
@@ -370,7 +370,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_transaction TYPE tstc-tcode,
           lt_tcodes      TYPE TABLE OF tstc,
@@ -429,7 +429,7 @@ CLASS lcl_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

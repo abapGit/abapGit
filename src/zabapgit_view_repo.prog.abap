@@ -3,9 +3,11 @@
 *&---------------------------------------------------------------------*
 
 CLASS lcl_gui_view_repo DEFINITION FINAL.
+
   PUBLIC SECTION.
-    INTERFACES lif_gui_page.
-    ALIASES render FOR lif_gui_page~render.
+    INTERFACES zif_abapgit_gui_page.
+
+    ALIASES render FOR zif_abapgit_gui_page~render.
 
     CONSTANTS: BEGIN OF c_actions,
                  change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
@@ -16,7 +18,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
                END OF c_actions.
 
     METHODS constructor
-      IMPORTING iv_key TYPE lcl_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -33,26 +35,26 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
       render_head_line
         IMPORTING iv_lstate      TYPE char1
                   iv_rstate      TYPE char1
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_head_menu
         IMPORTING iv_lstate         TYPE char1
                   iv_rstate         TYPE char1
-        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
+        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       build_grid_menu
-        RETURNING VALUE(ro_toolbar) TYPE REF TO lcl_html_toolbar
+        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       render_item
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_item_files
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_item_command
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html,
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       get_item_class
         IMPORTING is_item        TYPE lcl_repo_content_list=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
@@ -62,7 +64,7 @@ CLASS lcl_gui_view_repo DEFINITION FINAL.
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
-        RETURNING VALUE(ro_html) TYPE REF TO lcl_html
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
 
     METHODS:
@@ -79,40 +81,40 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO lcl_settings.
+    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
 
     super->constructor( ).
 
     mo_repo         = lcl_app=>repo_srv( )->get( iv_key ).
     mv_cur_dir      = '/'. " Root
-    mv_hide_files   = lcl_app=>user( )->get_hide_files( ).
-    mv_changes_only = lcl_app=>user( )->get_changes_only( ).
+    mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
 
     " Read global settings to get max # of objects to be listed
-    lo_settings     = lcl_app=>settings( )->read( ).
+    lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
 
   ENDMETHOD. "constructor
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lv_path TYPE string.
 
     CASE iv_action.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
-        mv_hide_files   = lcl_app=>user( )->toggle_hide_files( ).
+        mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
-        lv_path         = lcl_html_action_utils=>dir_decode( iv_getdata ).
-        mv_cur_dir      = lcl_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        lv_path         = zcl_abapgit_html_action_utils=>dir_decode( iv_getdata ).
+        mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
         mv_cur_dir      = '/'. " Root
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
-        mv_changes_only = lcl_app=>user( )->toggle_changes_only( ).
+        mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
@@ -121,7 +123,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   ENDMETHOD. "lif_gui_page~on_event
 
-  METHOD lif_gui_page~render.
+  METHOD zif_abapgit_gui_page~render.
 
     DATA: lt_repo_items TYPE lcl_repo_content_list=>tt_repo_items,
           lo_browser    TYPE REF TO lcl_repo_content_list,
@@ -131,7 +133,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
           lv_max        TYPE abap_bool,
           lv_max_str    TYPE string,
           lv_add_str    TYPE string,
-          lo_log        TYPE REF TO lcl_log.
+          lo_log        TYPE REF TO zcl_abapgit_log.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -151,10 +153,10 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                                           iv_changes_only = mv_changes_only ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
-          lcl_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
-                             CHANGING cv_prev = lv_lstate ).
-          lcl_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
-                             CHANGING cv_prev = lv_rstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
+                                     CHANGING cv_prev = lv_lstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
+                                     CHANGING cv_prev = lv_rstate ).
         ENDLOOP.
 
         ro_html->add( render_head_line( iv_lstate = lv_lstate
@@ -172,7 +174,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         " Repo content table
         ro_html->add( '<table class="repo_tab">' ).
 
-        IF lcl_path=>is_root( mv_cur_dir ) = abap_false.
+        IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
         ENDIF.
 
@@ -199,9 +201,9 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
           ro_html->add( |Only { lv_max_str } shown in list. Display {
-            lcl_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
+            zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
-            lcl_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>gc_action-go_settings )
+            zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>gc_action-go_settings )
             } )| ).
           ro_html->add( '</div>' ).
         ENDIF.
@@ -217,7 +219,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD render_head_line.
 
-    DATA lo_toolbar TYPE REF TO lcl_html_toolbar.
+    DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_html.
     lo_toolbar = build_head_menu( iv_lstate = iv_lstate iv_rstate = iv_rstate ).
@@ -262,9 +264,10 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
   METHOD build_head_menu.
 
-    DATA: lo_tb_advanced TYPE REF TO lcl_html_toolbar,
-          lo_tb_branch   TYPE REF TO lcl_html_toolbar,
-          lv_key         TYPE lcl_persistence_db=>ty_value,
+    DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
+          lv_key         TYPE zif_abapgit_persistence=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_definitions=>gc_html_opt-crossout,
           lv_crossout    LIKE zif_abapgit_definitions=>gc_html_opt-crossout,
           lv_pull_opt    LIKE zif_abapgit_definitions=>gc_html_opt-crossout.
@@ -272,6 +275,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
+    CREATE OBJECT lo_tb_tag.
 
     lv_key = mo_repo->get_key( ).
 
@@ -293,6 +297,14 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>gc_action-git_branch_create }?{ lv_key }| ).
       lo_tb_branch->add( iv_txt = 'Delete'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-git_branch_delete }?{ lv_key }| ).
+
+      lo_tb_tag->add( iv_txt = 'Overview'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-go_tag_overview }?{ lv_key }| ).
+      lo_tb_tag->add( iv_txt = 'Create'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_create }?{ lv_key }| ).
+      lo_tb_tag->add( iv_txt = 'Delete'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_delete }?{ lv_key }| ).
+
     ENDIF.
 
     " Build advanced drop-down ========================
@@ -356,6 +368,8 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
       ENDTRY.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
+      ro_toolbar->add( iv_txt = 'Tag'
+                       io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
       ro_toolbar->add( iv_txt = 'Import ZIP'
                        iv_act = |{ zif_abapgit_definitions=>gc_action-zip_import }?{ lv_key }|
@@ -369,7 +383,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>gc_action-repo_refresh }?{ lv_key }| ).
-    ro_toolbar->add( iv_txt = lcl_html=>icon( iv_name = 'settings/grey70' )
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'settings/grey70' )
                      io_sub = build_grid_menu( ) ).
 
   ENDMETHOD.  "build_head_menu
@@ -396,17 +410,17 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     CASE is_item-obj_type.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
-        rv_html = lcl_html=>icon( 'file-code/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
       WHEN 'W3MI' OR 'W3HT'.
-        rv_html = lcl_html=>icon( 'file-binary/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-binary/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = lcl_html=>icon( 'file/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = lcl_html=>icon( 'file-directory/darkgrey' ).
+      rv_html = zcl_abapgit_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
   ENDMETHOD. "get_item_icon
@@ -491,7 +505,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
       IF mv_hide_files = abap_true AND is_item-obj_name IS NOT INITIAL.
 
-        lv_difflink = lcl_html_action_utils=>obj_encode(
+        lv_difflink = zcl_abapgit_html_action_utils=>obj_encode(
           iv_key    = mo_repo->get_key( )
           ig_object = is_item ).
 
@@ -507,7 +521,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
           ro_html->add( '<div>' ).
           IF ls_file-is_changed = abap_true.
-            lv_difflink = lcl_html_action_utils=>file_encode(
+            lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
             ro_html->add_a( iv_txt = 'view diff'
@@ -539,7 +553,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<tr class="folder">' ).
-    ro_html->add( |<td class="icon">{ lcl_html=>icon( 'dir' ) }</td>| ).
+    ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'dir' ) }</td>| ).
     ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->is_offline( ) = abap_false.
       ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
@@ -555,10 +569,10 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
-    lv_encode = lcl_html_action_utils=>dir_encode( lv_path ).
+    lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
-    rv_html = lcl_html=>a( iv_txt = lv_path
-                           iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
+                                   iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_dir_jump_link
 
@@ -566,11 +580,11 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     DATA: lv_encode TYPE string.
 
-    lv_encode = lcl_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
+    lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
                                                     iv_obj_name = is_item-obj_name ).
 
-    rv_html = lcl_html=>a( iv_txt = |{ is_item-obj_name }|
-                           iv_act = |{ zif_abapgit_definitions=>gc_action-jump }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|
+                                   iv_act = |{ zif_abapgit_definitions=>gc_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.  "build_obj_jump_link
 

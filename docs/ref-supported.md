@@ -15,6 +15,9 @@ CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
+CUS0 | Customizing IMG Activity | Yes
+CUS1 | Customizing Transactions | Yes
+CUS2 | Customizing Attributes | Yes
 DCLS | ABAP Data Control Language Sources | Yes
 DDLS | Data Definition Language Source | Yes
 DDLX | CDS metadata extension | Yes
@@ -23,6 +26,7 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
+DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
 ECTD | eCATT Test Data Container | [#105](https://github.com/larshp/abapGit/issues/105)
@@ -55,6 +59,8 @@ SFPF | Form Object: Form | Yes
 SFPI | Form Object: Interface | Yes
 SFSW | Switch + Assignment of Objects to the Switch | Yes
 SHI3 | General structure storage: Definition of a structure | Yes
+SHI5 | Gen. hierarchy storage extrension name | Yes
+SHI8 | SFW Switch Assignment in Hierarchy Tool | Yes
 SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes

@@ -4,8 +4,8 @@
 
 CLASS lcl_object_ensc DEFINITION INHERITING FROM lcl_objects_super FINAL.
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
 ENDCLASS. "lcl_object_ensc
 
@@ -14,15 +14,15 @@ ENDCLASS. "lcl_object_ensc
 *----------------------------------------------------------------------*
 CLASS lcl_object_ensc IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_spot_name  TYPE enhspotcompositename,
           lv_message    TYPE string,
@@ -45,8 +45,8 @@ CLASS lcl_object_ensc IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'COMP_ENH_SPOTS' "Composite enhancement spots
                   CHANGING  cg_data = lt_comp_spots ).
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     lv_package = iv_package.
@@ -85,7 +85,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "deserialize
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_spot_name  TYPE enhspotcompositename,
           lv_message    TYPE string,
@@ -129,7 +129,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "serialize
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_spot_name TYPE enhspotcompositename,
           li_spot_ref  TYPE REF TO if_enh_spot_composite.
@@ -148,7 +148,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "exists
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     DATA: lv_spot_name TYPE enhspotcompositename,
           lv_message   TYPE string,
           lx_root      TYPE REF TO cx_root,
@@ -175,11 +175,11 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "delete
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.  "get_metadata
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -190,7 +190,7 @@ CLASS lcl_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.  "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

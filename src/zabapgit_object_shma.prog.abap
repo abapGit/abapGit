@@ -5,31 +5,31 @@
 CLASS lcl_object_shma DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
+    INTERFACES zif_abapgit_object.
 
 ENDCLASS.
 
 CLASS lcl_object_shma IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     rv_changed = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_area_name TYPE shm_area_name.
 
@@ -42,7 +42,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lv_area_name       TYPE shm_area_name,
           ls_area_attributes TYPE shma_attributes.
@@ -59,8 +59,8 @@ CLASS lcl_object_shma IMPLEMENTATION.
         CLEAR: ls_area_attributes-chg_user,
                ls_area_attributes-chg_date,
                ls_area_attributes-chg_time,
-               ls_area_attributes-cls_gen_user ,
-               ls_area_attributes-cls_gen_date ,
+               ls_area_attributes-cls_gen_user,
+               ls_area_attributes-cls_gen_date,
                ls_area_attributes-cls_gen_time.
 
         io_xml->add( iv_name = 'AREA_ATTRIBUTES'
@@ -72,7 +72,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_area_name       TYPE shm_area_name,
           ls_area_attributes TYPE shma_attributes.
@@ -100,14 +100,14 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     " We can't use FM SHMA_DELETE_AREA because it depends
     " on the corresponding class, but in abapGit it has its own
     " lifecycle. Therefore we have to reimplement most of the
     " FMs logic
 
-    CONSTANTS: lc_request_delete TYPE i VALUE '4'.
+    CONSTANTS: lc_request_delete TYPE i VALUE 4.
 
     DATA: lv_request   TYPE i,
           lv_area_name TYPE shm_area_name,
@@ -192,7 +192,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
           EXCEPTIONS
             OTHERS      = 1.
 
-        IF  sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
+        IF sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
 
           " TADIR entries for local objects must be deleted 'by hand'
 
@@ -228,7 +228,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_bcdata TYPE bdcdata,
           lt_bcdata TYPE STANDARD TABLE OF bdcdata.
@@ -264,7 +264,7 @@ CLASS lcl_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
 

@@ -10,8 +10,8 @@
 CLASS lcl_object_splo DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
 ENDCLASS.                    "lcl_object_splo DEFINITION
 
@@ -22,11 +22,11 @@ ENDCLASS.                    "lcl_object_splo DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_splo IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE chgname1 FROM tsp1d INTO rv_user
       WHERE papart = ms_item-obj_name.
@@ -36,19 +36,19 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_tsp1t TYPE tsp1t,
           ls_tsp1d TYPE tsp1d,
           ls_tsp0p TYPE tsp0p.
 
 
-    IF lif_object~exists( ) = abap_false.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -72,9 +72,9 @@ CLASS lcl_object_splo IMPLEMENTATION.
     io_xml->add( iv_name = 'TSP0P'
                  ig_data = ls_tsp0p ).
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.                    "zif_abapgit_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_tsp1t    TYPE tsp1t,
           ls_tsp1d    TYPE tsp1d,
@@ -94,17 +94,17 @@ CLASS lcl_object_splo IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DELETE FROM tsp1t WHERE papart = ms_item-obj_name. "#EC CI_NOFIRST "#EC CI_SUBRC
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_papart TYPE tsp1d-papart.
 
@@ -113,13 +113,13 @@ CLASS lcl_object_splo IMPLEMENTATION.
       WHERE papart = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( 'todo, jump, SPLO' ).
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

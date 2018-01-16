@@ -12,8 +12,8 @@ CLASS lcl_skip_objects DEFINITION.
     METHODS:
       skip_sadl_generated_objects
         IMPORTING
-          it_tadir          TYPE zif_abapgit_definitions=>ty_tadir_tt
-          io_log            TYPE REF TO lcl_log OPTIONAL
+          it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
+          io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING
           VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
   PRIVATE SECTION.
@@ -32,8 +32,8 @@ CLASS lcl_tadir DEFINITION FINAL.
       read
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-                  io_dot                TYPE REF TO lcl_dot_abapgit OPTIONAL
-                  io_log                TYPE REF TO lcl_log OPTIONAL
+                  io_dot                TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
+                  io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception,
       read_single
@@ -67,9 +67,9 @@ CLASS lcl_tadir DEFINITION FINAL.
       build
         IMPORTING iv_package            TYPE tadir-devclass
                   iv_top                TYPE tadir-devclass
-                  io_dot                TYPE REF TO lcl_dot_abapgit
+                  io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-                  io_log                TYPE REF TO lcl_log OPTIONAL
+                  io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
         RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 
@@ -84,11 +84,8 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   METHOD read_single.
 
-    DATA: lv_obj_name TYPE tadir-obj_name.
-
-
     IF iv_object = 'SICF'.
-      rs_tadir = read_single_sicf( iv_pgmid = iv_pgmid
+      rs_tadir = read_single_sicf( iv_pgmid    = iv_pgmid
                                    iv_obj_name = iv_obj_name ).
     ELSE.
       SELECT SINGLE * FROM tadir INTO rs_tadir
@@ -114,7 +111,8 @@ CLASS lcl_tadir IMPLEMENTATION.
     SELECT * FROM tadir INTO TABLE lt_tadir
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
-      AND obj_name LIKE lv_obj_name.
+      AND obj_name LIKE lv_obj_name
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.
@@ -170,7 +168,7 @@ CLASS lcl_tadir IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc = 0.
-      rv_hash = lcl_hash=>sha1_raw( lcl_convert=>string_to_xstring_utf8( lv_url ) ).
+      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -270,7 +268,7 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
     IF NOT io_dot IS INITIAL.
-      lv_path = lcl_folder_logic=>package_to_path(
+      lv_path = zcl_abapgit_folder_logic=>package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
         iv_package = iv_package ).

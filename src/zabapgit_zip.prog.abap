@@ -11,7 +11,7 @@ CLASS lcl_zip DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS import
-      IMPORTING iv_key TYPE lcl_persistence_db=>ty_value
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_value
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export
@@ -342,8 +342,8 @@ CLASS lcl_zip IMPLEMENTATION.
 
       <ls_file>-data = lv_data.
 
-      <ls_file>-sha1 = lcl_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
-                                       iv_data = <ls_file>-data ).
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+                                               iv_data = <ls_file>-data ).
 
     ENDLOOP.
 
@@ -353,7 +353,7 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log TYPE REF TO lcl_log,
+    DATA: lo_log TYPE REF TO zcl_abapgit_log,
           lt_zip TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
 
@@ -385,11 +385,11 @@ CLASS lcl_zip IMPLEMENTATION.
   METHOD export_package.
 
     DATA: lo_repo TYPE REF TO lcl_repo_offline,
-          ls_data TYPE lcl_persistence_repo=>ty_repo.
+          ls_data TYPE zcl_abapgit_persistence_repo=>ty_repo.
 
 
     ls_data-key = 'DUMMY'.
-    ls_data-dot_abapgit = lcl_dot_abapgit=>build_default( )->get_data( ).
+    ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
     lcl_popups=>popup_package_export(
       IMPORTING

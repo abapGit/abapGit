@@ -27,7 +27,7 @@ CLASS lcl_proxy_configuration DEFINITION CREATE PUBLIC.
           VALUE(rv_auth) TYPE abap_bool.
 
   PRIVATE SECTION.
-    DATA: mo_settings TYPE REF TO lcl_settings,
+    DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
           mi_exit     TYPE REF TO lif_exit.
 
 ENDCLASS.
@@ -36,7 +36,7 @@ CLASS lcl_proxy_configuration IMPLEMENTATION.
 
   METHOD constructor.
 
-    mo_settings = lcl_app=>settings( )->read( ).
+    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     mi_exit = lcl_exit=>get_instance( ).
 

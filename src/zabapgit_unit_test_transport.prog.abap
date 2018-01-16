@@ -52,7 +52,8 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING.
           mt_transport_objects TYPE scts_tadir,
           mt_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt,
           ms_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files,
-          mo_stage             TYPE REF TO lcl_stage.
+          mo_stage             TYPE REF TO zcl_abapgit_stage.
+
 ENDCLASS.
 
 CLASS ltcl_transport_objects IMPLEMENTATION.
@@ -321,14 +322,14 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_file_should_be_added.
-    DATA: lt_staged_objects TYPE lcl_stage=>ty_stage_tt.
+    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
     lt_staged_objects = mo_stage->get_all( ).
 
     READ TABLE lt_staged_objects TRANSPORTING NO FIELDS
     WITH KEY file-filename = is_local_file-file-filename
             file-path      = is_local_file-file-path
             file-data      = is_local_file-file-data
-            method         = lcl_stage=>c_method-add.
+            method         = zcl_abapgit_stage=>c_method-add.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Object { is_local_file-file-filename } not added to stage| ).
     ENDIF.
@@ -347,7 +348,9 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_it_should_remove_at_stage.
-    DATA: lt_staged_objects TYPE lcl_stage=>ty_stage_tt.
+
+    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
+
     lt_staged_objects = mo_stage->get_all( ).
 
     READ TABLE lt_staged_objects TRANSPORTING NO FIELDS

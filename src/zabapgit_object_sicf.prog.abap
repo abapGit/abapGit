@@ -10,8 +10,8 @@
 CLASS lcl_object_sicf DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     TYPES: ty_icfhandler_tt TYPE STANDARD TABLE OF icfhandler WITH DEFAULT KEY.
@@ -63,11 +63,11 @@ ENDCLASS.                    "lcl_object_sicf DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_sicf IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_icfservice TYPE icfservice.
 
@@ -83,11 +83,11 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: ls_tadir TYPE tadir,
           ls_key   TYPE ty_sicf_key.
@@ -104,9 +104,9 @@ CLASS lcl_object_sicf IMPLEMENTATION.
       rv_bool = boolc( sy-subrc = 0 ).
     ENDIF.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_icfservice TYPE icfservice,
           ls_icfdocu    TYPE icfdocu,
@@ -195,7 +195,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   ENDMETHOD.                    "read
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_icfservice TYPE icfservice,
           ls_read       TYPE icfservice,
@@ -215,7 +215,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
                   CHANGING cg_data = lt_icfhandler ).
 
 
-    lv_exists = lif_object~exists( ).
+    lv_exists = zif_abapgit_object~exists( ).
     IF lv_exists = abap_false.
       insert_sicf( is_icfservice = ls_icfservice
                    is_icfdocu    = ls_icfdocu
@@ -393,7 +393,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   ENDMETHOD.                    "change_sicf
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: ls_icfservice TYPE icfservice.
 
@@ -436,7 +436,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: ls_bcdata TYPE bdcdata,
           lt_bcdata TYPE STANDARD TABLE OF bdcdata.
@@ -472,7 +472,7 @@ CLASS lcl_object_sicf IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 

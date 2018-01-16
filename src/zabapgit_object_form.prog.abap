@@ -7,8 +7,8 @@
 CLASS lcl_object_form DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
@@ -91,7 +91,7 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 CLASS lcl_object_form IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
 
     DATA: ls_last_changed    TYPE tys_form_header.
     DATA: lv_last_changed_ts TYPE timestamp.
@@ -105,7 +105,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_last_changed TYPE tys_form_header.
 
@@ -119,14 +119,14 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_form_name TYPE thead-tdform.
 
@@ -141,7 +141,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     DATA: lt_bdcdata TYPE TABLE OF bdcdata.
 
@@ -173,7 +173,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lv_name TYPE itcta-tdform.
 
@@ -186,13 +186,13 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lt_form_data              TYPE tyt_form_data.
     DATA: ls_form_data              TYPE tys_form_data.
     DATA: lt_text_header            TYPE tyt_text_header.
     DATA: lt_lines                  TYPE tyt_lines.
-    DATA: lo_xml                    TYPE REF TO lcl_xml_output.
+*    DATA: lo_xml                    TYPE REF TO zcl_abapgit_xml_output.
     DATA: lv_form_found             TYPE flag.
     FIELD-SYMBOLS: <ls_text_header> LIKE LINE OF lt_text_header.
 
@@ -201,7 +201,7 @@ CLASS lcl_object_form IMPLEMENTATION.
     LOOP AT lt_text_header ASSIGNING <ls_text_header>.
       CLEAR lt_lines.
       CLEAR ls_form_data.
-      FREE lo_xml.
+*      FREE lo_xml.
 
       _read_form( EXPORTING is_text_header = <ls_text_header>
                   IMPORTING ev_form_found = lv_form_found
@@ -230,7 +230,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lt_form_data            TYPE tyt_form_data.
     DATA: lt_lines                TYPE tyt_lines.
@@ -242,7 +242,6 @@ CLASS lcl_object_form IMPLEMENTATION.
     LOOP AT lt_form_data ASSIGNING <ls_form_data>.
 
       lt_lines = _extract_tdlines( <ls_form_data> ).
-
 
       _save_form( EXPORTING it_lines     = lt_lines
                   CHANGING  cs_form_data = <ls_form_data> ).
@@ -259,7 +258,7 @@ CLASS lcl_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -315,7 +314,7 @@ CLASS lcl_object_form IMPLEMENTATION.
   METHOD _extract_tdlines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO lcl_xml_input.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_input.
 
     lv_string = mo_files->read_string( iv_extra =
                                _build_extra_from_header( is_form_data-form_header )
@@ -353,7 +352,7 @@ CLASS lcl_object_form IMPLEMENTATION.
   METHOD _compress_lines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO lcl_xml_output.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
 
     CREATE OBJECT lo_xml.
     lo_xml->add( iv_name = c_objectname_tdlines

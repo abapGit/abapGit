@@ -19,7 +19,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
              lstate     TYPE char1,
              rstate     TYPE char1,
              fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
-             o_diff     TYPE REF TO lcl_diff,
+             o_diff     TYPE REF TO zcl_abapgit_diff,
              changed_by TYPE xubname,
              type       TYPE string,
            END OF ty_file_diff,
@@ -27,12 +27,12 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       constructor
-        IMPORTING iv_key           TYPE lcl_persistence_repo=>ty_repo-key
+        IMPORTING iv_key           TYPE zcl_abapgit_persistence_repo=>ty_repo-key
                   is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
                   is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -45,33 +45,33 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
                END OF c_actions.
 
     DATA: mt_diff_files    TYPE tt_file_diff,
-          mt_delayed_lines TYPE lcl_diff=>ty_diffs_tt,
+          mt_delayed_lines TYPE zcl_abapgit_diff=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
-          mv_repo_key      TYPE lcl_persistence_repo=>ty_repo-key,
+          mv_repo_key      TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           mv_seed          TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_diff_head
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_table_head
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_lines
       IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_beacon
-      IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff
+      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
                 is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_split
-      IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff
+      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
                 iv_fstate      TYPE char1
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_unified
-      IMPORTING is_diff_line   TYPE lcl_diff=>ty_diff OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO lcl_html.
+      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS append_diff
       IMPORTING it_remote TYPE zif_abapgit_definitions=>ty_files_tt
                 it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -79,7 +79,7 @@ CLASS lcl_gui_page_diff DEFINITION FINAL INHERITING FROM lcl_gui_page.
       RAISING   zcx_abapgit_exception.
     METHODS build_menu
       IMPORTING iv_supress_stage TYPE abap_bool
-      RETURNING VALUE(ro_menu)   TYPE REF TO lcl_html_toolbar.
+      RETURNING VALUE(ro_menu)   TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS is_binary
       IMPORTING iv_d1         TYPE xstring
                 iv_d2         TYPE xstring
@@ -101,7 +101,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     super->constructor( ).
     ms_control-page_title = 'DIFF'.
-    mv_unified            = lcl_app=>user( )->get_diff_unified( ).
+    mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
     mv_repo_key           = iv_key.
 
     GET TIME STAMP FIELD lv_ts.
@@ -275,7 +275,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD build_menu.
 
-    DATA: lo_sub   TYPE REF TO lcl_html_toolbar,
+    DATA: lo_sub   TYPE REF TO zcl_abapgit_html_toolbar,
           lt_types TYPE string_table,
           lt_users TYPE string_table.
 
@@ -334,11 +334,11 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   ENDMETHOD.  " build_menu.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
-        mv_unified = lcl_app=>user( )->toggle_diff_unified( ).
+        mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
         ev_state   = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 
@@ -353,10 +353,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
-      lcl_progress=>show( iv_key     = 'Diff'
-                          iv_current = sy-tabix
-                          iv_total   = lines( mt_diff_files )
-                          iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+      zcl_abapgit_progress=>show( iv_key     = 'Diff'
+                                  iv_current = sy-tabix
+                                  iv_total   = lines( mt_diff_files )
+                                  iv_text    = |Render Diff - { ls_diff_file-filename }| ).
 
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
@@ -394,7 +394,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_diff_head.
 
-    DATA: ls_stats TYPE lcl_diff=>ty_count.
+    DATA: ls_stats TYPE zcl_abapgit_diff=>ty_count.
 
     CREATE OBJECT ro_html.
 
@@ -486,13 +486,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_lines.
 
-    DATA: lo_highlighter TYPE REF TO lcl_syntax_highlighter,
-          lt_diffs       TYPE lcl_diff=>ty_diffs_tt,
+    DATA: lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
+          lt_diffs       TYPE zcl_abapgit_diff=>ty_diffs_tt,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
 
-    lo_highlighter = lcl_syntax_highlighter=>create( is_diff-filename ).
+    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( is_diff-filename ).
     CREATE OBJECT ro_html.
 
     lt_diffs = is_diff-o_diff->get( ).
@@ -545,10 +545,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " New line
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = lcl_diff=>c_diff-update.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = zcl_abapgit_diff=>c_diff-update.
       lv_bg = ' diff_upd'.
       lv_mark = `~`.
-    ELSEIF is_diff_line-result = lcl_diff=>c_diff-insert.
+    ELSEIF is_diff_line-result = zcl_abapgit_diff=>c_diff-insert.
       lv_bg = ' diff_ins'.
       lv_mark = `+`.
     ENDIF.
@@ -558,10 +558,10 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     " Old line
     CLEAR lv_bg.
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = lcl_diff=>c_diff-update.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = zcl_abapgit_diff=>c_diff-update.
       lv_bg = ' diff_upd'.
       lv_mark = `~`.
-    ELSEIF is_diff_line-result = lcl_diff=>c_diff-delete.
+    ELSEIF is_diff_line-result = zcl_abapgit_diff=>c_diff-delete.
       lv_bg = ' diff_del'.
       lv_mark = `-`.
     ENDIF.
@@ -588,7 +588,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     " Release delayed subsequent update lines
-    IF is_diff_line-result <> lcl_diff=>c_diff-update.
+    IF is_diff_line-result <> zcl_abapgit_diff=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
         ro_html->add( '<tr>' ).                               "#EC NOTEXT
         ro_html->add( |<td class="num" line-num="{ <diff_line>-old_num }"></td>|
@@ -608,13 +608,13 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( '<tr>' ).                               "#EC NOTEXT
     CASE is_diff_line-result.
-      WHEN lcl_diff=>c_diff-update.
+      WHEN zcl_abapgit_diff=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
-      WHEN lcl_diff=>c_diff-insert.
+      WHEN zcl_abapgit_diff=>c_diff-insert.
         ro_html->add( |<td class="num" line-num=""></td>|
                    && |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="code diff_ins">+{ is_diff_line-new }</td>| ).
-      WHEN lcl_diff=>c_diff-delete.
+      WHEN zcl_abapgit_diff=>c_diff-delete.
         ro_html->add( |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
                    && |<td class="num" line-num=""></td>|
                    && |<td class="code diff_del">-{ is_diff_line-old }</td>| ).

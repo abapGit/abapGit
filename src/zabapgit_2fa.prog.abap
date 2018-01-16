@@ -560,7 +560,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
   METHOD get_authenticated_client.
     DATA: lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
-          lo_settings              TYPE REF TO lcl_settings.
+          lo_settings              TYPE REF TO zcl_abapgit_settings.
 
     " If there is a cached client return it instead
     IF is_session_running( ) = abap_true AND mi_authenticated_session IS BOUND.
@@ -570,7 +570,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
 
     " Try to login to GitHub API with username, password and 2fa token
 
-    lo_settings = lcl_app=>settings( )->read( ).
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     cl_http_client=>create_by_url(
       EXPORTING

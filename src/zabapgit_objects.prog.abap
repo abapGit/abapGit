@@ -282,406 +282,23 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
 ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 
-*----------------------------------------------------------------------*
-*       CLASS lcl_objects_files DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_objects_files DEFINITION.
-
-  PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-                  iv_path TYPE string OPTIONAL,
-      add_string
-        IMPORTING iv_extra  TYPE clike OPTIONAL
-                  iv_ext    TYPE string
-                  iv_string TYPE string
-        RAISING   zcx_abapgit_exception,
-      read_string
-        IMPORTING iv_extra         TYPE clike OPTIONAL
-                  iv_ext           TYPE string
-        RETURNING VALUE(rv_string) TYPE string
-        RAISING   zcx_abapgit_exception,
-      add_xml
-        IMPORTING iv_extra     TYPE clike OPTIONAL
-                  io_xml       TYPE REF TO lcl_xml_output
-                  iv_normalize TYPE sap_bool DEFAULT abap_true
-                  is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-        RAISING   zcx_abapgit_exception,
-* needed since type-check during dynamic call fails even if the object is compatible
-      add_xml_from_plugin
-        IMPORTING iv_extra     TYPE clike OPTIONAL
-                  io_xml       TYPE REF TO object
-                  iv_normalize TYPE sap_bool DEFAULT abap_true
-        RAISING   zcx_abapgit_exception ##called,
-      read_xml
-        IMPORTING iv_extra      TYPE clike OPTIONAL
-        RETURNING VALUE(ro_xml) TYPE REF TO lcl_xml_input
-        RAISING   zcx_abapgit_exception,
-      read_abap
-        IMPORTING iv_extra       TYPE clike OPTIONAL
-                  iv_error       TYPE sap_bool DEFAULT abap_true
-        RETURNING VALUE(rt_abap) TYPE abaptxt255_tab
-        RAISING   zcx_abapgit_exception,
-      add_abap
-        IMPORTING iv_extra TYPE clike OPTIONAL
-                  it_abap  TYPE STANDARD TABLE
-        RAISING   zcx_abapgit_exception,
-      add
-        IMPORTING is_file TYPE zif_abapgit_definitions=>ty_file,
-      add_raw
-        IMPORTING iv_extra TYPE clike OPTIONAL
-                  iv_ext   TYPE string
-                  iv_data  TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      read_raw
-        IMPORTING iv_extra       TYPE clike OPTIONAL
-                  iv_ext         TYPE string
-        RETURNING VALUE(rv_data) TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      get_files
-        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt,
-      set_files
-        IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt,
-      get_accessed_files
-        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
-
-  PRIVATE SECTION.
-    DATA: ms_item           TYPE zif_abapgit_definitions=>ty_item,
-          mt_accessed_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          mt_files          TYPE zif_abapgit_definitions=>ty_files_tt,
-          mv_path           TYPE string.
-
-    METHODS:
-      read_file
-        IMPORTING iv_filename TYPE string
-                  iv_error    TYPE abap_bool DEFAULT abap_true
-        EXPORTING ev_data     TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      filename
-        IMPORTING iv_extra           TYPE clike OPTIONAL
-                  iv_ext             TYPE string
-        RETURNING VALUE(rv_filename) TYPE string.
-
-ENDCLASS.                    "lcl_objects_files DEFINITION
-
-INTERFACE lif_comparison_result.
-  METHODS:
-    show_confirmation_dialog,
-    is_result_complete_halt
-      RETURNING VALUE(rv_response) TYPE abap_bool.
-ENDINTERFACE.
-
 "Null Object Pattern
 CLASS lcl_comparison_null DEFINITION FINAL.
   PUBLIC SECTION.
-    INTERFACES lif_comparison_result.
+    INTERFACES zif_abapgit_comparison_result.
 ENDCLASS.
 
 CLASS lcl_comparison_null IMPLEMENTATION.
 
-  METHOD lif_comparison_result~is_result_complete_halt.
+  METHOD zif_abapgit_comparison_result~is_result_complete_halt.
     rv_response = abap_false.
   ENDMETHOD.
 
-  METHOD lif_comparison_result~show_confirmation_dialog.
+  METHOD zif_abapgit_comparison_result~show_confirmation_dialog.
     RETURN.
   ENDMETHOD.
 
 ENDCLASS.
-
-*----------------------------------------------------------------------*
-*       INTERFACE lif_object DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-INTERFACE lif_object.
-
-  METHODS:
-    serialize
-      IMPORTING io_xml TYPE REF TO lcl_xml_output
-      RAISING   zcx_abapgit_exception,
-    deserialize
-      IMPORTING iv_package TYPE devclass
-                io_xml     TYPE REF TO lcl_xml_input
-      RAISING   zcx_abapgit_exception,
-    delete
-      RAISING zcx_abapgit_exception,
-    exists
-      RETURNING VALUE(rv_bool) TYPE abap_bool
-      RAISING   zcx_abapgit_exception,
-    changed_by
-      RETURNING VALUE(rv_user) TYPE xubname
-      RAISING   zcx_abapgit_exception,
-    jump
-      RAISING zcx_abapgit_exception,
-    get_metadata
-      RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
-    has_changed_since
-      IMPORTING iv_timestamp      TYPE timestamp
-                it_serial_buffer  TYPE lcl_persistence_objm=>tt_objm OPTIONAL
-      RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-  METHODS:
-    compare_to_remote_version
-      IMPORTING io_remote_version_xml       TYPE REF TO lcl_xml_input
-      RETURNING VALUE(ro_comparison_result) TYPE REF TO lif_comparison_result
-      RAISING   zcx_abapgit_exception.
-
-  DATA: mo_files TYPE REF TO lcl_objects_files.
-
-ENDINTERFACE.                    "lif_object DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_objects_files IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_objects_files IMPLEMENTATION.
-
-  METHOD constructor.
-    ms_item = is_item.
-    mv_path = iv_path.
-  ENDMETHOD.                    "constructor
-
-  METHOD add.
-    APPEND is_file TO mt_files.
-  ENDMETHOD.                    "add
-
-  METHOD get_files.
-    rt_files = mt_files.
-  ENDMETHOD.                    "get_files
-
-  METHOD set_files.
-    mt_files = it_files.
-  ENDMETHOD.                    "set_files
-
-  METHOD get_accessed_files.
-    rt_files = mt_accessed_files.
-  ENDMETHOD.  " get_accessed_files.
-
-  METHOD read_string.
-
-    DATA: lv_filename TYPE string,
-          lv_data     TYPE xstring.
-
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).                                          "#EC NOTEXT
-
-    read_file( EXPORTING iv_filename = lv_filename
-               IMPORTING ev_data     = lv_data ).
-
-    rv_string = lcl_convert=>xstring_to_string_utf8( lv_data ).
-
-  ENDMETHOD.                    "read_string
-
-  METHOD read_abap.
-
-    DATA: lv_filename TYPE string,
-          lv_data     TYPE xstring,
-          lv_abap     TYPE string.
-
-
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'abap' ).                                          "#EC NOTEXT
-
-    read_file( EXPORTING iv_filename = lv_filename
-                         iv_error    = iv_error
-               IMPORTING ev_data     = lv_data ).
-
-    IF lv_data IS INITIAL. " Post-handling of iv_error = false
-      RETURN.
-    ENDIF.
-
-    lv_abap = lcl_convert=>xstring_to_string_utf8( lv_data ).
-
-    SPLIT lv_abap AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_abap.
-
-  ENDMETHOD.                    "read_abap
-
-  METHOD add_abap.
-
-    DATA: lv_source TYPE string,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file.
-
-
-    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY zif_abapgit_definitions=>gc_newline.
-* when editing files via eg. GitHub web interface it adds a newline at end of file
-    lv_source = lv_source && zif_abapgit_definitions=>gc_newline.
-
-    ls_file-path = '/'.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'abap' ).                                     "#EC NOTEXT
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_source ).
-
-    APPEND ls_file TO mt_files.
-
-  ENDMETHOD.                    "abap_to_file
-
-  METHOD add_string.
-
-    DATA: ls_file TYPE zif_abapgit_definitions=>ty_file.
-
-
-    ls_file-path = '/'.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).                                     "#EC NOTEXT
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( iv_string ).
-
-    APPEND ls_file TO mt_files.
-
-  ENDMETHOD.                    "add_string
-
-  METHOD add_xml.
-
-    DATA: lv_xml  TYPE string,
-          ls_file TYPE zif_abapgit_definitions=>ty_file.
-
-
-    lv_xml = io_xml->render( iv_normalize = iv_normalize
-                             is_metadata = is_metadata ).
-    ls_file-path = '/'.
-
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'xml' ).                                      "#EC NOTEXT
-
-    REPLACE FIRST OCCURRENCE
-      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
-      IN lv_xml
-      WITH '<?xml version="1.0" encoding="utf-8"?>'.
-    ASSERT sy-subrc = 0.
-
-    ls_file-data = lcl_convert=>string_to_xstring_utf8( lv_xml ).
-
-    APPEND ls_file TO mt_files.
-
-  ENDMETHOD.                    "do
-
-  METHOD read_xml.
-
-    DATA: lv_filename TYPE string,
-          lv_data     TYPE xstring,
-          lv_xml      TYPE string.
-
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'xml' ).                                           "#EC NOTEXT
-
-    read_file( EXPORTING iv_filename = lv_filename
-               IMPORTING ev_data     = lv_data ).
-
-    lv_xml = lcl_convert=>xstring_to_string_utf8( lv_data ).
-
-    CREATE OBJECT ro_xml
-      EXPORTING
-        iv_xml = lv_xml.
-
-  ENDMETHOD.                    "read_xml
-
-  METHOD filename.
-
-    DATA: lv_obj_name TYPE string.
-
-
-    lv_obj_name = ms_item-obj_name.
-
-    IF ms_item-obj_type = 'DEVC'.
-      " Packages have a fixed filename so that the repository can be installed to a different
-      " package(-hierarchy) on the client and not show up as a different package in the repo.
-      lv_obj_name = 'package'.
-    ENDIF.
-
-    IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
-        INTO rv_filename.                                                                 "#EC NOTEXT
-    ELSE.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra '.' iv_ext
-        INTO rv_filename.                                                                 "#EC NOTEXT
-    ENDIF.
-
-* handle namespaces
-    REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
-    TRANSLATE rv_filename TO LOWER CASE.
-
-  ENDMETHOD.                    "filename
-
-  METHOD add_xml_from_plugin.
-*    this method wraps add_xml as in the plugin. This is necessary as the wrapped
-*    xml-object in the plugin can only be typed to object.
-*    ABAP does not perform implicit type casts (also if compatible) in signatures,
-*    therefore this method's signature is typed ref to object
-    DATA lo_xml TYPE REF TO lcl_xml_output.
-
-    lo_xml ?= io_xml.
-
-    me->add_xml(
-      iv_extra     = iv_extra
-      io_xml       = lo_xml
-      iv_normalize = iv_normalize ).
-
-  ENDMETHOD.                    "add_xml_from_plugin
-
-  METHOD read_file.
-
-    FIELD-SYMBOLS: <ls_file>     LIKE LINE OF mt_files,
-                   <ls_accessed> LIKE LINE OF mt_accessed_files.
-
-    CLEAR ev_data.
-
-    IF mv_path IS NOT INITIAL.
-      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY path     = mv_path
-                                                       filename = iv_filename.
-    ELSE.
-      READ TABLE mt_files ASSIGNING <ls_file> WITH KEY filename = iv_filename.
-    ENDIF.
-
-    IF sy-subrc <> 0.
-      IF iv_error = abap_true.
-        zcx_abapgit_exception=>raise( |File not found: { iv_filename }| ).
-      ELSE.
-        RETURN.
-      ENDIF.
-    ENDIF.
-
-    " Update access table
-    READ TABLE mt_accessed_files TRANSPORTING NO FIELDS
-      WITH KEY path = <ls_file>-path filename = <ls_file>-filename.
-    IF sy-subrc > 0. " Not found ? -> Add
-      APPEND INITIAL LINE TO mt_accessed_files ASSIGNING <ls_accessed>.
-      MOVE-CORRESPONDING <ls_file> TO <ls_accessed>.
-    ENDIF.
-
-    ev_data = <ls_file>-data.
-
-  ENDMETHOD.  " read_file.
-
-  METHOD add_raw.
-
-    DATA: ls_file TYPE zif_abapgit_definitions=>ty_file.
-
-    ls_file-path     = '/'.
-    ls_file-data     = iv_data.
-    ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).
-
-    APPEND ls_file TO mt_files.
-
-  ENDMETHOD.                    "add_raw
-
-  METHOD read_raw.
-
-    DATA: lv_filename TYPE string.
-
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).
-
-    read_file( EXPORTING iv_filename = lv_filename
-               IMPORTING ev_data     = rv_data ).
-
-  ENDMETHOD.                    "read_raw
-
-ENDCLASS.                    "lcl_objects_files IMPLEMENTATION
 
 *----------------------------------------------------------------------*
 *       CLASS lcl_objects_super DEFINITION
@@ -756,8 +373,8 @@ CLASS lcl_objects_bridge DEFINITION INHERITING FROM lcl_objects_super FINAL.
       IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
       RAISING   cx_sy_create_object_error.
 
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
@@ -779,11 +396,11 @@ ENDCLASS.                    "lcl_objects_bridge DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_objects_bridge IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.  "lif_object~has_changed_since
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~GET_METADATA')
       RECEIVING
@@ -791,7 +408,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~get_metadata
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
 
@@ -819,7 +436,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "constructor
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     CALL METHOD mo_plugin->('WRAP_SERIALIZE')
       EXPORTING
@@ -827,7 +444,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lx_plugin        TYPE REF TO cx_static_check.
 
@@ -841,7 +458,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.                    "lif_object~deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
     DATA lx_plugin TYPE REF TO cx_static_check.
 
     TRY.
@@ -852,7 +469,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~delete
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~EXISTS')
       RECEIVING
@@ -860,7 +477,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "lif_object~exists
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~JUMP').
 
@@ -926,7 +543,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   ENDMETHOD.                    "class_constructor
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -971,9 +588,9 @@ CLASS lcl_objects_program DEFINITION INHERITING FROM lcl_objects_super.
            END OF ty_progdir.
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO lcl_xml_output OPTIONAL
+      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_output OPTIONAL
                 is_item    TYPE zif_abapgit_definitions=>ty_item
-                io_files   TYPE REF TO lcl_objects_files
+                io_files   TYPE REF TO zcl_abapgit_objects_files
                 iv_program TYPE programm OPTIONAL
                 iv_extra   TYPE clike OPTIONAL
       RAISING   zcx_abapgit_exception.
@@ -1130,7 +747,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO lcl_xml_output.
+          lo_xml          TYPE REF TO zcl_abapgit_xml_output.
 
     IF iv_program IS INITIAL.
       lv_program_name = is_item-obj_name.
@@ -1138,7 +755,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
       lv_program_name = iv_program.
     ENDIF.
 
-    lcl_language=>set_current_language( mv_language ).
+    zcl_abapgit_language=>set_current_language( mv_language ).
 
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
@@ -1154,14 +771,14 @@ CLASS lcl_objects_program IMPLEMENTATION.
         OTHERS           = 4.
 
     IF sy-subrc = 2.
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
       RETURN.
     ELSEIF sy-subrc <> 0.
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
       zcx_abapgit_exception=>raise( 'Error reading program' ).
     ENDIF.
 
-    lcl_language=>restore_login_language( ).
+    zcl_abapgit_language=>restore_login_language( ).
 
     ls_progdir = read_progdir( lv_program_name ).
 
@@ -1254,7 +871,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_exists = abap_true.
-      lcl_language=>set_current_language( mv_language ).
+      zcl_abapgit_language=>set_current_language( mv_language ).
 
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
         EXPORTING
@@ -1270,7 +887,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
           OTHERS           = 4.
 
       IF sy-subrc <> 0.
-        lcl_language=>restore_login_language( ).
+        zcl_abapgit_language=>restore_login_language( ).
 
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           zcx_abapgit_exception=>raise( 'User is currently editing program' ).
@@ -1279,7 +896,7 @@ CLASS lcl_objects_program IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lcl_language=>restore_login_language( ).
+      zcl_abapgit_language=>restore_login_language( ).
     ELSE.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
@@ -1755,7 +1372,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
 
     SELECT dgen tgen FROM d020s           " Screens
       INTO CORRESPONDING FIELDS OF TABLE lt_screens
-      WHERE prog = iv_program ##TOO_MANY_ITAB_FIELDS.                                     "#EC CI_SUBRC
+      WHERE prog = iv_program
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.        "#EC CI_SUBRC
 
     LOOP AT lt_screens ASSIGNING <ls_screen>.
       rv_changed = check_timestamp(
@@ -1771,7 +1389,8 @@ CLASS lcl_objects_program IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_eudb
       WHERE relid = 'CU'
       AND   name  = iv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.                                             "#EC CI_SUBRC
+      AND   srtf2 = 0
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.        "#EC CI_SUBRC
 
     LOOP AT lt_eudb ASSIGNING <ls_eudb>.
       rv_changed = check_timestamp(
@@ -2027,7 +1646,7 @@ CLASS lcl_objects_saxx_super DEFINITION ABSTRACT
 
   PUBLIC SECTION.
     INTERFACES:
-      lif_object.
+      zif_abapgit_object.
 
   PROTECTED SECTION.
     METHODS:
@@ -2075,23 +1694,23 @@ ENDCLASS.
 
 CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lr_data TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_data>    TYPE any,
-                   <ls_header>  TYPE any,
-                   <changed_by> TYPE any.
+    FIELD-SYMBOLS: <lg_data>       TYPE any,
+                   <lg_header>     TYPE any,
+                   <lg_changed_by> TYPE any.
 
     create_channel_objects( ).
 
     TRY.
         CREATE DATA lr_data TYPE (mv_data_structure_name).
-        ASSIGN lr_data->* TO <ls_data>.
+        ASSIGN lr_data->* TO <lg_data>.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_name } not supported| ).
@@ -2099,23 +1718,27 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
     get_data(
       IMPORTING
-        p_data = <ls_data> ).
+        p_data = <lg_data> ).
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <ls_data> TO <ls_header>.
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
-    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <ls_header> TO <changed_by>.
+    ASSIGN COMPONENT 'CHANGED_BY' OF STRUCTURE <lg_header> TO <lg_changed_by>.
     ASSERT sy-subrc = 0.
 
-    rv_user = <changed_by>.
+    IF <lg_changed_by> IS NOT INITIAL.
+      rv_user = <lg_changed_by>.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: object_key TYPE seu_objkey.
 
@@ -2137,7 +1760,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: lr_data             TYPE REF TO data.
 
@@ -2199,7 +1822,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_data TYPE REF TO data.
 
@@ -2221,8 +1844,8 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
       CHANGING
         cg_data = <ls_data> ).
 
-    IF lif_object~exists( ) = abap_true.
-      lif_object~delete( ).
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
     ENDIF.
 
     TRY.
@@ -2258,7 +1881,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: object_key TYPE seu_objkey.
 
@@ -2279,7 +1902,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -2289,7 +1912,7 @@ CLASS lcl_objects_saxx_super IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
   ENDMETHOD.
 
@@ -2407,8 +2030,8 @@ CLASS lcl_objects DEFINITION FINAL.
     TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_deserialization,
-             obj     TYPE REF TO lif_object,
-             xml     TYPE REF TO lcl_xml_input,
+             obj     TYPE REF TO zif_abapgit_object,
+             xml     TYPE REF TO zcl_abapgit_xml_input,
              package TYPE devclass,
              item    TYPE zif_abapgit_definitions=>ty_item,
            END OF ty_deserialization.
@@ -2418,7 +2041,7 @@ CLASS lcl_objects DEFINITION FINAL.
     CLASS-METHODS serialize
       IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
                 iv_language     TYPE spras
-                io_log          TYPE REF TO lcl_log OPTIONAL
+                io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
       RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING   zcx_abapgit_exception.
 
@@ -2470,7 +2093,7 @@ CLASS lcl_objects DEFINITION FINAL.
                 iv_language    TYPE spras
                 is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
                 iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ri_obj)  TYPE REF TO lif_object
+      RETURNING VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS
@@ -2501,7 +2124,7 @@ CLASS lcl_objects DEFINITION FINAL.
 
     CLASS-METHODS compare_remote_to_local
       IMPORTING
-        io_object TYPE REF TO lif_object
+        io_object TYPE REF TO zif_abapgit_object
         it_remote TYPE zif_abapgit_definitions=>ty_files_tt
         is_result TYPE zif_abapgit_definitions=>ty_result
       RAISING

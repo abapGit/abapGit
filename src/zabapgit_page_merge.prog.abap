@@ -14,14 +14,14 @@ CLASS lcl_merge DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_merge,
              repo     TYPE REF TO lcl_repo_online,
-             source   TYPE lcl_git_branch_list=>ty_git_branch,
-             target   TYPE lcl_git_branch_list=>ty_git_branch,
+             source   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+             target   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
              common   TYPE ty_ancestor,
              stree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              ttree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              ctree    TYPE lcl_git_porcelain=>ty_expanded_tt,
              result   TYPE lcl_git_porcelain=>ty_expanded_tt,
-             stage    TYPE REF TO lcl_stage,
+             stage    TYPE REF TO zcl_abapgit_stage,
              conflict TYPE string,
            END OF ty_merge.
 
@@ -259,7 +259,7 @@ CLASS lcl_merge IMPLEMENTATION.
       ENDIF.
     END-OF-DEFINITION.
 
-    DATA: ls_commit TYPE lcl_git_pack=>ty_commit,
+    DATA: ls_commit TYPE zcl_abapgit_git_pack=>ty_commit,
           lt_visit  TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1,
           lv_commit LIKE LINE OF lt_visit.
 
@@ -274,7 +274,7 @@ CLASS lcl_merge IMPLEMENTATION.
         WITH KEY type = zif_abapgit_definitions=>gc_type-commit sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 
-      ls_commit = lcl_git_pack=>decode_commit( <ls_object>-data ).
+      ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       _visit ls_commit-parent.
       _visit ls_commit-parent2.
@@ -294,12 +294,14 @@ CLASS lcl_merge IMPLEMENTATION.
 
   METHOD fetch_git.
 
-    DATA: lo_branch_list TYPE REF TO lcl_git_branch_list,
-          lt_upload   TYPE lcl_git_branch_list=>ty_git_branch_list_tt.
+    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+          lt_upload      TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
     lo_branch_list  = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
-    gs_merge-source = lo_branch_list->find_by_name( lcl_git_branch_list=>complete_heads_branch_name( iv_source ) ).
-    gs_merge-target = lo_branch_list->find_by_name( lcl_git_branch_list=>complete_heads_branch_name( iv_target ) ).
+    gs_merge-source = lo_branch_list->find_by_name(
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_source ) ).
+    gs_merge-target = lo_branch_list->find_by_name(
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target ) ).
 
     APPEND gs_merge-source TO lt_upload.
     APPEND gs_merge-target TO lt_upload.
@@ -324,7 +326,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
                   iv_source TYPE string
                   iv_target TYPE string
         RAISING   zcx_abapgit_exception,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -339,7 +341,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
 
     METHODS:
       build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO lcl_html_toolbar.
+        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
 ENDCLASS.                       "lcl_gui_page_merge DEFINITION
 
@@ -360,7 +362,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     CASE iv_action.
       WHEN c_actions-merge.

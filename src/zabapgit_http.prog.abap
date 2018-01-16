@@ -50,55 +50,6 @@ CLASS lcl_proxy_auth IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_http_digest DEFINITION FINAL.
-
-  PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-                  ii_client   TYPE REF TO if_http_client
-                  iv_username TYPE string
-                  iv_password TYPE string
-        RAISING   zcx_abapgit_exception,
-      run
-        IMPORTING
-                  ii_client TYPE REF TO if_http_client
-        RAISING   zcx_abapgit_exception.
-
-  PRIVATE SECTION.
-    DATA: mv_ha1      TYPE string,
-          mv_username TYPE string,
-          mv_realm    TYPE string,
-          mv_qop      TYPE string,
-          mv_nonce    TYPE string.
-
-    CLASS-DATA: gv_nc TYPE n LENGTH 8.
-
-    CLASS-METHODS:
-      md5
-        IMPORTING
-                  iv_data        TYPE string
-        RETURNING
-                  VALUE(rv_hash) TYPE string
-        RAISING   zcx_abapgit_exception.
-
-    METHODS:
-      hash
-        IMPORTING
-                  iv_qop             TYPE string
-                  iv_nonce           TYPE string
-                  iv_uri             TYPE string
-                  iv_method          TYPE string
-                  iv_cnonse          TYPE string
-        RETURNING
-                  VALUE(rv_response) TYPE string
-        RAISING   zcx_abapgit_exception,
-      parse
-        IMPORTING
-          ii_client TYPE REF TO if_http_client.
-
-ENDCLASS.
-
 CLASS lcl_http_client DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -108,7 +59,7 @@ CLASS lcl_http_client DEFINITION FINAL.
         IMPORTING ii_client TYPE REF TO if_http_client,
       close,
       set_digest
-        IMPORTING io_digest TYPE REF TO lcl_http_digest,
+        IMPORTING io_digest TYPE REF TO zcl_abapgit_http_digest,
       send_receive_close
         IMPORTING
                   iv_data        TYPE xstring
@@ -128,7 +79,7 @@ CLASS lcl_http_client DEFINITION FINAL.
 
   PRIVATE SECTION.
     DATA: mi_client TYPE REF TO if_http_client,
-          mo_digest TYPE REF TO lcl_http_digest.
+          mo_digest TYPE REF TO zcl_abapgit_http_digest.
 
 ENDCLASS.
 
@@ -260,117 +211,6 @@ CLASS lcl_http_client IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_http_digest IMPLEMENTATION.
-
-  METHOD constructor.
-
-    parse( ii_client ).
-
-    mv_ha1 = md5( |{ iv_username }:{ mv_realm }:{ iv_password }| ).
-
-    mv_username = iv_username.
-
-  ENDMETHOD.
-
-  METHOD hash.
-
-    DATA: lv_ha2 TYPE string.
-
-
-    lv_ha2 = md5( |{ iv_method }:{ iv_uri }| ).
-
-    ASSERT NOT iv_cnonse IS INITIAL.
-
-    rv_response = md5( |{ mv_ha1 }:{ iv_nonce }:{ gv_nc }:{ iv_cnonse }:{ iv_qop }:{ lv_ha2 }| ).
-
-  ENDMETHOD.
-
-  METHOD run.
-
-    DATA: lv_response TYPE string,
-          lv_method   TYPE string,
-          lv_cnonce   TYPE string,
-          lv_uri      TYPE string,
-          lv_auth     TYPE string.
-
-
-    ASSERT NOT mv_nonce IS INITIAL.
-
-    lv_method = ii_client->request->get_header_field( '~request_method' ).
-    lv_uri = ii_client->request->get_header_field( '~request_uri' ).
-
-    CALL FUNCTION 'GENERAL_GET_RANDOM_STRING'
-      EXPORTING
-        number_chars  = 24
-      IMPORTING
-        random_string = lv_cnonce.
-
-    lv_response = hash(
-      iv_qop    = mv_qop
-      iv_nonce  = mv_nonce
-      iv_uri    = lv_uri
-      iv_method = lv_method
-      iv_cnonse = lv_cnonce ).
-
-* client response
-    lv_auth = |Digest username="{ mv_username
-      }", realm="{ mv_realm
-      }", nonce="{ mv_nonce
-      }", uri="{ lv_uri
-      }", qop={ mv_qop
-      }, nc={ gv_nc
-      }, cnonce="{ lv_cnonce
-      }", response="{ lv_response }"|.
-
-    ii_client->request->set_header_field(
-      name  = 'Authorization'
-      value = lv_auth ).
-
-  ENDMETHOD.
-
-  METHOD parse.
-
-    DATA: lv_value TYPE string.
-
-
-    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
-
-    FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm.
-    FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop.
-    FIND REGEX 'nonce="([\w=/+\$]+)"' IN lv_value SUBMATCHES mv_nonce.
-
-  ENDMETHOD.
-
-  METHOD md5.
-
-    DATA: lv_xstr TYPE xstring,
-          lv_hash TYPE xstring.
-
-
-    lv_xstr = lcl_convert=>string_to_xstring_utf8( iv_data ).
-
-    CALL FUNCTION 'CALCULATE_HASH_FOR_RAW'
-      EXPORTING
-        alg            = 'MD5'
-        data           = lv_xstr
-      IMPORTING
-        hashxstring    = lv_hash
-      EXCEPTIONS
-        unknown_alg    = 1
-        param_error    = 2
-        internal_error = 3
-        OTHERS         = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CALCULATE_HASH_FOR_RAW' ).
-    ENDIF.
-
-    rv_hash = lv_hash.
-    TRANSLATE rv_hash TO LOWER CASE.
-
-  ENDMETHOD.
-
-ENDCLASS.
-
 CLASS lcl_http DEFINITION FINAL.
 
   PUBLIC SECTION.
@@ -416,11 +256,11 @@ CLASS lcl_http IMPLEMENTATION.
 
   METHOD create_by_url.
 
-    DATA: lv_uri    TYPE string,
-          lv_scheme TYPE string,
-          li_client TYPE REF TO if_http_client,
-          lo_proxy_configuration  TYPE REF TO lcl_proxy_configuration,
-          lv_text   TYPE string.
+    DATA: lv_uri                 TYPE string,
+          lv_scheme              TYPE string,
+          li_client              TYPE REF TO if_http_client,
+          lo_proxy_configuration TYPE REF TO lcl_proxy_configuration,
+          lv_text                TYPE string.
 
     lo_proxy_configuration = lcl_app=>proxy( ).
 
@@ -480,7 +320,7 @@ CLASS lcl_http IMPLEMENTATION.
     " Disable internal auth dialog (due to its unclarity)
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    lcl_login_manager=>load( iv_uri    = iv_url
+    zcl_abapgit_login_manager=>load( iv_uri    = iv_url
                              ii_client = li_client ).
 
     ro_client->send_receive( ).
@@ -493,7 +333,7 @@ CLASS lcl_http IMPLEMENTATION.
     ro_client->check_http_200( ).
 
     IF lv_scheme <> gc_scheme-digest.
-      lcl_login_manager=>save( iv_uri    = iv_url
+      zcl_abapgit_login_manager=>save( iv_uri    = iv_url
                                ii_client = li_client ).
     ENDIF.
 
@@ -504,6 +344,9 @@ CLASS lcl_http IMPLEMENTATION.
     DATA: lv_host TYPE string,
           lt_list TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
           li_exit TYPE REF TO lif_exit.
+
+    FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
+
 
     CALL FUNCTION 'ICM_GET_INFO2'
       TABLES
@@ -516,6 +359,9 @@ CLASS lcl_http IMPLEMENTATION.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+
+    APPEND INITIAL LINE TO lt_list ASSIGNING <ls_list>.
+    <ls_list>-hostname = 'localhost'.
 
     li_exit = lcl_exit=>get_instance( ).
     li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
@@ -546,10 +392,10 @@ CLASS lcl_http IMPLEMENTATION.
     DATA: lv_default_user TYPE string,
           lv_user         TYPE string,
           lv_pass         TYPE string,
-          lo_digest       TYPE REF TO lcl_http_digest.
+          lo_digest       TYPE REF TO zcl_abapgit_http_digest.
 
 
-    lv_default_user = lcl_app=>user( )->get_repo_login( iv_url ).
+    lv_default_user = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
 
     lcl_password_dialog=>popup(
@@ -564,8 +410,9 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     IF lv_user <> lv_default_user.
-      lcl_app=>user( )->set_repo_login( iv_url   = iv_url
-                                        iv_login = lv_user ).
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
+        iv_url   = iv_url
+        iv_login = lv_user ).
     ENDIF.
 
     " Offer two factor authentication if it is available and required

@@ -10,8 +10,8 @@
 CLASS lcl_object_wdyn DEFINITION INHERITING FROM lcl_objects_super FINAL.
 
   PUBLIC SECTION.
-    INTERFACES lif_object.
-    ALIASES mo_files FOR lif_object~mo_files.
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
 
@@ -82,19 +82,19 @@ ENDCLASS.                    "lcl_object_wdyn DEFINITION
 *----------------------------------------------------------------------*
 CLASS lcl_object_wdyn IMPLEMENTATION.
 
-  METHOD lif_object~has_changed_since.
+  METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD lif_object~changed_by.
+  METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "lif_object~changed_by
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD lif_object~get_metadata.
+  METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD lif_object~exists.
+  METHOD zif_abapgit_object~exists.
 
     DATA: lv_component_name TYPE wdy_component-component_name.
 
@@ -105,7 +105,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
       AND version = 'A'.                                "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD delta_definition.
 
@@ -721,7 +721,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "add_fm_exception
 
-  METHOD lif_object~serialize.
+  METHOD zif_abapgit_object~serialize.
 
     DATA: ls_component TYPE wdy_component_metadata.
 
@@ -737,7 +737,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize
 
-  METHOD lif_object~deserialize.
+  METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_component TYPE wdy_component_metadata.
 
@@ -774,7 +774,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD lif_object~delete.
+  METHOD zif_abapgit_object~delete.
 
     DATA: lo_component   TYPE REF TO cl_wdy_wb_component,
           lo_request     TYPE REF TO cl_wb_request,
@@ -797,7 +797,7 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD lif_object~jump.
+  METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -808,8 +808,8 @@ CLASS lcl_object_wdyn IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD lif_object~compare_to_remote_version.
+  METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE lcl_comparison_null.
-  ENDMETHOD.                    "lif_object~compare_to_remote_version
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_object_wdyn IMPLEMENTATION

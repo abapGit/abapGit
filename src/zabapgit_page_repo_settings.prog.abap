@@ -7,7 +7,7 @@ CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM lcl_gui_page.
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo,
-      lif_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     CONSTANTS:
@@ -40,25 +40,50 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
     DATA lv_serialized_post_data TYPE string.
 
     CONCATENATE LINES OF it_postdata INTO lv_serialized_post_data.
-    rt_post_fields = lcl_html_action_utils=>parse_fields( lv_serialized_post_data ).
+    rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
 
   METHOD render_content.
 
-    DATA: ls_dot TYPE lcl_dot_abapgit=>ty_dot_abapgit.
-
+    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_selected     TYPE string,
+          lt_folder_logic TYPE stringtab.
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    INSERT zif_abapgit_dot_abapgit=>c_folder_logic-full
+           INTO TABLE lt_folder_logic.
+
+    INSERT zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+           INTO TABLE lt_folder_logic.
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="settings_container">' ).
     ro_html->add( '<form id="settings_form" method="post" action="sapevent:' &&
       c_action-save_settings && '">' ).
+
     ro_html->add( '<br>' ).
-    ro_html->add( 'Folder logic: <input name="folder_logic" type="text" size="10" value="' &&
-      ls_dot-folder_logic && '">' ).
+    ro_html->add( 'Folder logic: <select name="folder_logic">' ).
+
+    LOOP AT lt_folder_logic ASSIGNING <lv_folder_logic>.
+
+      IF ls_dot-folder_logic = <lv_folder_logic>.
+        lv_selected = 'selected'.
+      ELSE.
+        CLEAR: lv_selected.
+      ENDIF.
+
+      ro_html->add( |<option value="{ <lv_folder_logic> }" |
+                 && |{ lv_selected }>|
+                 && |{ <lv_folder_logic> }</option>| ).
+
+    ENDLOOP.
+
+    ro_html->add( '</select>' ).
     ro_html->add( '<br>' ).
+
     ro_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
       ls_dot-starting_folder && '">' ).
     ro_html->add( '<br>' ).
@@ -68,10 +93,10 @@ CLASS lcl_gui_page_repo_sett IMPLEMENTATION.
 
   ENDMETHOD.  "render_content
 
-  METHOD lif_gui_page~on_event.
+  METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lt_post_fields TYPE tihttpnvp,
-          lo_dot         TYPE REF TO lcl_dot_abapgit,
+          lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field  LIKE LINE OF lt_post_fields.
 
 

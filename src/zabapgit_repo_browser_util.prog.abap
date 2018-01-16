@@ -38,11 +38,11 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     METHODS get_log
-      RETURNING VALUE(ro_log) TYPE REF TO lcl_log.
+      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
 
   PRIVATE SECTION.
     DATA: mo_repo TYPE REF TO lcl_repo,
-          mo_log  TYPE REF TO lcl_log.
+          mo_log  TYPE REF TO zcl_abapgit_log.
 
     METHODS build_repo_items_offline
       RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
@@ -113,7 +113,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
       lv_index = sy-tabix.
       CHECK <item>-path <> iv_cur_dir. " files in target dir - just leave them be
 
-      IF lcl_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
+      IF zcl_abapgit_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
         ls_subitem-changes = <item>-changes.
         ls_subitem-path    = <item>-path.
         ls_subitem-lstate  = <item>-lstate.
@@ -136,10 +136,10 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
       ls_folder-changes = ls_folder-changes + <item>-changes.
 
-      lcl_state=>reduce( EXPORTING iv_cur = <item>-lstate
-                         CHANGING cv_prev = ls_folder-lstate ).
-      lcl_state=>reduce( EXPORTING iv_cur = <item>-rstate
-                         CHANGING cv_prev = ls_folder-rstate ).
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-lstate
+                                 CHANGING cv_prev = ls_folder-lstate ).
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-rstate
+                                 CHANGING cv_prev = ls_folder-rstate ).
 
       AT END OF path.
         APPEND ls_folder TO ct_repo_items.
@@ -222,10 +222,10 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
           <ls_repo_item>-changes = <ls_repo_item>-changes + 1.
 
-          lcl_state=>reduce( EXPORTING iv_cur = ls_file-lstate
-                             CHANGING cv_prev = <ls_repo_item>-lstate ).
-          lcl_state=>reduce( EXPORTING iv_cur = ls_file-rstate
-                             CHANGING cv_prev = <ls_repo_item>-rstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-lstate
+                                     CHANGING cv_prev = <ls_repo_item>-lstate ).
+          zcl_abapgit_state=>reduce( EXPORTING iv_cur = ls_file-rstate
+                                     CHANGING cv_prev = <ls_repo_item>-rstate ).
         ENDIF.
       ENDIF.
 
