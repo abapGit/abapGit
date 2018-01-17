@@ -101,11 +101,12 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_object_key TYPE seu_objkey,
-          lo_data_model TYPE REF TO if_wb_object_data_model,
-          lr_data       TYPE REF TO data,
-          lv_text       TYPE string,
-          lx_error      TYPE REF TO cx_root.
+    DATA: lv_object_key  TYPE seu_objkey,
+          lo_data_model  TYPE REF TO if_wb_object_data_model,
+          lo_persistence TYPE REF TO if_wb_object_persist,
+          lr_data        TYPE REF TO data,
+          lv_text        TYPE string,
+          lx_error       TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_data> TYPE any.
 
@@ -119,12 +120,13 @@ CLASS lcl_object_ddlx IMPLEMENTATION.
         CREATE OBJECT lo_data_model
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
-        get_persistence( )->get(
+        lo_persistence = get_persistence( ).
+        lo_persistence->get(
           EXPORTING
-            p_object_key           = lv_object_key
-            p_version              = swbm_version_active
+            p_object_key  = lv_object_key
+            p_version     = swbm_version_active
           CHANGING
-            p_object_data          = lo_data_model ).
+            p_object_data = lo_data_model ).
 
         lo_data_model->get_data(
           IMPORTING

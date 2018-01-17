@@ -251,8 +251,7 @@ CLASS lcl_object_devc IMPLEMENTATION.
           e_package_exists        = rv_bool
         EXCEPTIONS
           intern_err              = 1
-          package_hierarchy_error = 2
-          OTHERS                  = 3 ).
+          OTHERS                  = 2 ).
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
       ENDIF.
