@@ -42,17 +42,11 @@ CLASS lcl_objects_activation DEFINITION FINAL.
       IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
       RAISING   zcx_abapgit_exception.
 
-    CLASS-METHODS filter_ddic_objects
-      EXPORTING et_ddic     TYPE act_work_area
-                et_non_ddic TYPE act_work_area.
-
     CLASS-METHODS activate_ddic
-      IMPORTING it_ddic TYPE act_work_area
-      RAISING   zcx_abapgit_exception.
+      RAISING zcx_abapgit_exception.
 
     CLASS-METHODS activate_non_ddic
-      IMPORTING it_non_ddic TYPE act_work_area
-      RAISING   zcx_abapgit_exception.
+      RAISING zcx_abapgit_exception.
 
     CLASS-DATA: gt_objects TYPE TABLE OF dwinactiv.
 
@@ -194,32 +188,27 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   METHOD activate_new.
 
-    DATA: lt_ddic     TYPE act_work_area,
-          lt_non_ddic TYPE act_work_area.
-
     IF gt_objects IS INITIAL.
       RETURN.
     ENDIF.
 
-    zcl_abapgit_progress=>show( iv_key     = 'Activate'
-                                iv_current = '100'
-                                iv_total   = '100'
-                                iv_text    = '...' ).
+    IF iv_ddic = abap_true.
 
-    filter_ddic_objects(
-      IMPORTING
-        et_ddic     = lt_ddic
-        et_non_ddic = lt_non_ddic ).
+      zcl_abapgit_progress=>show( iv_key     = 'Activating DDIC'
+                                  iv_current = '98'
+                                  iv_total   = '100'
+                                  iv_text    = '...' ).
 
-    IF lines( lt_ddic ) > 0 AND iv_ddic = abap_true.
+      activate_ddic( ).
 
-      activate_ddic( lt_ddic ).
+    ELSE.
 
-    ENDIF.
+      zcl_abapgit_progress=>show( iv_key     = 'Activating non DDIC'
+                                  iv_current = '98'
+                                  iv_total   = '100'
+                                  iv_text    = '...' ).
 
-    IF lines( lt_non_ddic ) > 0.
-
-      activate_non_ddic( lt_non_ddic ).
+      activate_non_ddic( ).
 
     ENDIF.
 
@@ -249,38 +238,6 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD filter_ddic_objects.
-
-    DATA: ls_ddic LIKE LINE OF et_ddic.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
-
-    CLEAR: et_ddic, et_non_ddic.
-
-    LOOP AT gt_objects ASSIGNING <ls_object>.
-
-      MOVE-CORRESPONDING <ls_object> TO ls_ddic.
-      INSERT ls_ddic INTO TABLE et_ddic.
-      INSERT ls_ddic INTO TABLE et_non_ddic.
-
-    ENDLOOP.
-
-    CALL FUNCTION 'WB_ACTIVATION_TROBJTYPE_FILTER'
-      EXPORTING
-        keep_dictionary_types = abap_true
-      CHANGING
-        trobjtypes            = et_ddic.
-
-    CALL FUNCTION 'WB_ACTIVATION_TROBJTYPE_FILTER'
-      EXPORTING
-        keep_dictionary_types = abap_false
-      CHANGING
-        trobjtypes            = et_non_ddic.
-
-  ENDMETHOD.
-
-
   METHOD activate_ddic.
 
     DATA: lt_gentab TYPE STANDARD TABLE OF dcgentb,
@@ -288,12 +245,12 @@ CLASS lcl_objects_activation IMPLEMENTATION.
           lv_rc     TYPE sy-subrc,
           lt_deltab TYPE STANDARD TABLE OF dcdeltb.
 
-    FIELD-SYMBOLS: <ls_ddic> LIKE LINE OF it_ddic.
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
-    LOOP AT it_ddic ASSIGNING <ls_ddic>.
+    LOOP AT gt_objects ASSIGNING <ls_object>.
 
-      ls_gentab-name = <ls_ddic>-obj_name.
-      ls_gentab-type = <ls_ddic>-object.
+      ls_gentab-name = <ls_object>-obj_name.
+      ls_gentab-type = <ls_object>-object.
       INSERT ls_gentab INTO TABLE lt_gentab.
 
     ENDLOOP.
@@ -333,11 +290,11 @@ CLASS lcl_objects_activation IMPLEMENTATION.
     DATA: lt_non_ddic_objects LIKE gt_objects,
           ls_non_ddic_object  LIKE LINE OF lt_non_ddic_objects.
 
-    FIELD-SYMBOLS: <ls_non_ddic> LIKE LINE OF it_non_ddic.
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
-    LOOP AT it_non_ddic ASSIGNING <ls_non_ddic>.
+    LOOP AT gt_objects ASSIGNING <ls_object>.
 
-      MOVE-CORRESPONDING <ls_non_ddic> TO ls_non_ddic_object.
+      MOVE-CORRESPONDING <ls_object> TO ls_non_ddic_object.
       INSERT ls_non_ddic_object INTO TABLE lt_non_ddic_objects.
 
     ENDLOOP.
