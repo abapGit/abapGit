@@ -31,6 +31,29 @@ CLASS lcl_objects_activation DEFINITION FINAL.
       IMPORTING iv_obj_name TYPE trobj_name
       CHANGING  ct_objects  TYPE dwinactiv_tab.
 
+    CLASS-METHODS use_new_activation_logic
+      RETURNING VALUE(rv_use_new_activation_logic) TYPE abap_bool.
+
+    CLASS-METHODS activate_new
+      IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
+      RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS activate_old
+      IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
+      RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS filter_ddic_objects
+      EXPORTING et_ddic     TYPE act_work_area
+                et_non_ddic TYPE act_work_area.
+
+    CLASS-METHODS activate_ddic
+      IMPORTING it_ddic TYPE act_work_area
+      RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS activate_non_ddic
+      IMPORTING it_non_ddic TYPE act_work_area
+      RAISING   zcx_abapgit_exception.
+
     CLASS-DATA: gt_objects TYPE TABLE OF dwinactiv.
 
 ENDCLASS.                    "lcl_objects_activation DEFINITION
@@ -53,21 +76,14 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   METHOD activate.
 
-    IF NOT gt_objects IS INITIAL.
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          activate_ddic_objects  = iv_ddic
-          with_popup             = abap_true
-        TABLES
-          objects                = gt_objects
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
-      ENDIF.
+    IF use_new_activation_logic( ) = abap_true.
+
+      activate_new( iv_ddic ).
+
+    ELSE.
+
+      activate_old( iv_ddic ).
+
     ENDIF.
 
   ENDMETHOD.                    "activate
@@ -154,6 +170,198 @@ CLASS lcl_objects_activation IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.                    "activate
+
+
+  METHOD use_new_activation_logic.
+
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname           = 'DD_MASS_ACT_C3'    " Name of Function Module
+        EXCEPTIONS
+          function_not_exist = 1
+          OTHERS             = 2.
+
+      IF sy-subrc = 0.
+        rv_use_new_activation_logic = abap_true.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD activate_new.
+
+    DATA: lt_ddic     TYPE act_work_area,
+          lt_non_ddic TYPE act_work_area.
+
+    IF gt_objects IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    zcl_abapgit_progress=>show( iv_key     = 'Activate'
+                                iv_current = '100'
+                                iv_total   = '100'
+                                iv_text    = '...' ).
+
+    filter_ddic_objects(
+      IMPORTING
+        et_ddic     = lt_ddic
+        et_non_ddic = lt_non_ddic ).
+
+    IF lines( lt_ddic ) > 0 AND iv_ddic = abap_true.
+
+      activate_ddic( lt_ddic ).
+
+    ENDIF.
+
+    IF lines( lt_non_ddic ) > 0.
+
+      activate_non_ddic( lt_non_ddic ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD activate_old.
+
+    IF gt_objects IS NOT INITIAL.
+
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          activate_ddic_objects  = iv_ddic
+          with_popup             = abap_true
+        TABLES
+          objects                = gt_objects
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          OTHERS                 = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD filter_ddic_objects.
+
+    DATA: ls_ddic LIKE LINE OF et_ddic.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
+
+    CLEAR: et_ddic, et_non_ddic.
+
+    LOOP AT gt_objects ASSIGNING <ls_object>.
+
+      MOVE-CORRESPONDING <ls_object> TO ls_ddic.
+      INSERT ls_ddic INTO TABLE et_ddic.
+      INSERT ls_ddic INTO TABLE et_non_ddic.
+
+    ENDLOOP.
+
+    CALL FUNCTION 'WB_ACTIVATION_TROBJTYPE_FILTER'
+      EXPORTING
+        keep_dictionary_types = abap_true
+      CHANGING
+        trobjtypes            = et_ddic.
+
+    CALL FUNCTION 'WB_ACTIVATION_TROBJTYPE_FILTER'
+      EXPORTING
+        keep_dictionary_types = abap_false
+      CHANGING
+        trobjtypes            = et_non_ddic.
+
+  ENDMETHOD.
+
+
+  METHOD activate_ddic.
+
+    DATA: lt_gentab TYPE STANDARD TABLE OF dcgentb,
+          ls_gentab LIKE LINE OF lt_gentab,
+          lv_rc     TYPE sy-subrc,
+          lt_deltab TYPE STANDARD TABLE OF dcdeltb.
+
+    FIELD-SYMBOLS: <ls_ddic> LIKE LINE OF it_ddic.
+
+    LOOP AT it_ddic ASSIGNING <ls_ddic>.
+
+      ls_gentab-name = <ls_ddic>-obj_name.
+      ls_gentab-type = <ls_ddic>-object.
+      INSERT ls_gentab INTO TABLE lt_gentab.
+
+    ENDLOOP.
+
+    IF lt_gentab IS NOT INITIAL.
+
+      CALL FUNCTION 'DD_MASS_ACT_C3'
+        EXPORTING
+          ddmode         = 'C'
+          medium         = space
+          write_log      = space
+          log_head_tail  = space
+          t_on           = space
+        IMPORTING
+          act_rc         = lv_rc
+        TABLES
+          gentab         = lt_gentab
+          deltab         = lt_deltab
+        EXCEPTIONS
+          access_failure = 1
+          no_objects     = 2
+          locked         = 3
+          internal_error = 4
+          OTHERS         = 5.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from DD_MASS_ACT_C3' ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD activate_non_ddic.
+
+    DATA: lt_non_ddic_objects LIKE gt_objects,
+          ls_non_ddic_object  LIKE LINE OF lt_non_ddic_objects.
+
+    FIELD-SYMBOLS: <ls_non_ddic> LIKE LINE OF it_non_ddic.
+
+    LOOP AT it_non_ddic ASSIGNING <ls_non_ddic>.
+
+      MOVE-CORRESPONDING <ls_non_ddic> TO ls_non_ddic_object.
+      INSERT ls_non_ddic_object INTO TABLE lt_non_ddic_objects.
+
+    ENDLOOP.
+
+    IF lt_non_ddic_objects IS NOT INITIAL.
+
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          with_popup             = abap_true
+        TABLES
+          objects                = lt_non_ddic_objects
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          OTHERS                 = 4.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
 
 ENDCLASS.                    "lcl_objects_activation IMPLEMENTATION
 
