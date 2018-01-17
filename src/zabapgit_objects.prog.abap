@@ -45,7 +45,9 @@ CLASS lcl_objects_activation DEFINITION FINAL.
     CLASS-METHODS activate_ddic
       RAISING zcx_abapgit_exception.
 
-
+    CLASS-METHODS show_activation_errors
+      IMPORTING iv_logname TYPE ddmass-logname
+      RAISING   zcx_abapgit_exception.
 
     CLASS-DATA: gt_objects TYPE TABLE OF dwinactiv.
 
@@ -239,10 +241,12 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   METHOD activate_ddic.
 
-    DATA: lt_gentab TYPE STANDARD TABLE OF dcgentb,
-          ls_gentab LIKE LINE OF lt_gentab,
-          lv_rc     TYPE sy-subrc,
-          lt_deltab TYPE STANDARD TABLE OF dcdeltb.
+    DATA: lt_gentab  TYPE STANDARD TABLE OF dcgentb,
+          ls_gentab  LIKE LINE OF lt_gentab,
+          lv_rc      TYPE sy-subrc,
+          lt_deltab  TYPE STANDARD TABLE OF dcdeltb,
+          action_tab TYPE dctablrestab,
+          lv_logname TYPE ddmass-logname.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
@@ -256,18 +260,24 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
     IF lt_gentab IS NOT INITIAL.
 
+      lv_logname = |ABAPGIT_{ sy-datum }_{ sy-uzeit }|.
+
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
           ddmode         = 'C'
-          medium         = space
-          write_log      = space
-          log_head_tail  = space
+          medium         = 'T'
+          device         = 'T'
+          logname        = lv_logname
+          write_log      = abap_true
+          log_head_tail  = abap_true
           t_on           = space
+          prid           = 1
         IMPORTING
           act_rc         = lv_rc
         TABLES
           gentab         = lt_gentab
           deltab         = lt_deltab
+          cnvtab         = action_tab
         EXCEPTIONS
           access_failure = 1
           no_objects     = 2
@@ -279,7 +289,51 @@ CLASS lcl_objects_activation IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error from DD_MASS_ACT_C3' ).
       ENDIF.
 
+      IF lv_rc > 0.
+
+        show_activation_errors( lv_logname ).
+
+      ENDIF.
+
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD show_activation_errors.
+
+    DATA: lt_lines      TYPE STANDARD TABLE OF trlog,
+          lv_logname_db TYPE ddprh-protname,
+          lo_log        TYPE REF TO zcl_abapgit_log.
+
+    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
+
+    lv_logname_db = iv_logname.
+
+    CALL FUNCTION 'TR_READ_LOG'
+      EXPORTING
+        iv_log_type   = 'DB'
+        iv_logname_db = lv_logname_db
+      TABLES
+        et_lines      = lt_lines
+      EXCEPTIONS
+        invalid_input = 1
+        access_error  = 2
+        OTHERS        = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from TR_READ_LOG' ).
+    ENDIF.
+
+    DELETE lt_lines WHERE severity <> 'E'.
+
+    CREATE OBJECT lo_log.
+
+    LOOP AT lt_lines ASSIGNING <ls_line>.
+      lo_log->add( <ls_line>-line ).
+    ENDLOOP.
+
+    lo_log->show( ).
 
   ENDMETHOD.
 
