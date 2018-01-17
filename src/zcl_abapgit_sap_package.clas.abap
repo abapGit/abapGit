@@ -120,9 +120,23 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         intern_err            = 6
         OTHERS                = 7 ).
     IF sy-subrc <> 0.
+
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_err.
+
+      " Here we have to delete the package,
+      " otherwise it would remain in the memory
+      " and cannot created again in this session.
+      li_package->delete(
+        EXCEPTIONS
+          object_not_empty      = 1
+          object_not_changeable = 2
+          object_invalid        = 3
+          intern_err            = 4
+          others                = 5 ).
+
       zcx_abapgit_exception=>raise( lv_err ).
+
     ENDIF.
 
     li_package->set_changeable( abap_false ).
