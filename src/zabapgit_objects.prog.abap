@@ -45,8 +45,7 @@ CLASS lcl_objects_activation DEFINITION FINAL.
     CLASS-METHODS activate_ddic
       RAISING zcx_abapgit_exception.
 
-    CLASS-METHODS activate_non_ddic
-      RAISING zcx_abapgit_exception.
+
 
     CLASS-DATA: gt_objects TYPE TABLE OF dwinactiv.
 
@@ -208,7 +207,7 @@ CLASS lcl_objects_activation IMPLEMENTATION.
                                   iv_total   = '100'
                                   iv_text    = '...' ).
 
-      activate_non_ddic( ).
+      activate_old( ).
 
     ENDIF.
 
@@ -278,42 +277,6 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from DD_MASS_ACT_C3' ).
-      ENDIF.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD activate_non_ddic.
-
-    DATA: lt_non_ddic_objects LIKE gt_objects,
-          ls_non_ddic_object  LIKE LINE OF lt_non_ddic_objects.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
-
-    LOOP AT gt_objects ASSIGNING <ls_object>.
-
-      MOVE-CORRESPONDING <ls_object> TO ls_non_ddic_object.
-      INSERT ls_non_ddic_object INTO TABLE lt_non_ddic_objects.
-
-    ENDLOOP.
-
-    IF lt_non_ddic_objects IS NOT INITIAL.
-
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          with_popup             = abap_true
-        TABLES
-          objects                = lt_non_ddic_objects
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
-
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.
 
     ENDIF.
