@@ -7,7 +7,7 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_objects_program.
+CLASS lcl_object_clas_old DEFINITION INHERITING FROM lcl_objects_program.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
@@ -47,7 +47,7 @@ ENDCLASS.                    "lcl_object_dtel DEFINITION
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_object_clas IMPLEMENTATION.
+CLASS lcl_object_clas_old IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     DATA:

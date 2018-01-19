@@ -146,10 +146,10 @@ CLASS lcl_objects IMPLEMENTATION.
       lv_class_name = class_name( is_item ).
     ENDIF.
 
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true
-        AND is_item-obj_type = 'CLAS'.
-      lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
-    ENDIF.
+*    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true
+*        AND is_item-obj_type = 'CLAS'.
+*      lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
+*    ENDIF.
 
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
