@@ -229,9 +229,10 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO lcl_repo_online,
           lx_error  TYPE REF TO zcx_abapgit_exception,
-          lv_text   TYPE string.
+          lv_text   TYPE string,
+          lo_repo   TYPE REF TO lcl_repo_online,
+          lv_sha1   TYPE zif_abapgit_definitions=>ty_sha1.
 
     lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
 
@@ -240,7 +241,9 @@ CLASS lcl_services_git IMPLEMENTATION.
         iv_sha1   = lo_repo->get_sha1_local( )
       IMPORTING
         ev_name   = lv_name
+        ev_sha1   = lv_sha1
         ev_cancel = lv_cancel ).
+
     IF lv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -250,7 +253,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     TRY.
         lcl_git_porcelain=>create_tag( io_repo = lo_repo
                                        iv_name = lv_name
-                                       iv_from = lo_repo->get_sha1_local( ) ).
+                                       iv_from = lv_sha1 ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
