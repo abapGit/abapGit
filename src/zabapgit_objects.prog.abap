@@ -459,7 +459,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
 
-    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~GET_METADATA')
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~GET_METADATA')
       RECEIVING
         rs_metadata = rs_metadata.
 
@@ -519,7 +519,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     DATA lx_plugin TYPE REF TO cx_static_check.
 
     TRY.
-        CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~DELETE').
+        CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~DELETE').
       CATCH cx_static_check INTO lx_plugin.
         zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
@@ -528,7 +528,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~EXISTS')
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~EXISTS')
       RECEIVING
         rv_bool = rv_bool.
 
@@ -536,7 +536,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    CALL METHOD mo_plugin->('ZIF_ABAPGIT_PLUGIN~JUMP').
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
 
   ENDMETHOD.                    "lif_object~jump
 
@@ -552,12 +552,12 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
     SELECT ext~clsname
       FROM vseoextend AS ext
       INTO TABLE lt_plugin_class
-      WHERE ext~refclsname LIKE 'ZCL_ABAPGIT_OBJECT%'
+      WHERE ext~refclsname LIKE 'ZCL_ABAPGITP_OBJECT%'
       AND ext~version = '1'.                              "#EC CI_SUBRC
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class
-        WHERE table_line <> 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'.
+        WHERE table_line <> 'ZCL_ABAPGITP_OBJECT_BY_SOBJ'.
 * have the generic plugin only as fallback
       TRY.
           CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
@@ -585,7 +585,7 @@ CLASS lcl_objects_bridge IMPLEMENTATION.
 * and the same for the generic plugin if exists
 * have the generic plugin only as fallback
     LOOP AT lt_plugin_class INTO lv_plugin_class
-        WHERE table_line = 'ZCL_ABAPGIT_OBJECT_BY_SOBJ'.
+        WHERE table_line = 'ZCL_ABAPGITP_OBJECT_BY_SOBJ'.
       CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
 
       CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
