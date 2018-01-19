@@ -30,6 +30,7 @@ CLASS lcl_popups DEFINITION FINAL.
       create_tag_popup
         IMPORTING iv_sha1   TYPE zif_abapgit_definitions=>ty_sha1
         EXPORTING ev_name   TYPE string
+                  ev_sha1   TYPE zif_abapgit_definitions=>ty_sha1
                   ev_cancel TYPE abap_bool
         RAISING   zcx_abapgit_exception,
       run_page_class_popup
@@ -124,32 +125,27 @@ CLASS lcl_popups DEFINITION FINAL.
                   iv_fieldtext  TYPE sval-fieldtext
                   iv_value      TYPE clike DEFAULT ''
                   iv_field_attr TYPE sval-field_attr DEFAULT ''
+                  iv_obligatory TYPE spo_obl OPTIONAL
         CHANGING  ct_fields     TYPE ty_sval_tt,
 
       create_new_table
-        IMPORTING
-          it_list TYPE STANDARD TABLE,
+        IMPORTING it_list TYPE STANDARD TABLE,
 
       get_selected_rows
-        EXPORTING
-          et_list TYPE INDEX TABLE,
+        EXPORTING et_list TYPE INDEX TABLE,
 
       on_select_list_link_click FOR EVENT link_click OF cl_salv_events_table
-        IMPORTING
-            row
-            column,
+        IMPORTING row
+                    column,
 
       on_select_list_function_click FOR EVENT added_function OF cl_salv_events_table
-        IMPORTING
-            e_salv_function,
+        IMPORTING e_salv_function,
 
       extract_field_values
-        IMPORTING
-          it_fields  TYPE ty_sval_tt
-        EXPORTING
-          ev_url     TYPE abaptxt255-line
-          ev_package TYPE tdevc-devclass
-          ev_branch  TYPE textl-line.
+        IMPORTING it_fields  TYPE ty_sval_tt
+        EXPORTING ev_url     TYPE abaptxt255-line
+                  ev_package TYPE tdevc-devclass
+                  ev_branch  TYPE textl-line.
 
 ENDCLASS.
 
@@ -165,6 +161,7 @@ CLASS lcl_popups IMPLEMENTATION.
     <ls_field>-fieldtext  = iv_fieldtext.
     <ls_field>-value      = iv_value.
     <ls_field>-field_attr = iv_field_attr.
+    <ls_field>-field_obl  = iv_obligatory.
 
   ENDMETHOD.
 
@@ -313,48 +310,69 @@ CLASS lcl_popups IMPLEMENTATION.
 
   METHOD create_tag_popup.
 
-    DATA: lv_answer TYPE c LENGTH 1,
-          lt_fields TYPE TABLE OF sval.
+    DATA: lv_answer          TYPE c LENGTH 1,
+          lt_fields          TYPE TABLE OF sval,
+          lv_exit_while_loop TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
-    CLEAR: ev_name, ev_cancel.
+    CLEAR: ev_name, ev_cancel, ev_sha1.
 
-    add_field( EXPORTING iv_tabname    = 'TOAVALUE'
-                         iv_fieldname  = 'REFER_CODE'
+    add_field( EXPORTING iv_tabname    = 'TBDTPPT'
+                         iv_fieldname  = 'P_TEXT'
                          iv_fieldtext  = 'SHA'
-                         iv_value      = iv_sha1(7)
-                         iv_field_attr = '05'
+                         iv_value      = iv_sha1
+                         iv_obligatory = abap_true
                CHANGING ct_fields      = lt_fields ).
 
-    add_field( EXPORTING iv_tabname   = 'TEXTL'
-                         iv_fieldname = 'LINE'
-                         iv_fieldtext = 'Name'
-                         iv_value     = 'new-tag-name'
-               CHANGING ct_fields     = lt_fields ).
+    add_field( EXPORTING iv_tabname    = 'TEXTL'
+                         iv_fieldname  = 'LINE'
+                         iv_fieldtext  = 'Name'
+                         iv_obligatory = abap_true
+               CHANGING ct_fields      = lt_fields ).
 
-    CALL FUNCTION 'POPUP_GET_VALUES'
-      EXPORTING
-        popup_title     = 'Create tag'
-      IMPORTING
-        returncode      = lv_answer
-      TABLES
-        fields          = lt_fields
-      EXCEPTIONS
-        error_in_fields = 1
-        OTHERS          = 2 ##NO_TEXT.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
-    ENDIF.
+    WHILE lv_exit_while_loop = abap_false.
 
-    IF lv_answer = 'A'.
-      ev_cancel = abap_true.
-    ELSE.
+      CALL FUNCTION 'POPUP_GET_VALUES'
+        EXPORTING
+          popup_title     = 'Create tag'
+        IMPORTING
+          returncode      = lv_answer
+        TABLES
+          fields          = lt_fields
+        EXCEPTIONS
+          error_in_fields = 1
+          OTHERS          = 2 ##NO_TEXT.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      ENDIF.
+
+      IF lv_answer = 'A'.
+        ev_cancel = abap_true.
+        RETURN.
+      ENDIF.
+
+      READ TABLE lt_fields WITH KEY fieldname = 'P_TEXT'
+                           ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+
+      ev_sha1 = <ls_field>-value.
+
       READ TABLE lt_fields WITH KEY fieldname = 'LINE'
                            ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
+
+      IF condense( <ls_field>-value ) CS ` `.
+        CLEAR: lv_exit_while_loop.
+        MESSAGE 'Tag name cannot contain blank spaces' TYPE 'S' DISPLAY LIKE 'E'.
+        CONTINUE.
+      ENDIF.
+
       ev_name = zcl_abapgit_tag=>add_tag_prefix( <ls_field>-value ).
-    ENDIF.
+
+      lv_exit_while_loop = abap_true.
+
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -1234,7 +1252,6 @@ CLASS lcl_popups IMPLEMENTATION.
     ev_branch = <ls_field>-value.
 
   ENDMETHOD.
-
 
   METHOD branch_popup_callback.
 
