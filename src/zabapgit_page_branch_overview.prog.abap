@@ -158,12 +158,17 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
   METHOD get_git_objects.
 
-    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
+    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
+          lo_progress    TYPE REF TO zcl_abapgit_progress.
 
-    zcl_abapgit_progress=>show( iv_key     = 'Get git objects'
-                                iv_current = 1
-                                iv_total   = 1
-                                iv_text    = io_repo->get_name( ) ) ##NO_TEXT.
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = 1.
+
+    lo_progress->show(
+      iv_current = 1
+      iv_text    = |Get git objects { io_repo->get_name( ) }| ) ##NO_TEXT.
 
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch

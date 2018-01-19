@@ -346,17 +346,22 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA ls_diff_file LIKE LINE OF mt_diff_files.
+    DATA: ls_diff_file LIKE LINE OF mt_diff_files,
+          lo_progress  TYPE REF TO zcl_abapgit_progress.
+
 
     CREATE OBJECT ro_html.
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( mt_diff_files ).
 
     ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
-      zcl_abapgit_progress=>show( iv_key     = 'Diff'
-                                  iv_current = sy-tabix
-                                  iv_total   = lines( mt_diff_files )
-                                  iv_text    = |Render Diff - { ls_diff_file-filename }| ).
+      lo_progress->show(
+        iv_current = sy-tabix
+        iv_text    = |Render Diff - { ls_diff_file-filename }| ).
 
       ro_html->add( render_diff( ls_diff_file ) ).
     ENDLOOP.
@@ -375,17 +380,17 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     " Content
     IF is_diff-type <> 'binary'.
-      ro_html->add( '<div class="diff_content">' ).           "#EC NOTEXT
-      ro_html->add( '<table class="diff_tab syntax-hl">' ).   "#EC NOTEXT
+      ro_html->add( '<div class="diff_content">' ).         "#EC NOTEXT
+      ro_html->add( '<table class="diff_tab syntax-hl">' ). "#EC NOTEXT
       ro_html->add( render_table_head( ) ).
       ro_html->add( render_lines( is_diff ) ).
-      ro_html->add( '</table>' ).                             "#EC NOTEXT
-      ro_html->add( '</div>' ).                               "#EC NOTEXT
+      ro_html->add( '</table>' ).                           "#EC NOTEXT
+      ro_html->add( '</div>' ).                             "#EC NOTEXT
     ELSE.
       ro_html->add( '<div class="diff_content paddings center grey">' ). "#EC NOTEXT
-      ro_html->add( 'The content seems to be binary.' ).      "#EC NOTEXT
-      ro_html->add( 'Cannot display as diff.' ).              "#EC NOTEXT
-      ro_html->add( '</div>' ).                               "#EC NOTEXT
+      ro_html->add( 'The content seems to be binary.' ).    "#EC NOTEXT
+      ro_html->add( 'Cannot display as diff.' ).            "#EC NOTEXT
+      ro_html->add( '</div>' ).                             "#EC NOTEXT
     ENDIF.
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
@@ -434,22 +439,22 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF mv_unified = abap_true.
-      ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
-      ro_html->add( '<tr>' ).                                 "#EC NOTEXT
-      ro_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
-      ro_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
-      ro_html->add( '<th>code</th>' ).                        "#EC NOTEXT
-      ro_html->add( '</tr>' ).                                "#EC NOTEXT
-      ro_html->add( '</thead>' ).                             "#EC NOTEXT
+      ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
+      ro_html->add( '<tr>' ).                               "#EC NOTEXT
+      ro_html->add( '<th class="num">old</th>' ).           "#EC NOTEXT
+      ro_html->add( '<th class="num">new</th>' ).           "#EC NOTEXT
+      ro_html->add( '<th>code</th>' ).                      "#EC NOTEXT
+      ro_html->add( '</tr>' ).                              "#EC NOTEXT
+      ro_html->add( '</thead>' ).                           "#EC NOTEXT
     ELSE.
-      ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
-      ro_html->add( '<tr>' ).                                 "#EC NOTEXT
-      ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-      ro_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
-      ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-      ro_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
-      ro_html->add( '</tr>' ).                                "#EC NOTEXT
-      ro_html->add( '</thead>' ).                             "#EC NOTEXT
+      ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
+      ro_html->add( '<tr>' ).                               "#EC NOTEXT
+      ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
+      ro_html->add( '<th>LOCAL</th>' ).                     "#EC NOTEXT
+      ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
+      ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
+      ro_html->add( '</tr>' ).                              "#EC NOTEXT
+      ro_html->add( '</thead>' ).                           "#EC NOTEXT
     ENDIF.
 
   ENDMETHOD.  " render_table_head.
@@ -569,7 +574,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ro_html->add( '<tr>' ).                               "#EC NOTEXT
+    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
     IF iv_fstate = c_fstate-remote. " Remote file leading changes
       ro_html->add( lv_old ). " local
       ro_html->add( lv_new ). " remote
@@ -577,7 +582,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
       ro_html->add( lv_new ). " local
       ro_html->add( lv_old ). " remote
     ENDIF.
-    ro_html->add( '</tr>' ).                              "#EC NOTEXT
+    ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
   ENDMETHOD. "render_line_split
 
@@ -590,23 +595,23 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zcl_abapgit_diff=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
-        ro_html->add( '<tr>' ).                               "#EC NOTEXT
+        ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( |<td class="num" line-num="{ <diff_line>-old_num }"></td>|
                    && |<td class="num" line-num=""></td>|
                    && |<td class="code diff_del">-{ <diff_line>-old }</td>| ).
-        ro_html->add( '</tr>' ).                              "#EC NOTEXT
+        ro_html->add( '</tr>' ).                            "#EC NOTEXT
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
-        ro_html->add( '<tr>' ).                               "#EC NOTEXT
+        ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( |<td class="num" line-num=""></td>|
                    && |<td class="num" line-num="{ <diff_line>-new_num }"></td>|
                    && |<td class="code diff_ins">+{ <diff_line>-new }</td>| ).
-        ro_html->add( '</tr>' ).                              "#EC NOTEXT
+        ro_html->add( '</tr>' ).                            "#EC NOTEXT
       ENDLOOP.
       CLEAR mt_delayed_lines.
     ENDIF.
 
-    ro_html->add( '<tr>' ).                               "#EC NOTEXT
+    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
     CASE is_diff_line-result.
       WHEN zcl_abapgit_diff=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
@@ -623,7 +628,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
                    && |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="code"> { is_diff_line-old }</td>| ).
     ENDCASE.
-    ro_html->add( '</tr>' ).                              "#EC NOTEXT
+    ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
   ENDMETHOD. "render_line_unified
 
