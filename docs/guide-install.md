@@ -40,7 +40,7 @@ To use the online feature, SSL must be setup. Offline projects will work behind 
 
 ![](img/strust1.png)
 
-Report [ZABAPGIT_TEST_SSL](https://github.com/larshp/abapGit/wiki/ZABAPGIT_TEST_SSL) can be used to verify that the connection works.
+Report [ZABAPGIT_TEST_SSL](./other-test-ssl.html) can be used to verify that the connection works.
 
 Also see blogs
 * http://scn.sap.com/people/jens.gleichmann/blog/2008/10/31/calling-webservices-from-abap-via-httpsssl-with-pfx-certificates
