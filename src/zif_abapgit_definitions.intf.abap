@@ -1,8 +1,5 @@
 INTERFACE zif_abapgit_definitions PUBLIC.
 
-  CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.54.0' ##NO_TEXT.
-
   TYPES:
     ty_type    TYPE c LENGTH 6 .
   TYPES:
@@ -149,6 +146,8 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       commit_text TYPE string,
     END OF ty_transport_to_branch .
 
+  CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.55.0' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
@@ -262,13 +261,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
     END OF gc_action .
-
   CONSTANTS:
     BEGIN OF gc_version,
       active   TYPE r3state VALUE 'A',
       inactive TYPE r3state VALUE 'I',
-    END OF gc_version.
-
-  CONSTANTS: gc_tag_prefix TYPE string VALUE 'refs/tags/'.
-
+    END OF gc_version .
+  CONSTANTS gc_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
 ENDINTERFACE.
