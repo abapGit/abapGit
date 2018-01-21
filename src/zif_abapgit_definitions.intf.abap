@@ -6,6 +6,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     ty_bitbyte TYPE c LENGTH 8 .
   TYPES:
     ty_sha1    TYPE c LENGTH 40 .
+  TYPES: ty_adler32 TYPE x LENGTH 4.
   TYPES:
     BEGIN OF ty_file_signature,
       path     TYPE string,
@@ -92,9 +93,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     ty_chmod TYPE c LENGTH 6 .
   TYPES:
     BEGIN OF ty_object,
-      sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-      type TYPE zif_abapgit_definitions=>ty_type,
-      data TYPE xstring,
+      sha1    TYPE zif_abapgit_definitions=>ty_sha1,
+      type    TYPE zif_abapgit_definitions=>ty_type,
+      data    TYPE xstring,
+      adler32 TYPE ty_adler32,
     END OF ty_object .
   TYPES:
     ty_objects_tt TYPE STANDARD TABLE OF ty_object WITH DEFAULT KEY .

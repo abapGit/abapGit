@@ -25,10 +25,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
       BEGIN OF ty_adler32,
         sha1    TYPE zif_abapgit_definitions=>ty_sha1,
         type    TYPE zif_abapgit_definitions=>ty_type,
-        adler32 TYPE zcl_abapgit_hash=>ty_adler32,
       END OF ty_adler32 .
-    TYPES:
-      ty_adler32_tt TYPE SORTED TABLE OF ty_adler32 WITH UNIQUE KEY sha1 type .
 
     CLASS-METHODS decode
       IMPORTING
@@ -54,7 +51,6 @@ CLASS zcl_abapgit_git_pack DEFINITION
     CLASS-METHODS encode
       IMPORTING
         !it_objects    TYPE zif_abapgit_definitions=>ty_objects_tt
-        !it_adler32    TYPE ty_adler32_tt OPTIONAL
       RETURNING
         VALUE(rv_data) TYPE xstring
       RAISING
@@ -233,11 +229,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
                                   cv_decompressed = lv_decompressed ).
       ENDIF.
 
+      CLEAR ls_object.
+      ls_object-adler32 = lv_data(4).
       lv_data = lv_data+4. " skip adler checksum
 
-*************************
-
-      CLEAR ls_object.
       IF lv_type = zif_abapgit_definitions=>gc_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
@@ -541,14 +536,13 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
   METHOD encode.
 
     DATA: lv_sha1          TYPE x LENGTH 20,
-          lv_adler32       TYPE zcl_abapgit_hash=>ty_adler32,
+          lv_adler32       TYPE zif_abapgit_definitions=>ty_adler32,
           lv_compressed    TYPE xstring,
           lv_xstring       TYPE xstring,
           lo_progress      TYPE REF TO zcl_abapgit_progress,
           lv_objects_total TYPE i.
 
-    FIELD-SYMBOLS: <ls_object>  LIKE LINE OF it_objects,
-                   <ls_adler32> LIKE LINE OF it_adler32.
+    FIELD-SYMBOLS: <ls_object>  LIKE LINE OF it_objects.
 
 
     rv_data = c_pack_start.
@@ -565,7 +559,6 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         iv_total = lv_objects_total.
 
     LOOP AT it_objects ASSIGNING <ls_object>.
-
       lo_progress->show(
         iv_current = sy-tabix
         iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
@@ -583,12 +576,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CONCATENATE rv_data c_zlib lv_compressed INTO rv_data IN BYTE MODE.
 
-      READ TABLE it_adler32
-        ASSIGNING <ls_adler32>
-        WITH KEY type = <ls_object>-type
-        sha1 = <ls_object>-sha1.
-      IF sy-subrc = 0 AND NOT <ls_adler32>-adler32 IS INITIAL.
-        lv_adler32 = <ls_adler32>-adler32.
+      IF NOT <ls_object>-adler32 IS INITIAL.
+        lv_adler32 = <ls_object>-adler32.
       ELSE.
         lv_adler32 = zcl_abapgit_hash=>adler32( <ls_object>-data ).
       ENDIF.
@@ -834,7 +823,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     DATA: ls_data           TYPE zcl_abapgit_zlib=>ty_decompress,
           lv_compressed_len TYPE i,
-          lv_adler32        TYPE zcl_abapgit_hash=>ty_adler32.
+          lv_adler32        TYPE zif_abapgit_definitions=>ty_adler32.
 
 
     ls_data = zcl_abapgit_zlib=>decompress( cv_data ).
