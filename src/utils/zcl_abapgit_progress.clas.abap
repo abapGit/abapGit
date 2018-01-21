@@ -5,34 +5,35 @@ CLASS zcl_abapgit_progress DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS:
-      show
-        IMPORTING
-          !iv_key           TYPE string
-          VALUE(iv_current) TYPE i
-          !iv_total         TYPE i
-          !iv_text          TYPE csequence .
+    METHODS show
+      IMPORTING
+        VALUE(iv_current) TYPE i
+        !iv_text          TYPE csequence .
+    METHODS constructor
+      IMPORTING
+        !iv_total TYPE i .
+  PROTECTED SECTION.
 
+    DATA mv_total TYPE i .
+
+    METHODS calc_pct
+      IMPORTING
+        !iv_current   TYPE i
+      RETURNING
+        VALUE(rv_pct) TYPE i .
   PRIVATE SECTION.
-    CLASS-METHODS:
-      calc_pct
-        IMPORTING
-          !iv_current   TYPE i
-          !iv_total     TYPE i
-        RETURNING
-          VALUE(rv_pct) TYPE i .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_progress IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
 
 
   METHOD calc_pct.
 
     DATA: lv_f TYPE f.
 
-    lv_f = ( iv_current / iv_total ) * 100.
+    lv_f = ( iv_current / mv_total ) * 100.
     rv_pct = lv_f.
 
     IF rv_pct = 100.
@@ -42,20 +43,23 @@ CLASS zcl_abapgit_progress IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    mv_total = iv_total.
+
+  ENDMETHOD.
+
+
   METHOD show.
 
-    DATA: lv_pct  TYPE i,
-          lv_text TYPE string.
+    DATA: lv_pct TYPE i.
 
-    lv_pct = calc_pct( iv_current = iv_current
-                       iv_total   = iv_total ).
-    CONCATENATE iv_key '-' iv_text INTO lv_text SEPARATED BY space.
+    lv_pct = calc_pct( iv_current ).
 
     CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
       EXPORTING
         percentage = lv_pct
-        text       = lv_text.
+        text       = iv_text.
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -304,21 +304,24 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD decode_deltas.
 
-    DATA: ls_object LIKE LINE OF ct_objects,
-          lt_deltas LIKE ct_objects.
+    DATA: ls_object   LIKE LINE OF ct_objects,
+          lo_progress TYPE REF TO zcl_abapgit_progress,
+          lt_deltas   LIKE ct_objects.
 
-
-    zcl_abapgit_progress=>show( iv_key     = 'Decode'
-                                iv_current = 1
-                                iv_total   = 1
-                                iv_text    = 'Deltas' ) ##NO_TEXT.
 
     LOOP AT ct_objects INTO ls_object WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
       DELETE ct_objects INDEX sy-tabix.
       APPEND ls_object TO lt_deltas.
     ENDLOOP.
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( lt_deltas ).
+
     LOOP AT lt_deltas INTO ls_object.
+      lo_progress->show( iv_current = sy-tabix
+                         iv_text    = 'Decode deltas' ) ##NO_TEXT.
+
       delta( EXPORTING is_object = ls_object
              CHANGING ct_objects = ct_objects ).
     ENDLOOP.
@@ -514,12 +517,12 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD encode.
 
-    DATA: lv_sha1              TYPE x LENGTH 20,
-          lv_adler32           TYPE zcl_abapgit_hash=>ty_adler32,
-          lv_compressed        TYPE xstring,
-          lv_xstring           TYPE xstring,
-          lv_objects_total     TYPE i,
-          lv_objects_processed TYPE i.
+    DATA: lv_sha1          TYPE x LENGTH 20,
+          lv_adler32       TYPE zcl_abapgit_hash=>ty_adler32,
+          lv_compressed    TYPE xstring,
+          lv_xstring       TYPE xstring,
+          lo_progress      TYPE REF TO zcl_abapgit_progress,
+          lv_objects_total TYPE i.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
@@ -532,13 +535,15 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_objects_total = lines( it_objects ).
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lv_objects_total.
+
     LOOP AT it_objects ASSIGNING <ls_object>.
 
-      lv_objects_processed = sy-tabix.
-
-      cl_progress_indicator=>progress_indicate( i_text      = |encoding objects &1% ( &2 of &3 )|
-                                                i_processed = lv_objects_processed
-                                                i_total     = lv_objects_total ).
+      lo_progress->show(
+        iv_current = sy-tabix
+        iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
 
       lv_xstring = type_and_length(
         iv_type   = <ls_object>-type

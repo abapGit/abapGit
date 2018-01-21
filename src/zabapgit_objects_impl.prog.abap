@@ -293,7 +293,7 @@ CLASS lcl_objects IMPLEMENTATION.
   METHOD delete.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-*          lv_tabclass TYPE dd02l-tabclass,
+          lo_progress TYPE REF TO zcl_abapgit_progress,
           lt_tadir    LIKE it_tadir.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -302,11 +302,13 @@ CLASS lcl_objects IMPLEMENTATION.
 
     zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( lt_tadir ).
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      zcl_abapgit_progress=>show( iv_key     = 'Delete'
-                                  iv_current = sy-tabix
-                                  iv_total   = lines( lt_tadir )
-                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      lo_progress->show( iv_current = sy-tabix
+                         iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_tadir>-object.
@@ -424,18 +426,19 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize.
 
-    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
-          lv_cancel  TYPE abap_bool,
-          li_obj     TYPE REF TO zif_abapgit_object,
-          lt_remote  TYPE zif_abapgit_definitions=>ty_files_tt,
-          lv_package TYPE devclass,
-          lo_files   TYPE REF TO zcl_abapgit_objects_files,
-          lo_xml     TYPE REF TO zcl_abapgit_xml_input,
-          lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          lt_ddic    TYPE TABLE OF ty_deserialization,
-          lt_rest    TYPE TABLE OF ty_deserialization,
-          lt_late    TYPE TABLE OF ty_deserialization,
-          lv_path    TYPE string.
+    DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
+          lv_cancel   TYPE abap_bool,
+          li_obj      TYPE REF TO zif_abapgit_object,
+          lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
+          lv_package  TYPE devclass,
+          lo_files    TYPE REF TO zcl_abapgit_objects_files,
+          lo_xml      TYPE REF TO zcl_abapgit_xml_input,
+          lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_ddic     TYPE TABLE OF ty_deserialization,
+          lt_rest     TYPE TABLE OF ty_deserialization,
+          lt_late     TYPE TABLE OF ty_deserialization,
+          lo_progress TYPE REF TO zcl_abapgit_progress,
+          lv_path     TYPE string.
 
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -457,12 +460,14 @@ CLASS lcl_objects IMPLEMENTATION.
 
     warning_overwrite( CHANGING ct_results = lt_results ).
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( lt_results ).
+
     LOOP AT lt_results ASSIGNING <ls_result> WHERE obj_type IS NOT INITIAL
         AND NOT ( lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL ).
-      zcl_abapgit_progress=>show( iv_key     = 'Deserialize'
-                                  iv_current = sy-tabix
-                                  iv_total   = lines( lt_results )
-                                  iv_text    = <ls_result>-obj_name ) ##NO_TEXT.
+      lo_progress->show( iv_current = sy-tabix
+                         iv_text    = |Deserialize { <ls_result>-obj_name }| ) ##NO_TEXT.
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -546,16 +551,21 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD deserialize_objects.
 
+    DATA: lo_progress TYPE REF TO zcl_abapgit_progress.
+
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF it_objects.
 
 
     lcl_objects_activation=>clear( ).
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( it_objects ).
+
     LOOP AT it_objects ASSIGNING <ls_obj>.
-      zcl_abapgit_progress=>show( iv_key     = |Deserialize { iv_descr }|
-                                  iv_current = sy-tabix
-                                  iv_total   = lines( it_objects )
-                                  iv_text    = <ls_obj>-item-obj_name ) ##NO_TEXT.
+      lo_progress->show(
+        iv_current = sy-tabix
+        iv_text    = |Deserialize { iv_descr } - { <ls_obj>-item-obj_name }| ) ##NO_TEXT.
 
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
                                  io_xml     = <ls_obj>-xml ).

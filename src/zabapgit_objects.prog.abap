@@ -189,25 +189,27 @@ CLASS lcl_objects_activation IMPLEMENTATION.
 
   METHOD activate_new.
 
+    DATA: lo_progress TYPE REF TO zcl_abapgit_progress.
+
     IF gt_objects IS INITIAL.
       RETURN.
     ENDIF.
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = 100.
+
     IF iv_ddic = abap_true.
 
-      zcl_abapgit_progress=>show( iv_key     = 'Activating DDIC'
-                                  iv_current = '98'
-                                  iv_total   = '100'
-                                  iv_text    = '...' ).
+      lo_progress->show( iv_current = 98
+                         iv_text    = 'Activating DDIC' ).
 
       activate_ddic( ).
 
     ELSE.
 
-      zcl_abapgit_progress=>show( iv_key     = 'Activating non DDIC'
-                                  iv_current = '98'
-                                  iv_total   = '100'
-                                  iv_text    = '...' ).
+      lo_progress->show( iv_current = 98
+                         iv_text    = 'Activating non DDIC' ).
 
       activate_old( ).
 

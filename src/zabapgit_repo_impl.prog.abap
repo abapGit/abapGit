@@ -70,15 +70,18 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
+    DATA: lo_progress  TYPE REF TO zcl_abapgit_progress,
+          lx_exception TYPE REF TO zcx_abapgit_exception.
 
     super->refresh( iv_drop_cache ).
     reset_status( ).
 
-    zcl_abapgit_progress=>show( iv_key     = 'Fetch'
-                                iv_current = 1
-                                iv_total   = 1
-                                iv_text    = 'Remote files' ) ##NO_TEXT.
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = 1.
+
+    lo_progress->show( iv_current = 1
+                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
     TRY.
 
@@ -599,10 +602,11 @@ CLASS lcl_repo IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_item  TYPE zif_abapgit_definitions=>ty_item,
-          lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_cache TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_item     TYPE zif_abapgit_definitions=>ty_item,
+          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt,
+          lo_progress TYPE REF TO zcl_abapgit_progress,
+          lt_cache    TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
                    WITH NON-UNIQUE KEY item.
 
     DATA: lt_filter       TYPE SORTED TABLE OF tadir
@@ -638,6 +642,10 @@ CLASS lcl_repo IMPLEMENTATION.
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
 
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( lt_tadir ).
+
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF lv_filter_exist = abap_true.
         READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
@@ -648,10 +656,9 @@ CLASS lcl_repo IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      zcl_abapgit_progress=>show( iv_key     = 'Serialize'
-                                  iv_current = sy-tabix
-                                  iv_total   = lines( lt_tadir )
-                                  iv_text    = <ls_tadir>-obj_name ) ##NO_TEXT.
+      lo_progress->show(
+        iv_current = sy-tabix
+        iv_text    = |Serialize { <ls_tadir>-obj_name }| ) ##NO_TEXT.
 
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
