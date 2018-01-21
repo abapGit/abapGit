@@ -396,7 +396,7 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_object_clas_new DEFINITION INHERITING FROM lcl_object_clas.
+CLASS lcl_object_clas DEFINITION INHERITING FROM lcl_object_clas_old.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -410,7 +410,7 @@ CLASS lcl_object_clas_new DEFINITION INHERITING FROM lcl_object_clas.
 
 ENDCLASS.
 
-CLASS lcl_object_clas_new IMPLEMENTATION.
+CLASS lcl_object_clas IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( is_item     = is_item
