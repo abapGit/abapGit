@@ -559,9 +559,11 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         iv_total = lv_objects_total.
 
     LOOP AT it_objects ASSIGNING <ls_object>.
-      lo_progress->show(
-        iv_current = sy-tabix
-        iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
+      IF sy-tabix MOD 200 = 0.
+        lo_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
+      ENDIF.
 
       lv_xstring = type_and_length(
         iv_type   = <ls_object>-type
