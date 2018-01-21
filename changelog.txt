@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2018-01-21 v1.55.0
+------------------
+! CLAS deserialization changed
+! Progress indicators changed
++ Tag a specific commit
+
 2018-01-19 v1.54.0
 ------------------
 + SHI8 support
