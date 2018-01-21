@@ -3,11 +3,9 @@ CLASS zcl_abapgit_hash DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: ty_adler32 TYPE x LENGTH 4.
-
     CLASS-METHODS adler32
       IMPORTING iv_xstring         TYPE xstring
-      RETURNING VALUE(rv_checksum) TYPE ty_adler32.
+      RETURNING VALUE(rv_checksum) TYPE zif_abapgit_definitions=>ty_adler32.
 
     CLASS-METHODS sha1
       IMPORTING iv_type        TYPE zif_abapgit_definitions=>ty_type
