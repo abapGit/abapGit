@@ -119,6 +119,7 @@ CLASS lcl_object_auth IMPLEMENTATION.
 
     field = ms_item-obj_name.
 
+* TODO, this function module does not exist in 702
     CALL FUNCTION 'SU20_MAINTAIN_SNGL'
       EXPORTING
         id_field    = field
