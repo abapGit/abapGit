@@ -177,7 +177,7 @@ CLASS lcl_object_type IMPLEMENTATION.
       INSERT REPORT lv_progname FROM lt_source STATE 'I'.
     ENDIF.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

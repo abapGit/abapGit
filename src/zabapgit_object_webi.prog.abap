@@ -409,7 +409,7 @@ CLASS lcl_object_webi IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error deserializing WEBI' ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "zif_abapgit_object~deserialize
 

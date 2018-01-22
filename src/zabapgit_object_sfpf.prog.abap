@@ -217,7 +217,7 @@ CLASS lcl_object_sfpf IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'SFPF error, deserialize' ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

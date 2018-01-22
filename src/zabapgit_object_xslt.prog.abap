@@ -135,7 +135,7 @@ CLASS lcl_object_xslt IMPLEMENTATION.
 
     lo_xslt->set_changeable( abap_false ).
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "zif_abapgit_object~deserialize
 

@@ -213,7 +213,7 @@ CLASS lcl_object_sfbf IMPLEMENTATION.
     lo_bf->save_all( ).
     SET PARAMETER ID 'EUK' FIELD ''.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

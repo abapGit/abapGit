@@ -145,7 +145,7 @@ CLASS lcl_object_jobd IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error deserializing JOBD| ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 

@@ -225,7 +225,7 @@ CLASS lcl_object_dtel IMPLEMENTATION.
     deserialize_texts( io_xml   = io_xml
                        is_dd04v = ls_dd04v ).
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

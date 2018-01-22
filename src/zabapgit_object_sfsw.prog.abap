@@ -181,8 +181,7 @@ CLASS lcl_object_sfsw IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
-
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 
