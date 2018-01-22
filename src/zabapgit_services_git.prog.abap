@@ -43,6 +43,10 @@ CLASS lcl_services_git DEFINITION FINAL.
       IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
+    CLASS-METHODS switch_tag
+      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
     CLASS-METHODS tag_overview
       IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
@@ -285,6 +289,27 @@ CLASS lcl_services_git IMPLEMENTATION.
     lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
 
     MESSAGE lv_text TYPE 'S'.
+
+  ENDMETHOD.
+
+  METHOD switch_tag.
+
+    DATA: lo_repo TYPE REF TO lcl_repo_online,
+          ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+          lv_text TYPE string.
+
+    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+
+    ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
+    IF ls_tag IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    lo_repo->set_branch_name( ls_tag-name ).
+
+    COMMIT WORK.
+
+    lo_repo->deserialize( ).
 
   ENDMETHOD.
 

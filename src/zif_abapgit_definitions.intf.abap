@@ -237,6 +237,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       git_branch_delete        TYPE string VALUE 'git_branch_delete',
       git_tag_create           TYPE string VALUE 'git_tag_create',
       git_tag_delete           TYPE string VALUE 'git_tag_delete',
+      git_tag_switch           TYPE string VALUE 'git_tag_switch',
       git_commit               TYPE string VALUE 'git_commit',
 
       db_delete                TYPE string VALUE 'db_delete',
