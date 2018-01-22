@@ -195,8 +195,14 @@ CLASS lcl_repo_online IMPLEMENTATION.
   METHOD push.
 
     DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
-          lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
+          lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lv_text          TYPE string.
 
+    IF ms_data-branch_name CP 'refs/tags*'.
+      lv_text = |You're working on a tag. Currently it's not |
+             && |possible to push on tags. Consider creating a branch instead|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
 
     handle_stage_ignore( io_stage ).
 

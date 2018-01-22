@@ -300,6 +300,9 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
       lo_tb_tag->add( iv_txt = 'Overview'
                       iv_act = |{ zif_abapgit_definitions=>gc_action-go_tag_overview }?{ lv_key }| ).
+      lo_tb_tag->add( iv_txt = 'Switch'
+                      iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_switch }?{ lv_key }|
+                      iv_opt = lv_wp_opt ).
       lo_tb_tag->add( iv_txt = 'Create'
                       iv_act = |{ zif_abapgit_definitions=>gc_action-git_tag_create }?{ lv_key }| ).
       lo_tb_tag->add( iv_txt = 'Delete'

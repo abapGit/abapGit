@@ -670,7 +670,6 @@ CLASS lcl_popups IMPLEMENTATION.
       LOOP AT lt_tags ASSIGNING <ls_tag>.
 
         <ls_tag>-name = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
-        <ls_tag>-sha1 = <ls_tag>-sha1(7).
 
       ENDLOOP.
 
@@ -687,7 +686,7 @@ CLASS lcl_popups IMPLEMENTATION.
           lo_columns->get_column( `IS_HEAD` )->set_technical( ).
           lo_columns->get_column( `DISPLAY_NAME` )->set_technical( ).
 
-          lo_columns->get_column( `SHA1` )->set_output_length( 10 ).
+          lo_columns->get_column( `SHA1` )->set_output_length( 30 ).
           lo_columns->get_column( `SHA1` )->set_medium_text( 'SHA' ).
 
           lo_columns->get_column( `NAME` )->set_medium_text( 'Tag name' ).
@@ -695,9 +694,9 @@ CLASS lcl_popups IMPLEMENTATION.
           lo_columns->set_optimize( ).
 
           lo_alv->set_screen_popup( start_column = 5
-                                    end_column   = 50
+                                    end_column   = 70
                                     start_line   = 5
-                                    end_line     = 20 ).
+                                    end_line     = 25 ).
 
           CREATE OBJECT lo_table_header
             EXPORTING
