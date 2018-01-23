@@ -569,8 +569,8 @@ CLASS lcl_repo IMPLEMENTATION.
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     IF lt_requirements IS NOT INITIAL.
-      lcl_requirement_helper=>check_requirements( it_requirements = lt_requirements
-                                                  iv_show_popup   = abap_true ).
+      zcl_abapgit_requirement_helper=>check_requirements( it_requirements = lt_requirements
+                                                          iv_show_popup   = abap_true ).
     ENDIF.
 
     TRY.
