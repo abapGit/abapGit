@@ -283,9 +283,10 @@ CLASS lcl_file_status IMPLEMENTATION.
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
       lv_name = zcl_abapgit_folder_logic=>path_to_package(
-        iv_top  = iv_devclass
-        io_dot  = io_dot
-        iv_path = iv_path ).
+        iv_top                  = iv_devclass
+        io_dot                  = io_dot
+        iv_create_if_not_exists = abap_false
+        iv_path                 = iv_path ).
     ENDIF.
 
     CLEAR es_item.
