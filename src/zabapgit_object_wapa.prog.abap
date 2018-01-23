@@ -263,7 +263,7 @@ CLASS lcl_object_wapa IMPLEMENTATION.
 
     ls_item-obj_type = 'WAPD'.
     ls_item-obj_name = ms_item-obj_name.
-    lcl_objects_activation=>add_item( ls_item ).
+    zcl_abapgit_objects_activation=>add_item( ls_item ).
 
     lv_objkey = ls_item-obj_name.
 * todo, hmm, the WAPD is not added to the worklist during activation
@@ -298,8 +298,8 @@ CLASS lcl_object_wapa IMPLEMENTATION.
         p_key_component2 = <ls_page>-attributes-pagekey
         p_external_id    = 'WG ' ).
 
-      lcl_objects_activation=>add( iv_type = 'WAPP'
-                                   iv_name = lv_obj_name ).
+      zcl_abapgit_objects_activation=>add( iv_type = 'WAPP'
+                                           iv_name = lv_obj_name ).
 
     ENDLOOP.
 

@@ -178,7 +178,7 @@ CLASS lcl_object_dcls IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'DCLS error' ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 

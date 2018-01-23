@@ -1272,7 +1272,7 @@ CLASS lcl_object_enho IMPLEMENTATION.
     li_enho->deserialize( io_xml     = io_xml
                           iv_package = iv_package ).
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

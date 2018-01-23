@@ -479,8 +479,8 @@ CLASS lcl_oo_class IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
 
-    lcl_objects_activation=>add( iv_type = 'REPT'
-                                 iv_name = lv_cp ).
+    zcl_abapgit_objects_activation=>add( iv_type = 'REPT'
+                                         iv_name = lv_cp ).
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~create_sotr.

@@ -163,7 +163,7 @@ CLASS lcl_object_sfpi IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'SFPI error, deserialize' ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

@@ -181,7 +181,7 @@ CLASS lcl_object_enqu IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from DDIF_ENQU_PUT' ).
     ENDIF.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

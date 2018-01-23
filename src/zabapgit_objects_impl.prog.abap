@@ -447,7 +447,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
 
-    lcl_objects_activation=>clear( ).
+    zcl_abapgit_objects_activation=>clear( ).
 
     lt_remote = io_repo->get_files_remote( ).
 
@@ -556,7 +556,7 @@ CLASS lcl_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF it_objects.
 
 
-    lcl_objects_activation=>clear( ).
+    zcl_abapgit_objects_activation=>clear( ).
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -572,7 +572,7 @@ CLASS lcl_objects IMPLEMENTATION.
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
-    lcl_objects_activation=>activate( iv_ddic ).
+    zcl_abapgit_objects_activation=>activate( iv_ddic ).
 
   ENDMETHOD.
 

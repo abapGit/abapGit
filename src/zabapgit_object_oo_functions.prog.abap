@@ -529,7 +529,7 @@ CLASS lcl_oo_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~add_to_activation_list.
-    lcl_objects_activation=>add_item( is_item ).
+    zcl_abapgit_objects_activation=>add_item( is_item ).
   ENDMETHOD.
 
   METHOD lif_oo_object_fnc~update_descriptions.

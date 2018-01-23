@@ -235,7 +235,7 @@ CLASS lcl_object_ddls IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'DDLS error writing TADIR' ).
     ENDTRY.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.                    "deserialize
 

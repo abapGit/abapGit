@@ -410,7 +410,7 @@ CLASS lcl_object_tabl IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from DDIF_TABL_PUT' ).
     ENDIF.
 
-    lcl_objects_activation=>add_item( ms_item ).
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
 * handle indexes
     LOOP AT lt_dd12v INTO ls_dd12v.
@@ -449,8 +449,8 @@ CLASS lcl_object_tabl IMPLEMENTATION.
         IMPORTING
           obj_name = lv_tname.
 
-      lcl_objects_activation=>add( iv_type = 'INDX'
-                                   iv_name = lv_tname ).
+      zcl_abapgit_objects_activation=>add( iv_type = 'INDX'
+                                           iv_name = lv_tname ).
 
     ENDLOOP.
 
