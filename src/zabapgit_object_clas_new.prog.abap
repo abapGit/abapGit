@@ -46,7 +46,9 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
           it_source         TYPE zif_abapgit_definitions=>ty_string_tt
           iv_name           TYPE seoclsname
         RETURNING
-          VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class,
+          VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class
+        RAISING
+          zcx_abapgit_exception,
       update_full_class_include
         IMPORTING
           iv_classname TYPE seoclsname
@@ -138,10 +140,14 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
 
   METHOD init_scanner.
 
-    ro_scanner = cl_oo_source_scanner_class=>create_class_scanner(
-      clif_name = iv_name
-      source    = it_source ).
-    ro_scanner->scan( ).
+    TRY.
+        ro_scanner = cl_oo_source_scanner_class=>create_class_scanner(
+          clif_name = iv_name
+          source    = it_source ).
+        ro_scanner->scan( ).
+      CATCH cx_clif_scan_error.
+        zcx_abapgit_exception=>raise( 'error initializing CLAS scanner' ).
+    ENDTRY.
 
   ENDMETHOD.
 

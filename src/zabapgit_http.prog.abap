@@ -350,12 +350,11 @@ CLASS lcl_http IMPLEMENTATION.
 
     CALL FUNCTION 'ICM_GET_INFO2'
       TABLES
-        servlist           = lt_list
+        servlist    = lt_list
       EXCEPTIONS
-        icm_error          = 1
-        icm_timeout        = 2
-        icm_not_authorized = 3
-        OTHERS             = 4.
+        icm_error   = 1
+        icm_timeout = 2
+        OTHERS      = 3.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
