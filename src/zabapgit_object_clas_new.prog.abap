@@ -20,7 +20,9 @@ CLASS lcl_oo_class_new DEFINITION INHERITING FROM lcl_oo_class.
           iv_program        TYPE programm
           it_source         TYPE string_table
         RETURNING
-          VALUE(rv_updated) TYPE abap_bool,
+          VALUE(rv_updated) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception,
       generate_classpool
         IMPORTING
           iv_name TYPE seoclsname
@@ -156,7 +158,10 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
     DATA: lt_old TYPE string_table.
 
     READ REPORT iv_program INTO lt_old.
-    ASSERT sy-subrc = 0. " include should have been created previously
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
+    ENDIF.
+
     IF lt_old <> it_source.
       INSERT REPORT iv_program FROM it_source.
       ASSERT sy-subrc = 0.
