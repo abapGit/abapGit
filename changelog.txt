@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-02-03 v1.56.0
+------------------
++ background mode: remove old files when moving
++ checkout tags
+! progress indicator changes
+* downport
+* no package transport during serialization
+* fix dump in new CLAS serialization
+
 2018-01-21 v1.55.0
 ------------------
 ! CLAS deserialization changed
