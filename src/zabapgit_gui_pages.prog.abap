@@ -9,9 +9,7 @@ INCLUDE zabapgit_html_chunks.
 INCLUDE zabapgit_page.
 
 * Utils and helpers
-INCLUDE zabapgit_html_action_utils.
 INCLUDE zabapgit_repo_browser_util.
-INCLUDE zabapgit_syntax_highlighter.
 
 * Components and templates
 INCLUDE zabapgit_view_repo.
