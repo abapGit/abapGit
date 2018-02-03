@@ -314,6 +314,9 @@ CLASS lcl_objects IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
       delete_obj( ls_item ).
+
+* make sure to save object deletions
+      COMMIT WORK.
     ENDLOOP.
 
   ENDMETHOD.                    "delete
