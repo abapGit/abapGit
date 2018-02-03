@@ -149,7 +149,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF ty_transport_to_branch .
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.55.0' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.56.0' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
