@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_DB
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_db_dis DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -79,7 +79,7 @@ CLASS lcl_gui_page_db_dis IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_db_edit DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
     METHODS: constructor
@@ -150,7 +150,7 @@ CLASS lcl_gui_page_db_edit IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_db DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
     METHODS constructor.

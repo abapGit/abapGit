@@ -6,18 +6,13 @@
 *&  Include           ZABAPGIT_PAGE_REPO_SETTINGS
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_syntax_check DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_syntax_check DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO lcl_repo.
 
   PROTECTED SECTION.
-*    CONSTANTS:
-*      BEGIN OF c_action,
-*        back TYPE string VALUE 'back',
-*      END OF c_action.
-
     DATA: mo_repo TYPE REF TO lcl_repo.
 
     METHODS:
