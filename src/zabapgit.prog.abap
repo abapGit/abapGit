@@ -32,25 +32,11 @@ SELECTION-SCREEN END OF SCREEN 1001.
 
 INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
-INCLUDE zabapgit_macros.
-INCLUDE zabapgit_zlib.
-INCLUDE zabapgit_html.
-INCLUDE zabapgit_xml.
-
 INCLUDE zabapgit_app.              " Some deferred definitions here
-INCLUDE zabapgit_persistence_old.
-INCLUDE zabapgit_dot_abapgit.
-INCLUDE zabapgit_persistence.
-INCLUDE zabapgit_sap_package.
-INCLUDE zabapgit_folder_logic.
-INCLUDE zabapgit_requirements.
 INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
 INCLUDE zabapgit_proxy.
 
-INCLUDE zabapgit_tag.
-INCLUDE zabapgit_stage.
-INCLUDE zabapgit_git_helpers.
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_news.
 INCLUDE zabapgit_stage_logic.
