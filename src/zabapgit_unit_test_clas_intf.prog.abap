@@ -1,4 +1,29 @@
 
+*********************
+*********************
+*********************
+*********************
+*********************
+* TODO, move contents of this include to global OO serialization/deserialization classes
+*********************
+*********************
+*********************
+*********************
+
+*CLASS ltcl_oo_factory_injector DEFINITION FOR TESTING.
+*  PUBLIC SECTION.
+*    CLASS-METHODS:
+*      inject
+*        IMPORTING
+*          io_object_oriented_object TYPE REF TO zif_abapgit_oo_object_fnc.
+*ENDCLASS.
+*
+*CLASS ltcl_oo_factory_injector IMPLEMENTATION.
+*  METHOD inject.
+*    lcl_oo_factory=>go_object_oriented_object = io_object_oriented_object.
+*  ENDMETHOD.
+*ENDCLASS.
+
 *CLASS ltd_spy_oo_object DEFINITION FOR TESTING.
 *  PUBLIC SECTION.
 *    INTERFACES: if_oo_object_fnc.

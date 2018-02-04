@@ -4,9 +4,241 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+
+
+  METHOD zif_abapgit_object~changed_by.
+
+    DATA: lv_as4date TYPE dd02l-as4date,
+          lv_as4time TYPE dd02l-as4time.
+
+
+    SELECT SINGLE as4user as4date as4time
+      FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE as4user INTO rv_user
+      FROM dd09l
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'
+      AND ( as4date > lv_as4date OR ( as4date = lv_as4date AND as4time > lv_as4time ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    DATA: lo_table_validation     TYPE REF TO zcl_abapgit_object_tabl_valid,
+          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
+          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input,
+          lv_validation_text      TYPE string.
+
+    CREATE OBJECT lo_local_version_output.
+    me->zif_abapgit_object~serialize( lo_local_version_output ).
+
+    CREATE OBJECT lo_local_version_input
+      EXPORTING
+        iv_xml = lo_local_version_output->render( ).
+
+    CREATE OBJECT lo_table_validation.
+
+    lv_validation_text = lo_table_validation->validate(
+      io_remote_version = io_remote_version_xml
+      io_local_version  = lo_local_version_input ).
+    IF lv_validation_text IS NOT INITIAL.
+      lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
+      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_object_tabl_dialog
+        EXPORTING
+          iv_message = lv_validation_text.
+    ELSE.
+      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_objname  TYPE rsedd0-ddobjname,
+          lv_tabclass TYPE dd02l-tabclass,
+          lv_no_ask   TYPE abap_bool,
+          lr_data     TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_data>  TYPE any.
+
+
+    lv_objname = ms_item-obj_name.
+
+    lv_no_ask = abap_true.
+    SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+* it cannot delete table with table wihtout asking
+      CREATE DATA lr_data TYPE (lv_objname).
+      ASSIGN lr_data->* TO <ls_data>.
+      SELECT SINGLE * FROM (lv_objname) INTO <ls_data>.
+      IF sy-subrc = 0.
+        lv_no_ask = abap_false.
+      ENDIF.
+    ENDIF.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = lv_no_ask
+        objname              = lv_objname
+        objtype              = 'T'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL' ).
+    ENDIF.
+
+  ENDMETHOD.                    "delete
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lv_name      TYPE ddobjname,
+          lv_tname     TYPE trobj_name,
+          ls_dd02v     TYPE dd02v,
+          ls_dd09l     TYPE dd09l,
+          lt_dd03p     TYPE TABLE OF dd03p,
+          lt_dd05m     TYPE TABLE OF dd05m,
+          lt_dd08v     TYPE TABLE OF dd08v,
+          lt_dd12v     TYPE dd12vtab,
+          lt_dd17v     TYPE dd17vtab,
+          ls_dd17v     LIKE LINE OF lt_dd17v,
+          lt_secondary LIKE lt_dd17v,
+          lt_dd35v     TYPE TABLE OF dd35v,
+          lt_dd36m     TYPE dd36mttyp,
+          ls_dd12v     LIKE LINE OF lt_dd12v.
+
+
+    io_xml->read( EXPORTING iv_name = 'DD02V'
+                  CHANGING cg_data = ls_dd02v ).
+    io_xml->read( EXPORTING iv_name = 'DD09L'
+                  CHANGING cg_data = ls_dd09l ).
+    io_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
+                  CHANGING cg_data = lt_dd03p ).
+    io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
+                  CHANGING cg_data = lt_dd05m ).
+    io_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
+                  CHANGING cg_data = lt_dd08v ).
+    io_xml->read( EXPORTING iv_name = 'DD12V'
+                  CHANGING cg_data = lt_dd12v ).
+    io_xml->read( EXPORTING iv_name = 'DD17V'
+                  CHANGING cg_data = lt_dd17v ).
+    io_xml->read( EXPORTING iv_name = 'DD35V_TALE'
+                  CHANGING cg_data = lt_dd35v ).
+    io_xml->read( EXPORTING iv_name = 'DD36M'
+                  CHANGING cg_data = lt_dd36m ).
+
+    corr_insert( iv_package ).
+
+    lv_name = ms_item-obj_name. " type conversion
+
+    CALL FUNCTION 'DDIF_TABL_PUT'
+      EXPORTING
+        name              = lv_name
+        dd02v_wa          = ls_dd02v
+        dd09l_wa          = ls_dd09l
+      TABLES
+        dd03p_tab         = lt_dd03p
+        dd05m_tab         = lt_dd05m
+        dd08v_tab         = lt_dd08v
+        dd35v_tab         = lt_dd35v
+        dd36m_tab         = lt_dd36m
+      EXCEPTIONS
+        tabl_not_found    = 1
+        name_inconsistent = 2
+        tabl_inconsistent = 3
+        put_failure       = 4
+        put_refused       = 5
+        OTHERS            = 6.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from DDIF_TABL_PUT' ).
+    ENDIF.
+
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
+
+* handle indexes
+    LOOP AT lt_dd12v INTO ls_dd12v.
+
+* todo, call corr_insert?
+
+      CLEAR lt_secondary.
+      LOOP AT lt_dd17v INTO ls_dd17v
+          WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
+        APPEND ls_dd17v TO lt_secondary.
+      ENDLOOP.
+
+      CALL FUNCTION 'DDIF_INDX_PUT'
+        EXPORTING
+          name              = ls_dd12v-sqltab
+          id                = ls_dd12v-indexname
+          dd12v_wa          = ls_dd12v
+        TABLES
+          dd17v_tab         = lt_secondary
+        EXCEPTIONS
+          indx_not_found    = 1
+          name_inconsistent = 2
+          indx_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from DDIF_INDX_PUT' ).
+      ENDIF.
+
+      CALL FUNCTION 'DD_DD_TO_E071'
+        EXPORTING
+          type     = 'INDX'
+          name     = ls_dd12v-sqltab
+          id       = ls_dd12v-indexname
+        IMPORTING
+          obj_name = lv_tname.
+
+      zcl_abapgit_objects_activation=>add( iv_type = 'INDX'
+                                           iv_name = lv_tname ).
+
+    ENDLOOP.
+
+  ENDMETHOD.                    "deserialize
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_tabname TYPE dd02l-tabname.
+
+
+    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
+      WHERE tabname = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
 
   METHOD zif_abapgit_object~has_changed_since.
 
@@ -63,48 +295,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
-
-    DATA: lv_as4date TYPE dd02l-as4date,
-          lv_as4time TYPE dd02l-as4time.
-
-
-    SELECT SINGLE as4user as4date as4time
-      FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
-    IF sy-subrc <> 0.
-      rv_user = c_user_unknown.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE as4user INTO rv_user
-      FROM dd09l
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'
-      AND ( as4date > lv_as4date OR ( as4date = lv_as4date AND as4time > lv_as4time ) ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_tabname TYPE dd02l-tabname.
-
-
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD zif_abapgit_object~jump.
 
@@ -113,48 +303,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_objname  TYPE rsedd0-ddobjname,
-          lv_tabclass TYPE dd02l-tabclass,
-          lv_no_ask   TYPE abap_bool,
-          lr_data     TYPE REF TO data.
-
-    FIELD-SYMBOLS: <ls_data>  TYPE any.
-
-
-    lv_objname = ms_item-obj_name.
-
-    lv_no_ask = abap_true.
-    SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
-    IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
-* it cannot delete table with table wihtout asking
-      CREATE DATA lr_data TYPE (lv_objname).
-      ASSIGN lr_data->* TO <ls_data>.
-      SELECT SINGLE * FROM (lv_objname) INTO <ls_data>.
-      IF sy-subrc = 0.
-        lv_no_ask = abap_false.
-      ENDIF.
-    ENDIF.
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = lv_no_ask
-        objname              = lv_objname
-        objtype              = 'T'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL' ).
-    ENDIF.
-
-  ENDMETHOD.                    "delete
 
   METHOD zif_abapgit_object~serialize.
 
@@ -331,142 +479,4 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                  ig_data = lt_dd36m ).
 
   ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: lv_name      TYPE ddobjname,
-          lv_tname     TYPE trobj_name,
-          ls_dd02v     TYPE dd02v,
-          ls_dd09l     TYPE dd09l,
-          lt_dd03p     TYPE TABLE OF dd03p,
-          lt_dd05m     TYPE TABLE OF dd05m,
-          lt_dd08v     TYPE TABLE OF dd08v,
-          lt_dd12v     TYPE dd12vtab,
-          lt_dd17v     TYPE dd17vtab,
-          ls_dd17v     LIKE LINE OF lt_dd17v,
-          lt_secondary LIKE lt_dd17v,
-          lt_dd35v     TYPE TABLE OF dd35v,
-          lt_dd36m     TYPE dd36mttyp,
-          ls_dd12v     LIKE LINE OF lt_dd12v.
-
-
-    io_xml->read( EXPORTING iv_name = 'DD02V'
-                  CHANGING cg_data = ls_dd02v ).
-    io_xml->read( EXPORTING iv_name = 'DD09L'
-                  CHANGING cg_data = ls_dd09l ).
-    io_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
-                  CHANGING cg_data = lt_dd03p ).
-    io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
-                  CHANGING cg_data = lt_dd05m ).
-    io_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
-                  CHANGING cg_data = lt_dd08v ).
-    io_xml->read( EXPORTING iv_name = 'DD12V'
-                  CHANGING cg_data = lt_dd12v ).
-    io_xml->read( EXPORTING iv_name = 'DD17V'
-                  CHANGING cg_data = lt_dd17v ).
-    io_xml->read( EXPORTING iv_name = 'DD35V_TALE'
-                  CHANGING cg_data = lt_dd35v ).
-    io_xml->read( EXPORTING iv_name = 'DD36M'
-                  CHANGING cg_data = lt_dd36m ).
-
-    corr_insert( iv_package ).
-
-    lv_name = ms_item-obj_name. " type conversion
-
-    CALL FUNCTION 'DDIF_TABL_PUT'
-      EXPORTING
-        name              = lv_name
-        dd02v_wa          = ls_dd02v
-        dd09l_wa          = ls_dd09l
-      TABLES
-        dd03p_tab         = lt_dd03p
-        dd05m_tab         = lt_dd05m
-        dd08v_tab         = lt_dd08v
-        dd35v_tab         = lt_dd35v
-        dd36m_tab         = lt_dd36m
-      EXCEPTIONS
-        tabl_not_found    = 1
-        name_inconsistent = 2
-        tabl_inconsistent = 3
-        put_failure       = 4
-        put_refused       = 5
-        OTHERS            = 6.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_TABL_PUT' ).
-    ENDIF.
-
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
-
-* handle indexes
-    LOOP AT lt_dd12v INTO ls_dd12v.
-
-* todo, call corr_insert?
-
-      CLEAR lt_secondary.
-      LOOP AT lt_dd17v INTO ls_dd17v
-          WHERE sqltab = ls_dd12v-sqltab AND indexname = ls_dd12v-indexname.
-        APPEND ls_dd17v TO lt_secondary.
-      ENDLOOP.
-
-      CALL FUNCTION 'DDIF_INDX_PUT'
-        EXPORTING
-          name              = ls_dd12v-sqltab
-          id                = ls_dd12v-indexname
-          dd12v_wa          = ls_dd12v
-        TABLES
-          dd17v_tab         = lt_secondary
-        EXCEPTIONS
-          indx_not_found    = 1
-          name_inconsistent = 2
-          indx_inconsistent = 3
-          put_failure       = 4
-          put_refused       = 5
-          OTHERS            = 6.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from DDIF_INDX_PUT' ).
-      ENDIF.
-
-      CALL FUNCTION 'DD_DD_TO_E071'
-        EXPORTING
-          type     = 'INDX'
-          name     = ls_dd12v-sqltab
-          id       = ls_dd12v-indexname
-        IMPORTING
-          obj_name = lv_tname.
-
-      zcl_abapgit_objects_activation=>add( iv_type = 'INDX'
-                                           iv_name = lv_tname ).
-
-    ENDLOOP.
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    DATA: lo_table_validation     TYPE REF TO zcl_abapgit_object_tabl_valid,
-          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
-          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input,
-          lv_validation_text      TYPE string.
-
-    CREATE OBJECT lo_local_version_output.
-    me->zif_abapgit_object~serialize( lo_local_version_output ).
-
-    CREATE OBJECT lo_local_version_input
-      EXPORTING
-        iv_xml = lo_local_version_output->render( ).
-
-    CREATE OBJECT lo_table_validation.
-
-    lv_validation_text = lo_table_validation->validate(
-      io_remote_version = io_remote_version_xml
-      io_local_version  = lo_local_version_input ).
-    IF lv_validation_text IS NOT INITIAL.
-      lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
-      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_tabl_valid_dialog
-        EXPORTING
-          iv_message = lv_validation_text.
-    ELSE.
-      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-    ENDIF.
-  ENDMETHOD.
-
-ENDCLASS.                    "zcl_abapgit_object_TABL IMPLEMENTATION
+ENDCLASS.
