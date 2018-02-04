@@ -1,6 +1,4 @@
-CLASS zcl_abapgit_oo_serializer DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+CLASS zcl_abapgit_oo_serializer DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
 
