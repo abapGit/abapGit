@@ -259,7 +259,7 @@ CLASS lcl_http IMPLEMENTATION.
     DATA: lv_uri                 TYPE string,
           lv_scheme              TYPE string,
           li_client              TYPE REF TO if_http_client,
-          lo_proxy_configuration TYPE REF TO lcl_proxy_configuration,
+          lo_proxy_configuration TYPE REF TO lcl_proxy_config,
           lv_text                TYPE string.
 
     lo_proxy_configuration = lcl_app=>proxy( ).

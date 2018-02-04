@@ -2,7 +2,7 @@
 *& Include zabapgit_proxy
 *&---------------------------------------------------------------------*
 
-CLASS lcl_proxy_configuration DEFINITION CREATE PUBLIC.
+CLASS lcl_proxy_config DEFINITION CREATE PUBLIC.
 
   PUBLIC SECTION.
     METHODS:
@@ -32,7 +32,7 @@ CLASS lcl_proxy_configuration DEFINITION CREATE PUBLIC.
 
 ENDCLASS.
 
-CLASS lcl_proxy_configuration IMPLEMENTATION.
+CLASS lcl_proxy_config IMPLEMENTATION.
 
   METHOD constructor.
 
