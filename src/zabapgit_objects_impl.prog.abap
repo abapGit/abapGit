@@ -154,7 +154,7 @@ CLASS lcl_objects IMPLEMENTATION.
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
-            is_item = is_item
+            is_item     = is_item
             iv_language = iv_language.
       CATCH cx_sy_create_object_error.
         lv_message = |Object type { is_item-obj_type } not supported, serialize|. "#EC NOTEXT
@@ -243,7 +243,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
   METHOD class_name.
 
-    CONCATENATE 'LCL_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
+    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
 
   ENDMETHOD.                    "class_name
 
@@ -259,8 +259,9 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF lv_adt_jump_enabled = abap_true.
       TRY.
-          lcl_objects_super=>jump_adt( i_obj_name = is_item-obj_name
-                                       i_obj_type = is_item-obj_type ).
+          zcl_abapgit_objects_super=>jump_adt(
+            i_obj_name = is_item-obj_name
+            i_obj_type = is_item-obj_type ).
         CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.
@@ -277,7 +278,7 @@ CLASS lcl_objects IMPLEMENTATION.
 
     IF is_item IS INITIAL.
 * eg. ".abapgit.xml" file
-      rv_user = lcl_objects_super=>c_user_unknown.
+      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
     ELSE.
       li_obj = create_object( is_item     = is_item
                               iv_language = zif_abapgit_definitions=>gc_english ).

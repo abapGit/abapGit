@@ -31,11 +31,11 @@ CLASS lcl_skip_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD has_sadl_superclass.
-    DATA: lo_oo_functions TYPE REF TO lif_oo_object_fnc,
+    DATA: lo_oo_functions TYPE REF TO zif_abapgit_oo_object_fnc,
           lv_class_name   TYPE seoclsname,
           lv_superclass   TYPE seoclsname.
 
-    lo_oo_functions = lcl_oo_factory=>make( is_class-object ).
+    lo_oo_functions = zcl_abapgit_oo_factory=>make( is_class-object ).
     lv_class_name = is_class-obj_name.
     lv_superclass = lo_oo_functions->read_superclass( lv_class_name ).
     IF lv_superclass = 'CL_SADL_GTK_EXPOSURE_MPC'.
