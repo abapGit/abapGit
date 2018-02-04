@@ -356,6 +356,11 @@ CLASS lcl_oo_class_new IMPLEMENTATION.
                                it_source    = it_source
                                it_methods   = lt_methods ).
 
+* TODO, perhaps move this call to somewhere else, to be done while cleaning up the CLAS deserialization
+    zcl_abapgit_objects_activation=>add(
+      iv_type = 'CLAS'
+      iv_name = is_key-clsname ).
+
   ENDMETHOD.
 
   METHOD update_full_class_include.
