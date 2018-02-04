@@ -9,52 +9,12 @@ CLASS zcl_abapgit_object_sfbf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(ro_bf) TYPE REF TO cl_sfw_bf
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_SFBF DEFINITION
+ENDCLASS.
 
-CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
+CLASS ZCL_ABAPGIT_OBJECT_SFBF IMPLEMENTATION.
 
-    DATA: ls_data TYPE sfw_bf.
-
-    ls_data = get( )->get_header_data( ).
-
-    rv_user = ls_data-changedby.
-
-    IF rv_user IS INITIAL.
-      rv_user = ls_data-author.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: ls_tadir TYPE tadir,
-          lv_bf    TYPE sfw_bfunction.
-
-    lv_bf = ms_item-obj_name.
-    IF cl_sfw_bf=>check_existence( lv_bf ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    ls_tadir = zcl_abapgit_tadir=>read_single(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    rv_bool = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD get.
 
@@ -74,68 +34,47 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_bf                TYPE REF TO cl_sfw_bf,
-          ls_header            TYPE sfw_bf,
-          lv_name_32           TYPE sfw_name32,
-          lv_name_80           TYPE sfw_name80,
-          lt_assigned_switches TYPE sfw_swbf_outtab,
-          lt_dependancies      TYPE sfw_depend_outtab,
-          ls_sfw_bfc_kw        TYPE sfw_bfc_kw,
-          ls_sfw_bfc_tc        TYPE sfw_bfc_tc,
-          ls_sfw_bfc_rn        TYPE sfw_bfc_rn,
-          lt_parent_bfs        TYPE sfw_bs_bf_outtab.
+  METHOD zif_abapgit_object~changed_by.
 
+    DATA: ls_data TYPE sfw_bf.
 
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
+    ls_data = get( )->get_header_data( ).
+
+    rv_user = ls_data-changedby.
+
+    IF rv_user IS INITIAL.
+      rv_user = ls_data-author.
     ENDIF.
 
-    lo_bf = get( ).
+  ENDMETHOD.
 
-    ls_header = lo_bf->get_header_data( ).
-    CLEAR: ls_header-author,
-           ls_header-createdon,
-           ls_header-changedby,
-           ls_header-changedon,
-           ls_header-timestamp.
 
-    lo_bf->get_texts(
-      IMPORTING
-        p_32 = lv_name_32
-        p_80 = lv_name_80 ).
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
-    lt_assigned_switches = lo_bf->get_assigned_switches( ).
-    lt_dependancies = lo_bf->get_excluded_bf( ).
-    lo_bf->get_content_data(
-      IMPORTING
-        ex_sfw_bfc_kw = ls_sfw_bfc_kw
-        ex_sfw_bfc_tc = ls_sfw_bfc_tc
-        ex_sfw_bfc_rn = ls_sfw_bfc_rn ).
-    lt_parent_bfs = lo_bf->get_parent_bfs( ).
 
-    io_xml->add( ig_data = ls_header
-                 iv_name = 'HEADER' ).
-    io_xml->add( ig_data = lv_name_32
-                 iv_name = 'NAME32' ).
-    io_xml->add( ig_data = lv_name_80
-                 iv_name = 'NAME80' ).
+  METHOD zif_abapgit_object~delete.
 
-    io_xml->add( ig_data = lt_assigned_switches
-                 iv_name = 'ASSIGNED_SWITCHES' ).
-    io_xml->add( ig_data = lt_dependancies
-                 iv_name = 'DEPENDANCIES' ).
-    io_xml->add( ig_data = ls_sfw_bfc_kw
-                 iv_name = 'CONTENT_KW' ).
-    io_xml->add( ig_data = ls_sfw_bfc_tc
-                 iv_name = 'CONTENT_TC' ).
-    io_xml->add( ig_data = ls_sfw_bfc_rn
-                 iv_name = 'CONTENT_RN' ).
-    io_xml->add( ig_data = lt_parent_bfs
-                 iv_name = 'PARENT_BFS' ).
+    DATA: lv_bf     TYPE sfw_bfunction,
+          lt_delete TYPE sfw_bftab,
+          lt_msgtab TYPE sprot_u_tab.
 
-  ENDMETHOD.                    "serialize
+
+    lv_bf = ms_item-obj_name.
+    APPEND lv_bf TO lt_delete.
+
+    cl_sfw_activate=>delete_sfbf( EXPORTING p_bfuncts = lt_delete
+                                  IMPORTING p_msgtab = lt_msgtab ).
+
+    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise( 'Error deleting SFBF' ).
+    ENDIF.
+
+  ENDMETHOD.                    "delete
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -203,25 +142,39 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD zif_abapgit_object~delete.
 
-    DATA: lv_bf     TYPE sfw_bfunction,
-          lt_delete TYPE sfw_bftab,
-          lt_msgtab TYPE sprot_u_tab.
+  METHOD zif_abapgit_object~exists.
 
+    DATA: ls_tadir TYPE tadir,
+          lv_bf    TYPE sfw_bfunction.
 
     lv_bf = ms_item-obj_name.
-    APPEND lv_bf TO lt_delete.
-
-    cl_sfw_activate=>delete_sfbf( EXPORTING p_bfuncts = lt_delete
-                                  IMPORTING p_msgtab = lt_msgtab ).
-
-    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( 'Error deleting SFBF' ).
+    IF cl_sfw_bf=>check_existence( lv_bf ) = abap_false.
+      RETURN.
     ENDIF.
 
-  ENDMETHOD.                    "delete
+    SELECT SINGLE * FROM tadir INTO ls_tadir
+      WHERE pgmid = 'R3TR'
+      AND object = ms_item-obj_type
+      AND obj_name = ms_item-obj_name.
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -234,8 +187,67 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_SFBF IMPLEMENTATION
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_bf                TYPE REF TO cl_sfw_bf,
+          ls_header            TYPE sfw_bf,
+          lv_name_32           TYPE sfw_name32,
+          lv_name_80           TYPE sfw_name80,
+          lt_assigned_switches TYPE sfw_swbf_outtab,
+          lt_dependancies      TYPE sfw_depend_outtab,
+          ls_sfw_bfc_kw        TYPE sfw_bfc_kw,
+          ls_sfw_bfc_tc        TYPE sfw_bfc_tc,
+          ls_sfw_bfc_rn        TYPE sfw_bfc_rn,
+          lt_parent_bfs        TYPE sfw_bs_bf_outtab.
+
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lo_bf = get( ).
+
+    ls_header = lo_bf->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    lo_bf->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_assigned_switches = lo_bf->get_assigned_switches( ).
+    lt_dependancies = lo_bf->get_excluded_bf( ).
+    lo_bf->get_content_data(
+      IMPORTING
+        ex_sfw_bfc_kw = ls_sfw_bfc_kw
+        ex_sfw_bfc_tc = ls_sfw_bfc_tc
+        ex_sfw_bfc_rn = ls_sfw_bfc_rn ).
+    lt_parent_bfs = lo_bf->get_parent_bfs( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_assigned_switches
+                 iv_name = 'ASSIGNED_SWITCHES' ).
+    io_xml->add( ig_data = lt_dependancies
+                 iv_name = 'DEPENDANCIES' ).
+    io_xml->add( ig_data = ls_sfw_bfc_kw
+                 iv_name = 'CONTENT_KW' ).
+    io_xml->add( ig_data = ls_sfw_bfc_tc
+                 iv_name = 'CONTENT_TC' ).
+    io_xml->add( ig_data = ls_sfw_bfc_rn
+                 iv_name = 'CONTENT_RN' ).
+    io_xml->add( ig_data = lt_parent_bfs
+                 iv_name = 'PARENT_BFS' ).
+
+  ENDMETHOD.                    "serialize
+ENDCLASS.

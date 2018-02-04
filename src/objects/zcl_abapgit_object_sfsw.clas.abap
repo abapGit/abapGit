@@ -9,53 +9,12 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_sfsw DEFINITION
-
-CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
-
-  METHOD zif_abapgit_object~changed_by.
-
-    DATA: ls_data TYPE sfw_switch.
+ENDCLASS.
 
 
-    ls_data = get( )->get_header_data( ).
 
-    rv_user = ls_data-changedby.
-    IF rv_user IS INITIAL.
-      rv_user = ls_data-author.
-    ENDIF.
+CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: ls_tadir     TYPE tadir,
-          lv_switch_id TYPE sfw_switch_id.
-
-
-    lv_switch_id = ms_item-obj_name.
-    IF cl_sfw_sw=>check_existence( lv_switch_id ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    ls_tadir = zcl_abapgit_tadir=>read_single(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    rv_bool = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD get.
 
@@ -71,50 +30,44 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_switch    TYPE REF TO cl_sfw_sw,
-          ls_header    TYPE sfw_switch,
-          lv_name_32   TYPE sfw_name32,
-          lv_name_80   TYPE sfw_name80,
-          lt_parent_bf TYPE sfw_bf_sw_outtab,
-          lt_conflicts TYPE sfw_confl_outtab.
+  METHOD zif_abapgit_object~changed_by.
+
+    DATA: ls_data TYPE sfw_switch.
 
 
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
+    ls_data = get( )->get_header_data( ).
+
+    rv_user = ls_data-changedby.
+    IF rv_user IS INITIAL.
+      rv_user = ls_data-author.
     ENDIF.
 
-    lo_switch = get( ).
+  ENDMETHOD.
 
-    ls_header = lo_switch->get_header_data( ).
-    CLEAR: ls_header-author,
-           ls_header-createdon,
-           ls_header-changedby,
-           ls_header-changedon,
-           ls_header-timestamp.
 
-    lo_switch->get_texts(
-      IMPORTING
-        p_32 = lv_name_32
-        p_80 = lv_name_80 ).
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
-    lt_parent_bf = lo_switch->get_parent_bf( ).
-    lt_conflicts = lo_switch->get_conflicts( ).
 
-    io_xml->add( ig_data = ls_header
-                 iv_name = 'HEADER' ).
-    io_xml->add( ig_data = lv_name_32
-                 iv_name = 'NAME32' ).
-    io_xml->add( ig_data = lv_name_80
-                 iv_name = 'NAME80' ).
+  METHOD zif_abapgit_object~delete.
 
-    io_xml->add( ig_data = lt_parent_bf
-                 iv_name = 'PARENT_BF' ).
-    io_xml->add( ig_data = lt_conflicts
-                 iv_name = 'CONFLICTS' ).
+    DATA: lv_switch_id TYPE sfw_switch_id,
+          lo_switch    TYPE REF TO cl_sfw_sw.
 
-  ENDMETHOD.                    "serialize
+
+    lv_switch_id = ms_item-obj_name.
+    TRY.
+        lo_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
+        lo_switch->set_delete_flag( lv_switch_id ).
+        lo_switch->save_all( ).
+      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
+        zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
+    ENDTRY.
+
+  ENDMETHOD.                    "delete
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -171,22 +124,40 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD zif_abapgit_object~delete.
 
-    DATA: lv_switch_id TYPE sfw_switch_id,
-          lo_switch    TYPE REF TO cl_sfw_sw.
+  METHOD zif_abapgit_object~exists.
+
+    DATA: ls_tadir     TYPE tadir,
+          lv_switch_id TYPE sfw_switch_id.
 
 
     lv_switch_id = ms_item-obj_name.
-    TRY.
-        lo_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
-        lo_switch->set_delete_flag( lv_switch_id ).
-        lo_switch->save_all( ).
-      CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
-        zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
-    ENDTRY.
+    IF cl_sfw_sw=>check_existence( lv_switch_id ) = abap_false.
+      RETURN.
+    ENDIF.
 
-  ENDMETHOD.                    "delete
+    SELECT SINGLE * FROM tadir INTO ls_tadir
+      WHERE pgmid = 'R3TR'
+      AND object = ms_item-obj_type
+      AND obj_name = ms_item-obj_name.
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -199,8 +170,49 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_sfsw IMPLEMENTATION
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_switch    TYPE REF TO cl_sfw_sw,
+          ls_header    TYPE sfw_switch,
+          lv_name_32   TYPE sfw_name32,
+          lv_name_80   TYPE sfw_name80,
+          lt_parent_bf TYPE sfw_bf_sw_outtab,
+          lt_conflicts TYPE sfw_confl_outtab.
+
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lo_switch = get( ).
+
+    ls_header = lo_switch->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    lo_switch->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_parent_bf = lo_switch->get_parent_bf( ).
+    lt_conflicts = lo_switch->get_conflicts( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_parent_bf
+                 iv_name = 'PARENT_BF' ).
+    io_xml->add( ig_data = lt_conflicts
+                 iv_name = 'CONFLICTS' ).
+
+  ENDMETHOD.                    "serialize
+ENDCLASS.

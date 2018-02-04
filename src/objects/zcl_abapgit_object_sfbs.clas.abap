@@ -9,27 +9,12 @@ CLASS zcl_abapgit_object_sfbs DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(ro_bfs) TYPE REF TO cl_sfw_bfs
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_SFBS DEFINITION
+ENDCLASS.
 
-CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
+CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
 
-    DATA: ls_data TYPE sfw_bs.
-
-    ls_data = get( )->get_header_data( ).
-
-    rv_user = ls_data-changedby.
-
-    IF rv_user IS INITIAL.
-      rv_user = ls_data-author.
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD get.
 
@@ -48,81 +33,47 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD zif_abapgit_object~exists.
+  METHOD zif_abapgit_object~changed_by.
 
-    DATA: ls_tadir TYPE tadir,
-          lv_bfset TYPE sfw_bset.
+    DATA: ls_data TYPE sfw_bs.
+
+    ls_data = get( )->get_header_data( ).
+
+    rv_user = ls_data-changedby.
+
+    IF rv_user IS INITIAL.
+      rv_user = ls_data-author.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_bfset  TYPE sfw_bset,
+          lt_delete TYPE sfw_bstab,
+          lt_msgtab TYPE sprot_u_tab.
 
 
     lv_bfset = ms_item-obj_name.
-    IF cl_sfw_bfs=>check_existence( lv_bfset ) = abap_false.
-      RETURN.
+    APPEND lv_bfset TO lt_delete.
+
+    cl_sfw_activate=>delete_sfbs( EXPORTING p_bsets = lt_delete
+                                  IMPORTING p_msgtab = lt_msgtab ).
+
+    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise( 'Error deleting SFBS' ).
     ENDIF.
 
-    ls_tadir = zcl_abapgit_tadir=>read_single(
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
+  ENDMETHOD.                    "delete
 
-    rv_bool = abap_true.
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lo_bfs         TYPE REF TO cl_sfw_bfs,
-          ls_header      TYPE sfw_bs,
-          lv_name_32     TYPE sfw_name32,
-          lv_name_80     TYPE sfw_name80,
-          lt_assigned_bf TYPE sfw_bfbs_outtab,
-          lt_nested_bfs  TYPE sfw_bsbs_outtab,
-          lt_parent_bfs  TYPE sfw_bs_bs_parent_outtab.
-
-
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    lo_bfs = get( ).
-
-    ls_header = lo_bfs->get_header_data( ).
-    CLEAR: ls_header-author,
-           ls_header-createdon,
-           ls_header-changedby,
-           ls_header-changedon,
-           ls_header-timestamp.
-
-    lo_bfs->get_texts(
-      IMPORTING
-        p_32 = lv_name_32
-        p_80 = lv_name_80 ).
-
-    lt_assigned_bf = lo_bfs->get_assigned_bf( ).
-    lt_nested_bfs = lo_bfs->get_nested_bfs( ).
-    lt_parent_bfs = lo_bfs->get_nested_parent( ).
-
-    io_xml->add( ig_data = ls_header
-                 iv_name = 'HEADER' ).
-    io_xml->add( ig_data = lv_name_32
-                 iv_name = 'NAME32' ).
-    io_xml->add( ig_data = lv_name_80
-                 iv_name = 'NAME80' ).
-
-    io_xml->add( ig_data = lt_assigned_bf
-                 iv_name = 'ASSIGNED_BF' ).
-    io_xml->add( ig_data = lt_nested_bfs
-                 iv_name = 'NESTED_BFS' ).
-    io_xml->add( ig_data = lt_parent_bfs
-                 iv_name = 'PARENT_BFS' ).
-
-  ENDMETHOD.                    "serialize
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -177,25 +128,41 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD zif_abapgit_object~delete.
 
-    DATA: lv_bfset  TYPE sfw_bset,
-          lt_delete TYPE sfw_bstab,
-          lt_msgtab TYPE sprot_u_tab.
+  METHOD zif_abapgit_object~exists.
+
+    DATA: ls_tadir TYPE tadir,
+          lv_bfset TYPE sfw_bset.
 
 
     lv_bfset = ms_item-obj_name.
-    APPEND lv_bfset TO lt_delete.
-
-    cl_sfw_activate=>delete_sfbs( EXPORTING p_bsets = lt_delete
-                                  IMPORTING p_msgtab = lt_msgtab ).
-
-    READ TABLE lt_msgtab WITH KEY severity = 'E' TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( 'Error deleting SFBS' ).
+    IF cl_sfw_bfs=>check_existence( lv_bfset ) = abap_false.
+      RETURN.
     ENDIF.
 
-  ENDMETHOD.                    "delete
+    SELECT SINGLE * FROM tadir INTO ls_tadir
+      WHERE pgmid = 'R3TR'
+      AND object = ms_item-obj_type
+      AND obj_name = ms_item-obj_name.
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_bool = abap_true.
+
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-ddic = abap_true.
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -208,8 +175,53 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
   ENDMETHOD.                    "jump
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_SFBS IMPLEMENTATION
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_bfs         TYPE REF TO cl_sfw_bfs,
+          ls_header      TYPE sfw_bs,
+          lv_name_32     TYPE sfw_name32,
+          lv_name_80     TYPE sfw_name80,
+          lt_assigned_bf TYPE sfw_bfbs_outtab,
+          lt_nested_bfs  TYPE sfw_bsbs_outtab,
+          lt_parent_bfs  TYPE sfw_bs_bs_parent_outtab.
+
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lo_bfs = get( ).
+
+    ls_header = lo_bfs->get_header_data( ).
+    CLEAR: ls_header-author,
+           ls_header-createdon,
+           ls_header-changedby,
+           ls_header-changedon,
+           ls_header-timestamp.
+
+    lo_bfs->get_texts(
+      IMPORTING
+        p_32 = lv_name_32
+        p_80 = lv_name_80 ).
+
+    lt_assigned_bf = lo_bfs->get_assigned_bf( ).
+    lt_nested_bfs = lo_bfs->get_nested_bfs( ).
+    lt_parent_bfs = lo_bfs->get_nested_parent( ).
+
+    io_xml->add( ig_data = ls_header
+                 iv_name = 'HEADER' ).
+    io_xml->add( ig_data = lv_name_32
+                 iv_name = 'NAME32' ).
+    io_xml->add( ig_data = lv_name_80
+                 iv_name = 'NAME80' ).
+
+    io_xml->add( ig_data = lt_assigned_bf
+                 iv_name = 'ASSIGNED_BF' ).
+    io_xml->add( ig_data = lt_nested_bfs
+                 iv_name = 'NESTED_BFS' ).
+    io_xml->add( ig_data = lt_parent_bfs
+                 iv_name = 'PARENT_BFS' ).
+
+  ENDMETHOD.                    "serialize
+ENDCLASS.
