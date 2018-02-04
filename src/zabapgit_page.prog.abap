@@ -56,7 +56,7 @@ CLASS lcl_gui_page IMPLEMENTATION.
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
-    ro_html->add( lcl_gui_asset_manager=>get_webfont_link( ) ). " Web fonts
+    ro_html->add( zcl_abapgit_gui_asset_manager=>get_webfont_link( ) ). " Web fonts
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
