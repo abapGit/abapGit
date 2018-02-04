@@ -3,13 +3,13 @@ CLASS zcl_abapgit_object_ensc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-ENDCLASS. "zcl_abapgit_object_ensc
+ENDCLASS.
 
 CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo

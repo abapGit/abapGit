@@ -2,7 +2,7 @@ CLASS zcl_abapgit_object_w3ht DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
     METHODS: change_bdc_jump_data REDEFINITION.
-ENDCLASS.                    "zcl_abapgit_object_W3HT DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_w3ht IMPLEMENTATION.
 

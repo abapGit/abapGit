@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rs_page) TYPE ty_page
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_TRAN DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 

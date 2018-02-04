@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_clas_old DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 

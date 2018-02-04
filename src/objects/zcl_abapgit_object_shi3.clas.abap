@@ -22,7 +22,7 @@ CLASS zcl_abapgit_object_shi3 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       CHANGING cs_head  TYPE ttree
                ct_nodes TYPE hier_iface_t.
 
-ENDCLASS.                    "zcl_abapgit_object_shi3 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 

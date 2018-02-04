@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   it_dd07v TYPE dd07v_tab
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_doma DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 

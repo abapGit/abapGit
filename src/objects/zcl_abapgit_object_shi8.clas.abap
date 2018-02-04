@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_shi8 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
     DATA: mv_assignment_id  TYPE hier_sfw_id.
 
-ENDCLASS.                    "zcl_abapgit_object_shi8 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 

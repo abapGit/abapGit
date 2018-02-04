@@ -24,7 +24,7 @@ CLASS zcl_abapgit_object_smim DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING   zcx_abapgit_not_found
                 zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_smim DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 

@@ -23,7 +23,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_intf DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   METHOD constructor.

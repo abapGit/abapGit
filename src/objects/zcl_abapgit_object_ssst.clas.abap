@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_ssst DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_tdfamily TYPE tdfamily
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_ssst DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
 

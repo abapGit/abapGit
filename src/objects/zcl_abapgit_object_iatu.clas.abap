@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   iv_source TYPE string
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_iatu DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 

@@ -52,7 +52,7 @@ CLASS zcl_abapgit_object_w3super DEFINITION PUBLIC INHERITING FROM zcl_abapgit_o
       RETURNING VALUE(rv_value) TYPE string
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS. "zcl_abapgit_object_W3SUPER DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
 

@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_enho_wdyn DEFINITION PUBLIC.
   PRIVATE SECTION.
     DATA: ms_item  TYPE zif_abapgit_definitions=>ty_item.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_wdyconf DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
 

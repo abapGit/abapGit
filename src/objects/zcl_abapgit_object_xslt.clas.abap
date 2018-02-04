@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_xslt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(ro_xslt) TYPE REF TO cl_o2_api_xsltdesc
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_xslt DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 

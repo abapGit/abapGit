@@ -44,7 +44,7 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception
                   cx_ws_md_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_SFBS DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 

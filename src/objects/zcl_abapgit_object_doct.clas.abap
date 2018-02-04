@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS: read
       RETURNING VALUE(rs_data) TYPE ty_data.
 
-ENDCLASS.                    "zcl_abapgit_object_msag DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 

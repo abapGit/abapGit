@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_extension TYPE hier_names.
 
-ENDCLASS.                    "zcl_abapgit_object_shi5 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 

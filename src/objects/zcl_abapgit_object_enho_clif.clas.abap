@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_enho_clif DEFINITION PUBLIC.
                 io_clif  TYPE REF TO cl_enh_tool_clif
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_clif DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
 

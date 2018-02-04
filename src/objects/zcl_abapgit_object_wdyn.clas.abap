@@ -64,7 +64,7 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   i_value      TYPE i
         CHANGING  ct_exception TYPE abap_func_excpbind_tab.
 
-ENDCLASS.                    "zcl_abapgit_object_wdyn DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 

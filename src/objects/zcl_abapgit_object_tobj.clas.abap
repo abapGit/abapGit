@@ -17,7 +17,7 @@ CLASS zcl_abapgit_object_tobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       update_extra IMPORTING is_tobj TYPE ty_tobj,
       delete_extra IMPORTING iv_tabname TYPE vim_name.
 
-ENDCLASS.                    "zcl_abapgit_object_tobj DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 

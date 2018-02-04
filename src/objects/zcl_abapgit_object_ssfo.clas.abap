@@ -7,7 +7,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
     METHODS: fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 

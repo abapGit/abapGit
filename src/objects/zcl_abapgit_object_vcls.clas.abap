@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS: c_cluster_type TYPE c VALUE 'C'.
     CONSTANTS: c_mode_insert  TYPE obj_para-maint_mode VALUE 'I'.
 
-ENDCLASS.                    "zcl_abapgit_object_vcls DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
 

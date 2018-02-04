@@ -67,7 +67,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RETURNING VALUE(rv_return) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_fugr DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 

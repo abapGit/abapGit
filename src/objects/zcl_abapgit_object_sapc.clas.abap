@@ -6,7 +6,7 @@ CLASS zcl_abapgit_object_sapc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       get_data_class_name REDEFINITION,
       get_data_structure_name REDEFINITION.
 
-ENDCLASS.                    "zcl_abapgit_object_sAPC DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_sapc IMPLEMENTATION.
 
@@ -28,4 +28,4 @@ CLASS zcl_abapgit_object_sapc IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_sAPC IMPLEMENTATION
+ENDCLASS.

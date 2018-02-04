@@ -133,7 +133,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         RETURNING VALUE(rt_flow) TYPE swydyflow.
 
 
-ENDCLASS.                    "zcl_abapgit_objects_program DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 

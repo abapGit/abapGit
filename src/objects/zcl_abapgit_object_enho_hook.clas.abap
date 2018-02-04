@@ -28,7 +28,7 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_hook DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
 

@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_cus2 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_img_attribute TYPE cus_atr.
 
-ENDCLASS.                    "zcl_abapgit_object_cus2 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_cus2 IMPLEMENTATION.
 

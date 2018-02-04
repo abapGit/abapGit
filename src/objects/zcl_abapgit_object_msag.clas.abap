@@ -21,7 +21,7 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception.
 
 
-ENDCLASS.                    "zcl_abapgit_object_msag DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 

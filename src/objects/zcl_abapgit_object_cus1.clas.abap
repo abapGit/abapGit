@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_cus1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_customizing_activity TYPE cus_img_ac.
 
-ENDCLASS.                    "zcl_abapgit_object_cus1 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 

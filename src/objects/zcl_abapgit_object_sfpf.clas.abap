@@ -17,7 +17,7 @@ CLASS zcl_abapgit_object_sfpf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rv_xstr) TYPE xstring
         RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_doma DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 

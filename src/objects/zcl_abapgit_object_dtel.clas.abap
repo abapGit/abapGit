@@ -25,7 +25,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   is_dd04v TYPE dd04v
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 

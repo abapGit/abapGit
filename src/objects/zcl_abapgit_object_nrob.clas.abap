@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_nrob DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       delete_intervals IMPORTING iv_object TYPE inri-object
                        RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_nrob DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_nrob IMPLEMENTATION.
 

@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_cus0 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            END OF ty_img_activity.
     DATA: mv_img_activity TYPE cus_img_ac.
 
-ENDCLASS.                    "zcl_abapgit_object_cus0 DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 

@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_pinf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   ii_interface TYPE REF TO if_package_interface
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_PINF DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
 

@@ -38,7 +38,7 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_TRAN DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 

@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_ddls_name TYPE tadir-obj_name
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 

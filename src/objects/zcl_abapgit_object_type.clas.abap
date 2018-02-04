@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                 iv_devclass TYPE devclass
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_type DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_type IMPLEMENTATION.
 

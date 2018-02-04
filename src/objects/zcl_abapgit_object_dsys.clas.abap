@@ -26,7 +26,7 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS: read
       RETURNING VALUE(rs_data) TYPE ty_data.
 
-ENDCLASS.                    "zcl_abapgit_object_dsys DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 

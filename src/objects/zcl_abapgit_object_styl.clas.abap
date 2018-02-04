@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_styl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              tabs       TYPE STANDARD TABLE OF itcdq WITH DEFAULT KEY,
            END OF ty_style.
 
-ENDCLASS.                    "zcl_abapgit_object_styl DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_styl IMPLEMENTATION.
 

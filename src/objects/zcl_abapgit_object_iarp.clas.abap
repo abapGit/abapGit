@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_iarp DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                   it_parameters TYPE w3resopara_tabletype
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "zcl_abapgit_object_dtel DEFINITION
+ENDCLASS.
 
 CLASS zcl_abapgit_object_iarp IMPLEMENTATION.
 
