@@ -2,7 +2,7 @@
 *&  Include           ZABAPGIT_PAGE_REPO_SETTINGS
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor

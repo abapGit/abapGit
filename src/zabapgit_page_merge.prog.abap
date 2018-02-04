@@ -317,7 +317,7 @@ ENDCLASS.
 
 *********************************
 
-CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
     METHODS:

@@ -2,13 +2,13 @@
 *&  Include           ZABAPGIT_PAGE_MAIN
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM lcl_gui_page.
+CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
-      zif_abapgit_gui_page~on_event   REDEFINITION.
+      zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
