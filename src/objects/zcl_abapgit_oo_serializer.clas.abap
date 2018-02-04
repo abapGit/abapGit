@@ -1,53 +1,53 @@
-class ZCL_ABAPGIT_OO_SERIALIZER definition
-  public
-  create public .
+CLASS zcl_abapgit_oo_serializer DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  methods SERIALIZE_ABAP_CLIF_SOURCE
-    importing
-      !IS_CLASS_KEY type SEOCLSKEY
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION
-      CX_SY_DYN_CALL_ERROR .
-  methods ARE_TEST_CLASSES_SKIPPED
-    returning
-      value(RV_RETURN) type ABAP_BOOL .
-  methods SERIALIZE_LOCALS_IMP
-    importing
-      !IS_CLSKEY type SEOCLSKEY
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_LOCALS_DEF
-    importing
-      !IS_CLSKEY type SEOCLSKEY
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_TESTCLASSES
-    importing
-      !IS_CLSKEY type SEOCLSKEY
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_MACROS
-    importing
-      !IS_CLSKEY type SEOCLSKEY
-    returning
-      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CALCULATE_SKIP_TESTCLASS
-    importing
-      !IT_SOURCE type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-    returning
-      value(RV_SKIP_TESTCLASS) type ABAP_BOOL .
+    METHODS serialize_abap_clif_source
+      IMPORTING
+        !is_class_key    TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception
+        cx_sy_dyn_call_error .
+    METHODS are_test_classes_skipped
+      RETURNING
+        VALUE(rv_return) TYPE abap_bool .
+    METHODS serialize_locals_imp
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_locals_def
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_testclasses
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_macros
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS calculate_skip_testclass
+      IMPORTING
+        !it_source               TYPE zif_abapgit_definitions=>ty_string_tt
+      RETURNING
+        VALUE(rv_skip_testclass) TYPE abap_bool .
   PRIVATE SECTION.
     DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old

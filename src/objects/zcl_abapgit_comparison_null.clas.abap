@@ -1,13 +1,13 @@
-class ZCL_ABAPGIT_COMPARISON_NULL definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_comparison_null DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_COMPARISON_RESULT .
-protected section.
-private section.
+    INTERFACES zif_abapgit_comparison_result .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
