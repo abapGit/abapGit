@@ -151,6 +151,8 @@ CLASS lcl_objects IMPLEMENTATION.
 *      lv_class_name = 'LCL_OBJECT_CLAS_NEW'.
 *    ENDIF.
 
+    REPLACE FIRST OCCURRENCE OF 'LCL' IN lv_class_name WITH 'ZCL_ABAPGIT'.
+
     TRY.
         CREATE OBJECT ri_obj TYPE (lv_class_name)
           EXPORTING
