@@ -44,7 +44,7 @@ ENDCLASS. "lcl_object_enhs
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enhs_badi_def DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_object_enhs_badi_def DEFINITION.
+CLASS lcl_object_enhs_badi_d DEFINITION.
 
   PUBLIC SECTION.
     INTERFACES: lif_object_enhs.
@@ -54,7 +54,7 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enhs_hook_def DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_object_enhs_hook_def DEFINITION.
+CLASS lcl_object_enhs_hook_d DEFINITION.
 
   PUBLIC SECTION.
     INTERFACES: lif_object_enhs.
@@ -230,9 +230,9 @@ CLASS lcl_object_enhs IMPLEMENTATION.
 
     CASE iv_tool.
       WHEN cl_enh_tool_badi_def=>tooltype.
-        CREATE OBJECT ri_enho TYPE lcl_object_enhs_badi_def.
+        CREATE OBJECT ri_enho TYPE lcl_object_enhs_badi_d.
       WHEN cl_enh_tool_hook_def=>tool_type.
-        CREATE OBJECT ri_enho TYPE lcl_object_enhs_hook_def.
+        CREATE OBJECT ri_enho TYPE lcl_object_enhs_hook_d.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |ENHS: Unsupported tool { iv_tool }| ).
     ENDCASE.
@@ -244,7 +244,7 @@ ENDCLASS. "lcl_object_enhs
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enhs_badi_def IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcl_object_enhs_badi_def IMPLEMENTATION.
+CLASS lcl_object_enhs_badi_d IMPLEMENTATION.
 
   METHOD lif_object_enhs~deserialize.
 
@@ -332,7 +332,7 @@ ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS lcl_object_enhs_hook_def IMPLEMENTATION
 *----------------------------------------------------------------------*
-CLASS lcl_object_enhs_hook_def IMPLEMENTATION.
+CLASS lcl_object_enhs_hook_d IMPLEMENTATION.
 
   METHOD lif_object_enhs~deserialize.
 

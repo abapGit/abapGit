@@ -6,7 +6,7 @@
 *&  Include           ZABAPGIT_PAGE_REPO_SETTINGS
 *&---------------------------------------------------------------------*
 
-CLASS lcl_gui_page_syntax_check DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
+CLASS lcl_gui_page_syntax DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
@@ -20,7 +20,7 @@ CLASS lcl_gui_page_syntax_check DEFINITION FINAL INHERITING FROM zcl_abapgit_gui
 
 ENDCLASS.
 
-CLASS lcl_gui_page_syntax_check IMPLEMENTATION.
+CLASS lcl_gui_page_syntax IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
