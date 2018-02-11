@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2018-02-11 v1.57.0
+------------------
+! more classes moved to global
+* where-used lists for CLASses
+
 2018-02-03 v1.56.0
 ------------------
 + background mode: remove old files when moving
