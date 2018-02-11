@@ -107,7 +107,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     DATA: lv_data TYPE string.
 
 
-    eo_client = lcl_http=>create_by_url(
+    eo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
       iv_service = iv_service ).
 
@@ -143,7 +143,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       iv_url     = iv_url
       iv_service = c_service-receive ).
 
-    lv_cap_list = 'report-status agent=' && lcl_http=>get_agent( ) ##NO_TEXT.
+    lv_cap_list = 'report-status agent=' && zcl_abapgit_http=>get_agent( ) ##NO_TEXT.
 
     lv_line = iv_old &&
               ` ` &&
@@ -249,7 +249,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
         lv_capa = 'side-band-64k no-progress multi_ack agent='
-          && lcl_http=>get_agent( ) ##NO_TEXT.
+          && zcl_abapgit_http=>get_agent( ) ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline. "#EC NOTEXT
       ELSE.
