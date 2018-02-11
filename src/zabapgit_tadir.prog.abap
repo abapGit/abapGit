@@ -42,11 +42,6 @@ CLASS lcl_tadir DEFINITION FINAL.
                   iv_obj_name     TYPE tadir-obj_name
         RETURNING VALUE(rs_tadir) TYPE tadir
         RAISING   zcx_abapgit_exception,
-      read_single_sicf
-        IMPORTING iv_pgmid        TYPE tadir-pgmid DEFAULT 'R3TR'
-                  iv_obj_name     TYPE tadir-obj_name
-        RETURNING VALUE(rs_tadir) TYPE tadir
-        RAISING   zcx_abapgit_exception,
       get_object_package
         IMPORTING iv_pgmid           TYPE tadir-pgmid DEFAULT 'R3TR'
                   iv_object          TYPE tadir-object
@@ -56,10 +51,6 @@ CLASS lcl_tadir DEFINITION FINAL.
 
   PRIVATE SECTION.
     CLASS-METHODS:
-      read_sicf_url
-        IMPORTING iv_obj_name    TYPE tadir-obj_name
-        RETURNING VALUE(rv_hash) TYPE text25
-        RAISING   zcx_abapgit_exception,
       check_exists
         IMPORTING it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
         RETURNING VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -85,8 +76,9 @@ CLASS lcl_tadir IMPLEMENTATION.
   METHOD read_single.
 
     IF iv_object = 'SICF'.
-      rs_tadir = read_single_sicf( iv_pgmid    = iv_pgmid
-                                   iv_obj_name = iv_obj_name ).
+      rs_tadir = zcl_abapgit_object_sicf=>read_tadir_sicf(
+        iv_pgmid    = iv_pgmid
+        iv_obj_name = iv_obj_name ).
     ELSE.
       SELECT SINGLE * FROM tadir INTO rs_tadir
         WHERE pgmid = iv_pgmid
@@ -95,39 +87,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "read_single
-
-  METHOD read_single_sicf.
-
-    DATA: lt_tadir    TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY,
-          lv_hash     TYPE text25,
-          lv_obj_name TYPE tadir-obj_name.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
-
-
-    lv_hash = iv_obj_name+15.
-    CONCATENATE iv_obj_name(15) '%' INTO lv_obj_name.
-
-    SELECT * FROM tadir INTO TABLE lt_tadir
-      WHERE pgmid = iv_pgmid
-      AND object = 'SICF'
-      AND obj_name LIKE lv_obj_name
-      ORDER BY PRIMARY KEY.
-
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.
-        rs_tadir = <ls_tadir>.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    IF lines( lt_tadir ) = 1.
-      READ TABLE lt_tadir INDEX 1 ASSIGNING <ls_tadir>.
-      ASSERT sy-subrc = 0.
-      rs_tadir = <ls_tadir>.
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD get_object_package.
 
@@ -144,34 +103,6 @@ CLASS lcl_tadir IMPLEMENTATION.
     rv_devclass = ls_tadir-devclass.
 
   ENDMETHOD.  "get_object_package.
-
-  METHOD read_sicf_url.
-
-    DATA: lv_name    TYPE icfname,
-          lv_url     TYPE string,
-          lv_parguid TYPE icfparguid.
-
-
-    lv_name    = iv_obj_name.
-    lv_parguid = iv_obj_name+15.
-
-    cl_icf_tree=>if_icf_tree~get_info_from_serv(
-      EXPORTING
-        icf_name          = lv_name
-        icfparguid        = lv_parguid
-      IMPORTING
-        url               = lv_url
-      EXCEPTIONS
-        wrong_name        = 1
-        wrong_parguid     = 2
-        incorrect_service = 3
-        no_authority      = 4
-        OTHERS            = 5 ).
-    IF sy-subrc = 0.
-      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD check_exists.
 
@@ -284,7 +215,7 @@ CLASS lcl_tadir IMPLEMENTATION.
       CASE <ls_tadir>-object.
         WHEN 'SICF'.
 * replace the internal GUID with a hash of the path
-          <ls_tadir>-obj_name+15 = read_sicf_url( <ls_tadir>-obj_name ).
+          <ls_tadir>-obj_name+15 = zcl_abapgit_object_sicf=>read_sicf_url( <ls_tadir>-obj_name ).
       ENDCASE.
     ENDLOOP.
 
