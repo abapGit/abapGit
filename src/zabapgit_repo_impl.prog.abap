@@ -98,7 +98,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     ENDTRY.
 
-    mo_branches = lcl_git_transport=>branches( get_url( ) ).
+    mo_branches = zcl_abapgit_git_transport=>branches( get_url( ) ).
     actualize_head_branch( ).
 
     mv_initialized = abap_true.
@@ -147,7 +147,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
   METHOD get_branches.
     IF mo_branches IS NOT BOUND.
-      mo_branches = lcl_git_transport=>branches( get_url( ) ).
+      mo_branches = zcl_abapgit_git_transport=>branches( get_url( ) ).
     ENDIF.
     ro_branches = mo_branches.
   ENDMETHOD.                    "get_branches

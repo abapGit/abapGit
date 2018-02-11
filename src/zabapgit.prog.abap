@@ -35,13 +35,10 @@ INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 INCLUDE zabapgit_app.              " Some deferred definitions here
 INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
-INCLUDE zabapgit_proxy.
 
 INCLUDE zabapgit_repo.
 INCLUDE zabapgit_news.
 INCLUDE zabapgit_stage_logic.
-INCLUDE zabapgit_2fa.
-INCLUDE zabapgit_http.
 INCLUDE zabapgit_git.
 INCLUDE zabapgit_objects.
 INCLUDE zabapgit_tadir.
@@ -50,14 +47,11 @@ INCLUDE zabapgit_popups.
 INCLUDE zabapgit_zip.
 INCLUDE zabapgit_objects_impl.
 
-INCLUDE zabapgit_skip_objects.
-
 INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
 
 INCLUDE zabapgit_services.            " All services here
-INCLUDE zabapgit_gui_asset_manager.
 INCLUDE zabapgit_gui_pages.           " All GUI pages here
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 INCLUDE zabapgit_gui_router.
