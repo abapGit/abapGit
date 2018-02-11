@@ -35,7 +35,7 @@ CLASS lcl_proxy_auth IMPLEMENTATION.
 
   METHOD enter.
 
-    lcl_password_dialog=>popup(
+    zcl_abapgit_password_dialog=>popup(
       EXPORTING
         iv_repo_url = 'Proxy Authentication'
       CHANGING
@@ -237,7 +237,7 @@ CLASS lcl_http IMPLEMENTATION.
     lv_default_user = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
 
-    lcl_password_dialog=>popup(
+    zcl_abapgit_password_dialog=>popup(
       EXPORTING
         iv_repo_url     = iv_url
       CHANGING

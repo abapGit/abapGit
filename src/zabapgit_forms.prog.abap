@@ -123,3 +123,19 @@ FORM exit RAISING zcx_abapgit_exception.
       ENDIF.
   ENDCASE.
 ENDFORM.
+
+FORM password_popup
+      USING
+        iv_repo_url TYPE string
+      CHANGING
+        cv_user     TYPE string
+        cv_pass     TYPE string.
+
+  lcl_password_dialog=>popup(
+    EXPORTING
+      iv_repo_url     = iv_repo_url
+    CHANGING
+      cv_user         = cv_user
+      cv_pass         = cv_pass ).
+
+ENDFORM.
