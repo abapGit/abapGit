@@ -297,7 +297,7 @@ CLASS lcl_merge IMPLEMENTATION.
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
           lt_upload      TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
-    lo_branch_list  = lcl_git_transport=>branches( gs_merge-repo->get_url( ) ).
+    lo_branch_list  = zcl_abapgit_git_transport=>branches( gs_merge-repo->get_url( ) ).
     gs_merge-source = lo_branch_list->find_by_name(
       zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_source ) ).
     gs_merge-target = lo_branch_list->find_by_name(
@@ -306,14 +306,14 @@ CLASS lcl_merge IMPLEMENTATION.
     APPEND gs_merge-source TO lt_upload.
     APPEND gs_merge-target TO lt_upload.
 
-    lcl_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
-        iv_url = gs_merge-repo->get_url( )
+        iv_url         = gs_merge-repo->get_url( )
         iv_branch_name = gs_merge-repo->get_branch_name( )
-        iv_deepen   = abap_false
-        it_branches = lt_upload
+        iv_deepen      = abap_false
+        it_branches    = lt_upload
       IMPORTING
-        et_objects  = gt_objects ).
+        et_objects     = gt_objects ).
 
   ENDMETHOD.
 

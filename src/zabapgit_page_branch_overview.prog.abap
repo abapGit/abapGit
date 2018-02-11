@@ -175,12 +175,12 @@ CLASS lcl_branch_overview IMPLEMENTATION.
 
     "TODO refactor
 
-    lo_branch_list = lcl_git_transport=>branches( io_repo->get_url( ) ).
+    lo_branch_list = zcl_abapgit_git_transport=>branches( io_repo->get_url( ) ).
 
     gt_branches = lo_branch_list->get_branches_only( ).
     gt_tags = lo_branch_list->get_tags_only( ).
 
-    lcl_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
         iv_url         = io_repo->get_url( )
         iv_branch_name = io_repo->get_branch_name( )

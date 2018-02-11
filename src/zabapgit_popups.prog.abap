@@ -510,7 +510,7 @@ CLASS lcl_popups IMPLEMENTATION.
                    <ls_branch> LIKE LINE OF lt_branches.
 
 
-    lo_branches    = lcl_git_transport=>branches( iv_url ).
+    lo_branches    = zcl_abapgit_git_transport=>branches( iv_url ).
     lt_branches    = lo_branches->get_branches_only( ).
     lv_head_suffix = | ({ zcl_abapgit_git_branch_list=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
@@ -616,7 +616,7 @@ CLASS lcl_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
                    <ls_tag> LIKE LINE OF lt_tags.
 
-    lo_branches = lcl_git_transport=>branches( iv_url ).
+    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
     lt_tags     = lo_branches->get_tags_only( ).
 
     IF lines( lt_tags ) = 0.
