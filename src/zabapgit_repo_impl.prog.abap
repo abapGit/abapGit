@@ -1075,7 +1075,6 @@ CLASS lcl_repo_srv IMPLEMENTATION.
 
   ENDMETHOD.  "switch_repo_type
 
-
   METHOD is_sap_object_allowed.
 
     rv_allowed = cl_enh_badi_def_utility=>is_sap_system( ).
@@ -1083,7 +1082,7 @@ CLASS lcl_repo_srv IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    rv_allowed = lcl_exit=>get_instance( )->allow_sap_objects( ).
+    rv_allowed = zcl_abapgit_exit=>get_instance( )->allow_sap_objects( ).
 
   ENDMETHOD.
 
