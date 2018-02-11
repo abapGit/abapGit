@@ -41,7 +41,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
-      EXPORTING eo_client      TYPE REF TO lcl_http_client
+      EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
                 eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
 
@@ -49,7 +49,7 @@ CLASS lcl_git_transport DEFINITION FINAL.
       IMPORTING iv_url         TYPE string
                 iv_service     TYPE string
                 iv_branch_name TYPE string
-      EXPORTING eo_client      TYPE REF TO lcl_http_client
+      EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
@@ -87,7 +87,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD branches.
 
-    DATA: lo_client TYPE REF TO lcl_http_client.
+    DATA: lo_client TYPE REF TO zcl_abapgit_http_client.
 
 
     lcl_git_transport=>branch_list(
@@ -121,7 +121,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD receive_pack.
 
-    DATA: lo_client   TYPE REF TO lcl_http_client,
+    DATA: lo_client   TYPE REF TO zcl_abapgit_http_client,
           lv_cmd_pkt  TYPE string,
           lv_line     TYPE string,
           lv_tmp      TYPE xstring,
@@ -214,7 +214,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: lo_client   TYPE REF TO lcl_http_client,
+    DATA: lo_client   TYPE REF TO zcl_abapgit_http_client,
           lv_buffer   TYPE string,
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
