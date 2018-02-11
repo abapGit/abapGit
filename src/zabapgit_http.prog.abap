@@ -207,7 +207,7 @@ CLASS lcl_http IMPLEMENTATION.
     ENDIF.
 
     " Offer two factor authentication if it is available and required
-    lcl_2fa_auth_registry=>use_2fa_if_required(
+    zcl_abapgit_2fa_auth_registry=>use_2fa_if_required(
       EXPORTING
         iv_url      = iv_url
       CHANGING
