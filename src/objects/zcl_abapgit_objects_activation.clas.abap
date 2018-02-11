@@ -327,12 +327,23 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD update_where_used.
 
-    DATA: lv_class   LIKE LINE OF gt_classes,
-          lo_cross   TYPE REF TO cl_wb_crossreference,
-          lv_include TYPE programm.
+    DATA: lv_class    LIKE LINE OF gt_classes,
+          lo_cross    TYPE REF TO cl_wb_crossreference,
+          lv_include  TYPE programm,
+          lo_progress TYPE REF TO zcl_abapgit_progress.
 
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( gt_classes ).
 
     LOOP AT gt_classes INTO lv_class.
+      IF sy-tabix MOD 20 = 0.
+        lo_progress->show(
+          iv_current = sy-tabix
+          iv_text    = 'Updating where-used lists' ).
+      ENDIF.
+
       lv_include = cl_oo_classname_service=>get_classpool_name( lv_class ).
 
       CREATE OBJECT lo_cross
