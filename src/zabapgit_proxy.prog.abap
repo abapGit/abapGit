@@ -28,7 +28,7 @@ CLASS lcl_proxy_config DEFINITION CREATE PUBLIC.
 
   PRIVATE SECTION.
     DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
-          mi_exit     TYPE REF TO lif_exit.
+          mi_exit     TYPE REF TO zif_abapgit_exit.
 
 ENDCLASS.
 
@@ -38,7 +38,7 @@ CLASS lcl_proxy_config IMPLEMENTATION.
 
     mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
-    mi_exit = lcl_exit=>get_instance( ).
+    mi_exit = zcl_abapgit_exit=>get_instance( ).
 
   ENDMETHOD.
 

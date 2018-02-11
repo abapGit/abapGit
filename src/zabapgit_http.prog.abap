@@ -182,7 +182,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     DATA: lv_host TYPE string,
           lt_list TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
-          li_exit TYPE REF TO lif_exit.
+          li_exit TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -201,7 +201,7 @@ CLASS lcl_http IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_list ASSIGNING <ls_list>.
     <ls_list>-hostname = 'localhost'.
 
-    li_exit = lcl_exit=>get_instance( ).
+    li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_local_host( CHANGING ct_hosts = lt_list ).
 
     FIND REGEX 'https?://([^/^:]*)' IN iv_url
