@@ -7,23 +7,6 @@
 *----------------------------------------------------------------------*
 *
 *----------------------------------------------------------------------*
-CLASS lcl_skip_objects DEFINITION.
-  PUBLIC SECTION.
-    METHODS:
-      skip_sadl_generated_objects
-        IMPORTING
-          it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
-          io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
-        RETURNING
-          VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt.
-  PRIVATE SECTION.
-    METHODS:
-      has_sadl_superclass
-        IMPORTING
-          is_class         TYPE zif_abapgit_definitions=>ty_tadir
-        RETURNING
-          VALUE(rv_return) TYPE abap_bool.
-ENDCLASS.
 
 CLASS lcl_tadir DEFINITION FINAL.
 
@@ -161,7 +144,7 @@ CLASS lcl_tadir IMPLEMENTATION.
     DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_tdevc        TYPE STANDARD TABLE OF tdevc,
           lv_path         TYPE string,
-          lo_skip_objects TYPE REF TO lcl_skip_objects,
+          lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
           lt_excludes     TYPE RANGE OF trobjtype,
           ls_exclude      LIKE LINE OF lt_excludes.
 

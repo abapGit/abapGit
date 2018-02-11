@@ -318,3 +318,147 @@ CLASS ltcl_pack IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_git_pack_decode_commit DEFINITION FOR TESTING
+    RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PUBLIC SECTION.
+    METHODS:
+      decode1 FOR TESTING
+        RAISING zcx_abapgit_exception,
+      decode2 FOR TESTING
+        RAISING zcx_abapgit_exception,
+      decode3 FOR TESTING
+        RAISING zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    DATA: ms_raw TYPE zcl_abapgit_git_pack=>ty_commit,
+          mv_str TYPE string.
+
+    METHODS:
+      setup,
+      decode
+        RAISING zcx_abapgit_exception,
+      add
+        IMPORTING iv_string TYPE string.
+
+ENDCLASS.
+
+CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
+
+  METHOD setup.
+    CLEAR ms_raw.
+    CLEAR mv_str.
+  ENDMETHOD.
+
+  METHOD add.
+
+    CONCATENATE mv_str iv_string zif_abapgit_definitions=>gc_newline INTO mv_str.
+
+  ENDMETHOD.
+
+  METHOD decode.
+
+    DATA: lv_xstr TYPE xstring.
+
+
+    lv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( mv_str ).
+
+    ms_raw = zcl_abapgit_git_pack=>decode_commit( lv_xstr ).
+
+  ENDMETHOD.
+
+  METHOD decode1.
+
+    add( 'tree tree' ).
+    add( 'parent parent1' ).
+    add( 'parent parent2' ).
+    add( 'author author' ).
+    add( 'committer committer' ).
+    add( '' ).
+    add( 'comment' ).
+
+    decode( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-tree
+      exp = 'tree' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-author
+      exp = 'author' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-committer
+      exp = 'committer' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-parent
+      exp = 'parent1' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-parent2
+      exp = 'parent2' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
+
+  ENDMETHOD.
+
+  METHOD decode2.
+
+    add( 'tree tree' ).
+    add( 'author author' ).
+    add( 'committer committer' ).
+    add( '' ).
+    add( 'comment' ).
+
+    decode( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-tree
+      exp = 'tree' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-author
+      exp = 'author' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-committer
+      exp = 'committer' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-parent
+      exp = '' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
+
+  ENDMETHOD.
+
+  METHOD decode3.
+
+    add( 'tree tree' ).
+    add( 'parent parent1' ).
+    add( 'author author' ).
+    add( 'committer committer' ).
+    add( '' ).
+    add( 'comment' ).
+
+    decode( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-tree
+      exp = 'tree' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-author
+      exp = 'author' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-committer
+      exp = 'committer' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_raw-parent
+      exp = 'parent1' ).
+
+    cl_abap_unit_assert=>assert_char_cp(
+      act = ms_raw-body
+      exp = 'comment+' ).
+
+  ENDMETHOD.
+
+ENDCLASS.
