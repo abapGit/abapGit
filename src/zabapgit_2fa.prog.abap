@@ -2,43 +2,43 @@
 *&  Include           ZABAPGIT_2FA
 *&---------------------------------------------------------------------*
 
-"! Exception base class for two factor authentication related errors
-CLASS lcx_2fa_error DEFINITION INHERITING FROM cx_static_check.
-  PUBLIC SECTION.
-    METHODS:
-      constructor IMPORTING is_textid     LIKE textid OPTIONAL
-                            ix_previous   LIKE previous OPTIONAL
-                            iv_error_text TYPE csequence OPTIONAL,
-      get_text REDEFINITION.
-    DATA:
-      mv_text TYPE string READ-ONLY.
-  PROTECTED SECTION.
-    METHODS:
-      get_default_text RETURNING VALUE(rv_text) TYPE string.
-ENDCLASS.
+*"! Exception base class for two factor authentication related errors
+*CLASS lcx_2fa_error DEFINITION INHERITING FROM cx_static_check.
+*  PUBLIC SECTION.
+*    METHODS:
+*      constructor IMPORTING is_textid     LIKE textid OPTIONAL
+*                            ix_previous   LIKE previous OPTIONAL
+*                            iv_error_text TYPE csequence OPTIONAL,
+*      get_text REDEFINITION.
+*    DATA:
+*      mv_text TYPE string READ-ONLY.
+*  PROTECTED SECTION.
+*    METHODS:
+*      get_default_text RETURNING VALUE(rv_text) TYPE string.
+*ENDCLASS.
+*
+*CLASS lcx_2fa_error IMPLEMENTATION.
+*  METHOD constructor.
+*    super->constructor( textid = is_textid previous = ix_previous ).
+*    mv_text = iv_error_text.
+*  ENDMETHOD.
+*
+*  METHOD get_text.
+*    IF mv_text IS NOT INITIAL.
+*      result = mv_text.
+*    ELSEIF get_default_text( ) IS NOT INITIAL.
+*      result = get_default_text( ).
+*    ELSE.
+*      result = super->get_text( ).
+*    ENDIF.
+*  ENDMETHOD.
+*
+*  METHOD get_default_text.
+*    rv_text = 'Error in two factor authentication.' ##NO_TEXT.
+*  ENDMETHOD.
+*ENDCLASS.
 
-CLASS lcx_2fa_error IMPLEMENTATION.
-  METHOD constructor.
-    super->constructor( textid = is_textid previous = ix_previous ).
-    mv_text = iv_error_text.
-  ENDMETHOD.
-
-  METHOD get_text.
-    IF mv_text IS NOT INITIAL.
-      result = mv_text.
-    ELSEIF get_default_text( ) IS NOT INITIAL.
-      result = get_default_text( ).
-    ELSE.
-      result = super->get_text( ).
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD get_default_text.
-    rv_text = 'Error in two factor authentication.' ##NO_TEXT.
-  ENDMETHOD.
-ENDCLASS.
-
-CLASS lcx_2fa_auth_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_auth_failed DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -50,7 +50,7 @@ CLASS lcx_2fa_auth_failed IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_gen_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_gen_failed DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -62,7 +62,7 @@ CLASS lcx_2fa_gen_failed IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_unsupported DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_unsupported DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -74,7 +74,7 @@ CLASS lcx_2fa_unsupported IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_del_failed DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_del_failed DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -86,7 +86,7 @@ CLASS lcx_2fa_del_failed IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_comm_error DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_comm_error DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -98,7 +98,7 @@ CLASS lcx_2fa_comm_error IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS lcx_2fa_illegal_state DEFINITION INHERITING FROM lcx_2fa_error FINAL.
+CLASS lcx_2fa_illegal_state DEFINITION INHERITING FROM zcx_abapgit_2fa_error FINAL.
   PROTECTED SECTION.
     METHODS:
       get_default_text REDEFINITION.
@@ -262,7 +262,7 @@ CLASS lcl_2fa_auth_base IMPLEMENTATION.
             INTO lv_error_msg.
     RAISE EXCEPTION TYPE lcx_2fa_comm_error
       EXPORTING
-        iv_error_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
+        mv_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
   ENDMETHOD.
 
   METHOD begin.
@@ -360,14 +360,14 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
     IF lv_http_code <> 201.
       RAISE EXCEPTION TYPE lcx_2fa_gen_failed
         EXPORTING
-          iv_error_text = |Token generation failed: { lv_http_code } { lv_http_code_description }|.
+          mv_text = |Token generation failed: { lv_http_code } { lv_http_code_description }|.
     ENDIF.
 
     rv_access_token = get_token_from_response( li_http_client->response ).
     IF rv_access_token IS INITIAL.
       RAISE EXCEPTION TYPE lcx_2fa_gen_failed
         EXPORTING
-          iv_error_text = 'Token generation failed: parser error' ##NO_TEXT.
+          mv_text = 'Token generation failed: parser error' ##NO_TEXT.
     ENDIF.
 
     " GitHub might need some time until the new token is ready to use, give it a second
@@ -527,7 +527,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
     IF lv_http_code <> 200.
       RAISE EXCEPTION TYPE lcx_2fa_del_failed
         EXPORTING
-          iv_error_text = |Could not fetch current 2FA authorizations: | &&
+          mv_text = |Could not fetch current 2FA authorizations: | &&
                           |{ lv_http_code } { lv_http_code_description }|.
     ENDIF.
 
@@ -552,7 +552,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
       IF lv_http_code <> 204.
         RAISE EXCEPTION TYPE lcx_2fa_del_failed
           EXPORTING
-            iv_error_text = |Could not delete token '{ <lv_id> }': | &&
+            mv_text = |Could not delete token '{ <lv_id> }': | &&
                             |{ lv_http_code } { lv_http_code_description }|.
       ENDIF.
     ENDLOOP.
@@ -614,7 +614,7 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
     IF lv_http_code <> 200.
       RAISE EXCEPTION TYPE lcx_2fa_auth_failed
         EXPORTING
-          iv_error_text = |Authentication failed: { lv_http_code_description }|.
+          mv_text = |Authentication failed: { lv_http_code_description }|.
     ENDIF.
 
     " Cache the authenticated http session / client to avoid unnecessary additional authentication
@@ -750,7 +750,7 @@ CLASS lcl_2fa_auth_registry IMPLEMENTATION.
 
         li_authenticator->end( ).
 
-      CATCH lcx_2fa_error INTO lx_ex.
+      CATCH zcx_abapgit_2fa_error INTO lx_ex.
         TRY.
             li_authenticator->end( ).
           CATCH lcx_2fa_illegal_state ##NO_HANDLER.
