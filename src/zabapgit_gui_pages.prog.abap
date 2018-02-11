@@ -6,7 +6,6 @@
 
 * Super class & common html chunks
 INCLUDE zabapgit_html_chunks.
-INCLUDE zabapgit_page.
 
 * Utils and helpers
 INCLUDE zabapgit_repo_browser_util.

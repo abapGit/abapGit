@@ -1,9 +1,9 @@
-class ZCL_ABAPGIT_GIT_TRANSPORT definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_git_transport DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 * remote to local
     CLASS-METHODS upload_pack
       IMPORTING iv_url         TYPE string
