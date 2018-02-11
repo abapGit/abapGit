@@ -1,8 +1,11 @@
 INTERFACE zif_abapgit_exit PUBLIC.
 
+  TYPES:
+    ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY .
+
   METHODS:
     change_local_host
-      CHANGING ct_hosts TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
+      CHANGING ct_hosts TYPE ty_icm_sinfo2_tt,
     allow_sap_objects
       RETURNING VALUE(rv_allowed) TYPE abap_bool,
     change_proxy_url

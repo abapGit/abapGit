@@ -106,17 +106,17 @@ CLASS lcl_http IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url           = zcl_abapgit_url=>host( iv_url )
-        ssl_id        = 'ANONYM'
-        proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url )
-        proxy_service = lo_proxy_configuration->get_proxy_port( iv_url )
+        url                = zcl_abapgit_url=>host( iv_url )
+        ssl_id             = 'ANONYM'
+        proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
+        proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
       IMPORTING
-        client        = li_client
+        client             = li_client
       EXCEPTIONS
         argument_not_found = 1
-        plugin_not_active = 2
-        internal_error = 3
-        OTHERS = 4 ).
+        plugin_not_active  = 2
+        internal_error     = 3
+        OTHERS             = 4 ).
     IF sy-subrc <> 0.
       CASE sy-subrc.
         WHEN 1.
@@ -161,7 +161,7 @@ CLASS lcl_http IMPLEMENTATION.
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
     zcl_abapgit_login_manager=>load( iv_uri    = iv_url
-                             ii_client = li_client ).
+                                     ii_client = li_client ).
 
     ro_client->send_receive( ).
     IF check_auth_requested( li_client ) = abap_true.
@@ -174,7 +174,7 @@ CLASS lcl_http IMPLEMENTATION.
 
     IF lv_scheme <> gc_scheme-digest.
       zcl_abapgit_login_manager=>save( iv_uri    = iv_url
-                               ii_client = li_client ).
+                                       ii_client = li_client ).
     ENDIF.
 
   ENDMETHOD.
@@ -182,7 +182,7 @@ CLASS lcl_http IMPLEMENTATION.
   METHOD is_local_system.
 
     DATA: lv_host TYPE string,
-          lt_list TYPE zif_abapgit_definitions=>ty_icm_sinfo2_tt,
+          lt_list TYPE zif_abapgit_exit=>ty_icm_sinfo2_tt,
           li_exit TYPE REF TO zif_abapgit_exit.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
