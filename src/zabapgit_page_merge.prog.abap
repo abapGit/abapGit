@@ -306,10 +306,14 @@ CLASS lcl_merge IMPLEMENTATION.
     APPEND gs_merge-source TO lt_upload.
     APPEND gs_merge-target TO lt_upload.
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo     = gs_merge-repo
-                                              iv_deepen   = abap_false
-                                              it_branches = lt_upload
-                                    IMPORTING et_objects  = gt_objects ).
+    lcl_git_transport=>upload_pack(
+      EXPORTING
+        iv_url = gs_merge-repo->get_url( )
+        iv_branch_name = gs_merge-repo->get_branch_name( )
+        iv_deepen   = abap_false
+        it_branches = lt_upload
+      IMPORTING
+        et_objects  = gt_objects ).
 
   ENDMETHOD.
 

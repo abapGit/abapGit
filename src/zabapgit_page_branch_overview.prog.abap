@@ -180,10 +180,14 @@ CLASS lcl_branch_overview IMPLEMENTATION.
     gt_branches = lo_branch_list->get_branches_only( ).
     gt_tags = lo_branch_list->get_tags_only( ).
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo     = io_repo
-                                              iv_deepen   = abap_false
-                                              it_branches = gt_branches
-                                    IMPORTING et_objects  = rt_objects ).
+    lcl_git_transport=>upload_pack(
+      EXPORTING
+        iv_url         = io_repo->get_url( )
+        iv_branch_name = io_repo->get_branch_name( )
+        iv_deepen      = abap_false
+        it_branches    = gt_branches
+      IMPORTING
+        et_objects     = rt_objects ).
 
     DELETE rt_objects WHERE type = zif_abapgit_definitions=>gc_type-blob.
 

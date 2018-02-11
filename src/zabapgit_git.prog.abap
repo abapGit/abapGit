@@ -11,11 +11,12 @@ CLASS lcl_git_transport DEFINITION FINAL.
 
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING io_repo     TYPE REF TO lcl_repo_online
-                iv_deepen   TYPE abap_bool DEFAULT abap_true
-                it_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt OPTIONAL
-      EXPORTING et_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
-                ev_branch   TYPE zif_abapgit_definitions=>ty_sha1
+      IMPORTING iv_url         TYPE string
+                iv_branch_name TYPE string
+                iv_deepen      TYPE abap_bool DEFAULT abap_true
+                it_branches    TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt OPTIONAL
+      EXPORTING et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+                ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
 
 * local to remote
@@ -90,7 +91,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
     DATA: lo_client TYPE REF TO zcl_abapgit_http_client.
 
 
-    lcl_git_transport=>branch_list(
+    branch_list(
       EXPORTING
         iv_url         = iv_url
         iv_service     = c_service-upload
@@ -229,9 +230,9 @@ CLASS lcl_git_transport IMPLEMENTATION.
 
     find_branch(
       EXPORTING
-        iv_url         = io_repo->get_url( )
+        iv_url         = iv_url
         iv_service     = c_service-upload
-        iv_branch_name = io_repo->get_branch_name( )
+        iv_branch_name = iv_branch_name
       IMPORTING
         eo_client      = lo_client
         ev_branch      = ev_branch ).
@@ -243,7 +244,7 @@ CLASS lcl_git_transport IMPLEMENTATION.
       lt_branches = it_branches.
     ENDIF.
 
-    lo_client->set_headers( iv_url     = io_repo->get_url( )
+    lo_client->set_headers( iv_url     = iv_url
                             iv_service = c_service-upload ).
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
@@ -616,7 +617,10 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
       <ls_branch>-name = io_stage->get_branch_name( ).
       <ls_branch>-sha1 = io_stage->get_branch_sha1( ).
 
-      lcl_git_transport=>upload_pack( EXPORTING io_repo     = io_repo
+      lcl_git_transport=>upload_pack(
+        EXPORTING
+          iv_url = io_repo->get_url( )
+          iv_branch_name = io_repo->get_branch_name( )
                                                 it_branches = lt_branches
                                       IMPORTING et_objects  = lt_objects ).
     ENDIF.
@@ -745,9 +749,13 @@ CLASS lcl_git_porcelain IMPLEMENTATION.
     CLEAR et_objects.
     CLEAR ev_branch.
 
-    lcl_git_transport=>upload_pack( EXPORTING io_repo = io_repo
-                                    IMPORTING et_objects = et_objects
-                                              ev_branch = ev_branch ).
+    lcl_git_transport=>upload_pack(
+      EXPORTING
+        iv_url = io_repo->get_url( )
+        iv_branch_name = io_repo->get_branch_name( )
+      IMPORTING
+        et_objects = et_objects
+        ev_branch = ev_branch ).
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = zif_abapgit_definitions=>gc_type-commit.
     IF sy-subrc <> 0.
