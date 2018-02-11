@@ -448,9 +448,10 @@ CLASS lcl_2fa_github_auth IMPLEMENTATION.
   METHOD is_2fa_required.
 
     DATA: li_client TYPE REF TO if_http_client,
-          lo_proxy  TYPE REF TO lcl_proxy_config.
+          lo_proxy  TYPE REF TO zcl_abapgit_proxy_config.
 
-    lo_proxy = lcl_app=>proxy( ).
+
+    CREATE OBJECT lo_proxy.
 
     cl_http_client=>create_by_url(
       EXPORTING
