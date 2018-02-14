@@ -46,7 +46,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
     lv_area_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=ZCL_ABAPGIT_SHMA_HELPER')=>('READ_AREA_ATTRIBUTES_ALL')
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('READ_AREA_ATTRIBUTES_ALL')
           EXPORTING
             area_name       = lv_area_name
           IMPORTING
@@ -82,7 +82,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
         cg_data = ls_area_attributes ).
 
     TRY.
-        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=ZCL_ABAPGIT_SHMA_HELPER')=>('INSERT_AREA')
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
             area_name           = lv_area_name
             attributes          = ls_area_attributes
@@ -136,12 +136,12 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Error deleting SHMA { ms_item-obj_name }| ).
         ENDIF.
 
-        CALL METHOD ('\PROGRAM=SAPMSHM_MONITOR\CLASS=ZCL_ABAPGIT_SHMM')=>('FREE_AREA_BY_NAME')
+        CALL METHOD ('\PROGRAM=SAPMSHM_MONITOR\CLASS=LCL_SHMM')=>('FREE_AREA_BY_NAME')
           EXPORTING
             area_name     = lv_area_name
             affect_server = cl_shm_area=>affect_all_servers.
 
-        CREATE OBJECT lo_cts_if TYPE ('\FUNCTION-POOL=SHMA\CLASS=ZCL_ABAPGIT_CTS_INTERFACE')
+        CREATE OBJECT lo_cts_if TYPE ('\FUNCTION-POOL=SHMA\CLASS=LCL_CTS_INTERFACE')
           EXPORTING
             area = lv_area_name.
 
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
         ENDIF.
 
-        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=ZCL_ABAPGIT_SHMA_HELPER')=>('DELETE_RUNTIME_SETTINGS')
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('DELETE_RUNTIME_SETTINGS')
           EXPORTING
             area_name = lv_area_name.
 
