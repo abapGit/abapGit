@@ -331,7 +331,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
     lt_transport_headers = zcl_abapgit_popups=>popup_to_select_transports( ).
-    lt_transport_objects = lcl_transport=>to_tadir( lt_transport_headers ).
+    lt_transport_objects = zcl_abapgit_transport=>to_tadir( lt_transport_headers ).
     IF lt_transport_objects IS INITIAL.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.

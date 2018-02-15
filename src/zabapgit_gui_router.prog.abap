@@ -203,7 +203,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         zcl_abapgit_zip=>export_package( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_transport.                   " Export transport as ZIP
-        lcl_transport=>zip( ).
+        zcl_abapgit_transport=>zip( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_object.                      " Export object as ZIP
         zcl_abapgit_zip=>export_object( ).
