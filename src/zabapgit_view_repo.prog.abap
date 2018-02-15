@@ -85,7 +85,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo         = lcl_app=>repo_srv( )->get( iv_key ).
+    mo_repo         = lcl_repo_srv=>get_instance( )->get( iv_key ).
     mv_cur_dir      = '/'. " Root
     mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
     mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
@@ -138,7 +138,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
     " Reinit, for the case of type change
-    mo_repo = lcl_app=>repo_srv( )->get( mo_repo->get_key( ) ).
+    mo_repo = lcl_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
     CREATE OBJECT ro_html.
 

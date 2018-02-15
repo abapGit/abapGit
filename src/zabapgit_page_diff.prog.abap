@@ -109,7 +109,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    lo_repo  ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo  ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).

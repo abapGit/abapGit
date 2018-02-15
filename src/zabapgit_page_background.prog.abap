@@ -146,7 +146,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     CREATE OBJECT lo_per.
     lt_per = lo_per->list( ).
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( mv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( mv_key ).
 
     READ TABLE lt_per INTO ls_per WITH KEY key = lo_repo->get_key( ).
     IF sy-subrc <> 0.

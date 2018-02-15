@@ -42,7 +42,7 @@ CLASS lcl_migrations IMPLEMENTATION.
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
 
 
-    lt_repos = lcl_app=>repo_srv( )->list( ).
+    lt_repos = lcl_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repos ASSIGNING <lo_repo>.
       lo_dot_abapgit = <lo_repo>->get_dot_abapgit( ).
@@ -99,7 +99,7 @@ CLASS lcl_migrations IMPLEMENTATION.
 
     FIELD-SYMBOLS: <repo> LIKE LINE OF lt_repos.
 
-    lt_repos = lcl_app=>repo_srv( )->list( ).
+    lt_repos = lcl_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repos ASSIGNING <repo>.
       lv_index = sy-tabix.

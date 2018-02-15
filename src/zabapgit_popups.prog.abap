@@ -484,7 +484,7 @@ CLASS lcl_popups IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          lcl_app=>repo_srv( )->validate_package( rs_popup-package ).
+          lcl_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
           " in case of validation errors we display the popup again
@@ -816,7 +816,7 @@ CLASS lcl_popups IMPLEMENTATION.
       TRY.
           zcl_abapgit_url=>name( |{ lv_url }| ).
           IF iv_freeze_package = abap_false.
-            lcl_app=>repo_srv( )->validate_package( lv_package ).
+            lcl_repo_srv=>get_instance( )->validate_package( lv_package ).
           ENDIF.
         CATCH zcx_abapgit_exception INTO lx_error.
           MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.

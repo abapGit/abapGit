@@ -2,6 +2,8 @@
 *&  Include           ZABAPGIT_REPO
 *&---------------------------------------------------------------------*
 
+CLASS lcl_repo_srv DEFINITION DEFERRED.
+
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo DEFINITION
 *----------------------------------------------------------------------*
@@ -175,9 +177,12 @@ ENDCLASS.                    "lcl_repo_offline DEFINITION
 *----------------------------------------------------------------------*
 *       CLASS lcl_repo_srv DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
+CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE.
 
   PUBLIC SECTION.
+
+    CLASS-METHODS: get_instance
+      RETURNING VALUE(rv_srv) TYPE REF TO lcl_repo_srv.
 
     TYPES: ty_repo_tt TYPE STANDARD TABLE OF REF TO lcl_repo WITH DEFAULT KEY.
 
@@ -226,6 +231,8 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
+
+    CLASS-DATA: go_ref TYPE REF TO lcl_repo_srv.
 
     METHODS constructor.
 

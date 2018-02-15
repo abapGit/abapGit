@@ -69,7 +69,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           lt_selected               LIKE lt_unnecessary_local_objs,
           lt_columns                TYPE stringtab.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
@@ -124,7 +124,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           lo_repo   TYPE REF TO lcl_repo_online.
 
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     lcl_popups=>create_branch_popup(
       IMPORTING
@@ -152,7 +152,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
@@ -171,7 +171,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     ls_branch = lcl_popups=>branch_list_popup(
       iv_url             = lo_repo->get_url( )
@@ -200,7 +200,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     ls_branch = lcl_popups=>branch_list_popup( lo_repo->get_url( ) ).
     IF ls_branch IS INITIAL.
@@ -238,7 +238,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           lo_repo   TYPE REF TO lcl_repo_online,
           lv_sha1   TYPE zif_abapgit_definitions=>ty_sha1.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     lcl_popups=>create_tag_popup(
       EXPORTING
@@ -275,7 +275,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
           lv_text TYPE string.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
     IF ls_tag IS INITIAL.
@@ -298,7 +298,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
           lv_text TYPE string.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
     IF ls_tag IS INITIAL.
@@ -317,7 +317,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO lcl_repo_online.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
 
     lcl_popups=>tag_list_popup( iv_url         = lo_repo->get_url( )
                                 iv_select_mode = abap_false ).

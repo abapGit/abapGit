@@ -376,7 +376,7 @@ CLASS lcl_zip IMPLEMENTATION.
     DATA: lo_repo TYPE REF TO lcl_repo_offline.
 
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( iv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 

@@ -76,7 +76,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-show.              " Change displayed repo
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
-            lcl_app=>repo_srv( )->get( lv_key )->refresh( ).
+            lcl_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
@@ -121,7 +121,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     TRY.
-        lt_repos = lcl_app=>repo_srv( )->list( ).
+        lt_repos = lcl_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception INTO lx_error.
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
         RETURN.
@@ -133,7 +133,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       CREATE OBJECT lo_tutorial.
       ro_html->add( lo_tutorial->render( ) ).
     ELSE.
-      lo_repo = lcl_app=>repo_srv( )->get( mv_show ).
+      lo_repo = lcl_repo_srv=>get_instance( )->get( mv_show ).
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
@@ -144,7 +144,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lv_show_old LIKE mv_show.
 
     TRY.
-        lcl_app=>repo_srv( )->list( ).
+        lcl_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
@@ -154,7 +154,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
-          lcl_app=>repo_srv( )->get( mv_show ).
+          lcl_repo_srv=>get_instance( )->get( mv_show ).
         CATCH zcx_abapgit_exception.
           CLEAR mv_show.
           zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( mv_show ).

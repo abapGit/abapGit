@@ -233,7 +233,7 @@ CLASS lcl_background IMPLEMENTATION.
     WRITE: / 'Background mode' ##NO_TEXT.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
-      lo_repo ?= lcl_app=>repo_srv( )->get( <ls_list>-key ).
+      lo_repo ?= lcl_repo_srv=>get_instance( )->get( <ls_list>-key ).
       lv_repo_name = lo_repo->get_name( ).
       WRITE: / <ls_list>-method, lv_repo_name.
 

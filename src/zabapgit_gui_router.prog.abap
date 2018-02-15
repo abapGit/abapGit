@@ -166,7 +166,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE lcl_gui_page_syntax
           EXPORTING
-            io_repo = lcl_app=>repo_srv( )->get( lv_key ).
+            io_repo = lcl_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-repo_purge.                      " Repo remove & purge all objects
         lcl_services_repo=>purge( lv_key ).
@@ -189,7 +189,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-repo_settings.
         CREATE OBJECT ei_page TYPE lcl_gui_page_repo_sett
           EXPORTING
-            io_repo = lcl_app=>repo_srv( )->get( lv_key ).
+            io_repo = lcl_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         " ZIP services actions
@@ -197,7 +197,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_zip=>import( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-zip_export.                      " Export repo as ZIP
-        lcl_zip=>export( lcl_app=>repo_srv( )->get( lv_key ) ).
+        lcl_zip=>export( lcl_repo_srv=>get_instance( )->get( lv_key ) ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_package.                     " Export package as ZIP
         lcl_zip=>export_package( ).
@@ -305,7 +305,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     lv_key = iv_getdata.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( lv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( lv_key ).
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -359,7 +359,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
                   ev_seed    = lv_seed ).
     ENDIF.
 
-    lo_repo ?= lcl_app=>repo_srv( )->get( lv_key ).
+    lo_repo ?= lcl_repo_srv=>get_instance( )->get( lv_key ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
