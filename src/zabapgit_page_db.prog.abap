@@ -262,7 +262,7 @@ CLASS lcl_gui_page_db IMPLEMENTATION.
           RETURN.
         ENDIF.
         rv_text = |Method: { is_data-data_str+lv_match-offset(lv_match-length) }, |
-               && |Repository: { lcl_app=>repo_srv( )->get( is_data-value )->get_name( ) }|.
+               && |Repository: { lcl_repo_srv=>get_instance( )->get( is_data-value )->get_name( ) }|.
 
       WHEN 'USER'.
         rv_text = '-'. " No additional explanation for user

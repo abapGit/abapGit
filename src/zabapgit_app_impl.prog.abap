@@ -16,13 +16,4 @@ CLASS lcl_app IMPLEMENTATION.
 
   ENDMETHOD.      "gui
 
-  METHOD repo_srv.
-
-    IF go_repo_srv IS NOT BOUND.
-      CREATE OBJECT go_repo_srv.
-    ENDIF.
-    ro_repo_srv = go_repo_srv.
-
-  ENDMETHOD.      "repo_srv
-
 ENDCLASS.   "lcl_app

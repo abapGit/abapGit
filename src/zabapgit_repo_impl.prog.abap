@@ -321,7 +321,7 @@ CLASS lcl_repo_online IMPLEMENTATION.
 
     IF me->is_offline( ) = abap_false AND me->get_sha1_local( ) IS INITIAL.
 
-      lcl_app=>repo_srv( )->delete( me ).
+      lcl_repo_srv=>get_instance( )->delete( me ).
 
       IF iv_commit = abap_true.
         COMMIT WORK.
@@ -828,6 +828,13 @@ ENDCLASS.                    "lcl_repo IMPLEMENTATION
 *
 *----------------------------------------------------------------------*
 CLASS lcl_repo_srv IMPLEMENTATION.
+
+  METHOD get_instance.
+    IF go_ref IS INITIAL.
+      CREATE OBJECT go_ref.
+    ENDIF.
+    rv_srv = go_ref.
+  ENDMETHOD.
 
   METHOD constructor.
     CREATE OBJECT mo_persistence.

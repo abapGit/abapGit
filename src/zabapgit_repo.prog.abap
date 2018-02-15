@@ -179,6 +179,9 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
 
   PUBLIC SECTION.
 
+    CLASS-METHODS: get_instance
+      RETURNING VALUE(rv_srv) TYPE REF TO lcl_repo_srv.
+
     TYPES: ty_repo_tt TYPE STANDARD TABLE OF REF TO lcl_repo WITH DEFAULT KEY.
 
     METHODS list
@@ -226,6 +229,8 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
+
+class-data: go_ref type ref to lcl_repo_srv.
 
     METHODS constructor.
 

@@ -133,13 +133,13 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF abap_false = lcl_app=>repo_srv( )->is_repo_installed(
+    IF abap_false = lcl_repo_srv=>get_instance( )->is_repo_installed(
         iv_url              = iv_url
         iv_target_package   = iv_package ).
 
       zcl_abapgit_sap_package=>create_local( iv_package ).
 
-      lo_repo = lcl_app=>repo_srv( )->new_online(
+      lo_repo = lcl_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
         iv_branch_name = 'refs/heads/master'
         iv_package     = iv_package ) ##NO_TEXT.
@@ -159,7 +159,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
   METHOD is_installed.
 
     TRY.
-        rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_abapgit_url ).
+        rv_installed = lcl_repo_srv=>get_instance( )->is_repo_installed( c_abapgit_url ).
         " TODO, alternative checks for presence in the system
       CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection
@@ -171,7 +171,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
   METHOD is_installed_pi.
 
     TRY.
-        rv_installed = lcl_app=>repo_srv( )->is_repo_installed( c_plugins_url ).
+        rv_installed = lcl_repo_srv=>get_instance( )->is_repo_installed( c_plugins_url ).
         " TODO, alternative checks for presence in the system
       CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection

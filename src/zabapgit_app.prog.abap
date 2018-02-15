@@ -15,11 +15,7 @@ CLASS lcl_app DEFINITION FINAL.
       RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
       RAISING   zcx_abapgit_exception.
 
-    CLASS-METHODS repo_srv
-      RETURNING VALUE(ro_repo_srv) TYPE REF TO lcl_repo_srv.
-
   PRIVATE SECTION.
-    CLASS-DATA: go_gui          TYPE REF TO lcl_gui,
-                go_repo_srv     TYPE REF TO lcl_repo_srv.
+    CLASS-DATA: go_gui          TYPE REF TO lcl_gui.
 
 ENDCLASS.   "lcl_app

@@ -117,7 +117,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lt_types = lcl_objects=>supported_list( ).
 
-    lo_repo = lcl_app=>repo_srv( )->new_online(
+    lo_repo = lcl_repo_srv=>get_instance( )->new_online(
       iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
@@ -153,7 +153,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-    lcl_app=>repo_srv( )->delete( lo_repo ).
+    lcl_repo_srv=>get_instance( )->delete( lo_repo ).
 
     COMMIT WORK.
 
