@@ -1036,7 +1036,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
         EXPORTING
           popup_title       = 'New Offline Project'
-          programname       = sy-repid
+          programname       = sy-cprog
           formname          = 'PACKAGE_POPUP'
           ok_pushbuttontext = ''
           icon_ok_push      = lv_icon_ok
@@ -1149,7 +1149,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       CALL FUNCTION 'POPUP_GET_VALUES_USER_BUTTONS'
         EXPORTING
           popup_title       = iv_title
-          programname       = sy-repid
+          programname       = sy-cprog
           formname          = 'BRANCH_POPUP'
           ok_pushbuttontext = 'OK'
           icon_ok_push      = lv_icon_ok
