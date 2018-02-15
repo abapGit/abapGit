@@ -17,7 +17,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
                 iv_show_branch        TYPE abap_bool DEFAULT abap_true
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
                 iv_branch             TYPE string OPTIONAL
-                io_news               TYPE REF TO lcl_news OPTIONAL
+                io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
       RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
@@ -39,7 +39,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
 
     CLASS-METHODS render_news
       IMPORTING
-                io_news               TYPE REF TO lcl_news
+                io_news               TYPE REF TO zcl_abapgit_news
       RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
@@ -247,7 +247,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
     DATA: lv_text    TYPE string,
           lv_display TYPE string,
-          lt_log     TYPE lcl_news=>tt_log.
+          lt_log     TYPE zcl_abapgit_news=>tt_log.
 
     FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
 
