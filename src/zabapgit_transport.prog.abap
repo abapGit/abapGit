@@ -62,7 +62,7 @@ CLASS lcl_transport IMPLEMENTATION.
       EXPORTING
         is_data = ls_data.
 
-    lcl_zip=>export( io_repo   = lo_repo
+    zcl_abapgit_zip=>export( io_repo   = lo_repo
                      it_filter = lt_tadir ).
   ENDMETHOD.
 
