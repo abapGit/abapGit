@@ -8,6 +8,11 @@ Legend
 + : added
 - : removed
 
+2018-02-15 v1.58.0
+------------------
+! more classes moved to global
+* SHMA bugfix
+
 2018-02-11 v1.57.0
 ------------------
 ! more classes moved to global
