@@ -323,7 +323,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
   METHOD transport_to_branch.
     DATA:
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
-      lo_transport_to_branch TYPE REF TO lcl_transport_2_branch,
+      lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE scts_tadir,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
