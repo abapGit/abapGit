@@ -28,13 +28,13 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
       retrieve_active_repo
         RAISING zcx_abapgit_exception,
       render_toc
-        IMPORTING it_repo_list   TYPE lcl_repo_srv=>ty_repo_tt
+        IMPORTING it_repo_list   TYPE zcl_abapgit_repo_srv=>ty_repo_tt
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_repo
-        IMPORTING io_repo        TYPE REF TO lcl_repo
+        IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
 
@@ -76,7 +76,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       WHEN c_actions-show.              " Change displayed repo
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
-            lcl_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
+            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
@@ -95,7 +95,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
-    ls_tadir = lcl_popups=>popup_object( ).
+    ls_tadir = zcl_abapgit_popups=>popup_object( ).
     IF ls_tadir IS INITIAL.
       RETURN.
     ENDIF.
@@ -103,7 +103,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     ls_item-obj_type = ls_tadir-object.
     ls_item-obj_name = ls_tadir-obj_name.
 
-    lv_user = lcl_objects=>changed_by( ls_item ).
+    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
 
     MESSAGE lv_user TYPE 'S'.
 
@@ -111,7 +111,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repos    TYPE lcl_repo_srv=>ty_repo_tt,
+    DATA: lt_repos    TYPE zcl_abapgit_repo_srv=>ty_repo_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lo_tutorial TYPE REF TO lcl_gui_view_tutorial,
           lo_repo     LIKE LINE OF lt_repos.
@@ -121,7 +121,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     TRY.
-        lt_repos = lcl_repo_srv=>get_instance( )->list( ).
+        lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception INTO lx_error.
         ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
         RETURN.
@@ -133,7 +133,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
       CREATE OBJECT lo_tutorial.
       ro_html->add( lo_tutorial->render( ) ).
     ELSE.
-      lo_repo = lcl_repo_srv=>get_instance( )->get( mv_show ).
+      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_show ).
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
@@ -144,7 +144,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     DATA: lv_show_old LIKE mv_show.
 
     TRY.
-        lcl_repo_srv=>get_instance( )->list( ).
+        zcl_abapgit_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
@@ -154,7 +154,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS NOT INITIAL.
       TRY. " verify the key exists
-          lcl_repo_srv=>get_instance( )->get( mv_show ).
+          zcl_abapgit_repo_srv=>get_instance( )->get( mv_show ).
         CATCH zcx_abapgit_exception.
           CLEAR mv_show.
           zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( mv_show ).

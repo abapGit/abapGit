@@ -29,15 +29,16 @@ ENDCLASS.
 CLASS lcl_transport IMPLEMENTATION.
 
   METHOD zip.
+
     DATA: lt_requests TYPE trwbo_requests,
           lt_tadir    TYPE scts_tadir,
           lv_package  TYPE devclass,
           ls_data     TYPE zcl_abapgit_persistence_repo=>ty_repo,
-          lo_repo     TYPE REF TO lcl_repo_offline,
+          lo_repo     TYPE REF TO zcl_abapgit_repo_offline,
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = lcl_popups=>popup_to_select_transports( ).
+    lt_trkorr = zcl_abapgit_popups=>popup_to_select_transports( ).
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -162,7 +163,7 @@ CLASS lcl_transport IMPLEMENTATION.
           lv_obj_name = <ls_object>-obj_name.
         ENDIF.
 
-        ls_tadir = lcl_tadir=>read_single(
+        ls_tadir = zcl_abapgit_tadir=>read_single(
           iv_object   = lv_object
           iv_obj_name = lv_obj_name ).
 
@@ -180,7 +181,7 @@ CLASS lcl_transport_2_branch DEFINITION.
   PUBLIC SECTION.
     METHODS:
       create
-        IMPORTING io_repository          TYPE REF TO lcl_repo_online
+        IMPORTING io_repository          TYPE REF TO zcl_abapgit_repo_online
                   is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
                   it_transport_objects   TYPE scts_tadir
         RAISING   zcx_abapgit_exception.
@@ -188,7 +189,7 @@ CLASS lcl_transport_2_branch DEFINITION.
 
     METHODS create_new_branch
       IMPORTING
-        io_repository  TYPE REF TO lcl_repo_online
+        io_repository  TYPE REF TO zcl_abapgit_repo_online
         iv_branch_name TYPE string
       RAISING
         zcx_abapgit_exception.
@@ -229,7 +230,7 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
         iv_branch_name = lv_branch_name
         iv_branch_sha1 = io_repository->get_sha1_remote( ).
 
-    ls_stage_objects = lcl_stage_logic=>get( io_repository ).
+    ls_stage_objects = zcl_abapgit_stage_logic=>get( io_repository ).
 
     lt_object_statuses = io_repository->status( ).
 
@@ -248,7 +249,7 @@ CLASS lcl_transport_2_branch IMPLEMENTATION.
   METHOD create_new_branch.
     ASSERT iv_branch_name CP 'refs/heads/+*'.
     TRY.
-        lcl_git_porcelain=>create_branch(
+        zcl_abapgit_git_porcelain=>create_branch(
           io_repo = io_repository
           iv_name = iv_branch_name
           iv_from = io_repository->get_sha1_local( ) ).

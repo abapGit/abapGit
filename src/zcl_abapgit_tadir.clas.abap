@@ -1,14 +1,4 @@
-*&---------------------------------------------------------------------*
-*&  Include           ZABAPGIT_TADIR
-*&---------------------------------------------------------------------*
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_tadir DEFINITION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-
-CLASS lcl_tadir DEFINITION FINAL.
+class ZCL_ABAPGIT_TADIR definition public final create public.
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -47,97 +37,12 @@ CLASS lcl_tadir DEFINITION FINAL.
         RETURNING VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.                    "lcl_tadir DEFINITION
-
-*----------------------------------------------------------------------*
-*       CLASS lcl_tadir IMPLEMENTATION
-*----------------------------------------------------------------------*
-*
-*----------------------------------------------------------------------*
-CLASS lcl_tadir IMPLEMENTATION.
-
-  METHOD read_single.
-
-    IF iv_object = 'SICF'.
-      rs_tadir = zcl_abapgit_object_sicf=>read_tadir_sicf(
-        iv_pgmid    = iv_pgmid
-        iv_obj_name = iv_obj_name ).
-    ELSE.
-      SELECT SINGLE * FROM tadir INTO rs_tadir
-        WHERE pgmid = iv_pgmid
-        AND object = iv_object
-        AND obj_name = iv_obj_name.                       "#EC CI_SUBRC
-    ENDIF.
-
-  ENDMETHOD.                    "read_single
-
-  METHOD get_object_package.
-
-    DATA ls_tadir TYPE tadir.
-
-    ls_tadir = read_single( iv_pgmid    = iv_pgmid
-                            iv_object   = iv_object
-                            iv_obj_name = iv_obj_name ).
-
-    IF ls_tadir-delflag = 'X'.
-      RETURN. "Mark for deletion -> return nothing
-    ENDIF.
-
-    rv_devclass = ls_tadir-devclass.
-
-  ENDMETHOD.  "get_object_package.
-
-  METHOD check_exists.
-
-    DATA: lv_exists   TYPE abap_bool,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+ENDCLASS.
 
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( it_tadir ).
 
-* rows from database table TADIR are not removed for
-* transportable objects until the transport is released
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      IF sy-tabix MOD 200 = 0.
-        lo_progress->show(
-          iv_current = sy-tabix
-          iv_text    = |Check object exists { <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
-      ENDIF.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      ls_item-devclass = <ls_tadir>-devclass.
-
-      IF lcl_objects=>is_supported( ls_item ) = abap_true.
-        lv_exists = lcl_objects=>exists( ls_item ).
-        IF lv_exists = abap_true.
-          APPEND <ls_tadir> TO rt_tadir.
-        ENDIF.
-      ELSE.
-        APPEND <ls_tadir> TO rt_tadir.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.                    "check_exists
-
-  METHOD read.
-
-* start recursion
-* hmm, some problems here, should TADIR also build path?
-    rt_tadir = build( iv_package            = iv_package
-                      iv_top                = iv_package
-                      io_dot                = io_dot
-                      iv_ignore_subpackages = iv_ignore_subpackages
-                      io_log                = io_log ).
-
-    rt_tadir = check_exists( rt_tadir ).
-
-  ENDMETHOD.                    "read
 
   METHOD build.
 
@@ -219,4 +124,90 @@ CLASS lcl_tadir IMPLEMENTATION.
 
   ENDMETHOD.                    "build
 
-ENDCLASS.                    "lcl_tadir IMPLEMENTATION
+
+  METHOD check_exists.
+
+    DATA: lv_exists   TYPE abap_bool,
+          lo_progress TYPE REF TO zcl_abapgit_progress,
+          ls_item     TYPE zif_abapgit_definitions=>ty_item.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
+
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = lines( it_tadir ).
+
+* rows from database table TADIR are not removed for
+* transportable objects until the transport is released
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+      IF sy-tabix MOD 200 = 0.
+        lo_progress->show(
+          iv_current = sy-tabix
+          iv_text    = |Check object exists { <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
+      ENDIF.
+
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass = <ls_tadir>-devclass.
+
+      IF zcl_abapgit_objects=>is_supported( ls_item ) = abap_true.
+        lv_exists = zcl_abapgit_objects=>exists( ls_item ).
+        IF lv_exists = abap_true.
+          APPEND <ls_tadir> TO rt_tadir.
+        ENDIF.
+      ELSE.
+        APPEND <ls_tadir> TO rt_tadir.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.                    "check_exists
+
+
+  METHOD get_object_package.
+
+    DATA ls_tadir TYPE tadir.
+
+    ls_tadir = read_single( iv_pgmid    = iv_pgmid
+                            iv_object   = iv_object
+                            iv_obj_name = iv_obj_name ).
+
+    IF ls_tadir-delflag = 'X'.
+      RETURN. "Mark for deletion -> return nothing
+    ENDIF.
+
+    rv_devclass = ls_tadir-devclass.
+
+  ENDMETHOD.  "get_object_package.
+
+
+  METHOD read.
+
+* start recursion
+* hmm, some problems here, should TADIR also build path?
+    rt_tadir = build( iv_package            = iv_package
+                      iv_top                = iv_package
+                      io_dot                = io_dot
+                      iv_ignore_subpackages = iv_ignore_subpackages
+                      io_log                = io_log ).
+
+    rt_tadir = check_exists( rt_tadir ).
+
+  ENDMETHOD.                    "read
+
+
+  METHOD read_single.
+
+    IF iv_object = 'SICF'.
+      rs_tadir = zcl_abapgit_object_sicf=>read_tadir_sicf(
+        iv_pgmid    = iv_pgmid
+        iv_obj_name = iv_obj_name ).
+    ELSE.
+      SELECT SINGLE * FROM tadir INTO rs_tadir
+        WHERE pgmid = iv_pgmid
+        AND object = iv_object
+        AND obj_name = iv_obj_name.                       "#EC CI_SUBRC
+    ENDIF.
+
+  ENDMETHOD.                    "read_single
+ENDCLASS.

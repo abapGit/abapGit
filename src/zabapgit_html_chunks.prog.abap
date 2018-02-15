@@ -12,7 +12,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
         RETURNING VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
 
     CLASS-METHODS render_repo_top
-      IMPORTING io_repo               TYPE REF TO lcl_repo
+      IMPORTING io_repo               TYPE REF TO zcl_abapgit_repo
                 iv_show_package       TYPE abap_bool DEFAULT abap_true
                 iv_show_branch        TYPE abap_bool DEFAULT abap_true
                 iv_interactive_branch TYPE abap_bool DEFAULT abap_false
@@ -28,7 +28,7 @@ CLASS lcl_gui_chunk_lib DEFINITION FINAL.
 
     CLASS-METHODS render_branch_span
       IMPORTING iv_branch             TYPE string
-                io_repo               TYPE REF TO lcl_repo_online
+                io_repo               TYPE REF TO zcl_abapgit_repo_online
                 iv_interactive        TYPE abap_bool
       RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
@@ -49,7 +49,7 @@ CLASS lcl_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_top.
 
-    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           lo_pback       TYPE REF TO zcl_abapgit_persist_background,
           lv_hint        TYPE string,
           lv_icon        TYPE string.

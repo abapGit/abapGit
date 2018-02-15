@@ -6,7 +6,7 @@ CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_pa
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo,
+        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo,
       zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -15,7 +15,7 @@ CLASS lcl_gui_page_repo_sett DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_pa
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action.
 
-    DATA: mo_repo TYPE REF TO lcl_repo.
+    DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS:
       render_content REDEFINITION,

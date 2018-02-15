@@ -26,7 +26,7 @@ CLASS lcl_news DEFINITION CREATE PRIVATE FRIENDS ltcl_news.
 
     CLASS-METHODS:
       create " TODO REFACTOR
-        IMPORTING io_repo            TYPE REF TO lcl_repo
+        IMPORTING io_repo            TYPE REF TO zcl_abapgit_repo
         RETURNING VALUE(ro_instance) TYPE REF TO lcl_news
         RAISING   zcx_abapgit_exception.
 
@@ -94,9 +94,10 @@ CLASS lcl_news IMPLEMENTATION.
     DATA: lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_last_seen   TYPE string,
           lv_url         TYPE string,
-          lo_repo_online TYPE REF TO lcl_repo_online.
+          lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     FIELD-SYMBOLS <file> LIKE LINE OF lt_remote.
+
 
     IF io_repo->is_offline( ) = abap_true.
       RETURN.

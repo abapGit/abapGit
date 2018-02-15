@@ -28,7 +28,7 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
     TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
     METHODS constructor
-      IMPORTING io_repo TYPE REF TO lcl_repo.
+      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS list
       IMPORTING iv_path              TYPE string
@@ -41,7 +41,7 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
       RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
 
   PRIVATE SECTION.
-    DATA: mo_repo TYPE REF TO lcl_repo,
+    DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
           mo_log  TYPE REF TO zcl_abapgit_log.
 
     METHODS build_repo_items_offline
@@ -173,7 +173,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
                    <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
-    lt_tadir = lcl_tadir=>read(
+    lt_tadir = zcl_abapgit_tadir=>read(
       iv_package = mo_repo->get_package( )
       io_dot     = mo_repo->get_dot_abapgit( ) ).
 
@@ -189,7 +189,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
   METHOD build_repo_items_online.
 
-    DATA: lo_repo_online TYPE REF TO lcl_repo_online,
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
           lt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
 

@@ -57,16 +57,16 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD clone.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo_online,
-          ls_popup TYPE lcl_popups=>ty_popup.
+    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo_online,
+          ls_popup TYPE zcl_abapgit_popups=>ty_popup.
 
 
-    ls_popup = lcl_popups=>repo_popup( iv_url ).
+    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo = lcl_repo_srv=>get_instance( )->new_online(
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
       iv_url         = ls_popup-url
       iv_branch_name = ls_popup-branch_name
       iv_package     = ls_popup-package ).
@@ -86,24 +86,24 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD refresh.
 
-    lcl_repo_srv=>get_instance( )->get( iv_key )->refresh( ).
+    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->refresh( ).
 
   ENDMETHOD.  "refresh
 
   METHOD remove.
 
     DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
+          lo_repo     TYPE REF TO zcl_abapgit_repo,
           lv_package  TYPE devclass,
           lv_question TYPE c LENGTH 200.
 
 
-    lo_repo     = lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lv_package  = lo_repo->get_package( ).
     lv_question = |This will remove the repository reference to the package { lv_package }|
                && '. All objects will safely remain in the system.'.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Remove'
       text_question         = lv_question
       text_button_1         = 'Remove'
@@ -117,7 +117,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_repo_srv=>get_instance( )->delete( lo_repo ).
+    zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -127,26 +127,26 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO lcl_repo,
+          lo_repo     TYPE REF TO zcl_abapgit_repo,
           lv_package  TYPE devclass,
           lv_question TYPE c LENGTH 100.
 
 
-    lo_repo = lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
     ENDIF.
 
     lv_package = lo_repo->get_package( ).
-    lt_tadir   = lcl_tadir=>read( lv_package ).
+    lt_tadir   = zcl_abapgit_tadir=>read( lv_package ).
 
     IF lines( lt_tadir ) > 0.
 
       lv_question = |This will DELETE all objects in package { lv_package }|
                  && | ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
 
-      lv_answer = lcl_popups=>popup_to_confirm(
+      lv_answer = zcl_abapgit_popups=>popup_to_confirm(
         titlebar              = 'Uninstall'
         text_question         = lv_question
         text_button_1         = 'Delete'
@@ -160,11 +160,11 @@ CLASS lcl_services_repo IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
       ENDIF.
 
-      lcl_objects=>delete( lt_tadir ).
+      zcl_abapgit_objects=>delete( lt_tadir ).
 
     ENDIF.
 
-    lcl_repo_srv=>get_instance( )->delete( lo_repo ).
+    zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
 
     COMMIT WORK.
 
@@ -172,15 +172,15 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: lo_repo  TYPE REF TO lcl_repo,
-          ls_popup TYPE lcl_popups=>ty_popup.
+    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo,
+          ls_popup TYPE zcl_abapgit_popups=>ty_popup.
 
-    ls_popup  = lcl_popups=>repo_new_offline( ).
+    ls_popup  = zcl_abapgit_popups=>repo_new_offline( ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo = lcl_repo_srv=>get_instance( )->new_offline(
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url     = ls_popup-url
       iv_package = ls_popup-package ).
 
@@ -195,7 +195,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     DATA: lv_answer TYPE c LENGTH 1.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Make repository OFF-line'
       text_question         = 'This will detach the repo from remote and make it OFF-line'
       text_button_1         = 'Make OFF-line'
@@ -209,7 +209,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_true ).
+    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_true ).
 
     COMMIT WORK.
 
@@ -218,21 +218,21 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD remote_attach.
 
-    DATA: ls_popup TYPE lcl_popups=>ty_popup,
-          lo_repo  TYPE REF TO lcl_repo_online.
+    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup,
+          lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
-    ls_popup = lcl_popups=>repo_popup(
+    ls_popup = zcl_abapgit_popups=>repo_popup(
       iv_title          = 'Attach repo to remote ...'
       iv_url            = ''
-      iv_package        = lcl_repo_srv=>get_instance( )->get( iv_key )->get_package( )
+      iv_package        = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_package( )
       iv_freeze_package = abap_true ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_false ).
+    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_false ).
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_url( ls_popup-url ).
     lo_repo->set_branch_name( ls_popup-branch_name ).
 
@@ -242,12 +242,12 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD remote_change.
 
-    DATA: ls_popup TYPE lcl_popups=>ty_popup,
-          lo_repo  TYPE REF TO lcl_repo_online.
+    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup,
+          lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_popup = lcl_popups=>repo_popup(
+    ls_popup = zcl_abapgit_popups=>repo_popup(
       iv_title          = 'Change repo remote ...'
       iv_url            = lo_repo->get_url( )
       iv_package        = lo_repo->get_package( )
@@ -256,7 +256,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_new_remote( iv_url         = ls_popup-url
                              iv_branch_name = ls_popup-branch_name ).
 
@@ -268,10 +268,10 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
     DATA: lv_answer   TYPE c,
           lv_question TYPE string,
-          lo_repo     TYPE REF TO lcl_repo.
+          lo_repo     TYPE REF TO zcl_abapgit_repo.
 
 
-    lo_repo = lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lv_question =  'This will rebuild and overwrite local repo checksums.'.
 
@@ -284,7 +284,7 @@ CLASS lcl_services_repo IMPLEMENTATION.
                 && ' Please make sure you don''t have ones like that.'.
     ENDIF.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = lv_question
       text_button_1         = 'OK'
@@ -322,21 +322,21 @@ CLASS lcl_services_repo IMPLEMENTATION.
 
   METHOD transport_to_branch.
     DATA:
-      lo_repository          TYPE REF TO lcl_repo_online,
+      lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO lcl_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE scts_tadir,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
-    lo_repository ?= lcl_repo_srv=>get_instance( )->get( iv_repository_key ).
+    lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
-    lt_transport_headers = lcl_popups=>popup_to_select_transports( ).
+    lt_transport_headers = zcl_abapgit_popups=>popup_to_select_transports( ).
     lt_transport_objects = lcl_transport=>to_tadir( lt_transport_headers ).
     IF lt_transport_objects IS INITIAL.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
 
-    ls_transport_to_branch = lcl_popups=>popup_to_create_transp_branch(
+    ls_transport_to_branch = zcl_abapgit_popups=>popup_to_create_transp_branch(
       lt_transport_headers ).
 
     CREATE OBJECT lo_transport_to_branch.

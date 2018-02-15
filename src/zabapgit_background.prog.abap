@@ -15,15 +15,15 @@ CLASS lcl_background DEFINITION FINAL.
         IMPORTING is_files          TYPE zif_abapgit_definitions=>ty_stage_files
         RETURNING VALUE(rv_comment) TYPE string,
       push
-        IMPORTING io_repo     TYPE REF TO lcl_repo_online
+        IMPORTING io_repo     TYPE REF TO zcl_abapgit_repo_online
                   is_settings TYPE zcl_abapgit_persist_background=>ty_background
         RAISING   zcx_abapgit_exception,
       push_fixed
-        IMPORTING io_repo     TYPE REF TO lcl_repo_online
+        IMPORTING io_repo     TYPE REF TO zcl_abapgit_repo_online
                   is_settings TYPE zcl_abapgit_persist_background=>ty_background
         RAISING   zcx_abapgit_exception,
       push_auto
-        IMPORTING io_repo TYPE REF TO lcl_repo_online
+        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -32,7 +32,7 @@ CLASS lcl_background IMPLEMENTATION.
 
   METHOD push.
 
-    IF lines( lcl_stage_logic=>get( io_repo )-local ) = 0.
+    IF lines( zcl_abapgit_stage_logic=>get( io_repo )-local ) = 0.
       WRITE: / 'nothing to stage' ##NO_TEXT.
       RETURN.
     ENDIF.
@@ -58,7 +58,7 @@ CLASS lcl_background IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
 
 
-    ls_files = lcl_stage_logic=>get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
     ASSERT lines( ls_files-local ) > 0.
 
     CREATE OBJECT lo_stage
@@ -132,10 +132,10 @@ CLASS lcl_background IMPLEMENTATION.
                    <ls_local>   LIKE LINE OF ls_files-local.
 
 
-    ls_files = lcl_stage_logic=>get( io_repo ).
+    ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      lv_changed_by = lcl_objects=>changed_by( <ls_local>-item ).
+      lv_changed_by = zcl_abapgit_objects=>changed_by( <ls_local>-item ).
       APPEND lv_changed_by TO lt_users.
       APPEND INITIAL LINE TO lt_changed ASSIGNING <ls_changed>.
       <ls_changed>-changed_by = lv_changed_by.
@@ -206,7 +206,7 @@ CLASS lcl_background IMPLEMENTATION.
     CONSTANTS: c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 
     DATA: lo_per       TYPE REF TO zcl_abapgit_persist_background,
-          lo_repo      TYPE REF TO lcl_repo_online,
+          lo_repo      TYPE REF TO zcl_abapgit_repo_online,
           lt_list      TYPE zcl_abapgit_persist_background=>tt_background,
           lv_repo_name TYPE string.
 
@@ -233,7 +233,7 @@ CLASS lcl_background IMPLEMENTATION.
     WRITE: / 'Background mode' ##NO_TEXT.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
-      lo_repo ?= lcl_repo_srv=>get_instance( )->get( <ls_list>-key ).
+      lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
       lv_repo_name = lo_repo->get_name( ).
       WRITE: / <ls_list>-method, lv_repo_name.
 

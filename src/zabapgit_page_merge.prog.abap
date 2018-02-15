@@ -13,21 +13,21 @@ CLASS lcl_merge DEFINITION FINAL.
            END OF ty_ancestor.
 
     TYPES: BEGIN OF ty_merge,
-             repo     TYPE REF TO lcl_repo_online,
+             repo     TYPE REF TO zcl_abapgit_repo_online,
              source   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
              target   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
              common   TYPE ty_ancestor,
-             stree    TYPE lcl_git_porcelain=>ty_expanded_tt,
-             ttree    TYPE lcl_git_porcelain=>ty_expanded_tt,
-             ctree    TYPE lcl_git_porcelain=>ty_expanded_tt,
-             result   TYPE lcl_git_porcelain=>ty_expanded_tt,
+             stree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
+             ttree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
+             ctree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
+             result   TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
              stage    TYPE REF TO zcl_abapgit_stage,
              conflict TYPE string,
            END OF ty_merge.
 
     CLASS-METHODS:
       run
-        IMPORTING io_repo         TYPE REF TO lcl_repo_online
+        IMPORTING io_repo         TYPE REF TO zcl_abapgit_repo_online
                   iv_source       TYPE string
                   iv_target       TYPE string
         RETURNING VALUE(rs_merge) TYPE ty_merge
@@ -41,7 +41,7 @@ CLASS lcl_merge DEFINITION FINAL.
 
     CLASS-METHODS:
       all_files
-        RETURNING VALUE(rt_files) TYPE lcl_git_porcelain=>ty_expanded_tt,
+        RETURNING VALUE(rt_files) TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
       calculate_result
         RAISING zcx_abapgit_exception,
       find_ancestors
@@ -85,13 +85,13 @@ CLASS lcl_merge IMPLEMENTATION.
     gs_merge-common = find_first_common( it_list1 = lt_asource
                                          it_list2 = lt_atarget ).
 
-    gs_merge-stree = lcl_git_porcelain=>full_tree(
+    gs_merge-stree = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = gt_objects
       iv_branch  = gs_merge-source-sha1 ).
-    gs_merge-ttree = lcl_git_porcelain=>full_tree(
+    gs_merge-ttree = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = gt_objects
       iv_branch  = gs_merge-target-sha1 ).
-    gs_merge-ctree = lcl_git_porcelain=>full_tree(
+    gs_merge-ctree = zcl_abapgit_git_porcelain=>full_tree(
       it_objects = gt_objects
       iv_branch  = gs_merge-common-commit ).
 
@@ -124,7 +124,7 @@ CLASS lcl_merge IMPLEMENTATION.
                            iv_data     = <ls_object>-data ).
     END-OF-DEFINITION.
 
-    DATA: lt_files        TYPE lcl_git_porcelain=>ty_expanded_tt,
+    DATA: lt_files        TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
           lv_found_source TYPE abap_bool,
           lv_found_target TYPE abap_bool,
           lv_found_common TYPE abap_bool.
@@ -326,7 +326,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo   TYPE REF TO lcl_repo_online
+        IMPORTING io_repo   TYPE REF TO zcl_abapgit_repo_online
                   iv_source TYPE string
                   iv_target TYPE string
         RAISING   zcx_abapgit_exception,
@@ -336,7 +336,7 @@ CLASS lcl_gui_page_merge DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO lcl_repo_online,
+    DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
           ms_merge TYPE lcl_merge=>ty_merge.
 
     CONSTANTS: BEGIN OF c_actions,

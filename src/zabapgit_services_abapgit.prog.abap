@@ -78,7 +78,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
     IF is_installed( ) = abap_true.
       lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
-      lcl_popups=>popup_to_inform(
+      zcl_abapgit_popups=>popup_to_inform(
         titlebar              = lc_title
         text_message          = lv_text ).
       RETURN.
@@ -100,7 +100,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
     IF is_installed_pi( ) = abap_true.
       lv_text = 'Seems like abapGit plugins package is already installed. No changes to be done'.
-      lcl_popups=>popup_to_inform(
+      zcl_abapgit_popups=>popup_to_inform(
         titlebar              = lc_title
         text_message          = lv_text ).
       RETURN.
@@ -118,10 +118,11 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
 
   METHOD do_install.
 
-    DATA lo_repo            TYPE REF TO lcl_repo_online.
-    DATA lv_answer          TYPE c LENGTH 1.
+    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lv_answer TYPE c LENGTH 1.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = iv_title
       text_question         = iv_text
       text_button_1         = 'Continue'
@@ -133,13 +134,13 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF abap_false = lcl_repo_srv=>get_instance( )->is_repo_installed(
+    IF abap_false = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed(
         iv_url              = iv_url
         iv_target_package   = iv_package ).
 
       zcl_abapgit_sap_package=>create_local( iv_package ).
 
-      lo_repo = lcl_repo_srv=>get_instance( )->new_online(
+      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
         iv_branch_name = 'refs/heads/master'
         iv_package     = iv_package ) ##NO_TEXT.
@@ -159,7 +160,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
   METHOD is_installed.
 
     TRY.
-        rv_installed = lcl_repo_srv=>get_instance( )->is_repo_installed( c_abapgit_url ).
+        rv_installed = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed( c_abapgit_url ).
         " TODO, alternative checks for presence in the system
       CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection
@@ -171,7 +172,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
   METHOD is_installed_pi.
 
     TRY.
-        rv_installed = lcl_repo_srv=>get_instance( )->is_repo_installed( c_plugins_url ).
+        rv_installed = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed( c_plugins_url ).
         " TODO, alternative checks for presence in the system
       CATCH zcx_abapgit_exception.
         " cannot be installed anyway in this case, e.g. no connection

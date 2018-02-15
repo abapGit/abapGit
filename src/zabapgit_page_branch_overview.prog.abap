@@ -28,7 +28,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
     TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
 
     CLASS-METHODS: run
-      IMPORTING io_repo           TYPE REF TO lcl_repo_online
+      IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo_online
       RETURNING VALUE(rt_commits) TYPE ty_commit_tt
       RAISING   zcx_abapgit_exception.
 
@@ -53,7 +53,7 @@ CLASS lcl_branch_overview DEFINITION FINAL.
       fixes
         RAISING zcx_abapgit_exception,
       get_git_objects
-        IMPORTING io_repo           TYPE REF TO lcl_repo_online
+        IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo_online
         RETURNING VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
         RAISING   zcx_abapgit_exception,
       determine_tags
@@ -348,7 +348,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_pa
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo_online
+        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
 
@@ -356,7 +356,7 @@ CLASS lcl_gui_page_boverview DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_pa
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo     TYPE REF TO lcl_repo_online,
+    DATA: mo_repo     TYPE REF TO zcl_abapgit_repo_online,
           mv_compress TYPE abap_bool VALUE abap_false,
           mt_commits  TYPE lcl_branch_overview=>ty_commit_tt.
 

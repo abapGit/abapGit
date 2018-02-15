@@ -35,18 +35,9 @@ INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
 
-INCLUDE zabapgit_repo.
 INCLUDE zabapgit_news.
-INCLUDE zabapgit_stage_logic.
-INCLUDE zabapgit_git.
-INCLUDE zabapgit_objects.
-INCLUDE zabapgit_tadir.
-INCLUDE zabapgit_file_status.
-INCLUDE zabapgit_popups.
 INCLUDE zabapgit_zip.
-INCLUDE zabapgit_objects_impl.
 
-INCLUDE zabapgit_repo_impl.
 INCLUDE zabapgit_background.
 INCLUDE zabapgit_transport.
 
