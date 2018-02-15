@@ -1,8 +1,4 @@
-*&---------------------------------------------------------------------*
-*&  Include           ZABAPGIT_SERVICES_BACKGROUND
-*&---------------------------------------------------------------------*
-
-CLASS lcl_services_bkg DEFINITION FINAL.
+CLASS zcl_abapgit_services_bkg DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -10,9 +6,12 @@ CLASS lcl_services_bkg DEFINITION FINAL.
       IMPORTING is_bg_task TYPE zcl_abapgit_persist_background=>ty_background
       RAISING   zcx_abapgit_exception.
 
-ENDCLASS. "lcl_services_background
+ENDCLASS.
 
-CLASS lcl_services_bkg IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_SERVICES_BKG IMPLEMENTATION.
+
 
   METHOD update_task.
 
@@ -30,6 +29,5 @@ CLASS lcl_services_bkg IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "update_task
-
-ENDCLASS. "lcl_services_background
+  ENDMETHOD.
+ENDCLASS.
