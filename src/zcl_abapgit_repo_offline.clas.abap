@@ -1,12 +1,12 @@
-class ZCL_ABAPGIT_REPO_OFFLINE definition
-  public
-  inheriting from ZCL_ABAPGIT_REPO
-  final
-  create public .
+CLASS zcl_abapgit_repo_offline DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_repo
+  FINAL
+  CREATE PUBLIC .
 
-public section.
-protected section.
-private section.
+  PUBLIC SECTION.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 

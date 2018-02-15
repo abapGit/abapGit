@@ -1,97 +1,96 @@
-class ZCL_ABAPGIT_REPO definition
-  public
-  abstract
-  create public
+CLASS zcl_abapgit_repo DEFINITION
+  PUBLIC
+  ABSTRACT
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_repo_srv .
 
-  global friends ZCL_ABAPGIT_REPO_SRV .
+  PUBLIC SECTION.
 
-public section.
-
-  methods CONSTRUCTOR
-    importing
-      !IS_DATA type ZCL_ABAPGIT_PERSISTENCE_REPO=>TY_REPO .
-  methods GET_KEY
-    returning
-      value(RV_KEY) type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE .
-  methods GET_NAME
-    returning
-      value(RV_NAME) type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_FILES_LOCAL
-    importing
-      !IO_LOG type ref to ZCL_ABAPGIT_LOG optional
-      !IT_FILTER type SCTS_TADIR optional
-    returning
-      value(RT_FILES) type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_ITEM_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_LOCAL_CHECKSUMS
-    returning
-      value(RT_CHECKSUMS) type ZCL_ABAPGIT_PERSISTENCE_REPO=>TY_LOCAL_CHECKSUM_TT .
-  methods GET_LOCAL_CHECKSUMS_PER_FILE
-    returning
-      value(RT_CHECKSUMS) type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE_SIGNATURES_TT .
-  methods GET_FILES_REMOTE
-    returning
-      value(RT_FILES) type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_PACKAGE
-    returning
-      value(RV_PACKAGE) type ZCL_ABAPGIT_PERSISTENCE_REPO=>TY_REPO-PACKAGE .
-  methods GET_MASTER_LANGUAGE
-    returning
-      value(RV_LANGUAGE) type SPRAS .
-  methods IS_WRITE_PROTECTED
-    returning
-      value(RV_YES) type SAP_BOOL .
-  methods IGNORE_SUBPACKAGES
-    returning
-      value(RV_YES) type SAP_BOOL .
-  methods DELETE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_DOT_ABAPGIT
-    returning
-      value(RO_DOT_ABAPGIT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT .
-  methods SET_DOT_ABAPGIT
-    importing
-      !IO_DOT_ABAPGIT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods REFRESH
-    importing
-      !IV_DROP_CACHE type ABAP_BOOL default ABAP_FALSE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods REFRESH_LOCAL .
-  methods UPDATE_LOCAL_CHECKSUMS
-    importing
-      !IT_FILES type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE_SIGNATURES_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods REBUILD_LOCAL_CHECKSUMS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FIND_REMOTE_DOT_ABAPGIT
-    returning
-      value(RO_DOT) type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_OFFLINE
-    returning
-      value(RV_OFFLINE) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SET_FILES_REMOTE
-    importing
-      !IT_FILES type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS constructor
+      IMPORTING
+        !is_data TYPE zcl_abapgit_persistence_repo=>ty_repo .
+    METHODS get_key
+      RETURNING
+        VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
+    METHODS get_name
+      RETURNING
+        VALUE(rv_name) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_files_local
+      IMPORTING
+        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
+        !it_filter      TYPE scts_tadir OPTIONAL
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_local_checksums
+      RETURNING
+        VALUE(rt_checksums) TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt .
+    METHODS get_local_checksums_per_file
+      RETURNING
+        VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
+    METHODS get_files_remote
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_package
+      RETURNING
+        VALUE(rv_package) TYPE zcl_abapgit_persistence_repo=>ty_repo-package .
+    METHODS get_master_language
+      RETURNING
+        VALUE(rv_language) TYPE spras .
+    METHODS is_write_protected
+      RETURNING
+        VALUE(rv_yes) TYPE sap_bool .
+    METHODS ignore_subpackages
+      RETURNING
+        VALUE(rv_yes) TYPE sap_bool .
+    METHODS delete
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_dot_abapgit
+      RETURNING
+        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
+    METHODS set_dot_abapgit
+      IMPORTING
+        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize
+      RAISING
+        zcx_abapgit_exception .
+    METHODS refresh
+      IMPORTING
+        !iv_drop_cache TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
+    METHODS refresh_local .
+    METHODS update_local_checksums
+      IMPORTING
+        !it_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS rebuild_local_checksums
+      RAISING
+        zcx_abapgit_exception .
+    METHODS find_remote_dot_abapgit
+      RETURNING
+        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_offline
+      RETURNING
+        VALUE(rv_offline) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_files_remote
+      IMPORTING
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
     DATA: mt_local              TYPE zif_abapgit_definitions=>ty_files_item_tt,
           mt_remote             TYPE zif_abapgit_definitions=>ty_files_tt,
