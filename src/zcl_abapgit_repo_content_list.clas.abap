@@ -1,8 +1,7 @@
-*&---------------------------------------------------------------------*
-*&  Include           ZABAPGIT_REPO_BROWSER_UTIL
-*&---------------------------------------------------------------------*
-
-CLASS lcl_repo_content_list DEFINITION FINAL.
+CLASS zcl_abapgit_repo_content_list DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
@@ -60,45 +59,12 @@ CLASS lcl_repo_content_list DEFINITION FINAL.
     METHODS filter_changes
       CHANGING ct_repo_items TYPE tt_repo_items.
 
-ENDCLASS. "lcl_repo_content_browser
+ENDCLASS.
 
-CLASS lcl_repo_content_list IMPLEMENTATION.
 
-  METHOD constructor.
-    mo_repo = io_repo.
-    CREATE OBJECT mo_log.
-  ENDMETHOD.  "constructor
 
-  METHOD get_log.
-    ro_log = mo_log.
-  ENDMETHOD. "get_log
+CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
-  METHOD list.
-
-    mo_log->clear( ).
-
-    IF mo_repo->is_offline( ) = abap_true.
-      rt_repo_items = build_repo_items_offline( ).
-    ELSE.
-      rt_repo_items = build_repo_items_online( ).
-    ENDIF.
-
-    IF iv_by_folders = abap_true.
-      build_folders(
-        EXPORTING iv_cur_dir    = iv_path
-        CHANGING  ct_repo_items = rt_repo_items ).
-    ENDIF.
-
-    IF iv_changes_only = abap_true.
-      filter_changes( CHANGING ct_repo_items = rt_repo_items ).
-    ENDIF.
-
-    SORT rt_repo_items BY
-      sortkey ASCENDING
-      obj_type ASCENDING
-      obj_name ASCENDING.
-
-  ENDMETHOD.  "list
 
   METHOD build_folders.
 
@@ -148,22 +114,6 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
   ENDMETHOD. "build_folders
 
-  METHOD filter_changes.
-
-    DATA lt_repo_temp LIKE ct_repo_items.
-
-    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
-
-    LOOP AT ct_repo_items ASSIGNING <item>.
-      CHECK <item>-changes > 0.
-      APPEND <item> TO lt_repo_temp.
-    ENDLOOP.
-
-    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
-      ct_repo_items = lt_repo_temp.
-    ENDIF.
-
-  ENDMETHOD. "filter_changes
 
   METHOD build_repo_items_offline.
 
@@ -186,6 +136,7 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.  "build_repo_items_offline
+
 
   METHOD build_repo_items_online.
 
@@ -238,4 +189,60 @@ CLASS lcl_repo_content_list IMPLEMENTATION.
 
   ENDMETHOD. "build_repo_items_online
 
-ENDCLASS. "lcl_repo_content_browser
+
+  METHOD constructor.
+    mo_repo = io_repo.
+    CREATE OBJECT mo_log.
+  ENDMETHOD.  "constructor
+
+
+  METHOD filter_changes.
+
+    DATA lt_repo_temp LIKE ct_repo_items.
+
+    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
+
+    LOOP AT ct_repo_items ASSIGNING <item>.
+      CHECK <item>-changes > 0.
+      APPEND <item> TO lt_repo_temp.
+    ENDLOOP.
+
+    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
+      ct_repo_items = lt_repo_temp.
+    ENDIF.
+
+  ENDMETHOD. "filter_changes
+
+
+  METHOD get_log.
+    ro_log = mo_log.
+  ENDMETHOD. "get_log
+
+
+  METHOD list.
+
+    mo_log->clear( ).
+
+    IF mo_repo->is_offline( ) = abap_true.
+      rt_repo_items = build_repo_items_offline( ).
+    ELSE.
+      rt_repo_items = build_repo_items_online( ).
+    ENDIF.
+
+    IF iv_by_folders = abap_true.
+      build_folders(
+        EXPORTING iv_cur_dir    = iv_path
+        CHANGING  ct_repo_items = rt_repo_items ).
+    ENDIF.
+
+    IF iv_changes_only = abap_true.
+      filter_changes( CHANGING ct_repo_items = rt_repo_items ).
+    ENDIF.
+
+    SORT rt_repo_items BY
+      sortkey ASCENDING
+      obj_type ASCENDING
+      obj_name ASCENDING.
+
+  ENDMETHOD.  "list
+ENDCLASS.

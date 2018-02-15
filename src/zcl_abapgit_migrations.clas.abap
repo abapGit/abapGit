@@ -1,8 +1,7 @@
-*&---------------------------------------------------------------------*
-*&  Include           ZABAPGIT_MIGRATIONS
-*&---------------------------------------------------------------------*
-
-CLASS lcl_migrations DEFINITION FINAL.
+CLASS zcl_abapgit_migrations DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
     CLASS-METHODS run
@@ -14,22 +13,12 @@ CLASS lcl_migrations DEFINITION FINAL.
     CLASS-METHODS local_dot_abapgit
       RAISING zcx_abapgit_exception.
 
-ENDCLASS. "lcl_migrations
+ENDCLASS.
 
-CLASS lcl_migrations IMPLEMENTATION.
 
-  METHOD run.
 
-    " Migrate STDTEXT to TABLE
-    zcl_abapgit_persist_migrate=>run( ).
+CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
-    " Rebuild local file checksums
-    rebuild_local_checksums_161112( ).
-
-    " local .abapgit.xml state, issue #630
-    local_dot_abapgit( ).
-
-  ENDMETHOD.  " run.
 
   METHOD local_dot_abapgit.
 
@@ -87,6 +76,7 @@ CLASS lcl_migrations IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD rebuild_local_checksums_161112.
 
@@ -155,4 +145,17 @@ CLASS lcl_migrations IMPLEMENTATION.
 
   ENDMETHOD.  " rebuild_local_checksums_20161112.
 
-ENDCLASS. "lcl_migrations
+
+  METHOD run.
+
+    " Migrate STDTEXT to TABLE
+    zcl_abapgit_persist_migrate=>run( ).
+
+    " Rebuild local file checksums
+    rebuild_local_checksums_161112( ).
+
+    " local .abapgit.xml state, issue #630
+    local_dot_abapgit( ).
+
+  ENDMETHOD.  " run.
+ENDCLASS.

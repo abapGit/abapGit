@@ -298,11 +298,11 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
   METHOD render_repo.
 
-    DATA lo_news TYPE REF TO lcl_news.
+    DATA lo_news TYPE REF TO zcl_abapgit_news.
 
     CREATE OBJECT ro_html.
 
-    lo_news = lcl_news=>create( io_repo ).
+    lo_news = zcl_abapgit_news=>create( io_repo ).
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
     ro_html->add( lcl_gui_chunk_lib=>render_repo_top(

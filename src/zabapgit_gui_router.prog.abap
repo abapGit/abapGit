@@ -194,19 +194,19 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " ZIP services actions
       WHEN zif_abapgit_definitions=>gc_action-zip_import.                      " Import repo from ZIP
-        lcl_zip=>import( lv_key ).
+        zcl_abapgit_zip=>import( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-zip_export.                      " Export repo as ZIP
-        lcl_zip=>export( zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ) ).
+        zcl_abapgit_zip=>export( zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ) ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_package.                     " Export package as ZIP
-        lcl_zip=>export_package( ).
+        zcl_abapgit_zip=>export_package( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_transport.                   " Export transport as ZIP
-        lcl_transport=>zip( ).
+        zcl_abapgit_transport=>zip( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_object.                      " Export object as ZIP
-        lcl_zip=>export_object( ).
+        zcl_abapgit_zip=>export_object( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
 
         " Remote ORIGIN manipulations

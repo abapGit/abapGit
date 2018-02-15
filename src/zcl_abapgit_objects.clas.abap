@@ -1,60 +1,76 @@
-CLASS zcl_abapgit_objects DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_objects DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_deserialization,
-             obj     TYPE REF TO zif_abapgit_object,
-             xml     TYPE REF TO zcl_abapgit_xml_input,
-             package TYPE devclass,
-             item    TYPE zif_abapgit_definitions=>ty_item,
-           END OF ty_deserialization.
-
-    TYPES: ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY.
+    TYPES:
+      ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_deserialization,
+        obj     TYPE REF TO zif_abapgit_object,
+        xml     TYPE REF TO zcl_abapgit_xml_input,
+        package TYPE devclass,
+        item    TYPE zif_abapgit_definitions=>ty_item,
+      END OF ty_deserialization .
+    TYPES:
+      ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
 
     CLASS-METHODS serialize
-      IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
-                iv_language     TYPE spras
-                io_log          TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS deserialize
-      IMPORTING io_repo                  TYPE REF TO zcl_abapgit_repo
-      RETURNING VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo                 TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS delete
-      IMPORTING it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS jump
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS changed_by
-      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(rv_user) TYPE xubname
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_user) TYPE xubname
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS has_changed_since
-      IMPORTING is_item           TYPE zif_abapgit_definitions=>ty_item
-                iv_timestamp      TYPE timestamp
-      RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item          TYPE zif_abapgit_definitions=>ty_item
+        !iv_timestamp     TYPE timestamp
+      RETURNING
+        VALUE(rv_changed) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS is_supported
-      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
-                iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(rv_bool) TYPE abap_bool.
-
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(rv_bool)  TYPE abap_bool .
     CLASS-METHODS exists
-      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(rv_bool) TYPE abap_bool.
-
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool .
     CLASS-METHODS supported_list
-      RETURNING VALUE(rt_types) TYPE ty_types_tt.
-
+      RETURNING
+        VALUE(rt_types) TYPE ty_types_tt .
   PRIVATE SECTION.
 
     CLASS-METHODS check_duplicates

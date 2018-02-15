@@ -34,13 +34,7 @@ INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
 INCLUDE zabapgit_authorizations.
 INCLUDE zabapgit_exit.
-
-INCLUDE zabapgit_news.
-INCLUDE zabapgit_zip.
-
 INCLUDE zabapgit_background.
-INCLUDE zabapgit_transport.
-
 INCLUDE zabapgit_services.            " All services here
 INCLUDE zabapgit_gui_pages.           " All GUI pages here
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
@@ -48,7 +42,6 @@ INCLUDE zabapgit_gui_router.
 INCLUDE zabapgit_gui.
 
 INCLUDE zabapgit_unit_test.
-INCLUDE zabapgit_migrations.          " Data migration routines
 INCLUDE zabapgit_forms.
 
 **********************************************************************

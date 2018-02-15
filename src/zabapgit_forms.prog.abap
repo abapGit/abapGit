@@ -21,7 +21,7 @@ FORM run.
   ENDIF.
 
   TRY.
-      lcl_migrations=>run( ).
+      zcl_abapgit_migrations=>run( ).
       PERFORM open_gui.
     CATCH zcx_abapgit_exception INTO lx_exception.
       MESSAGE lx_exception->text TYPE 'E'.
