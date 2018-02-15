@@ -232,7 +232,7 @@ CLASS lcl_repo_srv DEFINITION FINAL CREATE PRIVATE.
 
   PRIVATE SECTION.
 
-class-data: go_ref type ref to lcl_repo_srv.
+    CLASS-DATA: go_ref TYPE REF TO lcl_repo_srv.
 
     METHODS constructor.
 
