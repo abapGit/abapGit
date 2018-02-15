@@ -5,9 +5,13 @@
 *----------------------------------------------------------------------*
 *       CLASS lcl_gui DEFINITION
 *----------------------------------------------------------------------*
-CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
+CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
   PUBLIC SECTION.
+
+    CLASS-METHODS: get_instance
+      RETURNING VALUE(ro_gui) TYPE REF TO lcl_gui
+      RAISING   zcx_abapgit_exception.
 
     METHODS go_home
       RAISING zcx_abapgit_exception.
@@ -21,6 +25,8 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE FRIENDS lcl_app.
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
 
   PRIVATE SECTION.
+
+    CLASS-DATA: go_gui TYPE REF TO lcl_gui.
 
     TYPES: BEGIN OF ty_page_stack,
              page     TYPE REF TO zif_abapgit_gui_page,
@@ -76,6 +82,13 @@ ENDCLASS.                    "lcl_gui DEFINITION
 *       CLASS lcl_gui IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS lcl_gui IMPLEMENTATION.
+
+  METHOD get_instance.
+    IF go_gui IS INITIAL.
+      CREATE OBJECT go_gui.
+    ENDIF.
+    ro_gui = go_gui.
+  ENDMETHOD.
 
   METHOD constructor.
 
