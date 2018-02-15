@@ -79,7 +79,7 @@ CLASS lcl_gui_page_debuginfo IMPLEMENTATION.
 
     LOOP AT lt_objects ASSIGNING <object> WHERE pgmid = 'R3TR'.
       ls_item-obj_type = <object>-object.
-      IF lcl_objects=>is_supported( is_item = ls_item iv_native_only = abap_true ) = abap_true.
+      IF zcl_abapgit_objects=>is_supported( is_item = ls_item iv_native_only = abap_true ) = abap_true.
         IF lv_list IS INITIAL.
           lv_list = ls_item-obj_type.
         ELSE.

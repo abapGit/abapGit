@@ -13,7 +13,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
 
     METHODS:
       constructor
-        IMPORTING io_repo  TYPE REF TO lcl_repo_online
+        IMPORTING io_repo  TYPE REF TO zcl_abapgit_repo_online
                   io_stage TYPE REF TO zcl_abapgit_stage
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
@@ -24,7 +24,7 @@ CLASS lcl_gui_page_commit DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO lcl_repo_online,
+    DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
           mo_stage TYPE REF TO zcl_abapgit_stage.
 
     METHODS:

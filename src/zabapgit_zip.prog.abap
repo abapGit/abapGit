@@ -15,7 +15,7 @@ CLASS lcl_zip DEFINITION FINAL.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS export
-      IMPORTING io_repo   TYPE REF TO lcl_repo
+      IMPORTING io_repo   TYPE REF TO zcl_abapgit_repo
                 it_filter TYPE scts_tadir OPTIONAL
       RAISING   zcx_abapgit_exception.
 
@@ -373,10 +373,10 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD import.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_offline.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
 
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
     lo_repo->deserialize( ).
 
@@ -384,14 +384,14 @@ CLASS lcl_zip IMPLEMENTATION.
 
   METHOD export_package.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_offline,
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline,
           ls_data TYPE zcl_abapgit_persistence_repo=>ty_repo.
 
 
     ls_data-key = 'DUMMY'.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    lcl_popups=>popup_package_export(
+    zcl_abapgit_popups=>popup_package_export(
       IMPORTING
         ev_package      = ls_data-package
         ev_folder_logic = ls_data-dot_abapgit-folder_logic ).
@@ -422,7 +422,7 @@ CLASS lcl_zip IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
 
-    ls_tadir = lcl_popups=>popup_object( ).
+    ls_tadir = zcl_abapgit_popups=>popup_object( ).
     IF ls_tadir IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -430,7 +430,7 @@ CLASS lcl_zip IMPLEMENTATION.
     ls_item-obj_type = ls_tadir-object.
     ls_item-obj_name = ls_tadir-obj_name.
 
-    lt_files = lcl_objects=>serialize(
+    lt_files = zcl_abapgit_objects=>serialize(
       is_item     = ls_item
       iv_language = sy-langu ).
 

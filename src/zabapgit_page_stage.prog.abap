@@ -13,7 +13,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
     METHODS:
       constructor
         IMPORTING
-                  io_repo TYPE REF TO lcl_repo_online
+                  io_repo TYPE REF TO zcl_abapgit_repo_online
                   iv_seed TYPE string OPTIONAL
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
@@ -24,7 +24,7 @@ CLASS lcl_gui_page_stage DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO lcl_repo_online,
+    DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
           ms_files TYPE zif_abapgit_definitions=>ty_stage_files,
           mv_seed  TYPE string. " Unique page id to bind JS sessionStorage
 
@@ -65,7 +65,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
 
     ms_control-page_title = 'STAGE'.
     mo_repo               = io_repo.
-    ms_files              = lcl_stage_logic=>get( mo_repo ).
+    ms_files              = zcl_abapgit_stage_logic=>get( mo_repo ).
     mv_seed               = iv_seed.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
@@ -350,7 +350,7 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
         lt_files_local = mo_repo->get_files_local( ).
         READ TABLE lt_files_local INTO ls_local_file WITH KEY file = is_file.
         IF sy-subrc = 0.
-          rv_user = lcl_objects=>changed_by( ls_local_file-item ).
+          rv_user = zcl_abapgit_objects=>changed_by( ls_local_file-item ).
         ENDIF.
       CATCH zcx_abapgit_exception.
         CLEAR rv_user. "Should not raise errors if user last changed by was not found

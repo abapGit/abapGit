@@ -52,7 +52,7 @@ CLASS lcl_services_git DEFINITION FINAL.
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS commit
-      IMPORTING io_repo   TYPE REF TO lcl_repo_online
+      IMPORTING io_repo   TYPE REF TO zcl_abapgit_repo_online
                 is_commit TYPE ty_commit_fields
                 io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
@@ -63,19 +63,19 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo                   TYPE REF TO lcl_repo_online,
+    DATA: lo_repo                   TYPE REF TO zcl_abapgit_repo_online,
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
           lt_columns                TYPE stringtab.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
     ENDIF.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = 'Reset local objects?'
       text_button_1         = 'Ok'
@@ -96,7 +96,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       INSERT `OBJECT` INTO TABLE lt_columns.
       INSERT `OBJ_NAME` INTO TABLE lt_columns.
 
-      lcl_popups=>popup_to_select_from_list(
+      zcl_abapgit_popups=>popup_to_select_from_list(
         EXPORTING
           it_list              = lt_unnecessary_local_objs
           i_header_text        = |Which unnecessary objects should be deleted?|
@@ -106,9 +106,7 @@ CLASS lcl_services_git IMPLEMENTATION.
           et_list              = lt_selected ).
 
       IF lines( lt_selected ) > 0.
-
-        lcl_objects=>delete( lt_selected ).
-
+        zcl_abapgit_objects=>delete( lt_selected ).
       ENDIF.
 
     ENDIF.
@@ -121,12 +119,12 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO lcl_repo_online.
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online.
 
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    lcl_popups=>create_branch_popup(
+    zcl_abapgit_popups=>create_branch_popup(
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
@@ -136,7 +134,7 @@ CLASS lcl_services_git IMPLEMENTATION.
 
     ASSERT lv_name CP 'refs/heads/+*'.
 
-    lcl_git_porcelain=>create_branch(
+    zcl_abapgit_git_porcelain=>create_branch(
       io_repo = lo_repo
       iv_name = lv_name
       iv_from = lo_repo->get_sha1_local( ) ).
@@ -150,9 +148,9 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->is_write_protected( ) = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot pull. Local code is write-protected by repo config' ).
@@ -167,13 +165,13 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD switch_branch.
 
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
           ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = lcl_popups=>branch_list_popup(
+    ls_branch = zcl_abapgit_popups=>branch_list_popup(
       iv_url             = lo_repo->get_url( )
       iv_default_branch  = lo_repo->get_branch_name( )
       iv_show_new_option = abap_true ).
@@ -181,7 +179,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ls_branch-name = lcl_popups=>c_new_branch_label.
+    IF ls_branch-name = zcl_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).
       RETURN.
     ENDIF.
@@ -196,13 +194,13 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD delete_branch.
 
-    DATA: lo_repo   TYPE REF TO lcl_repo_online,
+    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
           ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
 
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = lcl_popups=>branch_list_popup( lo_repo->get_url( ) ).
+    ls_branch = zcl_abapgit_popups=>branch_list_popup( lo_repo->get_url( ) ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -213,7 +211,7 @@ CLASS lcl_services_git IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Switch branch before deleting current' ).
     ENDIF.
 
-    lcl_git_porcelain=>delete_branch(
+    zcl_abapgit_git_porcelain=>delete_branch(
       io_repo   = lo_repo
       is_branch = ls_branch ).
 
@@ -235,12 +233,12 @@ CLASS lcl_services_git IMPLEMENTATION.
           lv_cancel TYPE abap_bool,
           lx_error  TYPE REF TO zcx_abapgit_exception,
           lv_text   TYPE string,
-          lo_repo   TYPE REF TO lcl_repo_online,
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
           lv_sha1   TYPE zif_abapgit_definitions=>ty_sha1.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    lcl_popups=>create_tag_popup(
+    zcl_abapgit_popups=>create_tag_popup(
       EXPORTING
         iv_sha1   = lo_repo->get_sha1_local( )
       IMPORTING
@@ -255,7 +253,7 @@ CLASS lcl_services_git IMPLEMENTATION.
     ASSERT lv_name CP 'refs/tags/+*'.
 
     TRY.
-        lcl_git_porcelain=>create_tag( io_repo = lo_repo
+        zcl_abapgit_git_porcelain=>create_tag( io_repo = lo_repo
                                        iv_name = lv_name
                                        iv_from = lv_sha1 ).
 
@@ -271,18 +269,18 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD delete_tag.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online,
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
           ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
           lv_text TYPE string.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
+    ls_tag = zcl_abapgit_popups=>tag_list_popup( lo_repo->get_url( ) ).
     IF ls_tag IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lcl_git_porcelain=>delete_tag(
+    zcl_abapgit_git_porcelain=>delete_tag(
       io_repo = lo_repo
       is_tag  = ls_tag ).
 
@@ -294,13 +292,13 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD switch_tag.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online,
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
           ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
           lv_text TYPE string.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_tag = lcl_popups=>tag_list_popup( lo_repo->get_url( ) ).
+    ls_tag = zcl_abapgit_popups=>tag_list_popup( lo_repo->get_url( ) ).
     IF ls_tag IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -315,11 +313,11 @@ CLASS lcl_services_git IMPLEMENTATION.
 
   METHOD tag_overview.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    lcl_popups=>tag_list_popup( iv_url         = lo_repo->get_url( )
+    zcl_abapgit_popups=>tag_list_popup( iv_url         = lo_repo->get_url( )
                                 iv_select_mode = abap_false ).
 
   ENDMETHOD.

@@ -10,10 +10,10 @@ CLASS lcl_gui_page_syntax DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
       constructor
-        IMPORTING io_repo TYPE REF TO lcl_repo.
+        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
 
   PROTECTED SECTION.
-    DATA: mo_repo TYPE REF TO lcl_repo.
+    DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS:
       render_content REDEFINITION.

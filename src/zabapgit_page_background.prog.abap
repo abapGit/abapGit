@@ -128,7 +128,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
 
   METHOD render_data.
 
-    DATA: lo_repo    TYPE REF TO lcl_repo_online,
+    DATA: lo_repo    TYPE REF TO zcl_abapgit_repo_online,
           lo_per     TYPE REF TO zcl_abapgit_persist_background,
           lt_per     TYPE zcl_abapgit_persist_background=>tt_background,
           ls_per     LIKE LINE OF lt_per,
@@ -146,7 +146,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
     CREATE OBJECT lo_per.
     lt_per = lo_per->list( ).
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( mv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_key ).
 
     READ TABLE lt_per INTO ls_per WITH KEY key = lo_repo->get_key( ).
     IF sy-subrc <> 0.

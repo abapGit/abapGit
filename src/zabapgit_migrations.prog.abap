@@ -33,7 +33,7 @@ CLASS lcl_migrations IMPLEMENTATION.
 
   METHOD local_dot_abapgit.
 
-    DATA: lt_repos       TYPE lcl_repo_srv=>ty_repo_tt,
+    DATA: lt_repos       TYPE zcl_abapgit_repo_srv=>ty_repo_tt,
           lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
@@ -42,7 +42,7 @@ CLASS lcl_migrations IMPLEMENTATION.
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
 
 
-    lt_repos = lcl_repo_srv=>get_instance( )->list( ).
+    lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repos ASSIGNING <lo_repo>.
       lo_dot_abapgit = <lo_repo>->get_dot_abapgit( ).
@@ -90,16 +90,16 @@ CLASS lcl_migrations IMPLEMENTATION.
 
   METHOD rebuild_local_checksums_161112.
 
-    DATA: lt_repos     TYPE lcl_repo_srv=>ty_repo_tt,
+    DATA: lt_repos     TYPE zcl_abapgit_repo_srv=>ty_repo_tt,
           lv_repo_list TYPE string,
           lv_question  TYPE string,
           lv_answer    TYPE c,
           lv_index     TYPE i,
-          lo_repo      TYPE REF TO lcl_repo_online.
+          lo_repo      TYPE REF TO zcl_abapgit_repo_online.
 
     FIELD-SYMBOLS: <repo> LIKE LINE OF lt_repos.
 
-    lt_repos = lcl_repo_srv=>get_instance( )->list( ).
+    lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
     LOOP AT lt_repos ASSIGNING <repo>.
       lv_index = sy-tabix.
@@ -134,7 +134,7 @@ CLASS lcl_migrations IMPLEMENTATION.
                && ' by "Advances/Update local checksums" command.'
                && | Repos affected: { lv_repo_list }|.
 
-    lv_answer = lcl_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = lv_question
       text_button_1         = 'OK'

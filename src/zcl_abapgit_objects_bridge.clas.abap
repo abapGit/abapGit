@@ -1,0 +1,192 @@
+CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITING FROM zcl_abapgit_objects_super.
+
+  PUBLIC SECTION.
+
+    CLASS-METHODS class_constructor.
+
+    METHODS constructor
+      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
+      RAISING   cx_sy_create_object_error.
+
+    INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
+  PRIVATE SECTION.
+    DATA: mo_plugin TYPE REF TO object.
+
+    TYPES: BEGIN OF ty_s_objtype_map,
+             obj_typ      TYPE trobjtype,
+             plugin_class TYPE seoclsname,
+           END OF ty_s_objtype_map,
+           ty_t_objtype_map TYPE SORTED TABLE OF ty_s_objtype_map WITH UNIQUE KEY obj_typ.
+
+    CLASS-DATA gt_objtype_map TYPE ty_t_objtype_map.
+
+ENDCLASS.
+
+
+
+CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
+
+
+  METHOD class_constructor.
+
+    DATA lt_plugin_class    TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY.
+    DATA lv_plugin_class    LIKE LINE OF lt_plugin_class.
+    DATA lo_plugin          TYPE REF TO object.
+    DATA lt_plugin_obj_type TYPE objtyptable.
+    DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
+
+
+    SELECT ext~clsname
+      FROM vseoextend AS ext
+      INTO TABLE lt_plugin_class
+      WHERE ext~refclsname LIKE 'ZCL_ABAPGITP_OBJECT%'
+      AND ext~version = '1'.                              "#EC CI_SUBRC
+
+    CLEAR gt_objtype_map.
+    LOOP AT lt_plugin_class INTO lv_plugin_class
+        WHERE table_line <> 'ZCL_ABAPGITP_OBJECT_BY_SOBJ'.
+* have the generic plugin only as fallback
+      TRY.
+          CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
+        CATCH cx_sy_create_object_error.
+          CONTINUE. ">>>>>>>>>>>>>>
+      ENDTRY.
+
+      CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
+        IMPORTING
+          rt_obj_type = lt_plugin_obj_type.
+
+      ls_objtype_map-plugin_class = lv_plugin_class.
+      LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
+        INSERT ls_objtype_map INTO TABLE gt_objtype_map.
+        IF sy-subrc <> 0.
+* No exception in class-contructor possible.
+* Anyway, a shortdump is more appropriate in this case
+          ASSERT 'There must not be' =
+            |multiple abapGit-Plugins for the same object type {
+            ls_objtype_map-obj_typ }|.
+        ENDIF.
+      ENDLOOP.
+    ENDLOOP. "at plugins
+
+* and the same for the generic plugin if exists
+* have the generic plugin only as fallback
+    LOOP AT lt_plugin_class INTO lv_plugin_class
+        WHERE table_line = 'ZCL_ABAPGITP_OBJECT_BY_SOBJ'.
+      CREATE OBJECT lo_plugin TYPE (lv_plugin_class).
+
+      CALL METHOD lo_plugin->('GET_SUPPORTED_OBJ_TYPES')
+        RECEIVING
+          rt_obj_type = lt_plugin_obj_type.
+
+      ls_objtype_map-plugin_class = lv_plugin_class.
+      LOOP AT lt_plugin_obj_type INTO ls_objtype_map-obj_typ.
+        INSERT ls_objtype_map INTO TABLE gt_objtype_map. "knowingly ignore the subrc
+      ENDLOOP.
+    ENDLOOP. "at plugins
+
+  ENDMETHOD.                    "class_constructor
+
+
+  METHOD constructor.
+
+    DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
+
+    super->constructor( is_item = is_item
+                        iv_language = zif_abapgit_definitions=>gc_english ).
+
+*    determine the responsible plugin
+    READ TABLE gt_objtype_map INTO ls_objtype_map
+      WITH TABLE KEY obj_typ = is_item-obj_type.
+    IF sy-subrc = 0.
+      CREATE OBJECT mo_plugin TYPE (ls_objtype_map-plugin_class).
+
+      CALL METHOD mo_plugin->('SET_ITEM')
+        EXPORTING
+          iv_obj_type = is_item-obj_type
+          iv_obj_name = is_item-obj_name.
+    ELSE.
+      RAISE EXCEPTION TYPE cx_sy_create_object_error
+        EXPORTING
+          classname = 'LCL_OBJECTS_BRIDGE'.
+    ENDIF.
+  ENDMETHOD.                    "constructor
+
+
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+    DATA lx_plugin TYPE REF TO cx_static_check.
+
+    TRY.
+        CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~DELETE').
+      CATCH cx_static_check INTO lx_plugin.
+        zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
+    ENDTRY.
+
+  ENDMETHOD.                    "lif_object~delete
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lx_plugin        TYPE REF TO cx_static_check.
+
+    TRY.
+        CALL METHOD mo_plugin->('WRAP_DESERIALIZE')
+          EXPORTING
+            iv_package = iv_package
+            io_xml     = io_xml.
+      CATCH cx_static_check INTO lx_plugin.
+        zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
+    ENDTRY.
+  ENDMETHOD.                    "lif_object~deserialize
+
+
+  METHOD zif_abapgit_object~exists.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~EXISTS')
+      RECEIVING
+        rv_bool = rv_bool.
+
+  ENDMETHOD.                    "lif_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~GET_METADATA')
+      RECEIVING
+        rs_metadata = rs_metadata.
+
+  ENDMETHOD.                    "lif_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "lif_object~has_changed_since
+
+
+  METHOD zif_abapgit_object~jump.
+
+    CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
+
+  ENDMETHOD.                    "lif_object~jump
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    CALL METHOD mo_plugin->('WRAP_SERIALIZE')
+      EXPORTING
+        io_xml = io_xml.
+
+  ENDMETHOD.                    "lif_object~serialize
+ENDCLASS.

@@ -115,7 +115,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           EXPORTING iv_string   = iv_getdata
           IMPORTING ev_obj_type = ls_item-obj_type
                     ev_obj_name = ls_item-obj_name ).
-        lcl_objects=>jump( ls_item ).
+        zcl_abapgit_objects=>jump( ls_item ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-jump_pkg.                      " Open SE80
         lcl_services_repo=>open_se80( |{ iv_getdata }| ).
@@ -166,7 +166,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE lcl_gui_page_syntax
           EXPORTING
-            io_repo = lcl_repo_srv=>get_instance( )->get( lv_key ).
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-repo_purge.                      " Repo remove & purge all objects
         lcl_services_repo=>purge( lv_key ).
@@ -189,7 +189,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-repo_settings.
         CREATE OBJECT ei_page TYPE lcl_gui_page_repo_sett
           EXPORTING
-            io_repo = lcl_repo_srv=>get_instance( )->get( lv_key ).
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         " ZIP services actions
@@ -197,7 +197,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         lcl_zip=>import( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-zip_export.                      " Export repo as ZIP
-        lcl_zip=>export( lcl_repo_srv=>get_instance( )->get( lv_key ) ).
+        lcl_zip=>export( zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ) ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-zip_package.                     " Export package as ZIP
         lcl_zip=>export_package( ).
@@ -298,14 +298,14 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_branch_overview.
 
-    DATA: lo_repo TYPE REF TO lcl_repo_online,
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
           lo_page TYPE REF TO lcl_gui_page_boverview,
           lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
     lv_key = iv_getdata.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( lv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -344,7 +344,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo       TYPE REF TO lcl_repo_online,
+    DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
           lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           lv_seed       TYPE string,
           lo_stage_page TYPE REF TO lcl_gui_page_stage.
@@ -359,7 +359,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
                   ev_seed    = lv_seed ).
     ENDIF.
 
-    lo_repo ?= lcl_repo_srv=>get_instance( )->get( lv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
     " force refresh on stage, to make sure the latest local and remote files are used
     lo_repo->refresh( ).
@@ -385,7 +385,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lv_class_name TYPE string,
           lv_cancel     TYPE abap_bool.
 
-    lcl_popups=>run_page_class_popup( IMPORTING ev_name   = lv_class_name
+    zcl_abapgit_popups=>run_page_class_popup( IMPORTING ev_name   = lv_class_name
                                                 ev_cancel = lv_cancel ).
     IF lv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
