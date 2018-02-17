@@ -35,12 +35,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
-    METHODS get_page_db_by_name
-      IMPORTING iv_name        TYPE clike
-                iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
-      RAISING   zcx_abapgit_exception.
-
     METHODS get_page_background
       IMPORTING iv_key         TYPE zcl_abapgit_persistence_repo=>ty_repo-key
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
@@ -126,15 +120,17 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " DB actions
       WHEN zif_abapgit_definitions=>gc_action-db_edit.
-        ei_page = get_page_db_by_name( iv_name    = iv_action
-                                       iv_getdata = iv_getdata ).
+        CREATE OBJECT ei_page TYPE lcl_gui_page_db_edit
+          EXPORTING
+            is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DIS'.
           ev_state = zif_abapgit_definitions=>gc_event_state-new_page_replacing.
         ENDIF.
       WHEN zif_abapgit_definitions=>gc_action-db_display.
-        ei_page = get_page_db_by_name( iv_name    = 'DB_DIS'
-                                       iv_getdata = iv_getdata ).
+        CREATE OBJECT ei_page TYPE lcl_gui_page_db_dis
+          EXPORTING
+            is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-db_delete.                       " DB Delete
         ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
@@ -260,27 +256,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.        " on_event
-
-  METHOD get_page_db_by_name.
-
-    DATA: lv_page_class TYPE string,
-          lv_message    TYPE string,
-          ls_key        TYPE zif_abapgit_persistence=>ty_content.
-
-    lv_page_class = |LCL_GUI_PAGE_{ to_upper( iv_name ) }|.
-    ls_key        = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
-
-    TRY.
-        CREATE OBJECT ri_page TYPE (lv_page_class)
-          EXPORTING
-            is_key = ls_key.
-
-      CATCH cx_sy_create_object_error.
-        lv_message = |Cannot create page class { lv_page_class }|.
-        zcx_abapgit_exception=>raise( lv_message ).
-    ENDTRY.
-
-  ENDMETHOD.        " get_page_db_by_name
 
   METHOD get_page_branch_overview.
 
