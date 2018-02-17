@@ -18,8 +18,6 @@ Collection of links to various git related documentation,
 
 [https://github.com/git/git/tree/master/Documentation/technical](https://github.com/git/git/tree/master/Documentation/technical)
 
-[http://schacon.github.io/gitbook/7_the_packfile.html](http://schacon.github.io/gitbook/7_the_packfile.html)
-
 [http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html](http://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html)
 
 [https://git-scm.herokuapp.com/book/en/Git-Internals-Transfer-Protocols](https://git-scm.herokuapp.com/book/en/Git-Internals-Transfer-Protocols)
