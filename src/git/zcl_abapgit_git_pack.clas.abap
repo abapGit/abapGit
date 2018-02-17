@@ -758,65 +758,71 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD type_and_length.
 
-    DATA: lv_bits   TYPE string,
-          lv_type   TYPE string,
-          lv_result TYPE string,
-          lv_c      TYPE c,
-          lv_offset TYPE i,
-          lv_x4     TYPE x LENGTH 4,
-          lv_x      TYPE x LENGTH 1.
+* see http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/#pack_file_objects
+
+    DATA: lv_result TYPE i,
+          lv_type   TYPE i,
+          lv_length TYPE i,
+          lv_hex    TYPE x LENGTH 1.
 
 
     CASE iv_type.
       WHEN zif_abapgit_definitions=>gc_type-commit.
-        lv_type = '001'.
+        lv_type = 16.
       WHEN zif_abapgit_definitions=>gc_type-tree.
-        lv_type = '010'.
+        lv_type = 32.
       WHEN zif_abapgit_definitions=>gc_type-blob.
-        lv_type = '011'.
+        lv_type = 48.
       WHEN zif_abapgit_definitions=>gc_type-ref_d.
-        lv_type = '111'.
+        lv_type = 112.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Unexpected object type while encoding pack' ).
     ENDCASE.
 
-    lv_x4 = iv_length.
-    DO 32 TIMES.
-      GET BIT sy-index OF lv_x4 INTO lv_c.
-      CONCATENATE lv_bits lv_c INTO lv_bits.
-    ENDDO.
+    lv_length = iv_length.
 
-    IF lv_bits(28) = '0000000000000000000000000000'.
-      CONCATENATE '0' lv_type lv_bits+28(4) INTO lv_result.
-    ELSEIF lv_bits(21) = '000000000000000000000'.
-      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
-      CONCATENATE lv_result '0' lv_bits+21(7) INTO lv_result.
-    ELSEIF lv_bits(14) = '00000000000000'.
-      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
-      CONCATENATE lv_result '1' lv_bits+21(7) INTO lv_result.
-      CONCATENATE lv_result '0' lv_bits+14(7) INTO lv_result.
-    ELSEIF lv_bits(7) = '0000000'.
-      CONCATENATE '1' lv_type lv_bits+28(4) INTO lv_result.
-      CONCATENATE lv_result '1' lv_bits+21(7) INTO lv_result.
-      CONCATENATE lv_result '1' lv_bits+14(7) INTO lv_result.
-      CONCATENATE lv_result '0' lv_bits+7(7) INTO lv_result.
+    IF lv_length <= 15.
+      lv_hex = 0 + lv_type + lv_length MOD 16.
+      rv_xstring = lv_hex.
+      lv_length = lv_length DIV 16.
+
+    ELSEIF lv_length <= 2047.
+      lv_hex = 128 + lv_type + lv_length MOD 16.
+      rv_xstring = lv_hex.
+      lv_length = lv_length DIV 16.
+
+      lv_hex = lv_length.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
+    ELSEIF lv_length <= 262143.
+      lv_hex = 128 + lv_type + lv_length MOD 16.
+      rv_xstring = lv_hex.
+      lv_length = lv_length DIV 16.
+
+      lv_hex = 128 + lv_length MOD 128.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
+      lv_length = lv_length DIV 128.
+
+      lv_hex = lv_length.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
+    ELSEIF lv_length <= 33554431.
+      lv_hex = 128 + lv_type + lv_length MOD 16.
+      rv_xstring = lv_hex.
+      lv_length = lv_length DIV 16.
+
+      lv_hex = 128 + lv_length MOD 128.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
+      lv_length = lv_length DIV 128.
+
+      lv_hex = 128 + lv_length MOD 128.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
+      lv_length = lv_length DIV 128.
+
+      lv_hex = lv_length.
+      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
     ELSE.
 * this IF can be refactored, use shifting?
       zcx_abapgit_exception=>raise( 'Todo, encoding length' ).
     ENDIF.
-
-* convert bit string to xstring
-    CLEAR lv_x.
-    DO strlen( lv_result ) TIMES.
-      lv_offset = sy-index - 1.
-      IF lv_result+lv_offset(1) = '1'.
-        SET BIT ( lv_offset MOD 8 ) + 1 OF lv_x.
-      ENDIF.
-      IF ( lv_offset + 1 ) MOD 8 = 0.
-        CONCATENATE rv_xstring lv_x INTO rv_xstring IN BYTE MODE.
-        CLEAR lv_x.
-      ENDIF.
-    ENDDO.
 
   ENDMETHOD.                    "type_and_length
 
