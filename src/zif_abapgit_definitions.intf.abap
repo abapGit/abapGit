@@ -244,6 +244,19 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            conflict TYPE string,
          END OF ty_merge.
 
+  TYPES: BEGIN OF ty_repo_item,
+           obj_type TYPE tadir-object,
+           obj_name TYPE tadir-obj_name,
+           sortkey  TYPE i,
+           path     TYPE string,
+           is_dir   TYPE abap_bool,
+           changes  TYPE i,
+           lstate   TYPE char1,
+           rstate   TYPE char1,
+           files    TYPE tt_repo_files,
+         END OF ty_repo_item.
+  TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
+
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
   CONSTANTS gc_abap_version TYPE string VALUE 'v1.58.0' ##NO_TEXT.
   CONSTANTS:

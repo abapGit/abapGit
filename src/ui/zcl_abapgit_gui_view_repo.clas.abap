@@ -49,20 +49,20 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       render_item
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_item_files
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_item_command
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       get_item_class
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       get_item_icon
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
@@ -72,12 +72,11 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
 
     METHODS:
       build_obj_jump_link
-        IMPORTING is_item        TYPE zcl_abapgit_repo_content_list=>ty_repo_item
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       build_dir_jump_link
         IMPORTING iv_path        TYPE string
         RETURNING VALUE(rv_html) TYPE string.
-
 ENDCLASS.
 
 
@@ -519,7 +518,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~render.
 
-    DATA: lt_repo_items TYPE zcl_abapgit_repo_content_list=>tt_repo_items,
+    DATA: lt_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
           lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
           lx_error      TYPE REF TO zcx_abapgit_exception,
           lv_lstate     TYPE char1,
