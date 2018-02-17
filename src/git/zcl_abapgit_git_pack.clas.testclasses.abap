@@ -1,42 +1,18 @@
-CLASS ltcl_pack DEFINITION DEFERRED.
-CLASS zcl_abapgit_git_pack DEFINITION LOCAL FRIENDS ltcl_pack.
+CLASS ltcl_type_and_length DEFINITION DEFERRED.
+CLASS zcl_abapgit_git_pack DEFINITION LOCAL FRIENDS ltcl_type_and_length.
 
-CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+CLASS ltcl_type_and_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-
-    CONSTANTS: c_sha TYPE zif_abapgit_definitions=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
-
     METHODS:
-      tree FOR TESTING
-        RAISING zcx_abapgit_exception,
-      commit FOR TESTING
-        RAISING zcx_abapgit_exception,
-      commit_newline FOR TESTING
-        RAISING zcx_abapgit_exception,
-      pack_short FOR TESTING
-        RAISING zcx_abapgit_exception,
-      pack_long FOR TESTING
-        RAISING zcx_abapgit_exception,
-      pack_multiple FOR TESTING
-        RAISING zcx_abapgit_exception,
-      sort_tree1 FOR TESTING,
-      sort_tree2 FOR TESTING,
-      type_and_length01 FOR TESTING
-        RAISING zcx_abapgit_exception,
-      type_and_length02 FOR TESTING
-        RAISING zcx_abapgit_exception.
+      type_and_length01 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length02 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length03 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length04 FOR TESTING RAISING zcx_abapgit_exception.
 
-    METHODS:
-      object_blob
-        IMPORTING iv_data          TYPE xstring
-        RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
-        RAISING   zcx_abapgit_exception.
+ENDCLASS.
 
-ENDCLASS.       "ltcl_Pack
-
-
-CLASS ltcl_pack IMPLEMENTATION.
+CLASS ltcl_type_and_length IMPLEMENTATION.
 
   METHOD type_and_length01.
 
@@ -65,6 +41,73 @@ CLASS ltcl_pack IMPLEMENTATION.
       exp = 'B0F92B' ).
 
   ENDMETHOD.
+
+  METHOD type_and_length03.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_definitions=>gc_type-commit
+      iv_length = 10 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '1A' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length04.
+
+    DATA: lv_result TYPE xstring.
+
+    lv_result = zcl_abapgit_git_pack=>type_and_length(
+      iv_type   = zif_abapgit_definitions=>gc_type-commit
+      iv_length = 1000000 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '90A4E803' ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+CLASS ltcl_pack DEFINITION DEFERRED.
+CLASS zcl_abapgit_git_pack DEFINITION LOCAL FRIENDS ltcl_pack.
+
+CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
+    CONSTANTS: c_sha TYPE zif_abapgit_definitions=>ty_sha1 VALUE '5f46cb3c4b7f0b3600b64f744cde614a283a88dc'.
+
+    METHODS:
+      tree FOR TESTING
+        RAISING zcx_abapgit_exception,
+      commit FOR TESTING
+        RAISING zcx_abapgit_exception,
+      commit_newline FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_short FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_long FOR TESTING
+        RAISING zcx_abapgit_exception,
+      pack_multiple FOR TESTING
+        RAISING zcx_abapgit_exception,
+      sort_tree1 FOR TESTING,
+      sort_tree2 FOR TESTING.
+
+    METHODS:
+      object_blob
+        IMPORTING iv_data          TYPE xstring
+        RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
+        RAISING   zcx_abapgit_exception.
+
+ENDCLASS.       "ltcl_Pack
+
+
+CLASS ltcl_pack IMPLEMENTATION.
 
   METHOD sort_tree1.
 
