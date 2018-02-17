@@ -31,6 +31,26 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
   TYPES: ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY.
 
+  TYPES ty_git_branch_type TYPE char2 .
+  TYPES:
+    BEGIN OF ty_git_branch,
+      sha1         TYPE zif_abapgit_definitions=>ty_sha1,
+      name         TYPE string,
+      type         TYPE ty_git_branch_type,
+      is_head      TYPE abap_bool,
+      display_name TYPE string,
+    END OF ty_git_branch .
+  TYPES:
+    ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
+
+  CONSTANTS:
+    BEGIN OF c_git_branch_type,
+      branch TYPE ty_git_branch_type VALUE 'HD',
+      tag    TYPE ty_git_branch_type VALUE 'TG',
+      other  TYPE ty_git_branch_type VALUE 'ZZ',
+    END OF c_git_branch_type .
+  CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
+
   TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
@@ -193,6 +213,36 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            delete TYPE i,
            update TYPE i,
          END OF ty_count.
+
+  TYPES:
+    BEGIN OF ty_expanded,
+      path  TYPE string,
+      name  TYPE string,
+      sha1  TYPE ty_sha1,
+      chmod TYPE ty_chmod,
+    END OF ty_expanded .
+  TYPES:
+    ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
+
+  TYPES: BEGIN OF ty_ancestor,
+           commit TYPE ty_sha1,
+           tree   TYPE ty_sha1,
+           time   TYPE string,
+           body   TYPE string,
+         END OF ty_ancestor.
+
+  TYPES: BEGIN OF ty_merge,
+           repo     TYPE REF TO zcl_abapgit_repo_online,
+           source   TYPE ty_git_branch,
+           target   TYPE ty_git_branch,
+           common   TYPE ty_ancestor,
+           stree    TYPE ty_expanded_tt,
+           ttree    TYPE ty_expanded_tt,
+           ctree    TYPE ty_expanded_tt,
+           result   TYPE ty_expanded_tt,
+           stage    TYPE REF TO zcl_abapgit_stage,
+           conflict TYPE string,
+         END OF ty_merge.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
   CONSTANTS gc_abap_version TYPE string VALUE 'v1.58.0' ##NO_TEXT.

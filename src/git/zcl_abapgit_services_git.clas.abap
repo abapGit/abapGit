@@ -184,7 +184,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -212,7 +212,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD delete_tag.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+          ls_tag  TYPE zif_abapgit_definitions=>ty_git_branch,
           lv_text TYPE string.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -309,7 +309,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD switch_branch.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          ls_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch.
+          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -339,7 +339,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD switch_tag.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          ls_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+          ls_tag  TYPE zif_abapgit_definitions=>ty_git_branch,
           lv_text TYPE string.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).

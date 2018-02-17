@@ -12,8 +12,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: get_branches
-      RETURNING VALUE(rt_branches) TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
-
+      RETURNING VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
   PRIVATE SECTION.
 
     CLASS-METHODS:
@@ -34,10 +33,9 @@ CLASS zcl_abapgit_branch_overview DEFINITION PUBLIC FINAL CREATE PUBLIC.
         RAISING zcx_abapgit_exception.
 
     CLASS-DATA:
-      gt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
+      gt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
       gt_commits  TYPE TABLE OF zif_abapgit_definitions=>ty_commit,
-      gt_tags     TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
-
+      gt_tags     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
 ENDCLASS.
 
 
@@ -192,7 +190,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
     DATA: lv_tag TYPE LINE OF zif_abapgit_definitions=>ty_commit-tags.
 
-    FIELD-SYMBOLS: <ls_tag>    TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
+    FIELD-SYMBOLS: <ls_tag>    TYPE zif_abapgit_definitions=>ty_git_branch,
                    <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     LOOP AT gt_tags ASSIGNING <ls_tag>.

@@ -1,43 +1,22 @@
 CLASS zcl_abapgit_merge DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_ancestor,
-             commit TYPE zif_abapgit_definitions=>ty_sha1,
-             tree   TYPE zif_abapgit_definitions=>ty_sha1,
-             time   TYPE string,
-             body   TYPE string,
-           END OF ty_ancestor.
-
-    TYPES: BEGIN OF ty_merge,
-             repo     TYPE REF TO zcl_abapgit_repo_online,
-             source   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
-             target   TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
-             common   TYPE ty_ancestor,
-             stree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
-             ttree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
-             ctree    TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
-             result   TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
-             stage    TYPE REF TO zcl_abapgit_stage,
-             conflict TYPE string,
-           END OF ty_merge.
-
     CLASS-METHODS:
       run
         IMPORTING io_repo         TYPE REF TO zcl_abapgit_repo_online
                   iv_source       TYPE string
                   iv_target       TYPE string
-        RETURNING VALUE(rs_merge) TYPE ty_merge
+        RETURNING VALUE(rs_merge) TYPE zif_abapgit_definitions=>ty_merge
         RAISING   zcx_abapgit_exception.
-
   PRIVATE SECTION.
-    CLASS-DATA: gs_merge   TYPE ty_merge,
+    CLASS-DATA: gs_merge   TYPE zif_abapgit_definitions=>ty_merge,
                 gt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
-    TYPES: ty_ancestor_tt TYPE STANDARD TABLE OF ty_ancestor WITH DEFAULT KEY.
+    TYPES: ty_ancestor_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_ancestor WITH DEFAULT KEY.
 
     CLASS-METHODS:
       all_files
-        RETURNING VALUE(rt_files) TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
+        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_expanded_tt,
       calculate_result
         RAISING zcx_abapgit_exception,
       find_ancestors
@@ -47,13 +26,12 @@ CLASS zcl_abapgit_merge DEFINITION PUBLIC FINAL CREATE PUBLIC.
       find_first_common
         IMPORTING it_list1         TYPE ty_ancestor_tt
                   it_list2         TYPE ty_ancestor_tt
-        RETURNING VALUE(rs_common) TYPE ty_ancestor
+        RETURNING VALUE(rs_common) TYPE zif_abapgit_definitions=>ty_ancestor
         RAISING   zcx_abapgit_exception,
       fetch_git
         IMPORTING iv_source TYPE string
                   iv_target TYPE string
         RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -85,7 +63,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
                            iv_data     = <ls_object>-data ).
     END-OF-DEFINITION.
 
-    DATA: lt_files        TYPE zcl_abapgit_git_porcelain=>ty_expanded_tt,
+    DATA: lt_files        TYPE zif_abapgit_definitions=>ty_expanded_tt,
           lv_found_source TYPE abap_bool,
           lv_found_target TYPE abap_bool,
           lv_found_common TYPE abap_bool.
@@ -194,7 +172,8 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   METHOD fetch_git.
 
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
-          lt_upload      TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
+          lt_upload      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
+
 
     lo_branch_list  = zcl_abapgit_git_transport=>branches( gs_merge-repo->get_url( ) ).
     gs_merge-source = lo_branch_list->find_by_name(

@@ -227,7 +227,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
   METHOD form_select.
 
     DATA: lv_name     TYPE string,
-          lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
+          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 

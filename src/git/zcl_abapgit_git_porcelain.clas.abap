@@ -4,17 +4,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
-    TYPES:
-      BEGIN OF ty_expanded,
-        path  TYPE string,
-        name  TYPE string,
-        sha1  TYPE zif_abapgit_definitions=>ty_sha1,
-        chmod TYPE zif_abapgit_definitions=>ty_chmod,
-      END OF ty_expanded .
-    TYPES:
-      ty_expanded_tt TYPE STANDARD TABLE OF ty_expanded WITH DEFAULT KEY .
-
     CLASS-METHODS pull
       IMPORTING
         !io_repo    TYPE REF TO zcl_abapgit_repo_online
@@ -51,13 +40,13 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CLASS-METHODS delete_branch
       IMPORTING
         !io_repo   TYPE REF TO zcl_abapgit_repo_online
-        !is_branch TYPE zcl_abapgit_git_branch_list=>ty_git_branch
+        !is_branch TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_tag
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo_online
-        !is_tag  TYPE zcl_abapgit_git_branch_list=>ty_git_branch
+        !is_tag  TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS full_tree
@@ -65,7 +54,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !it_objects        TYPE zif_abapgit_definitions=>ty_objects_tt
         !iv_branch         TYPE zif_abapgit_definitions=>ty_sha1
       RETURNING
-        VALUE(rt_expanded) TYPE ty_expanded_tt
+        VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -89,12 +78,12 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CONSTANTS: c_zero TYPE zif_abapgit_definitions=>ty_sha1 VALUE '0000000000000000000000000000000000000000'.
 
     CLASS-METHODS build_trees
-      IMPORTING it_expanded     TYPE ty_expanded_tt
+      IMPORTING it_expanded     TYPE zif_abapgit_definitions=>ty_expanded_tt
       RETURNING VALUE(rt_trees) TYPE ty_trees_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS find_folders
-      IMPORTING it_expanded       TYPE ty_expanded_tt
+      IMPORTING it_expanded       TYPE zif_abapgit_definitions=>ty_expanded_tt
       RETURNING VALUE(rt_folders) TYPE ty_folders_tt.
 
     CLASS-METHODS walk
@@ -108,7 +97,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       IMPORTING it_objects         TYPE zif_abapgit_definitions=>ty_objects_tt
                 iv_tree            TYPE zif_abapgit_definitions=>ty_sha1
                 iv_base            TYPE string
-      RETURNING VALUE(rt_expanded) TYPE ty_expanded_tt
+      RETURNING VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS receive_pack
@@ -119,7 +108,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
                 io_stage         TYPE REF TO zcl_abapgit_stage
       RETURNING VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -364,12 +352,12 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
   METHOD push.
 
-    DATA: lt_expanded TYPE ty_expanded_tt,
+    DATA: lt_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt,
           lt_blobs    TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
           lt_trees    TYPE ty_trees_tt,
           lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
+          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,

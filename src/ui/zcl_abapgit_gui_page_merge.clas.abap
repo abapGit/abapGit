@@ -17,7 +17,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
-          ms_merge TYPE zcl_abapgit_merge=>ty_merge.
+          ms_merge TYPE zif_abapgit_definitions=>ty_merge.
 
     CONSTANTS: BEGIN OF c_actions,
                  merge TYPE string VALUE 'merge' ##NO_TEXT,
@@ -26,7 +26,6 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
     METHODS:
       build_menu
         RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
-
 ENDCLASS.
 
 
