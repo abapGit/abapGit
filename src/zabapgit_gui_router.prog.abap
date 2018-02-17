@@ -70,7 +70,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     CASE iv_action.
         " General PAGE routing
       WHEN zif_abapgit_definitions=>gc_action-go_main.                          " Go Main page
-        CREATE OBJECT ei_page TYPE lcl_gui_page_main.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
