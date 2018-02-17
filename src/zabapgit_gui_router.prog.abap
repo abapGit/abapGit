@@ -164,7 +164,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_syntax
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_syntax
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
