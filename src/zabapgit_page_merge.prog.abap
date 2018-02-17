@@ -55,7 +55,7 @@ CLASS lcl_gui_page_merge IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'nothing to merge' ).
         ENDIF.
 
-        CREATE OBJECT ei_page TYPE lcl_gui_page_commit
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
             io_stage = ms_merge-stage.

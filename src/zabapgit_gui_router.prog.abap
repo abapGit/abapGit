@@ -347,7 +347,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
           lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
           lv_seed       TYPE string,
-          lo_stage_page TYPE REF TO lcl_gui_page_stage.
+          lo_stage_page TYPE REF TO zcl_abapgit_gui_page_stage.
 
     FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
     IF sy-subrc <> 0. " Not found ? -> just repo key in params
