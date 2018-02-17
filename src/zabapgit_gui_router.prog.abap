@@ -85,7 +85,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         CREATE OBJECT ei_page TYPE lcl_gui_page_settings.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_background_run.              " Go background run page
-        CREATE OBJECT ei_page TYPE lcl_gui_page_bkg_run.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_bkg_run.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_background.                   " Go Background page
         ei_page  = get_page_background( lv_key ).
@@ -361,7 +361,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   METHOD get_page_background.
 
-    CREATE OBJECT ri_page TYPE lcl_gui_page_bkg
+    CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_bkg
       EXPORTING
         iv_key = iv_key.
 
