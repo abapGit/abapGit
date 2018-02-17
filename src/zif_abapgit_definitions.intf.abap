@@ -146,6 +146,28 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       commit_text TYPE string,
     END OF ty_transport_to_branch .
 
+  TYPES: BEGIN OF ty_create,
+           name   TYPE string,
+           parent TYPE string,
+         END OF ty_create.
+
+  TYPES: BEGIN OF ty_commit,
+           sha1       TYPE ty_sha1,
+           parent1    TYPE ty_sha1,
+           parent2    TYPE ty_sha1,
+           author     TYPE string,
+           email      TYPE string,
+           time       TYPE string,
+           message    TYPE string,
+           branch     TYPE string,
+           merge      TYPE string,
+           tags       TYPE stringtab,
+           create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
+           compressed TYPE abap_bool,
+         END OF ty_commit.
+
+  TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
+
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
   CONSTANTS gc_abap_version TYPE string VALUE 'v1.58.0' ##NO_TEXT.
   CONSTANTS:

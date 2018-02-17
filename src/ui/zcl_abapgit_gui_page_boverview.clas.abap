@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
   PRIVATE SECTION.
     DATA: mo_repo     TYPE REF TO zcl_abapgit_repo_online,
           mv_compress TYPE abap_bool VALUE abap_false,
-          mt_commits  TYPE zcl_abapgit_branch_overview=>ty_commit_tt.
+          mt_commits  TYPE zif_abapgit_definitions=>ty_commit_tt.
 
     CONSTANTS: BEGIN OF c_actions,
                  uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
@@ -54,7 +54,6 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
       escape_message
         IMPORTING iv_string        TYPE string
         RETURNING VALUE(rv_string) TYPE string.
-
 ENDCLASS.
 
 

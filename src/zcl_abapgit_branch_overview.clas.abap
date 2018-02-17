@@ -1,36 +1,14 @@
 CLASS zcl_abapgit_branch_overview DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_create,
-             name   TYPE string,
-             parent TYPE string,
-           END OF ty_create.
-
-    TYPES: BEGIN OF ty_commit,
-             sha1       TYPE zif_abapgit_definitions=>ty_sha1,
-             parent1    TYPE zif_abapgit_definitions=>ty_sha1,
-             parent2    TYPE zif_abapgit_definitions=>ty_sha1,
-             author     TYPE string,
-             email      TYPE string,
-             time       TYPE string,
-             message    TYPE string,
-             branch     TYPE string,
-             merge      TYPE string,
-             tags       TYPE stringtab,
-             create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
-             compressed TYPE abap_bool,
-           END OF ty_commit.
-
-    TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
-
     CLASS-METHODS: run
       IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo_online
-      RETURNING VALUE(rt_commits) TYPE ty_commit_tt
+      RETURNING VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: compress
-      IMPORTING it_commits        TYPE ty_commit_tt
-      RETURNING VALUE(rt_commits) TYPE ty_commit_tt
+      IMPORTING it_commits        TYPE zif_abapgit_definitions=>ty_commit_tt
+      RETURNING VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS: get_branches
@@ -57,7 +35,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     CLASS-DATA:
       gt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
-      gt_commits  TYPE TABLE OF ty_commit,
+      gt_commits  TYPE TABLE OF zif_abapgit_definitions=>ty_commit,
       gt_tags     TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt.
 
 ENDCLASS.
@@ -212,10 +190,10 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
   METHOD determine_tags.
 
-    DATA: lv_tag TYPE LINE OF ty_commit-tags.
+    DATA: lv_tag TYPE LINE OF zif_abapgit_definitions=>ty_commit-tags.
 
     FIELD-SYMBOLS: <ls_tag>    TYPE zcl_abapgit_git_branch_list=>ty_git_branch,
-                   <ls_commit> TYPE ty_commit.
+                   <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     LOOP AT gt_tags ASSIGNING <ls_tag>.
 
