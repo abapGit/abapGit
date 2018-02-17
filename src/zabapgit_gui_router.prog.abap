@@ -19,11 +19,6 @@ CLASS lcl_gui_router DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    METHODS get_page_by_name
-      IMPORTING iv_name        TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
-      RAISING   zcx_abapgit_exception.
-
     METHODS get_page_diff
       IMPORTING iv_getdata     TYPE clike
                 iv_prev_page   TYPE clike
@@ -74,12 +69,20 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     CASE iv_action.
         " General PAGE routing
-      WHEN zif_abapgit_definitions=>gc_action-go_main                          " Go Main page
-          OR zif_abapgit_definitions=>gc_action-go_explore                     " Go Explore page
-          OR zif_abapgit_definitions=>gc_action-go_db                          " Go DB util page
-          OR zif_abapgit_definitions=>gc_action-go_debuginfo                   " Go debug info page
-          OR zif_abapgit_definitions=>gc_action-go_settings.                   " Go settings page
-        ei_page  = get_page_by_name( iv_action ).
+      WHEN zif_abapgit_definitions=>gc_action-go_main.                          " Go Main page
+        CREATE OBJECT ei_page TYPE lcl_gui_page_main.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
+        CREATE OBJECT ei_page TYPE lcl_gui_page_explore.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
+        CREATE OBJECT ei_page TYPE lcl_gui_page_db.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_debuginfo.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_debuginfo.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_settings.
+        CREATE OBJECT ei_page TYPE lcl_gui_page_settings.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_background_run.              " Go background run page
         CREATE OBJECT ei_page TYPE lcl_gui_page_bkg_run.
@@ -258,23 +261,6 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
   ENDMETHOD.        " on_event
 
-  METHOD get_page_by_name.
-
-    DATA: lv_page_class TYPE string,
-          lv_page_name  TYPE string.
-
-    lv_page_name  = iv_name.
-    SHIFT lv_page_name LEFT DELETING LEADING 'go_'.
-    lv_page_class = |LCL_GUI_PAGE_{ to_upper( lv_page_name ) }|.
-
-    TRY.
-        CREATE OBJECT ri_page TYPE (lv_page_class).
-      CATCH cx_sy_create_object_error.
-        zcx_abapgit_exception=>raise( |Cannot create page class { lv_page_class }| ).
-    ENDTRY.
-
-  ENDMETHOD.        " get_page_by_name
-
   METHOD get_page_db_by_name.
 
     DATA: lv_page_class TYPE string,
@@ -385,8 +371,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
     DATA: lv_class_name TYPE string,
           lv_cancel     TYPE abap_bool.
 
-    zcl_abapgit_popups=>run_page_class_popup( IMPORTING ev_name   = lv_class_name
-                                                ev_cancel = lv_cancel ).
+    zcl_abapgit_popups=>run_page_class_popup(
+      IMPORTING
+        ev_name   = lv_class_name
+        ev_cancel = lv_cancel ).
+
     IF lv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
