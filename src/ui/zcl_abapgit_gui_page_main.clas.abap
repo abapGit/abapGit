@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       retrieve_active_repo
         RAISING zcx_abapgit_exception,
       render_toc
-        IMPORTING it_repo_list   TYPE zcl_abapgit_repo_srv=>ty_repo_ref_tt
+        IMPORTING it_repo_list   TYPE zif_abapgit_definitions=>ty_repo_ref_tt
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repos    TYPE zcl_abapgit_repo_srv=>ty_repo_ref_tt,
+    DATA: lt_repos    TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lo_tutorial TYPE REF TO zcl_abapgit_gui_view_tutorial,
           lo_repo     LIKE LINE OF lt_repos.

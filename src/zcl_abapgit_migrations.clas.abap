@@ -22,7 +22,7 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
   METHOD local_dot_abapgit.
 
-    DATA: lt_repos       TYPE zcl_abapgit_repo_srv=>ty_repo_ref_tt,
+    DATA: lt_repos       TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
   METHOD rebuild_local_checksums_161112.
 
-    DATA: lt_repos     TYPE zcl_abapgit_repo_srv=>ty_repo_ref_tt,
+    DATA: lt_repos     TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lv_repo_list TYPE string,
           lv_question  TYPE string,
           lv_answer    TYPE c,
