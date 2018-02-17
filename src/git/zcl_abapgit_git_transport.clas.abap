@@ -9,7 +9,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
       IMPORTING iv_url         TYPE string
                 iv_branch_name TYPE string
                 iv_deepen      TYPE abap_bool DEFAULT abap_true
-                it_branches    TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt OPTIONAL
+                it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
       RAISING   zcx_abapgit_exception.
@@ -27,7 +27,6 @@ CLASS zcl_abapgit_git_transport DEFINITION
       IMPORTING iv_url                TYPE string
       RETURNING VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
-
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_service,
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
@@ -218,7 +217,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
           lv_xstring  TYPE xstring,
           lv_line     TYPE string,
           lv_pack     TYPE xstring,
-          lt_branches TYPE zcl_abapgit_git_branch_list=>ty_git_branch_list_tt,
+          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           lv_capa     TYPE string.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.

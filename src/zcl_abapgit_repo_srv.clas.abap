@@ -5,10 +5,8 @@ CLASS zcl_abapgit_repo_srv DEFINITION PUBLIC FINAL CREATE PRIVATE.
     CLASS-METHODS: get_instance
       RETURNING VALUE(rv_srv) TYPE REF TO zcl_abapgit_repo_srv.
 
-    TYPES: ty_repo_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY.
-
     METHODS list
-      RETURNING VALUE(rt_list) TYPE ty_repo_tt
+      RETURNING VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_repo_ref_tt
       RAISING   zcx_abapgit_exception.
 
     METHODS refresh
@@ -58,7 +56,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION PUBLIC FINAL CREATE PRIVATE.
 
     DATA: mv_init        TYPE abap_bool VALUE abap_false,
           mo_persistence TYPE REF TO zcl_abapgit_persistence_repo,
-          mt_list        TYPE ty_repo_tt.
+          mt_list        TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
     METHODS is_sap_object_allowed
       RETURNING
@@ -139,7 +137,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD is_repo_installed.
 
-    DATA: lt_repo        TYPE zcl_abapgit_repo_srv=>ty_repo_tt,
+    DATA: lt_repo        TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lo_repo        TYPE REF TO zcl_abapgit_repo,
           lv_url         TYPE string,
           lv_package     TYPE devclass,
@@ -196,8 +194,8 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
-          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zif_abapgit_persistence=>ty_repo,
+          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -226,8 +224,8 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_repo TYPE zcl_abapgit_persistence_repo=>ty_repo,
-          lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
+    DATA: ls_repo TYPE zif_abapgit_persistence=>ty_repo,
+          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
     validate_package( iv_package ).
@@ -255,7 +253,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list    TYPE zcl_abapgit_persistence_repo=>tt_repo,
+    DATA: lt_list    TYPE zif_abapgit_persistence=>tt_repo,
           lo_online  TYPE REF TO zcl_abapgit_repo_online,
           lo_offline TYPE REF TO zcl_abapgit_repo_offline.
 
@@ -318,7 +316,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD validate_package.
 
     DATA: ls_devclass TYPE tdevc,
-          lt_repos    TYPE zcl_abapgit_persistence_repo=>tt_repo.
+          lt_repos    TYPE zif_abapgit_persistence=>tt_repo.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).

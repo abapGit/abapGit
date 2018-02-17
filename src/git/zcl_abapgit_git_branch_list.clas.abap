@@ -3,27 +3,6 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
-    TYPES ty_git_branch_type TYPE char2 .
-    TYPES:
-      BEGIN OF ty_git_branch,
-        sha1         TYPE zif_abapgit_definitions=>ty_sha1,
-        name         TYPE string,
-        type         TYPE ty_git_branch_type,
-        is_head      TYPE abap_bool,
-        display_name TYPE string,
-      END OF ty_git_branch .
-    TYPES:
-      ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
-
-    CONSTANTS:
-      BEGIN OF c_type,
-        branch TYPE ty_git_branch_type VALUE 'HD',
-        tag    TYPE ty_git_branch_type VALUE 'TG',
-        other  TYPE ty_git_branch_type VALUE 'ZZ',
-      END OF c_type .
-    CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
-
     METHODS constructor
       IMPORTING
         !iv_data TYPE string
@@ -33,12 +12,12 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_branch_name  TYPE clike
       RETURNING
-        VALUE(rs_branch) TYPE ty_git_branch
+        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     METHODS get_head   " For potential future use
       RETURNING
-        VALUE(rs_branch) TYPE ty_git_branch
+        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
     METHODS get_head_symref
@@ -46,12 +25,12 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rv_head_symref) TYPE string .
     METHODS get_branches_only
       RETURNING
-        VALUE(rt_branches) TYPE ty_git_branch_list_tt
+        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
     METHODS get_tags_only   " For potential future use
       RETURNING
-        VALUE(rt_branches) TYPE ty_git_branch_list_tt
+        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS is_ignored
@@ -68,7 +47,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_branch_name TYPE clike
       RETURNING
-        VALUE(rv_type)  TYPE ty_git_branch_type .
+        VALUE(rv_type)  TYPE zif_abapgit_definitions=>ty_git_branch_type .
     CLASS-METHODS complete_heads_branch_name
       IMPORTING
         !iv_branch_name TYPE clike
@@ -81,14 +60,14 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rv_name)  TYPE string .
   PRIVATE SECTION.
 
-    DATA mt_branches TYPE ty_git_branch_list_tt .
+    DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
 
     CLASS-METHODS parse_branch_list
       IMPORTING
         !iv_data        TYPE string
       EXPORTING
-        !et_list        TYPE ty_git_branch_list_tt
+        !et_list        TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
         !ev_head_symref TYPE string
       RAISING
         zcx_abapgit_exception .
@@ -140,7 +119,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
-      IF <ls_branch>-type = c_type-branch.
+      IF <ls_branch>-type = zif_abapgit_definitions=>c_git_branch_type-branch.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
@@ -164,7 +143,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     IF mv_head_symref IS NOT INITIAL.
       rs_branch = find_by_name( mv_head_symref ).
     ELSE.
-      rs_branch = find_by_name( c_head_name ).
+      rs_branch = find_by_name( zif_abapgit_definitions=>c_head_name ).
     ENDIF.
 
   ENDMETHOD.  "get_head
@@ -179,7 +158,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
-      IF <ls_branch>-type = c_type-tag.
+      IF <ls_branch>-type = zif_abapgit_definitions=>c_git_branch_type-tag.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
@@ -187,15 +166,15 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD get_type.
-    rv_type = c_type-other.
+    rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 
-    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = c_head_name.
-      rv_type = c_type-branch.
+    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = zif_abapgit_definitions=>c_head_name.
+      rv_type = zif_abapgit_definitions=>c_git_branch_type-branch.
       RETURN.
     ENDIF.
 
     IF iv_branch_name CP 'refs/tags/*'.
-      rv_type = c_type-tag.
+      rv_type = zif_abapgit_definitions=>c_git_branch_type-tag.
     ENDIF.
 
   ENDMETHOD.  "get_type
@@ -267,7 +246,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       <ls_branch>-name         = lv_name.
       <ls_branch>-display_name = get_display_name( lv_name ).
       <ls_branch>-type         = get_type( lv_name ).
-      IF <ls_branch>-name = c_head_name OR <ls_branch>-name = ev_head_symref.
+      IF <ls_branch>-name = zif_abapgit_definitions=>c_head_name OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head    = abap_true.
       ENDIF.
     ENDLOOP.

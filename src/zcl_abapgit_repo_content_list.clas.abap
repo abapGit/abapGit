@@ -4,7 +4,19 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    METHODS constructor
+      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
 
+    METHODS list
+      IMPORTING iv_path              TYPE string
+                iv_by_folders        TYPE abap_bool
+                iv_changes_only      TYPE abap_bool
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
+      RAISING   zcx_abapgit_exception.
+
+    METHODS get_log
+      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
+  PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_sortkey,
                  default    TYPE i VALUE 9999,
                  parent_dir TYPE i VALUE 0,
@@ -13,52 +25,24 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                  changed    TYPE i VALUE 3,
                END OF c_sortkey.
 
-    TYPES: BEGIN OF ty_repo_item,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             sortkey  TYPE i,
-             path     TYPE string,
-             is_dir   TYPE abap_bool,
-             changes  TYPE i,
-             lstate   TYPE char1,
-             rstate   TYPE char1,
-             files    TYPE zif_abapgit_definitions=>tt_repo_files,
-           END OF ty_repo_item.
-    TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
-
-    METHODS constructor
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
-
-    METHODS list
-      IMPORTING iv_path              TYPE string
-                iv_by_folders        TYPE abap_bool
-                iv_changes_only      TYPE abap_bool
-      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
-      RAISING   zcx_abapgit_exception.
-
-    METHODS get_log
-      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
-
-  PRIVATE SECTION.
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
           mo_log  TYPE REF TO zcl_abapgit_log.
 
     METHODS build_repo_items_offline
-      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
     METHODS build_repo_items_online
-      RETURNING VALUE(rt_repo_items) TYPE tt_repo_items
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
     METHODS build_folders
       IMPORTING iv_cur_dir    TYPE string
-      CHANGING  ct_repo_items TYPE tt_repo_items
+      CHANGING  ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
     METHODS filter_changes
-      CHANGING ct_repo_items TYPE tt_repo_items.
-
+      CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
 ENDCLASS.
 
 

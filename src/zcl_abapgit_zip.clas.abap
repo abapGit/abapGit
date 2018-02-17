@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
   METHOD export_package.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline,
-          ls_data TYPE zcl_abapgit_persistence_repo=>ty_repo.
+          ls_data TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ls_data-key = 'DUMMY'.

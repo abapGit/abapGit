@@ -57,13 +57,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS file_encode
       IMPORTING
-        !iv_key          TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
         !ig_file         TYPE any                   "assuming ty_file
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
-        !iv_key          TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
         !ig_object       TYPE any                 "assuming ty_item
       RETURNING
         VALUE(rv_string) TYPE string .
@@ -71,7 +71,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
       IMPORTING
         !iv_string TYPE clike
       EXPORTING
-        !ev_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
         !eg_file   TYPE any            "assuming ty_file
         !eg_object TYPE any          "assuming ty_item
       RAISING
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
       IMPORTING
         !iv_getdata TYPE clike
       EXPORTING
-        !ev_key     TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !ev_key     TYPE zif_abapgit_persistence=>ty_repo-key
         !ev_seed    TYPE string
       RAISING
         zcx_abapgit_exception .

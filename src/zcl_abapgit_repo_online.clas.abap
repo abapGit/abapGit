@@ -4,31 +4,31 @@ CLASS zcl_abapgit_repo_online DEFINITION PUBLIC INHERITING FROM zcl_abapgit_repo
     METHODS:
       refresh REDEFINITION,
       constructor
-        IMPORTING is_data TYPE zcl_abapgit_persistence_repo=>ty_repo
+        IMPORTING is_data TYPE zif_abapgit_persistence=>ty_repo
         RAISING   zcx_abapgit_exception,
       get_url
-        RETURNING VALUE(rv_url) TYPE zcl_abapgit_persistence_repo=>ty_repo-url,
+        RETURNING VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url,
       get_branch_name
-        RETURNING VALUE(rv_name) TYPE zcl_abapgit_persistence_repo=>ty_repo-branch_name,
+        RETURNING VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name,
       get_head_branch_name
-        RETURNING VALUE(rv_name) TYPE zcl_abapgit_persistence_repo=>ty_repo-head_branch,
+        RETURNING VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-head_branch,
       get_branches
         RETURNING VALUE(ro_branches) TYPE REF TO zcl_abapgit_git_branch_list
         RAISING   zcx_abapgit_exception,
       set_url
-        IMPORTING iv_url TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        IMPORTING iv_url TYPE zif_abapgit_persistence=>ty_repo-url
         RAISING   zcx_abapgit_exception,
       set_branch_name
-        IMPORTING iv_branch_name TYPE zcl_abapgit_persistence_repo=>ty_repo-branch_name
+        IMPORTING iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
         RAISING   zcx_abapgit_exception,
       set_new_remote
-        IMPORTING iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
-                  iv_branch_name TYPE zcl_abapgit_persistence_repo=>ty_repo-branch_name
+        IMPORTING iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
+                  iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
         RAISING   zcx_abapgit_exception,
       get_sha1_local
-        RETURNING VALUE(rv_sha1) TYPE zcl_abapgit_persistence_repo=>ty_repo-sha1,
+        RETURNING VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1,
       get_sha1_remote
-        RETURNING VALUE(rv_sha1) TYPE zcl_abapgit_persistence_repo=>ty_repo-sha1
+        RETURNING VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1
         RAISING   zcx_abapgit_exception,
       get_files_remote REDEFINITION,
       get_objects
@@ -53,7 +53,6 @@ CLASS zcl_abapgit_repo_online DEFINITION PUBLIC INHERITING FROM zcl_abapgit_repo
       get_unnecessary_local_objs
         RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
         RAISING   zcx_abapgit_exception.
-
   PRIVATE SECTION.
     DATA:
       mt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt,
@@ -185,7 +184,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_status       TYPE zif_abapgit_definitions=>ty_results_tt,
-          lv_package      TYPE zcl_abapgit_persistence_repo=>ty_repo-package.
+          lv_package      TYPE zif_abapgit_persistence=>ty_repo-package.
 
     FIELD-SYMBOLS: <status> TYPE zif_abapgit_definitions=>ty_result,
                    <tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
@@ -314,7 +313,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item    TYPE zif_abapgit_definitions=>ty_item,
           lv_branch_equal TYPE abap_bool,
-          lt_checksums    TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums    TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,

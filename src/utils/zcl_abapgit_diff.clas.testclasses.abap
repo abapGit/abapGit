@@ -6,7 +6,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA: mt_new      TYPE TABLE OF string,
           mt_old      TYPE TABLE OF string,
-          mt_expected TYPE zcl_abapgit_diff=>ty_diffs_tt,
+          mt_expected TYPE zif_abapgit_definitions=>ty_diffs_tt,
           ms_expected LIKE LINE OF mt_expected.
 
     METHODS: setup.
@@ -56,7 +56,7 @@ CLASS ltcl_diff IMPLEMENTATION.
           lv_old  TYPE string,
           lv_xold TYPE xstring,
           lo_diff TYPE REF TO zcl_abapgit_diff,
-          lt_diff TYPE zcl_abapgit_diff=>ty_diffs_tt.
+          lt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
@@ -90,7 +90,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _new 'A'.
 
     "         " NEW  " STATUS                 " OLD
-    _expected 1 'A'  zcl_abapgit_diff=>c_diff-insert  '' ''.
+    _expected 1 'A'  zif_abapgit_definitions=>c_diff-insert  '' ''.
     test( ).
 
   ENDMETHOD.                    "diff01
@@ -113,7 +113,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _old 'A'.
 
     "         " NEW  " STATUS                 " OLD
-    _expected '' ''  zcl_abapgit_diff=>c_diff-delete  1 'A'.
+    _expected '' ''  zif_abapgit_definitions=>c_diff-delete  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff03
@@ -125,7 +125,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _old 'A'.
 
     "         " NEW   " STATUS                 " OLD
-    _expected 1 'A+'  zcl_abapgit_diff=>c_diff-update  1 'A'.
+    _expected 1 'A+'  zif_abapgit_definitions=>c_diff-update  1 'A'.
     test( ).
 
   ENDMETHOD.                    "diff04
@@ -161,9 +161,9 @@ CLASS ltcl_diff IMPLEMENTATION.
     "         " NEW         " STATUS                        " OLD
     _expected 1 'A'         ''                                1 'A'.
     _expected 2 'B'         ''                                2 'B'.
-    _expected 3 'inserted'  zcl_abapgit_diff=>c_diff-insert   '' ''.
+    _expected 3 'inserted'  zif_abapgit_definitions=>c_diff-insert   '' ''.
     _expected 4 'C'         ''                                3 'C'.
-    _expected 5 'D update'  zcl_abapgit_diff=>c_diff-update   4 'D'.
+    _expected 5 'D update'  zif_abapgit_definitions=>c_diff-update   4 'D'.
 
     test( ).
 

@@ -32,9 +32,9 @@ ENDFORM.                    "run
 FORM open_gui RAISING zcx_abapgit_exception.
 
   IF sy-batch = abap_true.
-    lcl_background=>run( ).
+    zcl_abapgit_background=>run( ).
   ELSE.
-    lcl_gui=>get_instance( )->go_home( ).
+    zcl_abapgit_gui=>get_instance( )->go_home( ).
     CALL SELECTION-SCREEN 1001. " trigger screen
   ENDIF.
 
@@ -118,7 +118,7 @@ ENDFORM.
 FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF lcl_gui=>get_instance( )->back( ) IS INITIAL.
+      IF zcl_abapgit_gui=>get_instance( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.
