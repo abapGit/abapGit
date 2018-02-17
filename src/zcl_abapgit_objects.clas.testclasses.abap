@@ -1,6 +1,183 @@
 *"* use this source file for your ABAP unit test classes
 
 *----------------------------------------------------------------------*
+*       CLASS ltcl_dangerous DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FINAL.
+* if this test class does not run, parameters in transaction SAUNIT_CLIENT_SETUP
+* might need to be adjusted
+
+  PRIVATE SECTION.
+
+    CLASS-METHODS:
+      class_setup.
+
+    METHODS:
+      run FOR TESTING
+        RAISING zcx_abapgit_exception.
+
+    CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
+
+ENDCLASS.                    "ltcl_dangerous DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS ltcl_dangerous IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_dangerous IMPLEMENTATION.
+
+  METHOD class_setup.
+    "Objects will be created and deleted, do not run in customer system!
+    "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_run_critical_tests( ) = abap_false.
+      cl_abap_unit_assert=>fail(
+        msg   = 'Cancelled. You can enable these tests at the Settings page'
+        level = if_aunit_constants=>tolerable ).
+    ENDIF.
+  ENDMETHOD.                    "class_setup
+
+  METHOD run.
+
+    DATA: lo_repo    TYPE REF TO zcl_abapgit_repo_online,
+          lt_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lv_msg     TYPE string,
+          lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_types   TYPE zcl_abapgit_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
+                   <ls_tadir>  LIKE LINE OF lt_tadir,
+                   <lv_type>   LIKE LINE OF lt_types.
+
+
+    zcl_abapgit_sap_package=>create_local( c_package ).
+
+    lt_types = zcl_abapgit_objects=>supported_list( ).
+
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
+      iv_branch_name = 'refs/heads/master'
+      iv_package     = c_package ).
+    lo_repo->status( ).
+    lo_repo->deserialize( ).
+
+    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    LOOP AT lt_types ASSIGNING <lv_type>.
+      READ TABLE lt_tadir WITH KEY object = <lv_type> TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        lv_msg = |Missing object type { <lv_type> }|.
+        cl_abap_unit_assert=>fail(
+            msg   = lv_msg
+            level = if_aunit_constants=>tolerable
+            quit  = if_aunit_constants=>no ).
+      ENDIF.
+    ENDLOOP.
+
+    lt_results = lo_repo->status( ).
+    LOOP AT lt_results ASSIGNING <ls_result> WHERE match = abap_false.
+      lv_msg = |Does not match { <ls_result>-obj_type } { <ls_result>-obj_name }|.
+      cl_abap_unit_assert=>fail(
+          msg  = lv_msg
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+    zcl_abapgit_objects=>delete( lt_tadir ).
+    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+      lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.
+      cl_abap_unit_assert=>fail(
+          msg  = lv_msg
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+    zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.                    "run
+
+ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
+
+
+*----------------------------------------------------------------------*
+*       CLASS ltcl_object_types DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    METHODS:
+      is_supported FOR TESTING,
+      not_exist FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.                    "ltcl_object_types DEFINITION
+
+*----------------------------------------------------------------------*
+*       CLASS ltcl_object_types IMPLEMENTATION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS ltcl_object_types IMPLEMENTATION.
+
+  METHOD is_supported.
+
+    DATA: ls_item      TYPE zif_abapgit_definitions=>ty_item,
+          lv_supported TYPE abap_bool,
+          lt_types     TYPE zcl_abapgit_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
+
+
+    lt_types = zcl_abapgit_objects=>supported_list( ).
+
+    LOOP AT lt_types ASSIGNING <lv_type>.
+
+      CLEAR ls_item.
+      ls_item-obj_type = <lv_type>.
+      lv_supported = zcl_abapgit_objects=>is_supported( ls_item ).
+
+      cl_abap_unit_assert=>assert_equals(
+          act  = lv_supported
+          exp  = abap_true
+          msg  = ls_item-obj_type
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "is_supported
+
+  METHOD not_exist.
+
+    DATA: ls_item   TYPE zif_abapgit_definitions=>ty_item,
+          lv_exists TYPE abap_bool,
+          lt_types  TYPE zcl_abapgit_objects=>ty_types_tt.
+
+    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
+
+
+    lt_types = zcl_abapgit_objects=>supported_list( ).
+
+    LOOP AT lt_types ASSIGNING <lv_type>.
+      CLEAR ls_item.
+      ls_item-obj_name = 'ZABAPGIT_FOOBAR'.
+      ls_item-obj_type = <lv_type>.
+      lv_exists = zcl_abapgit_objects=>exists( ls_item ).
+
+      cl_abap_unit_assert=>assert_equals(
+          act  = lv_exists
+          exp  = abap_false
+          msg  = ls_item-obj_type
+          quit = if_aunit_constants=>no ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "not_exist
+
+ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
+
+
+*----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
 *----------------------------------------------------------------------*
 *
