@@ -129,26 +129,26 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
 
   METHOD migrate_settings.
 
-    DATA: lr_settings                    TYPE REF TO zcl_abapgit_settings.
-    DATA: lr_persist_settings            TYPE REF TO zcl_abapgit_persist_settings.
-    DATA: lv_critical_tests_as_string    TYPE string.
-    DATA: lv_critical_tests_as_boolean   TYPE abap_bool.
-    DATA: lv_max_lines_as_string         TYPE string.
-    DATA: lv_flag                        TYPE abap_bool.
-    DATA: lv_max_lines_as_integer        TYPE i.
-    DATA: lv_s_param_value               TYPE string.
-    DATA: lv_i_param_value               TYPE i.
-    DATA: lv_adt_jump_enabled_as_string  TYPE string.
-    DATA: lv_adt_jump_enabled_as_boolean TYPE abap_bool.
+    DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
+          lo_persist_settings            TYPE REF TO zcl_abapgit_persist_settings,
+          lv_critical_tests_as_string    TYPE string,
+          lv_critical_tests_as_boolean   TYPE abap_bool,
+          lv_max_lines_as_string         TYPE string,
+          lv_flag                        TYPE abap_bool,
+          lv_max_lines_as_integer        TYPE i,
+          lv_s_param_value               TYPE string,
+          lv_i_param_value               TYPE i,
+          lv_adt_jump_enabled_as_string  TYPE string,
+          lv_adt_jump_enabled_as_boolean TYPE abap_bool.
 
 
-    lr_persist_settings = zcl_abapgit_persist_settings=>get_instance( ).
+    lo_persist_settings = zcl_abapgit_persist_settings=>get_instance( ).
 
-    CREATE OBJECT lr_settings.
-    lr_settings->set_defaults( ).
+    CREATE OBJECT lo_settings.
+    lo_settings->set_defaults( ).
 
     TRY.
-        lr_settings->set_proxy_url(
+        lo_settings->set_proxy_url(
           zcl_abapgit_persistence_db=>get_instance( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_URL' ) ).
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lr_settings->set_proxy_port(
+        lo_settings->set_proxy_port(
           zcl_abapgit_persistence_db=>get_instance( )->read(
             iv_type  = 'SETTINGS'
             iv_value = 'PROXY_PORT' ) ).
@@ -167,7 +167,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
         lv_flag = zcl_abapgit_persistence_db=>get_instance( )->read(
           iv_type  = 'SETTINGS'
           iv_value = 'PROXY_AUTH' ).
-        lr_settings->set_proxy_authentication( lv_flag ).
+        lo_settings->set_proxy_authentication( lv_flag ).
       CATCH zcx_abapgit_not_found.
     ENDTRY.
 
@@ -176,7 +176,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
            iv_type  = 'SETTINGS'
            iv_value = 'CRIT_TESTS' ).
         lv_critical_tests_as_boolean = lv_critical_tests_as_string.
-        lr_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
+        lo_settings->set_run_critical_tests( lv_critical_tests_as_boolean ).
       CATCH zcx_abapgit_not_found.
     ENDTRY.
 
@@ -185,7 +185,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
            iv_type  = 'SETTINGS'
            iv_value = 'MAX_LINES' ).
         lv_max_lines_as_integer = lv_max_lines_as_string.
-        lr_settings->set_max_lines( lv_max_lines_as_integer ).
+        lo_settings->set_max_lines( lv_max_lines_as_integer ).
       CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
            iv_type  = 'SETTINGS'
            iv_value = 'ADT_JUMP' ).
         lv_adt_jump_enabled_as_boolean = lv_adt_jump_enabled_as_string.
-        lr_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
+        lo_settings->set_adt_jump_enanbled( lv_adt_jump_enabled_as_boolean ).
       CATCH zcx_abapgit_not_found.
     ENDTRY.
 
@@ -203,7 +203,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
            iv_type  = 'SETTINGS'
            iv_value = 'COMMENT_LEN' ).
         lv_i_param_value = lv_s_param_value.
-        lr_settings->set_commitmsg_comment_length( lv_i_param_value ).
+        lo_settings->set_commitmsg_comment_length( lv_i_param_value ).
       CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
@@ -212,11 +212,11 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
            iv_type  = 'SETTINGS'
            iv_value = 'BODY_SIZE' ).
         lv_i_param_value = lv_s_param_value.
-        lr_settings->set_commitmsg_body_size( lv_i_param_value ).
+        lo_settings->set_commitmsg_body_size( lv_i_param_value ).
       CATCH zcx_abapgit_not_found cx_sy_conversion_no_number.
     ENDTRY.
 
-    lr_persist_settings->modify( lr_settings ).
+    lo_persist_settings->modify( lo_settings ).
 
     TRY.
         zcl_abapgit_persistence_db=>get_instance( )->delete(

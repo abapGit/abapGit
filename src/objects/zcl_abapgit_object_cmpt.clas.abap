@@ -14,7 +14,10 @@ CLASS zcl_abapgit_object_cmpt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -31,15 +34,10 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    rv_changed = abap_true.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: mi_cmp_template TYPE REF TO object.
+    DATA: lo_cmp_template TYPE REF TO object.
 
     TRY.
         CALL METHOD ('CL_CMP_TEMPLATE')=>('S_CREATE_FROM_DB')
@@ -47,9 +45,9 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
             i_name         = |{ ms_item-obj_name }|
             i_version      = 'A'
           RECEIVING
-            r_ref_template = mi_cmp_template.
+            r_ref_template = lo_cmp_template.
 
-        CALL METHOD mi_cmp_template->('IF_CMP_TEMPLATE_EDIT~GET_CHANGE_USER')
+        CALL METHOD lo_cmp_template->('IF_CMP_TEMPLATE_EDIT~GET_CHANGE_USER')
           RECEIVING
             r_user = rv_user.
 
@@ -59,77 +57,57 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
 
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~exists.
 
-    DATA: name TYPE c LENGTH 30.
+  METHOD zif_abapgit_object~delete.
 
-    name = ms_item-obj_name.
+    DATA: lv_deleted TYPE abap_bool.
 
     TRY.
-        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
+        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
           EXPORTING
-            i_name       = name
-            i_version    = 'A'
+            i_name        = |{ ms_item-obj_name }|
+            i_version     = 'A'
+            i_flg_header  = abap_true
+            i_flg_lines   = abap_true
           RECEIVING
-            r_flg_exists = rv_bool.
+            r_flg_deleted = lv_deleted.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <template> TYPE any.
-
-    TRY.
-        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
-        ASSIGN lr_template->* TO <template>.
-
-        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~READ_TEMPLATE')
-          EXPORTING
-            i_name     = |{ ms_item-obj_name }|
-            i_version  = 'A'
-          RECEIVING
-            r_template = <template>.
-
-        io_xml->add( iv_name = 'CMPT'
-                     ig_data = <template> ).
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
-    ENDTRY.
-
+    IF lv_deleted = abap_false.
+      zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
+    ENDIF.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lr_template TYPE REF TO data.
-    FIELD-SYMBOLS: <template> TYPE any.
+    FIELD-SYMBOLS: <lg_template> TYPE any.
 
     TRY.
         CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
-        ASSIGN lr_template->* TO <template>.
+        ASSIGN lr_template->* TO <lg_template>.
 
         io_xml->read(
           EXPORTING
             iv_name = 'CMPT'
           CHANGING
-            cg_data = <template> ).
+            cg_data = <lg_template> ).
 
         CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~SAVE_TEMPLATE')
           EXPORTING
-            i_template_db = <template>
+            i_template_db = <lg_template>
             i_flg_header  = abap_true
             i_flg_lines   = abap_true.
 
@@ -157,27 +135,39 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
 
-    DATA: deleted TYPE abap_bool.
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_name TYPE c LENGTH 30.
+
+    lv_name = ms_item-obj_name.
 
     TRY.
-        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
+        CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
           EXPORTING
-            i_name        = |{ ms_item-obj_name }|
-            i_version     = 'A'
-            i_flg_header  = abap_true
-            i_flg_lines   = abap_true
+            i_name       = lv_name
+            i_version    = 'A'
           RECEIVING
-            r_flg_deleted = deleted.
+            r_flg_exists = rv_bool.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
-    IF deleted = abap_false.
-      zcx_abapgit_exception=>raise( |Error deleting CMPT { ms_item-obj_name }| ).
-    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+
+    rv_changed = abap_true.
 
   ENDMETHOD.
 
@@ -200,10 +190,30 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
 
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lr_template TYPE REF TO data.
+    FIELD-SYMBOLS: <lg_template> TYPE any.
+
+    TRY.
+        CREATE DATA lr_template TYPE ('IF_CMP_TEMPLATE_DB=>TYP_TEMPLATE').
+        ASSIGN lr_template->* TO <lg_template>.
+
+        CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~READ_TEMPLATE')
+          EXPORTING
+            i_name     = |{ ms_item-obj_name }|
+            i_version  = 'A'
+          RECEIVING
+            r_template = <lg_template>.
+
+        io_xml->add( iv_name = 'CMPT'
+                     ig_data = <lg_template> ).
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'CMPT not supported' ).
+    ENDTRY.
+
 
   ENDMETHOD.
-
 ENDCLASS.

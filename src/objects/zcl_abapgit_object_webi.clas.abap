@@ -46,87 +46,10 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
+CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_webi    TYPE ty_webi,
-          lt_modilog TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
-          li_vi      TYPE REF TO if_ws_md_vif,
-          lv_name    TYPE vepname.
-
-    FIELD-SYMBOLS: <ls_header>   LIKE LINE OF ls_webi-pvepheader,
-                   <ls_endpoint> LIKE LINE OF ls_webi-pvependpoint.
-
-    CALL FUNCTION 'WEBI_GET_OBJECT'
-      EXPORTING
-        webiname          = ms_item-obj_name
-      TABLES
-        psmodilog         = lt_modilog
-        pvepheader        = ls_webi-pvepheader
-        pvepfunction      = ls_webi-pvepfunction
-        pvepfault         = ls_webi-pvepfault
-        pvepparameter     = ls_webi-pvepparameter
-        pveptype          = ls_webi-pveptype
-        pvepelemtype      = ls_webi-pvepelemtype
-        pveptabletype     = ls_webi-pveptabletype
-        pvepstrutype      = ls_webi-pvepstrutype
-        pveptypesoapext   = ls_webi-pveptypesoapext
-        pvepeletypsoap    = ls_webi-pvepeletypsoap
-        pveptabtypsoap    = ls_webi-pveptabtypsoap
-        pvepfuncsoapext   = ls_webi-pvepfuncsoapext
-        pvepfieldref      = ls_webi-pvepfieldref
-        pvependpoint      = ls_webi-pvependpoint
-        pvepvisoapext     = ls_webi-pvepvisoapext
-        pvepparasoapext   = ls_webi-pvepparasoapext
-      EXCEPTIONS
-        version_not_found = 1
-        webi_not_exist    = 2
-        OTHERS            = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from WEBI_GET_OBJECT' ).
-    ENDIF.
-
-    SORT ls_webi-pveptype BY
-      vepname ASCENDING
-      version ASCENDING
-      typename ASCENDING.
-
-    lv_name = ms_item-obj_name.
-    TRY.
-        li_vi = cl_ws_md_factory=>get_vif_root( )->get_virtual_interface( lv_name ).
-        ls_webi-veptext = li_vi->get_short_text( sews_c_vif_version-active ).
-      CATCH cx_ws_md_exception.
-        zcx_abapgit_exception=>raise( 'error serializing WEBI' ).
-    ENDTRY.
-
-    LOOP AT ls_webi-pvepheader ASSIGNING <ls_header>.
-      CLEAR <ls_header>-author.
-      CLEAR <ls_header>-createdon.
-      CLEAR <ls_header>-changedby.
-      CLEAR <ls_header>-changedon.
-      CLEAR <ls_header>-ctime.
-      CLEAR <ls_header>-text_id.
-      CLEAR <ls_header>-utime.
-      CLEAR <ls_header>-wsint_version.
-    ENDLOOP.
-
-    LOOP AT ls_webi-pvependpoint ASSIGNING <ls_endpoint>.
-      CLEAR: <ls_endpoint>-clustd.
-    ENDLOOP.
-
-    io_xml->add( iv_name = 'WEBI'
-                 ig_data = ls_webi ).
-
-  ENDMETHOD.                    "zif_abapgit_object~serialize
 
   METHOD handle_endpoint.
 
@@ -167,12 +90,13 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "handle_endpoint
 
+
   METHOD handle_function.
 
-    CONSTANTS: BEGIN OF co_parameter_type,
+    CONSTANTS: BEGIN OF lc_parameter_type,
                  import TYPE vepparamtype VALUE 'I',
                  export TYPE vepparamtype VALUE 'O',
-               END OF co_parameter_type.
+               END OF lc_parameter_type.
 
     DATA: li_parameter TYPE REF TO if_ws_md_vif_param,
           li_soap      TYPE REF TO if_ws_md_soap_ext_func,
@@ -202,12 +126,12 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
           WHERE function = <ls_function>-function.
 
         CASE <ls_parameter>-vepparamtype.
-          WHEN co_parameter_type-import.
+          WHEN lc_parameter_type-import.
 
             li_parameter = li_function->create_incoming_parameter(
               <ls_parameter>-vepparam ).
 
-          WHEN co_parameter_type-export.
+          WHEN lc_parameter_type-export.
 
             li_parameter = li_function->create_outgoing_parameter(
               <ls_parameter>-vepparam ).
@@ -243,6 +167,26 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "handle_function
+
+
+  METHOD handle_soap.
+
+    DATA: li_soap TYPE REF TO if_ws_md_soap_ext_virtinfc,
+          ls_soap LIKE LINE OF is_webi-pvepvisoapext.
+
+
+    READ TABLE is_webi-pvepvisoapext INDEX 1 INTO ls_soap.
+    ASSERT sy-subrc = 0.
+
+    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-active ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
+    li_soap->set_namespace( ls_soap-namespace ).
+
+  ENDMETHOD.                    "handle_soap
+
 
   METHOD handle_types.
 
@@ -325,23 +269,34 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "handle_types
 
-  METHOD handle_soap.
 
-    DATA: li_soap TYPE REF TO if_ws_md_soap_ext_virtinfc,
-          ls_soap LIKE LINE OF is_webi-pvepvisoapext.
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.                    "zif_abapgit_object~changed_by
 
 
-    READ TABLE is_webi-pvepvisoapext INDEX 1 INTO ls_soap.
-    ASSERT sy-subrc = 0.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
-    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-active ) = abap_true.
-      RETURN.
-    ENDIF.
 
-    li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
-    li_soap->set_namespace( ls_soap-namespace ).
+  METHOD zif_abapgit_object~delete.
 
-  ENDMETHOD.                    "handle_soap
+    DATA: lv_name TYPE vepname,
+          lo_vif  TYPE REF TO cl_ws_md_vif_root.
+
+
+    lv_name = ms_item-obj_name.
+
+    CREATE OBJECT lo_vif.
+    TRY.
+        lo_vif->if_ws_md_vif_root~delete_virtual_interface( lv_name ).
+      CATCH cx_ws_md_exception.
+        zcx_abapgit_exception=>raise( 'error deleting WEBI' ).
+    ENDTRY.
+
+  ENDMETHOD.                    "zif_abapgit_object~delete
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -399,22 +354,6 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_name TYPE vepname,
-          lo_vif  TYPE REF TO cl_ws_md_vif_root.
-
-
-    lv_name = ms_item-obj_name.
-
-    CREATE OBJECT lo_vif.
-    TRY.
-        lo_vif->if_ws_md_vif_root~delete_virtual_interface( lv_name ).
-      CATCH cx_ws_md_exception.
-        zcx_abapgit_exception=>raise( 'error deleting WEBI' ).
-    ENDTRY.
-
-  ENDMETHOD.                    "zif_abapgit_object~delete
 
   METHOD zif_abapgit_object~exists.
 
@@ -429,6 +368,17 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object~exists
 
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -440,12 +390,76 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
+  METHOD zif_abapgit_object~serialize.
 
-ENDCLASS.                    "zcl_abapgit_object_webi IMPLEMENTATION
+    DATA: ls_webi    TYPE ty_webi,
+          lt_modilog TYPE STANDARD TABLE OF smodilog WITH DEFAULT KEY,
+          li_vi      TYPE REF TO if_ws_md_vif,
+          lv_name    TYPE vepname.
+
+    FIELD-SYMBOLS: <ls_header>   LIKE LINE OF ls_webi-pvepheader,
+                   <ls_endpoint> LIKE LINE OF ls_webi-pvependpoint.
+
+    CALL FUNCTION 'WEBI_GET_OBJECT'
+      EXPORTING
+        webiname          = ms_item-obj_name
+      TABLES
+        psmodilog         = lt_modilog
+        pvepheader        = ls_webi-pvepheader
+        pvepfunction      = ls_webi-pvepfunction
+        pvepfault         = ls_webi-pvepfault
+        pvepparameter     = ls_webi-pvepparameter
+        pveptype          = ls_webi-pveptype
+        pvepelemtype      = ls_webi-pvepelemtype
+        pveptabletype     = ls_webi-pveptabletype
+        pvepstrutype      = ls_webi-pvepstrutype
+        pveptypesoapext   = ls_webi-pveptypesoapext
+        pvepeletypsoap    = ls_webi-pvepeletypsoap
+        pveptabtypsoap    = ls_webi-pveptabtypsoap
+        pvepfuncsoapext   = ls_webi-pvepfuncsoapext
+        pvepfieldref      = ls_webi-pvepfieldref
+        pvependpoint      = ls_webi-pvependpoint
+        pvepvisoapext     = ls_webi-pvepvisoapext
+        pvepparasoapext   = ls_webi-pvepparasoapext
+      EXCEPTIONS
+        version_not_found = 1
+        webi_not_exist    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from WEBI_GET_OBJECT' ).
+    ENDIF.
+
+    SORT ls_webi-pveptype BY
+      vepname ASCENDING
+      version ASCENDING
+      typename ASCENDING.
+
+    lv_name = ms_item-obj_name.
+    TRY.
+        li_vi = cl_ws_md_factory=>get_vif_root( )->get_virtual_interface( lv_name ).
+        ls_webi-veptext = li_vi->get_short_text( sews_c_vif_version-active ).
+      CATCH cx_ws_md_exception.
+        zcx_abapgit_exception=>raise( 'error serializing WEBI' ).
+    ENDTRY.
+
+    LOOP AT ls_webi-pvepheader ASSIGNING <ls_header>.
+      CLEAR <ls_header>-author.
+      CLEAR <ls_header>-createdon.
+      CLEAR <ls_header>-changedby.
+      CLEAR <ls_header>-changedon.
+      CLEAR <ls_header>-ctime.
+      CLEAR <ls_header>-text_id.
+      CLEAR <ls_header>-utime.
+      CLEAR <ls_header>-wsint_version.
+    ENDLOOP.
+
+    LOOP AT ls_webi-pvependpoint ASSIGNING <ls_endpoint>.
+      CLEAR: <ls_endpoint>-clustd.
+    ENDLOOP.
+
+    io_xml->add( iv_name = 'WEBI'
+                 ig_data = ls_webi ).
+
+  ENDMETHOD.                    "zif_abapgit_object~serialize
+ENDCLASS.

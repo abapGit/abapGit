@@ -180,21 +180,21 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     APPEND 16 TO lt_order.
     APPEND 17 TO lt_order.
     APPEND 18 TO lt_order.
-    APPEND  0 TO lt_order.
-    APPEND  8 TO lt_order.
-    APPEND  7 TO lt_order.
-    APPEND  9 TO lt_order.
-    APPEND  6 TO lt_order.
+    APPEND 0 TO lt_order.
+    APPEND 8 TO lt_order.
+    APPEND 7 TO lt_order.
+    APPEND 9 TO lt_order.
+    APPEND 6 TO lt_order.
     APPEND 10 TO lt_order.
-    APPEND  5 TO lt_order.
+    APPEND 5 TO lt_order.
     APPEND 11 TO lt_order.
-    APPEND  4 TO lt_order.
+    APPEND 4 TO lt_order.
     APPEND 12 TO lt_order.
-    APPEND  3 TO lt_order.
+    APPEND 3 TO lt_order.
     APPEND 13 TO lt_order.
-    APPEND  2 TO lt_order.
+    APPEND 2 TO lt_order.
     APPEND 14 TO lt_order.
-    APPEND  1 TO lt_order.
+    APPEND 1 TO lt_order.
     APPEND 15 TO lt_order.
 
     lv_nlen = go_stream->take_int( 5 ) + 257.

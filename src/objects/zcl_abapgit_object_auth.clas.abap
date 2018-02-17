@@ -6,36 +6,46 @@ CLASS zcl_abapgit_object_auth DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_authx TYPE authx.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
 
-    SELECT SINGLE * FROM authx INTO ls_authx
-      WHERE fieldname = ms_item-obj_name.               "#EC CI_GENBUFF
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_fieldname TYPE authx-fieldname.
+
+
+    lv_fieldname = ms_item-obj_name.
+
+* there is a bug in SAP standard, the TADIR entries are not deleted
+* when the AUTH object is deleted in transaction SU20
+    CALL FUNCTION 'SUSR_AUTF_DELETE_FIELD'
+      EXPORTING
+        fieldname           = lv_fieldname
+      EXCEPTIONS
+        delete_not_possible = 1
+        field_in_use        = 2
+        not_existing        = 3
+        no_authority        = 4
+        OTHERS              = 5.
     IF sy-subrc <> 0.
-      RETURN.
+      zcx_abapgit_exception=>raise( 'error from SUSR_AUTF_DELETE_FIELD' ).
     ENDIF.
 
-    io_xml->add( iv_name = 'AUTHX'
-                 ig_data = ls_authx ).
+  ENDMETHOD.                    "zif_abapgit_object~delete
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
 
   METHOD zif_abapgit_object~deserialize.
 * see include LSAUT_FIELDF02
@@ -63,29 +73,6 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object~deserialize
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_fieldname TYPE authx-fieldname.
-
-
-    lv_fieldname = ms_item-obj_name.
-
-* there is a bug in SAP standard, the TADIR entries are not deleted
-* when the AUTH object is deleted in transaction SU20
-    CALL FUNCTION 'SUSR_AUTF_DELETE_FIELD'
-      EXPORTING
-        fieldname           = lv_fieldname
-      EXCEPTIONS
-        delete_not_possible = 1
-        field_in_use        = 2
-        not_existing        = 3
-        no_authority        = 4
-        OTHERS              = 5.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SUSR_AUTF_DELETE_FIELD' ).
-    ENDIF.
-
-  ENDMETHOD.                    "zif_abapgit_object~delete
 
   METHOD zif_abapgit_object~exists.
 
@@ -99,22 +86,45 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object~exists
 
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
+
   METHOD zif_abapgit_object~jump.
 
-    DATA: field TYPE fieldname.
+    DATA: lv_field TYPE fieldname.
 
-    field = ms_item-obj_name.
+    lv_field = ms_item-obj_name.
 
 * TODO, this function module does not exist in 702
     CALL FUNCTION 'SU20_MAINTAIN_SNGL'
       EXPORTING
-        id_field    = field
+        id_field    = lv_field
         id_wbo_mode = abap_false.
 
   ENDMETHOD.                    "zif_abapgit_object~jump
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_auth IMPLEMENTATION
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_authx TYPE authx.
+
+
+    SELECT SINGLE * FROM authx INTO ls_authx
+      WHERE fieldname = ms_item-obj_name.               "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    io_xml->add( iv_name = 'AUTHX'
+                 ig_data = ls_authx ).
+
+  ENDMETHOD.                    "zif_abapgit_object~serialize
+ENDCLASS.

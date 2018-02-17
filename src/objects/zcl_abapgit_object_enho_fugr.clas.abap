@@ -13,28 +13,32 @@ CLASS zcl_abapgit_object_enho_fugr DEFINITION PUBLIC.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_ENHO_FUGR IMPLEMENTATION.
+
 
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
   ENDMETHOD.                    "constructor
 
+
   METHOD zif_abapgit_object_enho~deserialize.
 
     DATA: lo_fugrdata  TYPE REF TO cl_enh_tool_fugr,
           ls_enha_data TYPE enhfugrdata,
           li_tool      TYPE REF TO if_enh_tool,
-          tool         TYPE enhtooltype,
+          lv_tool      TYPE enhtooltype,
           lv_package   TYPE devclass.
 
-    FIELD-SYMBOLS: <fuba> TYPE enhfugrfuncdata.
+    FIELD-SYMBOLS: <ls_fuba> TYPE enhfugrfuncdata.
 
     io_xml->read(
       EXPORTING
         iv_name = 'TOOL'
       CHANGING
-        cg_data = tool ).
+        cg_data = lv_tool ).
 
     io_xml->read(
       EXPORTING
@@ -49,7 +53,7 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
           EXPORTING
             enhname     = |{ ms_item-obj_name }|
             enhtype     = ''
-            enhtooltype = tool
+            enhtooltype = lv_tool
           IMPORTING
             enhancement = li_tool
           CHANGING
@@ -59,10 +63,10 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
         lo_fugrdata->set_fugr( ls_enha_data-fugr ).
 
-        LOOP AT ls_enha_data-enh_fubas ASSIGNING <fuba>.
+        LOOP AT ls_enha_data-enh_fubas ASSIGNING <ls_fuba>.
 
-          lo_fugrdata->set_func_data( func_name     = <fuba>-fuba
-                                      func_enhadata = <fuba> ).
+          lo_fugrdata->set_func_data( func_name     = <ls_fuba>-fuba
+                                      func_enhadata = <ls_fuba> ).
 
         ENDLOOP.
 
@@ -75,32 +79,32 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
 
+
   METHOD zif_abapgit_object_enho~serialize.
 
     DATA: lo_fugrdata  TYPE REF TO cl_enh_tool_fugr,
-          fugr_name    TYPE rs38l-area,
+          lv_fugr_name TYPE rs38l-area,
           ls_enha_data TYPE enhfugrdata.
 
-    FIELD-SYMBOLS: <docuobj> TYPE enhfugrparamdocu.
+    FIELD-SYMBOLS: <ls_docuobj> TYPE enhfugrparamdocu.
+
 
     lo_fugrdata ?= ii_enh_tool.
 
     lo_fugrdata->get_fugr(
       IMPORTING
-        fugr_name = fugr_name ).
+        fugr_name = lv_fugr_name ).
 
     TRY.
         lo_fugrdata->get_all_data_for_fugr(
           EXPORTING
-            fugr_name = fugr_name
+            fugr_name = lv_fugr_name
           IMPORTING
             enha_data = ls_enha_data ).
 
-        LOOP AT ls_enha_data-docuobjs ASSIGNING <docuobj>.
-
-          CLEAR: <docuobj>-shorttext,
-                 <docuobj>-longtext.
-
+        LOOP AT ls_enha_data-docuobjs ASSIGNING <ls_docuobj>.
+          CLEAR: <ls_docuobj>-shorttext,
+                 <ls_docuobj>-longtext.
         ENDLOOP.
 
       CATCH cx_enh_not_found.
@@ -114,5 +118,4 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
                  ig_data = ls_enha_data ).
 
   ENDMETHOD.                    "zif_abapgit_object_enho~serialize
-
-ENDCLASS.                    "zcl_abapgit_object_enho_wdyconf IMPLEMENTATION
+ENDCLASS.

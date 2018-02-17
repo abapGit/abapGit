@@ -133,7 +133,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
           object_not_changeable = 2
           object_invalid        = 3
           intern_err            = 4
-          others                = 5 ).
+          OTHERS                = 5 ).
 
       zcx_abapgit_exception=>raise( lv_err ).
 

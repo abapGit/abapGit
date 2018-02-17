@@ -335,13 +335,14 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_it_should_raise_exception.
-    DATA: lo_exception TYPE REF TO zcx_abapgit_exception.
+    DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
+
     TRY.
         when_staging( ).
         cl_abap_unit_assert=>fail( 'Should have raised exception').
-      CATCH zcx_abapgit_exception INTO lo_exception.
+      CATCH zcx_abapgit_exception INTO lx_exception.
         cl_abap_unit_assert=>assert_equals(
-          act = lo_exception->text
+          act = lx_exception->text
           exp = with_text ).
     ENDTRY.
   ENDMETHOD.

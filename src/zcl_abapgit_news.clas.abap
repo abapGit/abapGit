@@ -138,7 +138,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
           lv_url         TYPE string,
           lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
-    FIELD-SYMBOLS <file> LIKE LINE OF lt_remote.
+    FIELD-SYMBOLS <ls_file> LIKE LINE OF lt_remote.
 
 
     IF io_repo->is_offline( ) = abap_true.
@@ -162,13 +162,13 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    READ TABLE lt_remote ASSIGNING <file>
+    READ TABLE lt_remote ASSIGNING <ls_file>
       WITH KEY path = lc_log_path filename = lc_log_filename.
 
     IF sy-subrc = 0.
       CREATE OBJECT ro_instance
         EXPORTING
-          iv_rawdata          = <file>-data
+          iv_rawdata          = <ls_file>-data
           iv_current_version  = zif_abapgit_definitions=>gc_abap_version " TODO refactor
           iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
@@ -235,10 +235,11 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
           lv_version             TYPE string,
           ls_log                 LIKE LINE OF rt_log.
 
-    FIELD-SYMBOLS: <line> LIKE LINE OF it_lines.
+    FIELD-SYMBOLS: <lv_line> LIKE LINE OF it_lines.
 
-    LOOP AT it_lines ASSIGNING <line>.
-      ls_log = parse_line( iv_line = <line> iv_current_version = iv_current_version ).
+
+    LOOP AT it_lines ASSIGNING <lv_line>.
+      ls_log = parse_line( iv_line = <lv_line> iv_current_version = iv_current_version ).
 
       " Skip until first version head and Skip empty lines
       CHECK ls_log IS NOT INITIAL AND

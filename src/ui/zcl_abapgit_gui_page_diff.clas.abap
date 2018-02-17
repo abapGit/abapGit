@@ -180,13 +180,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           lt_types TYPE string_table,
           lt_users TYPE string_table.
 
-    FIELD-SYMBOLS: <diff> LIKE LINE OF mt_diff_files,
-                   <i>    TYPE string.
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff_files,
+                   <lv_i>    TYPE string.
 
     " Get unique
-    LOOP AT mt_diff_files ASSIGNING <diff>.
-      APPEND <diff>-type TO lt_types.
-      APPEND <diff>-changed_by TO lt_users.
+    LOOP AT mt_diff_files ASSIGNING <ls_diff>.
+      APPEND <ls_diff>-type TO lt_types.
+      APPEND <ls_diff>-changed_by TO lt_users.
     ENDLOOP.
 
     SORT: lt_types, lt_users.
@@ -207,8 +207,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       " File types
       IF lines( lt_types ) > 1.
         lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
-        LOOP AT lt_types ASSIGNING <i>.
-          lo_sub->add( iv_txt = <i>
+        LOOP AT lt_types ASSIGNING <lv_i>.
+          lo_sub->add( iv_txt = <lv_i>
                        iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
                        iv_aux = 'type'
                        iv_chk = abap_true ).
@@ -218,8 +218,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       " Changed by
       IF lines( lt_users ) > 1.
         lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
-        LOOP AT lt_users ASSIGNING <i>.
-          lo_sub->add( iv_txt = <i>
+        LOOP AT lt_users ASSIGNING <lv_i>.
+          lo_sub->add( iv_txt = <lv_i>
                        iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
                        iv_aux = 'changed-by'
                        iv_chk = abap_true ).
@@ -306,15 +306,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           lv_idx TYPE i,
           lv_x   TYPE x.
 
-    FIELD-SYMBOLS <data> LIKE iv_d1.
+    FIELD-SYMBOLS <lv_data> LIKE iv_d1.
+
 
     IF iv_d1 IS NOT INITIAL. " One of them might be new and so empty
-      ASSIGN iv_d1 TO <data>.
+      ASSIGN iv_d1 TO <lv_data>.
     ELSE.
-      ASSIGN iv_d2 TO <data>.
+      ASSIGN iv_d2 TO <lv_data>.
     ENDIF.
 
-    lv_len = xstrlen( <data> ).
+    lv_len = xstrlen( <lv_data> ).
     IF lv_len = 0.
       RETURN.
     ENDIF.
@@ -327,7 +328,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     " stackoverflow.com/questions/277521/how-to-identify-the-file-content-as-ascii-or-binary
     DO lv_len TIMES. " I'm sure there is more efficient way ...
       lv_idx = sy-index - 1.
-      lv_x = <data>+lv_idx(1).
+      lv_x = <lv_data>+lv_idx(1).
 
       IF NOT ( lv_x BETWEEN 9 AND 13 OR lv_x BETWEEN 32 AND 126 ).
         rv_yes = abap_true.
@@ -563,24 +564,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD render_line_unified.
 
-    FIELD-SYMBOLS <diff_line> LIKE LINE OF mt_delayed_lines.
+    FIELD-SYMBOLS <ls_diff_line> LIKE LINE OF mt_delayed_lines.
 
     CREATE OBJECT ro_html.
 
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
-      LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
+      LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
         ro_html->add( '<tr>' ).                             "#EC NOTEXT
-        ro_html->add( |<td class="num" line-num="{ <diff_line>-old_num }"></td>|
+        ro_html->add( |<td class="num" line-num="{ <ls_diff_line>-old_num }"></td>|
                    && |<td class="num" line-num=""></td>|
-                   && |<td class="code diff_del">-{ <diff_line>-old }</td>| ).
+                   && |<td class="code diff_del">-{ <ls_diff_line>-old }</td>| ).
         ro_html->add( '</tr>' ).                            "#EC NOTEXT
       ENDLOOP.
-      LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
+      LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
         ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( |<td class="num" line-num=""></td>|
-                   && |<td class="num" line-num="{ <diff_line>-new_num }"></td>|
-                   && |<td class="code diff_ins">+{ <diff_line>-new }</td>| ).
+                   && |<td class="num" line-num="{ <ls_diff_line>-new_num }"></td>|
+                   && |<td class="code diff_ins">+{ <ls_diff_line>-new }</td>| ).
         ro_html->add( '</tr>' ).                            "#EC NOTEXT
       ENDLOOP.
       CLEAR mt_delayed_lines.

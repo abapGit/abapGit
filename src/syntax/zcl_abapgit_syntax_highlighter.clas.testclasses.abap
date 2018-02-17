@@ -64,11 +64,11 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
   METHOD do_test.
 
     DATA: lt_matches_act TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt,
-          lo             TYPE REF TO zcl_abapgit_syntax_highlighter.
+          lo_syntax      TYPE REF TO zcl_abapgit_syntax_highlighter.
 
 
-    lo = zcl_abapgit_syntax_highlighter=>create( iv_filename ).
-    lo->parse_line( EXPORTING iv_line    = iv_line
+    lo_syntax = zcl_abapgit_syntax_highlighter=>create( iv_filename ).
+    lo_syntax->parse_line( EXPORTING iv_line    = iv_line
                     IMPORTING et_matches = lt_matches_act ).
 
     SORT lt_matches_act BY offset.
@@ -77,15 +77,18 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                                         act = lt_matches_act
                                         msg = | Error during parsing: { iv_line }| ).
 
-    lo->order_matches( EXPORTING iv_line    = iv_line
+    lo_syntax->order_matches( EXPORTING iv_line    = iv_line
                        CHANGING  ct_matches = lt_matches_act ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_order
                                         act = lt_matches_act
                                         msg = | Error during ordering: { iv_line }| ).
 
-    lo->extend_matches( EXPORTING iv_line    = iv_line
-                        CHANGING  ct_matches = lt_matches_act ).
+    lo_syntax->extend_matches(
+      EXPORTING
+        iv_line    = iv_line
+      CHANGING
+        ct_matches = lt_matches_act ).
 
     cl_abap_unit_assert=>assert_equals( exp = mt_after_extend
                                         act = lt_matches_act

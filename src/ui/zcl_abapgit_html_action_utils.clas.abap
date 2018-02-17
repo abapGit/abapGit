@@ -125,7 +125,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF ct.
 
-    FIELD-SYMBOLS <src> TYPE any.
+    FIELD-SYMBOLS <lg_src> TYPE any.
 
     ls_field-name = name.
 
@@ -133,9 +133,9 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
       WHEN cl_abap_typedescr=>kind_elem.
         ls_field-value = iv.
       WHEN cl_abap_typedescr=>kind_struct.
-        ASSIGN COMPONENT name OF STRUCTURE iv TO <src>.
-        ASSERT <src> IS ASSIGNED.
-        ls_field-value = <src>.
+        ASSIGN COMPONENT name OF STRUCTURE iv TO <lg_src>.
+        ASSERT <lg_src> IS ASSIGNED.
+        ls_field-value = <lg_src>.
       WHEN OTHERS.
         ASSERT 0 = 1.
     ENDCASE.
@@ -232,13 +232,13 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD field_keys_to_upper.
 
-    FIELD-SYMBOLS <field> LIKE LINE OF ct_fields.
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF ct_fields.
 
-    LOOP AT ct_fields ASSIGNING <field>.
-      <field>-name = to_upper( <field>-name ).
+    LOOP AT ct_fields ASSIGNING <ls_field>.
+      <ls_field>-name = to_upper( <ls_field>-name ).
     ENDLOOP.
 
-  ENDMETHOD.  "field_keys_to_upper
+  ENDMETHOD.
 
 
   METHOD file_encode.
@@ -282,7 +282,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   METHOD get_field.
 
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF it,
-                   <dest>     TYPE any.
+                   <lg_dest>  TYPE any.
 
 
     READ TABLE it ASSIGNING <ls_field> WITH KEY name = name.
@@ -294,9 +294,9 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
       WHEN cl_abap_typedescr=>kind_elem.
         cv = <ls_field>-value.
       WHEN cl_abap_typedescr=>kind_struct.
-        ASSIGN COMPONENT name OF STRUCTURE cv TO <dest>.
-        ASSERT <dest> IS ASSIGNED.
-        <dest> = <ls_field>-value.
+        ASSIGN COMPONENT name OF STRUCTURE cv TO <lg_dest>.
+        ASSERT <lg_dest> IS ASSIGNED.
+        <lg_dest> = <ls_field>-value.
       WHEN OTHERS.
         ASSERT 0 = 1.
     ENDCASE.
@@ -350,7 +350,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lv_string TYPE string,
           lt_fields TYPE tihttpnvp.
 
-    FIELD-SYMBOLS <body> TYPE string.
+    FIELD-SYMBOLS <lv_body> TYPE string.
 
     CLEAR es_fields.
 
@@ -366,35 +366,36 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     get_field( EXPORTING name = 'COMMENT'         it = lt_fields CHANGING cv = es_fields ).
     get_field( EXPORTING name = 'BODY'            it = lt_fields CHANGING cv = es_fields ).
 
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <body>.
-    ASSERT <body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <body> WITH zif_abapgit_definitions=>gc_newline.
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
+    ASSERT <lv_body> IS ASSIGNED.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
   ENDMETHOD.                    "parse_commit_request
 
 
   METHOD parse_fields.
 
-    DATA: substrings TYPE stringtab,
-          field      LIKE LINE OF rt_fields.
+    DATA: lt_substrings TYPE stringtab,
+          ls_field      LIKE LINE OF rt_fields.
 
-    FIELD-SYMBOLS: <substring> LIKE LINE OF substrings.
+    FIELD-SYMBOLS: <lv_substring> LIKE LINE OF lt_substrings.
 
-    SPLIT iv_string AT '&' INTO TABLE substrings.
 
-    LOOP AT substrings ASSIGNING <substring>.
+    SPLIT iv_string AT '&' INTO TABLE lt_substrings.
 
-      CLEAR: field.
+    LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
-      field-name = substring_before( val = <substring>
+      CLEAR: ls_field.
+
+      ls_field-name = substring_before( val = <lv_substring>
                                      sub = '=' ).
-      field-name = unescape( field-name ).
+      ls_field-name = unescape( ls_field-name ).
 
-      field-value = substring_after( val = <substring>
+      ls_field-value = substring_after( val = <lv_substring>
                                      sub = '=' ).
-      field-value = unescape( field-value ).
+      ls_field-value = unescape( ls_field-value ).
 
-      INSERT field INTO TABLE rt_fields.
+      INSERT ls_field INTO TABLE rt_fields.
 
     ENDLOOP.
 

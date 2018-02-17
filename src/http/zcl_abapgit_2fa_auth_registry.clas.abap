@@ -67,11 +67,11 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
 
 
   METHOD get_authenticator_for_url.
-    FIELD-SYMBOLS: <lo_authenticator> LIKE LINE OF gt_registered_authenticators.
+    FIELD-SYMBOLS: <li_authenticator> LIKE LINE OF gt_registered_authenticators.
 
-    LOOP AT gt_registered_authenticators ASSIGNING <lo_authenticator>.
-      IF <lo_authenticator>->supports_url( iv_url ) = abap_true.
-        ro_authenticator = <lo_authenticator>.
+    LOOP AT gt_registered_authenticators ASSIGNING <li_authenticator>.
+      IF <li_authenticator>->supports_url( iv_url ) = abap_true.
+        ro_authenticator = <li_authenticator>.
         RETURN.
       ENDIF.
     ENDLOOP.

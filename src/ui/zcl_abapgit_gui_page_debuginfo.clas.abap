@@ -76,7 +76,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
           lv_list    TYPE string,
           ls_item    TYPE zif_abapgit_definitions=>ty_item.
 
-    FIELD-SYMBOLS <object> LIKE LINE OF lt_objects.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
     CALL FUNCTION 'TR_OBJECT_TABLE'
       TABLES
@@ -84,8 +84,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       EXCEPTIONS
         OTHERS         = 1 ##FM_SUBRC_OK.
 
-    LOOP AT lt_objects ASSIGNING <object> WHERE pgmid = 'R3TR'.
-      ls_item-obj_type = <object>-object.
+    LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
+      ls_item-obj_type = <ls_object>-object.
       IF zcl_abapgit_objects=>is_supported( is_item = ls_item iv_native_only = abap_true ) = abap_true.
         IF lv_list IS INITIAL.
           lv_list = ls_item-obj_type.

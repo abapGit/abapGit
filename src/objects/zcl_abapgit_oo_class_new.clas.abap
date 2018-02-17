@@ -63,7 +63,16 @@ CLASS zcl_abapgit_oo_class_new DEFINITION PUBLIC INHERITING FROM zcl_abapgit_oo_
 
 ENDCLASS.
 
-CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
+
+
+  METHOD create_report.
+    INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
+    ASSERT sy-subrc = 0.
+  ENDMETHOD.
+
 
   METHOD determine_method_include.
 
@@ -109,29 +118,44 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~create.
-* same as in super class, but with "version = seoc_version_active"
 
-    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+  METHOD generate_classpool.
+
+    DATA: ls_clskey TYPE seoclskey.
+
+    ls_clskey-clsname = iv_name.
+
+    CALL FUNCTION 'SEO_CLASS_GENERATE_CLASSPOOL'
       EXPORTING
-        devclass        = iv_package
-        overwrite       = iv_overwrite
-        version         = seoc_version_active
-      CHANGING
-        class           = is_properties
+        clskey                        = ls_clskey
+        suppress_corr                 = seox_true
       EXCEPTIONS
-        existing        = 1
-        is_interface    = 2
-        db_error        = 3
-        component_error = 4
-        no_access       = 5
-        other           = 6
-        OTHERS          = 7.
+        not_existing                  = 1
+        model_only                    = 2
+        class_pool_not_generated      = 3
+        class_stment_not_generated    = 4
+        locals_not_generated          = 5
+        macros_not_generated          = 6
+        public_sec_not_generated      = 7
+        protected_sec_not_generated   = 8
+        private_sec_not_generated     = 9
+        typeref_not_generated         = 10
+        class_pool_not_initialised    = 11
+        class_stment_not_initialised  = 12
+        locals_not_initialised        = 13
+        macros_not_initialised        = 14
+        public_sec_not_initialised    = 15
+        protected_sec_not_initialised = 16
+        private_sec_not_initialised   = 17
+        typeref_not_initialised       = 18
+        _internal_class_overflow      = 19
+        OTHERS                        = 20.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD init_scanner.
 
@@ -146,49 +170,52 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD update_report.
 
-    DATA: lt_old TYPE string_table.
+  METHOD update_cs_number_of_methods.
 
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
-    ENDIF.
+    " Indirect access to keep downward compatibility
+    DATA lr_cache_entry TYPE REF TO data.
+    FIELD-SYMBOLS: <ls_cache_entry> TYPE any,
+                   <field>          TYPE any.
 
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
+    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+    ASSIGN lr_cache_entry->* TO <ls_cache_entry>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <ls_cache_entry>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    <field> = iv_classname.
+
+    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <ls_cache_entry>
+           TO <field>.
+    ASSERT sy-subrc = 0.
+    <field> = iv_number_of_impl_methods.
+
+    MODIFY ('SEO_CS_CACHE') FROM <ls_cache_entry>.
+
+  ENDMETHOD.
+
+
+  METHOD update_full_class_include.
+
+    CONSTANTS: lc_class_source_extension TYPE sychar02 VALUE 'CS',
+               lc_include_program_type   TYPE sychar01 VALUE 'I',
+               lc_active_version         TYPE r3state VALUE 'A'.
+
+
+    create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
+                   it_source       = it_source
+                   iv_extension    = lc_class_source_extension
+                   iv_program_type = lc_include_program_type
+                   iv_version      = lc_active_version ).
+
+    " Assuming that all methods that were scanned are implemented
+    update_cs_number_of_methods( iv_classname              = iv_classname
+                                 iv_number_of_impl_methods = lines( it_methods ) ).
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~generate_locals.
-
-    DATA: lv_program TYPE programm.
-
-
-    lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_definitions ).
-
-    lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_implementations ).
-
-    lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_macros ).
-
-    IF lines( it_local_test_classes ) > 0.
-      lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
-      update_report( iv_program = lv_program
-                     it_source  = it_local_test_classes ).
-    ENDIF.
-
-  ENDMETHOD.
 
   METHOD update_meta.
 
@@ -242,42 +269,51 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD generate_classpool.
 
-    DATA: ls_clskey TYPE seoclskey.
+  METHOD update_report.
 
-    ls_clskey-clsname = iv_name.
+    DATA: lt_old TYPE string_table.
 
-    CALL FUNCTION 'SEO_CLASS_GENERATE_CLASSPOOL'
-      EXPORTING
-        clskey                        = ls_clskey
-        suppress_corr                 = seox_true
-      EXCEPTIONS
-        not_existing                  = 1
-        model_only                    = 2
-        class_pool_not_generated      = 3
-        class_stment_not_generated    = 4
-        locals_not_generated          = 5
-        macros_not_generated          = 6
-        public_sec_not_generated      = 7
-        protected_sec_not_generated   = 8
-        private_sec_not_generated     = 9
-        typeref_not_generated         = 10
-        class_pool_not_initialised    = 11
-        class_stment_not_initialised  = 12
-        locals_not_initialised        = 13
-        macros_not_initialised        = 14
-        public_sec_not_initialised    = 15
-        protected_sec_not_initialised = 16
-        private_sec_not_initialised   = 17
-        typeref_not_initialised       = 18
-        _internal_class_overflow      = 19
-        OTHERS                        = 20.
+    READ REPORT iv_program INTO lt_old.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
+      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
+    ENDIF.
+
+    IF lt_old <> it_source.
+      INSERT REPORT iv_program FROM it_source.
+      ASSERT sy-subrc = 0.
+      rv_updated = abap_true.
+    ELSE.
+      rv_updated = abap_false.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~create.
+* same as in super class, but with "version = seoc_version_active"
+
+    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+        version         = seoc_version_active
+      CHANGING
+        class           = is_properties
+      EXCEPTIONS
+        existing        = 1
+        is_interface    = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
 
@@ -356,51 +392,29 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD update_full_class_include.
-    CONSTANTS c_class_source_extension TYPE sychar02 VALUE 'CS'.
-    CONSTANTS c_include_program_type TYPE sychar01 VALUE 'I'.
-    CONSTANTS c_active_version TYPE r3state VALUE 'A'.
 
-    create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
-                   it_source       = it_source
-                   iv_extension    = c_class_source_extension
-                   iv_program_type = c_include_program_type
-                   iv_version      = c_active_version ).
+  METHOD zif_abapgit_oo_object_fnc~generate_locals.
 
-    " Assuming that all methods that were scanned are implemented
-    update_cs_number_of_methods( iv_classname              = iv_classname
-                                 iv_number_of_impl_methods = lines( it_methods ) ).
+    DATA: lv_program TYPE programm.
 
-  ENDMETHOD.
 
-  METHOD create_report.
-    INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
-    ASSERT sy-subrc = 0.
-  ENDMETHOD.
+    lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
+    update_report( iv_program = lv_program
+                   it_source  = it_local_definitions ).
 
-  METHOD update_cs_number_of_methods.
+    lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
+    update_report( iv_program = lv_program
+                   it_source  = it_local_implementations ).
 
-    " Indirect access to keep downward compatibility
-    DATA lr_cache_entry TYPE REF TO data.
-    FIELD-SYMBOLS: <ls_cache_entry> TYPE any,
-                   <field>          TYPE any.
+    lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
+    update_report( iv_program = lv_program
+                   it_source  = it_local_macros ).
 
-    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
-    ASSIGN lr_cache_entry->* TO <ls_cache_entry>.
-    ASSERT sy-subrc = 0.
-
-    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <ls_cache_entry>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    <field> = iv_classname.
-
-    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <ls_cache_entry>
-           TO <field>.
-    ASSERT sy-subrc = 0.
-    <field> = iv_number_of_impl_methods.
-
-    MODIFY ('SEO_CS_CACHE') FROM <ls_cache_entry>.
+    IF lines( it_local_test_classes ) > 0.
+      lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
+      update_report( iv_program = lv_program
+                     it_source  = it_local_test_classes ).
+    ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
