@@ -32,7 +32,7 @@ ENDFORM.                    "run
 FORM open_gui RAISING zcx_abapgit_exception.
 
   IF sy-batch = abap_true.
-    lcl_background=>run( ).
+    zcl_abapgit_background=>run( ).
   ELSE.
     lcl_gui=>get_instance( )->go_home( ).
     CALL SELECTION-SCREEN 1001. " trigger screen

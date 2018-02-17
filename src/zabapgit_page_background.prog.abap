@@ -37,7 +37,7 @@ CLASS lcl_gui_page_bkg_run IMPLEMENTATION.
 
 
     TRY.
-        lcl_background=>run( ).
+        zcl_abapgit_background=>run( ).
 
         DO.
           READ LINE lv_line LINE VALUE INTO lv_text.
