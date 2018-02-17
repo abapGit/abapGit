@@ -273,8 +273,8 @@ CLASS lcl_gui_page_stage IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( mo_repo ) ).
-    ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
 
     ro_html->add( '<div class="stage-container">' ).
     ro_html->add( render_actions( ) ).

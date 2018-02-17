@@ -212,7 +212,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception INTO lx_error.
         ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
-        ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
@@ -500,7 +500,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
 
       ro_html->add( '<div>' ).
       ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
-      ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
                                                           iv2 = is_item-rstate ) ).
       ro_html->add( '</div>' ).
 
@@ -515,7 +515,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
         ro_html->add( '<div>' ).
         ro_html->add_a( iv_txt = |view diff ({ is_item-changes })|
                         iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_difflink }| ).
-        ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
+        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv1 = is_item-lstate
                                                             iv2 = is_item-rstate ) ).
         ro_html->add( '</div>' ).
 
@@ -529,7 +529,7 @@ CLASS lcl_gui_view_repo IMPLEMENTATION.
               ig_file = ls_file ).
             ro_html->add_a( iv_txt = 'view diff'
                             iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_difflink }| ).
-            ro_html->add( lcl_gui_chunk_lib=>render_item_state( iv1 = ls_file-lstate
+            ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv1 = ls_file-lstate
                                                                 iv2 = ls_file-rstate ) ).
           ELSE.
             ro_html->add( '&nbsp;' ).

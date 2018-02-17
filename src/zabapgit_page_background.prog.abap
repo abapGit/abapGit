@@ -176,7 +176,7 @@ CLASS lcl_gui_page_bkg IMPLEMENTATION.
         lv_afixed = ' checked' ##NO_TEXT.
     ENDCASE.
 
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top( lo_repo ) ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
 
     ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.

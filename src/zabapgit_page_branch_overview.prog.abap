@@ -120,7 +120,7 @@ CLASS lcl_gui_page_boverview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_show_branch  = abap_false ) ).

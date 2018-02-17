@@ -123,7 +123,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     TRY.
         lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        ro_html->add( lcl_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
         RETURN.
     ENDTRY.
 
@@ -305,12 +305,12 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
     lo_news = zcl_abapgit_news=>create( io_repo ).
 
     ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo               = io_repo
       io_news               = lo_news
       iv_interactive_branch = abap_true ) ).
 
-    ro_html->add( lcl_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).

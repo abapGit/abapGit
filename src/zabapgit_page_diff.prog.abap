@@ -357,7 +357,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
         iv_total = lines( mt_diff_files ).
 
     ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
-    ro_html->add( lcl_gui_chunk_lib=>render_js_error_banner( ) ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
       lo_progress->show(
         iv_current = sy-tabix
@@ -418,7 +418,7 @@ CLASS lcl_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    ro_html->add( lcl_gui_chunk_lib=>render_item_state(
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
       iv1 = is_diff-lstate
       iv2 = is_diff-rstate ) ).
 

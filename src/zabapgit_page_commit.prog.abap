@@ -86,7 +86,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="repo">' ).
-    ro_html->add( lcl_gui_chunk_lib=>render_repo_top(
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_branch       = mo_stage->get_branch_name( ) ) ).
