@@ -168,6 +168,29 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
   TYPES: ty_commit_tt TYPE STANDARD TABLE OF ty_commit WITH DEFAULT KEY.
 
+  CONSTANTS: BEGIN OF c_diff,
+               insert TYPE c LENGTH 1 VALUE 'I',
+               delete TYPE c LENGTH 1 VALUE 'D',
+               update TYPE c LENGTH 1 VALUE 'U',
+             END OF c_diff.
+
+  TYPES: BEGIN OF ty_diff,
+           new_num TYPE c LENGTH 6,
+           new     TYPE string,
+           result  TYPE c LENGTH 1,
+           old_num TYPE c LENGTH 6,
+           old     TYPE string,
+           short   TYPE abap_bool,
+           beacon  TYPE i,
+         END OF ty_diff.
+  TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_count,
+           insert TYPE i,
+           delete TYPE i,
+           update TYPE i,
+         END OF ty_count.
+
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
   CONSTANTS gc_abap_version TYPE string VALUE 'v1.58.0' ##NO_TEXT.
   CONSTANTS:

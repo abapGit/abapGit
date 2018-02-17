@@ -43,7 +43,7 @@ class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
                END OF c_actions.
 
     DATA: mt_diff_files    TYPE tt_file_diff,
-          mt_delayed_lines TYPE zcl_abapgit_diff=>ty_diffs_tt,
+          mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_repo-key,
           mv_seed          TYPE string. " Unique page id to bind JS sessionStorage
@@ -60,15 +60,15 @@ class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
       IMPORTING is_diff        TYPE ty_file_diff
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_beacon
-      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
+      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
                 is_diff        TYPE ty_file_diff
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_split
-      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff
+      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
                 iv_fstate      TYPE char1
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_unified
-      IMPORTING is_diff_line   TYPE zcl_abapgit_diff=>ty_diff OPTIONAL
+      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS append_diff
       IMPORTING it_remote TYPE zif_abapgit_definitions=>ty_files_tt
@@ -426,7 +426,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD render_diff_head.
 
-    DATA: ls_stats TYPE zcl_abapgit_diff=>ty_count.
+    DATA: ls_stats TYPE zif_abapgit_definitions=>ty_count.
 
     CREATE OBJECT ro_html.
 
@@ -465,7 +465,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD render_lines.
 
     DATA: lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
-          lt_diffs       TYPE zcl_abapgit_diff=>ty_diffs_tt,
+          lt_diffs       TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_insert_nav  TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
@@ -524,10 +524,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     " New line
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = zcl_abapgit_diff=>c_diff-update.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
       lv_bg = ' diff_upd'.
       lv_mark = `~`.
-    ELSEIF is_diff_line-result = zcl_abapgit_diff=>c_diff-insert.
+    ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-insert.
       lv_bg = ' diff_ins'.
       lv_mark = `+`.
     ENDIF.
@@ -537,10 +537,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     " Old line
     CLEAR lv_bg.
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = zcl_abapgit_diff=>c_diff-update.
+    IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
       lv_bg = ' diff_upd'.
       lv_mark = `~`.
-    ELSEIF is_diff_line-result = zcl_abapgit_diff=>c_diff-delete.
+    ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
       lv_bg = ' diff_del'.
       lv_mark = `-`.
     ENDIF.
@@ -568,7 +568,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     " Release delayed subsequent update lines
-    IF is_diff_line-result <> zcl_abapgit_diff=>c_diff-update.
+    IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <diff_line>.
         ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( |<td class="num" line-num="{ <diff_line>-old_num }"></td>|
@@ -588,13 +588,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ro_html->add( '<tr>' ).                                 "#EC NOTEXT
     CASE is_diff_line-result.
-      WHEN zcl_abapgit_diff=>c_diff-update.
+      WHEN zif_abapgit_definitions=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
-      WHEN zcl_abapgit_diff=>c_diff-insert.
+      WHEN zif_abapgit_definitions=>c_diff-insert.
         ro_html->add( |<td class="num" line-num=""></td>|
                    && |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
                    && |<td class="code diff_ins">+{ is_diff_line-new }</td>| ).
-      WHEN zcl_abapgit_diff=>c_diff-delete.
+      WHEN zif_abapgit_definitions=>c_diff-delete.
         ro_html->add( |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
                    && |<td class="num" line-num=""></td>|
                    && |<td class="code diff_del">-{ is_diff_line-old }</td>| ).

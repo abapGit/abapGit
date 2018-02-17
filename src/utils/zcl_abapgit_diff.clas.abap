@@ -3,29 +3,6 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: BEGIN OF c_diff,
-                 insert TYPE c LENGTH 1 VALUE 'I',
-                 delete TYPE c LENGTH 1 VALUE 'D',
-                 update TYPE c LENGTH 1 VALUE 'U',
-               END OF c_diff.
-
-    TYPES: BEGIN OF ty_diff,
-             new_num TYPE c LENGTH 6,
-             new     TYPE string,
-             result  TYPE c LENGTH 1,
-             old_num TYPE c LENGTH 6,
-             old     TYPE string,
-             short   TYPE abap_bool,
-             beacon  TYPE i,
-           END OF ty_diff.
-    TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_count,
-             insert TYPE i,
-             delete TYPE i,
-             update TYPE i,
-           END OF ty_count.
-
     DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
@@ -35,14 +12,13 @@ CLASS zcl_abapgit_diff DEFINITION
                 iv_old TYPE xstring.
 
     METHODS get
-      RETURNING VALUE(rt_diff) TYPE ty_diffs_tt.
+      RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     METHODS stats
-      RETURNING VALUE(rs_count) TYPE ty_count.
-
+      RETURNING VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count.
   PRIVATE SECTION.
-    DATA mt_diff     TYPE ty_diffs_tt.
-    DATA ms_stats    TYPE ty_count.
+    DATA mt_diff     TYPE zif_abapgit_definitions=>ty_diffs_tt.
+    DATA ms_stats    TYPE zif_abapgit_definitions=>ty_count.
 
     CLASS-METHODS:
       unpack
@@ -54,7 +30,7 @@ CLASS zcl_abapgit_diff DEFINITION
         IMPORTING it_new         TYPE abaptxt255_tab
                   it_old         TYPE abaptxt255_tab
                   it_delta       TYPE vxabapt255_tab
-        RETURNING VALUE(rt_diff) TYPE ty_diffs_tt,
+        RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt,
       compute
         IMPORTING it_new          TYPE abaptxt255_tab
                   it_old          TYPE abaptxt255_tab
@@ -64,7 +40,6 @@ CLASS zcl_abapgit_diff DEFINITION
       calculate_line_num_and_stats,
       map_beacons,
       shortlist.
-
 ENDCLASS.
 
 
@@ -85,10 +60,10 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       <ls_diff>-old_num = lv_old.
 
       CASE <ls_diff>-result. " Line nums
-        WHEN c_diff-delete.
+        WHEN zif_abapgit_definitions=>c_diff-delete.
           lv_old = lv_old + 1.
           CLEAR <ls_diff>-new_num.
-        WHEN c_diff-insert.
+        WHEN zif_abapgit_definitions=>c_diff-insert.
           lv_new = lv_new + 1.
           CLEAR <ls_diff>-old_num.
         WHEN OTHERS.
@@ -97,11 +72,11 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDCASE.
 
       CASE <ls_diff>-result. " Stats
-        WHEN c_diff-insert.
+        WHEN zif_abapgit_definitions=>c_diff-insert.
           ms_stats-insert = ms_stats-insert + 1.
-        WHEN c_diff-delete.
+        WHEN zif_abapgit_definitions=>c_diff-delete.
           ms_stats-delete = ms_stats-delete + 1.
-        WHEN c_diff-update.
+        WHEN zif_abapgit_definitions=>c_diff-update.
           ms_stats-update = ms_stats-update + 1.
       ENDCASE.
 
@@ -249,17 +224,17 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         DELETE lt_delta INDEX sy-tabix.
 
         CASE ls_delta-vrsflag.
-          WHEN c_diff-delete.
-            _append '' c_diff-delete ls_delta-line.
+          WHEN zif_abapgit_definitions=>c_diff-delete.
+            _append '' zif_abapgit_definitions=>c_diff-delete ls_delta-line.
             lv_oindex = lv_oindex + 1.
-          WHEN c_diff-insert.
-            _append ls_delta-line c_diff-insert ''.
+          WHEN zif_abapgit_definitions=>c_diff-insert.
+            _append ls_delta-line zif_abapgit_definitions=>c_diff-insert ''.
             lv_nindex = lv_nindex + 1.
-          WHEN c_diff-update.
+          WHEN zif_abapgit_definitions=>c_diff-update.
             CLEAR ls_new.
             READ TABLE it_new INTO ls_new INDEX lv_nindex.
             ASSERT sy-subrc = 0.
-            _append ls_new c_diff-update ls_delta-line.
+            _append ls_new zif_abapgit_definitions=>c_diff-update ls_delta-line.
             lv_nindex = lv_nindex + 1.
             lv_oindex = lv_oindex + 1.
           WHEN OTHERS.
