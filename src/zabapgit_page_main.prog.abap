@@ -113,7 +113,7 @@ CLASS lcl_gui_page_main IMPLEMENTATION.
 
     DATA: lt_repos    TYPE zcl_abapgit_repo_srv=>ty_repo_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
-          lo_tutorial TYPE REF TO lcl_gui_view_tutorial,
+          lo_tutorial TYPE REF TO zcl_abapgit_gui_view_tutorial,
           lo_repo     LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
