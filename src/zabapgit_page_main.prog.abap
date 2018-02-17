@@ -20,7 +20,7 @@ CLASS lcl_gui_page_main DEFINITION FINAL INHERITING FROM zcl_abapgit_gui_page.
                END OF c_actions.
 
     DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content TYPE REF TO lcl_gui_view_repo.
+          mo_repo_content TYPE REF TO zcl_abapgit_gui_view_repo.
 
     METHODS:
       test_changed_by
