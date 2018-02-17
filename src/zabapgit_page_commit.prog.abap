@@ -58,7 +58,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: ls_commit TYPE lcl_services_git=>ty_commit_fields.
+    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields.
 
     CASE iv_action.
       WHEN c_action-commit_post.
@@ -69,7 +69,7 @@ CLASS lcl_gui_page_commit IMPLEMENTATION.
 
         ls_commit-repo_key = mo_repo->get_key( ).
 
-        lcl_services_git=>commit( is_commit   = ls_commit
+        zcl_abapgit_services_git=>commit( is_commit   = ls_commit
                                   io_repo     = mo_repo
                                   io_stage    = mo_stage ).
 

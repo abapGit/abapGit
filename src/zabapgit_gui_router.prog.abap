@@ -222,33 +222,33 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " GIT actions
       WHEN zif_abapgit_definitions=>gc_action-git_pull.                      " GIT Pull
-        lcl_services_git=>pull( lv_key ).
+        zcl_abapgit_services_git=>pull( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_reset.                     " GIT Reset
-        lcl_services_git=>reset( lv_key ).
+        zcl_abapgit_services_git=>reset( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_branch_create.             " GIT Create new branch
-        lcl_services_git=>create_branch( lv_key ).
+        zcl_abapgit_services_git=>create_branch( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_branch_delete.             " GIT Delete remote branch
-        lcl_services_git=>delete_branch( lv_key ).
+        zcl_abapgit_services_git=>delete_branch( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_branch_switch.             " GIT Switch branch
-        lcl_services_git=>switch_branch( lv_key ).
+        zcl_abapgit_services_git=>switch_branch( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-go_tag_overview.               " GIT Tag overview
-        lcl_services_git=>tag_overview( lv_key ).
+        zcl_abapgit_services_git=>tag_overview( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_create.                " GIT Tag create
-        lcl_services_git=>create_tag( lv_key ).
+        zcl_abapgit_services_git=>create_tag( lv_key ).
         lcl_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_delete.                " GIT Tag create
-        lcl_services_git=>delete_tag( lv_key ).
+        zcl_abapgit_services_git=>delete_tag( lv_key ).
         lcl_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_switch.                " GIT Switch Tag
-        lcl_services_git=>switch_tag( lv_key ).
+        zcl_abapgit_services_git=>switch_tag( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
 
         "Others
