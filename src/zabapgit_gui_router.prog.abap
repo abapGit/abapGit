@@ -285,7 +285,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
   METHOD get_page_branch_overview.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          lo_page TYPE REF TO lcl_gui_page_boverview,
+          lo_page TYPE REF TO zcl_abapgit_gui_page_boverview,
           lv_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
