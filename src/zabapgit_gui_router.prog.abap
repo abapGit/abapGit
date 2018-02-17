@@ -305,7 +305,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
     DATA: ls_file   TYPE zif_abapgit_definitions=>ty_file,
           ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lo_page   TYPE REF TO lcl_gui_page_diff,
+          lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
 
 
