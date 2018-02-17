@@ -5,15 +5,14 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
 
   PUBLIC SECTION.
     METHODS:
-      constructor IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+      constructor IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key,
       zif_abapgit_gui_page~on_event REDEFINITION.
-
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
     DATA:
-      mv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
+      mv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
     METHODS:
       build_menu
@@ -21,7 +20,6 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
       render_data
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 

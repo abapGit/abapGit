@@ -8,7 +8,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
     METHODS constructor
       IMPORTING
-        !is_data TYPE zcl_abapgit_persistence_repo=>ty_repo .
+        !is_data TYPE zif_abapgit_persistence=>ty_repo .
     METHODS get_key
       RETURNING
         VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
@@ -27,7 +27,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_local_checksums
       RETURNING
-        VALUE(rt_checksums) TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt .
+        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
     METHODS get_local_checksums_per_file
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
@@ -38,7 +38,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_package
       RETURNING
-        VALUE(rv_package) TYPE zcl_abapgit_persistence_repo=>ty_repo-package .
+        VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
     METHODS get_master_language
       RETURNING
         VALUE(rv_language) TYPE spras .
@@ -96,19 +96,18 @@ CLASS zcl_abapgit_repo DEFINITION
           mt_remote             TYPE zif_abapgit_definitions=>ty_files_tt,
           mv_do_local_refresh   TYPE abap_bool,
           mv_last_serialization TYPE timestamp,
-          ms_data               TYPE zcl_abapgit_persistence_repo=>ty_repo.
+          ms_data               TYPE zif_abapgit_persistence=>ty_repo.
 
     METHODS:
       set
         IMPORTING iv_sha1        TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                  it_checksums   TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt OPTIONAL
-                  iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url OPTIONAL
-                  iv_branch_name TYPE zcl_abapgit_persistence_repo=>ty_repo-branch_name OPTIONAL
-                  iv_head_branch TYPE zcl_abapgit_persistence_repo=>ty_repo-head_branch OPTIONAL
-                  iv_offline     TYPE zcl_abapgit_persistence_repo=>ty_repo-offline OPTIONAL
-                  is_dot_abapgit TYPE zcl_abapgit_persistence_repo=>ty_repo-dot_abapgit OPTIONAL
+                  it_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+                  iv_url         TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+                  iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+                  iv_head_branch TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+                  iv_offline     TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+                  is_dot_abapgit TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
         RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -368,7 +367,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA: lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-          lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt.
+          lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
@@ -502,7 +501,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     " Push fills it from local files before pushing, deserialize from remote
     " If this is not true that there is an error somewhere but not here
 
-    DATA: lt_checksums TYPE zcl_abapgit_persistence_repo=>ty_local_checksum_tt,
+    DATA: lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt,
           lt_files_idx TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lv_chks_row  TYPE i,

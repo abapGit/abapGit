@@ -6,38 +6,38 @@ CLASS zcl_abapgit_services_repo DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS refresh
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS remove
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS purge
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS new_offline
       RAISING zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_attach
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_detach
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS remote_change
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS refresh_local_checksums
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS toggle_favorite
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS open_se80
@@ -47,7 +47,6 @@ CLASS zcl_abapgit_services_repo DEFINITION PUBLIC FINAL CREATE PUBLIC.
     CLASS-METHODS transport_to_branch
       IMPORTING iv_repository_key TYPE zif_abapgit_persistence=>ty_value
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
 ENDCLASS.
 
 

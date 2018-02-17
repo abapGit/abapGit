@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     DATA: lo_pback      TYPE REF TO zcl_abapgit_persist_background,
           lv_current    TYPE abap_bool,
-          lv_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_icon       TYPE string,
           lo_repo       LIKE LINE OF it_repo_list,
           lo_favbar     TYPE REF TO zcl_abapgit_html_toolbar,
@@ -288,7 +288,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: lv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key.
+    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
     IF NOT mo_repo_content IS INITIAL.

@@ -4,7 +4,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES tt_favorites TYPE zcl_abapgit_persistence_repo=>tt_repo_keys .
+    TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
 
     CLASS-METHODS get_instance
       IMPORTING
@@ -43,40 +43,40 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS get_repo_git_user_email
       IMPORTING
-        !iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
       RETURNING
         VALUE(rv_email) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_repo_git_user_name
       IMPORTING
-        !iv_url            TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url
       RETURNING
         VALUE(rv_username) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_repo_last_change_seen
       IMPORTING
-        !iv_url           TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url           TYPE zif_abapgit_persistence=>ty_repo-url
       RETURNING
         VALUE(rv_version) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_repo_login
       IMPORTING
-        !iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
       RETURNING
         VALUE(rv_login) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_repo_show
       RETURNING
-        VALUE(rv_key) TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
     METHODS is_favorite_repo
       IMPORTING
-        !iv_repo_key  TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_repo_key  TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
         VALUE(rv_yes) TYPE abap_bool
       RAISING
@@ -93,31 +93,31 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS set_repo_git_user_email
       IMPORTING
-        !iv_url   TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url   TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_email TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS set_repo_git_user_name
       IMPORTING
-        !iv_url      TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url      TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_username TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS set_repo_last_change_seen
       IMPORTING
-        !iv_url     TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url     TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_version TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS set_repo_login
       IMPORTING
-        !iv_url   TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url   TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_login TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS set_repo_show
       IMPORTING
-        !iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
     METHODS toggle_changes_only
@@ -132,7 +132,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS toggle_favorite
       IMPORTING
-        !iv_repo_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
     METHODS toggle_hide_files
@@ -144,7 +144,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     TYPES:
       BEGIN OF ty_repo_config,
-        url              TYPE zcl_abapgit_persistence_repo=>ty_repo-url,
+        url              TYPE zif_abapgit_persistence=>ty_repo-url,
         login            TYPE string,
         git_user         TYPE zif_abapgit_definitions=>ty_git_user,
         last_change_seen TYPE string,
@@ -154,7 +154,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
     TYPES:
       BEGIN OF ty_user,
         default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
-        repo_show        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+        repo_show        TYPE zif_abapgit_persistence=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
@@ -182,7 +182,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS read_repo_config
       IMPORTING
-        !iv_url               TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url               TYPE zif_abapgit_persistence=>ty_repo-url
       RETURNING
         VALUE(rs_repo_config) TYPE ty_repo_config
       RAISING
@@ -199,7 +199,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         zcx_abapgit_exception .
     METHODS update_repo_config
       IMPORTING
-        !iv_url         TYPE zcl_abapgit_persistence_repo=>ty_repo-url
+        !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
         !is_repo_config TYPE ty_repo_config
       RAISING
         zcx_abapgit_exception .

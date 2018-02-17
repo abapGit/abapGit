@@ -3,71 +3,44 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_local_checksum,
-             item  TYPE zif_abapgit_definitions=>ty_item,
-             files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-           END OF ty_local_checksum.
-
-    TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_repo_xml,
-             url                TYPE string,
-             branch_name        TYPE string,
-             sha1               TYPE zif_abapgit_definitions=>ty_sha1,
-             package            TYPE devclass,
-             offline            TYPE sap_bool,
-             local_checksums    TYPE ty_local_checksum_tt,
-             dot_abapgit        TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-             head_branch        TYPE string,   " HEAD symref of the repo, master branch
-             write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
-             ignore_subpackages TYPE sap_bool,
-           END OF ty_repo_xml.
-
-    TYPES: BEGIN OF ty_repo,
-             key TYPE zif_abapgit_persistence=>ty_value.
-        INCLUDE TYPE ty_repo_xml.
-    TYPES: END OF ty_repo.
-    TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
-    TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
-
     METHODS constructor.
 
     METHODS list
-      RETURNING VALUE(rt_repos) TYPE tt_repo
+      RETURNING VALUE(rt_repos) TYPE zif_abapgit_persistence=>tt_repo
       RAISING   zcx_abapgit_exception.
 
     METHODS update_sha1
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_branch_sha1 TYPE ty_repo_xml-sha1
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
+                iv_branch_sha1 TYPE zif_abapgit_persistence=>ty_repo_xml-sha1
       RAISING   zcx_abapgit_exception.
 
     METHODS update_local_checksums
-      IMPORTING iv_key       TYPE ty_repo-key
-                it_checksums TYPE ty_repo_xml-local_checksums
+      IMPORTING iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
+                it_checksums TYPE zif_abapgit_persistence=>ty_repo_xml-local_checksums
       RAISING   zcx_abapgit_exception.
 
     METHODS update_url
-      IMPORTING iv_key TYPE ty_repo-key
-                iv_url TYPE ty_repo_xml-url
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+                iv_url TYPE zif_abapgit_persistence=>ty_repo_xml-url
       RAISING   zcx_abapgit_exception.
 
     METHODS update_branch_name
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_branch_name TYPE ty_repo_xml-branch_name
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
+                iv_branch_name TYPE zif_abapgit_persistence=>ty_repo_xml-branch_name
       RAISING   zcx_abapgit_exception.
 
     METHODS update_head_branch
-      IMPORTING iv_key         TYPE ty_repo-key
-                iv_head_branch TYPE ty_repo_xml-head_branch
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
+                iv_head_branch TYPE zif_abapgit_persistence=>ty_repo_xml-head_branch
       RAISING   zcx_abapgit_exception.
 
     METHODS update_offline
-      IMPORTING iv_key     TYPE ty_repo-key
-                iv_offline TYPE ty_repo_xml-offline
+      IMPORTING iv_key     TYPE zif_abapgit_persistence=>ty_repo-key
+                iv_offline TYPE zif_abapgit_persistence=>ty_repo_xml-offline
       RAISING   zcx_abapgit_exception.
 
     METHODS update_dot_abapgit
-      IMPORTING iv_key         TYPE ty_repo-key
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
                 is_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
       RAISING   zcx_abapgit_exception.
 
@@ -78,33 +51,33 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
                 iv_package     TYPE devclass
                 iv_offline     TYPE sap_bool DEFAULT abap_false
                 is_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
-      RETURNING VALUE(rv_key)  TYPE ty_repo-key
+      RETURNING VALUE(rv_key)  TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     METHODS delete
-      IMPORTING iv_key TYPE ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception.
 
     METHODS read
-      IMPORTING iv_key         TYPE ty_repo-key
-      RETURNING VALUE(rs_repo) TYPE ty_repo
+      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
+      RETURNING VALUE(rs_repo) TYPE zif_abapgit_persistence=>ty_repo
       RAISING   zcx_abapgit_exception
                 zcx_abapgit_not_found.
 
     METHODS lock
       IMPORTING iv_mode TYPE enqmode
-                iv_key  TYPE ty_repo-key
+                iv_key  TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     DATA: mo_db TYPE REF TO zcl_abapgit_persistence_db.
 
     METHODS from_xml
       IMPORTING iv_repo_xml_string TYPE string
-      RETURNING VALUE(rs_repo)     TYPE ty_repo_xml
+      RETURNING VALUE(rs_repo)     TYPE zif_abapgit_persistence=>ty_repo_xml
       RAISING   zcx_abapgit_exception.
 
     METHODS to_xml
-      IMPORTING is_repo                   TYPE ty_repo
+      IMPORTING is_repo                   TYPE zif_abapgit_persistence=>ty_repo
       RETURNING VALUE(rv_repo_xml_string) TYPE string.
 
     METHODS get_next_id
@@ -119,7 +92,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD add.
 
-    DATA: ls_repo        TYPE ty_repo,
+    DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
           lv_repo_as_xml TYPE string.
 
 
@@ -238,7 +211,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD read.
 
-    DATA lt_repo TYPE tt_repo.
+    DATA lt_repo TYPE zif_abapgit_persistence=>tt_repo.
 
     lt_repo = list( ).
 
@@ -252,7 +225,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD to_xml.
 
-    DATA: ls_xml TYPE ty_repo_xml.
+    DATA: ls_xml TYPE zif_abapgit_persistence=>ty_repo_xml.
 
 
     MOVE-CORRESPONDING is_repo TO ls_xml.
@@ -267,7 +240,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ASSERT NOT iv_key IS INITIAL.
@@ -292,7 +265,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ASSERT NOT iv_key IS INITIAL.
@@ -317,7 +290,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ASSERT NOT iv_key IS INITIAL.
@@ -342,7 +315,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ASSERT NOT iv_key IS INITIAL.
@@ -367,7 +340,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
     ASSERT NOT iv_key IS INITIAL.
 
@@ -391,7 +364,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     ASSERT NOT iv_key IS INITIAL.
@@ -416,7 +389,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
           ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE ty_repo.
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
 
 
     IF iv_url IS INITIAL.

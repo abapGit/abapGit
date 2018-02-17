@@ -21,7 +21,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.

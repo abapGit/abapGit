@@ -3,7 +3,7 @@ CLASS zcl_abapgit_services_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
   PUBLIC SECTION.
 
     TYPES: BEGIN OF ty_commit_fields,
-             repo_key        TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+             repo_key        TYPE zif_abapgit_persistence=>ty_repo-key,
              committer_name  TYPE string,
              committer_email TYPE string,
              author_name     TYPE string,
@@ -13,39 +13,39 @@ CLASS zcl_abapgit_services_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
            END OF ty_commit_fields.
 
     CLASS-METHODS pull
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS reset
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS create_branch
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS switch_branch
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS delete_branch
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS create_tag
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS delete_tag
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS switch_tag
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS tag_overview
-      IMPORTING iv_key TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
 
     CLASS-METHODS commit
@@ -53,7 +53,6 @@ CLASS zcl_abapgit_services_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
                 is_commit TYPE ty_commit_fields
                 io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
 ENDCLASS.
 
 

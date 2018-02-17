@@ -26,13 +26,12 @@ class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
 
     METHODS:
       constructor
-        IMPORTING iv_key           TYPE zcl_abapgit_persistence_repo=>ty_repo-key
+        IMPORTING iv_key           TYPE zif_abapgit_persistence=>ty_repo-key
                   is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
                   is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
                   iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
-
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
@@ -46,7 +45,7 @@ class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
     DATA: mt_diff_files    TYPE tt_file_diff,
           mt_delayed_lines TYPE zcl_abapgit_diff=>ty_diffs_tt,
           mv_unified       TYPE abap_bool VALUE abap_true,
-          mv_repo_key      TYPE zcl_abapgit_persistence_repo=>ty_repo-key,
+          mv_repo_key      TYPE zif_abapgit_persistence=>ty_repo-key,
           mv_seed          TYPE string. " Unique page id to bind JS sessionStorage
 
     METHODS render_diff
@@ -83,7 +82,6 @@ class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
       IMPORTING iv_d1         TYPE xstring
                 iv_d2         TYPE xstring
       RETURNING VALUE(rv_yes) TYPE abap_bool.
-
 ENDCLASS.
 
 
