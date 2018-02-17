@@ -70,7 +70,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
-        CREATE OBJECT ei_page TYPE lcl_gui_page_db.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_debuginfo.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_debuginfo.
@@ -120,7 +120,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " DB actions
       WHEN zif_abapgit_definitions=>gc_action-db_edit.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_db_edit
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db_edit
           EXPORTING
             is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
@@ -128,7 +128,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
           ev_state = zif_abapgit_definitions=>gc_event_state-new_page_replacing.
         ENDIF.
       WHEN zif_abapgit_definitions=>gc_action-db_display.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_db_dis
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db_dis
           EXPORTING
             is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
