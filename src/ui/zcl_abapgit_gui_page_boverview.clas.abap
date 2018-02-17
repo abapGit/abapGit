@@ -62,7 +62,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
 
   METHOD body.
-    DATA: tag TYPE string.
+    DATA: lv_tag TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -126,13 +126,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
         " Therefore we concatenate them.
         " https://github.com/nicoespeon/gitgraph.js/issues/143
 
-        tag = concat_lines_of( table = <ls_commit>-tags
-                               sep   = ` | ` ).
+        lv_tag = concat_lines_of( table = <ls_commit>-tags
+                                  sep   = ` | ` ).
 
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
           escape_message( <ls_commit>-message ) }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }", tag: "{ tag }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ lv_tag }"\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{

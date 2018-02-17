@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lv_system TYPE string.
 
-    FIELD-SYMBOLS <state> TYPE char1.
+    FIELD-SYMBOLS <lv_state> TYPE char1.
 
 
     rv_html = '<span class="state-block">'.
@@ -107,14 +107,14 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     DO 2 TIMES.
       CASE sy-index.
         WHEN 1.
-          ASSIGN iv1 TO <state>.
+          ASSIGN iv1 TO <lv_state>.
           lv_system = 'Local:'.
         WHEN 2.
-          ASSIGN iv2 TO <state>.
+          ASSIGN iv2 TO <lv_state>.
           lv_system = 'Remote:'.
       ENDCASE.
 
-      CASE <state>.
+      CASE <lv_state>.
         WHEN zif_abapgit_definitions=>gc_state-unchanged.  "None or unchanged
           IF iv1 = zif_abapgit_definitions=>gc_state-added OR iv2 = zif_abapgit_definitions=>gc_state-added.
             rv_html = rv_html && |<span class="none" title="{ lv_system } Not exists">X</span>|.
@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
           lv_display TYPE string,
           lt_log     TYPE zcl_abapgit_news=>tt_log.
 
-    FIELD-SYMBOLS: <line> LIKE LINE OF lt_log.
+    FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
     CREATE OBJECT ro_html.
 
@@ -187,18 +187,18 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Generate news
     ro_html->add( |<div class="newslist">| ).
-    LOOP AT lt_log ASSIGNING <line>.
-      IF <line>-is_header = abap_true.
-        IF <line>-pos_to_cur > 0.
-          lv_text = <line>-text && '<span class="version-marker update">update</span>'.
-        ELSEIF <line>-pos_to_cur = 0.
-          lv_text = <line>-text && '<span class="version-marker">current</span>'.
+    LOOP AT lt_log ASSIGNING <ls_line>.
+      IF <ls_line>-is_header = abap_true.
+        IF <ls_line>-pos_to_cur > 0.
+          lv_text = <ls_line>-text && '<span class="version-marker update">update</span>'.
+        ELSEIF <ls_line>-pos_to_cur = 0.
+          lv_text = <ls_line>-text && '<span class="version-marker">current</span>'.
         ELSE. " < 0
-          lv_text = <line>-text.
+          lv_text = <ls_line>-text.
         ENDIF.
         ro_html->add( |<h1>{ lv_text }</h1>| ).
       ELSE.
-        ro_html->add( |<li>{ <line>-text }</li>| ).
+        ro_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
     ro_html->add( '</div>' ).

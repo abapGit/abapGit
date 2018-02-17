@@ -40,31 +40,57 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD split_parameters_comp.
-    DATA: lv_off TYPE i.
+  METHOD deserialize_texts.
 
-    IF iv_param CS iv_type.
-      lv_off = sy-fdpos + strlen( iv_type ).
-      cg_value = iv_param+lv_off.
-      IF cg_value CA '\'.
-        CLEAR cg_value+sy-fdpos.
+    DATA lt_tpool_i18n TYPE TABLE OF tstct.
+
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
+
+
+    " Read XML-files data
+    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+                  CHANGING  cg_data = lt_tpool_i18n ).
+
+    " Force t-code name (security reasons)
+    LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
+      <ls_tpool>-tcode = ms_item-obj_name.
+    ENDLOOP.
+
+    IF lines( lt_tpool_i18n ) > 0.
+      MODIFY tstct FROM TABLE lt_tpool_i18n.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Update of t-code translations failed' ).
       ENDIF.
     ENDIF.
-  ENDMETHOD.                    "split_parameters_comp
+
+  ENDMETHOD.                    "deserialize_texts
+
+
+  METHOD serialize_texts.
+
+    DATA lt_tpool_i18n TYPE TABLE OF tstct.
+
+    " Skip master language - it was already serialized
+    " Don't serialize t-code itself
+    SELECT sprsl ttext
+      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
+      FROM tstct
+      WHERE sprsl <> mv_language
+      AND   tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
+
+    IF lines( lt_tpool_i18n ) > 0.
+      SORT lt_tpool_i18n BY sprsl ASCENDING.
+      io_xml->add( iv_name = 'I18N_TPOOL'
+                   ig_data = lt_tpool_i18n ).
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_texts
+
 
   METHOD split_parameters.
 * see subroutine split_parameters in include LSEUKF01
@@ -195,52 +221,29 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "split_parameters
 
-  METHOD zif_abapgit_object~exists.
 
-    DATA: lv_tcode TYPE tstc-tcode.
+  METHOD split_parameters_comp.
+    DATA: lv_off TYPE i.
 
-
-    SELECT SINGLE tcode FROM tstc INTO lv_tcode
-      WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
-
-  METHOD zif_abapgit_object~jump.
-
-    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+    IF iv_param CS iv_type.
+      lv_off = sy-fdpos + strlen( iv_type ).
+      cg_value = iv_param+lv_off.
+      IF cg_value CA '\'.
+        CLEAR cg_value+sy-fdpos.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.                    "split_parameters_comp
 
 
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPLSEUK'.
-    <ls_bdcdata>-dynpro   = '0390'.
-    <ls_bdcdata>-dynbegin = abap_true.
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.
 
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
-    <ls_bdcdata>-fval = '=SHOW'.
 
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'TSTC-TCODE'.
-    <ls_bdcdata>-fval = ms_item-obj_name.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                 = 'SE93'
-        mode_val              = 'E'
-      TABLES
-        using_tab             = lt_bdcdata
-      EXCEPTIONS
-        system_failure        = 1
-        communication_failure = 2
-        resource_failure      = 3
-        OTHERS                = 4
-        ##fm_subrc_ok.    "#EC CI_SUBRC
-
-  ENDMETHOD.                    "jump
 
   METHOD zif_abapgit_object~delete.
 
@@ -261,6 +264,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "delete
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -356,6 +360,66 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_tcode TYPE tstc-tcode.
+
+
+    SELECT SINGLE tcode FROM tstc INTO lv_tcode
+      WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
+
+  METHOD zif_abapgit_object~jump.
+
+    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
+
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
+
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPLSEUK'.
+    <ls_bdcdata>-dynpro   = '0390'.
+    <ls_bdcdata>-dynbegin = abap_true.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=SHOW'.
+
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'TSTC-TCODE'.
+    <ls_bdcdata>-fval = ms_item-obj_name.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                 = 'SE93'
+        mode_val              = 'E'
+      TABLES
+        using_tab             = lt_bdcdata
+      EXCEPTIONS
+        system_failure        = 1
+        communication_failure = 2
+        resource_failure      = 3
+        OTHERS                = 4
+        ##fm_subrc_ok.    "#EC CI_SUBRC
+
+  ENDMETHOD.                    "jump
+
+
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_transaction TYPE tstc-tcode,
@@ -414,52 +478,4 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-  METHOD serialize_texts.
-
-    DATA lt_tpool_i18n TYPE TABLE OF tstct.
-
-    " Skip master language - it was already serialized
-    " Don't serialize t-code itself
-    SELECT sprsl ttext
-      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
-      FROM tstct
-      WHERE sprsl <> mv_language
-      AND   tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
-
-    IF lines( lt_tpool_i18n ) > 0.
-      SORT lt_tpool_i18n BY sprsl ASCENDING.
-      io_xml->add( iv_name = 'I18N_TPOOL'
-                   ig_data = lt_tpool_i18n ).
-    ENDIF.
-
-  ENDMETHOD.                    "serialize_texts
-
-  METHOD deserialize_texts.
-
-    DATA lt_tpool_i18n TYPE TABLE OF tstct.
-
-    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
-
-    " Read XML-files data
-    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
-                  CHANGING  cg_data = lt_tpool_i18n ).
-
-    " Force t-code name (security reasons)
-    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
-      <tpool>-tcode = ms_item-obj_name.
-    ENDLOOP.
-
-    IF lines( lt_tpool_i18n ) > 0.
-      MODIFY tstct FROM TABLE lt_tpool_i18n.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Update of t-code translations failed' ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.                    "deserialize_texts
-ENDCLASS.                    "zcl_abapgit_object_tran IMPLEMENTATION
+ENDCLASS.

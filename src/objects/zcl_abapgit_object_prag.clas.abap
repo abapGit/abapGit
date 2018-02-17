@@ -26,13 +26,10 @@ CLASS zcl_abapgit_object_prag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
 
-    rv_changed = abap_true.
+CLASS ZCL_ABAPGIT_OBJECT_PRAG IMPLEMENTATION.
 
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -40,79 +37,13 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
 
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    TRY.
-        cl_abap_pragma=>get_ref( ms_item-obj_name ).
-
-      CATCH cx_abap_pragma_not_exists.
-        rv_bool = abap_false.
-        RETURN.
-    ENDTRY.
-
-    rv_bool = abap_true.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lo_pragma TYPE REF TO cl_abap_pragma,
-          pragma    TYPE zcl_abapgit_object_prag=>ty_pragma.
-
-    TRY.
-        lo_pragma = cl_abap_pragma=>get_ref( ms_item-obj_name ).
-
-        pragma-pragma      = lo_pragma->pragma.
-        pragma-extension   = lo_pragma->extension.
-        pragma-signature   = lo_pragma->signature.
-        pragma-description = lo_pragma->description.
-
-        io_xml->add( iv_name = 'PRAG'
-                     ig_data = pragma ).
-
-      CATCH cx_abap_pragma_not_exists.
-        _raise_pragma_not_exists( ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: pragma    TYPE ty_pragma,
-          lo_pragma TYPE REF TO cl_abap_pragma.
-
-    TRY.
-        io_xml->read(
-          EXPORTING
-            iv_name = 'PRAG'
-          CHANGING
-            cg_data = pragma ).
-
-        lo_pragma = cl_abap_pragma=>create( p_pragma  = ms_item-obj_name
-                                            p_package = iv_package ).
-
-        lo_pragma->set_info( p_description = pragma-description
-                             p_signature   = pragma-signature
-                             p_extension   = pragma-extension ).
-
-        lo_pragma->save( ).
-
-      CATCH cx_abap_pragma_not_exists.
-        _raise_pragma_not_exists( ).
-      CATCH cx_abap_pragma_exists.
-        _raise_pragma_exists( ).
-      CATCH cx_abap_pragma_enqueue.
-        _raise_pragma_enqueue( ).
-    ENDTRY.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -131,6 +62,69 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_pragma TYPE ty_pragma,
+          lo_pragma TYPE REF TO cl_abap_pragma.
+
+    TRY.
+        io_xml->read(
+          EXPORTING
+            iv_name = 'PRAG'
+          CHANGING
+            cg_data = ls_pragma ).
+
+        lo_pragma = cl_abap_pragma=>create( p_pragma  = ms_item-obj_name
+                                            p_package = iv_package ).
+
+        lo_pragma->set_info( p_description = ls_pragma-description
+                             p_signature   = ls_pragma-signature
+                             p_extension   = ls_pragma-extension ).
+
+        lo_pragma->save( ).
+
+      CATCH cx_abap_pragma_not_exists.
+        _raise_pragma_not_exists( ).
+      CATCH cx_abap_pragma_exists.
+        _raise_pragma_exists( ).
+      CATCH cx_abap_pragma_enqueue.
+        _raise_pragma_enqueue( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    TRY.
+        cl_abap_pragma=>get_ref( ms_item-obj_name ).
+
+      CATCH cx_abap_pragma_not_exists.
+        rv_bool = abap_false.
+        RETURN.
+    ENDTRY.
+
+    rv_bool = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+
+    rv_changed = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -145,11 +139,29 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
 
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_pragma TYPE REF TO cl_abap_pragma,
+          ls_pragma TYPE zcl_abapgit_object_prag=>ty_pragma.
+
+    TRY.
+        lo_pragma = cl_abap_pragma=>get_ref( ms_item-obj_name ).
+
+        ls_pragma-pragma      = lo_pragma->pragma.
+        ls_pragma-extension   = lo_pragma->extension.
+        ls_pragma-signature   = lo_pragma->signature.
+        ls_pragma-description = lo_pragma->description.
+
+        io_xml->add( iv_name = 'PRAG'
+                     ig_data = ls_pragma ).
+
+      CATCH cx_abap_pragma_not_exists.
+        _raise_pragma_not_exists( ).
+    ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD _raise_pragma_enqueue.
 
@@ -157,16 +169,17 @@ CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD _raise_pragma_exists.
 
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } exists| ).
 
   ENDMETHOD.
 
+
   METHOD _raise_pragma_not_exists.
 
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
 
   ENDMETHOD.
-
 ENDCLASS.

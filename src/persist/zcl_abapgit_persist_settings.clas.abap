@@ -38,17 +38,19 @@ CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
 
   METHOD modify.
 
-    DATA: settings TYPE string.
-    settings = io_settings->get_settings_xml( ).
+    DATA: lv_settings TYPE string.
+
+
+    lv_settings = io_settings->get_settings_xml( ).
 
     zcl_abapgit_persistence_db=>get_instance( )->modify(
       iv_type       = zcl_abapgit_persistence_db=>c_type_settings
       iv_value      = ''
-      iv_data       = settings ).
+      iv_data       = lv_settings ).
 
     " Settings have been modified: Update Buffered Settings
     IF mo_settings IS BOUND.
-      mo_settings->set_xml_settings( settings ).
+      mo_settings->set_xml_settings( lv_settings ).
     ENDIF.
 
   ENDMETHOD.

@@ -137,14 +137,15 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_settings_xml.
 
-    DATA: lr_output TYPE REF TO zcl_abapgit_xml_output.
+    DATA: lo_output TYPE REF TO zcl_abapgit_xml_output.
 
-    CREATE OBJECT lr_output.
 
-    lr_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
+    CREATE OBJECT lo_output.
+
+    lo_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
                     ig_data = ms_settings ).
 
-    ev_settings_xml = lr_output->render( ).
+    ev_settings_xml = lo_output->render( ).
 
   ENDMETHOD.
 
@@ -211,14 +212,18 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD set_xml_settings.
 
-    DATA: lr_input TYPE REF TO zcl_abapgit_xml_input.
+    DATA: lo_input TYPE REF TO zcl_abapgit_xml_input.
 
-    CREATE OBJECT lr_input EXPORTING iv_xml = iv_settings_xml.
+
+    CREATE OBJECT lo_input EXPORTING iv_xml = iv_settings_xml.
 
     CLEAR ms_settings.
 
-    lr_input->read( EXPORTING iv_name = zcl_abapgit_persistence_db=>c_type_settings
-                    CHANGING  cg_data = ms_settings ).
+    lo_input->read(
+      EXPORTING
+        iv_name = zcl_abapgit_persistence_db=>c_type_settings
+      CHANGING
+        cg_data = ms_settings ).
 
   ENDMETHOD.
 ENDCLASS.

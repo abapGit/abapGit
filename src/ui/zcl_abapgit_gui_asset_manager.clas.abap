@@ -66,17 +66,17 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
   METHOD get_images.
 
-    FIELD-SYMBOLS <image> LIKE LINE OF rt_images.
+    FIELD-SYMBOLS <ls_image> LIKE LINE OF rt_images.
 
     rt_images = get_inline_images( ).
 
     " Convert to xstring
-    LOOP AT rt_images ASSIGNING <image>.
+    LOOP AT rt_images ASSIGNING <ls_image>.
       CALL FUNCTION 'SSFC_BASE64_DECODE'
         EXPORTING
-          b64data = <image>-base64
+          b64data = <ls_image>-base64
         IMPORTING
-          bindata = <image>-content
+          bindata = <ls_image>-content
         EXCEPTIONS
           OTHERS  = 1.
       ASSERT sy-subrc = 0. " Image data error

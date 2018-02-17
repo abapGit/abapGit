@@ -206,7 +206,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD run.
 
-    CONSTANTS: c_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
+    CONSTANTS: lc_enq_type TYPE c LENGTH 12 VALUE 'BACKGROUND'.
 
     DATA: lo_per       TYPE REF TO zcl_abapgit_persist_background,
           lo_repo      TYPE REF TO zcl_abapgit_repo_online,
@@ -219,7 +219,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
         mode_zabapgit  = 'E'
-        type           = c_enq_type
+        type           = lc_enq_type
         _scope         = '3'
       EXCEPTIONS
         foreign_lock   = 1
@@ -262,7 +262,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
     CALL FUNCTION 'DEQUEUE_EZABAPGIT'
       EXPORTING
-        type = c_enq_type.
+        type = lc_enq_type.
 
   ENDMETHOD.
 ENDCLASS.

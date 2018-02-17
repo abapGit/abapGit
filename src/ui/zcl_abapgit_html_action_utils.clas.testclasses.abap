@@ -163,29 +163,30 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD parse_fields_german_umlauts.
 
-    DATA: ae       TYPE string,
-          oe       TYPE string,
-          ue       TYPE string,
-          ae_oe_ue TYPE string.
+    DATA: lv_ae       TYPE string,
+          lv_oe       TYPE string,
+          lv_ue       TYPE string,
+          lv_ae_oe_ue TYPE string.
 
-    ae = ms_german_umlaut_as_char-lower_case_ae.
-    oe = ms_german_umlaut_as_char-lower_case_oe.
-    ue = ms_german_umlaut_as_char-lower_case_ue.
 
-    ae_oe_ue = ae && oe && ue.
+    lv_ae = ms_german_umlaut_as_char-lower_case_ae.
+    lv_oe = ms_german_umlaut_as_char-lower_case_oe.
+    lv_ue = ms_german_umlaut_as_char-lower_case_ue.
 
-    _given_string_is( |committer_name=Christian G{ ue }nter&|
+    lv_ae_oe_ue = lv_ae && lv_oe && lv_ue.
+
+    _given_string_is( |committer_name=Christian G{ lv_ue }nter&|
                    && |committer_email=guenne@googlemail.com&|
-                   && |comment={ ae_oe_ue }&|
-                   && |body=Message body<<new>><<new>>with line break<<new>>and umlauts. { ae_oe_ue }&|
-                   && |author_name=Gerd Schr{ oe }der&|
+                   && |comment={ lv_ae_oe_ue }&|
+                   && |body=Message body<<new>><<new>>with line break<<new>>and umlauts. { lv_ae_oe_ue }&|
+                   && |author_name=Gerd Schr{ lv_oe }der&|
                    && |author_email=gerd@schroeder.com| ).
 
     _when_fields_are_parsed( ).
 
     _then_fields_should_be( index = 1
                             name  = `COMMITTER_NAME`
-                            value = |Christian G{ ue }nter| ).
+                            value = |Christian G{ lv_ue }nter| ).
 
     _then_fields_should_be( index = 2
                             name  = `COMMITTER_EMAIL`
@@ -193,15 +194,15 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _then_fields_should_be( index = 3
                             name  = `COMMENT`
-                            value = ae_oe_ue ).
+                            value = lv_ae_oe_ue ).
 
     _then_fields_should_be( index = 4
                             name  = `BODY`
-                            value = |Message body<<new>><<new>>with line break<<new>>and umlauts. { ae_oe_ue }| ).
+                            value = |Message body<<new>><<new>>with line break<<new>>and umlauts. { lv_ae_oe_ue }| ).
 
     _then_fields_should_be( index = 5
                             name  = `AUTHOR_NAME`
-                            value = |Gerd Schr{ oe }der| ).
+                            value = |Gerd Schr{ lv_oe }der| ).
 
     _then_fields_should_be( index = 6
                             name  = `AUTHOR_EMAIL`
@@ -223,19 +224,19 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD _then_fields_should_be.
 
-    FIELD-SYMBOLS: <parsed_field> LIKE LINE OF mt_parsed_fields.
+    FIELD-SYMBOLS: <ls_parsed_field> LIKE LINE OF mt_parsed_fields.
 
-    READ TABLE mt_parsed_fields ASSIGNING <parsed_field>
+    READ TABLE mt_parsed_fields ASSIGNING <ls_parsed_field>
                                 INDEX index.
 
     cl_abap_unit_assert=>assert_subrc( exp = 0
                                        msg = |No parsed field found at index { index }| ).
 
-    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-name
+    cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-name
                                         exp = name
                                         msg = |Name at index { index } should be { name }| ).
 
-    cl_abap_unit_assert=>assert_equals( act = <parsed_field>-value
+    cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-value
                                         exp = value
                                         msg = |Value at index { index } should be { value }| ).
 
@@ -243,10 +244,10 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD _hex_to_char.
 
-    DATA lr_conv TYPE REF TO cl_abap_conv_in_ce.
+    DATA lo_conv TYPE REF TO cl_abap_conv_in_ce.
 
-    lr_conv = cl_abap_conv_in_ce=>create( ).
-    lr_conv->convert( EXPORTING input = i_x IMPORTING data = r_s ).
+    lo_conv = cl_abap_conv_in_ce=>create( ).
+    lo_conv->convert( EXPORTING input = i_x IMPORTING data = r_s ).
 
   ENDMETHOD.
 

@@ -17,13 +17,10 @@ CLASS zcl_abapgit_object_dial DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
 
-    rv_changed = abap_true.
+CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
 
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -31,70 +28,13 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
 
-    rs_metadata = get_metadata( ).
+  METHOD zif_abapgit_object~compare_to_remote_version.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: ls_tdct TYPE tdct.
-
-    ls_tdct = _read_tdct( ).
-
-    rv_bool = boolc( ls_tdct IS NOT INITIAL ).
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_dialog_module TYPE ty_dialog_module.
-
-    ls_dialog_module-tdct = _read_tdct( ).
-
-    SELECT * FROM diapar
-             INTO TABLE ls_dialog_module-dia_pars
-             WHERE dnam = ls_dialog_module-tdct-dnam.
-
-    io_xml->add( iv_name = 'DIAL'
-                 ig_data = ls_dialog_module ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: ls_dialog_module TYPE ty_dialog_module.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'DIAL'
-      CHANGING
-        cg_data = ls_dialog_module ).
-
-    CALL FUNCTION 'RS_DIALOG_CREATE'
-      EXPORTING
-        dialogname            = ls_dialog_module-tdct-dnam
-        dynpronumber          = ls_dialog_module-tdct-dynr
-        programname           = ls_dialog_module-tdct-prog
-        suppress_corr_check   = abap_false
-*     It seems that dia_par parameter doesn't do anything, but we can't omit it
-*     Parameters are inserted below
-      TABLES
-        dia_par               = ls_dialog_module-dia_pars
-      EXCEPTIONS
-        dialog_already_exists = 1
-        invalid_name          = 2
-        OTHERS                = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error deserializing dialogmodule { ms_item-obj_name }| ).
-    ENDIF.
-
-    " It seems that there's no API for diapar, therefore we manipulate it directly
-    INSERT diapar FROM TABLE ls_dialog_module-dia_pars.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -158,15 +98,75 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_dialog_module TYPE ty_dialog_module.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'DIAL'
+      CHANGING
+        cg_data = ls_dialog_module ).
+
+    CALL FUNCTION 'RS_DIALOG_CREATE'
+      EXPORTING
+        dialogname            = ls_dialog_module-tdct-dnam
+        dynpronumber          = ls_dialog_module-tdct-dynr
+        programname           = ls_dialog_module-tdct-prog
+        suppress_corr_check   = abap_false
+*     It seems that dia_par parameter doesn't do anything, but we can't omit it
+*     Parameters are inserted below
+      TABLES
+        dia_par               = ls_dialog_module-dia_pars
+      EXCEPTIONS
+        dialog_already_exists = 1
+        invalid_name          = 2
+        OTHERS                = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error deserializing dialogmodule { ms_item-obj_name }| ).
+    ENDIF.
+
+    " It seems that there's no API for diapar, therefore we manipulate it directly
+    INSERT diapar FROM TABLE ls_dialog_module-dia_pars.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: ls_tdct TYPE tdct.
+
+    ls_tdct = _read_tdct( ).
+
+    rv_bool = boolc( ls_tdct IS NOT INITIAL ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+
+    rv_changed = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
-    DATA: objectname TYPE tdct-dnam.
+    DATA: lv_objectname TYPE tdct-dnam.
 
-    objectname = ms_item-obj_name.
+    lv_objectname = ms_item-obj_name.
 
     CALL FUNCTION 'RS_DIALOG_SHOW'
       EXPORTING
-        objectname       = objectname
+        objectname       = lv_objectname
         type             = 'VW'
       EXCEPTIONS
         object_not_found = 1
@@ -178,23 +178,32 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
 
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_dialog_module TYPE ty_dialog_module.
+
+    ls_dialog_module-tdct = _read_tdct( ).
+
+    SELECT * FROM diapar
+             INTO TABLE ls_dialog_module-dia_pars
+             WHERE dnam = ls_dialog_module-tdct-dnam.
+
+    io_xml->add( iv_name = 'DIAL'
+                 ig_data = ls_dialog_module ).
 
   ENDMETHOD.
 
 
   METHOD _read_tdct.
 
-    DATA: dnam TYPE tdct-dnam.
+    DATA: lv_dnam TYPE tdct-dnam.
 
-    dnam = ms_item-obj_name.
+    lv_dnam = ms_item-obj_name.
 
     SELECT SINGLE * FROM tdct
            INTO rs_tdct
-           WHERE dnam = dnam.
+           WHERE dnam = lv_dnam.
 
   ENDMETHOD.
-
 ENDCLASS.

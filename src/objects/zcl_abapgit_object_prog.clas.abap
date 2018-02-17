@@ -21,15 +21,64 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
 
-    rv_changed = check_prog_changed_since(
-      iv_program   = ms_item-obj_name
-      iv_timestamp = iv_timestamp ).
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
+  METHOD deserialize_texts.
+
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
+
+    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
+
+    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+                  CHANGING  cg_data = lt_tpool_i18n ).
+
+    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
+      lt_tpool = read_tpool( <tpool>-textpool ).
+      deserialize_textpool( iv_program  = ms_item-obj_name
+                            iv_language = <tpool>-language
+                            it_tpool    = lt_tpool ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "deserialize_texts
+
+
+  METHOD serialize_texts.
+
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
+
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
+
+
+    " Table d010tinf stores info. on languages in which program is maintained
+    " Select all active translations of program texts
+    " Skip master language - it was already serialized
+    SELECT DISTINCT language
+      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
+      FROM d010tinf
+      WHERE r3state = 'A'
+      AND   prog = ms_item-obj_name
+      AND   language <> mv_language.
+
+    SORT lt_tpool_i18n BY language ASCENDING.
+    LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
+      READ TEXTPOOL ms_item-obj_name
+        LANGUAGE <ls_tpool>-language
+        INTO lt_tpool.
+      <ls_tpool>-textpool = add_tpool( lt_tpool ).
+    ENDLOOP.
+
+    IF lines( lt_tpool_i18n ) > 0.
+      io_xml->add( iv_name = 'I18N_TPOOL'
+                   ig_data = lt_tpool_i18n ).
+    ENDIF.
+
+  ENDMETHOD.                    "serialize_texts
+
 
   METHOD zif_abapgit_object~changed_by.
     SELECT SINGLE unam FROM reposrc INTO rv_user
@@ -40,31 +89,11 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.                    "zif_abapgit_object~changed_by
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD zif_abapgit_object~exists.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
-    DATA: lv_progname TYPE reposrc-progname.
-
-    SELECT SINGLE progname FROM reposrc INTO lv_progname
-      WHERE progname = ms_item-obj_name
-      AND r3state = 'A'.
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
-
-  METHOD zif_abapgit_object~jump.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = 'PROG'
-        in_new_window = abap_true.
-
-  ENDMETHOD.                    "jump
 
   METHOD zif_abapgit_object~delete.
 
@@ -90,16 +119,6 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD zif_abapgit_object~serialize.
-
-    serialize_program( io_xml   = io_xml
-                       is_item  = ms_item
-                       io_files = mo_files ).
-
-    " Texts serializing (translations)
-    serialize_texts( io_xml ).
-
-  ENDMETHOD.                    "zif_abapgit_serialize~serialize
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -144,59 +163,53 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
   ENDMETHOD.                    "zif_abapgit_serialize~deserialize
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
-  METHOD serialize_texts.
+  METHOD zif_abapgit_object~exists.
 
-    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
-          lt_tpool      TYPE textpool_table.
+    DATA: lv_progname TYPE reposrc-progname.
 
-    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
+    SELECT SINGLE progname FROM reposrc INTO lv_progname
+      WHERE progname = ms_item-obj_name
+      AND r3state = 'A'.
+    rv_bool = boolc( sy-subrc = 0 ).
 
-    " Table d010tinf stores info. on languages in which program is maintained
-    " Select all active translations of program texts
-    " Skip master language - it was already serialized
-    SELECT DISTINCT language
-      INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
-      FROM d010tinf
-      WHERE r3state = 'A'
-      AND   prog = ms_item-obj_name
-      AND   language <> mv_language.
+  ENDMETHOD.                    "zif_abapgit_object~exists
 
-    SORT lt_tpool_i18n BY language ASCENDING.
-    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
-      READ TEXTPOOL ms_item-obj_name
-        LANGUAGE <tpool>-language
-        INTO lt_tpool.
-      <tpool>-textpool = add_tpool( lt_tpool ).
-    ENDLOOP.
 
-    IF lines( lt_tpool_i18n ) > 0.
-      io_xml->add( iv_name = 'I18N_TPOOL'
-                   ig_data = lt_tpool_i18n ).
-    ENDIF.
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  ENDMETHOD.                    "serialize_texts
 
-  METHOD deserialize_texts.
+  METHOD zif_abapgit_object~has_changed_since.
 
-    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
-          lt_tpool      TYPE textpool_table.
+    rv_changed = check_prog_changed_since(
+      iv_program   = ms_item-obj_name
+      iv_timestamp = iv_timestamp ).
 
-    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
-                  CHANGING  cg_data = lt_tpool_i18n ).
 
-    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
-      lt_tpool = read_tpool( <tpool>-textpool ).
-      deserialize_textpool( iv_program  = ms_item-obj_name
-                            iv_language = <tpool>-language
-                            it_tpool    = lt_tpool ).
-    ENDLOOP.
+  METHOD zif_abapgit_object~jump.
 
-  ENDMETHOD.                    "deserialize_texts
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'PROG'
+        in_new_window = abap_true.
 
-ENDCLASS.                    "zcl_abapgit_object_prog IMPLEMENTATION
+  ENDMETHOD.                    "jump
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    serialize_program( io_xml   = io_xml
+                       is_item  = ms_item
+                       io_files = mo_files ).
+
+    " Texts serializing (translations)
+    serialize_texts( io_xml ).
+
+  ENDMETHOD.                    "zif_abapgit_serialize~serialize
+ENDCLASS.

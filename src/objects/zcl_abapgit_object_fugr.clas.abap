@@ -69,125 +69,40 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
-          lt_includes TYPE rso_t_objnm.
-
-    FIELD-SYMBOLS: <ls_func>      LIKE LINE OF lt_functab,
-                   <include_name> LIKE LINE OF lt_includes.
-
-    lt_includes = includes( ). " Main prog also included here
-
-    LOOP AT lt_includes ASSIGNING <include_name>.
-      rv_changed = check_prog_changed_since(
-        iv_program   = <include_name>
-        iv_timestamp = iv_timestamp ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    lt_functab = functions( ).
-
-    LOOP AT lt_functab ASSIGNING <ls_func>.
-      rv_changed = check_prog_changed_since(
-        iv_program   = <ls_func>-include
-        iv_timestamp = iv_timestamp ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
-
-  METHOD zif_abapgit_object~changed_by.
-
-    TYPES: BEGIN OF ty_stamps,
-             user TYPE xubname,
-             date TYPE d,
-             time TYPE t,
-           END OF ty_stamps.
-
-    DATA: lt_stamps   TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
-          lv_program  TYPE program,
-          lt_includes TYPE rso_t_objnm.
-
-    FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
-                   <lv_include> LIKE LINE OF lt_includes.
 
 
-    lv_program = main_name( ).
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
-    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
+
+  METHOD are_exceptions_class_based.
+    DATA:
+      lt_dokumentation    TYPE TABLE OF funct,
+      lt_exception_list   TYPE TABLE OF rsexc,
+      lt_export_parameter TYPE TABLE OF rsexp,
+      lt_import_parameter TYPE TABLE OF rsimp,
+      lt_tables_parameter TYPE TABLE OF rstbl.
+
+    CALL FUNCTION 'FUNCTION_IMPORT_DOKU'
       EXPORTING
-        program      = lv_program
+        funcname           = iv_function_name
+      IMPORTING
+        exception_class    = rv_return
       TABLES
-        includetab   = lt_includes
+        dokumentation      = lt_dokumentation
+        exception_list     = lt_exception_list
+        export_parameter   = lt_export_parameter
+        import_parameter   = lt_import_parameter
+        tables_parameter   = lt_tables_parameter
       EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
+        error_message      = 1
+        function_not_found = 2
+        invalid_name       = 3
+        OTHERS             = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
+      zcx_abapgit_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
     ENDIF.
-
-    SELECT unam AS user udat AS date utime AS time FROM reposrc
-      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
-      WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
-
-    LOOP AT lt_includes ASSIGNING <lv_include>.
-      SELECT unam AS user udat AS date utime AS time FROM reposrc
-        APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
-        WHERE progname = <lv_include>
-        AND   r3state = 'A'.                              "#EC CI_SUBRC
-    ENDLOOP.
-
-    SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
-      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
-      WHERE progname = lv_program
-      AND   r3state = 'A'.                                "#EC CI_SUBRC
-
-    SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
-      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
-      WHERE relid = 'CU'
-      AND   name  = lv_program
-      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
-
-* Screens: username not stored in D020S database table
-
-    SORT lt_stamps BY date DESCENDING time DESCENDING.
-
-    READ TABLE lt_stamps INDEX 1 ASSIGNING <ls_stamp>.
-    IF sy-subrc = 0.
-      rv_user = <ls_stamp>-user.
-    ELSE.
-      rv_user = c_user_unknown.
-    ENDIF.
-
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_pool  TYPE tlibg-area.
-
-
-    lv_pool = ms_item-obj_name.
-    CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
-      EXPORTING
-        function_pool   = lv_pool
-      EXCEPTIONS
-        pool_not_exists = 1.
-    rv_bool = boolc( sy-subrc <> 1 ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD deserialize_functions.
 
@@ -283,6 +198,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_functions
 
+
   METHOD deserialize_includes.
 
     DATA: lo_xml       TYPE REF TO zcl_abapgit_xml_input,
@@ -325,6 +241,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "deserialize_includes
+
 
   METHOD deserialize_xml.
 
@@ -390,25 +307,31 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize_xml
 
-  METHOD serialize_xml.
 
-    DATA: lt_includes TYPE rso_t_objnm,
-          lv_areat    TYPE tlibt-areat.
+  METHOD functions.
+
+    DATA: lv_area TYPE rs38l-area.
 
 
-    SELECT SINGLE areat INTO lv_areat
-      FROM tlibt
-      WHERE spras = mv_language
-      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
+    lv_area = ms_item-obj_name.
 
-    lt_includes = includes( ).
+    CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
+      EXPORTING
+        function_pool           = lv_area
+      TABLES
+        functab                 = rt_functab
+      EXCEPTIONS
+        function_pool_not_found = 1
+        OTHERS                  = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
+    ENDIF.
 
-    io_xml->add( iv_name = 'AREAT'
-                 ig_data = lv_areat ).
-    io_xml->add( iv_name = 'INCLUDES'
-                 ig_data = lt_includes ).
+    SORT rt_functab BY funcname ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
 
-  ENDMETHOD.                    "serialize_xml
+  ENDMETHOD.                    "functions
+
 
   METHOD includes.
 
@@ -487,29 +410,6 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "includes
 
-  METHOD functions.
-
-    DATA: lv_area TYPE rs38l-area.
-
-
-    lv_area = ms_item-obj_name.
-
-    CALL FUNCTION 'RS_FUNCTION_POOL_CONTENTS'
-      EXPORTING
-        function_pool           = lv_area
-      TABLES
-        functab                 = rt_functab
-      EXCEPTIONS
-        function_pool_not_found = 1
-        OTHERS                  = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
-    ENDIF.
-
-    SORT rt_functab BY funcname ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
-
-  ENDMETHOD.                    "functions
 
   METHOD main_name.
 
@@ -546,6 +446,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
 
   ENDMETHOD.                    "main_name
+
 
   METHOD serialize_functions.
 
@@ -615,6 +516,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_functions
 
+
   METHOD serialize_includes.
 
     DATA: lt_includes TYPE rso_t_objnm.
@@ -636,34 +538,231 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   ENDMETHOD.                    "serialize_includes
 
-  METHOD are_exceptions_class_based.
-    DATA:
-      lt_dokumentation    TYPE TABLE OF funct,
-      lt_exception_list   TYPE TABLE OF rsexc,
-      lt_export_parameter TYPE TABLE OF rsexp,
-      lt_import_parameter TYPE TABLE OF rsimp,
-      lt_tables_parameter TYPE TABLE OF rstbl.
 
-    CALL FUNCTION 'FUNCTION_IMPORT_DOKU'
+  METHOD serialize_xml.
+
+    DATA: lt_includes TYPE rso_t_objnm,
+          lv_areat    TYPE tlibt-areat.
+
+
+    SELECT SINGLE areat INTO lv_areat
+      FROM tlibt
+      WHERE spras = mv_language
+      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
+
+    lt_includes = includes( ).
+
+    io_xml->add( iv_name = 'AREAT'
+                 ig_data = lv_areat ).
+    io_xml->add( iv_name = 'INCLUDES'
+                 ig_data = lt_includes ).
+
+  ENDMETHOD.                    "serialize_xml
+
+
+  METHOD zif_abapgit_object~changed_by.
+
+    TYPES: BEGIN OF ty_stamps,
+             user TYPE xubname,
+             date TYPE d,
+             time TYPE t,
+           END OF ty_stamps.
+
+    DATA: lt_stamps   TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
+          lv_program  TYPE program,
+          lt_includes TYPE rso_t_objnm.
+
+    FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
+                   <lv_include> LIKE LINE OF lt_includes.
+
+
+    lv_program = main_name( ).
+
+    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
-        funcname           = iv_function_name
-      IMPORTING
-        exception_class    = rv_return
+        program      = lv_program
       TABLES
-        dokumentation      = lt_dokumentation
-        exception_list     = lt_exception_list
-        export_parameter   = lt_export_parameter
-        import_parameter   = lt_import_parameter
-        tables_parameter   = lt_tables_parameter
+        includetab   = lt_includes
       EXCEPTIONS
-        error_message      = 1
-        function_not_found = 2
-        invalid_name       = 3
-        OTHERS             = 4.
+        not_existent = 1
+        no_program   = 2
+        OTHERS       = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from FUNCTION_IMPORT_DOKU' ).
+      zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
+
+    SELECT unam AS user udat AS date utime AS time FROM reposrc
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE progname = lv_program
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+      SELECT unam AS user udat AS date utime AS time FROM reposrc
+        APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+        WHERE progname = <lv_include>
+        AND   r3state = 'A'.                              "#EC CI_SUBRC
+    ENDLOOP.
+
+    SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE progname = lv_program
+      AND   r3state = 'A'.                                "#EC CI_SUBRC
+
+    SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
+      APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
+      WHERE relid = 'CU'
+      AND   name  = lv_program
+      AND   srtf2 = 0 ##TOO_MANY_ITAB_FIELDS.
+
+* Screens: username not stored in D020S database table
+
+    SORT lt_stamps BY date DESCENDING time DESCENDING.
+
+    READ TABLE lt_stamps INDEX 1 ASSIGNING <ls_stamp>.
+    IF sy-subrc = 0.
+      rv_user = <ls_stamp>-user.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_area TYPE rs38l-area.
+
+
+    lv_area = ms_item-obj_name.
+
+    CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
+      EXPORTING
+        area                   = lv_area
+        suppress_popups        = abap_true
+        skip_progress_ind      = abap_true
+      EXCEPTIONS
+        canceled_in_corr       = 1
+        enqueue_system_failure = 2
+        function_exist         = 3
+        not_executed           = 4
+        no_modify_permission   = 5
+        no_show_permission     = 6
+        permission_failure     = 7
+        pool_not_exist         = 8
+        cancelled              = 9
+        OTHERS                 = 10.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
+    ENDIF.
+
+  ENDMETHOD.                    "delete
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lv_program_name TYPE programm,
+          lt_functions    TYPE ty_function_tt,
+          lt_dynpros      TYPE ty_dynpro_tt,
+          ls_cua          TYPE ty_cua.
+
+
+    deserialize_xml(
+      io_xml     = io_xml
+      iv_package = iv_package ).
+
+    io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
+                  CHANGING cg_data = lt_functions ).
+    deserialize_functions( lt_functions ).
+
+    deserialize_includes(
+      io_xml     = io_xml
+      iv_package = iv_package ).
+
+    lv_program_name = main_name( ).
+
+    io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
+    deserialize_dynpros( it_dynpros = lt_dynpros ).
+
+    io_xml->read( EXPORTING iv_name = 'CUA'
+                  CHANGING cg_data = ls_cua ).
+    deserialize_cua( iv_program_name = lv_program_name
+                     is_cua = ls_cua ).
+
+  ENDMETHOD.                    "deserialize
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_pool  TYPE tlibg-area.
+
+
+    lv_pool = ms_item-obj_name.
+    CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
+      EXPORTING
+        function_pool   = lv_pool
+      EXCEPTIONS
+        pool_not_exists = 1.
+    rv_bool = boolc( sy-subrc <> 1 ).
+
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+
+    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
+          lt_includes TYPE rso_t_objnm.
+
+    FIELD-SYMBOLS: <ls_func>         LIKE LINE OF lt_functab,
+                   <lv_include_name> LIKE LINE OF lt_includes.
+
+
+    lt_includes = includes( ). " Main prog also included here
+
+    LOOP AT lt_includes ASSIGNING <lv_include_name>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <lv_include_name>
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+    lt_functab = functions( ).
+
+    LOOP AT lt_functab ASSIGNING <ls_func>.
+      rv_changed = check_prog_changed_since(
+        iv_program   = <ls_func>-include
+        iv_timestamp = iv_timestamp ).
+      IF rv_changed = abap_true.
+        RETURN.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
+
+  METHOD zif_abapgit_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'FUGR'
+        in_new_window = abap_true.
+
+  ENDMETHOD.                    "jump
+
 
   METHOD zif_abapgit_object~serialize.
 
@@ -703,82 +802,4 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: lv_program_name TYPE programm,
-          lt_functions    TYPE ty_function_tt,
-          lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
-
-
-    deserialize_xml(
-      io_xml     = io_xml
-      iv_package = iv_package ).
-
-    io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
-                  CHANGING cg_data = lt_functions ).
-    deserialize_functions( lt_functions ).
-
-    deserialize_includes(
-      io_xml     = io_xml
-      iv_package = iv_package ).
-
-    lv_program_name = main_name( ).
-
-    io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                  CHANGING cg_data = lt_dynpros ).
-    deserialize_dynpros( it_dynpros = lt_dynpros ).
-
-    io_xml->read( EXPORTING iv_name = 'CUA'
-                  CHANGING cg_data = ls_cua ).
-    deserialize_cua( iv_program_name = lv_program_name
-                     is_cua = ls_cua ).
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_area TYPE rs38l-area.
-
-
-    lv_area = ms_item-obj_name.
-
-    CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
-      EXPORTING
-        area                   = lv_area
-        suppress_popups        = abap_true
-        skip_progress_ind      = abap_true
-      EXCEPTIONS
-        canceled_in_corr       = 1
-        enqueue_system_failure = 2
-        function_exist         = 3
-        not_executed           = 4
-        no_modify_permission   = 5
-        no_show_permission     = 6
-        permission_failure     = 7
-        pool_not_exist         = 8
-        cancelled              = 9
-        OTHERS                 = 10.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_DELETE' ).
-    ENDIF.
-
-  ENDMETHOD.                    "delete
-
-  METHOD zif_abapgit_object~jump.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = 'FUGR'
-        in_new_window = abap_true.
-
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-ENDCLASS.                    "zcl_abapgit_object_fugr IMPLEMENTATION
+ENDCLASS.

@@ -378,12 +378,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     DATA: lr_struct       TYPE REF TO data,
           lt_components   TYPE cl_abap_structdescr=>component_table,
           lo_struct_descr TYPE REF TO cl_abap_structdescr,
-          struct_descr    TYPE REF TO cl_abap_structdescr.
+          struct_descr TYPE REF TO cl_abap_structdescr.
 
-    FIELD-SYMBOLS: <table>     TYPE STANDARD TABLE,
+    FIELD-SYMBOLS: <lt_table>     TYPE STANDARD TABLE,
                    <component> TYPE abap_componentdescr,
                    <line>      TYPE data,
-                   <data>      TYPE any.
+                   <lg_data>      TYPE any.
 
     mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
     lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
@@ -399,18 +399,18 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     mo_table_descr = cl_abap_tabledescr=>create( struct_descr ).
 
     CREATE DATA mr_table TYPE HANDLE mo_table_descr.
-    ASSIGN mr_table->* TO <table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_struct TYPE HANDLE struct_descr.
     ASSIGN lr_struct->* TO <line>.
     ASSERT sy-subrc = 0.
 
-    LOOP AT it_list ASSIGNING <data>.
+    LOOP AT it_list ASSIGNING <lg_data>.
 
       CLEAR: <line>.
-      MOVE-CORRESPONDING <data> TO <line>.
-      INSERT <line> INTO TABLE <table>.
+      MOVE-CORRESPONDING <lg_data> TO <line>.
+      INSERT <line> INTO TABLE <lt_table>.
 
     ENDLOOP.
 
@@ -971,17 +971,18 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD popup_to_select_transports.
-    DATA: lrs_trfunction TYPE trsel_trs_function,
-          lv_types       TYPE string,
-          ls_ranges      TYPE trsel_ts_ranges.
+
+    DATA: ls_trfunction TYPE trsel_trs_function,
+          lv_types      TYPE string,
+          ls_ranges     TYPE trsel_ts_ranges.
 
     " Fill all request types
     lv_types = 'KWTCOEMPDRSXQFG'.
-    lrs_trfunction-sign   = 'I'.
-    lrs_trfunction-option = 'EQ'.
+    ls_trfunction-sign   = 'I'.
+    ls_trfunction-option = 'EQ'.
     WHILE lv_types <> space.
-      lrs_trfunction-low = lv_types(1).
-      APPEND lrs_trfunction TO ls_ranges-request_funcs.
+      ls_trfunction-low = lv_types(1).
+      APPEND ls_trfunction TO ls_ranges-request_funcs.
       SHIFT lv_types.
     ENDWHILE.
 

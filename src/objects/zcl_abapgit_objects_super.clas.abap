@@ -132,15 +132,15 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD is_adt_jump_possible.
 
-    DATA: li_wb_request         TYPE REF TO cl_wb_request,
-          li_adt_uri_mapper_vit TYPE REF TO object,
-          is_vit_wb_request     TYPE abap_bool.
+    DATA: lo_wb_request         TYPE REF TO cl_wb_request,
+          lo_adt_uri_mapper_vit TYPE REF TO object,
+          lv_vit_wb_request     TYPE abap_bool.
 
     cl_wb_request=>create_from_object_ref(
       EXPORTING
         p_wb_object       = io_object
       RECEIVING
-        p_wb_request      = li_wb_request
+        p_wb_request      = lo_wb_request
       EXCEPTIONS
         illegal_operation = 1
         cancelled         = 2
@@ -153,15 +153,15 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     TRY.
         CALL METHOD io_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER_VIT')
           RECEIVING
-            result = li_adt_uri_mapper_vit.
+            result = lo_adt_uri_mapper_vit.
 
-        CALL METHOD li_adt_uri_mapper_vit->('IF_ADT_URI_MAPPER_VIT~IS_VIT_WB_REQUEST')
+        CALL METHOD lo_adt_uri_mapper_vit->('IF_ADT_URI_MAPPER_VIT~IS_VIT_WB_REQUEST')
           EXPORTING
-            wb_request = li_wb_request
+            wb_request = lo_wb_request
           RECEIVING
-            result     = is_vit_wb_request.
+            result     = lv_vit_wb_request.
 
-        IF is_vit_wb_request = abap_true.
+        IF lv_vit_wb_request = abap_true.
           r_is_adt_jump_possible = abap_false.
         ELSE.
           r_is_adt_jump_possible = abap_true.
@@ -176,52 +176,58 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: adt_link          TYPE string,
-          obj_type          TYPE trobjtype,
-          obj_name          TYPE trobj_name,
-          li_object         TYPE REF TO cl_wb_object,
-          li_adt            TYPE REF TO object,
-          li_adt_uri_mapper TYPE REF TO object,
-          li_adt_objref     TYPE REF TO object ##needed.
+    DATA: lv_adt_link       TYPE string,
+          lv_obj_type       TYPE trobjtype,
+          lv_obj_name       TYPE trobj_name,
+          lo_object         TYPE REF TO cl_wb_object,
+          lo_adt            TYPE REF TO object,
+          lo_adt_uri_mapper TYPE REF TO object,
+          lo_adt_objref     TYPE REF TO object ##needed.
 
-    FIELD-SYMBOLS: <uri> TYPE string.
+    FIELD-SYMBOLS: <lv_uri> TYPE string.
 
-    obj_name = i_obj_name.
-    obj_type = i_obj_type.
+
+    lv_obj_name = i_obj_name.
+    lv_obj_type = i_obj_type.
 
     TRY.
-        cl_wb_object=>create_from_transport_key( EXPORTING  p_object = obj_type p_obj_name = obj_name
-                                                 RECEIVING  p_wb_object = li_object
-                                                 EXCEPTIONS OTHERS   = 1 ).
+        cl_wb_object=>create_from_transport_key(
+          EXPORTING
+            p_object    = lv_obj_type
+            p_obj_name  = lv_obj_name
+          RECEIVING
+            p_wb_object = lo_object
+          EXCEPTIONS
+            OTHERS      = 1 ).
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
         ENDIF.
 
         CALL METHOD ('CL_ADT_TOOLS_CORE_FACTORY')=>('GET_INSTANCE')
           RECEIVING
-            result = li_adt.
+            result = lo_adt.
 
-        IF is_adt_jump_possible( io_object = li_object
-                                 io_adt    = li_adt ) = abap_false.
+        IF is_adt_jump_possible( io_object = lo_object
+                                 io_adt    = lo_adt ) = abap_false.
           zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
         ENDIF.
 
-        CALL METHOD li_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
+        CALL METHOD lo_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
           RECEIVING
-            result = li_adt_uri_mapper.
+            result = lo_adt_uri_mapper.
 
-        CALL METHOD li_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
+        CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
           EXPORTING
-            wb_object = li_object
+            wb_object = lo_object
           RECEIVING
-            result    = li_adt_objref.
+            result    = lo_adt_objref.
 
-        ASSIGN ('li_adt_objref->ref_data-uri') TO <uri>.
+        ASSIGN ('li_adt_objref->ref_data-uri') TO <lv_uri>.
         ASSERT sy-subrc = 0.
 
-        CONCATENATE 'adt://' sy-sysid <uri> INTO adt_link.
+        CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
 
-        cl_gui_frontend_services=>execute( EXPORTING  document = adt_link
+        cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
                                            EXCEPTIONS OTHERS   = 1 ).
 
         IF sy-subrc <> 0.

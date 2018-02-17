@@ -2,39 +2,39 @@ CLASS ltcl_file_status DEFINITION DEFERRED.
 CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_file_status.
 
 DEFINE _append_state.
-  APPEND INITIAL LINE TO lt_state ASSIGNING <state>.
-  <state>-path     = '/'.
-  <state>-filename = &1.
-  <state>-sha1     = &2.
+  APPEND INITIAL LINE TO lt_state ASSIGNING <ls_state>.
+  <ls_state>-path     = '/'.
+  <ls_state>-filename = &1.
+  <ls_state>-sha1     = &2.
 END-OF-DEFINITION.
 
 DEFINE _append_local.
-  APPEND INITIAL LINE TO lt_local ASSIGNING <local>.
-  <local>-item-obj_type = &1.
-  <local>-item-obj_name = &2.
-  <local>-item-devclass = '$Z$'.
-  <local>-file-path     = '/'.
-  <local>-file-filename = &3.
-  <local>-file-sha1     = &4.
+  APPEND INITIAL LINE TO lt_local ASSIGNING <ls_local>.
+  <ls_local>-item-obj_type = &1.
+  <ls_local>-item-obj_name = &2.
+  <ls_local>-item-devclass = '$Z$'.
+  <ls_local>-file-path     = '/'.
+  <ls_local>-file-filename = &3.
+  <ls_local>-file-sha1     = &4.
 END-OF-DEFINITION.
 
 DEFINE _append_remote.
-  APPEND INITIAL LINE TO lt_remote ASSIGNING <remote>.
-  <remote>-path     = '/'.
-  <remote>-filename = &1.
-  <remote>-sha1     = &2.
+  APPEND INITIAL LINE TO lt_remote ASSIGNING <ls_remote>.
+  <ls_remote>-path     = '/'.
+  <ls_remote>-filename = &1.
+  <ls_remote>-sha1     = &2.
 END-OF-DEFINITION.
 
 DEFINE _append_result.
-  APPEND INITIAL LINE TO lt_results ASSIGNING <result>.
-  <result>-obj_type = &1.
-  <result>-obj_name = &2.
-  <result>-match    = &3.
-  <result>-lstate   = &4.
-  <result>-rstate   = &5.
-  <result>-package  = &6.
-  <result>-path     = &7.
-  <result>-filename = &8.
+  APPEND INITIAL LINE TO lt_results ASSIGNING <ls_result>.
+  <ls_result>-obj_type = &1.
+  <ls_result>-obj_name = &2.
+  <ls_result>-match    = &3.
+  <ls_result>-lstate   = &4.
+  <ls_result>-rstate   = &5.
+  <ls_result>-package  = &6.
+  <ls_result>-path     = &7.
+  <ls_result>-filename = &8.
 END-OF-DEFINITION.
 
 CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
@@ -58,10 +58,10 @@ CLASS ltcl_file_status IMPLEMENTATION.
           lt_results_exp TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
 
-    FIELD-SYMBOLS: <local>  LIKE LINE OF lt_local,
-                   <remote> LIKE LINE OF lt_remote,
-                   <result> LIKE LINE OF lt_results,
-                   <state>  LIKE LINE OF lt_state.
+    FIELD-SYMBOLS: <ls_local>  LIKE LINE OF lt_local,
+                   <ls_remote> LIKE LINE OF lt_remote,
+                   <ls_result> LIKE LINE OF lt_results,
+                   <ls_state>  LIKE LINE OF lt_state.
 
     "STATE         FILE                              SHA1
     _append_state '$$zclass1.clas.xml'              'C1_F1'.
@@ -164,7 +164,7 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
     DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_log     TYPE REF TO zcl_abapgit_log.
 
-    FIELD-SYMBOLS: <result> LIKE LINE OF lt_results.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
 
 *** 0 Positive
 

@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           lv_no_ask   TYPE abap_bool,
           lr_data     TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_data>  TYPE any.
+    FIELD-SYMBOLS: <lg_data>  TYPE any.
 
 
     lv_objname = ms_item-obj_name.
@@ -86,8 +86,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
 * it cannot delete table with table wihtout asking
       CREATE DATA lr_data TYPE (lv_objname).
-      ASSIGN lr_data->* TO <ls_data>.
-      SELECT SINGLE * FROM (lv_objname) INTO <ls_data>.
+      ASSIGN lr_data->* TO <lg_data>.
+      SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
       IF sy-subrc = 0.
         lv_no_ask = abap_false.
       ENDIF.

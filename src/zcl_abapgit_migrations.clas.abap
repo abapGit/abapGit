@@ -87,26 +87,27 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
           lv_index     TYPE i,
           lo_repo      TYPE REF TO zcl_abapgit_repo_online.
 
-    FIELD-SYMBOLS: <repo> LIKE LINE OF lt_repos.
+    FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
+
 
     lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
-    LOOP AT lt_repos ASSIGNING <repo>.
+    LOOP AT lt_repos ASSIGNING <lo_repo>.
       lv_index = sy-tabix.
 
-      IF <repo>->is_offline( ) = abap_true. " Skip local repos
+      IF <lo_repo>->is_offline( ) = abap_true. " Skip local repos
         DELETE lt_repos INDEX lv_index.
         CONTINUE.
       ENDIF.
 
       " Ignore empty repos or repos with file checksums
-      IF lines( <repo>->get_local_checksums( ) ) = 0
-          OR lines( <repo>->get_local_checksums_per_file( ) ) > 0.
+      IF lines( <lo_repo>->get_local_checksums( ) ) = 0
+          OR lines( <lo_repo>->get_local_checksums_per_file( ) ) > 0.
         DELETE lt_repos INDEX lv_index.
         CONTINUE.
       ENDIF.
 
-      lv_repo_list = lv_repo_list && `, ` && <repo>->get_name( ).
+      lv_repo_list = lv_repo_list && `, ` && <lo_repo>->get_name( ).
 
     ENDLOOP.
 
@@ -138,8 +139,8 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT lt_repos ASSIGNING <repo>.
-      lo_repo ?= <repo>.
+    LOOP AT lt_repos ASSIGNING <lo_repo>.
+      lo_repo ?= <lo_repo>.
       lo_repo->rebuild_local_checksums( ).
     ENDLOOP.
 

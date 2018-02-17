@@ -184,7 +184,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
           lo_remote_version    TYPE REF TO zcl_abapgit_xml_input,
           lv_count             TYPE i,
-          lo_comparison_result TYPE REF TO zif_abapgit_comparison_result.
+          li_comparison_result TYPE REF TO zif_abapgit_comparison_result.
 
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
@@ -201,10 +201,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         CREATE OBJECT lo_remote_version
           EXPORTING
             iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
-        lo_comparison_result = io_object->compare_to_remote_version( lo_remote_version ).
-        lo_comparison_result->show_confirmation_dialog( ).
+        li_comparison_result = io_object->compare_to_remote_version( lo_remote_version ).
+        li_comparison_result->show_confirmation_dialog( ).
 
-        IF lo_comparison_result->is_result_complete_halt( ) = abap_true.
+        IF li_comparison_result->is_result_complete_halt( ) = abap_true.
           zcx_abapgit_exception=>raise( 'Deserialization aborted by user' ).
         ENDIF.
       ENDIF.
