@@ -66,9 +66,9 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     ro_html->add( '<h2>abapGit related repositories</h2>' ).
     ro_html->add( '<p><ul>' ).
     ro_html->add( '<li>' ).
-    IF lcl_services_abapgit=>is_installed( ) = abap_true.
+    IF zcl_abapgit_services_abapgit=>is_installed( ) = abap_true.
       ro_html->add( 'abapGit installed in package&nbsp;' ).
-      ro_html->add( lcl_services_abapgit=>c_package_abapgit ).
+      ro_html->add( zcl_abapgit_services_abapgit=>c_package_abapgit ).
     ELSE.
       ro_html->add_a( iv_txt = 'install abapGit repo' iv_act = zif_abapgit_definitions=>gc_action-abapgit_install ).
       ro_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
@@ -76,9 +76,9 @@ CLASS lcl_gui_view_tutorial IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</li>' ).
     ro_html->add( '<li>' ).
-    IF lcl_services_abapgit=>is_installed_pi( ) = abap_true.
+    IF zcl_abapgit_services_abapgit=>is_installed_pi( ) = abap_true.
       ro_html->add( 'abapGit plugins installed in package&nbsp;' ).
-      ro_html->add( lcl_services_abapgit=>c_package_plugins ).
+      ro_html->add( zcl_abapgit_services_abapgit=>c_package_plugins ).
     ELSE.
       ro_html->add_a( iv_txt = 'install abapGit plugins'
                       iv_act = zif_abapgit_definitions=>gc_action-abapgit_install_pi ).
