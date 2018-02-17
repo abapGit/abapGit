@@ -73,7 +73,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         CREATE OBJECT ei_page TYPE lcl_gui_page_main.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
-        CREATE OBJECT ei_page TYPE lcl_gui_page_explore.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE lcl_gui_page_db.
