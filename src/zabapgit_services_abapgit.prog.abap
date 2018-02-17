@@ -149,7 +149,7 @@ CLASS lcl_services_abapgit IMPLEMENTATION.
       lo_repo->find_remote_dot_abapgit( ).
       lo_repo->status( ). " check for errors
       lo_repo->deserialize( ).
-      lcl_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
+      zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
     ENDIF.
 
     COMMIT WORK.

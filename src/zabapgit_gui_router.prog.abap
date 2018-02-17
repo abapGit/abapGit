@@ -118,7 +118,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         zcl_abapgit_objects=>jump( ls_item ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-jump_pkg.                      " Open SE80
-        lcl_services_repo=>open_se80( |{ iv_getdata }| ).
+        zcl_abapgit_services_repo=>open_se80( |{ iv_getdata }| ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
 
         " DB actions
@@ -135,11 +135,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-db_delete.                       " DB Delete
         ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
-        lcl_services_db=>delete( ls_db ).
+        zcl_abapgit_services_db=>delete( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-db_update.                       " DB Update
         ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
-        lcl_services_db=>update( ls_db ).
+        zcl_abapgit_services_db=>update( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
 
         " ABAPGIT services actions
@@ -158,10 +158,10 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " REPOSITORY services actions
       WHEN zif_abapgit_definitions=>gc_action-repo_newoffline.                 " New offline repo
-        lcl_services_repo=>new_offline( ).
+        zcl_abapgit_services_repo=>new_offline( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_refresh.                    " Repo refresh
-        lcl_services_repo=>refresh( lv_key ).
+        zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE lcl_gui_page_syntax
@@ -169,22 +169,22 @@ CLASS lcl_gui_router IMPLEMENTATION.
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-repo_purge.                      " Repo remove & purge all objects
-        lcl_services_repo=>purge( lv_key ).
+        zcl_abapgit_services_repo=>purge( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_remove.                     " Repo remove
-        lcl_services_repo=>remove( lv_key ).
+        zcl_abapgit_services_repo=>remove( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
-        lcl_services_repo=>clone( lv_url ).
+        zcl_abapgit_services_repo=>clone( lv_url ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_refresh_checksums.          " Rebuil local checksums
-        lcl_services_repo=>refresh_local_checksums( lv_key ).
+        zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_toggle_fav.                 " Toggle repo as favorite
-        lcl_services_repo=>toggle_favorite( lv_key ).
+        zcl_abapgit_services_repo=>toggle_favorite( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_transport_to_branch.
-        lcl_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
+        zcl_abapgit_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_settings.
         CREATE OBJECT ei_page TYPE lcl_gui_page_repo_sett
@@ -211,13 +211,13 @@ CLASS lcl_gui_router IMPLEMENTATION.
 
         " Remote ORIGIN manipulations
       WHEN zif_abapgit_definitions=>gc_action-repo_remote_attach.            " Remote attach
-        lcl_services_repo=>remote_attach( lv_key ).
+        zcl_abapgit_services_repo=>remote_attach( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_remote_detach.            " Remote detach
-        lcl_services_repo=>remote_detach( lv_key ).
+        zcl_abapgit_services_repo=>remote_detach( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_remote_change.            " Remote change
-        lcl_services_repo=>remote_change( lv_key ).
+        zcl_abapgit_services_repo=>remote_change( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
 
         " GIT actions
@@ -241,11 +241,11 @@ CLASS lcl_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_create.                " GIT Tag create
         zcl_abapgit_services_git=>create_tag( lv_key ).
-        lcl_services_repo=>refresh( lv_key ).
+        zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_delete.                " GIT Tag create
         zcl_abapgit_services_git=>delete_tag( lv_key ).
-        lcl_services_repo=>refresh( lv_key ).
+        zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_switch.                " GIT Switch Tag
         zcl_abapgit_services_git=>switch_tag( lv_key ).
