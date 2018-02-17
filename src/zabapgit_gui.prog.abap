@@ -35,7 +35,7 @@ CLASS lcl_gui DEFINITION FINAL CREATE PRIVATE.
 
     DATA: mi_cur_page    TYPE REF TO zif_abapgit_gui_page,
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
-          mo_router      TYPE REF TO lcl_gui_router,
+          mo_router      TYPE REF TO zcl_abapgit_gui_router,
           mo_asset_man   TYPE REF TO zcl_abapgit_gui_asset_manager,
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
