@@ -82,7 +82,7 @@ CLASS lcl_gui_router IMPLEMENTATION.
         CREATE OBJECT ei_page TYPE lcl_gui_page_debuginfo.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_settings.
-        CREATE OBJECT ei_page TYPE lcl_gui_page_settings.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_settings.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_background_run.              " Go background run page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_bkg_run.
