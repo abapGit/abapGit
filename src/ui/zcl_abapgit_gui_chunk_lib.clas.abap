@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF ix_error IS BOUND.
-      lv_error = ix_error->text.
+      lv_error = ix_error->get_text( ).
     ELSE.
       lv_error = iv_error.
     ENDIF.

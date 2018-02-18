@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
               CALL FUNCTION 'POPUP_TO_INFORM'
                 EXPORTING
                   titel = 'Migration has failed'
-                  txt1  = lx_exception->text
+                  txt1  = lx_exception->get_text( )
                   txt2  = lv_msg
                   txt3  = 'You will be prompted to migrate the repository every time you run abapGit.'
                   txt4  = 'You can safely remove the repository in its ''Advanced -> Remove'' menu.'.

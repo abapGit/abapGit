@@ -161,7 +161,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
         " ensure to reset default transport request task
         zcl_abapgit_default_task=>get_instance( )->reset( ).
-        zcx_abapgit_exception=>raise( lx_error->text ).
+        RAISE EXCEPTION lx_error.
 
     ENDTRY.
 
