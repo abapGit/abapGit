@@ -14,17 +14,17 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
   PRIVATE SECTION.
 
-    CONSTANTS: BEGIN OF co_german_umlaut_as_hex,
+    CONSTANTS: BEGIN OF c_german_umlaut_as_hex,
                  lower_case_ae TYPE xstring VALUE 'C3A4',
                  lower_case_oe TYPE xstring VALUE 'C3B6',
                  lower_case_ue TYPE xstring VALUE 'C3BC',
-               END OF co_german_umlaut_as_hex.
+               END OF c_german_umlaut_as_hex.
 
-    CLASS-DATA: BEGIN OF ms_german_umlaut_as_char,
+    CLASS-DATA: BEGIN OF gs_german_umlaut_as_char,
                   lower_case_ae TYPE string,
                   lower_case_oe TYPE string,
                   lower_case_ue TYPE string,
-                END OF ms_german_umlaut_as_char.
+                END OF gs_german_umlaut_as_char.
 
     DATA m_given_parse_string TYPE string.
     DATA mt_parsed_fields TYPE tihttpnvp.
@@ -51,9 +51,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   METHOD class_constructor.
 
-    ms_german_umlaut_as_char-lower_case_ae = _hex_to_char( co_german_umlaut_as_hex-lower_case_ae ).
-    ms_german_umlaut_as_char-lower_case_oe = _hex_to_char( co_german_umlaut_as_hex-lower_case_oe ).
-    ms_german_umlaut_as_char-lower_case_ue = _hex_to_char( co_german_umlaut_as_hex-lower_case_ue ).
+    gs_german_umlaut_as_char-lower_case_ae = _hex_to_char( c_german_umlaut_as_hex-lower_case_ae ).
+    gs_german_umlaut_as_char-lower_case_oe = _hex_to_char( c_german_umlaut_as_hex-lower_case_oe ).
+    gs_german_umlaut_as_char-lower_case_ue = _hex_to_char( c_german_umlaut_as_hex-lower_case_ue ).
 
   ENDMETHOD.
 
@@ -169,9 +169,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
           lv_ae_oe_ue TYPE string.
 
 
-    lv_ae = ms_german_umlaut_as_char-lower_case_ae.
-    lv_oe = ms_german_umlaut_as_char-lower_case_oe.
-    lv_ue = ms_german_umlaut_as_char-lower_case_ue.
+    lv_ae = gs_german_umlaut_as_char-lower_case_ae.
+    lv_oe = gs_german_umlaut_as_char-lower_case_oe.
+    lv_ue = gs_german_umlaut_as_char-lower_case_ue.
 
     lv_ae_oe_ue = lv_ae && lv_oe && lv_ue.
 

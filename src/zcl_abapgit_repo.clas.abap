@@ -317,10 +317,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_local_checksums_per_file.
 
-    FIELD-SYMBOLS <object> LIKE LINE OF ms_data-local_checksums.
+    FIELD-SYMBOLS <ls_object> LIKE LINE OF ms_data-local_checksums.
 
-    LOOP AT ms_data-local_checksums ASSIGNING <object>.
-      APPEND LINES OF <object>-files TO rt_checksums.
+    LOOP AT ms_data-local_checksums ASSIGNING <ls_object>.
+      APPEND LINES OF <ls_object>-files TO rt_checksums.
     ENDLOOP.
 
   ENDMETHOD.

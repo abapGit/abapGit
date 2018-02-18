@@ -31,15 +31,16 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
           lt_tpool      TYPE textpool_table.
 
-    FIELD-SYMBOLS <tpool> LIKE LINE OF lt_tpool_i18n.
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
+
 
     io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
 
-    LOOP AT lt_tpool_i18n ASSIGNING <tpool>.
-      lt_tpool = read_tpool( <tpool>-textpool ).
+    LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
+      lt_tpool = read_tpool( <ls_tpool>-textpool ).
       deserialize_textpool( iv_program  = ms_item-obj_name
-                            iv_language = <tpool>-language
+                            iv_language = <ls_tpool>-language
                             it_tpool    = lt_tpool ).
     ENDLOOP.
 

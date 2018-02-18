@@ -14,29 +14,42 @@ CLASS zcl_abapgit_2fa_github_auth DEFINITION
       end REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS:
-      gc_github_api_url              TYPE string VALUE `https://api.github.com/`,
-      gc_otp_header_name             TYPE string VALUE `X-Github-OTP`,
-      gc_restendpoint_authorizations TYPE string VALUE `/authorizations`.
-    CLASS-METHODS:
-      set_new_token_request IMPORTING ii_request   TYPE REF TO if_http_request,
-      get_token_from_response IMPORTING ii_response     TYPE REF TO if_http_response
-                              RETURNING VALUE(rv_token) TYPE string,
-      set_list_token_request IMPORTING ii_request TYPE REF TO if_http_request,
-      get_tobedel_tokens_from_resp IMPORTING ii_response   TYPE REF TO if_http_response
-                                   RETURNING VALUE(rt_ids) TYPE stringtab,
-      set_del_token_request IMPORTING ii_request  TYPE REF TO if_http_request
-                                      iv_token_id TYPE string.
-    METHODS:
-      get_authenticated_client IMPORTING iv_username      TYPE string
-                                         iv_password      TYPE string
-                                         iv_2fa_token     TYPE string
-                               RETURNING VALUE(ri_client) TYPE REF TO if_http_client
-                               RAISING   zcx_abapgit_2fa_auth_failed
-                                         zcx_abapgit_2fa_comm_error.
-    DATA:
-      mi_authenticated_session TYPE REF TO if_http_client.
 
+    CONSTANTS c_github_api_url TYPE string VALUE `https://api.github.com/` ##NO_TEXT.
+    CONSTANTS c_otp_header_name TYPE string VALUE `X-Github-OTP` ##NO_TEXT.
+    CONSTANTS c_restendpoint_authorizations TYPE string VALUE `/authorizations` ##NO_TEXT.
+    DATA mi_authenticated_session TYPE REF TO if_http_client .
+
+    CLASS-METHODS set_new_token_request
+      IMPORTING
+        !ii_request TYPE REF TO if_http_request .
+    CLASS-METHODS get_token_from_response
+      IMPORTING
+        !ii_response    TYPE REF TO if_http_response
+      RETURNING
+        VALUE(rv_token) TYPE string .
+    CLASS-METHODS set_list_token_request
+      IMPORTING
+        !ii_request TYPE REF TO if_http_request .
+    CLASS-METHODS get_tobedel_tokens_from_resp
+      IMPORTING
+        !ii_response  TYPE REF TO if_http_response
+      RETURNING
+        VALUE(rt_ids) TYPE stringtab .
+    CLASS-METHODS set_del_token_request
+      IMPORTING
+        !ii_request  TYPE REF TO if_http_request
+        !iv_token_id TYPE string .
+    METHODS get_authenticated_client
+      IMPORTING
+        !iv_username     TYPE string
+        !iv_password     TYPE string
+        !iv_2fa_token    TYPE string
+      RETURNING
+        VALUE(ri_client) TYPE REF TO if_http_client
+      RAISING
+        zcx_abapgit_2fa_auth_failed
+        zcx_abapgit_2fa_comm_error .
 ENDCLASS.
 
 
@@ -66,7 +79,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = gc_github_api_url
+        url                = c_github_api_url
         ssl_id             = 'ANONYM'
         proxy_host         = lo_settings->get_proxy_url( )
         proxy_service      = lo_settings->get_proxy_port( )
@@ -83,7 +96,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
     ri_client->propertytype_accept_cookie = if_http_client=>co_enabled.
-    ri_client->request->set_header_field( name = gc_otp_header_name value = iv_2fa_token ).
+    ri_client->request->set_header_field( name = c_otp_header_name value = iv_2fa_token ).
     ri_client->authenticate( username = iv_username password = iv_password ).
     ri_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
@@ -158,7 +171,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
   METHOD set_del_token_request.
     DATA: lv_url TYPE string.
 
-    lv_url = |{ gc_restendpoint_authorizations }/{ iv_token_id }|.
+    lv_url = |{ c_restendpoint_authorizations }/{ iv_token_id }|.
 
     ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
                                   value = lv_url ).
@@ -170,7 +183,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD set_list_token_request.
     ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
-                                  value = gc_restendpoint_authorizations ).
+                                  value = c_restendpoint_authorizations ).
     ii_request->set_method( if_http_request=>co_request_method_get ).
   ENDMETHOD.
 
@@ -182,7 +195,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     ii_request->set_data( cl_abap_codepage=>convert_to( lv_json_string ) ).
     ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
-                                  value = gc_restendpoint_authorizations ).
+                                  value = c_restendpoint_authorizations ).
     ii_request->set_method( if_http_request=>co_request_method_post ).
   ENDMETHOD.
 
@@ -264,7 +277,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_2fa_del_failed
         EXPORTING
           mv_text = |Could not fetch current 2FA authorizations: | &&
-                          |{ lv_http_code } { lv_http_code_description }|.
+                    |{ lv_http_code } { lv_http_code_description }|.
     ENDIF.
 
     lt_tobedeleted_tokens = get_tobedel_tokens_from_resp( li_http_client->response ).
@@ -289,7 +302,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
         RAISE EXCEPTION TYPE zcx_abapgit_2fa_del_failed
           EXPORTING
             mv_text = |Could not delete token '{ <lv_id> }': | &&
-                            |{ lv_http_code } { lv_http_code_description }|.
+                      |{ lv_http_code } { lv_http_code_description }|.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -316,7 +329,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = gc_github_api_url
+        url                = c_github_api_url
         ssl_id             = 'ANONYM'
         proxy_host         = lo_proxy->get_proxy_url( )
         proxy_service      = lo_proxy->get_proxy_port(  )
@@ -336,7 +349,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     " The request needs to use something other than GET and it needs to be send to an endpoint
     " to trigger a SMS.
     li_client->request->set_header_field( name  = if_http_header_fields_sap=>request_uri
-                                          value = gc_restendpoint_authorizations ).
+                                          value = c_restendpoint_authorizations ).
     li_client->request->set_method( if_http_request=>co_request_method_post ).
 
     " Try to authenticate, if 2FA is required there will be a specific response header
@@ -354,7 +367,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     " The response will either be UNAUTHORIZED or MALFORMED which is both fine.
 
-    IF li_client->response->get_header_field( gc_otp_header_name ) CP 'required*'.
+    IF li_client->response->get_header_field( c_otp_header_name ) CP 'required*'.
       rv_required = abap_true.
     ENDIF.
   ENDMETHOD.

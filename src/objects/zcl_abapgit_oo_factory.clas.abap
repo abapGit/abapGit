@@ -8,14 +8,18 @@ CLASS zcl_abapgit_oo_factory DEFINITION PUBLIC.
         RETURNING
           VALUE(ro_object_oriented_object) TYPE REF TO zif_abapgit_oo_object_fnc.
   PRIVATE SECTION.
-    CLASS-DATA:
-        go_object_oriented_object TYPE REF TO zif_abapgit_oo_object_fnc.
+
+    CLASS-DATA gi_object_oriented_object TYPE REF TO zif_abapgit_oo_object_fnc .
 ENDCLASS.
 
-CLASS zcl_abapgit_oo_factory IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OO_FACTORY IMPLEMENTATION.
+
+
   METHOD make.
-    IF go_object_oriented_object IS BOUND.
-      ro_object_oriented_object = go_object_oriented_object.
+    IF gi_object_oriented_object IS BOUND.
+      ro_object_oriented_object = gi_object_oriented_object.
       RETURN.
     ENDIF.
     IF iv_object_type = 'CLAS'.

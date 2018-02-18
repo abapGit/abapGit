@@ -151,12 +151,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
           lx_error        TYPE REF TO cx_root,
           lv_text         TYPE string.
 
-    FIELD-SYMBOLS: <ls_srfc_data> TYPE any.
+    FIELD-SYMBOLS: <lg_srfc_data> TYPE any.
 
 
     TRY.
         CREATE DATA lr_srfc_data TYPE ('UCONRFCSERV_COMPLETE').
-        ASSIGN lr_srfc_data->* TO <ls_srfc_data>.
+        ASSIGN lr_srfc_data->* TO <lg_srfc_data>.
         ASSERT sy-subrc = 0.
 
         CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
 
         li_object_data->get_data(
           IMPORTING
-            p_data = <ls_srfc_data> ).
+            p_data = <lg_srfc_data> ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -178,7 +178,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
     ENDTRY.
 
     io_xml->add( iv_name = 'SRFC'
-                 ig_data = <ls_srfc_data> ).
+                 ig_data = <lg_srfc_data> ).
 
   ENDMETHOD.
 ENDCLASS.

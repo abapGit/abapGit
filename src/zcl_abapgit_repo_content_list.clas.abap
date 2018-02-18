@@ -57,17 +57,18 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
           ls_subitem  LIKE LINE OF ct_repo_items,
           ls_folder   LIKE LINE OF ct_repo_items.
 
-    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
 
-    LOOP AT ct_repo_items ASSIGNING <item>.
+
+    LOOP AT ct_repo_items ASSIGNING <ls_item>.
       lv_index = sy-tabix.
-      CHECK <item>-path <> iv_cur_dir. " files in target dir - just leave them be
+      CHECK <ls_item>-path <> iv_cur_dir. " files in target dir - just leave them be
 
-      IF zcl_abapgit_path=>is_subdir( iv_path = <item>-path  iv_parent = iv_cur_dir ) = abap_true.
-        ls_subitem-changes = <item>-changes.
-        ls_subitem-path    = <item>-path.
-        ls_subitem-lstate  = <item>-lstate.
-        ls_subitem-rstate  = <item>-rstate.
+      IF zcl_abapgit_path=>is_subdir( iv_path = <ls_item>-path  iv_parent = iv_cur_dir ) = abap_true.
+        ls_subitem-changes = <ls_item>-changes.
+        ls_subitem-path    = <ls_item>-path.
+        ls_subitem-lstate  = <ls_item>-lstate.
+        ls_subitem-rstate  = <ls_item>-rstate.
         APPEND ls_subitem TO lt_subitems.
       ENDIF.
 
@@ -76,19 +77,19 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     SORT lt_subitems BY path ASCENDING.
 
-    LOOP AT lt_subitems ASSIGNING <item>.
+    LOOP AT lt_subitems ASSIGNING <ls_item>.
       AT NEW path.
         CLEAR ls_folder.
-        ls_folder-path    = <item>-path.
+        ls_folder-path    = <ls_item>-path.
         ls_folder-sortkey = c_sortkey-dir. " Directory
         ls_folder-is_dir  = abap_true.
       ENDAT.
 
-      ls_folder-changes = ls_folder-changes + <item>-changes.
+      ls_folder-changes = ls_folder-changes + <ls_item>-changes.
 
-      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-lstate
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
                                  CHANGING cv_prev = ls_folder-lstate ).
-      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <item>-rstate
+      zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
                                  CHANGING cv_prev = ls_folder-rstate ).
 
       AT END OF path.
@@ -128,29 +129,29 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
           ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
           lt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
 
-    FIELD-SYMBOLS: <status>       LIKE LINE OF lt_status,
+    FIELD-SYMBOLS: <ls_status>    LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
 
     lo_repo_online ?= mo_repo.
     lt_status       = lo_repo_online->status( mo_log ).
 
-    LOOP AT lt_status ASSIGNING <status>.
+    LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
-        <ls_repo_item>-obj_type = <status>-obj_type.
-        <ls_repo_item>-obj_name = <status>-obj_name.
+        <ls_repo_item>-obj_type = <ls_status>-obj_type.
+        <ls_repo_item>-obj_name = <ls_status>-obj_name.
         <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
         <ls_repo_item>-changes  = 0.
-        <ls_repo_item>-path     = <status>-path.
+        <ls_repo_item>-path     = <ls_status>-path.
       ENDAT.
 
-      IF <status>-filename IS NOT INITIAL.
-        ls_file-path       = <status>-path.
-        ls_file-filename   = <status>-filename.
-        ls_file-is_changed = boolc( <status>-match = abap_false ). " TODO refactor
-        ls_file-rstate     = <status>-rstate.
-        ls_file-lstate     = <status>-lstate.
+      IF <ls_status>-filename IS NOT INITIAL.
+        ls_file-path       = <ls_status>-path.
+        ls_file-filename   = <ls_status>-filename.
+        ls_file-is_changed = boolc( <ls_status>-match = abap_false ). " TODO refactor
+        ls_file-rstate     = <ls_status>-rstate.
+        ls_file-lstate     = <ls_status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
 
         IF ls_file-is_changed = abap_true.
@@ -184,11 +185,11 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     DATA lt_repo_temp LIKE ct_repo_items.
 
-    FIELD-SYMBOLS <item> LIKE LINE OF ct_repo_items.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
 
-    LOOP AT ct_repo_items ASSIGNING <item>.
-      CHECK <item>-changes > 0.
-      APPEND <item> TO lt_repo_temp.
+    LOOP AT ct_repo_items ASSIGNING <ls_item>.
+      CHECK <ls_item>-changes > 0.
+      APPEND <ls_item> TO lt_repo_temp.
     ENDLOOP.
 
     IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all

@@ -69,12 +69,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
 
   METHOD clear_field.
 
-    FIELD-SYMBOLS: <field>  TYPE any.
+    FIELD-SYMBOLS: <lg_field> TYPE any.
 
     ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_header
-           TO <field>.
+           TO <lg_field>.
     ASSERT sy-subrc = 0.
-    CLEAR: <field>.
+    CLEAR <lg_field>.
 
   ENDMETHOD.
 
@@ -242,13 +242,14 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
           lo_persistence            TYPE REF TO object,
           lr_complete_comm_assembly TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_complete_comm_assembly> TYPE any.
+    FIELD-SYMBOLS: <lg_complete_comm_assembly> TYPE any.
+
 
     lv_id = ms_item-obj_name.
 
     TRY.
         CREATE DATA lr_complete_comm_assembly TYPE ('UCONSERVASCOMPLETE').
-        ASSIGN lr_complete_comm_assembly->* TO <ls_complete_comm_assembly>.
+        ASSIGN lr_complete_comm_assembly->* TO <lg_complete_comm_assembly>.
         ASSERT sy-subrc = 0.
 
         lo_persistence = get_persistence( lv_id ).
@@ -258,12 +259,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
             version  = zif_abapgit_definitions=>gc_version-active
             language = sy-langu
           IMPORTING
-            sa       = <ls_complete_comm_assembly>.
+            sa       = <lg_complete_comm_assembly>.
 
-        clear_dynamic_fields( CHANGING cs_complete_comm_assembly = <ls_complete_comm_assembly> ).
+        clear_dynamic_fields( CHANGING cs_complete_comm_assembly = <lg_complete_comm_assembly> ).
 
         io_xml->add( iv_name = 'UCSA'
-                     ig_data = <ls_complete_comm_assembly> ).
+                     ig_data = <lg_complete_comm_assembly> ).
 
       CATCH cx_root INTO lx_root.
         lv_text = lx_root->get_text( ).

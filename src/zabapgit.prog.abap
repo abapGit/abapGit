@@ -54,7 +54,7 @@ START-OF-SELECTION.
 
 * Hide Execute button from screen
 AT SELECTION-SCREEN OUTPUT.
-  IF sy-dynnr = lcl_password_dialog=>dynnr.
+  IF sy-dynnr = lcl_password_dialog=>c_dynnr.
     lcl_password_dialog=>on_screen_output( ).
   ELSE.
     PERFORM output.
@@ -65,6 +65,6 @@ AT SELECTION-SCREEN ON EXIT-COMMAND.
   PERFORM exit.
 
 AT SELECTION-SCREEN.
-  IF sy-dynnr = lcl_password_dialog=>dynnr.
+  IF sy-dynnr = lcl_password_dialog=>c_dynnr.
     lcl_password_dialog=>on_screen_event( sscrfields-ucomm ).
   ENDIF.
