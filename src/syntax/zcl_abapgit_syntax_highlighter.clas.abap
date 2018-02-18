@@ -120,28 +120,27 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
   METHOD extend_matches.
 
-    DATA:
-      lv_line_len TYPE i,
-      lv_last_pos TYPE i VALUE 0,
-      lv_length   TYPE i,
-      ls_match    TYPE ty_match.
+    DATA: lv_line_len TYPE i,
+          lv_last_pos TYPE i VALUE 0,
+          lv_length   TYPE i,
+          ls_match    TYPE ty_match.
 
-    FIELD-SYMBOLS <match> TYPE ty_match.
+    FIELD-SYMBOLS <ls_match> TYPE ty_match.
 
     lv_line_len = strlen( iv_line ).
 
     SORT ct_matches BY offset.
 
     " Add entries refering to parts of text that should not be formatted
-    LOOP AT ct_matches ASSIGNING <match>.
-      IF <match>-offset > lv_last_pos.
-        lv_length = <match>-offset - lv_last_pos.
+    LOOP AT ct_matches ASSIGNING <ls_match>.
+      IF <ls_match>-offset > lv_last_pos.
+        lv_length = <ls_match>-offset - lv_last_pos.
         ls_match-token  = c_token_none.
         ls_match-offset = lv_last_pos.
         ls_match-length = lv_length.
         INSERT ls_match INTO ct_matches INDEX sy-tabix.
       ENDIF.
-      lv_last_pos = <match>-offset + <match>-length.
+      lv_last_pos = <ls_match>-offset + <ls_match>-length.
     ENDLOOP.
 
     " Add remainder of the string
@@ -162,13 +161,13 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       lv_chunk TYPE string,
       ls_rule  LIKE LINE OF mt_rules.
 
-    FIELD-SYMBOLS <match> TYPE ty_match.
+    FIELD-SYMBOLS <ls_match> TYPE ty_match.
 
-    LOOP AT it_matches ASSIGNING <match>.
-      lv_chunk = substring( val = iv_line off = <match>-offset len = <match>-length ).
+    LOOP AT it_matches ASSIGNING <ls_match>.
+      lv_chunk = substring( val = iv_line off = <ls_match>-offset len = <ls_match>-length ).
 
       CLEAR ls_rule. " Failed read equals no style
-      READ TABLE mt_rules INTO ls_rule WITH KEY token = <match>-token.
+      READ TABLE mt_rules INTO ls_rule WITH KEY token = <ls_match>-token.
 
       lv_chunk = me->apply_style( iv_line  = lv_chunk
                                   iv_class = ls_rule-style ).
@@ -188,23 +187,24 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       ls_match   TYPE ty_match.
 
     FIELD-SYMBOLS:
-      <regex>  LIKE LINE OF mt_rules,
-      <result> TYPE match_result.
+      <ls_regex>  LIKE LINE OF mt_rules,
+      <ls_result> TYPE match_result.
+
 
     CLEAR et_matches.
 
     " Process syntax-dependent regex table and find all matches
-    LOOP AT mt_rules ASSIGNING <regex>.
-      lo_regex   = <regex>-regex.
+    LOOP AT mt_rules ASSIGNING <ls_regex>.
+      lo_regex   = <ls_regex>-regex.
       lo_matcher = lo_regex->create_matcher( text = iv_line ).
       lt_result  = lo_matcher->find_all( ).
 
       " Save matches into custom table with predefined tokens
-      LOOP AT lt_result ASSIGNING <result>.
+      LOOP AT lt_result ASSIGNING <ls_result>.
         CLEAR: ls_match.
-        ls_match-token  = <regex>-token.
-        ls_match-offset = <result>-offset.
-        ls_match-length = <result>-length.
+        ls_match-token  = <ls_regex>-token.
+        ls_match-offset = <ls_result>-offset.
+        ls_match-length = <ls_result>-length.
         APPEND ls_match TO et_matches.
       ENDLOOP.
     ENDLOOP.

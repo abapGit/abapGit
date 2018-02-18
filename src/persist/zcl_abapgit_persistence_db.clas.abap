@@ -7,10 +7,10 @@ CLASS zcl_abapgit_persistence_db DEFINITION
     CONSTANTS c_lock TYPE viewname VALUE 'EZABAPGIT' ##NO_TEXT.
 
     CONSTANTS:
-      c_type_settings TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
-      c_type_repo TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
+      c_type_settings   TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
+      c_type_repo       TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
       c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
-      c_type_user TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
+      c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
 
     CLASS-METHODS get_instance
       RETURNING
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    CLASS-DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
+    CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
 
     METHODS validate_and_unprettify_xml
       IMPORTING
@@ -114,10 +114,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
   METHOD get_instance.
 
-    IF mo_db IS NOT BOUND.
-      CREATE OBJECT mo_db.
+    IF go_db IS NOT BOUND.
+      CREATE OBJECT go_db.
     ENDIF.
-    ro_db = mo_db.
+    ro_db = go_db.
 
   ENDMETHOD.
 

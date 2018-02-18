@@ -28,7 +28,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 **************
 
   PUBLIC SECTION.
-    CONSTANTS dynnr TYPE char4 VALUE '1002'.
+    CONSTANTS c_dynnr TYPE char4 VALUE '1002'.
 
     CLASS-METHODS popup
       IMPORTING
@@ -44,7 +44,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
         iv_ucomm TYPE syucomm.
 
   PRIVATE SECTION.
-    CLASS-DATA mv_confirm TYPE abap_bool.
+    CLASS-DATA gv_confirm TYPE abap_bool.
 
 ENDCLASS. "lcl_password_dialog DEFINITION
 
@@ -55,11 +55,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     CLEAR p_pass.
     p_url      = iv_repo_url.
     p_user     = cv_user.
-    mv_confirm = abap_false.
+    gv_confirm = abap_false.
 
-    CALL SELECTION-SCREEN dynnr STARTING AT 5 5 ENDING AT 60 8.
+    CALL SELECTION-SCREEN c_dynnr STARTING AT 5 5 ENDING AT 60 8.
 
-    IF mv_confirm = abap_true.
+    IF gv_confirm = abap_true.
       cv_user = p_user.
       cv_pass = p_pass.
     ELSE.
@@ -80,7 +80,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   METHOD on_screen_output.
     DATA lt_ucomm TYPE TABLE OF sy-ucomm.
 
-    ASSERT sy-dynnr = dynnr.
+    ASSERT sy-dynnr = c_dynnr.
 
     LOOP AT SCREEN.
       IF screen-name = 'P_URL'.
@@ -113,20 +113,20 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.  "on_screen_output
 
   METHOD on_screen_event.
-    ASSERT sy-dynnr = dynnr.
+    ASSERT sy-dynnr = c_dynnr.
 
     " CRET   - F8
     " OTHERS - simulate Enter press
     CASE iv_ucomm.
       WHEN 'CRET'.
-        mv_confirm = abap_true.
+        gv_confirm = abap_true.
       WHEN OTHERS. "TODO REFACTOR !!! A CLUTCH !
         " This will work unless any new specific logic appear
         " for other commands. The problem is that the password dialog
         " does not have Enter event (or I don't know how to activate it ;)
         " so Enter issues previous command from previous screen
         " But for now this works :) Fortunately Esc produces another flow
-        mv_confirm = abap_true.
+        gv_confirm = abap_true.
         LEAVE TO SCREEN 0.
     ENDCASE.
 

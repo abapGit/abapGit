@@ -286,10 +286,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    FIELD-SYMBOLS <repo> LIKE LINE OF mt_list.
+    FIELD-SYMBOLS <lo_repo> LIKE LINE OF mt_list.
 
     lo_repo = get( iv_key ).
-    READ TABLE mt_list ASSIGNING <repo> FROM lo_repo.
+    READ TABLE mt_list ASSIGNING <lo_repo> FROM lo_repo.
     ASSERT sy-subrc IS INITIAL.
     ASSERT iv_offline <> lo_repo->ms_data-offline.
 
@@ -300,12 +300,12 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
         iv_sha1        = ''
         iv_head_branch = ''
         iv_offline     = abap_true ).
-      CREATE OBJECT <repo> TYPE zcl_abapgit_repo_offline
+      CREATE OBJECT <lo_repo> TYPE zcl_abapgit_repo_offline
         EXPORTING
           is_data = lo_repo->ms_data.
     ELSE. " OFFline -> On-line
       lo_repo->set( iv_offline = abap_false ).
-      CREATE OBJECT <repo> TYPE zcl_abapgit_repo_online
+      CREATE OBJECT <lo_repo> TYPE zcl_abapgit_repo_online
         EXPORTING
           is_data = lo_repo->ms_data.
     ENDIF.

@@ -175,24 +175,26 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
 
     " Indirect access to keep downward compatibility
     DATA lr_cache_entry TYPE REF TO data.
-    FIELD-SYMBOLS: <ls_cache_entry> TYPE any,
-                   <field>          TYPE any.
+
+    FIELD-SYMBOLS: <lg_cache_entry> TYPE any,
+                   <lg_field>       TYPE any.
+
 
     CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
-    ASSIGN lr_cache_entry->* TO <ls_cache_entry>.
+    ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <ls_cache_entry>
-           TO <field>.
+    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <lg_cache_entry>
+           TO <lg_field>.
     ASSERT sy-subrc = 0.
-    <field> = iv_classname.
+    <lg_field> = iv_classname.
 
-    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <ls_cache_entry>
-           TO <field>.
+    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <lg_cache_entry>
+           TO <lg_field>.
     ASSERT sy-subrc = 0.
-    <field> = iv_number_of_impl_methods.
+    <lg_field> = iv_number_of_impl_methods.
 
-    MODIFY ('SEO_CS_CACHE') FROM <ls_cache_entry>.
+    MODIFY ('SEO_CS_CACHE') FROM <lg_cache_entry>.
 
   ENDMETHOD.
 

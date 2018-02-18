@@ -66,40 +66,40 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
       lv_state      TYPE c VALUE 'O'. " O - for open tag; C - for closed tag;
 
     FIELD-SYMBOLS:
-      <prev>  TYPE ty_match,
-      <match> TYPE ty_match.
+      <ls_prev>  TYPE ty_match,
+      <ls_match> TYPE ty_match.
 
 
     SORT ct_matches BY offset.
 
-    LOOP AT ct_matches ASSIGNING <match>.
+    LOOP AT ct_matches ASSIGNING <ls_match>.
       lv_index = sy-tabix.
 
-      CASE <match>-token.
+      CASE <ls_match>-token.
         WHEN c_token-xml_tag.
-          <match>-text_tag = substring( val = iv_line
-                                        off = <match>-offset
-                                        len = <match>-length ).
+          <ls_match>-text_tag = substring( val = iv_line
+                                        off = <ls_match>-offset
+                                        len = <ls_match>-length ).
 
           " No other matches between two tags
-          IF <match>-text_tag = '>' AND lv_prev_token = c_token-xml_tag.
+          IF <ls_match>-text_tag = '>' AND lv_prev_token = c_token-xml_tag.
             lv_state = 'C'.
-            <prev>-length = <match>-offset - <prev>-offset + <match>-length.
+            <ls_prev>-length = <ls_match>-offset - <ls_prev>-offset + <ls_match>-length.
             DELETE ct_matches INDEX lv_index.
             CONTINUE.
 
             " Adjust length and offset of closing tag
-          ELSEIF <match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
+          ELSEIF <ls_match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
             lv_state = 'C'.
-            <match>-length = <match>-offset - <prev>-offset - <prev>-length + <match>-length.
-            <match>-offset = <prev>-offset + <prev>-length.
+            <ls_match>-length = <ls_match>-offset - <ls_prev>-offset - <ls_prev>-length + <ls_match>-length.
+            <ls_match>-offset = <ls_prev>-offset + <ls_prev>-length.
           ELSE.
             lv_state = 'O'.
           ENDIF.
 
         WHEN OTHERS.
           IF lv_prev_token = c_token-xml_tag.
-            <prev>-length = <match>-offset - <prev>-offset. " Extend length of the opening tag
+            <ls_prev>-length = <ls_match>-offset - <ls_prev>-offset. " Extend length of the opening tag
           ENDIF.
 
           IF lv_state = 'C'.  " Delete all matches between tags
@@ -109,8 +109,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
 
       ENDCASE.
 
-      lv_prev_token = <match>-token.
-      ASSIGN <match> TO <prev>.
+      lv_prev_token = <ls_match>-token.
+      ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
   ENDMETHOD.                    " order_matches

@@ -186,33 +186,34 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           lt_status       TYPE zif_abapgit_definitions=>ty_results_tt,
           lv_package      TYPE zif_abapgit_persistence=>ty_repo-package.
 
-    FIELD-SYMBOLS: <status> TYPE zif_abapgit_definitions=>ty_result,
-                   <tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
+    FIELD-SYMBOLS: <ls_status> TYPE zif_abapgit_definitions=>ty_result,
+                   <ls_tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
+
 
     " delete objects which are added locally but are not in remote repo
-    lt_local  = me->get_files_local( ).
-    lt_remote = me->get_files_remote( ).
-    lt_status = me->status( ).
+    lt_local  = get_files_local( ).
+    lt_remote = get_files_remote( ).
+    lt_status = status( ).
 
     lv_package = me->get_package( ).
     lt_tadir = zcl_abapgit_tadir=>read( lv_package ).
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
-    LOOP AT lt_status ASSIGNING <status>
+    LOOP AT lt_status ASSIGNING <ls_status>
                       WHERE lstate = zif_abapgit_definitions=>gc_state-added.
 
-      READ TABLE lt_tadir ASSIGNING <tadir>
+      READ TABLE lt_tadir ASSIGNING <ls_tadir>
                           WITH KEY pgmid    = 'R3TR'
-                                   object   = <status>-obj_type
-                                   obj_name = <status>-obj_name
-                                   devclass = <status>-package
+                                   object   = <ls_status>-obj_type
+                                   obj_name = <ls_status>-obj_name
+                                   devclass = <ls_status>-package
                           BINARY SEARCH.
       IF sy-subrc <> 0.
 * skip objects that does not exist locally
         CONTINUE.
       ENDIF.
 
-      INSERT <tadir> INTO TABLE lt_tadir_unique.
+      INSERT <ls_tadir> INTO TABLE lt_tadir_unique.
 
     ENDLOOP.
 

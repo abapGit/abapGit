@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
           lv_sep      TYPE c LENGTH 1,
           lt_files    TYPE zif_abapgit_definitions=>ty_files_tt.
 
-    STATICS: lv_prev TYPE string.
+    STATICS: sv_prev TYPE string.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
@@ -131,14 +131,14 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     cl_gui_frontend_services=>directory_browse(
       EXPORTING
-        initial_folder  = lv_prev
+        initial_folder  = sv_prev
       CHANGING
         selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
       RETURN.
     ENDIF.
 
-    lv_prev = lv_folder.
+    sv_prev = lv_folder.
 
     cl_gui_frontend_services=>get_file_separator(
       CHANGING

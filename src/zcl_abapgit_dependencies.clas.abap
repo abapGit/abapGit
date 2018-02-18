@@ -23,32 +23,37 @@ CLASS zcl_abapgit_dependencies DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-  PRIVATE SECTION.
-    TYPES: BEGIN OF ty_dependency,
+private section.
+
+  types:
+    BEGIN OF ty_dependency,
              depname  TYPE dd02l-tabname,
              deptyp   TYPE c LENGTH 4,
              deplocal TYPE dd02l-as4local,
              refname  TYPE dd02l-tabname,
              reftyp   TYPE c LENGTH 4,
              kind     TYPE c LENGTH 1,
-           END OF ty_dependency,
-           tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
-                               WITH NON-UNIQUE DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_item,
+           END OF ty_dependency .
+  types:
+    tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
+                               WITH NON-UNIQUE DEFAULT KEY .
+  types:
+    BEGIN OF ty_item,
              obj_type TYPE tadir-object,
              obj_name TYPE tadir-obj_name,
              devclass TYPE devclass,
-           END OF ty_item.
+           END OF ty_item .
 
-    CLASS-METHODS resolve_ddic
-      CHANGING ct_tadir TYPE ty_tadir_tt
-      RAISING  zcx_abapgit_exception.
-
-    CLASS-METHODS get_ddls_dependencies
-      IMPORTING i_ddls_name          TYPE tadir-obj_name
-      RETURNING VALUE(rt_dependency) TYPE tty_dedenpency.
-
+  class-methods RESOLVE_DDIC
+    changing
+      !CT_TADIR type TY_TADIR_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods GET_DDLS_DEPENDENCIES
+    importing
+      !IV_DDLS_NAME type TADIR-OBJ_NAME
+    returning
+      value(RT_DEPENDENCY) type TTY_DEDENPENCY .
 ENDCLASS.
 
 
@@ -68,7 +73,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
     DATA: lt_ddls_name TYPE tty_ddls_names,
           ls_ddls_name LIKE LINE OF lt_ddls_name.
 
-    ls_ddls_name-name = i_ddls_name.
+    ls_ddls_name-name = iv_ddls_name.
     INSERT ls_ddls_name INTO TABLE lt_ddls_name.
 
     PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')

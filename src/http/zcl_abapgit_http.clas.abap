@@ -4,9 +4,9 @@ CLASS zcl_abapgit_http DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: BEGIN OF gc_scheme,
+    CONSTANTS: BEGIN OF c_scheme,
                  digest TYPE string VALUE 'Digest',
-               END OF gc_scheme.
+               END OF c_scheme.
 
     CLASS-METHODS:
       get_agent
@@ -16,7 +16,6 @@ CLASS zcl_abapgit_http DEFINITION
                   iv_service       TYPE string
         RETURNING VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
         RAISING   zcx_abapgit_exception.
-
   PRIVATE SECTION.
     CLASS-METHODS:
       check_auth_requested
@@ -80,7 +79,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
 
     CASE rv_scheme.
-      WHEN gc_scheme-digest.
+      WHEN c_scheme-digest.
 * https://en.wikipedia.org/wiki/Digest_access_authentication
 * e.g. used by https://www.gerritcodereview.com/
         CREATE OBJECT lo_digest
@@ -193,7 +192,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     ENDIF.
     ro_client->check_http_200( ).
 
-    IF lv_scheme <> gc_scheme-digest.
+    IF lv_scheme <> c_scheme-digest.
       zcl_abapgit_login_manager=>save( iv_uri    = iv_url
                                        ii_client = li_client ).
     ENDIF.
