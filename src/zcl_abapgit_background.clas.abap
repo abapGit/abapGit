@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_background IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -91,7 +91,11 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
           lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by TYPE xubname,
-          lo_stage      TYPE REF TO zcl_abapgit_stage.
+          lo_stage      TYPE REF TO zcl_abapgit_stage,
+          lt_return     TYPE TABLE OF bapiret2,
+          ls_address    TYPE bapiaddr3,
+          lt_smtp       TYPE TABLE OF bapiadsmtp,
+          ls_smtp       TYPE bapiadsmtp.
 
     FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
                    <ls_remote>  LIKE LINE OF ls_files-remote,
@@ -114,8 +118,29 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
     LOOP AT lt_users INTO lv_changed_by.
       CLEAR ls_comment.
-      ls_comment-committer-name  = lv_changed_by.
-      ls_comment-committer-email = |{ ls_comment-committer-name }@localhost|.
+
+      CALL FUNCTION 'BAPI_USER_GET_DETAIL'
+        EXPORTING
+          username = lv_changed_by
+        IMPORTING
+          address  = ls_address
+        TABLES
+          return   = lt_return
+          addsmtp  = lt_smtp.
+
+      LOOP AT lt_smtp INTO ls_smtp.
+        ls_comment-committer-email = ls_smtp-e_mail.
+      ENDLOOP.
+
+      IF ls_comment-committer-email IS INITIAL.
+        ls_comment-committer-email = |{ lv_changed_by }@localhost|.
+      ENDIF.
+
+      ls_comment-committer-name = ls_address-fullname.
+
+      IF ls_comment-committer-name IS INITIAL.
+        ls_comment-committer-name  = lv_changed_by.
+      ENDIF.
 
       CREATE OBJECT lo_stage
         EXPORTING
