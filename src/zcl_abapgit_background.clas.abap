@@ -117,7 +117,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_users.
 
     LOOP AT lt_users INTO lv_changed_by.
-      CLEAR ls_comment.
+      CLEAR: ls_comment, ls_address, lt_return, lt_smtp.
 
       CALL FUNCTION 'BAPI_USER_GET_DETAIL'
         EXPORTING
