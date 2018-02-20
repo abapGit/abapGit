@@ -3,7 +3,8 @@ CLASS ltcl_tree DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
   PRIVATE SECTION.
     METHODS:
       test01 FOR TESTING RAISING zcx_abapgit_exception,
-      test02 FOR TESTING RAISING zcx_abapgit_exception.
+      test02 FOR TESTING RAISING zcx_abapgit_exception,
+      test03 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -48,6 +49,28 @@ CLASS ltcl_tree IMPLEMENTATION.
     ls_node-chmod = zif_abapgit_definitions=>gc_chmod-file.
     ls_node-name = 'something.md'.
     ls_node-sha1 = '1236cb3c4b7f0b3600b64f744cde614a283a88dc'.
+    APPEND ls_node TO lt_nodes.
+
+    lv_data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
+    lt_result = zcl_abapgit_git_pack=>decode_tree( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = lt_nodes
+        act = lt_result ).
+
+  ENDMETHOD.
+
+  METHOD test03.
+
+    DATA: lt_nodes  TYPE zcl_abapgit_git_pack=>ty_nodes_tt,
+          ls_node   LIKE LINE OF lt_nodes,
+          lv_data   TYPE xstring,
+          lt_result TYPE zcl_abapgit_git_pack=>ty_nodes_tt.
+
+    CLEAR ls_node.
+    ls_node-chmod = zif_abapgit_definitions=>gc_chmod-file.
+    ls_node-name = 'foobar.txt'.
+    ls_node-sha1 = '0000003c4b7f0b3600b64f744cde614a28000000'.
     APPEND ls_node TO lt_nodes.
 
     lv_data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
