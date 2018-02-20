@@ -32,12 +32,14 @@ SELECTION-SCREEN END OF SCREEN 1001.
 
 INCLUDE zabapgit_password_dialog. " !!! Contains SELECTION SCREEN
 
-* implement class ZCL_ABAPGIT_AUTH_EXIT implementing ZIF_ABAPGIT_AUTH in following include,
-* place the include in a different package than ZABAPGIT
+* create class ZCL_ABAPGIT_AUTH_EXIT implementing ZIF_ABAPGIT_AUTH in following include,
+* if using the development version of abapGit create a global class instead
+* place the object in a different package than ZABAPGIT
 INCLUDE zabapgit_authorizations_exit IF FOUND.
 
-* add class ZCL_ABAPGIT_USER_EXIT implementing ZIF_ABAPGIT_EXIT in following include,
-* place the include in a different package than ZABAPGIT
+* create class ZCL_ABAPGIT_USER_EXIT implementing ZIF_ABAPGIT_EXIT in following include,
+* if using the development version of abapGit create a global class instead
+* place the object in a different package than ZABAPGIT
 INCLUDE zabapgit_user_exit IF FOUND.
 
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
