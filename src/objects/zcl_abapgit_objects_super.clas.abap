@@ -222,7 +222,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
           RECEIVING
             result    = lo_adt_objref.
 
-        ASSIGN ('li_adt_objref->ref_data-uri') TO <lv_uri>.
+        ASSIGN ('LO_ADT_OBJREF->REF_DATA-URI') TO <lv_uri>.
         ASSERT sy-subrc = 0.
 
         CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
