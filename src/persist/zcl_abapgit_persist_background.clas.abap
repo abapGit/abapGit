@@ -13,6 +13,7 @@ CLASS zcl_abapgit_persist_background DEFINITION
     CONSTANTS: BEGIN OF c_amethod,
                  fixed TYPE string VALUE 'fixed' ##NO_TEXT,
                  auto  TYPE string VALUE 'auto' ##NO_TEXT,
+                 user  TYPE string VALUE 'user' ##NO_TEXT,
                END OF c_amethod.
 
     TYPES: BEGIN OF ty_xml,
