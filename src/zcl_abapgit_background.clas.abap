@@ -20,7 +20,10 @@ CLASS zcl_abapgit_background DEFINITION PUBLIC CREATE PUBLIC.
         RAISING   zcx_abapgit_exception,
       push_auto
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      determine_user_details
+        IMPORTING iv_changed_by  TYPE xubname
+        RETURNING VALUE(rs_user) TYPE zif_abapgit_definitions=>ty_git_user.
 
 ENDCLASS.
 
@@ -91,11 +94,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
           lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
           lv_changed_by TYPE xubname,
-          lo_stage      TYPE REF TO zcl_abapgit_stage,
-          lt_return     TYPE TABLE OF bapiret2,
-          ls_address    TYPE bapiaddr3,
-          lt_smtp       TYPE TABLE OF bapiadsmtp,
-          ls_smtp       TYPE bapiadsmtp.
+          lo_stage      TYPE REF TO zcl_abapgit_stage.
 
     FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
                    <ls_remote>  LIKE LINE OF ls_files-remote,
@@ -117,30 +116,9 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_users.
 
     LOOP AT lt_users INTO lv_changed_by.
-      CLEAR: ls_comment, ls_address, lt_return, lt_smtp.
+      CLEAR: ls_comment.
 
-      CALL FUNCTION 'BAPI_USER_GET_DETAIL'
-        EXPORTING
-          username = lv_changed_by
-        IMPORTING
-          address  = ls_address
-        TABLES
-          return   = lt_return
-          addsmtp  = lt_smtp.
-
-      LOOP AT lt_smtp INTO ls_smtp.
-        ls_comment-committer-email = ls_smtp-e_mail.
-      ENDLOOP.
-
-      IF ls_comment-committer-email IS INITIAL.
-        ls_comment-committer-email = |{ lv_changed_by }@localhost|.
-      ENDIF.
-
-      ls_comment-committer-name = ls_address-fullname.
-
-      IF ls_comment-committer-name IS INITIAL.
-        ls_comment-committer-name  = lv_changed_by.
-      ENDIF.
+      ls_comment-committer = determine_user_details( lv_changed_by ).
 
       CREATE OBJECT lo_stage
         EXPORTING
@@ -289,5 +267,44 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
       EXPORTING
         type = lc_enq_type.
 
+  ENDMETHOD.
+
+  METHOD determine_user_details.
+
+    DATA: lt_return  TYPE TABLE OF bapiret2,
+          ls_address TYPE bapiaddr3,
+          lt_smtp    TYPE TABLE OF bapiadsmtp,
+          ls_smtp    TYPE bapiadsmtp.
+
+*   Call BAPI to get user details from SU01
+    CALL FUNCTION 'BAPI_USER_GET_DETAIL'
+      EXPORTING
+        username = iv_changed_by
+      IMPORTING
+        address  = ls_address
+      TABLES
+        return   = lt_return
+        addsmtp  = lt_smtp.
+
+*   Choose the first email from SU01
+    SORT lt_smtp BY consnumber ASCENDING.
+
+    LOOP AT lt_smtp INTO ls_smtp.
+      rs_user-email = ls_smtp-e_mail.
+      EXIT.
+    ENDLOOP.
+
+*   If no email, fall back to localhost/default email
+    IF rs_user-email IS INITIAL.
+      rs_user-email = |{ iv_changed_by }@localhost|.
+    ENDIF.
+
+*   Attempt to use the full name from SU01
+    rs_user-name = ls_address-fullname.
+
+*   If no full name maintained, just use changed by user name
+    IF rs_user-name IS INITIAL.
+      rs_user-name  = iv_changed_by.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
