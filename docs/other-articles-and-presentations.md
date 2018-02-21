@@ -65,6 +65,9 @@ SAP Teched Barcelona
 [Getting started – Open sourcing ABAP code](https://blogs.sap.com/2017/11/19/getting-started-open-sourcing-abap-code/)
 -Lars Hvam
 
+[ABAP and the Cloud](http://sapinsider.wispubs.com/Assets/Articles/2017/November/SPI-ABAP-and-the-Cloud)
+-Karl Kessler
+
 [Innovative, Disruptive, Enterprise Focused and Boring – Choose Four. Reflections on SAP TechEd](https://redmonk.com/fryan/2017/12/11/innovative-disruptive-enterprise-focused-and-boring-choose-four-reflections-on-sap-teched/)
 -RedMonk
 
