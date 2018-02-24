@@ -64,7 +64,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
           lv_push    TYPE string,
           lv_pull    TYPE string,
           lv_afixed  TYPE string,
-          lv_aauto   TYPE string.
+          lv_aauto   TYPE string,
+          lv_auser   TYPE string.
 
 
     CREATE OBJECT ro_html.
@@ -98,6 +99,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     ENDCASE.
 
     CASE ls_per-amethod.
+      WHEN zcl_abapgit_persist_background=>c_amethod-user.
+        lv_auser = ' checked' ##NO_TEXT.
       WHEN zcl_abapgit_persist_background=>c_amethod-auto.
         lv_aauto = ' checked' ##NO_TEXT.
       WHEN OTHERS.
@@ -139,6 +142,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
       lv_afixed && '>Fixed<br>' ) ##NO_TEXT.
     ro_html->add( '<input type="radio" name="amethod" value="auto"' &&
       lv_aauto && '>Automatic<br>' ) ##NO_TEXT.
+    ro_html->add( '<input type="radio" name="amethod" value="user"' &&
+      lv_auser && '>Automatic using SU01 user details<br>' ) ##NO_TEXT.
     ro_html->add( '<br>' ).
 
     ro_html->add( '<table>' ).
