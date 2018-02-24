@@ -23,8 +23,8 @@ CLASS zcl_abapgit_git_pack DEFINITION
       END OF ty_commit .
     TYPES:
       BEGIN OF ty_adler32,
-        sha1    TYPE zif_abapgit_definitions=>ty_sha1,
-        type    TYPE zif_abapgit_definitions=>ty_type,
+        sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+        type TYPE zif_abapgit_definitions=>ty_type,
       END OF ty_adler32 .
 
     CLASS-METHODS decode
@@ -275,10 +275,6 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
-*      IF NOT rs_commit-committer IS INITIAL.
-*        CONCATENATE rs_commit-body <lv_string> INTO rs_commit-body
-*          SEPARATED BY zif_abapgit_definitions=>gc_newline.
-*      ELSE.
       lv_length = strlen( <lv_string> ) + 1.
       lv_string = lv_string+lv_length.
 
@@ -300,16 +296,9 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         WHEN OTHERS.
           ASSERT 0 = 1.
       ENDCASE.
-
-*      ENDIF.
     ENDLOOP.
 
     rs_commit-body = lv_string+1.
-
-* strip first newline
-*    IF strlen( rs_commit-body ) >= 2.
-*      rs_commit-body = rs_commit-body+2.
-*    ENDIF.
 
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
@@ -359,42 +348,38 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lv_len     TYPE i,
           lv_offset  TYPE i,
           lv_cursor  TYPE i,
-          ls_node    TYPE ty_node,
-          lv_start   TYPE i.
+          lv_match   TYPE i,
+          ls_node    TYPE ty_node.
 
 
     DO.
-      IF lv_cursor >= xstrlen( iv_data ).
-        EXIT. " current loop
+      FIND FIRST OCCURRENCE OF lc_null IN SECTION OFFSET lv_cursor OF iv_data
+        IN BYTE MODE MATCH OFFSET lv_match.
+      IF sy-subrc <> 0.
+        EXIT.
       ENDIF.
 
-      IF iv_data+lv_cursor(1) = lc_null.
-        lv_len = lv_cursor - lv_start.
-        lv_xstring = iv_data+lv_start(lv_len).
+      lv_len = lv_match - lv_cursor.
+      lv_xstring = iv_data+lv_cursor(lv_len).
 
-        lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
-        SPLIT lv_string AT space INTO lv_chmod lv_name.
+      lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
+      SPLIT lv_string AT space INTO lv_chmod lv_name.
 
-        lv_offset = lv_cursor + 1.
-
-        CLEAR ls_node.
-        ls_node-chmod = lv_chmod.
-        IF ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-dir
-            AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-file
-            AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-executable.
-          zcx_abapgit_exception=>raise( 'Unknown chmod' ).
-        ENDIF.
-
-        ls_node-name = lv_name.
-        ls_node-sha1 = iv_data+lv_offset(lc_sha_length).
-        TRANSLATE ls_node-sha1 TO LOWER CASE.
-        APPEND ls_node TO rt_nodes.
-
-        lv_start = lv_cursor + 1 + lc_sha_length.
-        lv_cursor = lv_start.
-      ELSE.
-        lv_cursor = lv_cursor + 1.
+      CLEAR ls_node.
+      ls_node-chmod = lv_chmod.
+      IF ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-dir
+          AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-file
+          AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-executable.
+        zcx_abapgit_exception=>raise( 'Unknown chmod' ).
       ENDIF.
+
+      lv_offset = lv_match + 1.
+      ls_node-name = lv_name.
+      ls_node-sha1 = iv_data+lv_offset(lc_sha_length).
+      TRANSLATE ls_node-sha1 TO LOWER CASE.
+      APPEND ls_node TO rt_nodes.
+
+      lv_cursor = lv_match + 1 + lc_sha_length.
     ENDDO.
 
   ENDMETHOD.                    "decode_tree
@@ -760,8 +745,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 * see http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/#pack_file_objects
 
-    DATA: lv_result TYPE i,
-          lv_type   TYPE i,
+    DATA: lv_type   TYPE i,
           lv_length TYPE i,
           lv_hex    TYPE x LENGTH 1.
 
