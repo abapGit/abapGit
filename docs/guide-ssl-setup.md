@@ -41,7 +41,7 @@ The certificate list should end up looking something like this:
 ![](img/strust.png)
 
 ### GitHub
-On [Feburary 22nd]{https://githubengineering.com/crypto-removal-notice/}, GitHub deprectated weak TSL connections.
+On [Feburary 22nd](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TSL connections.
 
 See SAP note 510007, section 7, for information on how to configure SSL.
 
