@@ -43,7 +43,7 @@ The certificate list should end up looking something like this:
 ### GitHub
 On [Feburary 22nd](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TSL connections.
 
-See SAP note 510007, section 7, for information on how to configure SSL.
+See [SAP note 510007](https://launchpad.support.sap.com/#/notes/510007), section 7, for information on how to configure SSL.
 
 Add parameters
 ```
