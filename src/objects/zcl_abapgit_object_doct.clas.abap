@@ -29,7 +29,6 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD read.
@@ -162,6 +161,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
         version = c_version
       TABLES
         line    = ls_data-lines.
+
+    tadir_insert( iv_package ).
 
   ENDMETHOD.                    "deserialize
 
