@@ -1,21 +1,27 @@
 CLASS zcl_abapgit_2fa_github_auth DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_2fa_auth_base
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor,
-      get_service_id_from_url REDEFINITION,
-      authenticate REDEFINITION,
-      is_2fa_required REDEFINITION,
-      delete_access_tokens REDEFINITION,
-      end REDEFINITION.
+
+    METHODS constructor
+      IMPORTING
+        !iv_override TYPE string OPTIONAL .
+
+    METHODS zif_abapgit_2fa_authenticator~authenticate
+        REDEFINITION .
+    METHODS zif_abapgit_2fa_authenticator~delete_access_tokens
+        REDEFINITION .
+    METHODS zif_abapgit_2fa_authenticator~end
+        REDEFINITION .
+    METHODS zif_abapgit_2fa_authenticator~is_2fa_required
+        REDEFINITION .
   PROTECTED SECTION.
+
+    DATA mv_github_api_url TYPE string VALUE `https://api.github.com/` ##NO_TEXT.
   PRIVATE SECTION.
 
-    CONSTANTS c_github_api_url TYPE string VALUE `https://api.github.com/` ##NO_TEXT.
     CONSTANTS c_otp_header_name TYPE string VALUE `X-Github-OTP` ##NO_TEXT.
     CONSTANTS c_restendpoint_authorizations TYPE string VALUE `/authorizations` ##NO_TEXT.
     DATA mi_authenticated_session TYPE REF TO if_http_client .
@@ -58,7 +64,17 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( '^https?://(www\.)?github.com.*$' ).
+
+    DATA: lv_match TYPE string.
+
+    IF iv_override IS SUPPLIED.
+      lv_match = iv_override.
+    ELSE.
+      lv_match = '^https?://(www\.)?github.com.*$'.
+    ENDIF.
+
+    super->constructor( lv_match ).
+
   ENDMETHOD.
 
 
@@ -79,7 +95,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = c_github_api_url
+        url                = mv_github_api_url
         ssl_id             = 'ANONYM'
         proxy_host         = lo_settings->get_proxy_url( )
         proxy_service      = lo_settings->get_proxy_port( )
@@ -200,7 +216,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD authenticate.
+  METHOD zif_abapgit_2fa_authenticator~authenticate.
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string.
@@ -247,7 +263,8 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD delete_access_tokens.
+  METHOD zif_abapgit_2fa_authenticator~delete_access_tokens.
+
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
@@ -308,18 +325,13 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD end.
+  METHOD zif_abapgit_2fa_authenticator~end.
     super->end( ).
     FREE mi_authenticated_session.
   ENDMETHOD.
 
 
-  METHOD get_service_id_from_url.
-    rv_id = 'github'.
-  ENDMETHOD.
-
-
-  METHOD is_2fa_required.
+  METHOD zif_abapgit_2fa_authenticator~is_2fa_required.
 
     DATA: li_client TYPE REF TO if_http_client,
           lo_proxy  TYPE REF TO zcl_abapgit_proxy_config.
@@ -329,7 +341,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url                = c_github_api_url
+        url                = mv_github_api_url
         ssl_id             = 'ANONYM'
         proxy_host         = lo_proxy->get_proxy_url( )
         proxy_service      = lo_proxy->get_proxy_port(  )

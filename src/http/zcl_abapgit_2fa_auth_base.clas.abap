@@ -10,7 +10,6 @@ CLASS zcl_abapgit_2fa_auth_base DEFINITION
     ALIASES:
       authenticate FOR zif_abapgit_2fa_authenticator~authenticate,
       supports_url FOR zif_abapgit_2fa_authenticator~supports_url,
-      get_service_id_from_url FOR zif_abapgit_2fa_authenticator~get_service_id_from_url,
       is_2fa_required FOR zif_abapgit_2fa_authenticator~is_2fa_required,
       delete_access_tokens FOR zif_abapgit_2fa_authenticator~delete_access_tokens,
       begin FOR zif_abapgit_2fa_authenticator~begin,
@@ -91,11 +90,6 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
     ENDIF.
 
     mv_session_running = abap_false.
-  ENDMETHOD.
-
-
-  METHOD get_service_id_from_url.
-    rv_id = 'UNKNOWN SERVICE'. " Please overwrite in subclasses
   ENDMETHOD.
 
 
