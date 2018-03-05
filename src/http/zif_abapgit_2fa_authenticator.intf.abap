@@ -15,65 +15,77 @@
 "! used to avoid having multiple http sessions between <em>authenticate</em> and
 "! <em>delete_access_tokens</em>.
 "! </p>
-INTERFACE zif_abapgit_2fa_authenticator PUBLIC.
+INTERFACE zif_abapgit_2fa_authenticator
+  PUBLIC .
 
-  METHODS:
-    "! Generate an access token
-    "! @parameter iv_url | Repository url
-    "! @parameter iv_username | Username
-    "! @parameter iv_password | Password
-    "! @parameter iv_2fa_token | Two factor token
-    "! @parameter rv_access_token | Generated access token
-    "! @raising lcx_2fa_auth_failed | Authentication failed
-    "! @raising lcx_2fa_token_gen_failed | Token generation failed
-    authenticate IMPORTING iv_url                 TYPE string
-                           iv_username            TYPE string
-                           iv_password            TYPE string
-                           iv_2fa_token           TYPE string
-                 RETURNING VALUE(rv_access_token) TYPE string
-                 RAISING   zcx_abapgit_2fa_auth_failed
-                           zcx_abapgit_2fa_gen_failed
-                           zcx_abapgit_2fa_comm_error,
-    "! Check if this authenticator instance supports the give repository url
-    "! @parameter iv_url | Repository url
-    "! @parameter rv_supported | Is supported
-    supports_url IMPORTING iv_url              TYPE string
-                 RETURNING VALUE(rv_supported) TYPE abap_bool,
-    "! Get a unique identifier for the service that hosts the repository
-    "! @parameter iv_url | Repository url
-    "! @parameter rv_id | Service id
-    "! @raising lcx_2fa_unsupported | Url is not supported
-    get_service_id_from_url IMPORTING iv_url       TYPE string
-                            RETURNING VALUE(rv_id) TYPE string
-                            RAISING   zcx_abapgit_2fa_unsupported,
-    "! Check if two factor authentication is required
-    "! @parameter iv_url | Repository url
-    "! @parameter iv_username | Username
-    "! @parameter iv_password | Password
-    "! @parameter rv_required | 2FA is required
-    is_2fa_required IMPORTING iv_url             TYPE string
-                              iv_username        TYPE string
-                              iv_password        TYPE string
-                    RETURNING VALUE(rv_required) TYPE abap_bool
-                    RAISING   zcx_abapgit_2fa_comm_error,
-    "! Delete all previously created access tokens for abapGit
-    "! @parameter iv_url | Repository url
-    "! @parameter iv_username | Username
-    "! @parameter iv_password | Password
-    "! @parameter iv_2fa_token | Two factor token
-    "! @raising lcx_2fa_token_del_failed | Token deletion failed
-    "! @raising lcx_2fa_auth_failed | Authentication failed
-    delete_access_tokens IMPORTING iv_url       TYPE string
-                                   iv_username  TYPE string
-                                   iv_password  TYPE string
-                                   iv_2fa_token TYPE string
-                         RAISING   zcx_abapgit_2fa_del_failed
-                                   zcx_abapgit_2fa_comm_error
-                                   zcx_abapgit_2fa_auth_failed,
-    "! Begin an authenticator session that uses internal caching for authorizations
-    "! @raising lcx_2fa_illegal_state | Session already started
-    begin RAISING zcx_abapgit_2fa_illegal_state,
-    "! End an authenticator session and clear internal caches
-    "! @raising lcx_2fa_illegal_state | Session not running
-    end RAISING zcx_abapgit_2fa_illegal_state.
+
+  "! Generate an access token
+  "! @parameter iv_url | Repository url
+  "! @parameter iv_username | Username
+  "! @parameter iv_password | Password
+  "! @parameter iv_2fa_token | Two factor token
+  "! @parameter rv_access_token | Generated access token
+  "! @raising lcx_2fa_auth_failed | Authentication failed
+  "! @raising lcx_2fa_token_gen_failed | Token generation failed
+  METHODS authenticate
+    IMPORTING
+      !iv_url                TYPE string
+      !iv_username           TYPE string
+      !iv_password           TYPE string
+      !iv_2fa_token          TYPE string
+    RETURNING
+      VALUE(rv_access_token) TYPE string
+    RAISING
+      zcx_abapgit_2fa_auth_failed
+      zcx_abapgit_2fa_gen_failed
+      zcx_abapgit_2fa_comm_error .
+  "! Check if this authenticator instance supports the give repository url
+  "! @parameter iv_url | Repository url
+  "! @parameter rv_supported | Is supported
+  METHODS supports_url
+    IMPORTING
+      !iv_url             TYPE string
+    RETURNING
+      VALUE(rv_supported) TYPE abap_bool .
+  "! Check if two factor authentication is required
+  "! @parameter iv_url | Repository url
+  "! @parameter iv_username | Username
+  "! @parameter iv_password | Password
+  "! @parameter rv_required | 2FA is required
+  METHODS is_2fa_required
+    IMPORTING
+      !iv_url            TYPE string
+      !iv_username       TYPE string
+      !iv_password       TYPE string
+    RETURNING
+      VALUE(rv_required) TYPE abap_bool
+    RAISING
+      zcx_abapgit_2fa_comm_error .
+  "! Delete all previously created access tokens for abapGit
+  "! @parameter iv_url | Repository url
+  "! @parameter iv_username | Username
+  "! @parameter iv_password | Password
+  "! @parameter iv_2fa_token | Two factor token
+  "! @raising lcx_2fa_token_del_failed | Token deletion failed
+  "! @raising lcx_2fa_auth_failed | Authentication failed
+  METHODS delete_access_tokens
+    IMPORTING
+      !iv_url       TYPE string
+      !iv_username  TYPE string
+      !iv_password  TYPE string
+      !iv_2fa_token TYPE string
+    RAISING
+      zcx_abapgit_2fa_del_failed
+      zcx_abapgit_2fa_comm_error
+      zcx_abapgit_2fa_auth_failed .
+  "! Begin an authenticator session that uses internal caching for authorizations
+  "! @raising lcx_2fa_illegal_state | Session already started
+  METHODS begin
+    RAISING
+      zcx_abapgit_2fa_illegal_state .
+  "! End an authenticator session and clear internal caches
+  "! @raising lcx_2fa_illegal_state | Session not running
+  METHODS end
+    RAISING
+      zcx_abapgit_2fa_illegal_state .
 ENDINTERFACE.

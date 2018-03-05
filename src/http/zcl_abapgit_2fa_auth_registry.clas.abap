@@ -12,7 +12,7 @@ CLASS zcl_abapgit_2fa_auth_registry DEFINITION
       "! @parameter ro_authenticator | Found authenticator instance
       "! @raising lcx_2fa_unsupported | No authenticator found that supports the service
       get_authenticator_for_url IMPORTING iv_url                  TYPE string
-                                RETURNING VALUE(ro_authenticator) TYPE REF TO zif_abapgit_2fa_authenticator
+                                RETURNING VALUE(ri_authenticator) TYPE REF TO zif_abapgit_2fa_authenticator
                                 RAISING   zcx_abapgit_2fa_unsupported,
       "! Check if there is a two factor authenticator available for the url
       "! @parameter iv_url | Url of the repository / service
@@ -52,17 +52,26 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
 
 
   METHOD class_constructor.
-    DEFINE _register.
-      CREATE OBJECT li_authenticator TYPE &1.
-      INSERT li_authenticator INTO TABLE gt_registered_authenticators.
-    END-OF-DEFINITION.
 
-    DATA: li_authenticator TYPE REF TO zif_abapgit_2fa_authenticator.
+    DATA: lt_sub           TYPE seo_relkeys,
+          ls_sub           LIKE LINE OF lt_sub,
+          li_authenticator TYPE REF TO zif_abapgit_2fa_authenticator,
+          lo_class         TYPE REF TO cl_oo_class.
 
-    " If there are new authenticators these need to be added here manually.
-    " I do not think there is an equivalent to SEO_INTERFACE_IMPLEM_GET_ALL for local classes
-    " without invoking the compiler directly.
-    _register: zcl_abapgit_2fa_github_auth.
+
+    TRY.
+        lo_class ?= cl_oo_class=>get_instance( 'ZCL_ABAPGIT_2FA_AUTH_BASE' ).
+        lt_sub = lo_class->get_subclasses( ).
+        LOOP AT lt_sub INTO ls_sub.
+          CREATE OBJECT li_authenticator TYPE (ls_sub-clsname).
+          INSERT li_authenticator INTO TABLE gt_registered_authenticators.
+        ENDLOOP.
+      CATCH cx_class_not_existent.
+* class in local report
+        CREATE OBJECT li_authenticator TYPE zcl_abapgit_2fa_github_auth.
+        INSERT li_authenticator INTO TABLE gt_registered_authenticators.
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -71,7 +80,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
 
     LOOP AT gt_registered_authenticators ASSIGNING <li_authenticator>.
       IF <li_authenticator>->supports_url( iv_url ) = abap_true.
-        ro_authenticator = <li_authenticator>.
+        ri_authenticator = <li_authenticator>.
         RETURN.
       ENDIF.
     ENDLOOP.
