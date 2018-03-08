@@ -130,7 +130,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -581,11 +581,17 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* ENHS has to be handled before ENHO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'ENHS'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
         AND obj_type <> 'XSLT'
-        AND obj_type <> 'PINF'.
+        AND obj_type <> 'PINF'
+        AND obj_type <> 'ENHS'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
