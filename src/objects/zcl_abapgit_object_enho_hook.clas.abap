@@ -133,7 +133,8 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           lv_package         TYPE devclass,
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
-          lt_enhancements    TYPE enh_hook_impl_it.
+          lt_enhancements    TYPE enh_hook_impl_it,
+          lx_enh_root        TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
 
@@ -184,10 +185,10 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
               spot             = <ls_enhancement>-spotname
               parent_full_name = <ls_enhancement>-parent_full_name ).
         ENDLOOP.
-        lo_hook_impl->if_enh_object~save( ).
+        lo_hook_impl->if_enh_object~save( run_dark = abap_true ).
         lo_hook_impl->if_enh_object~unlock( ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'error deserializing ENHO hook' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise( lx_enh_root->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
