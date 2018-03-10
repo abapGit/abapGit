@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2018-03-10 v1.60.0
+------------------
++ 2FA inheritance
++ improved error handling
+* fix deserialization dependency ENHO -> ENHS
+* DOCT fix tadir handling
+
 2018-02-24 v1.59.0
 ------------------
 + background mode: possibility to use user info from SU01
