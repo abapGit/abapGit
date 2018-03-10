@@ -36,7 +36,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     CREATE OBJECT lx_ex
       EXPORTING
-        iv_text = lc_text1.
+        text = lc_text1.
 
     cl_abap_unit_assert=>assert_equals( act = lx_ex->get_text( ) exp = lc_text1 ).
 
@@ -44,7 +44,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     CREATE OBJECT lx_ex
       EXPORTING
-        iv_text = lc_text2.
+        text = lc_text2.
 
     cl_abap_unit_assert=>assert_equals( act = lx_ex->get_text( )
                                         exp = zcx_abapgit_exception=>gc_generic_error_msg ).
@@ -59,8 +59,8 @@ CLASS ltcl_test IMPLEMENTATION.
 
     CREATE OBJECT lx_ex
       EXPORTING
-        iv_text     = lc_text2
-        ix_previous = lx_previous.
+        text     = lc_text2
+        previous = lx_previous.
 
     cl_abap_unit_assert=>assert_equals( act = lx_ex->get_text( )
                                         exp = lx_previous->get_text( ) ).
