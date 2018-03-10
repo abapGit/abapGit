@@ -24,7 +24,7 @@ FORM run.
       zcl_abapgit_migrations=>run( ).
       PERFORM open_gui.
     CATCH zcx_abapgit_exception INTO lx_exception.
-      MESSAGE lx_exception->text TYPE 'E'.
+      MESSAGE lx_exception TYPE 'E'.
   ENDTRY.
 
 ENDFORM.                    "run
@@ -73,7 +73,7 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
           cv_show_popup = cv_show_popup ).
 
     CATCH zcx_abapgit_exception INTO lx_error.
-      MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
   ENDTRY.
 
 ENDFORM.                    "branch_popup
@@ -97,7 +97,7 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
           cv_show_popup = cv_show_popup ).
 
     CATCH zcx_abapgit_exception INTO lx_error.
-      MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
   ENDTRY.
 
 ENDFORM.                    "package_popup

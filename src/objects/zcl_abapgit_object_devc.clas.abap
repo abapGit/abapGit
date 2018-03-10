@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
+CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -55,7 +55,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
       IF sy-subrc = 1.
         RETURN.
       ELSEIF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
   ENDMETHOD.
@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           unexpected_error            = 10
           OTHERS                      = 11 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_CHANGEABLE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     IF ( sy-subrc = 1 AND iv_lock = abap_true ) OR ( sy-subrc = 2 AND iv_lock = abap_false ).
       " There's no getter to find out beforehand...
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_PERMISSIONS_CHANGEABLE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -126,7 +126,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE=>GET_PERMISSIONS_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ls_data_sign-err_sever = abap_true.
@@ -151,8 +151,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
             intern_err            = 3
             OTHERS                = 4 ).
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise(
-            |Error from IF_PACKAGE_PERMISSION_TO_USE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       ELSE.
@@ -169,7 +168,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
             unexpected_error        = 5
             OTHERS                  = 6 ).
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->ADD_PERMISSION_TO_USE { sy-subrc }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       ENDIF.
@@ -192,7 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           intern_err            = 4
           OTHERS                = 5 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->DELETE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -218,11 +217,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: li_package         TYPE REF TO if_package,
-          ls_package_data    TYPE scompkdtln,
-          ls_data_sign       TYPE scompksign,
-          lt_usage_data      TYPE scomppdata,
-          ls_save_sign       TYPE paksavsign.
+    DATA: li_package      TYPE REF TO if_package,
+          ls_package_data TYPE scompkdtln,
+          ls_data_sign    TYPE scompksign,
+          lt_usage_data   TYPE scomppdata,
+          ls_save_sign    TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
 
@@ -301,7 +300,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           superpackage_invalid       = 17
           OTHERS                     = 18 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
 *      " If the application component was cleared SET_ALL_ATTRIBUTES doesn't change it
@@ -341,7 +340,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 *          error_in_cts_checks        = 21 downport, does not exist in 7.31
           OTHERS                     = 22 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>CREATE_NEW_PACKAGE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -374,7 +373,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         object_invalid        = 4
         OTHERS                = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SAVE_GENERIC { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     set_lock( ii_package = li_package iv_lock = abap_false ).
@@ -382,7 +381,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-
     " Check remote package if deserialize has not been called before this
     IF mv_local_devclass IS INITIAL.
       rv_bool = abap_false.
@@ -396,7 +394,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           intern_err              = 1
           OTHERS                  = 2 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
   ENDMETHOD.
@@ -424,7 +422,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         invalid_object_type = 2
         OTHERS              = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -454,7 +452,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         intern_err      = 3
         OTHERS          = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CLEAR: ls_package_data-devclass,
@@ -508,7 +506,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_PERMISSION_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     LOOP AT lt_intf_usages INTO li_usage.
@@ -520,8 +518,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           intern_err        = 2
           OTHERS            = 3 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise(
-          |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       CLEAR: ls_usage_data-pack_name, ls_usage_data-client_pak.
