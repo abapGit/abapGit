@@ -8,6 +8,10 @@ Legend
 + : added
 - : removed
 
+2018-03-14 v1.60.1
+------------------
+* show error messages instead of "Exception was raised"
+
 2018-03-10 v1.60.0
 ------------------
 + 2FA inheritance
