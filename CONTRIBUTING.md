@@ -26,6 +26,8 @@ d. abapGit is targeted for version 702, so the code should only contain expressi
 
 e. commit often, whenever something is working, and is a step in the right direction do a commit or PR. This way other contributors can see the changes, and it will minimize the risk of merge conflicts.
 
+f. Use pretty printer, keywords upper case + indentation
+
 External Links:
 https://guides.github.com/activities/contributing-to-open-source/
 
