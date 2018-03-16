@@ -22,7 +22,7 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
   METHOD local_dot_abapgit.
 
-    DATA: lv_exception_text type string,
+    DATA: lv_exception_text TYPE string,
           lt_repos          TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lv_msg            TYPE string,
           lv_shown          TYPE abap_bool,

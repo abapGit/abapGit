@@ -171,39 +171,39 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method update_cs_number_of_methods.
+  METHOD update_cs_number_of_methods.
 
     " Indirect access to keep downward compatibility
-    data lr_cache_entry type ref to data.
+    DATA lr_cache_entry TYPE REF TO data.
 
-    field-symbols: <lg_cache_entry> type any,
-                   <lg_field>       type any.
+    FIELD-SYMBOLS: <lg_cache_entry> TYPE any,
+                   <lg_field>       TYPE any.
 
 
-    try .
-        create data lr_cache_entry type ('SEO_CS_CACHE').
-        assign lr_cache_entry->* to <lg_cache_entry>.
-        assert sy-subrc = 0.
+    TRY .
+        CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+        ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
+        ASSERT sy-subrc = 0.
 
-        assign component 'CLSNAME' of structure <lg_cache_entry>
-               to <lg_field>.
-        assert sy-subrc = 0.
+        ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <lg_cache_entry>
+               TO <lg_field>.
+        ASSERT sy-subrc = 0.
         <lg_field> = iv_classname.
 
-        assign component 'NO_OF_METHOD_IMPLS' of structure <lg_cache_entry>
-               to <lg_field>.
-        assert sy-subrc = 0.
+        ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <lg_cache_entry>
+               TO <lg_field>.
+        ASSERT sy-subrc = 0.
         <lg_field> = iv_number_of_impl_methods.
 
-        modify ('SEO_CS_CACHE') from <lg_cache_entry>.
+        MODIFY ('SEO_CS_CACHE') FROM <lg_cache_entry>.
 
-        catch CX_SY_CREATE_DATA_ERROR.
+      CATCH cx_sy_create_data_error.
 
-      endtry.
+    ENDTRY.
 
 
 
-    endmethod.
+  ENDMETHOD.
 
 
   METHOD update_full_class_include.

@@ -95,7 +95,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD test_no_text.
     DATA: lv_exception_text TYPE string,
-          lx_ex TYPE REF TO zcx_abapgit_exception.
+          lx_ex             TYPE REF TO zcx_abapgit_exception.
 
     CREATE OBJECT lx_ex.
 
@@ -179,8 +179,8 @@ CLASS ltcl_test IMPLEMENTATION.
                END OF lc_msg9.
 
     DATA: lv_exception_text TYPE string,
-          lx_ex   TYPE REF TO zcx_abapgit_exception,
-          lv_text TYPE string.
+          lx_ex             TYPE REF TO zcx_abapgit_exception,
+          lv_text           TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg1 ).

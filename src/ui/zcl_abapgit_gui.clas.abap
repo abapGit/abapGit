@@ -1,7 +1,7 @@
-class ZCL_ABAPGIT_GUI definition
-  public
-  final
-  create private .
+CLASS zcl_abapgit_gui DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD handle_action.
 
-    DATA: lv_exception_text type string,
+    DATA: lv_exception_text TYPE string,
           lx_exception      TYPE REF TO zcx_abapgit_exception,
           li_page           TYPE REF TO zif_abapgit_gui_page,
           lv_state          TYPE i.
