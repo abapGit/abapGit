@@ -171,32 +171,39 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_cs_number_of_methods.
+  method update_cs_number_of_methods.
 
     " Indirect access to keep downward compatibility
-    DATA lr_cache_entry TYPE REF TO data.
+    data lr_cache_entry type ref to data.
 
-    FIELD-SYMBOLS: <lg_cache_entry> TYPE any,
-                   <lg_field>       TYPE any.
+    field-symbols: <lg_cache_entry> type any,
+                   <lg_field>       type any.
 
 
-    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
-    ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
-    ASSERT sy-subrc = 0.
+    try .
+        create data lr_cache_entry type ('SEO_CS_CACHE').
+        assign lr_cache_entry->* to <lg_cache_entry>.
+        assert sy-subrc = 0.
 
-    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <lg_cache_entry>
-           TO <lg_field>.
-    ASSERT sy-subrc = 0.
-    <lg_field> = iv_classname.
+        assign component 'CLSNAME' of structure <lg_cache_entry>
+               to <lg_field>.
+        assert sy-subrc = 0.
+        <lg_field> = iv_classname.
 
-    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <lg_cache_entry>
-           TO <lg_field>.
-    ASSERT sy-subrc = 0.
-    <lg_field> = iv_number_of_impl_methods.
+        assign component 'NO_OF_METHOD_IMPLS' of structure <lg_cache_entry>
+               to <lg_field>.
+        assert sy-subrc = 0.
+        <lg_field> = iv_number_of_impl_methods.
 
-    MODIFY ('SEO_CS_CACHE') FROM <lg_cache_entry>.
+        modify ('SEO_CS_CACHE') from <lg_cache_entry>.
 
-  ENDMETHOD.
+        catch CX_SY_CREATE_DATA_ERROR.
+
+      endtry.
+
+
+
+    endmethod.
 
 
   METHOD update_full_class_include.
@@ -234,8 +241,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
         clskey                        = ls_clskey
         exposure                      = iv_exposure
         state                         = 'A'
-        source                        = it_source
-        suppress_constrctr_generation = seox_true
+*        source                        = it_source
+*        suppress_constrctr_generation = seox_true
       EXCEPTIONS
         class_not_existing            = 1
         read_source_error             = 2

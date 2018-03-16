@@ -220,9 +220,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD handle_action.
 
-    DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-          li_page      TYPE REF TO zif_abapgit_gui_page,
-          lv_state     TYPE i.
+    DATA: lv_exception_text type string,
+          lx_exception      TYPE REF TO zcx_abapgit_exception,
+          li_page           TYPE REF TO zif_abapgit_gui_page,
+          lv_state          TYPE i.
 
     TRY.
         IF mi_cur_page IS BOUND.
@@ -270,7 +271,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception INTO lx_exception.
         ROLLBACK WORK.
-        MESSAGE lx_exception->get_text( ) TYPE 'S' DISPLAY LIKE 'E'.
+        lv_exception_text = lx_exception->get_text( ).
+        MESSAGE lv_exception_text TYPE 'S' DISPLAY LIKE 'E'.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.
