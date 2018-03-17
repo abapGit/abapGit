@@ -1074,7 +1074,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
         CATCH zcx_abapgit_exception INTO lx_error.
           " in case of validation errors we display the popup again
-          MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+          MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
           CLEAR lv_finished.
       ENDTRY.
 
@@ -1188,7 +1188,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
             zcl_abapgit_repo_srv=>get_instance( )->validate_package( lv_package ).
           ENDIF.
         CATCH zcx_abapgit_exception INTO lx_error.
-          MESSAGE lx_error->text TYPE 'S' DISPLAY LIKE 'E'.
+          MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
           " in case of validation errors we display the popup again
           CLEAR: lv_finished.
       ENDTRY.

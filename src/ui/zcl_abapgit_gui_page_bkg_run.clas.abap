@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
           lv_line = lv_line + 1.
         ENDDO.
       CATCH zcx_abapgit_exception INTO lx_error.
-        APPEND lx_error->text TO mt_text.
+        APPEND lx_error->get_text( ) TO mt_text.
     ENDTRY.
 
   ENDMETHOD.
