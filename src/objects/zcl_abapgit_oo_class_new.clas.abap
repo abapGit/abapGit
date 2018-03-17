@@ -180,21 +180,28 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
                    <lg_field>       TYPE any.
 
 
-    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
-    ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
-    ASSERT sy-subrc = 0.
+    TRY .
+        CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+        ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
+        ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <lg_cache_entry>
-           TO <lg_field>.
-    ASSERT sy-subrc = 0.
-    <lg_field> = iv_classname.
+        ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE <lg_cache_entry>
+               TO <lg_field>.
+        ASSERT sy-subrc = 0.
+        <lg_field> = iv_classname.
 
-    ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <lg_cache_entry>
-           TO <lg_field>.
-    ASSERT sy-subrc = 0.
-    <lg_field> = iv_number_of_impl_methods.
+        ASSIGN COMPONENT 'NO_OF_METHOD_IMPLS' OF STRUCTURE <lg_cache_entry>
+               TO <lg_field>.
+        ASSERT sy-subrc = 0.
+        <lg_field> = iv_number_of_impl_methods.
 
-    MODIFY ('SEO_CS_CACHE') FROM <lg_cache_entry>.
+        MODIFY ('SEO_CS_CACHE') FROM <lg_cache_entry>.
+
+      CATCH cx_sy_create_data_error.
+
+    ENDTRY.
+
+
 
   ENDMETHOD.
 
@@ -234,8 +241,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
         clskey                        = ls_clskey
         exposure                      = iv_exposure
         state                         = 'A'
-        source                        = it_source
-        suppress_constrctr_generation = seox_true
+*        source                        = it_source
+*        suppress_constrctr_generation = seox_true
       EXCEPTIONS
         class_not_existing            = 1
         read_source_error             = 2
