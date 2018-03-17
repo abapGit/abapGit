@@ -7,20 +7,13 @@ CLASS zcx_abapgit_exception DEFINITION
   PUBLIC SECTION.
     INTERFACES:
       if_t100_message.
-    CONSTANTS:
-      BEGIN OF dummy,
-        msgid TYPE symsgid VALUE '02',
-        msgno TYPE symsgno VALUE '004',
-        attr1 TYPE scx_attrname VALUE 'MSGV1',
-        attr2 TYPE scx_attrname VALUE 'MSGV2',
-        attr3 TYPE scx_attrname VALUE 'MSGV3',
-        attr4 TYPE scx_attrname VALUE 'MSGV4',
-      END OF dummy.
     CLASS-METHODS:
       "! Raise exception with text
       "! @parameter iv_text | Text
+      "! @parameter ix_previous | Previous exception
       "! @raising zcx_abapgit_exception | Exception
-      raise IMPORTING iv_text TYPE clike
+      raise IMPORTING iv_text     TYPE clike
+                      ix_previous TYPE REF TO cx_root OPTIONAL
             RAISING   zcx_abapgit_exception,
       "! Raise exception with T100 message
       "! <p>
@@ -43,15 +36,11 @@ CLASS zcx_abapgit_exception DEFINITION
     METHODS:
       constructor  IMPORTING textid   LIKE if_t100_message=>t100key OPTIONAL
                              previous LIKE previous OPTIONAL
-                             text     TYPE string OPTIONAL
-                             subrc    TYPE syst_subrc OPTIONAL
                              msgv1    TYPE syst_msgv OPTIONAL
                              msgv2    TYPE syst_msgv OPTIONAL
                              msgv3    TYPE syst_msgv OPTIONAL
-                             msgv4    TYPE syst_msgv OPTIONAL,
-      if_message~get_text REDEFINITION.
+                             msgv4    TYPE syst_msgv OPTIONAL.
     DATA:
-      text  TYPE string READ-ONLY,
       subrc TYPE syst_subrc READ-ONLY,
       msgv1 TYPE syst_msgv READ-ONLY,
       msgv2 TYPE syst_msgv READ-ONLY,
@@ -65,12 +54,10 @@ ENDCLASS.
 
 
 
-CLASS zcx_abapgit_exception IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
     super->constructor( previous = previous ).
 
-    me->text = text.
-    me->subrc = subrc.
     me->msgv1 = msgv1.
     me->msgv2 = msgv2.
     me->msgv3 = msgv3.
@@ -84,45 +71,45 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD if_message~get_text.
-    " The standard implementation of this method always uses T100 messages, if IF_T100_MESSAGE is
-    " implemented. Since this is a 'hybrid' exception of IF_MESSAGE and IF_T100_MESSAGE the normal
-    " get_text() is only called if a T100 message is used.
-    " Otherwise try to get a meaningful error text for the user in this order:
-    " mv_text variable, previous exception's text, generic error message
-
-    IF if_t100_message~t100key IS INITIAL OR
-       if_t100_message~t100key = if_t100_message=>default_textid.
-      IF text IS NOT INITIAL.
-        result = text.
-      ELSEIF previous IS NOT INITIAL.
-        result = previous->get_text( ).
-      ELSE.
-        IF sy-subrc IS NOT INITIAL.
-          result = |{ gc_generic_error_msg } ({ subrc })|.
-        ELSE.
-          result = gc_generic_error_msg.
-        ENDIF.
-      ENDIF.
-
-    ELSE.
-      result = super->get_text( ).
-    ENDIF.
-  ENDMETHOD.
-
   METHOD raise.
+    DATA: lv_msgv1    TYPE symsgv,
+          lv_msgv2    TYPE symsgv,
+          lv_msgv3    TYPE symsgv,
+          lv_msgv4    TYPE symsgv,
+          ls_t100_key TYPE scx_t100key,
+          lv_text     TYPE string.
+
+    IF iv_text IS INITIAL.
+      lv_text = gc_generic_error_msg.
+    ELSE.
+      lv_text = iv_text.
+    ENDIF.
+
+    cl_message_helper=>set_msg_vars_for_clike( lv_text ).
+
+    ls_t100_key-msgid = sy-msgid.
+    ls_t100_key-msgno = sy-msgno.
+    ls_t100_key-attr1 = 'MSGV1'.
+    ls_t100_key-attr2 = 'MSGV2'.
+    ls_t100_key-attr3 = 'MSGV3'.
+    ls_t100_key-attr4 = 'MSGV4'.
+    lv_msgv1 = sy-msgv1.
+    lv_msgv2 = sy-msgv2.
+    lv_msgv3 = sy-msgv3.
+    lv_msgv4 = sy-msgv4.
+
     RAISE EXCEPTION TYPE zcx_abapgit_exception
       EXPORTING
-        text = iv_text.
+        textid   = ls_t100_key
+        msgv1    = lv_msgv1
+        msgv2    = lv_msgv2
+        msgv3    = lv_msgv3
+        msgv4    = lv_msgv4
+        previous = ix_previous.
   ENDMETHOD.
 
   METHOD raise_t100.
-    DATA: ls_t100_key TYPE scx_t100key,
-          lv_subrc    TYPE syst_subrc.
-
-    " If this method is called right in the sy-subrc handling of a method or function module
-    " sy-subrc should still contain the id from that.
-    lv_subrc = sy-subrc.
+    DATA: ls_t100_key TYPE scx_t100key.
 
     ls_t100_key-msgid = iv_msgid.
     ls_t100_key-msgno = iv_msgno.
@@ -131,7 +118,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ls_t100_key-attr3 = 'MSGV3'.
     ls_t100_key-attr4 = 'MSGV4'.
 
-    IF iv_msgid IS INITIAL OR iv_msgno IS INITIAL.
+    IF iv_msgid IS INITIAL.
       CLEAR ls_t100_key.
     ENDIF.
 
@@ -141,7 +128,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         msgv1  = iv_msgv1
         msgv2  = iv_msgv2
         msgv3  = iv_msgv3
-        msgv4  = iv_msgv4
-        subrc  = lv_subrc.
+        msgv4  = iv_msgv4.
   ENDMETHOD.
 ENDCLASS.
