@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
                                        iv_from = lv_sha1 ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->text }'| ).
+        zcx_abapgit_exception=>raise( |Cannot create tag { lv_name }. Error: '{ lx_error->get_text( ) }'| ).
     ENDTRY.
 
     lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( lv_name ) } created| ##NO_TEXT.
