@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_devc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -238,6 +238,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
+    ls_package_data-pdevclass = li_package->transport_layer.
 
     " Parent package is not changed. Assume the folder logic already created the package and set
     " the hierarchy before.
