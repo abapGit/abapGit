@@ -16,6 +16,9 @@ INTERFACE zif_abapgit_exit PUBLIC.
       CHANGING  c_proxy_port TYPE string,
     change_proxy_authentication
       IMPORTING iv_repo_url            TYPE csequence
-      CHANGING  c_proxy_authentication TYPE abap_bool.
+      CHANGING  c_proxy_authentication TYPE abap_bool,
+    http_client
+      IMPORTING
+        ii_client TYPE REF TO if_http_client.
 
 ENDINTERFACE.

@@ -183,6 +183,8 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     zcl_abapgit_login_manager=>load( iv_uri    = iv_url
                                      ii_client = li_client ).
 
+    zcl_abapgit_exit=>get_instance( )->http_client( li_client ).
+
     ro_client->send_receive( ).
     IF check_auth_requested( li_client ) = abap_true.
       lv_scheme = acquire_login_details( ii_client = li_client
