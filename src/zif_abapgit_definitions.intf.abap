@@ -258,7 +258,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.60.1' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE 'v1.61.0' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
