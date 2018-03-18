@@ -59,6 +59,8 @@ FORM run.
     RETURN.
   ENDIF.
 
+* if SSL Handshake fails, make sure to also check https://launchpad.support.sap.com/#/notes/510007
+
   li_client->response->get_status(
       IMPORTING
         code = lv_code ).
