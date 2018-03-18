@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-03-18 v1.61.0
+------------------
+* ignore deleted objects in syntax check
+* fix transport layer invalid
+* fix error messages
+* more downport
+* INTF clear more fields
++ user exit to modify http client, eg SSO between SAP systems 
+
 2018-03-14 v1.60.1
 ------------------
 * show error messages instead of "Exception was raised"
