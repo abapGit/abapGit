@@ -17,15 +17,16 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
+CLASS zcl_abapgit_migrations IMPLEMENTATION.
 
 
   METHOD local_dot_abapgit.
 
     DATA: lt_repos       TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
-          lv_msg         TYPE string,
           lv_shown       TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lv_txt1        TYPE string,
+          lv_txt2        TYPE string,
           lx_exception   TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
@@ -54,12 +55,13 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
           TRY.
               <lo_repo>->refresh( ).
             CATCH zcx_abapgit_exception INTO lx_exception.
-              lv_msg = |Please do not use the "{ <lo_repo>->get_name( ) }" repository until migrated|.
+              lv_txt1 = lx_exception->get_text( ).
+              lv_txt2 = |Please do not use the "{ <lo_repo>->get_name( ) }" repository until migrated|.
               CALL FUNCTION 'POPUP_TO_INFORM'
                 EXPORTING
                   titel = 'Migration has failed'
-                  txt1  = lx_exception->get_text( )
-                  txt2  = lv_msg
+                  txt1  = lv_txt1
+                  txt2  = lv_txt2
                   txt3  = 'You will be prompted to migrate the repository every time you run abapGit.'
                   txt4  = 'You can safely remove the repository in its ''Advanced -> Remove'' menu.'.
               CONTINUE.

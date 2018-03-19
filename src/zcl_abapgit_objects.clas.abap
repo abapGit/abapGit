@@ -687,7 +687,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: lt_results_overwrite   LIKE ct_results,
           lt_confirmed_overwrite LIKE ct_results,
-          lt_columns             TYPE stringtab.
+          lt_columns             TYPE stringtab,
+          lv_column              LIKE LINE OF lt_columns.
 
     FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
 
@@ -707,8 +708,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     IF lines( lt_results_overwrite ) > 0.
 
-      INSERT `OBJ_TYPE` INTO TABLE lt_columns.
-      INSERT `OBJ_NAME` INTO TABLE lt_columns.
+      lv_column = `OBJ_TYPE`.
+      INSERT lv_column INTO TABLE lt_columns.
+      lv_column = `OBJ_NAME`.
+      INSERT lv_column INTO TABLE lt_columns.
 
       "all returned objects will be overwritten
       zcl_abapgit_popups=>popup_to_select_from_list(
