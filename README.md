@@ -28,4 +28,4 @@ See [dotabap.org](http://dotabap.org)
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![abapgit](https://github.com/larshp/abapGit/wiki/img/abapgit_1_33_3.png)
+![abapgit](http://docs.abapgit.org/img/abapgit_1_33_3.png)
