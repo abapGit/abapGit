@@ -213,6 +213,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
     " also count towards the contained objects counter.
     " -> Package deletion is currently not supported by abapGit
+    RETURN.
   ENDMETHOD.
 
 

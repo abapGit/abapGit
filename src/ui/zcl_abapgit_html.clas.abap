@@ -7,7 +7,6 @@ CLASS zcl_abapgit_html DEFINITION
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    METHODS reset .
     METHODS add
       IMPORTING
         !iv_chunk TYPE any .
@@ -301,11 +300,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>gc_newline.
 
   ENDMETHOD.                    "render
-
-
-  METHOD reset.
-    CLEAR me->mt_buffer.
-  ENDMETHOD.                    "reset
 
 
   METHOD study_line.
