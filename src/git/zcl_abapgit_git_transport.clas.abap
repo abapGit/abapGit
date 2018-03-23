@@ -246,8 +246,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress multi_ack agent='
-          && zcl_abapgit_http=>get_agent( ) ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
           && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline. "#EC NOTEXT
       ELSE.
