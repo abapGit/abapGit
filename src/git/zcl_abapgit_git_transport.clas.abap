@@ -176,7 +176,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       iv_url     = iv_url
       iv_service = c_service-receive ).
 
-    lv_cap_list = 'report-status agent=' && zcl_abapgit_http=>get_agent( ) ##NO_TEXT.
+    lv_cap_list = 'report-status' ##NO_TEXT.
 
     lv_line = iv_old &&
               ` ` &&
