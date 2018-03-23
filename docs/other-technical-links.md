@@ -33,4 +33,5 @@ $env:GIT_TRACE=1
 git config --global http.proxy %HTTP_PROXY%
 git config --global --unset http.proxy
 git config --global http.sslVerify false
+GIT_TRACE=2 GIT_CURL_VERBOSE=2 GIT_TRACE_PERFORMANCE=2 GIT_TRACE_PACK_ACCESS=2 GIT_TRACE_PACKET=2 GIT_TRACE_PACKFILE=2 GIT_TRACE_SETUP=2 GIT_TRACE_SHALLOW=2
 ```
