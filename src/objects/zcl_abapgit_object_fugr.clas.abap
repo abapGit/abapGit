@@ -110,8 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_area      TYPE rs38l-area,
           lv_group     TYPE rs38l-area,
           lv_namespace TYPE rs38l-namespace,
-          lt_source    TYPE TABLE OF abaptxt255,
-          lv_dummy     TYPE string.
+          lt_source    TYPE TABLE OF abaptxt255.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
