@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     lv_key = mo_repo->get_key( ).
 
-    IF mo_repo->is_write_protected( ) = abap_true.
+    IF mo_repo->get_local_settings( )-write_protected = abap_true.
       lv_wp_opt   = zif_abapgit_definitions=>gc_html_opt-crossout.
       lv_pull_opt = zif_abapgit_definitions=>gc_html_opt-crossout.
     ELSE.
@@ -200,7 +200,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_remove }?{ lv_key }| ).
 
     CLEAR lv_crossout.
-    IF mo_repo->is_write_protected( ) = abap_true
+    IF mo_repo->get_local_settings( )-write_protected = abap_true
         OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
       lv_crossout = zif_abapgit_definitions=>gc_html_opt-crossout.
     ENDIF.

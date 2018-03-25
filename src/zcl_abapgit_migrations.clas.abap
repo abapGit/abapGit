@@ -8,16 +8,18 @@ CLASS zcl_abapgit_migrations DEFINITION
       RAISING zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    CLASS-METHODS rebuild_local_checksums_161112
-      RAISING zcx_abapgit_exception.
-    CLASS-METHODS local_dot_abapgit
-      RAISING zcx_abapgit_exception.
 
+    CLASS-METHODS rebuild_local_checksums_161112
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS local_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_migrations IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
 
   METHOD local_dot_abapgit.

@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    IF lo_repo->is_write_protected( ) = abap_true.
+    IF lo_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
     ENDIF.
 
