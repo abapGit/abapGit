@@ -237,6 +237,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_tadir = zcl_abapgit_tadir=>read(
       iv_package            = get_package( )
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
+      iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( )
       io_log                = io_log ).
 
@@ -483,7 +484,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       lo_persistence->update_local_settings(
         iv_key      = ms_data-key
         is_settings = is_local_settings ).
-      ms_data-local_settings = is_local_settings..
+      ms_data-local_settings = is_local_settings.
     ENDIF.
 
   ENDMETHOD.

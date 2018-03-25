@@ -22,6 +22,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     BEGIN OF ty_local_settings,
       ignore_subpackages TYPE abap_bool,
       write_protected    TYPE abap_bool,
+      only_local_objects TYPE abap_bool,
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.

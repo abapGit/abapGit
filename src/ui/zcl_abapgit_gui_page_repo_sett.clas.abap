@@ -153,6 +153,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDIF.
     io_html->add( |Ignore subpackages <input name="ignore_subpackages" type="checkbox"{ lv_checked }><br>| ).
 
+    CLEAR lv_checked.
+    IF ls_settings-only_local_objects = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( |Only local objects <input name="only_local_objects" type="checkbox"{ lv_checked }><br>| ).
+
   ENDMETHOD.
 
 
@@ -212,6 +218,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       ls_settings-ignore_subpackages = abap_true.
     ELSE.
       ls_settings-ignore_subpackages = abap_false.
+    ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'only_local_objects' value = 'on'.
+    IF sy-subrc = 0.
+      ls_settings-only_local_objects = abap_true.
+    ELSE.
+      ls_settings-only_local_objects = abap_false.
     ENDIF.
 
     mo_repo->set_local_settings( ls_settings ).
