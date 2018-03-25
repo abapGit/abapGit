@@ -130,7 +130,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -411,7 +411,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       lo_xml = lo_files->read_xml( ).
 
       li_obj = create_object( is_item     = ls_item
-                              iv_language = io_repo->get_master_language( )
+                              iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
                               is_metadata = lo_xml->get_metadata( ) ).
 
       compare_remote_to_local(

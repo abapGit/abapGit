@@ -40,9 +40,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_package
       RETURNING
         VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
-    METHODS get_master_language
-      RETURNING
-        VALUE(rv_language) TYPE spras .
     METHODS delete
       RAISING
         zcx_abapgit_exception .
@@ -286,7 +283,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
       lt_files = zcl_abapgit_objects=>serialize(
         is_item     = ls_item
-        iv_language = get_master_language( )
+        iv_language = get_dot_abapgit( )->get_master_language( )
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
@@ -337,11 +334,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     rs_settings = ms_data-local_settings.
 
-  ENDMETHOD.
-
-
-  METHOD get_master_language.
-    rv_language = ms_data-dot_abapgit-master_language.
   ENDMETHOD.
 
 
