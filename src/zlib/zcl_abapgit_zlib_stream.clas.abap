@@ -3,18 +3,23 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING iv_data TYPE xstring,
-      take_bits
-        IMPORTING iv_length      TYPE i
-        RETURNING VALUE(rv_bits) TYPE string,
-      take_int
-        IMPORTING iv_length     TYPE i
-        RETURNING VALUE(rv_int) TYPE i,
-      remaining
-        RETURNING VALUE(rv_length) TYPE i.
 
+    METHODS constructor
+      IMPORTING
+        !iv_data TYPE xstring .
+    METHODS take_bits
+      IMPORTING
+        !iv_length     TYPE i
+      RETURNING
+        VALUE(rv_bits) TYPE string .
+    METHODS take_int
+      IMPORTING
+        !iv_length    TYPE i
+      RETURNING
+        VALUE(rv_int) TYPE i .
+    METHODS remaining
+      RETURNING
+        VALUE(rv_length) TYPE i .
   PRIVATE SECTION.
     DATA: mv_compressed TYPE xstring,
           mv_bits       TYPE string.
