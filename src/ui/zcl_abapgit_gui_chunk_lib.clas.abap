@@ -273,7 +273,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
 
     " Write protect
-    IF io_repo->is_write_protected( ) = abap_true.
+    IF io_repo->get_local_settings( )-write_protected = abap_true.
       ro_html->add_icon( iv_name = 'lock/darkgrey' iv_hint = 'Locked from pulls' ).
     ENDIF.
 

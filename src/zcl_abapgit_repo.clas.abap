@@ -2,6 +2,7 @@ CLASS zcl_abapgit_repo DEFINITION
   PUBLIC
   ABSTRACT
   CREATE PUBLIC
+
   GLOBAL FRIENDS zcl_abapgit_repo_srv .
 
   PUBLIC SECTION.
@@ -39,15 +40,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_package
       RETURNING
         VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
-    METHODS get_master_language
-      RETURNING
-        VALUE(rv_language) TYPE spras .
-    METHODS is_write_protected
-      RETURNING
-        VALUE(rv_yes) TYPE sap_bool .
-    METHODS ignore_subpackages
-      RETURNING
-        VALUE(rv_yes) TYPE sap_bool .
     METHODS delete
       RAISING
         zcx_abapgit_exception .
@@ -91,23 +83,35 @@ CLASS zcl_abapgit_repo DEFINITION
         !it_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS get_local_settings
+      RETURNING
+        VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
+    METHODS set_local_settings
+      IMPORTING
+        !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
-    DATA: mt_local              TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          mt_remote             TYPE zif_abapgit_definitions=>ty_files_tt,
-          mv_do_local_refresh   TYPE abap_bool,
-          mv_last_serialization TYPE timestamp,
-          ms_data               TYPE zif_abapgit_persistence=>ty_repo.
 
-    METHODS:
-      set
-        IMPORTING iv_sha1        TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                  it_checksums   TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-                  iv_url         TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-                  iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-                  iv_head_branch TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-                  iv_offline     TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-                  is_dot_abapgit TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        RAISING   zcx_abapgit_exception.
+    DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
+    DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
+    DATA mv_do_local_refresh TYPE abap_bool .
+    DATA mv_last_serialization TYPE timestamp .
+    DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
+
+    METHODS set
+      IMPORTING
+        !iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+        !it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+        !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+        !iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_head_branch    TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+        !iv_offline        TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+        !is_dot_abapgit    TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -232,7 +236,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_cache = mt_local.
     lt_tadir = zcl_abapgit_tadir=>read(
       iv_package            = get_package( )
-      iv_ignore_subpackages = ignore_subpackages( )
+      iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
+      iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( )
       io_log                = io_log ).
 
@@ -279,7 +284,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
       lt_files = zcl_abapgit_objects=>serialize(
         is_item     = ls_item
-        iv_language = get_master_language( )
+        iv_language = get_dot_abapgit( )->get_master_language( )
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
@@ -326,8 +331,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_master_language.
-    rv_language = ms_data-dot_abapgit-master_language.
+  METHOD get_local_settings.
+
+    rs_settings = ms_data-local_settings.
+
   ENDMETHOD.
 
 
@@ -348,19 +355,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.                    "get_package
 
 
-  METHOD ignore_subpackages.
-    rv_yes = ms_data-ignore_subpackages.
-  ENDMETHOD.
-
-
   METHOD is_offline.
     rv_offline = ms_data-offline.
   ENDMETHOD.
-
-
-  METHOD is_write_protected.
-    rv_yes = ms_data-write_protect.
-  ENDMETHOD.                    "is_write_protected
 
 
   METHOD rebuild_local_checksums. "LOCAL (BASE)
@@ -418,6 +415,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD set.
 
+* TODO: refactor
+
     DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
@@ -427,7 +426,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       OR iv_branch_name IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
-      OR is_dot_abapgit IS SUPPLIED.
+      OR is_dot_abapgit IS SUPPLIED
+      OR is_local_settings IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
 
@@ -480,6 +480,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ms_data-dot_abapgit = is_dot_abapgit.
     ENDIF.
 
+    IF is_local_settings IS SUPPLIED.
+      lo_persistence->update_local_settings(
+        iv_key      = ms_data-key
+        is_settings = is_local_settings ).
+      ms_data-local_settings = is_local_settings.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -491,6 +498,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD set_files_remote.
 
     mt_remote = it_files.
+
+  ENDMETHOD.
+
+
+  METHOD set_local_settings.
+
+    set( is_local_settings = is_settings ).
 
   ENDMETHOD.
 

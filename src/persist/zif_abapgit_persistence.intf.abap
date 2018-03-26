@@ -18,19 +18,25 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
          END OF ty_local_checksum.
 
+  TYPES:
+    BEGIN OF ty_local_settings,
+      ignore_subpackages TYPE abap_bool,
+      write_protected    TYPE abap_bool,
+      only_local_objects TYPE abap_bool,
+    END OF ty_local_settings.
+
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_repo_xml,
-           url                TYPE string,
-           branch_name        TYPE string,
-           sha1               TYPE zif_abapgit_definitions=>ty_sha1,
-           package            TYPE devclass,
-           offline            TYPE sap_bool,
-           local_checksums    TYPE ty_local_checksum_tt,
-           dot_abapgit        TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-           head_branch        TYPE string,   " HEAD symref of the repo, master branch
-           write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
-           ignore_subpackages TYPE sap_bool,
+           url             TYPE string,
+           branch_name     TYPE string,
+           sha1            TYPE zif_abapgit_definitions=>ty_sha1,
+           package         TYPE devclass,
+           offline         TYPE sap_bool,
+           local_checksums TYPE ty_local_checksum_tt,
+           dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+           head_branch     TYPE string,   " HEAD symref of the repo, master branch
+           local_settings  TYPE ty_local_settings,
          END OF ty_repo_xml.
 
   TYPES: BEGIN OF ty_repo,

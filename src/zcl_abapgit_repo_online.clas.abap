@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD deserialize.
 
-    IF ms_data-write_protect = abap_true.
+    IF ms_data-local_settings-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
     ENDIF.
 
@@ -409,7 +409,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD set_branch_name.
 
-    IF ms_data-write_protect = abap_true.
+    IF ms_data-local_settings-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
     ENDIF.
 
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD set_new_remote.
 
-    IF ms_data-write_protect = abap_true.
+    IF ms_data-local_settings-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot change remote. Local code is write-protected by repo config' ).
     ENDIF.
 
@@ -441,7 +441,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD set_url.
 
-    IF ms_data-write_protect = abap_true.
+    IF ms_data-local_settings-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
     ENDIF.
 
