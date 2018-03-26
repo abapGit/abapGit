@@ -114,6 +114,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
       WHEN 'USER'.
         rv_text = '-'. " No additional explanation for user
+      WHEN 'SETTINGS'.
+        rv_text = '-'.
       WHEN OTHERS.
         IF strlen( is_data-data_str ) >= 250.
           rv_text = is_data-data_str(250).
