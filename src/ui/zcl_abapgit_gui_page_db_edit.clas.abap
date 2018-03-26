@@ -1,18 +1,34 @@
 CLASS zcl_abapgit_gui_page_db_edit DEFINITION
   PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS: constructor
-      IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content.
 
+    METHODS constructor
+      IMPORTING
+        !is_key TYPE zif_abapgit_persistence=>ty_content .
+
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
 
+    METHODS render_content
+        REDEFINITION .
   PRIVATE SECTION.
-    DATA: ms_key TYPE zif_abapgit_persistence=>ty_content.
 
+    CONSTANTS:
+      BEGIN OF gc_action,
+        update TYPE string VALUE 'update',
+      END OF gc_action .
+    DATA ms_key TYPE zif_abapgit_persistence=>ty_content .
+
+    CLASS-METHODS update
+      IMPORTING
+        !is_content TYPE zif_abapgit_persistence=>ty_content
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -63,8 +79,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     ro_html->add( '</td></tr></table>' ).
 
     " Form
-    ro_html->add( |<form id="db_form" method="post" action="sapevent:|
-               && |{ zif_abapgit_definitions=>gc_action-db_update }">| ).
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:| && |{ gc_action-update }">| ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
@@ -73,4 +88,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     ro_html->add( '</div>' ). "db_entry
 
   ENDMETHOD.  "render_content
+
+
+  METHOD update.
+
+    ASSERT is_content-type IS NOT INITIAL.
+
+    zcl_abapgit_persistence_db=>get_instance( )->update(
+      iv_type  = is_content-type
+      iv_value = is_content-value
+      iv_data  = is_content-data_str ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page~on_event.
+
+    DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
+
+    CASE iv_action.
+      WHEN gc_action-update.
+        ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
+        update( ls_db ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.
