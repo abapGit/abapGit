@@ -1,70 +1,85 @@
-CLASS zcl_abapgit_repo_srv DEFINITION PUBLIC FINAL CREATE PRIVATE.
+CLASS zcl_abapgit_repo_srv DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
-    CLASS-METHODS: get_instance
-      RETURNING VALUE(rv_srv) TYPE REF TO zcl_abapgit_repo_srv.
-
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(rv_srv) TYPE REF TO zcl_abapgit_repo_srv .
     METHODS list
-      RETURNING VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_repo_ref_tt
-      RAISING   zcx_abapgit_exception.
-
-    METHODS refresh
-      RAISING zcx_abapgit_exception.
-
+      RETURNING
+        VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_repo_ref_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS new_online
-      IMPORTING iv_url         TYPE string
-                iv_branch_name TYPE string
-                iv_package     TYPE devclass
-      RETURNING VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url         TYPE string
+        !iv_branch_name TYPE string
+        !iv_package     TYPE devclass
+      RETURNING
+        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception .
     METHODS new_offline
-      IMPORTING iv_url         TYPE string
-                iv_package     TYPE devclass
-      RETURNING VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_offline
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url        TYPE string
+        !iv_package    TYPE devclass
+      RETURNING
+        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_offline
+      RAISING
+        zcx_abapgit_exception .
     METHODS delete
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
     METHODS get
-      IMPORTING iv_key         TYPE zif_abapgit_persistence=>ty_value
-      RETURNING VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_key        TYPE zif_abapgit_persistence=>ty_value
+      RETURNING
+        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
     METHODS is_repo_installed
-      IMPORTING iv_url              TYPE string
-                iv_target_package   TYPE devclass OPTIONAL
-      RETURNING VALUE(rv_installed) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url             TYPE string
+        !iv_target_package  TYPE devclass OPTIONAL
+      RETURNING
+        VALUE(rv_installed) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     METHODS switch_repo_type
-      IMPORTING iv_key     TYPE zif_abapgit_persistence=>ty_value
-                iv_offline TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_key     TYPE zif_abapgit_persistence=>ty_value
+        !iv_offline TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     METHODS validate_package
-      IMPORTING iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    CLASS-DATA: go_ref TYPE REF TO zcl_abapgit_repo_srv.
+    CLASS-DATA go_ref TYPE REF TO zcl_abapgit_repo_srv .
+    DATA mv_init TYPE abap_bool VALUE abap_false ##NO_TEXT.
+    DATA mo_persistence TYPE REF TO zcl_abapgit_persistence_repo .
+    DATA mt_list TYPE zif_abapgit_definitions=>ty_repo_ref_tt .
 
-    METHODS constructor.
-
-    DATA: mv_init        TYPE abap_bool VALUE abap_false,
-          mo_persistence TYPE REF TO zcl_abapgit_persistence_repo,
-          mt_list        TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
-
+    METHODS refresh
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor .
     METHODS is_sap_object_allowed
       RETURNING
-        VALUE(rv_allowed) TYPE abap_bool.
-
+        VALUE(rv_allowed) TYPE abap_bool .
     METHODS add
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 

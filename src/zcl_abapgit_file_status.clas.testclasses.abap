@@ -129,8 +129,6 @@ CLASS ltcl_file_status IMPLEMENTATION.
     lt_results_exp = lt_results.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
-*    lo_dot->set_starting_folder( 'SRC' ).
-*    lo_dot->set_folder_logic( lcl_dot_abapgit=>c_folder_logic-prefix ).
 
     lt_results = zcl_abapgit_file_status=>calculate_status(
       iv_devclass        = '$Z$'

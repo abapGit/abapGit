@@ -1,58 +1,90 @@
-CLASS zcl_abapgit_repo_online DEFINITION PUBLIC INHERITING FROM zcl_abapgit_repo FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_repo_online DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_repo
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      refresh REDEFINITION,
-      constructor
-        IMPORTING is_data TYPE zif_abapgit_persistence=>ty_repo
-        RAISING   zcx_abapgit_exception,
-      get_url
-        RETURNING VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url,
-      get_branch_name
-        RETURNING VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name,
-      get_head_branch_name
-        RETURNING VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-head_branch,
-      get_branches
-        RETURNING VALUE(ro_branches) TYPE REF TO zcl_abapgit_git_branch_list
-        RAISING   zcx_abapgit_exception,
-      set_url
-        IMPORTING iv_url TYPE zif_abapgit_persistence=>ty_repo-url
-        RAISING   zcx_abapgit_exception,
-      set_branch_name
-        IMPORTING iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
-        RAISING   zcx_abapgit_exception,
-      set_new_remote
-        IMPORTING iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
-                  iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
-        RAISING   zcx_abapgit_exception,
-      get_sha1_local
-        RETURNING VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1,
-      get_sha1_remote
-        RETURNING VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1
-        RAISING   zcx_abapgit_exception,
-      get_files_remote REDEFINITION,
-      get_objects
-        RETURNING VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception,
-      deserialize REDEFINITION,
-      status
-        IMPORTING io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
-        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-        RAISING   zcx_abapgit_exception,
-      reset_status,
-      set_objects
-        IMPORTING it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception,
-      initialize
-        RAISING zcx_abapgit_exception,
-      rebuild_local_checksums REDEFINITION,
-      push
-        IMPORTING is_comment TYPE zif_abapgit_definitions=>ty_comment
-                  io_stage   TYPE REF TO zcl_abapgit_stage
-        RAISING   zcx_abapgit_exception,
-      get_unnecessary_local_objs
-        RETURNING VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
-        RAISING   zcx_abapgit_exception.
+
+    METHODS constructor
+      IMPORTING
+        !is_data TYPE zif_abapgit_persistence=>ty_repo
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_url
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
+    METHODS get_branch_name
+      RETURNING
+        VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
+    METHODS get_head_branch_name
+      RETURNING
+        VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-head_branch .
+    METHODS set_url
+      IMPORTING
+        !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_branch_name
+      IMPORTING
+        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_new_remote
+      IMPORTING
+        !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_sha1_local
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1 .
+    METHODS get_sha1_remote
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_objects
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS status
+      IMPORTING
+        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS reset_status .
+    METHODS set_objects
+      IMPORTING
+        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS initialize
+      RAISING
+        zcx_abapgit_exception .
+    METHODS push
+      IMPORTING
+        !is_comment TYPE zif_abapgit_definitions=>ty_comment
+        !io_stage   TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_unnecessary_local_objs
+      RETURNING
+        VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS deserialize
+        REDEFINITION .
+    METHODS get_files_remote
+        REDEFINITION .
+    METHODS rebuild_local_checksums
+        REDEFINITION .
+    METHODS refresh
+        REDEFINITION .
   PRIVATE SECTION.
     DATA:
       mt_objects     TYPE zif_abapgit_definitions=>ty_objects_tt,
@@ -130,14 +162,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.                    "deserialize
-
-
-  METHOD get_branches.
-    IF mo_branches IS NOT BOUND.
-      mo_branches = zcl_abapgit_git_transport=>branches( get_url( ) ).
-    ENDIF.
-    ro_branches = mo_branches.
-  ENDMETHOD.                    "get_branches
 
 
   METHOD get_branch_name.
