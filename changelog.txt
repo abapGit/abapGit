@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-03-26 v1.62.0
+------------------
+* downport
+! add hostname to password popup dialog
+* git fix for AWS CodeCommit
++ additional authorization checks possible
++ repo settings page updated
++ possibility to only select local objects
+
 2018-03-18 v1.61.0
 ------------------
 * ignore deleted objects in syntax check
