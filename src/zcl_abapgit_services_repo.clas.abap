@@ -133,6 +133,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     IF lo_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
     ENDIF.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
 
     lv_package = lo_repo->get_package( ).
     lt_tadir   = zcl_abapgit_tadir=>read( lv_package ).
@@ -180,6 +183,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lv_question TYPE string,
           lo_repo     TYPE REF TO zcl_abapgit_repo.
 
+
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -336,6 +343,11 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       lt_transport_headers   TYPE trwbo_request_headers,
       lt_transport_objects   TYPE scts_tadir,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
+
+
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
 
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 

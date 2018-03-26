@@ -184,8 +184,15 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                            iv_act = |{ zif_abapgit_definitions=>gc_action-repo_remote_detach }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Force stage'
                            iv_act = |{ zif_abapgit_definitions=>gc_action-go_stage }?{ lv_key }| ).
+
+      CLEAR lv_crossout.
+      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
+        lv_crossout = zif_abapgit_definitions=>gc_html_opt-crossout.
+      ENDIF.
       lo_tb_advanced->add( iv_txt = 'Transport to Branch'
-                           iv_act = |{ zif_abapgit_definitions=>gc_action-repo_transport_to_branch }?{ lv_key }| ).
+                           iv_act = |{ zif_abapgit_definitions=>gc_action-repo_transport_to_branch }?{ lv_key }|
+                           iv_opt = lv_crossout ).
+
     ELSE.
       lo_tb_advanced->add( iv_txt = 'Make on-line'
                            iv_act = |{ zif_abapgit_definitions=>gc_action-repo_remote_attach }?{ lv_key }| ).
@@ -194,8 +201,15 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_syntax_check }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Repo settings'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_settings }?{ lv_key }| ).
+
+    CLEAR lv_crossout.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
+      lv_crossout = zif_abapgit_definitions=>gc_html_opt-crossout.
+    ENDIF.
     lo_tb_advanced->add( iv_txt = 'Update local checksums'
-                         iv_act = |{ zif_abapgit_definitions=>gc_action-repo_refresh_checksums }?{ lv_key }| ).
+                         iv_act = |{ zif_abapgit_definitions=>gc_action-repo_refresh_checksums }?{ lv_key }|
+                         iv_opt = lv_crossout ).
+
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_remove }?{ lv_key }| ).
 
