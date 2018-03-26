@@ -162,8 +162,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     DATA: lv_url  TYPE string,
           lv_key  TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_db   TYPE zif_abapgit_persistence=>ty_content,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
+
 
     lv_key = iv_getdata. " TODO refactor
     lv_url = iv_getdata. " TODO refactor
