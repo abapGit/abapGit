@@ -1,20 +1,39 @@
 CLASS zcl_abapgit_gui_page_db DEFINITION
   PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS constructor.
 
+    METHODS constructor .
+
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
 
+    METHODS render_content
+        REDEFINITION .
   PRIVATE SECTION.
-    METHODS explain_content
-      IMPORTING is_data        TYPE zif_abapgit_persistence=>ty_content
-      RETURNING VALUE(rv_text) TYPE string
-      RAISING   zcx_abapgit_exception.
 
+    CONSTANTS:
+      BEGIN OF gc_action,
+        delete TYPE string VALUE 'delete',
+      END OF gc_action .
+
+    CLASS-METHODS delete
+      IMPORTING
+        !is_key TYPE zif_abapgit_persistence=>ty_content
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
+    METHODS explain_content
+      IMPORTING
+        !is_data       TYPE zif_abapgit_persistence=>ty_content
+      RETURNING
+        VALUE(rv_text) TYPE string
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -26,6 +45,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'DATABASE PERSISTENCY'.
   ENDMETHOD.  " constructor.
+
+
+  METHOD delete.
+
+    DATA: lv_answer TYPE c LENGTH 1.
+
+    ASSERT is_key-type IS NOT INITIAL.
+    ASSERT is_key-value IS NOT INITIAL.
+
+    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+      titlebar              = 'Warning'
+      text_question         = 'Delete?'
+      text_button_1         = 'Ok'
+      icon_button_1         = 'ICON_DELETE'
+      text_button_2         = 'Cancel'
+      icon_button_2         = 'ICON_CANCEL'
+      default_button        = '2'
+      display_cancel_button = abap_false ).                 "#EC NOTEXT
+
+    IF lv_answer = '2'.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    zcl_abapgit_persistence_db=>get_instance( )->delete(
+      iv_type  = is_key-type
+      iv_value = is_key-value ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.  " delete
 
 
   METHOD explain_content.
@@ -65,6 +114,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
       WHEN 'USER'.
         rv_text = '-'. " No additional explanation for user
+      WHEN 'SETTINGS'.
+        rv_text = '-'.
       WHEN OTHERS.
         IF strlen( is_data-data_str ) >= 250.
           rv_text = is_data-data_str(250).
@@ -118,7 +169,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       CREATE OBJECT lo_toolbar.
       lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>gc_action-db_display }?{ lv_action }| ).
       lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ zif_abapgit_definitions=>gc_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ zif_abapgit_definitions=>gc_action-db_delete }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ gc_action-delete }?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
@@ -135,4 +186,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.            "render_content
+
+
+  METHOD zif_abapgit_gui_page~on_event.
+
+    DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
+
+    CASE iv_action.
+      WHEN gc_action-delete.
+        ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
+        delete( ls_db ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.

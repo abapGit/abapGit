@@ -349,8 +349,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       git_tag_switch           TYPE string VALUE 'git_tag_switch',
       git_commit               TYPE string VALUE 'git_commit',
 
-      db_delete                TYPE string VALUE 'db_delete',
-      db_update                TYPE string VALUE 'db_update',
       db_display               TYPE string VALUE 'db_display',
       db_edit                  TYPE string VALUE 'db_edit',
       bg_update                TYPE string VALUE 'bg_update',

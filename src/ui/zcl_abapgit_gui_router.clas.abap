@@ -239,14 +239,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           EXPORTING
             is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-db_delete.                       " DB Delete
-        ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
-        zcl_abapgit_services_db=>delete( ls_db ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-db_update.                       " DB Update
-        ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
-        zcl_abapgit_services_db=>update( ls_db ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
 
         " ABAPGIT services actions
       WHEN zif_abapgit_definitions=>gc_action-abapgit_home.                    " Go abapGit homepage
