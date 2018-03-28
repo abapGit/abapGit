@@ -16,9 +16,9 @@ CLASS zcl_abapgit_news DEFINITION
     TYPES:
       tt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
 
-    CONSTANTS c_tail_length TYPE i VALUE 5 ##NO_TEXT. " Number of versions to display if no updates
+    CONSTANTS c_tail_length TYPE i VALUE 5 ##NO_TEXT.   " Number of versions to display if no updates
 
-    CLASS-METHODS create " TODO REFACTOR
+    CLASS-METHODS create   " TODO REFACTOR
       IMPORTING
         !io_repo           TYPE REF TO zcl_abapgit_repo
       RETURNING
@@ -28,9 +28,6 @@ CLASS zcl_abapgit_news DEFINITION
     METHODS get_log
       RETURNING
         VALUE(rt_log) TYPE tt_log .
-    METHODS latest_version
-      RETURNING
-        VALUE(rv_version) TYPE string .
     METHODS has_news
       RETURNING
         VALUE(rv_boolean) TYPE abap_bool .
@@ -44,37 +41,48 @@ CLASS zcl_abapgit_news DEFINITION
       RETURNING
         VALUE(rv_boolean) TYPE abap_bool .
   PRIVATE SECTION.
-    DATA: mt_log              TYPE tt_log,
-          mv_current_version  TYPE string,
-          mv_lastseen_version TYPE string,
-          mv_latest_version   TYPE string.
 
-    METHODS:
-      constructor
-        IMPORTING iv_rawdata          TYPE xstring
-                  iv_lastseen_version TYPE string
-                  iv_current_version  TYPE string.
+    DATA mt_log TYPE tt_log .
+    DATA mv_current_version TYPE string .
+    DATA mv_lastseen_version TYPE string .
+    DATA mv_latest_version TYPE string .
 
-    CLASS-METHODS:
-      version_to_numeric
-        IMPORTING iv_version        TYPE string
-        RETURNING VALUE(rv_version) TYPE i,
-      normalize_version
-        IMPORTING iv_version        TYPE string
-        RETURNING VALUE(rv_version) TYPE string,
-      compare_versions
-        IMPORTING iv_a             TYPE string
-                  iv_b             TYPE string
-        RETURNING VALUE(rv_result) TYPE i,
-      parse_line
-        IMPORTING iv_line            TYPE string
-                  iv_current_version TYPE string
-        RETURNING VALUE(rs_log)      TYPE ty_log,
-      parse
-        IMPORTING it_lines           TYPE string_table
-                  iv_current_version TYPE string
-        RETURNING VALUE(rt_log)      TYPE tt_log.
-
+    METHODS latest_version
+      RETURNING
+        VALUE(rv_version) TYPE string .
+    METHODS constructor
+      IMPORTING
+        !iv_rawdata          TYPE xstring
+        !iv_lastseen_version TYPE string
+        !iv_current_version  TYPE string .
+    CLASS-METHODS version_to_numeric
+      IMPORTING
+        !iv_version       TYPE string
+      RETURNING
+        VALUE(rv_version) TYPE i .
+    CLASS-METHODS normalize_version
+      IMPORTING
+        !iv_version       TYPE string
+      RETURNING
+        VALUE(rv_version) TYPE string .
+    CLASS-METHODS compare_versions
+      IMPORTING
+        !iv_a            TYPE string
+        !iv_b            TYPE string
+      RETURNING
+        VALUE(rv_result) TYPE i .
+    CLASS-METHODS parse_line
+      IMPORTING
+        !iv_line            TYPE string
+        !iv_current_version TYPE string
+      RETURNING
+        VALUE(rs_log)       TYPE ty_log .
+    CLASS-METHODS parse
+      IMPORTING
+        !it_lines           TYPE string_table
+        !iv_current_version TYPE string
+      RETURNING
+        VALUE(rt_log)       TYPE tt_log .
 ENDCLASS.
 
 

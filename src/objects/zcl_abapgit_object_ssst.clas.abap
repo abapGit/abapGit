@@ -103,8 +103,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
         i_style_active_flag = 'A'
       EXCEPTIONS
         OTHERS              = 0.
-    IF sy-subrc <> 0.
-    ENDIF.
 
     SET PARAMETER ID 'EUK' FIELD iv_package.
     ASSIGN ('(SAPLSTXBS)MASTER_LANGUAGE') TO <lv_spras>.

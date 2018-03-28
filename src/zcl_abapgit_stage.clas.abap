@@ -3,67 +3,78 @@ CLASS zcl_abapgit_stage DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: ty_method TYPE c LENGTH 1.
 
-    CONSTANTS: BEGIN OF c_method,
-                 add    TYPE ty_method VALUE 'A',
-                 rm     TYPE ty_method VALUE 'R',
-                 ignore TYPE ty_method VALUE 'I',
-                 skip   TYPE ty_method VALUE '?',
-               END OF c_method.
+    TYPES:
+      ty_method TYPE c LENGTH 1 .
+    TYPES:
+      BEGIN OF ty_stage,
+        file   TYPE zif_abapgit_definitions=>ty_file,
+        method TYPE ty_method,
+      END OF ty_stage .
+    TYPES:
+      ty_stage_tt TYPE SORTED TABLE OF ty_stage
+        WITH UNIQUE KEY file-path file-filename .
 
-    TYPES: BEGIN OF ty_stage,
-             file   TYPE zif_abapgit_definitions=>ty_file,
-             method TYPE ty_method,
-           END OF ty_stage.
-
-    TYPES: ty_stage_tt TYPE SORTED TABLE OF ty_stage
-      WITH UNIQUE KEY file-path file-filename.
+    CONSTANTS:
+      BEGIN OF c_method,
+        add    TYPE ty_method VALUE 'A',
+        rm     TYPE ty_method VALUE 'R',
+        ignore TYPE ty_method VALUE 'I',
+        skip   TYPE ty_method VALUE '?',
+      END OF c_method .
 
     CLASS-METHODS method_description
-      IMPORTING iv_method             TYPE ty_method
-      RETURNING VALUE(rv_description) TYPE string
-      RAISING   zcx_abapgit_exception.
-
-    METHODS:
-      constructor
-        IMPORTING iv_branch_name  TYPE string
-                  iv_branch_sha1  TYPE zif_abapgit_definitions=>ty_sha1
-                  iv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL,
-      get_branch_name
-        RETURNING VALUE(rv_branch) TYPE string,
-      get_branch_sha1
-        RETURNING VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1,
-      add
-        IMPORTING iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
-                  iv_data     TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      reset
-        IMPORTING iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
-        RAISING   zcx_abapgit_exception,
-      reset_all
-        RAISING zcx_abapgit_exception,
-      rm
-        IMPORTING iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
-        RAISING   zcx_abapgit_exception,
-      ignore
-        IMPORTING iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
-        RAISING   zcx_abapgit_exception,
-      lookup
-        IMPORTING iv_path          TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename      TYPE zif_abapgit_definitions=>ty_file-filename
-        RETURNING VALUE(rv_method) TYPE ty_method,
-      get_merge_source
-        RETURNING VALUE(rv_source) TYPE zif_abapgit_definitions=>ty_sha1,
-      count
-        RETURNING VALUE(rv_count) TYPE i,
-      get_all
-        RETURNING VALUE(rt_stage) TYPE ty_stage_tt.
-
+      IMPORTING
+        !iv_method            TYPE ty_method
+      RETURNING
+        VALUE(rv_description) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !iv_branch_name  TYPE string
+        !iv_branch_sha1  TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL .
+    METHODS get_branch_name
+      RETURNING
+        VALUE(rv_branch) TYPE string .
+    METHODS get_branch_sha1
+      RETURNING
+        VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1 .
+    METHODS add
+      IMPORTING
+        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_data     TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    METHODS reset
+      IMPORTING
+        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+      RAISING
+        zcx_abapgit_exception .
+    METHODS rm
+      IMPORTING
+        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+      RAISING
+        zcx_abapgit_exception .
+    METHODS ignore
+      IMPORTING
+        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_merge_source
+      RETURNING
+        VALUE(rv_source) TYPE zif_abapgit_definitions=>ty_sha1 .
+    METHODS count
+      RETURNING
+        VALUE(rv_count) TYPE i .
+    METHODS get_all
+      RETURNING
+        VALUE(rt_stage) TYPE ty_stage_tt .
   PRIVATE SECTION.
     DATA: mt_stage        TYPE ty_stage_tt,
           mv_branch_name  TYPE string,
@@ -157,21 +168,6 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
   ENDMETHOD.        "ignore
 
 
-  METHOD lookup.
-
-    DATA ls_stage LIKE LINE OF mt_stage.
-
-
-    READ TABLE mt_stage INTO ls_stage
-      WITH KEY file-path     = iv_path
-               file-filename = iv_filename.
-    IF sy-subrc = 0.
-      rv_method = ls_stage-method.
-    ENDIF.
-
-  ENDMETHOD.        "lookup
-
-
   METHOD method_description.
 
     CASE iv_method.
@@ -193,11 +189,6 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
                     AND   file-filename = iv_filename.
     ASSERT sy-subrc = 0.
   ENDMETHOD.        "reset
-
-
-  METHOD reset_all.
-    CLEAR mt_stage.
-  ENDMETHOD.  "reset_all
 
 
   METHOD rm.

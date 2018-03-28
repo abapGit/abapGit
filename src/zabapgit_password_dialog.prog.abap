@@ -144,8 +144,8 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     DATA lv_host TYPE string.
 
     FIND REGEX 'https?://([^/^:]*)' IN iv_repo_url SUBMATCHES lv_host.
-    IF lv_host IS NOT INITIAL AND lv_host NE space.
-      CLEAR: s_title.
+    IF lv_host IS NOT INITIAL AND lv_host <> space.
+      CLEAR s_title.
       CONCATENATE 'Login:' lv_host INTO s_title IN CHARACTER MODE SEPARATED BY space.
     ENDIF.
 
