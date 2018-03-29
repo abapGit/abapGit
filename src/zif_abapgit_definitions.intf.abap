@@ -31,6 +31,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
   TYPES: ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY.
 
+  TYPES: BEGIN OF ty_deserialize_checks,
+           overwrite TYPE ty_string_tt,
+         END OF ty_deserialize_checks.
+
   TYPES ty_git_branch_type TYPE char2 .
   TYPES:
     BEGIN OF ty_git_branch,

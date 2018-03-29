@@ -7,6 +7,11 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
+    METHODS deserialize_checks
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      RAISING
+        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !is_data TYPE zif_abapgit_persistence=>ty_repo .
@@ -52,6 +57,8 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize
+      IMPORTING
+        VALUE(is_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     METHODS refresh
@@ -147,15 +154,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
 
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    find_remote_dot_abapgit( ).
-
-    IF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
-    ENDIF.
+    deserialize_checks( ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     IF lt_requirements IS NOT INITIAL.
@@ -164,14 +163,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        lt_updated_files = zcl_abapgit_objects=>deserialize( me ).
-
+        lt_updated_files = zcl_abapgit_objects=>deserialize(
+          io_repo   = me
+          is_checks = is_checks ).
       CATCH zcx_abapgit_exception INTO lx_error.
-
-        " ensure to reset default transport request task
+* ensure to reset default transport request task
         zcl_abapgit_default_task=>get_instance( )->reset( ).
         RAISE EXCEPTION lx_error.
-
     ENDTRY.
 
     APPEND get_dot_abapgit( )->get_signature( ) TO lt_updated_files.
@@ -179,6 +177,23 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     CLEAR: mt_local, mv_last_serialization.
 
     update_local_checksums( lt_updated_files ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_checks.
+
+    find_remote_dot_abapgit( ).
+
+    IF get_local_settings( )-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
+    ELSEIF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
+      zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
+    ENDIF.
+
+* todo
+
+    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
   ENDMETHOD.
 

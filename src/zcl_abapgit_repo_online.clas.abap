@@ -149,7 +149,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     initialize( ).
 
-    super->deserialize( ).
+    super->deserialize( is_checks ).
 
     set( iv_sha1 = mv_branch ).
 

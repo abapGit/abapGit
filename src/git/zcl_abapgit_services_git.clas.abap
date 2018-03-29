@@ -240,7 +240,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lo_repo->refresh( ).
-    lo_repo->deserialize( ).
+
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
     COMMIT WORK.
 
@@ -297,7 +298,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     ENDIF.
 
-    lo_repo->deserialize( ).
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
   ENDMETHOD.
 
@@ -327,9 +328,9 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lo_repo->deserialize( ).
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
-  ENDMETHOD.  "switch_branch
+  ENDMETHOD.
 
 
   METHOD switch_tag.
@@ -348,7 +349,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lo_repo->deserialize( ).
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
   ENDMETHOD.
 

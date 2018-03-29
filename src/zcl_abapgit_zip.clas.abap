@@ -394,7 +394,8 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
-    lo_repo->deserialize( ).
+
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
   ENDMETHOD.                    "import
 

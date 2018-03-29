@@ -84,7 +84,9 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       lo_repo->initialize( ).
       lo_repo->find_remote_dot_abapgit( ).
       lo_repo->status( ). " check for errors
-      lo_repo->deserialize( ).
+
+      zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+
       zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
     ENDIF.
 

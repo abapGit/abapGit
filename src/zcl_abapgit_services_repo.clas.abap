@@ -1,52 +1,83 @@
-CLASS zcl_abapgit_services_repo DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_services_repo DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS clone
-      IMPORTING iv_url TYPE string
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS refresh
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS remove
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS purge
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS new_offline
-      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
-
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS remote_attach
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS remote_detach
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS remote_change
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS refresh_local_checksums
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS toggle_favorite
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS open_se80
-      IMPORTING iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS transport_to_branch
-      IMPORTING iv_repository_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+      IMPORTING
+        !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
+    CLASS-METHODS gui_deserialize
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -75,13 +106,25 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo->initialize( ).
     lo_repo->find_remote_dot_abapgit( ).
     lo_repo->status( ). " check for errors
-    lo_repo->deserialize( ).
+
+    gui_deserialize( lo_repo ).
 
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
 
     COMMIT WORK.
 
   ENDMETHOD.  "clone
+
+
+  METHOD gui_deserialize.
+
+    DATA: ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+
+* todo
+
+    io_repo->deserialize( ls_checks ).
+
+  ENDMETHOD.
 
 
   METHOD new_offline.

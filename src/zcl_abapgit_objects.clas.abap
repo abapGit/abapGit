@@ -28,8 +28,16 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS deserialize
       IMPORTING
         !io_repo                 TYPE REF TO zcl_abapgit_repo
+        !is_checks               TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RETURNING
         VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS deserialize_checks
+      IMPORTING
+        !io_repo         TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete
@@ -73,59 +81,75 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_types) TYPE ty_types_tt .
   PRIVATE SECTION.
 
+    CLASS-METHODS files_to_deserialize
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS check_duplicates
-      IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS create_object
-      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
-                iv_language    TYPE spras
-                is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-                iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS
-      prioritize_deser
-        IMPORTING it_results        TYPE zif_abapgit_definitions=>ty_results_tt
-        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
-
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+        !iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS prioritize_deser
+      IMPORTING
+        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS class_name
-      IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(rv_class_name) TYPE string.
-
+      IMPORTING
+        !is_item             TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_class_name) TYPE string .
     CLASS-METHODS warning_overwrite
-      CHANGING ct_results TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING  zcx_abapgit_exception.
-
+      CHANGING
+        !ct_results TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS warning_package
-      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
-                iv_package       TYPE devclass
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+        !iv_package      TYPE devclass
+      RETURNING
+        VALUE(rv_cancel) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS update_package_tree
-      IMPORTING iv_package TYPE devclass.
-
+      IMPORTING
+        !iv_package TYPE devclass .
     CLASS-METHODS delete_obj
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
       IMPORTING
-        io_object TYPE REF TO zif_abapgit_object
-        it_remote TYPE zif_abapgit_definitions=>ty_files_tt
-        is_result TYPE zif_abapgit_definitions=>ty_result
+        !io_object TYPE REF TO zif_abapgit_object
+        !it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !is_result TYPE zif_abapgit_definitions=>ty_result
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
-      IMPORTING it_objects TYPE ty_deserialization_tt
-                iv_ddic    TYPE abap_bool DEFAULT abap_false
-                iv_descr   TYPE string
-      CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_objects TYPE ty_deserialization_tt
+        !iv_ddic    TYPE abap_bool DEFAULT abap_false
+        !iv_descr   TYPE string
+      CHANGING
+        !ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -352,20 +376,15 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
+
     lv_package = io_repo->get_package( ).
 
     zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
-
     zcl_abapgit_objects_activation=>clear( ).
 
     lt_remote = io_repo->get_files_remote( ).
 
-    lt_results = zcl_abapgit_file_status=>status( io_repo ).
-    DELETE lt_results WHERE match = abap_true.     " Full match
-    SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
-
-    lt_results = prioritize_deser( lt_results ).
+    lt_results = files_to_deserialize( io_repo ).
 
     warning_overwrite( CHANGING ct_results = lt_results ).
 
@@ -459,6 +478,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 
+  METHOD deserialize_checks.
+
+    DATA: lt_results  TYPE zif_abapgit_definitions=>ty_results_tt.
+
+
+    lt_results = files_to_deserialize( io_repo ).
+
+  ENDMETHOD.
+
+
   METHOD deserialize_objects.
 
     DATA: lo_progress TYPE REF TO zcl_abapgit_progress.
@@ -502,6 +531,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.                    "exists
+
+
+  METHOD files_to_deserialize.
+
+    rt_results = zcl_abapgit_file_status=>status( io_repo ).
+    DELETE rt_results WHERE match = abap_true.     " Full match
+    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
+
+    rt_results = prioritize_deser( rt_results ).
+
+  ENDMETHOD.
 
 
   METHOD has_changed_since.
