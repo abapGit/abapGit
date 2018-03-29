@@ -66,7 +66,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_drop_cache TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-    METHODS refresh_local .
     METHODS update_local_checksums
       IMPORTING
         !it_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -191,9 +190,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
     ENDIF.
 
-* todo
-
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+
+* todo
 
   ENDMETHOD.
 
@@ -426,11 +425,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "refresh
-
-
-  METHOD refresh_local. " For testing purposes, maybe removed later
-    mv_do_local_refresh = abap_true.
-  ENDMETHOD.  "refresh_local
 
 
   METHOD set.
