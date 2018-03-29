@@ -5,37 +5,33 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_abapgit_homepage TYPE string
-      VALUE 'http://www.abapgit.org' ##NO_TEXT.
-    CONSTANTS c_abapgit_wikipage TYPE string
-      VALUE 'http://docs.abapgit.org'.
-    CONSTANTS c_package_abapgit  TYPE devclass
-      VALUE '$ABAPGIT'.
-    CONSTANTS c_package_plugins  TYPE devclass
-      VALUE '$ABAPGIT_PLUGINS'.
-    CONSTANTS c_abapgit_url      TYPE string
-      VALUE 'https://github.com/larshp/abapGit.git'.
-    CONSTANTS c_plugins_url      TYPE string
-      VALUE 'https://github.com/larshp/abapGit-plugins.git'.
+    CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
+    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT.
+    CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT.
+    CONSTANTS c_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS' ##NO_TEXT.
+    CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
+    CONSTANTS c_plugins_url TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
-      RAISING zcx_abapgit_exception.
-
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_wikipage
-      RAISING zcx_abapgit_exception.
-
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS install_abapgit
-      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
-
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS install_abapgit_pi
-      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
-
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS is_installed
-      RETURNING VALUE(rv_installed) TYPE abap_bool.
-
+      RETURNING
+        VALUE(rv_installed) TYPE abap_bool .
     CLASS-METHODS is_installed_pi
-      RETURNING VALUE(rv_installed) TYPE abap_bool.
-
+      RETURNING
+        VALUE(rv_installed) TYPE abap_bool .
   PRIVATE SECTION.
 
     CLASS-METHODS do_install
@@ -84,7 +80,9 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       lo_repo->initialize( ).
       lo_repo->find_remote_dot_abapgit( ).
       lo_repo->status( ). " check for errors
-      lo_repo->deserialize( ).
+
+      zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+
       zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
     ENDIF.
 

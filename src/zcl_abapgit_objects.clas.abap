@@ -28,8 +28,16 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS deserialize
       IMPORTING
         !io_repo                 TYPE REF TO zcl_abapgit_repo
+        !is_checks               TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RETURNING
         VALUE(rt_accessed_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS deserialize_checks
+      IMPORTING
+        !io_repo         TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete
@@ -73,59 +81,84 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_types) TYPE ty_types_tt .
   PRIVATE SECTION.
 
+    CLASS-METHODS files_to_deserialize
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS check_duplicates
-      IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS create_object
-      IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_item
-                iv_language    TYPE spras
-                is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-                iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS
-      prioritize_deser
-        IMPORTING it_results        TYPE zif_abapgit_definitions=>ty_results_tt
-        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
-
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_language    TYPE spras
+        !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+        !iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS prioritize_deser
+      IMPORTING
+        !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS class_name
-      IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(rv_class_name) TYPE string.
-
-    CLASS-METHODS warning_overwrite
-      CHANGING ct_results TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING  zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item             TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_class_name) TYPE string .
+    CLASS-METHODS warning_overwrite_adjust
+      IMPORTING
+        !it_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      CHANGING
+        !ct_results   TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS warning_overwrite_find
+      IMPORTING
+        !it_results         TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_overwrite) TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS warning_package
-      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
-                iv_package       TYPE devclass
-      RETURNING VALUE(rv_cancel) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+        !iv_package      TYPE devclass
+      RETURNING
+        VALUE(rv_cancel) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS update_package_tree
-      IMPORTING iv_package TYPE devclass.
-
+      IMPORTING
+        !iv_package TYPE devclass .
     CLASS-METHODS delete_obj
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
       IMPORTING
-        io_object TYPE REF TO zif_abapgit_object
-        it_remote TYPE zif_abapgit_definitions=>ty_files_tt
-        is_result TYPE zif_abapgit_definitions=>ty_result
+        !io_object TYPE REF TO zif_abapgit_object
+        !it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !is_result TYPE zif_abapgit_definitions=>ty_result
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
-      IMPORTING it_objects TYPE ty_deserialization_tt
-                iv_ddic    TYPE abap_bool DEFAULT abap_false
-                iv_descr   TYPE string
-      CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_objects TYPE ty_deserialization_tt
+        !iv_ddic    TYPE abap_bool DEFAULT abap_false
+        !iv_descr   TYPE string
+      CHANGING
+        !ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -352,22 +385,19 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
 
+
     lv_package = io_repo->get_package( ).
 
     zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
-
     zcl_abapgit_objects_activation=>clear( ).
 
     lt_remote = io_repo->get_files_remote( ).
 
-    lt_results = zcl_abapgit_file_status=>status( io_repo ).
-    DELETE lt_results WHERE match = abap_true.     " Full match
-    SORT lt_results BY obj_type ASCENDING obj_name ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM lt_results COMPARING obj_type obj_name.
+    lt_results = files_to_deserialize( io_repo ).
 
-    lt_results = prioritize_deser( lt_results ).
-
-    warning_overwrite( CHANGING ct_results = lt_results ).
+    warning_overwrite_adjust(
+      EXPORTING it_overwrite = is_checks-overwrite
+      CHANGING ct_results = lt_results ).
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -459,6 +489,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.                    "deserialize
 
 
+  METHOD deserialize_checks.
+
+    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
+
+
+    lt_results = files_to_deserialize( io_repo ).
+
+    rs_checks-overwrite = warning_overwrite_find( lt_results ).
+
+  ENDMETHOD.
+
+
   METHOD deserialize_objects.
 
     DATA: lo_progress TYPE REF TO zcl_abapgit_progress.
@@ -502,6 +544,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.                    "exists
+
+
+  METHOD files_to_deserialize.
+
+    rt_results = zcl_abapgit_file_status=>status( io_repo ).
+    DELETE rt_results WHERE match = abap_true.     " Full match
+    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
+
+    rt_results = prioritize_deser( rt_results ).
+
+  ENDMETHOD.
 
 
   METHOD has_changed_since.
@@ -683,56 +737,56 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.                    "update_package_tree
 
 
-  METHOD warning_overwrite.
+  METHOD warning_overwrite_adjust.
 
-    DATA: lt_results_overwrite   LIKE ct_results,
-          lt_confirmed_overwrite LIKE ct_results,
-          lt_columns             TYPE stringtab,
-          lv_column              LIKE LINE OF lt_columns.
+    DATA: lt_overwrite LIKE it_overwrite,
+          ls_overwrite LIKE LINE OF lt_overwrite.
 
-    FIELD-SYMBOLS: <ls_result>  LIKE LINE OF ct_results.
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
 
-    LOOP AT ct_results ASSIGNING <ls_result>
-        WHERE NOT obj_type IS INITIAL.
 
-      IF <ls_result>-lstate IS NOT INITIAL
-          AND <ls_result>-lstate <> zif_abapgit_definitions=>gc_state-deleted
-          AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>gc_state-added
-          AND <ls_result>-rstate IS INITIAL ).
+* make sure to get the current status, as something might have changed in the meanwhile
+    lt_overwrite = warning_overwrite_find( ct_results ).
 
-        "current object has been modified locally, add to table for popup
-        APPEND <ls_result> TO lt_results_overwrite.
+    LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
+      READ TABLE it_overwrite INTO ls_overwrite WITH KEY
+        obj_type = <ls_overwrite>-obj_type
+        obj_name = <ls_overwrite>-obj_name.
+      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
+        zcx_abapgit_exception=>raise( |Overwrite { <ls_overwrite>-obj_type } {
+          <ls_overwrite>-obj_name } undecided| ).
+      ENDIF.
+
+      IF ls_overwrite-decision = 'N'.
+        DELETE ct_results WHERE
+          obj_type = <ls_overwrite>-obj_type AND
+          obj_name = <ls_overwrite>-obj_name.
+        ASSERT sy-subrc = 0.
       ENDIF.
 
     ENDLOOP.
 
-    IF lines( lt_results_overwrite ) > 0.
+  ENDMETHOD.
 
-      lv_column = `OBJ_TYPE`.
-      INSERT lv_column INTO TABLE lt_columns.
-      lv_column = `OBJ_NAME`.
-      INSERT lv_column INTO TABLE lt_columns.
 
-      "all returned objects will be overwritten
-      zcl_abapgit_popups=>popup_to_select_from_list(
-        EXPORTING
-          it_list               = lt_results_overwrite
-          i_header_text         = |The following Objects have been modified locally.|
-                              && | Select the Objects which should be overwritten.|
-          i_select_column_text  = 'Overwrite?'
-          it_columns_to_display = lt_columns
-        IMPORTING
-          et_list               = lt_confirmed_overwrite ).
+  METHOD warning_overwrite_find.
 
-      LOOP AT lt_results_overwrite ASSIGNING <ls_result>.
-        READ TABLE lt_confirmed_overwrite TRANSPORTING NO FIELDS
-             WITH KEY obj_type = <ls_result>-obj_type
-                      obj_name = <ls_result>-obj_name.
-        IF sy-subrc <> 0.
-          DELETE TABLE ct_results FROM <ls_result>.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+    DATA: ls_overwrite LIKE LINE OF rt_overwrite.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+
+    LOOP AT it_results ASSIGNING <ls_result>
+        WHERE NOT obj_type IS INITIAL.
+      IF <ls_result>-lstate IS NOT INITIAL
+          AND <ls_result>-lstate <> zif_abapgit_definitions=>gc_state-deleted
+          AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>gc_state-added
+          AND <ls_result>-rstate IS INITIAL ).
+* current object has been modified locally, add to table
+        CLEAR ls_overwrite.
+        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
+        APPEND ls_overwrite TO rt_overwrite.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 

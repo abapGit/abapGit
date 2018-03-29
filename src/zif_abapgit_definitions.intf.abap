@@ -79,6 +79,20 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF ty_file_item .
   TYPES:
     ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY .
+
+  TYPES: ty_yes_no TYPE c LENGTH 1.
+
+  TYPES: BEGIN OF ty_overwrite.
+      INCLUDE TYPE ty_item.
+  TYPES: decision TYPE ty_yes_no,
+         END OF ty_overwrite.
+
+  TYPES: ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY.
+
+  TYPES: BEGIN OF ty_deserialize_checks,
+           overwrite TYPE ty_overwrite_tt,
+         END OF ty_deserialize_checks.
+
   TYPES:
     BEGIN OF ty_metadata,
       class        TYPE string,

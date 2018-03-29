@@ -263,6 +263,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
     DATA: lo_per       TYPE REF TO zcl_abapgit_persist_background,
           lo_repo      TYPE REF TO zcl_abapgit_repo_online,
           lt_list      TYPE zcl_abapgit_persist_background=>tt_background,
+          ls_checks    TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lv_repo_name TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
@@ -299,7 +300,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
       CASE <ls_list>-method.
         WHEN zcl_abapgit_persist_background=>c_method-pull.
-          lo_repo->deserialize( ).
+* todo, set defaults in ls_checks
+          lo_repo->deserialize( ls_checks ).
         WHEN zcl_abapgit_persist_background=>c_method-push.
           push( io_repo     = lo_repo
                 is_settings = <ls_list> ).

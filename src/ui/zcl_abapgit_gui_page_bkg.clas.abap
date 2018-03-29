@@ -1,25 +1,37 @@
 CLASS zcl_abapgit_gui_page_bkg DEFINITION
   PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+
+    METHODS constructor
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA:
-      mv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
-    METHODS:
-      build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
-      render_data
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-        RAISING   zcx_abapgit_exception.
+    DATA mv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+
+    METHODS build_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS update_task
+      IMPORTING
+        !is_bg_task TYPE zcl_abapgit_persist_background=>ty_background
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_data
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -170,6 +182,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_task.
+
+    DATA lo_persistence TYPE REF TO zcl_abapgit_persist_background.
+
+    CREATE OBJECT lo_persistence.
+
+    IF is_bg_task-method = zcl_abapgit_persist_background=>c_method-nothing.
+      lo_persistence->delete( is_bg_task-key ).
+    ELSE.
+      lo_persistence->modify( is_bg_task ).
+    ENDIF.
+
+    MESSAGE 'Saved' TYPE 'S' ##NO_TEXT.
+
+    COMMIT WORK.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     DATA ls_bg_task TYPE zcl_abapgit_persist_background=>ty_background.
@@ -178,7 +209,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-bg_update.
         ls_bg_task     = zcl_abapgit_html_action_utils=>decode_bg_update( iv_getdata ).
         ls_bg_task-key = mv_key.
-        zcl_abapgit_services_bkg=>update_task( ls_bg_task ).
+        update_task( ls_bg_task ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 

@@ -243,7 +243,12 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
+    ASSERT NOT iv_url IS INITIAL
+      AND NOT iv_branch_name IS INITIAL
+      AND NOT iv_package IS INITIAL.
+
     validate_package( iv_package ).
+    zcl_abapgit_url=>validate( |{ iv_url }| ).
 
     lv_key = mo_persistence->add(
       iv_url         = iv_url
@@ -330,8 +335,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD validate_package.
 
-    DATA: ls_devclass TYPE tdevc,
-          lt_repos    TYPE zif_abapgit_persistence=>tt_repo.
+    DATA: lv_as4user TYPE tdevc-as4user,
+          lt_repos   TYPE zif_abapgit_persistence=>tt_repo.
+
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).
@@ -341,16 +347,14 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'not possible to use $TMP, create new (local) package' ).
     ENDIF.
 
-    SELECT SINGLE *
-           FROM tdevc
-           INTO ls_devclass
-           WHERE devclass = iv_package.                 "#EC CI_GENBUFF
-
+    SELECT SINGLE as4user FROM tdevc
+      INTO lv_as4user
+      WHERE devclass = iv_package.                      "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Package { iv_package } not found| ).
     ENDIF.
 
-    IF is_sap_object_allowed( ) = abap_false AND ls_devclass-as4user = 'SAP'.
+    IF is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed| ).
     ENDIF.
 
