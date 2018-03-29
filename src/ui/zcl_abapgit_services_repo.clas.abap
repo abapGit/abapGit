@@ -78,6 +78,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    CLASS-METHODS popup_overwrite
+      CHANGING
+        !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -120,7 +126,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
-* todo
+    ls_checks = io_repo->deserialize_checks( ).
+
+    popup_overwrite( CHANGING ct_overwrite = ls_checks-overwrite ).
 
     io_repo->deserialize( ls_checks ).
 
@@ -162,6 +170,50 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   ENDMETHOD.  " open_se80.
 
 
+  METHOD popup_overwrite.
+
+    DATA: lt_columns  TYPE stringtab,
+          lt_selected LIKE ct_overwrite,
+          lv_column   LIKE LINE OF lt_columns.
+
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
+
+
+    IF lines( ct_overwrite ) = 0.
+      RETURN.
+    ENDIF.
+
+    lv_column = 'OBJ_TYPE'.
+    INSERT lv_column INTO TABLE lt_columns.
+    lv_column = 'OBJ_NAME'.
+    INSERT lv_column INTO TABLE lt_columns.
+
+    zcl_abapgit_popups=>popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_overwrite
+        i_header_text         = |The following Objects have been modified locally.|
+                            && | Select the Objects which should be overwritten.|
+        i_select_column_text  = 'Overwrite?'
+        it_columns_to_display = lt_columns
+      IMPORTING
+        et_list               = lt_selected ).
+* todo, it should be possible for the user to click cancel in the popup
+
+    LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
+      READ TABLE lt_selected WITH KEY
+        obj_type = <ls_overwrite>-obj_type
+        obj_name = <ls_overwrite>-obj_name
+        TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_overwrite>-decision = 'Y'.
+      ELSE.
+        <ls_overwrite>-decision = 'N'.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD purge.
 
     DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
@@ -185,8 +237,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     IF lines( lt_tadir ) > 0.
 
-      lv_question = |This will DELETE all objects in package { lv_package }|
-                 && | ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
+      lv_question = |This will DELETE all objects in package { lv_package
+        } ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
 
       lv_answer = zcl_abapgit_popups=>popup_to_confirm(
         titlebar              = 'Uninstall'
@@ -350,8 +402,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lv_package  = lo_repo->get_package( ).
-    lv_question = |This will remove the repository reference to the package { lv_package }|
-               && '. All objects will safely remain in the system.'.
+    lv_question = |This will remove the repository reference to the package { lv_package
+      }. All objects will safely remain in the system.|.
 
     lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Remove'
