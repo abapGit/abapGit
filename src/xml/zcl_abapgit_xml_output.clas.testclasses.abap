@@ -86,8 +86,10 @@ CLASS ltcl_xml_output IMPLEMENTATION.
       CATCH cx_bcs .
     ENDTRY.
 
-    lo_conv_in_string = cl_abap_conv_in_ce=>create( EXPORTING   encoding = lv_encoding
-                                                                input = lv_xstring ).
+    lo_conv_in_string = cl_abap_conv_in_ce=>create(
+                          encoding = lv_encoding
+                          input = lv_xstring ).
+
     lo_conv_in_string->read( IMPORTING data = lv_value ).
 
     cl_abap_unit_assert=>assert_equals(
