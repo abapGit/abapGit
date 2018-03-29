@@ -243,7 +243,12 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
+    ASSERT NOT iv_url IS INITIAL
+      AND NOT iv_branch_name IS INITIAL
+      AND NOT iv_package IS INITIAL.
+
     validate_package( iv_package ).
+    zcl_abapgit_url=>validate( |{ iv_url }| ).
 
     lv_key = mo_persistence->add(
       iv_url         = iv_url
