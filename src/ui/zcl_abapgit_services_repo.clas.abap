@@ -277,7 +277,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_false ).
+    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type(
+      iv_key = iv_key
+      iv_offline = abap_false ).
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_url( ls_popup-url ).
@@ -310,7 +312,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "remote_change
+  ENDMETHOD.
 
 
   METHOD remote_detach.
@@ -335,7 +337,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "remote_detach
+  ENDMETHOD.
 
 
   METHOD remove.
@@ -369,17 +371,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "remove
+  ENDMETHOD.
 
 
   METHOD toggle_favorite.
 
     zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( iv_key ).
 
-  ENDMETHOD.  " toggle_favorite.
+  ENDMETHOD.
 
 
   METHOD transport_to_branch.
+
     DATA:
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
@@ -408,5 +411,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       io_repository          = lo_repository
       is_transport_to_branch = ls_transport_to_branch
       it_transport_objects   = lt_transport_objects ).
+
   ENDMETHOD.
 ENDCLASS.
