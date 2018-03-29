@@ -1,8 +1,12 @@
-CLASS zcl_abapgit_services_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
+class ZCL_ABAPGIT_SERVICES_GIT definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    TYPES: BEGIN OF ty_commit_fields,
+  types:
+    BEGIN OF ty_commit_fields,
              repo_key        TYPE zif_abapgit_persistence=>ty_repo-key,
              committer_name  TYPE string,
              committer_email TYPE string,
@@ -10,49 +14,70 @@ CLASS zcl_abapgit_services_git DEFINITION PUBLIC FINAL CREATE PUBLIC.
              author_email    TYPE string,
              comment         TYPE string,
              body            TYPE string,
-           END OF ty_commit_fields.
+           END OF ty_commit_fields .
 
-    CLASS-METHODS pull
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS reset
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS create_branch
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS switch_branch
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS delete_branch
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS create_tag
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS delete_tag
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS switch_tag
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS tag_overview
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-    CLASS-METHODS commit
-      IMPORTING io_repo   TYPE REF TO zcl_abapgit_repo_online
-                is_commit TYPE ty_commit_fields
-                io_stage  TYPE REF TO zcl_abapgit_stage
-      RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+  class-methods PULL
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods RESET
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods CREATE_BRANCH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods SWITCH_BRANCH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods DELETE_BRANCH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods CREATE_TAG
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods DELETE_TAG
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods SWITCH_TAG
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods TAG_OVERVIEW
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods COMMIT
+    importing
+      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
+      !IS_COMMIT type TY_COMMIT_FIELDS
+      !IO_STAGE type ref to ZCL_ABAPGIT_STAGE
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
 ENDCLASS.
 
 
