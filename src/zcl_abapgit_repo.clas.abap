@@ -146,6 +146,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           lt_requirements  TYPE STANDARD TABLE OF zif_abapgit_dot_abapgit=>ty_requirement,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
+
+    IF ms_data-local_settings-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
+    ENDIF.
+
     find_remote_dot_abapgit( ).
 
     IF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
