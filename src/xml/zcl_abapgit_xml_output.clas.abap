@@ -1,32 +1,32 @@
-class ZCL_ABAPGIT_XML_OUTPUT definition
-  public
-  inheriting from ZCL_ABAPGIT_XML
-  create public.
+CLASS zcl_abapgit_xml_output DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_xml
+  CREATE PUBLIC.
 
-public section.
+  PUBLIC SECTION.
 
-  methods ADD
-    importing
-      !IV_NAME type CLIKE
-      !IG_DATA type ANY
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SET_RAW
-    importing
-      !II_RAW type ref to IF_IXML_ELEMENT .
-  methods ADD_XML
-    importing
-      !IV_NAME type CLIKE
-      !II_XML type ref to IF_IXML_ELEMENT .
-  methods BUILD_ASX_NODE
-    returning
-      value(RI_ELEMENT) type ref to IF_IXML_ELEMENT .
-  methods RENDER
-    importing
-      !IV_NORMALIZE type SAP_BOOL default ABAP_TRUE
-      !IS_METADATA type ZIF_ABAPGIT_DEFINITIONS=>TY_METADATA optional
-    returning
-      value(RV_XML) type STRING .
+    METHODS add
+      IMPORTING
+        !iv_name TYPE clike
+        !ig_data TYPE any
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_raw
+      IMPORTING
+        !ii_raw TYPE REF TO if_ixml_element .
+    METHODS add_xml
+      IMPORTING
+        !iv_name TYPE clike
+        !ii_xml  TYPE REF TO if_ixml_element .
+    METHODS build_asx_node
+      RETURNING
+        VALUE(ri_element) TYPE REF TO if_ixml_element .
+    METHODS render
+      IMPORTING
+        !iv_normalize TYPE sap_bool DEFAULT abap_true
+        !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+      RETURNING
+        VALUE(rv_xml) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mi_raw  TYPE REF TO if_ixml_element.
