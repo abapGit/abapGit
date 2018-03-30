@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "scripts": {
-    "pretest": "abaplint \"src/**/*.abap\"",
+    "pretest": "abaplint -a v702 \"src/**/*.abap\"",
     "test": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
     "_disabled_posttest": "abaplint zabapgit.abap"
   },
