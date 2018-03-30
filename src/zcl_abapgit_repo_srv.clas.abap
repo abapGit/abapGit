@@ -61,6 +61,11 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
+    METHODS purge
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     CLASS-DATA go_ref TYPE REF TO zcl_abapgit_repo_srv .
@@ -269,6 +274,26 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     add( ro_repo ).
 
   ENDMETHOD.                    "new_online
+
+
+  METHOD purge.
+
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+
+
+    IF io_repo->get_local_settings( )-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot purge. Local code is write-protected by repo config' ).
+    ELSEIF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
+
+    lt_tadir = zcl_abapgit_tadir=>read( io_repo->get_package( ) ).
+
+    zcl_abapgit_objects=>delete( lt_tadir ).
+
+    delete( io_repo ).
+
+  ENDMETHOD.
 
 
   METHOD refresh.
