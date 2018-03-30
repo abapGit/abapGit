@@ -164,12 +164,18 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_old.
 
+    DATA: lv_popup TYPE abap_bool.
+
     IF gt_objects IS NOT INITIAL.
+
+      CALL FUNCTION 'GUI_IS_AVAILABLE'
+        IMPORTING
+          return = lv_popup.
 
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
           activate_ddic_objects  = iv_ddic
-          with_popup             = abap_true
+          with_popup             = lv_popup
         TABLES
           objects                = gt_objects
         EXCEPTIONS

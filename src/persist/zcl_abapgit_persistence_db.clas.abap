@@ -131,7 +131,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
   METHOD list_by_type.
     SELECT * FROM (c_tabname)
       INTO TABLE rt_content
-      WHERE type = iv_type.                               "#EC CI_SUBRC
+      WHERE type = iv_type
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
   ENDMETHOD.
 
 
