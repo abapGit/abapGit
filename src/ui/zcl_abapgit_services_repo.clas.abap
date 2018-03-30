@@ -84,6 +84,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS popup_package_overwrite
+      CHANGING
+        !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
 ENDCLASS.
 
 
@@ -126,10 +132,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
+* find troublesome objects
     ls_checks = io_repo->deserialize_checks( ).
 
-    popup_overwrite( CHANGING ct_overwrite = ls_checks-overwrite ).
+* and let the user decide what to do
+    TRY.
+        popup_overwrite( CHANGING ct_overwrite = ls_checks-overwrite ).
+        popup_package_overwrite( CHANGING ct_overwrite = ls_checks-warning_package ).
+      CATCH zcx_abapgit_cancel.
+        RETURN.
+    ENDTRY.
 
+* and pass decisions to deserialize
     io_repo->deserialize( ls_checks ).
 
   ENDMETHOD.
@@ -209,6 +223,45 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       ELSE.
         <ls_overwrite>-decision = 'N'.
       ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD popup_package_overwrite.
+
+    DATA: lv_question TYPE c LENGTH 200,
+          lv_answer   TYPE c.
+
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
+
+
+    IF lines( ct_overwrite ) = 0.
+      RETURN.
+    ENDIF.
+
+    LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
+      CONCATENATE 'Overwrite object' <ls_overwrite>-obj_type <ls_overwrite>-obj_name
+        'from package' <ls_overwrite>-devclass
+        INTO lv_question SEPARATED BY space.                "#EC NOTEXT
+
+      lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+        titlebar              = 'Warning'
+        text_question         = lv_question
+        text_button_1         = 'Ok'
+        icon_button_1         = 'ICON_DELETE'
+        text_button_2         = 'Cancel'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = abap_false ).               "#EC NOTEXT
+
+      IF lv_answer = '2'.
+        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+      ENDIF.
+
+* todo, let the user decide yes/no/cancel
+      <ls_overwrite>-decision = 'Y'.
+
     ENDLOOP.
 
   ENDMETHOD.
