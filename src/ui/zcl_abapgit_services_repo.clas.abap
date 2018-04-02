@@ -130,7 +130,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD gui_deserialize.
 
-    DATA: ls_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+    DATA: ls_checks       TYPE zif_abapgit_definitions=>ty_deserialize_checks,
+          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+
 
 * find troublesome objects
     ls_checks = io_repo->deserialize_checks( ).
@@ -139,6 +141,13 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     TRY.
         popup_overwrite( CHANGING ct_overwrite = ls_checks-overwrite ).
         popup_package_overwrite( CHANGING ct_overwrite = ls_checks-warning_package ).
+
+        IF ls_checks-requirements-met = 'N'.
+          lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
+          zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
+          ls_checks-requirements-decision = 'Y'.
+        ENDIF.
+
       CATCH zcx_abapgit_cancel.
         RETURN.
     ENDTRY.

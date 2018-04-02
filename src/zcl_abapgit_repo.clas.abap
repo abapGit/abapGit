@@ -149,17 +149,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_requirements  TYPE STANDARD TABLE OF zif_abapgit_dot_abapgit=>ty_requirement,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
 
     deserialize_checks( ).
 
-    lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
-    IF lt_requirements IS NOT INITIAL.
-      zcl_abapgit_requirement_helper=>check_requirements( it_requirements = lt_requirements
-                                                          iv_show_popup   = abap_true ).
+    IF is_checks-requirements-met = 'N' AND is_checks-requirements-decision IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Requirements not met and undecided ').
     ENDIF.
+
 
     TRY.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
@@ -182,6 +180,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
+    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+
+
     find_remote_dot_abapgit( ).
 
     IF get_local_settings( )-write_protected = abap_true.
@@ -192,7 +193,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
-* todo
+    lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
+    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
+      lt_requirements ).
 
   ENDMETHOD.
 
