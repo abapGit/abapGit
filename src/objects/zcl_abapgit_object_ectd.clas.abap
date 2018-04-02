@@ -10,11 +10,17 @@ CLASS zcl_abapgit_object_ectd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras.
 
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_last_changed,
+             luser TYPE xubname,
+             ldate TYPE datum,
+             ltime TYPE uzeit,
+           END OF ty_last_changed.
+
     CONSTANTS:
       co_default_version TYPE etobj_ver VALUE '1' ##NO_TEXT,
       BEGIN OF co_name,
-        version        TYPE string VALUE 'VERSION' ##NO_TEXT,
-        versions       TYPE string VALUE 'VERSIONS' ##NO_TEXT,
+        version  TYPE string VALUE 'VERSION' ##NO_TEXT,
+        versions TYPE string VALUE 'VERSIONS' ##NO_TEXT,
       END OF co_name.
 
     DATA:
@@ -48,7 +54,33 @@ CLASS zcl_abapgit_object_ectd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         CHANGING
           co_versions_node TYPE REF TO if_ixml_element
         RAISING
-          cx_ecatt.
+          cx_ecatt,
+
+      get_changed_date
+        IMPORTING
+          ii_document            TYPE REF TO if_ixml_document
+        RETURNING
+          VALUE(rv_changed_date) TYPE d,
+
+      get_changed_time
+        IMPORTING
+          ii_document            TYPE REF TO if_ixml_document
+        RETURNING
+          VALUE(rv_changed_time) TYPE t,
+
+      get_changed_by_user
+        IMPORTING
+          ii_document               TYPE REF TO if_ixml_document
+        RETURNING
+          VALUE(rv_changed_by_user) TYPE xubname,
+
+      get_change_information
+        IMPORTING
+          is_version_info              TYPE etversinfo
+        RETURNING
+          VALUE(rs_change_information) TYPE ty_last_changed
+        RAISING
+          cx_ecatt_apl.
 
 ENDCLASS.
 
@@ -62,6 +94,8 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
     DATA: lo_element TYPE REF TO if_ixml_element.
 
     lo_element = ci_document->find_from_name( |ECTD| ).
+    lo_element->set_attribute(  name  = |SAPRL|
+                                value = || ).
     lo_element->set_attribute(  name  = |DOWNLOADDATE|
                                 value = || ).
     lo_element->set_attribute(  name  = |DOWNLOADTIME|
@@ -96,6 +130,9 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
     lo_element->set_value( || ).
 
     lo_element = ci_document->find_from_name( |TADIR_RESP| ).
+    lo_element->set_value( || ).
+
+    lo_element = ci_document->find_from_name( |VAR_EXT_PATH| ).
     lo_element->set_value( || ).
 
   ENDMETHOD.
@@ -209,7 +246,51 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown.
+
+    DATA: ls_last_changed    TYPE ty_last_changed,
+          ls_current_changed TYPE ty_last_changed,
+          lt_version_info    TYPE etversinfo_tabtype,
+          lx_error           TYPE REF TO cx_ecatt,
+          lv_text            TYPE string.
+
+    FIELD-SYMBOLS: <ls_version_info> LIKE LINE OF lt_version_info.
+
+    TRY.
+        cl_apl_ecatt_object=>get_version_info_object(
+          EXPORTING
+            im_name          = mv_object_name
+            im_obj_type      = ms_item-obj_type
+          IMPORTING
+            ex_version_info  = lt_version_info  ).
+
+        LOOP AT lt_version_info ASSIGNING <ls_version_info>.
+
+          ls_current_changed = get_change_information( <ls_version_info> ).
+
+          IF    ls_current_changed-ldate > ls_last_changed-ldate
+            AND ls_current_changed-ltime > ls_last_changed-ltime.
+
+            ls_last_changed = ls_current_changed.
+
+          ENDIF.
+
+        ENDLOOP.
+
+      CATCH cx_ecatt INTO lx_error.
+        lv_text = lx_error->get_text( ).
+        MESSAGE lv_text TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
+
+    IF ls_last_changed-luser IS NOT INITIAL.
+
+      rv_user = ls_last_changed-luser.
+
+    ELSE.
+
+      rv_user = c_user_unknown.
+
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -352,4 +433,80 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD get_changed_date.
+
+    DATA: lv_changed_date_external TYPE string.
+
+    lv_changed_date_external = ii_document->find_from_name( 'LDATE' )->get_value( ).
+
+    CALL FUNCTION 'CONVERSION_EXIT_RSDAT_INPUT'
+      EXPORTING
+        input        = lv_changed_date_external
+      IMPORTING
+        output       = rv_changed_date
+      EXCEPTIONS
+        invalid_date = 1
+        OTHERS       = 2.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_changed_time.
+
+    DATA: lv_changed_time_external TYPE string.
+
+    lv_changed_time_external =  ii_document->find_from_name( 'LTIME' )->get_value( ).
+
+    CALL FUNCTION 'CONVERSION_EXIT_TIMLO_INPUT'
+      EXPORTING
+        input       = lv_changed_time_external
+      IMPORTING
+        output      = rv_changed_time
+      EXCEPTIONS
+        wrong_input = 1
+        OTHERS      = 2.
+
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_changed_by_user.
+
+    rv_changed_by_user = ii_document->find_from_name( 'LUSER' )->get_value( ).
+
+  ENDMETHOD.
+
+
+  METHOD get_change_information.
+
+    DATA: li_document TYPE REF TO if_ixml_document,
+          lo_download TYPE REF TO cl_apl_ecatt_data_download,
+          lv_xml      TYPE xstring.
+
+    CREATE OBJECT lo_download.
+
+    lo_download->build_xml_of_object(
+      EXPORTING
+        im_object_name    = mv_object_name
+        im_object_version = is_version_info-version
+        im_object_type    = ms_item-obj_type
+      IMPORTING
+        ex_xml_stream     = lv_xml ).
+
+    li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
+
+    rs_change_information-ldate = get_changed_date( li_document ).
+    rs_change_information-ltime = get_changed_time( li_document ).
+    rs_change_information-luser = get_changed_by_user( li_document ).
+
+  ENDMETHOD.
+
 ENDCLASS.
