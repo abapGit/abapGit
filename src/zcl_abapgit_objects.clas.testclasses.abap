@@ -133,6 +133,8 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
+    cl_abap_unit_assert=>assert_not_initial( lt_types ).
+
     LOOP AT lt_types ASSIGNING <lv_type>.
       CLEAR ls_item.
       ls_item-obj_name = 'ZABAPGIT_FOOBAR'.
