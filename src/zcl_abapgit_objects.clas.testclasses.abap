@@ -58,7 +58,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
+      iv_url         = 'https://github.com/abapGit/Test-Objects.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
     lo_repo->status( ).
