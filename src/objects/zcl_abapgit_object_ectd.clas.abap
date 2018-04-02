@@ -267,8 +267,8 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
           ls_current_changed = get_change_information( <ls_version_info> ).
 
-          IF    ls_current_changed-ldate > ls_last_changed-ldate
-            AND ls_current_changed-ltime > ls_last_changed-ltime.
+          IF     ls_current_changed-ldate >= ls_last_changed-ldate
+             AND ls_current_changed-ltime >  ls_last_changed-ltime.
 
             ls_last_changed = ls_current_changed.
 
