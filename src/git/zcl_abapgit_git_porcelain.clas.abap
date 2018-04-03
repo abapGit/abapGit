@@ -179,6 +179,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     IF iv_name CS ` `.
       zcx_abapgit_exception=>raise( 'Branch name cannot contain blank spaces' ).
+    ELSEIF iv_from = ''.
+      zcx_abapgit_exception=>raise( 'New branch, "from" SHA1 empty' ).
     ENDIF.
 
 * "client MUST send an empty packfile"
