@@ -372,7 +372,7 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
           ls_currently_changed = get_change_information( <ls_version_info> ).
 
           IF is_change_more_recent_than( is_currently_changed = ls_currently_changed
-                                         is_last_changed      = ls_last_changed ).
+                                         is_last_changed      = ls_last_changed ) = abap_true.
 
             ls_last_changed = ls_currently_changed.
 
