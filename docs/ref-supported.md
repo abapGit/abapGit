@@ -29,7 +29,7 @@ DOMA | Domain | Yes
 DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
-ECTD | eCATT Test Data Container | [#105](https://github.com/larshp/abapGit/issues/105)
+ECTD | eCATT Test Data Container | Yes
 ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
