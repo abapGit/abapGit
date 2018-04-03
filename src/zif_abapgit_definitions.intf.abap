@@ -89,9 +89,15 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
   TYPES: ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY.
 
+  TYPES: BEGIN OF ty_requirements,
+           met      TYPE ty_yes_no,
+           decision TYPE ty_yes_no,
+         END OF ty_requirements.
+
   TYPES: BEGIN OF ty_deserialize_checks,
            overwrite       TYPE ty_overwrite_tt,
            warning_package TYPE ty_overwrite_tt,
+           requirements    TYPE ty_requirements,
          END OF ty_deserialize_checks.
 
   TYPES:

@@ -18,17 +18,16 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
     TYPES:
       ty_requirement_status_tt TYPE STANDARD TABLE OF ty_requirement_status WITH DEFAULT KEY .
 
-    CLASS-METHODS check_requirements
+    CLASS-METHODS requirements_popup
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
-        !iv_show_popup   TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS get_requirement_met_status
+    CLASS-METHODS is_requirements_met
       IMPORTING
         !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
       RETURNING
-        VALUE(rt_status) TYPE ty_requirement_status_tt
+        VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -36,6 +35,13 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
     CLASS-METHODS show_requirement_popup
       IMPORTING
         !it_requirements TYPE ty_requirement_status_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_requirement_met_status
+      IMPORTING
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
+      RETURNING
+        VALUE(rt_status) TYPE ty_requirement_status_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS version_greater_or_equal
@@ -50,37 +56,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
 
-  METHOD check_requirements.
-
-    DATA: lt_met_status TYPE ty_requirement_status_tt,
-          lv_answer     TYPE c LENGTH 1.
-
-    lt_met_status = get_requirement_met_status( it_requirements ).
-
-    IF iv_show_popup = abap_true.
-      show_requirement_popup( lt_met_status ).
-    ENDIF.
-
-    LOOP AT lt_met_status TRANSPORTING NO FIELDS WHERE met = abap_false.
-      EXIT.
-    ENDLOOP.
-
-    IF sy-subrc = 0.
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          text_question = 'The project has unmet requirements. Do you want to continue?'
-        IMPORTING
-          answer        = lv_answer.
-      IF lv_answer <> '1'.
-        zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_requirement_met_status.
-
 
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
 
@@ -121,6 +97,45 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
       UNASSIGN <ls_installed_comp>.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_requirements_met.
+
+    DATA: lt_met_status TYPE ty_requirement_status_tt.
+
+
+    lt_met_status = get_requirement_met_status( it_requirements ).
+
+    READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
+    IF sy-subrc = 0.
+      rv_status = 'N'.
+    ELSE.
+      rv_status = 'Y'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD requirements_popup.
+
+    DATA: lt_met_status TYPE ty_requirement_status_tt,
+          lv_answer     TYPE c LENGTH 1.
+
+
+    lt_met_status = get_requirement_met_status( it_requirements ).
+
+    show_requirement_popup( lt_met_status ).
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        text_question = 'The project has unmet requirements. Do you want to continue?'
+      IMPORTING
+        answer        = lv_answer.
+    IF lv_answer <> '1'.
+      zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -218,9 +233,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     " Versions are comparable by number, compare release and if necessary patch level
     IF is_status-installed_release > is_status-required_release
-       OR ( is_status-installed_release = is_status-required_release
-            AND ( is_status-required_patch IS INITIAL OR
-                  is_status-installed_patch >= is_status-required_patch ) ).
+        OR ( is_status-installed_release = is_status-required_release
+        AND ( is_status-required_patch IS INITIAL OR
+        is_status-installed_patch >= is_status-required_patch ) ).
 
       rv_true = abap_true.
     ENDIF.
