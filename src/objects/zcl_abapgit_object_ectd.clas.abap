@@ -62,7 +62,7 @@ CLASS zcl_abapgit_object_ectd DEFINITION
         CHANGING
           co_versions_node TYPE REF TO if_ixml_element
         RAISING
-          cx_ecatt,
+          zcx_abapgit_exception,
 
       get_changed_date
         IMPORTING
@@ -88,7 +88,8 @@ CLASS zcl_abapgit_object_ectd DEFINITION
         RETURNING
           VALUE(rs_change_information) TYPE ty_last_changed
         RAISING
-          cx_ecatt_apl,
+          cx_ecatt_apl
+          zcx_abapgit_exception,
 
       is_change_more_recent_than
         IMPORTING
@@ -101,7 +102,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
+CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
 
   METHOD clear_attributes.
@@ -166,7 +167,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
   METHOD deserialize_version.
 
     DATA: ls_object   TYPE etmobjects,
-          lo_upload   TYPE REF TO cl_apl_ecatt_data_upload,
+          lo_upload   TYPE REF TO zcl_abapgit_ecatt_data_upload,
           lv_xml      TYPE xstring,
           lv_text     TYPE string,
           li_document TYPE REF TO if_ixml_document,
@@ -186,8 +187,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
 
     lv_xml = cl_ixml_80_20=>render_to_xstring( li_document ).
 
-*    lo_upload->set_stream_for_upload( lv_xml ).
-    zcx_abapgit_exception=>raise( 'ECTD temporarily disabled' ).
+    lo_upload->z_set_stream_for_upload( lv_xml ).
 
     ls_object-d_obj_name  = mv_object_name.
     ls_object-s_obj_type  = ms_item-obj_type.
@@ -264,12 +264,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
   METHOD get_change_information.
 
     DATA: li_document TYPE REF TO if_ixml_document,
-          lo_download TYPE REF TO cl_apl_ecatt_data_download,
+          lo_download TYPE REF TO zcl_abapgit_ecatt_data_downl,
           lv_xml      TYPE xstring.
 
     CREATE OBJECT lo_download.
 
-    lo_download->build_xml_of_object(
+    zcl_abapgit_ecatt_download=>z_build_xml_of_object(
       EXPORTING
         im_object_name    = mv_object_name
         im_object_version = is_version_info-version
@@ -318,13 +318,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
   METHOD serialize_version.
 
     DATA: li_document TYPE REF TO if_ixml_document,
-          lo_download TYPE REF TO cl_apl_ecatt_data_download,
+          lo_download TYPE REF TO zcl_abapgit_ecatt_data_downl,
           lv_xml      TYPE xstring,
           lo_node     TYPE REF TO if_ixml_element.
 
     CREATE OBJECT lo_download.
 
-    lo_download->build_xml_of_object(
+    zcl_abapgit_ecatt_download=>z_build_xml_of_object(
       EXPORTING
         im_object_name    = mv_object_name
         im_object_version = is_version_info-version
@@ -406,6 +406,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
+    DATA: lx_error TYPE REF TO cx_ecatt_apl.
+
     TRY.
         cl_apl_ecatt_object=>delete_object( im_obj_type            = ms_item-obj_type
                                             im_name                = mv_object_name
@@ -414,8 +416,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ECTD IMPLEMENTATION.
                                             im_version             = co_default_version
                                             im_delete_all_versions = abap_true ).
 
-      CATCH cx_ecatt_apl INTO DATA(error).
-        zcx_abapgit_exception=>raise( error->get_text( ) ).
+      CATCH cx_ecatt_apl INTO lx_error.
+        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
