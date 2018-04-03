@@ -172,6 +172,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     ls_data-package     = lv_package.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
+    ls_data-dot_abapgit-folder_logic = zcl_abapgit_popups=>popup_folder_logic( ).
+
     CREATE OBJECT lo_repo
       EXPORTING
         is_data = ls_data.
