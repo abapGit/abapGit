@@ -327,6 +327,14 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
           lt_source  TYPE seop_source_string.
 
 
+    "Buffer needs to be refreshed,
+    "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
+    CALL FUNCTION 'SEO_BUFFER_INIT'.
+    CALL FUNCTION 'SEO_BUFFER_REFRESH'
+      EXPORTING
+        cifkey  = is_key
+        version = seoc_version_inactive.
+
     lo_scanner = init_scanner(
       it_source = it_source
       iv_name   = is_key-clsname ).
