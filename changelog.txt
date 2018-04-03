@@ -8,6 +8,14 @@ Legend
 + : added
 - : removed
 
+2018-04-03 v1.63.0
+------------------
++ ECTD support
+! Seperation of UI and logic
++ Transport to zip, choose folder logic
+* TRAN fix
+* Additional unit tests
+
 2018-03-26 v1.62.0
 ------------------
 * downport
