@@ -58,7 +58,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url         = 'https://github.com/larshp/abapGit-Unit-Test.git'
+      iv_url         = 'https://github.com/abapGit/Test-Objects.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
     lo_repo->status( ).
@@ -111,7 +111,6 @@ CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
 
   PRIVATE SECTION.
     METHODS:
-      is_supported FOR TESTING,
       not_exist FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_object_types DEFINITION
@@ -122,32 +121,6 @@ ENDCLASS.                    "ltcl_object_types DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_object_types IMPLEMENTATION.
-
-  METHOD is_supported.
-
-    DATA: ls_item      TYPE zif_abapgit_definitions=>ty_item,
-          lv_supported TYPE abap_bool,
-          lt_types     TYPE zcl_abapgit_objects=>ty_types_tt.
-
-    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_types.
-
-
-    lt_types = zcl_abapgit_objects=>supported_list( ).
-
-    LOOP AT lt_types ASSIGNING <lv_type>.
-
-      CLEAR ls_item.
-      ls_item-obj_type = <lv_type>.
-      lv_supported = zcl_abapgit_objects=>is_supported( ls_item ).
-
-      cl_abap_unit_assert=>assert_equals(
-          act  = lv_supported
-          exp  = abap_true
-          msg  = ls_item-obj_type
-          quit = if_aunit_constants=>no ).
-    ENDLOOP.
-
-  ENDMETHOD.                    "is_supported
 
   METHOD not_exist.
 
@@ -160,6 +133,8 @@ CLASS ltcl_object_types IMPLEMENTATION.
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
+    cl_abap_unit_assert=>assert_not_initial( lt_types ).
+
     LOOP AT lt_types ASSIGNING <lv_type>.
       CLEAR ls_item.
       ls_item-obj_name = 'ZABAPGIT_FOOBAR'.
@@ -167,16 +142,15 @@ CLASS ltcl_object_types IMPLEMENTATION.
       lv_exists = zcl_abapgit_objects=>exists( ls_item ).
 
       cl_abap_unit_assert=>assert_equals(
-          act  = lv_exists
-          exp  = abap_false
-          msg  = ls_item-obj_type
-          quit = if_aunit_constants=>no ).
+        act  = lv_exists
+        exp  = abap_false
+        msg  = ls_item-obj_type
+        quit = if_aunit_constants=>no ).
     ENDLOOP.
 
   ENDMETHOD.                    "not_exist
 
 ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
-
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
