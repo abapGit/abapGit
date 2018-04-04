@@ -1,15 +1,11 @@
-CLASS zcl_abapgit_ecatt_data_downl DEFINITION
+CLASS zcl_abapgit_ecatt_config_downl DEFINITION
   PUBLIC
-  INHERITING FROM cl_apl_ecatt_data_download
+  INHERITING FROM cl_apl_ecatt_config_download
   CREATE PUBLIC .
 
   PUBLIC SECTION.
     METHODS:
       download REDEFINITION,
-
-      set_generate_xml_no_download
-        IMPORTING
-          iv_generate_xml_no_download TYPE abap_bool,
 
       get_xml_stream
         RETURNING
@@ -25,15 +21,13 @@ CLASS zcl_abapgit_ecatt_data_downl DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mv_generate_xml_no_download TYPE abap_bool,
-      mv_xml_stream               TYPE xstring,
-      mv_xml_stream_size          TYPE int4.
+      mv_xml_stream      TYPE xstring,
+      mv_xml_stream_size TYPE int4.
 
 ENDCLASS.
 
 
-CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
-
+CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
 
   METHOD download.
 
@@ -42,6 +36,7 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
     DATA: lv_partyp TYPE string.
 
     load_help = im_load_help.
+    typ = im_object_type.
 
     TRY.
         cl_apl_ecatt_object=>show_object(
@@ -55,33 +50,27 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    typ = im_object_type.
-
     lv_partyp = cl_apl_ecatt_const=>params_type_par.
 
-    ecatt_data ?= ecatt_object.
-* build_schema( ).
-* set_attributes_to_schema( ).
     set_attributes_to_template( ).
-* set_params_to_schema( ).
-    get_general_params_data( im_params = ecatt_data->params
+    ecatt_config ?= ecatt_object.
+    set_ecatt_objects_to_template( ).
+* MS180406
+    set_var_mode_to_dom( ).
+* ENDMS180406
+    get_general_params_data( im_params = ecatt_config->params
                              im_ptyp   = lv_partyp ).
-
     LOOP AT parm INTO wa_parm.
       set_general_params_data_to_dom( ).
       IF NOT wa_parm-val_type IS INITIAL.
-        set_deep_stru_to_dom( ecatt_data->params ).
-        set_deep_data_to_dom( im_params = ecatt_data->params
+        set_deep_stru_to_dom( ecatt_config->params ).
+        set_deep_data_to_dom( im_params = ecatt_config->params
                               im_pindex = wa_parm-pindex ).
       ENDIF.
     ENDLOOP.
 
-* MS180406
-    set_var_mode_to_dom( ).
-* ENDMS180406
-    set_variants_to_dom( im_params = ecatt_data->params ).
+    set_variants_to_dom( im_params = ecatt_config->params ).
 
-* download_schema( ).
     download_data( ).
 
   ENDMETHOD.
@@ -111,13 +100,6 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
   METHOD get_xml_stream_size.
 
     rv_xml_stream_size = mv_xml_stream_size.
-
-  ENDMETHOD.
-
-
-  METHOD set_generate_xml_no_download.
-
-    mv_generate_xml_no_download = iv_generate_xml_no_download.
 
   ENDMETHOD.
 

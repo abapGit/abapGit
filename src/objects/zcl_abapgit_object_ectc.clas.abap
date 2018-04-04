@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_object_ectd DEFINITION
+CLASS zcl_abapgit_object_ectc DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_object_ecatt_super
   FINAL
@@ -22,7 +22,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
+CLASS zcl_abapgit_object_ectc IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -34,19 +35,19 @@ CLASS zcl_abapgit_object_ectd IMPLEMENTATION.
 
   METHOD get_object_type.
 
-    rv_object_type = cl_apl_ecatt_const=>obj_type_test_data.
+    rv_object_type = cl_apl_ecatt_const=>obj_type_test_config.
 
   ENDMETHOD.
 
   METHOD get_upload.
 
-    CREATE OBJECT ro_upload TYPE zcl_abapgit_ecatt_data_upload.
+    CREATE OBJECT ro_upload TYPE zcl_abapgit_ecatt_config_upl.
 
   ENDMETHOD.
 
   METHOD get_download.
 
-    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_data_downl.
+    CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_config_downl.
 
   ENDMETHOD.
 

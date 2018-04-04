@@ -1,6 +1,6 @@
-CLASS zcl_abapgit_ecatt_data_upload DEFINITION
+CLASS zcl_abapgit_ecatt_config_upl DEFINITION
   PUBLIC
-  INHERITING FROM cl_apl_ecatt_data_upload
+  INHERITING FROM cl_apl_ecatt_config_upload
   FINAL
   CREATE PUBLIC .
 
@@ -21,7 +21,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_config_upl IMPLEMENTATION.
 
 
   METHOD upload_data_from_stream.
@@ -34,7 +34,7 @@ CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
 
   METHOD z_set_stream_for_upload.
 
-    " donwnpoort from CL_ABAPGIT_ECATT_DATA_UPLOAD SET_STREAM_FOR_UPLOAD
+    " downport from CL_ABAPGIT_ECATT_DATA_UPLOAD SET_STREAM_FOR_UPLOAD
     mv_external_xml = im_xml.
 
   ENDMETHOD.
