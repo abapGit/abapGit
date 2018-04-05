@@ -138,9 +138,12 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD clear_attributes.
 
-    DATA: lo_element TYPE REF TO if_ixml_element.
+    DATA: lo_element     TYPE REF TO if_ixml_element,
+          lv_object_type TYPE etobj_type.
 
-    lo_element = ci_document->find_from_name( get_object_type( ) ).
+    lv_object_type = get_object_type( ).
+
+    lo_element = ci_document->find_from_name( |{ lv_object_type }| ).
     lo_element->set_attribute( name  = |SAPRL|
                                value = || ).
     lo_element->set_attribute( name  = |DOWNLOADDATE|
@@ -308,17 +311,20 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD get_change_information.
 
-    DATA: li_document TYPE REF TO if_ixml_document,
-          lv_xml      TYPE xstring,
-          lo_download TYPE REF TO cl_apl_ecatt_download.
+    DATA: li_document    TYPE REF TO if_ixml_document,
+          lv_xml         TYPE xstring,
+          lo_download    TYPE REF TO cl_apl_ecatt_download,
+          lv_object_type TYPE etobj_type.
 
     lo_download = get_download( ).
+
+    lv_object_type = get_object_type( ).
 
     zcl_abapgit_ecatt_helper=>build_xml_of_object(
       EXPORTING
         im_object_name    = mv_object_name
         im_object_version = is_version_info-version
-        im_object_type    = ms_item-obj_type
+        im_object_type    = lv_object_type
         io_download       = lo_download
       IMPORTING
         ex_xml_stream     = lv_xml ).
@@ -363,18 +369,21 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD serialize_version.
 
-    DATA: li_document TYPE REF TO if_ixml_document,
-          lv_xml      TYPE xstring,
-          lo_node     TYPE REF TO if_ixml_element,
-          lo_download TYPE REF TO cl_apl_ecatt_download.
+    DATA: li_document    TYPE REF TO if_ixml_document,
+          lv_xml         TYPE xstring,
+          lo_node        TYPE REF TO if_ixml_element,
+          lo_download    TYPE REF TO cl_apl_ecatt_download,
+          lv_object_type TYPE etobj_type.
 
     lo_download = get_download( ).
+
+    lv_object_type = get_object_type( ).
 
     zcl_abapgit_ecatt_helper=>build_xml_of_object(
       EXPORTING
         im_object_name    = mv_object_name
         im_object_version = iv_version
-        im_object_type    = ms_item-obj_type
+        im_object_type    = lv_object_type
         io_download       = lo_download
       IMPORTING
         ex_xml_stream     = lv_xml ).
@@ -402,15 +411,18 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
           ls_currently_changed TYPE ty_last_changed,
           lt_version_info      TYPE etversinfo_tabtype,
           lx_error             TYPE REF TO cx_ecatt,
-          lv_text              TYPE string.
+          lv_text              TYPE string,
+          lv_object_type       TYPE etobj_type.
 
     FIELD-SYMBOLS: <ls_version_info> LIKE LINE OF lt_version_info.
 
     TRY.
+        lv_object_type = get_object_type( ).
+
         cl_apl_ecatt_object=>get_version_info_object(
           EXPORTING
             im_name          = mv_object_name
-            im_obj_type      = ms_item-obj_type
+            im_obj_type      = lv_object_type
           IMPORTING
             ex_version_info  = lt_version_info  ).
 
@@ -452,11 +464,14 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lx_error TYPE REF TO cx_ecatt_apl,
-          lv_text  TYPE string.
+    DATA: lx_error       TYPE REF TO cx_ecatt_apl,
+          lv_text        TYPE string,
+          lv_object_type TYPE etobj_type.
+
+    lv_object_type = get_object_type( ).
 
     TRY.
-        cl_apl_ecatt_object=>delete_object( im_obj_type            = get_object_type( )
+        cl_apl_ecatt_object=>delete_object( im_obj_type            = lv_object_type
                                             im_name                = mv_object_name
                                             " we have to supply a version, so let's use the default version
                                             " and delete them all
@@ -502,10 +517,14 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
+    DATA: lv_object_type TYPE etobj_type.
+
+    lv_object_type = get_object_type( ).
+
     TRY.
         rv_bool = cl_apl_ecatt_object=>existence_check_object( im_name               = mv_object_name
                                                                im_version            = co_default_version
-                                                               im_obj_type           = get_object_type( )
+                                                               im_obj_type           = lv_object_type
                                                                im_exists_any_version = abap_true ).
 
       CATCH cx_ecatt.
@@ -551,13 +570,16 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
       lt_version_info TYPE etversinfo_tabtype,
       li_document     TYPE REF TO if_ixml_document,
       lx_error        TYPE REF TO cx_ecatt,
-      lv_text         TYPE string.
+      lv_text         TYPE string,
+      lv_object_type  TYPE etobj_type.
+
+    lv_object_type = get_object_type( ).
 
     TRY.
         cl_apl_ecatt_object=>get_version_info_object(
           EXPORTING
             im_name          = mv_object_name
-            im_obj_type      = get_object_type( )
+            im_obj_type      = lv_object_type
           IMPORTING
             ex_version_info  = lt_version_info  ).
 
