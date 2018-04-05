@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
+CLASS zcl_abapgit_2fa_github_auth IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -80,8 +80,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD get_authenticated_client.
     DATA: lv_http_code             TYPE i,
-          lv_http_code_description TYPE string,
-          lo_settings              TYPE REF TO zcl_abapgit_settings.
+          lv_http_code_description TYPE string.
 
     " If there is a cached client return it instead
     IF is_session_running( ) = abap_true AND mi_authenticated_session IS BOUND.
@@ -90,25 +89,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     ENDIF.
 
     " Try to login to GitHub API with username, password and 2fa token
-
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = mv_github_api_url
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_settings->get_proxy_url( )
-        proxy_service      = lo_settings->get_proxy_port( )
-      IMPORTING
-        client             = ri_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      raise_comm_error_from_sy( ).
-    ENDIF.
+    ri_client = get_http_client_for_url( mv_github_api_url ).
 
     " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
     ri_client->propertytype_accept_cookie = if_http_client=>co_enabled.
@@ -333,28 +314,9 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD zif_abapgit_2fa_authenticator~is_2fa_required.
 
-    DATA: li_client TYPE REF TO if_http_client,
-          lo_proxy  TYPE REF TO zcl_abapgit_proxy_config.
+    DATA: li_client TYPE REF TO if_http_client.
 
-
-    CREATE OBJECT lo_proxy.
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = mv_github_api_url
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_proxy->get_proxy_url( )
-        proxy_service      = lo_proxy->get_proxy_port(  )
-      IMPORTING
-        client             = li_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      raise_comm_error_from_sy( ).
-    ENDIF.
+    li_client = get_http_client_for_url( mv_github_api_url ).
 
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
