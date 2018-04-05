@@ -2,7 +2,7 @@
 
 CLASS ltcl_changed_by DEFINITION DEFERRED.
 
-CLASS zcl_abapgit_object_ectd DEFINITION LOCAL FRIENDS ltcl_changed_by.
+CLASS zcl_abapgit_object_ecatt_super DEFINITION LOCAL FRIENDS ltcl_changed_by.
 
 CLASS ltcl_changed_by DEFINITION FINAL FOR TESTING
   DURATION SHORT
@@ -10,14 +10,11 @@ CLASS ltcl_changed_by DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      ms_given_current_changed  TYPE zcl_abapgit_object_ectd=>ty_last_changed,
-      ms_given_last_changed     TYPE zcl_abapgit_object_ectd=>ty_last_changed,
-      mo_cut                    TYPE REF TO zcl_abapgit_object_ectd,
+      ms_given_current_changed  TYPE zcl_abapgit_object_ecatt_super=>ty_last_changed,
+      ms_given_last_changed     TYPE zcl_abapgit_object_ecatt_super=>ty_last_changed,
       mv_act_change_more_recent TYPE abap_bool.
 
     METHODS:
-      setup,
-
       current_more_recent_than_last FOR TESTING RAISING cx_static_check,
 
       last_more_recent_than_current FOR TESTING RAISING cx_static_check,
@@ -47,19 +44,6 @@ ENDCLASS.
 
 CLASS ltcl_changed_by IMPLEMENTATION.
 
-  METHOD setup.
-
-    DATA: ls_dummy_item TYPE zif_abapgit_definitions=>ty_item.
-
-    ls_dummy_item-obj_name = 'DUMMY'.
-    ls_dummy_item-obj_type = 'ECTD'.
-
-    CREATE OBJECT mo_cut
-      EXPORTING
-        is_item     = ls_dummy_item
-        iv_language = sy-langu.
-
-  ENDMETHOD.
 
   METHOD current_more_recent_than_last.
 
@@ -140,9 +124,9 @@ CLASS ltcl_changed_by IMPLEMENTATION.
 
   METHOD when_changed_is_checked.
 
-    mv_act_change_more_recent = mo_cut->is_change_more_recent_than(
+    mv_act_change_more_recent = zcl_abapgit_object_ecatt_super=>is_change_more_recent_than(
                                   is_currently_changed = ms_given_current_changed
-                                  is_last_changed    = ms_given_last_changed ).
+                                  is_last_changed      = ms_given_last_changed ).
 
   ENDMETHOD.
 
