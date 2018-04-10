@@ -28,7 +28,8 @@ DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
 DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
-ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
+ECAT | eCATT Test Script | Yes
+ECTC | eCATT Test Configuration | Yes
 ECTD | eCATT Test Data Container | Yes
 ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
