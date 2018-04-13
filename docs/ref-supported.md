@@ -31,6 +31,7 @@ DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
 ECTC | eCATT Test Configuration | Yes
 ECTD | eCATT Test Data Container | Yes
+ECVO | eCATT Validation Object | Yes
 ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
@@ -92,6 +93,7 @@ WDCC | Web Dynpro Component Configuration | [#78](https://github.com/larshp/abap
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
+XINX | Extension Index | Yes
 XSLT | Transformation | Yes
 
 Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)
