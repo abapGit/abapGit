@@ -217,8 +217,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
           lv_text        TYPE string,
           li_document    TYPE REF TO if_ixml_document,
           lv_version     TYPE string,
-          lx_error       TYPE REF TO cx_ecatt,
-          lv_object_type TYPE etobj_type.
+          lx_error       TYPE REF TO cx_ecatt.
 
     lv_version = get_version_from_node( ii_version_node ).
 
