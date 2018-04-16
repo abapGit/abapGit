@@ -5,8 +5,6 @@ CLASS zcl_abapgit_user_master_record DEFINITION
 
   PUBLIC SECTION.
 
-    DATA ms_user TYPE zif_abapgit_definitions=>ty_git_user READ-ONLY .
-
     CLASS-METHODS:
       get_instance
         IMPORTING
@@ -17,7 +15,15 @@ CLASS zcl_abapgit_user_master_record DEFINITION
     METHODS:
       constructor
         IMPORTING
-          !iv_user TYPE uname.
+          !iv_user TYPE uname,
+
+      get_name
+        RETURNING
+          VALUE(rv_name) TYPE zif_abapgit_definitions=>ty_git_user-name,
+
+      get_email
+        RETURNING
+          VALUE(rv_email) TYPE zif_abapgit_definitions=>ty_git_user-email.
 
   PRIVATE SECTION.
     TYPES:
@@ -29,6 +35,9 @@ CLASS zcl_abapgit_user_master_record DEFINITION
     CLASS-DATA:
       mt_user TYPE HASHED TABLE OF ty_user
                    WITH UNIQUE KEY user.
+
+    DATA:
+      ms_user TYPE zif_abapgit_definitions=>ty_git_user.
 
 ENDCLASS.
 
@@ -67,6 +76,13 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_email.
+
+    rv_email = ms_user-email.
+
+  ENDMETHOD.
+
+
   METHOD get_instance.
 
     DATA: ls_user TYPE ty_user.
@@ -90,4 +106,12 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
     ro_user = <ls_user>-o_user.
 
   ENDMETHOD.
+
+
+  METHOD get_name.
+
+    rv_name = ms_user-name.
+
+  ENDMETHOD.
+
 ENDCLASS.

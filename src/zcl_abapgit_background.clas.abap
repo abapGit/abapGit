@@ -64,15 +64,19 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lt_return  TYPE TABLE OF bapiret2,
-          ls_address TYPE bapiaddr3,
-          lt_smtp    TYPE TABLE OF bapiadsmtp,
-          ls_smtp    TYPE bapiadsmtp.
+    DATA: lt_return             TYPE TABLE OF bapiret2,
+          ls_address            TYPE bapiaddr3,
+          lt_smtp               TYPE TABLE OF bapiadsmtp,
+          ls_smtp               TYPE bapiadsmtp,
+          lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
 
 *   IF the method is to use real user values, call the BAPI
     IF iv_method = zcl_abapgit_persist_background=>c_amethod-user.
 
-      rs_user = zcl_abapgit_user_master_record=>get_instance( iv_changed_by )->ms_user.
+      lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( iv_changed_by ).
+
+      rs_user-name = lo_user_master_record->get_name( ).
+      rs_user-email = lo_user_master_record->get_email( ).
 
     ENDIF.
 

@@ -98,7 +98,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ENDIF.
     IF lv_user IS INITIAL.
       " get default from user master record
-      lv_user = zcl_abapgit_user_master_record=>get_instance( sy-uname )->ms_user-name.
+      lv_user = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_name( ).
     ENDIF.
 
     lv_email = lo_user->get_repo_git_user_email( mo_repo->get_url( ) ).
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ENDIF.
     IF lv_email IS INITIAL.
       " get default from user master record
-      lv_email = zcl_abapgit_user_master_record=>get_instance( sy-uname )->ms_user-email.
+      lv_email = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_email( ).
     ENDIF.
 
     CREATE OBJECT ro_html.
