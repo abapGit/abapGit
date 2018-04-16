@@ -76,3 +76,5 @@ SAP Teched Barcelona
 [abapGit](http://www.tricktresor.de/blog/abapgit) (in German) -Enno Wulff
 
 [ABAP Code Reviews with abapGit](https://blogs.sap.com/2018/03/23/abap-code-reviews-with-abapgit/) -Eduardo Copat
+
+[Get into Git!](https://blogs.sap.com/2018/04/13/get-into-git/) - Mike Pokraka
