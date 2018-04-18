@@ -29,6 +29,7 @@ DOMA | Domain | Yes
 DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
+ECSD | eCATT System Data Container | Yes
 ECTC | eCATT Test Configuration | Yes
 ECTD | eCATT Test Data Container | Yes
 ECVO | eCATT Validation Object | Yes
