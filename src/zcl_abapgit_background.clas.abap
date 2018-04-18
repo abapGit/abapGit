@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
+CLASS zcl_abapgit_background IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -64,33 +64,20 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lt_return  TYPE TABLE OF bapiret2,
-          ls_address TYPE bapiaddr3,
-          lt_smtp    TYPE TABLE OF bapiadsmtp,
-          ls_smtp    TYPE bapiadsmtp.
+    DATA: lt_return             TYPE TABLE OF bapiret2,
+          ls_address            TYPE bapiaddr3,
+          lt_smtp               TYPE TABLE OF bapiadsmtp,
+          ls_smtp               TYPE bapiadsmtp,
+          lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
 
 *   IF the method is to use real user values, call the BAPI
     IF iv_method = zcl_abapgit_persist_background=>c_amethod-user.
 
-      CALL FUNCTION 'BAPI_USER_GET_DETAIL'
-        EXPORTING
-          username = iv_changed_by
-        IMPORTING
-          address  = ls_address
-        TABLES
-          return   = lt_return
-          addsmtp  = lt_smtp.
+      lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( iv_changed_by ).
 
-*     Choose the first email from SU01
-      SORT lt_smtp BY consnumber ASCENDING.
+      rs_user-name = lo_user_master_record->get_name( ).
+      rs_user-email = lo_user_master_record->get_email( ).
 
-      LOOP AT lt_smtp INTO ls_smtp.
-        rs_user-email = ls_smtp-e_mail.
-        EXIT.
-      ENDLOOP.
-
-*     Attempt to use the full name from SU01
-      rs_user-name = ls_address-fullname.
     ENDIF.
 
 *   If no email, fall back to localhost/default email
