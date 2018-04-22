@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
   PUBLIC
-  INHERITING FROM cl_apl_ecatt_vo_download
-  CREATE PUBLIC .
+  INHERITING FROM cl_apl_ecatt_download
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
     METHODS:
@@ -16,6 +16,9 @@ CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
           VALUE(rv_xml_stream_size) TYPE int4.
 
   PROTECTED SECTION.
+    DATA:
+      li_objects_node TYPE REF TO if_ixml_element.
+
     METHODS:
       download_data REDEFINITION.
 
@@ -31,12 +34,12 @@ CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
 
 ENDCLASS.
 
-
-
 CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
 
-
   METHOD download.
+
+    " We inherit from CL_APL_ECATT_DOWNLOAD because CL_APL_ECATT_VO_DOWNLOAD
+    " doesn't exist in 702
 
     " Downport
 
@@ -117,10 +120,9 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
       li_element        TYPE REF TO if_ixml_element,
       li_insert_objects TYPE REF TO if_ixml_element.
 
-    objects_node = template_over_all->create_simple_element(
-                                        name   = 'BUSINESS_MESSAGES'
-                                        parent = root_node ).
-
+    li_objects_node = template_over_all->create_simple_element(
+                                           name   = 'BUSINESS_MESSAGES'
+                                           parent = root_node ).
 
     ecatt_vo->get_bussiness_msg(
       IMPORTING
@@ -157,9 +159,9 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
       li_element           TYPE REF TO if_ixml_element,
       li_insert_objects    TYPE REF TO if_ixml_element.
 
-    objects_node = template_over_all->create_simple_element(
-                                        name   = 'VO_FLAGS'
-                                        parent = root_node ).
+    li_objects_node = template_over_all->create_simple_element(
+                                           name   = 'VO_FLAGS'
+                                           parent = root_node ).
 
     lv_invert_validation = ecatt_vo->get_invert_validation_flag( ).
 
@@ -215,9 +217,9 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
       li_element        TYPE REF TO if_ixml_element,
       li_insert_objects TYPE REF TO if_ixml_element.
 
-    objects_node = template_over_all->create_simple_element(
-                                        name   = 'IMPL_DETAILS'
-                                        parent = root_node ).
+    li_objects_node = template_over_all->create_simple_element(
+                                           name   = 'IMPL_DETAILS'
+                                           parent = root_node ).
 
     ls_impl_details = ecatt_vo->get_impl_details( ).
 
