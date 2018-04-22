@@ -23,6 +23,18 @@ CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
       download_data REDEFINITION.
 
   PRIVATE SECTION.
+    " downport missing types
+    TYPES:
+      etvo_bus_msg_tabtype   TYPE STANDARD TABLE OF ecvo_bus_msg,
+      etvo_invert_validation TYPE c LENGTH 1,
+      etvo_error_prio        TYPE n LENGTH 1,
+      BEGIN OF etvoimpl_det,
+        impl_name    TYPE etvo_impl_name,
+        impl_type    TYPE etvo_impl_type,
+        impl_subtype TYPE etvo_impl_subtype,
+        impl_package TYPE etvo_package,
+      END OF etvoimpl_det.
+
     DATA:
       mv_xml_stream      TYPE xstring,
       mv_xml_stream_size TYPE int4.
