@@ -348,6 +348,10 @@ div.settings_container {
   background-color: #f2f2f2;
 }
 
+div.settings_section {
+  margin-left:50px
+}
+
 /* DIFF */
 div.diff {
   background-color: #f2f2f2;

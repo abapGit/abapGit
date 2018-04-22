@@ -1,12 +1,17 @@
 CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
+    TYPES: BEGIN OF ty_s_user_settings,
+             max_lines        TYPE i,
+             adt_jump_enabled TYPE abap_bool,
+           END OF ty_s_user_settings.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
 
-    METHODS: set_proxy_url
-      IMPORTING
-        iv_url TYPE string,
+    METHODS:
+      set_proxy_url
+        IMPORTING
+          iv_url TYPE string,
       set_proxy_port
         IMPORTING
           iv_port TYPE string,
@@ -62,12 +67,20 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(ev_settings_xml) TYPE string
         RAISING
           zcx_abapgit_exception,
+      get_user_settings
+        RETURNING
+          VALUE(rs_settings) TYPE zcl_abapgit_settings=>ty_s_user_settings
+        RAISING
+          zcx_abapgit_exception,
       set_xml_settings
         IMPORTING
           iv_settings_xml TYPE string
         RAISING
           zcx_abapgit_exception,
-      set_defaults.
+      set_defaults,
+      set_user_settings
+        IMPORTING
+          is_user_settings TYPE ty_s_user_settings.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -76,22 +89,21 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              proxy_auth               TYPE string,
              run_critical_tests       TYPE abap_bool,
              experimental_features    TYPE abap_bool,
-             max_lines                TYPE i,
-             adt_jump_enabled         TYPE abap_bool,
              commitmsg_comment_length TYPE i,
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
-    DATA: ms_settings TYPE ty_s_settings.
+    DATA: ms_settings      TYPE ty_s_settings,
+          ms_user_settings TYPE ty_s_user_settings.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_adt_jump_enabled.
-    rv_adt_jump_enabled = ms_settings-adt_jump_enabled.
+    rv_adt_jump_enabled = ms_user_settings-adt_jump_enabled.
   ENDMETHOD.
 
 
@@ -111,7 +123,7 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_max_lines.
-    rv_lines = ms_settings-max_lines.
+    rv_lines = ms_user_settings-max_lines.
   ENDMETHOD.
 
 
@@ -150,8 +162,9 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+
   METHOD set_adt_jump_enanbled.
-    ms_settings-adt_jump_enabled = iv_adt_jump_enabled.
+    ms_user_settings-adt_jump_enabled = iv_adt_jump_enabled.
   ENDMETHOD.
 
 
@@ -186,7 +199,7 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD set_max_lines.
-    ms_settings-max_lines = iv_lines.
+    ms_user_settings-max_lines = iv_lines.
   ENDMETHOD.
 
 
@@ -210,6 +223,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_user_settings.
+    ms_user_settings = is_user_settings.
+  ENDMETHOD.
+
+
   METHOD set_xml_settings.
 
     DATA: lo_input TYPE REF TO zcl_abapgit_xml_input.
@@ -226,4 +244,9 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
         cg_data = ms_settings ).
 
   ENDMETHOD.
+
+  METHOD get_user_settings.
+    rs_settings = ms_user_settings.
+  ENDMETHOD.
+
 ENDCLASS.

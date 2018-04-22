@@ -140,6 +140,16 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         VALUE(rv_hide) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS get_settings
+      RETURNING
+        VALUE(rs_user_settings) TYPE zcl_abapgit_settings=>ty_s_user_settings
+      RAISING
+        zcx_abapgit_exception.
+    METHODS set_settings
+      IMPORTING
+        is_user_settings TYPE zcl_abapgit_settings=>ty_s_user_settings
+      RAISING
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 
     TYPES:
@@ -160,6 +170,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
         repo_config      TYPE ty_repo_config_tt,
+        settings         TYPE zcl_abapgit_settings=>ty_s_user_settings,
       END OF ty_user .
 
     DATA mv_user TYPE xubname .
@@ -203,11 +214,12 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         !is_repo_config TYPE ty_repo_config
       RAISING
         zcx_abapgit_exception .
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -554,4 +566,25 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.  "update_repo_config
+
+  METHOD get_settings.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    rs_user_settings = ls_user-settings.
+
+  ENDMETHOD.
+
+  METHOD set_settings.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-settings = is_user_settings.
+    update( ls_user ).
+
+  ENDMETHOD.
+
 ENDCLASS.

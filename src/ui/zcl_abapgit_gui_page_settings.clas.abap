@@ -48,12 +48,18 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       RAISING
         zcx_abapgit_exception.
     METHODS read_settings.
+    METHODS render_section_begin
+      IMPORTING
+                iv_header      TYPE csequence
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS render_section_end
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
 
   METHOD build_settings.
@@ -215,15 +221,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     read_settings( ).
 
     ro_html->add( render_form_begin( ) ).
+    ro_html->add( render_section_begin( |Global settings| ) ).
     ro_html->add( render_proxy( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_max_lines( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_commit_msg( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_development_internals( ) ).
+    ro_html->add( render_section_end( ) ).
+    ro_html->add( render_section_begin( |User specific settings| ) ).
+    ro_html->add( render_max_lines( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_adt_jump_enabled( ) ).
+    ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
   ENDMETHOD.  "render_content
@@ -347,4 +356,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD render_section_begin.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<h1>{ iv_header }</h1>| ).
+    ro_html->add( |<div class="settings_section">| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_section_end.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |</div>| ).
+
+  ENDMETHOD.
+
 ENDCLASS.
