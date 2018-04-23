@@ -35,7 +35,9 @@ CLASS zcl_abapgit_object_ecsp IMPLEMENTATION.
 
   METHOD get_object_type.
 
-    rv_object_type = cl_apl_ecatt_const=>obj_type_start_profile.
+*    constant missing in 702
+*    rv_object_type = cl_apl_ecatt_const=>obj_type_start_profile.
+    rv_object_type = 'ECSP'.
 
   ENDMETHOD.
 
