@@ -200,6 +200,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     ls_child-devclass  = iv_child.
     ls_child-dlvunit   = li_parent->software_component.
+    ls_child-component = li_parent->application_component.
     ls_child-ctext     = iv_child.
     ls_child-parentcl  = mv_package.
     ls_child-pdevclass = li_parent->transport_layer.
