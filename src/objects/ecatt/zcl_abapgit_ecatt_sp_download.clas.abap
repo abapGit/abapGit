@@ -62,8 +62,6 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
 
     set_attributes_to_template( ).
 
-    ecatt_sp ?= ecatt_object.
-
     set_sp_data_to_template( ).
 
     download_data( ).
@@ -105,17 +103,25 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
     DATA: li_dom                     TYPE REF TO if_ixml_document,
           li_start_profile_data_node TYPE REF TO if_ixml_element,
           li_element                 TYPE REF TO if_ixml_element,
-          lv_sp_xml                  TYPE etxml_line_str.
+          lv_sp_xml                  TYPE etxml_line_str,
+          lo_ecatt_sp                TYPE REF TO object.
+
+    FIELD-SYMBOLS: <ecatt_object> TYPE data.
 
     li_start_profile_data_node = template_over_all->create_simple_element(
-                                name = 'START_PROFILE'
-                                parent = root_node ).
+                                   name = 'START_PROFILE'
+                                   parent = root_node ).
+
+    ASSIGN ('ECATT_OBJECT') TO <ecatt_object>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_sp = <ecatt_object>.
 
     TRY.
-        ecatt_sp->get_sp_attributes(
+        CALL METHOD lo_ecatt_sp->('GET_SP_ATTRIBUTES')
           IMPORTING
-            e_sp_xml = lv_sp_xml ).
-      CATCH cx_ecatt_apl .
+            e_sp_xml = lv_sp_xml.
+      CATCH cx_ecatt_apl.
     ENDTRY.
 
     CALL FUNCTION 'SDIXML_XML_TO_DOM'

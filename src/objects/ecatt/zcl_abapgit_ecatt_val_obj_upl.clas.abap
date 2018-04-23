@@ -29,7 +29,19 @@ CLASS zcl_abapgit_ecatt_val_obj_upl DEFINITION
           cx_ecatt_apl.
 
   PRIVATE SECTION.
-    DATA: mv_external_xml TYPE xstring.
+    TYPES:
+      etvo_invert_validation TYPE c LENGTH 1,
+      etvo_error_prio        TYPE n LENGTH 1,
+      etvo_bus_msg_tabtype   TYPE STANDARD TABLE OF ecvo_bus_msg,
+      BEGIN OF etvoimpl_det,
+        impl_name    TYPE etvo_impl_name,
+        impl_type    TYPE etvo_impl_type,
+        impl_subtype TYPE etvo_impl_subtype,
+        impl_package TYPE etvo_package,
+      END OF etvoimpl_det.
+
+    DATA:
+      mv_external_xml TYPE xstring.
 
 ENDCLASS.
 
@@ -44,7 +56,10 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     DATA: li_section            TYPE REF TO if_ixml_element,
           lt_buss_msg_ref       TYPE etvo_bus_msg_tabtype,
-          lv_exception_occurred TYPE etonoff.
+          lv_exception_occurred TYPE etonoff,
+          lo_ecatt_vo           TYPE REF TO object.
+
+    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
 
     li_section = template_over_all->find_from_name_ns( 'ETVO_MSG' ).
 
@@ -62,9 +77,15 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_vo = <ecatt_vo>.
 
     TRY.
-        ecatt_vo->set_bussiness_msg( im_buss_msg_ref = lt_buss_msg_ref ).
+        CALL METHOD lo_ecatt_vo->('SET_BUSSINESS_MSG')
+          EXPORTING
+            im_buss_msg_ref = lt_buss_msg_ref.
       CATCH cx_ecatt_apl INTO exception_to_raise.
         lv_exception_occurred = 'X'.
     ENDTRY.
@@ -82,7 +103,10 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     DATA: li_section            TYPE REF TO if_ixml_element,
           ls_impl_details       TYPE etvoimpl_det,
-          lv_exception_occurred TYPE etonoff.
+          lv_exception_occurred TYPE etonoff,
+          lo_ecatt_vo           TYPE REF TO object.
+
+    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
 
     li_section = template_over_all->find_from_name_ns( name = 'IMPL_DET' ).
 
@@ -100,9 +124,15 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_vo = <ecatt_vo>.
 
     TRY.
-        ecatt_vo->set_impl_details( im_impl_details = ls_impl_details ).
+        CALL METHOD lo_ecatt_vo->('SET_IMPL_DETAILS')
+          EXPORTING
+            im_impl_details = ls_impl_details.
       CATCH cx_ecatt_apl INTO exception_to_raise.
         lv_exception_occurred = 'X'.
     ENDTRY.
@@ -121,10 +151,12 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     DATA: li_section            TYPE REF TO if_ixml_element,
           lv_error_prio         TYPE etvo_error_prio,
           lv_invert_validation  TYPE etvo_invert_validation,
-          lv_exception_occurred TYPE etonoff.
+          lv_exception_occurred TYPE etonoff,
+          lo_ecatt_vo           TYPE REF TO object.
 
-    li_section = template_over_all->find_from_name_ns(
-              name = 'INVERT_VALIDATION' ).
+    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
+
+    li_section = template_over_all->find_from_name_ns( 'INVERT_VALIDATION' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
@@ -140,17 +172,21 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_vo = <ecatt_vo>.
 
     TRY.
-        ecatt_vo->set_invert_validation_flag(
-                    im_invert_validation = lv_invert_validation ).
+        CALL METHOD lo_ecatt_vo->('SET_INVERT_VALIDATION_FLAG')
+          EXPORTING
+            im_invert_validation = lv_invert_validation.
 
       CATCH cx_ecatt_apl INTO exception_to_raise.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    li_section = template_over_all->find_from_name_ns(
-                   name = 'ERROR_PRIORITY' ).
+    li_section = template_over_all->find_from_name_ns( 'ERROR_PRIORITY' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
@@ -167,8 +203,9 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        ecatt_vo->set_error_priority(
-                    im_error_prio =  lv_error_prio ).
+        CALL METHOD lo_ecatt_vo->('SET_ERROR_PRIORITY')
+          EXPORTING
+            im_error_prio = lv_error_prio.
       CATCH cx_ecatt_apl INTO exception_to_raise.
         lv_exception_occurred = 'X'.
     ENDTRY.
@@ -189,10 +226,15 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     "26.03.2013
 
-    DATA: ex        TYPE REF TO cx_ecatt_apl,
-          l_exists  TYPE etonoff,
-          l_exc_occ TYPE etonoff,
-          ls_tadir  TYPE tadir.
+    DATA: ex          TYPE REF TO cx_ecatt_apl,
+          l_exists    TYPE etonoff,
+          l_exc_occ   TYPE etonoff,
+          ls_tadir    TYPE tadir,
+          lo_ecatt_vo TYPE REF TO object,
+          lo_params   TYPE REF TO cl_apl_ecatt_params.
+
+    FIELD-SYMBOLS: <ecatt_vo> TYPE any,
+                   <params>   TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
@@ -219,7 +261,15 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         l_exc_occ = 'X'.
     ENDTRY.
 
-    ecatt_vo ?= ecatt_object.
+    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_vo = <ecatt_vo>.
+
+    ASSIGN lo_ecatt_vo->('PARAMS') TO <params>.
+    ASSERT sy-subrc = 0.
+
+    lo_params = <params>.
 
     TRY.
         get_impl_detail_from_dom( ).
@@ -239,15 +289,14 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         l_exc_occ = 'X'.
     ENDTRY.
 
-
     TRY.
-        get_params_from_dom_new( im_params = ecatt_vo->params ).
+        get_params_from_dom_new( im_params = lo_params ).
       CATCH cx_ecatt_apl INTO ex.
         l_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
-        get_variants_from_dom( ecatt_vo->params ).
+        get_variants_from_dom( lo_params ).
       CATCH cx_ecatt_apl INTO ex.
         l_exc_occ = 'X'.
     ENDTRY.
@@ -260,14 +309,18 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
                 im_exists_any_version = 'X' ).
 
         IF l_exists EQ space.
-          ecatt_vo->set_tadir_for_new_object( im_tadir_for_new_object = tadir_preset ).
+          CALL METHOD lo_ecatt_vo->('SET_TADIR_FOR_NEW_OBJECT')
+            EXPORTING
+              im_tadir_for_new_object = tadir_preset.
         ENDIF.
       CATCH cx_ecatt.
         CLEAR l_exists.
     ENDTRY.
 
     TRY.
-        ecatt_vo->save( im_do_commit = 'X' ).
+        CALL METHOD lo_ecatt_vo->('SAVE')
+          EXPORTING
+            im_do_commit = 'X'.
       CATCH cx_ecatt_apl INTO ex.
         l_exc_occ = 'X'.
     ENDTRY.
