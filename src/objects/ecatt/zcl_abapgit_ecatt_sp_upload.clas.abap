@@ -40,7 +40,10 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
           li_dom                TYPE REF TO if_ixml_document,
           li_root               TYPE REF TO if_ixml_node,
           lv_start_profile      TYPE etxml_line_str,
-          lv_exception_occurred TYPE etonoff.
+          lv_exception_occurred TYPE etonoff,
+          lo_ecatt_sp           TYPE REF TO object.
+
+    FIELD-SYMBOLS: <ecatt_object> TYPE any.
 
     TRY.
         li_section = template_over_all->find_from_name_ns(
@@ -58,7 +61,15 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
             IMPORTING
               xml_as_string = lv_start_profile.
 
-          ecatt_sp->set_sp_attributes( i_sp_xml = lv_start_profile ).
+          ASSIGN ('ECATT_OBJECT') TO <ecatt_object>.
+          ASSERT sy-subrc = 0.
+
+          lo_ecatt_sp = <ecatt_object>.
+
+          CALL METHOD lo_ecatt_sp->('SET_SP_ATTRIBUTES')
+            EXPORTING
+              i_sp_xml = lv_start_profile.
+
         ENDIF.
       CATCH cx_ecatt_apl .
         lv_exception_occurred = 'X'.
@@ -83,7 +94,10 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
           lv_exists             TYPE etonoff,
           lv_exc_occ            TYPE etonoff,
           ls_tadir              TYPE tadir,
-          lv_exception_occurred TYPE etonoff.
+          lv_exception_occurred TYPE etonoff,
+          lo_ecatt_sp           TYPE REF TO object.
+
+    FIELD-SYMBOLS: <ecatt_sp> TYPE any.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
@@ -111,7 +125,10 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         lv_exc_occ = 'X'.
     ENDTRY.
 
-    ecatt_sp ?= ecatt_object.
+    ASSIGN me->ecatt_object TO <ecatt_sp>.
+    ASSERT sy-subrc = 0.
+
+    lo_ecatt_sp = <ecatt_sp>.
 
     TRY.
         get_ecatt_sp( ).
@@ -127,14 +144,18 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
                       im_exists_any_version = 'X' ).
 
         IF lv_exists EQ space.
-          ecatt_sp->set_tadir_for_new_object( im_tadir_for_new_object = tadir_preset ).
+          CALL METHOD lo_ecatt_sp->('SET_TADIR_FOR_NEW_OBJECT')
+            EXPORTING
+              im_tadir_for_new_object = tadir_preset.
         ENDIF.
       CATCH cx_ecatt.
         CLEAR lv_exists.
     ENDTRY.
 
     TRY.
-        ecatt_sp->save( im_do_commit = 'X' ).
+        CALL METHOD lo_ecatt_sp->('SAVE')
+          EXPORTING
+            im_do_commit = 'X'.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_exc_occ = 'X'.
     ENDTRY.
