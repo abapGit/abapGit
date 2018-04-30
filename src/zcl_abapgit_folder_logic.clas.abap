@@ -58,7 +58,8 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 * if abapGit project is installed in package ZZZ, all subpackages should be named
 * ZZZ_something. This will define the folder name in the zip file to be "something",
 * similarily with online projects. Alternatively change to FULL folder logic
-              lv_message = 'PREFIX: Unexpected package naming(' && iv_package && ')' ##no_text.
+              lv_message = 'PREFIX: Unexpected package naming (' && iv_package && ')'
+                           && 'you might switch to FULL folder logic' ##no_text.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
