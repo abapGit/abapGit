@@ -48,12 +48,12 @@ CLASS zcl_abapgit_persist_migrate DEFINITION PUBLIC CREATE PUBLIC.
       RETURNING
         VALUE(rv_global_settings_xml) TYPE string
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_not_found.
     CLASS-METHODS get_global_settings_document
       RETURNING
         VALUE(ri_global_settings_dom) TYPE REF TO if_ixml_document
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_not_found.
 
 ENDCLASS.
 
@@ -226,11 +226,18 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
   METHOD migrate_settings.
 
     DATA: li_global_settings_document TYPE REF TO if_ixml_document,
-          lt_settings_to_migrate      TYPE tty_settings_to_migrate.
+          lt_settings_to_migrate      TYPE tty_settings_to_migrate,
+          lx_error                    TYPE REF TO zcx_abapgit_not_found.
 
     " migrate global settings to user specific settings
 
-    li_global_settings_document = get_global_settings_document( ).
+    TRY.
+        li_global_settings_document = get_global_settings_document( ).
+
+      CATCH zcx_abapgit_not_found INTO lx_error.
+        " No global settings available, nothing todo.
+        RETURN.
+    ENDTRY.
 
     migrate_setting(
       EXPORTING
@@ -397,14 +404,9 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
   METHOD read_global_settings_xml.
 
-    TRY.
-        rv_global_settings_xml = zcl_abapgit_persistence_db=>get_instance( )->read(
-          iv_type  = zcl_abapgit_persistence_db=>c_type_settings
-          iv_value = '' ).
-
-      CATCH zcx_abapgit_not_found INTO DATA(lx_not_found).
-        zcx_abapgit_exception=>raise( lx_not_found->get_text( ) ).
-    ENDTRY.
+    rv_global_settings_xml = zcl_abapgit_persistence_db=>get_instance( )->read(
+        iv_type  = zcl_abapgit_persistence_db=>c_type_settings
+        iv_value = '' ).
 
   ENDMETHOD.
 
