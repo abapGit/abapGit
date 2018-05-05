@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -39,7 +39,7 @@ CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
   METHOD modify.
 
     DATA: lv_settings      TYPE string,
-          ls_user_settings TYPE zcl_abapgit_settings=>ty_s_user_settings.
+          ls_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
 
     lv_settings = io_settings->get_settings_xml( ).

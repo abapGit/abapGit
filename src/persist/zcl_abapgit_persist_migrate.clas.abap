@@ -66,7 +66,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
     DATA: lt_abapgit_users    TYPE STANDARD TABLE OF char12
                                    WITH NON-UNIQUE DEFAULT KEY,
-          ls_user_settings    TYPE zcl_abapgit_settings=>ty_s_user_settings,
+          ls_user_settings    TYPE zif_abapgit_definitions=>ty_s_user_settings,
           lo_user_persistence TYPE REF TO zcl_abapgit_persistence_user.
 
     FIELD-SYMBOLS: <ls_user>                     LIKE LINE OF lt_abapgit_users,
