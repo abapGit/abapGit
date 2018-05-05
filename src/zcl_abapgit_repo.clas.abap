@@ -94,9 +94,11 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
     METHODS set_local_settings
       IMPORTING
-        !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+        is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
+
+
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -117,12 +119,13 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
       RAISING
         zcx_abapgit_exception .
-  PRIVATE SECTION.
+
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -158,14 +161,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Requirements not met and undecided ').
     ENDIF.
 
+    IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
+      zcx_abapgit_exception=>raise( |No transport request was supplied| ).
+    ENDIF.
 
     TRY.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
-          io_repo   = me
-          is_checks = is_checks ).
+            io_repo   = me
+            is_checks = is_checks ).
       CATCH zcx_abapgit_exception INTO lx_error.
 * ensure to reset default transport request task
-        zcl_abapgit_default_task=>get_instance( )->reset( ).
+        zcl_abapgit_default_transport=>get_instance( )->reset( ).
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
@@ -196,6 +202,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
       lt_requirements ).
+
+    rs_checks-transport-required = zcl_abapgit_sap_package=>get( ms_data-package )->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -603,4 +611,5 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.  " update_local_checksums
+
 ENDCLASS.

@@ -179,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -420,7 +420,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     lv_package = io_repo->get_package( ).
 
-    zcl_abapgit_default_task=>get_instance( )->set( lv_package ).
+    IF is_checks-transport-required = abap_true.
+      zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
+    ENDIF.
+
     zcl_abapgit_objects_activation=>clear( ).
 
     lt_remote = io_repo->get_files_remote( ).
@@ -510,7 +513,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     SORT rt_accessed_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_accessed_files. " Just in case
 
-    zcl_abapgit_default_task=>get_instance( )->reset( ).
+    zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
   ENDMETHOD.                    "deserialize
 
