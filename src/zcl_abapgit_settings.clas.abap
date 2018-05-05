@@ -1,10 +1,6 @@
 CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_s_user_settings,
-             max_lines        TYPE i,
-             adt_jump_enabled TYPE abap_bool,
-           END OF ty_s_user_settings.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
 
@@ -69,7 +65,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           zcx_abapgit_exception,
       get_user_settings
         RETURNING
-          VALUE(rs_settings) TYPE zcl_abapgit_settings=>ty_s_user_settings
+          VALUE(rs_settings) TYPE zif_abapgit_definitions=>ty_s_user_settings
         RAISING
           zcx_abapgit_exception,
       set_xml_settings
@@ -80,7 +76,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       set_defaults,
       set_user_settings
         IMPORTING
-          is_user_settings TYPE ty_s_user_settings.
+          is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -93,7 +89,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
     DATA: ms_settings      TYPE ty_s_settings,
-          ms_user_settings TYPE ty_s_user_settings.
+          ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
 ENDCLASS.
 
