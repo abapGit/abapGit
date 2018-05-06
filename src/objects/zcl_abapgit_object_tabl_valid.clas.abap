@@ -13,10 +13,25 @@ ENDCLASS.
 CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
 
   METHOD validate.
+
     DATA: lt_previous_table_fields TYPE TABLE OF dd03p,
           ls_previous_table_field  LIKE LINE OF lt_previous_table_fields,
           lt_current_table_fields  TYPE TABLE OF dd03p,
-          ls_current_table_field   LIKE LINE OF lt_current_table_fields.
+          ls_current_table_field   LIKE LINE OF lt_current_table_fields,
+          ls_dd02v                 TYPE dd02v.
+
+    io_remote_version->read(
+      EXPORTING
+        iv_name = 'DD02V'
+      CHANGING
+        cg_data = ls_dd02v ).
+
+    IF ls_dd02v-tabclass <> 'TRANSP'.
+      " We only want to compare transparent tables. Otherwise we
+      " get false positives for structures
+      RETURN.
+    ENDIF.
+
     io_remote_version->read(
       EXPORTING
         iv_name       = 'DD03P_TABLE'
@@ -39,6 +54,7 @@ CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
         rv_message = 'Fields were changed. This may lead to inconsistencies.'.
       ENDIF.
     ENDLOOP.
+
   ENDMETHOD.
 
 ENDCLASS.
