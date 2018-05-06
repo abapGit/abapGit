@@ -52,7 +52,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     DATA: lv_answer TYPE c LENGTH 1.
 
     ASSERT is_key-type IS NOT INITIAL.
-    ASSERT is_key-value IS NOT INITIAL.
 
     lv_answer = zcl_abapgit_popups=>popup_to_confirm(
       titlebar              = 'Warning'
