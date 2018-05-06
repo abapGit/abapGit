@@ -515,7 +515,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
 * loop dynpros and skip generated selection screens
-    LOOP AT lt_d020s ASSIGNING <ls_d020s> WHERE type <> 'S'.
+    LOOP AT lt_d020s ASSIGNING <ls_d020s>
+        WHERE type <> 'S' AND type <> 'W' AND type <> 'J'.
 
       CALL FUNCTION 'RPY_DYNPRO_READ'
         EXPORTING
