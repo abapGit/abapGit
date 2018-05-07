@@ -555,6 +555,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    CLEAR ls_icfservice-icf_mandt.
     CLEAR ls_icfservice-icfnodguid.
     CLEAR ls_icfservice-icfparguid.
     CLEAR ls_icfservice-icf_user.

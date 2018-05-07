@@ -26,6 +26,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
     SELECT SINGLE * FROM tddat INTO rs_tobj-tddat WHERE tabname = iv_tabname.
 
     SELECT SINGLE * FROM tvdir INTO rs_tobj-tvdir WHERE tabname = iv_tabname.
+    CLEAR: rs_tobj-tvdir-gendate, rs_tobj-tvdir-gentime.
 
     SELECT * FROM tvimf INTO TABLE rs_tobj-tvimf WHERE tabname = iv_tabname.
 
@@ -194,10 +195,12 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'TOBJ'
                   CHANGING cg_data = ls_tobj ).
+    ls_tobj-tvdir-gendate = sy-datum.
+    ls_tobj-tvdir-gentime = sy-uzeit.
 
     update_extra( ls_tobj ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
