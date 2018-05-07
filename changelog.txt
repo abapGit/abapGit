@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2018-05-07 v1.65.0
+------------------
++ ECSD support
++ ECSP support
+! User specific global settings
+* downport
+* package, inherit parent appl component
+* skip more generated selection screens
+* match files if they are identical
+
 2018-04-15 v1.64.0
 ------------------
 + ECTD support
