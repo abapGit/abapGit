@@ -104,8 +104,6 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         ch_object-i_akh      = ch_object-d_akh.
 
         super->upload(
-          EXPORTING
-            i_use_cts_api_2 = i_use_cts_api_2
           CHANGING
             ch_object       = ch_object ).
 
