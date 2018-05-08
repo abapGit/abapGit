@@ -34,8 +34,14 @@ CLASS zcl_abapgit_tadir DEFINITION
         VALUE(rv_devclass) TYPE tadir-devclass
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
+    CLASS-METHODS exists
+      IMPORTING
+        is_item          TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
     CLASS-METHODS check_exists
       IMPORTING
         !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -59,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
@@ -181,22 +187,28 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
 
-      IF zcl_abapgit_objects=>is_supported( ls_item ) = abap_true.
-        lv_exists = zcl_abapgit_objects=>exists( ls_item ).
-        IF lv_exists = abap_true.
-          APPEND <ls_tadir> TO rt_tadir.
-        ENDIF.
-      ELSE.
+      IF exists( ls_item ) = abap_true.
         APPEND <ls_tadir> TO rt_tadir.
       ENDIF.
     ENDLOOP.
 
   ENDMETHOD.                    "check_exists
 
+  METHOD exists.
+
+    IF zcl_abapgit_objects=>is_supported( is_item ) = abap_false.
+      rv_exists = abap_true.
+      RETURN.
+    ENDIF.
+
+    rv_exists = zcl_abapgit_objects=>exists( is_item ).
+
+  ENDMETHOD.
 
   METHOD get_object_package.
 
-    DATA ls_tadir TYPE tadir.
+    DATA: ls_tadir TYPE tadir,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
     ls_tadir = read_single( iv_pgmid    = iv_pgmid
                             iv_object   = iv_object
@@ -204,6 +216,13 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
     IF ls_tadir-delflag = 'X'.
       RETURN. "Mark for deletion -> return nothing
+    ENDIF.
+
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
+    ls_item-devclass = ls_tadir-devclass.
+    IF exists( ls_item ) = abap_false.
+      RETURN.
     ENDIF.
 
     rv_devclass = ls_tadir-devclass.
