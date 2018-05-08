@@ -211,13 +211,13 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
   METHOD deserialize_version.
 
-    DATA: ls_object      TYPE etmobjects,
-          lo_upload      TYPE REF TO cl_apl_ecatt_upload,
-          lv_xml         TYPE xstring,
-          lv_text        TYPE string,
-          li_document    TYPE REF TO if_ixml_document,
-          lv_version     TYPE string,
-          lx_error       TYPE REF TO cx_ecatt.
+    DATA: ls_object   TYPE etmobjects,
+          lo_upload   TYPE REF TO cl_apl_ecatt_upload,
+          lv_xml      TYPE xstring,
+          lv_text     TYPE string,
+          li_document TYPE REF TO if_ixml_document,
+          lv_version  TYPE string,
+          lx_error    TYPE REF TO cx_ecatt.
 
     lv_version = get_version_from_node( ii_version_node ).
 
@@ -244,8 +244,6 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
     TRY.
         lo_upload->upload(
-          EXPORTING
-            im_commit_flag = abap_true
           CHANGING
             ch_object      = ls_object ).
 
