@@ -10,10 +10,12 @@ The feature disables pulls, uninstall of all objects, switching branches etc.
 
 To enable:
 
-1. from the abapGit main screen: Advanced -> Database util
+In the repo, click "Repo settings"
 
-2. find the repository, click "Edit"
+![](img/repo_settings_click.png)
 
-3. find the value `<WRITE_PROTECT/>` and replace with `<WRITE_PROTECT>X</WRITE_PROTECT>`
+Tick "Write protect"
 
-4. restart abapGit(just to make sure caches are cleared)
+![](img/repo_settings_write.png)
+
+Click "Save"
