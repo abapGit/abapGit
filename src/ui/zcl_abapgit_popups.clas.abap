@@ -891,7 +891,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     IF sy-subrc = 1.
 * looks like the function module used does not exist on all
 * versions since 702, so show an error
-      zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages. Please, create the package manually.' ).
+      zcx_abapgit_exception=>raise( 'Your system does not support automatic creation of packages.' &&
+        'Please, create the package manually.' ).
     ENDIF.
 
     CALL FUNCTION 'PB_POPUP_PACKAGE_CREATE'
