@@ -13,6 +13,9 @@ INTERFACE zif_abapgit_sap_package PUBLIC.
       IMPORTING iv_child TYPE devclass
       RAISING   zcx_abapgit_exception,
     exists
-      RETURNING VALUE(rv_bool) TYPE abap_bool.
+      RETURNING VALUE(rv_bool) TYPE abap_bool,
+    are_changes_recorded_in_tr_req
+      RETURNING VALUE(rv_are_changes_rec_in_tr_req) TYPE abap_bool
+      RAISING zcx_abapgit_exception.
 
 ENDINTERFACE.

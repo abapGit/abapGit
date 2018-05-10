@@ -151,6 +151,13 @@ CLASS zcl_abapgit_popups DEFINITION
         !cv_show_popup TYPE char01
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS popup_transport_request
+      RETURNING
+        VALUE(rv_transport) TYPE trkorr
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
+
   PRIVATE SECTION.
 
     TYPES:
@@ -197,7 +204,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -1428,4 +1435,32 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD popup_transport_request.
+
+    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
+          lt_e071k TYPE STANDARD TABLE OF e071k.
+
+    CALL FUNCTION 'TRINT_ORDER_CHOICE'
+      IMPORTING
+        we_order               = rv_transport
+      TABLES
+        wt_e071                = lt_e071
+        wt_e071k               = lt_e071k
+      EXCEPTIONS
+        no_correction_selected = 1
+        display_mode           = 2
+        object_append_error    = 3
+        recursive_call         = 4
+        wrong_order_type       = 5
+        OTHERS                 = 6.
+
+    IF sy-subrc = 1.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ELSEIF sy-subrc > 1.
+      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -94,7 +94,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD clone.
@@ -146,6 +146,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
           zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
           ls_checks-requirements-decision = 'Y'.
+        ENDIF.
+
+        IF ls_checks-transport-required = abap_true.
+          ls_checks-transport-transport = zcl_abapgit_popups=>popup_transport_request( ).
         ENDIF.
 
       CATCH zcx_abapgit_cancel.

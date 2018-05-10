@@ -89,6 +89,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     rv_bool = abap_true.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    RETURN.
+  ENDMETHOD.
+
   METHOD setup.
     FIELD-SYMBOLS: <ls_inject> LIKE LINE OF zcl_abapgit_sap_package=>gt_injected.
 

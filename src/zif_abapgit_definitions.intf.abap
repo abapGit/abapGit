@@ -94,10 +94,17 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            decision TYPE ty_yes_no,
          END OF ty_requirements.
 
+  TYPES: BEGIN OF ty_transport,
+           required  TYPE abap_bool,
+           transport TYPE trkorr,
+         END OF ty_transport.
+
+
   TYPES: BEGIN OF ty_deserialize_checks,
            overwrite       TYPE ty_overwrite_tt,
            warning_package TYPE ty_overwrite_tt,
            requirements    TYPE ty_requirements,
+           transport       TYPE ty_transport,
          END OF ty_deserialize_checks.
 
   TYPES:
