@@ -77,10 +77,6 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
         iv_branch_name = 'refs/heads/master'
         iv_package     = iv_package ) ##NO_TEXT.
 
-      lo_repo->initialize( ).
-      lo_repo->find_remote_dot_abapgit( ).
-      lo_repo->status( ). " check for errors
-
       zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
       zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).

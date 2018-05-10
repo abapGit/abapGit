@@ -26,7 +26,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ro_html->add( '<p><ul>' ).
 
     ro_html->add( `<li>To clone a remote repo (e.g. from github) click ` ).
-    ro_html->add_a( iv_txt = '+ Clone' iv_act = zif_abapgit_definitions=>gc_action-repo_clone ).
+    ro_html->add_a( iv_txt = '+ Online' iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ).
     ro_html->add( ' from the top menu. This will copy a remote repo to your system.</li>' ).
 
     ro_html->add( `<li>To add a local package as a repo click ` ).
