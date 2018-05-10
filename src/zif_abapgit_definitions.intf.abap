@@ -352,6 +352,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_remove              TYPE string VALUE 'repo_remove',
       repo_settings            TYPE string VALUE 'repo_settings',
       repo_purge               TYPE string VALUE 'repo_purge',
+      repo_newonline           TYPE string VALUE 'repo_newonline',
       repo_newoffline          TYPE string VALUE 'repo_newoffline',
       repo_remote_attach       TYPE string VALUE 'repo_remote_attach',
       repo_remote_detach       TYPE string VALUE 'repo_remote_detach',

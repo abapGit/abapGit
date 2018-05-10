@@ -162,6 +162,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     DATA: lv_url  TYPE string,
           lv_key  TYPE zif_abapgit_persistence=>ty_repo-key,
+          lo_repo TYPE REF TO zcl_abapgit_repo_online,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
 
 
@@ -272,8 +273,12 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+      WHEN zif_abapgit_definitions=>gc_action-repo_newonline.
+        zcl_abapgit_services_repo=>new_online( lv_url ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_clone OR 'install'.    " Repo clone, 'install' is for explore page
-        zcl_abapgit_services_repo=>clone( lv_url ).
+        lo_repo = zcl_abapgit_services_repo=>new_online( lv_url ).
+        zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_refresh_checksums.          " Rebuil local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).

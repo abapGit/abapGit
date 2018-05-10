@@ -1,82 +1,84 @@
-CLASS zcl_abapgit_services_repo DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_SERVICES_REPO definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS clone
-      IMPORTING
-        !iv_url TYPE string
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS refresh
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS remove
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS purge
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS new_offline
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS remote_attach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS remote_detach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS remote_change
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS refresh_local_checksums
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS toggle_favorite
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS open_se80
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS transport_to_branch
-      IMPORTING
-        !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS gui_deserialize
-      IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING
-        zcx_abapgit_exception .
+  class-methods NEW_ONLINE
+    importing
+      !IV_URL type STRING
+    returning
+      value(RO_REPO) type ref to ZCL_ABAPGIT_REPO_ONLINE
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods REFRESH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REMOVE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods PURGE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods NEW_OFFLINE
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods REMOTE_ATTACH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods REMOTE_DETACH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods REMOTE_CHANGE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods REFRESH_LOCAL_CHECKSUMS
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods TOGGLE_FAVORITE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods OPEN_SE80
+    importing
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods TRANSPORT_TO_BRANCH
+    importing
+      !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      ZCX_ABAPGIT_CANCEL .
+  class-methods GUI_DESERIALIZE
+    importing
+      !IO_REPO type ref to ZCL_ABAPGIT_REPO
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PRIVATE SECTION.
 
     CLASS-METHODS popup_overwrite
@@ -94,38 +96,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
-
-
-  METHOD clone.
-
-    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo_online,
-          ls_popup TYPE zcl_abapgit_popups=>ty_popup.
-
-
-    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
-    IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url         = ls_popup-url
-      iv_branch_name = ls_popup-branch_name
-      iv_package     = ls_popup-package ).
-
-    toggle_favorite( lo_repo->get_key( ) ).
-
-    lo_repo->initialize( ).
-    lo_repo->find_remote_dot_abapgit( ).
-    lo_repo->status( ). " check for errors
-
-    gui_deserialize( lo_repo ).
-
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
-
-    COMMIT WORK.
-
-  ENDMETHOD.  "clone
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -182,6 +153,31 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.  "new_offline
+
+
+  METHOD new_online.
+
+    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup.
+
+
+    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      iv_url         = ls_popup-url
+      iv_branch_name = ls_popup-branch_name
+      iv_package     = ls_popup-package ).
+
+    toggle_favorite( ro_repo->get_key( ) ).
+
+* Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
 
 
   METHOD open_se80.
