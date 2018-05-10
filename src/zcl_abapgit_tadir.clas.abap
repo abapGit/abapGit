@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD build.
@@ -194,7 +194,12 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   ENDMETHOD.                    "check_exists
 
+
   METHOD exists.
+
+    IF is_item IS INITIAL.
+      RETURN.
+    ENDIF.
 
     IF zcl_abapgit_objects=>is_supported( is_item ) = abap_false.
       rv_exists = abap_true.
@@ -204,6 +209,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     rv_exists = zcl_abapgit_objects=>exists( is_item ).
 
   ENDMETHOD.
+
 
   METHOD get_object_package.
 
