@@ -531,6 +531,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       io_repo    = io_repo
       it_results = lt_results ).
 
+    IF lines( lt_results ) > 0.
+      rs_checks-transport-required = zcl_abapgit_sap_package=>get( io_repo->get_package( )
+                                         )->are_changes_recorded_in_tr_req( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
