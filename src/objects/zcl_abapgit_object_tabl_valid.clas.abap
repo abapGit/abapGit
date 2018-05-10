@@ -80,11 +80,11 @@ CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
           object_not_exist         = 8
           OTHERS                   = 9.
 
-      IF sy-subrc = 1 OR lines( lt_founds ) = 0.
+      IF sy-subrc = 1
+      OR sy-subrc = 2
+      OR lines( lt_founds ) = 0.
         EXIT.
-      ENDIF.
-
-      IF sy-subrc > 1.
+      ELSEIF sy-subrc > 2.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
@@ -118,14 +118,9 @@ CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
       CHANGING
         cg_data = ls_dd02v ).
 
-    IF ls_dd02v-tabclass <> 'TRANSP'.
-      " We only want to compare transparent tables, or structures
-      " used in transparent tables
-
-      IF is_structure_used_in_db_table( ls_dd02v-tabname ) = abap_false.
-        RETURN.
-      ENDIF.
-
+    " We only want to compare transparent tables, or structures used in transparent tables
+    IF ls_dd02v-tabclass <> 'TRANSP' AND is_structure_used_in_db_table( ls_dd02v-tabname ) = abap_false.
+      RETURN.
     ENDIF.
 
     io_remote_version->read(
