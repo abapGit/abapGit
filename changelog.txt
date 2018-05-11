@@ -8,6 +8,18 @@ Legend
 + : added
 - : removed
 
+2018-05-11 v1.66.0
+------------------
+! Clone without pull, user has to choose pull after creating online repo
+! old migrations removed from code
+* downports
+* seperation of UI and logic
+* SICF: clear ICFSERVICE-ICF_MANDT
+* TOBJ: Clear TVDIR-GENDATE and TVDIR-GENTIME
+* fixes for object status
+* DOMA fix delete fix value appends
+* TABL exclude structures in warning
+
 2018-05-07 v1.65.0
 ------------------
 + ECSD support
