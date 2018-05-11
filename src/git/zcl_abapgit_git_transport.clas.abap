@@ -196,11 +196,15 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
     lv_xstring = lo_client->send_receive_close( lv_xstring ).
 
+* todo, this part should be changed, instead of looking at texts
+* parse the reply and look for the "ng" not good indicator
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_xstring ).
     IF NOT lv_string CP '*unpack ok*'.
       zcx_abapgit_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
       zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
+    ELSEIF lv_string CP '*push declined due to email privacy*'.
+      zcx_abapgit_exception=>raise( 'push declined due to email privacy' ).
     ELSEIF lv_string CP '*funny refname*'.
       zcx_abapgit_exception=>raise( 'funny refname' ).
     ELSEIF lv_string CP '*failed to update ref*'.
