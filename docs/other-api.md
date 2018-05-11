@@ -22,7 +22,7 @@ todo, how to list branches?
 ### Create Offline
 
 ```abap
-zcl_abapgit_repo_srv=>get_instance( )->new_online(
+zcl_abapgit_repo_srv=>get_instance( )->new_offline(
 ```
 
 ### List
@@ -144,9 +144,12 @@ METHOD decisions.
     rs_checks-requirements-decision = 'Y'.
   ENDIF.
 
+  IF rs_checks-transport-required = abap_true.
+    rs_checks-transport-transport = 'SOMETHING'.
+  ENDIF.
+
 ENDMETHOD.
 ```
 
 todo:
-[https://github.com/larshp/abapGit/issues/1333](https://github.com/larshp/abapGit/issues/1333)
 [https://github.com/larshp/abapGit/issues/1331](https://github.com/larshp/abapGit/issues/1331)
