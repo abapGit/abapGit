@@ -203,8 +203,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
       lt_requirements ).
 
-    rs_checks-transport-required = zcl_abapgit_sap_package=>get( ms_data-package )->are_changes_recorded_in_tr_req( ).
-
   ENDMETHOD.
 
 
