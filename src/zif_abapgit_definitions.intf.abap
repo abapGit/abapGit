@@ -347,11 +347,11 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS gc_author_regex TYPE string VALUE '^([\\\w\s\.@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_action,
-      repo_clone               TYPE string VALUE 'repo_clone',
       repo_refresh             TYPE string VALUE 'repo_refresh',
       repo_remove              TYPE string VALUE 'repo_remove',
       repo_settings            TYPE string VALUE 'repo_settings',
       repo_purge               TYPE string VALUE 'repo_purge',
+      repo_newonline           TYPE string VALUE 'repo_newonline',
       repo_newoffline          TYPE string VALUE 'repo_newoffline',
       repo_remote_attach       TYPE string VALUE 'repo_remote_attach',
       repo_remote_detach       TYPE string VALUE 'repo_remote_detach',

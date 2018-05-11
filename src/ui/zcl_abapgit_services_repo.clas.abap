@@ -5,9 +5,11 @@ CLASS zcl_abapgit_services_repo DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS clone
+    CLASS-METHODS new_online
       IMPORTING
-        !iv_url TYPE string
+        !iv_url        TYPE string
+      RETURNING
+        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
@@ -94,38 +96,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
-
-
-  METHOD clone.
-
-    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo_online,
-          ls_popup TYPE zcl_abapgit_popups=>ty_popup.
-
-
-    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
-    IF ls_popup-cancel = abap_true.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url         = ls_popup-url
-      iv_branch_name = ls_popup-branch_name
-      iv_package     = ls_popup-package ).
-
-    toggle_favorite( lo_repo->get_key( ) ).
-
-    lo_repo->initialize( ).
-    lo_repo->find_remote_dot_abapgit( ).
-    lo_repo->status( ). " check for errors
-
-    gui_deserialize( lo_repo ).
-
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
-
-    COMMIT WORK.
-
-  ENDMETHOD.  "clone
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -182,6 +153,31 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     COMMIT WORK.
 
   ENDMETHOD.  "new_offline
+
+
+  METHOD new_online.
+
+    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup.
+
+
+    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      iv_url         = ls_popup-url
+      iv_branch_name = ls_popup-branch_name
+      iv_package     = ls_popup-package ).
+
+    toggle_favorite( ro_repo->get_key( ) ).
+
+* Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
+
+    COMMIT WORK.
+
+  ENDMETHOD.
 
 
   METHOD open_se80.
