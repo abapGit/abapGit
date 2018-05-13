@@ -100,9 +100,7 @@ todo: staging, commits, tags
 
 *******************************
 
-## Pulling
-
-Online projects
+## Pulling, Online projects
 
 ```abap
 METHOD pull.
