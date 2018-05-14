@@ -132,6 +132,7 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         VALUE(et_list)         TYPE STANDARD TABLE
       RAISING
+        zcx_abapgit_cancel
         zcx_abapgit_exception .
     CLASS-METHODS branch_popup_callback
       IMPORTING
@@ -166,6 +167,7 @@ CLASS zcl_abapgit_popups DEFINITION
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CLASS-DATA go_select_list_popup TYPE REF TO cl_salv_table .
     CLASS-DATA gr_table TYPE REF TO data .
+    CLASS-DATA gv_cancel TYPE abap_bool .
     CLASS-DATA go_table_descr TYPE REF TO cl_abap_tabledescr .
 
     CLASS-METHODS add_field
@@ -204,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -601,11 +603,13 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     CASE e_salv_function.
       WHEN 'O.K.'.
+        gv_cancel = abap_false.
         go_select_list_popup->close_screen( ).
 
       WHEN 'ABR'.
         "Canceled: clear list to overwrite nothing
         CLEAR <lt_table>.
+        gv_cancel = abap_true.
         go_select_list_popup->close_screen( ).
 
       WHEN 'SALL'.
@@ -1049,8 +1053,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         go_select_list_popup->display( ).
 
       CATCH cx_salv_msg.
-        zcx_abapgit_exception=>raise( 'Error from POPUP_SELECT_OBJ_OVERWRITE' ).
+        zcx_abapgit_exception=>raise( 'Error from POPUP_TO_SELECT_FROM_LIST' ).
     ENDTRY.
+
+    IF gv_cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
 
     get_selected_rows(
       IMPORTING
@@ -1078,6 +1086,34 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     IF NOT lv_trkorr IS INITIAL.
       ls_trkorr-trkorr = lv_trkorr.
       APPEND ls_trkorr TO rt_trkorr.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD popup_transport_request.
+
+    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
+          lt_e071k TYPE STANDARD TABLE OF e071k.
+
+    CALL FUNCTION 'TRINT_ORDER_CHOICE'
+      IMPORTING
+        we_order               = rv_transport
+      TABLES
+        wt_e071                = lt_e071
+        wt_e071k               = lt_e071k
+      EXCEPTIONS
+        no_correction_selected = 1
+        display_mode           = 2
+        object_append_error    = 3
+        recursive_call         = 4
+        wrong_order_type       = 5
+        OTHERS                 = 6.
+
+    IF sy-subrc = 1.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ELSEIF sy-subrc > 1.
+      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -1436,32 +1472,4 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD popup_transport_request.
-
-    DATA: lt_e071  TYPE STANDARD TABLE OF e071,
-          lt_e071k TYPE STANDARD TABLE OF e071k.
-
-    CALL FUNCTION 'TRINT_ORDER_CHOICE'
-      IMPORTING
-        we_order               = rv_transport
-      TABLES
-        wt_e071                = lt_e071
-        wt_e071k               = lt_e071k
-      EXCEPTIONS
-        no_correction_selected = 1
-        display_mode           = 2
-        object_append_error    = 3
-        recursive_call         = 4
-        wrong_order_type       = 5
-        OTHERS                 = 6.
-
-    IF sy-subrc = 1.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ELSEIF sy-subrc > 1.
-      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
