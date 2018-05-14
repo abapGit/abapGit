@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -78,11 +78,18 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log TYPE REF TO zcl_abapgit_log,
-          lt_zip TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA: lo_log     TYPE REF TO zcl_abapgit_log,
+          lt_zip     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lv_package TYPE devclass.
 
 
     CREATE OBJECT lo_log.
+
+    lv_package = io_repo->get_package( ).
+
+    IF zcl_abapgit_sap_package=>get( lv_package )->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Package { lv_package } doesn't exist| ).
+    ENDIF.
 
     lt_zip = io_repo->get_files_local( io_log    = lo_log
                                        it_filter = it_filter ).
