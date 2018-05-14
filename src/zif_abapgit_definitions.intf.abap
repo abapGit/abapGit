@@ -344,7 +344,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS gc_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS gc_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
-  CONSTANTS gc_author_regex TYPE string VALUE '^([\\\w\s\.@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
+  CONSTANTS gc_author_regex TYPE string VALUE '^([\\\w\s\.\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_action,
       repo_refresh             TYPE string VALUE 'repo_refresh',
