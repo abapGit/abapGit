@@ -724,10 +724,10 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     lv_program_name = main_name( ).
     TRY.
-      ls_progdir = read_progdir( lv_program_name ).
-    CATCH zcx_read_progdir_exception.
-      rv_bool = abap_false.
-      RETURN.
+        ls_progdir = read_progdir( lv_program_name ).
+      CATCH zcx_read_progdir_exception.
+        rv_bool = abap_false.
+        RETURN.
     ENDTRY.
 
     IF is_a_deleted_maintance_view( ls_progdir ) = abap_true.
