@@ -723,12 +723,16 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     rv_bool = boolc( sy-subrc <> 1 ).
 
     lv_program_name = main_name( ).
-    ls_progdir = read_progdir( lv_program_name ).
+    TRY.
+      ls_progdir = read_progdir( lv_program_name ).
+    CATCH zcx_read_progdir_exception.
+      rv_bool = abap_false.
+      RETURN.
+    ENDTRY.
 
     IF is_a_deleted_maintance_view( ls_progdir ) = abap_true.
       rv_bool = abap_false.
     ENDIF.
-
   ENDMETHOD.                    "zif_abapgit_object~exists
 
 
