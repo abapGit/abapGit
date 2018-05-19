@@ -190,6 +190,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
           ls_item      LIKE LINE OF lt_items,
           lv_is_xml    TYPE abap_bool,
+          lt_super     TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts,
           lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
@@ -238,6 +239,16 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ls_item-devclass = zcl_abapgit_tadir=>get_object_package(
                            iv_object   = ls_item-obj_type
                            iv_obj_name = ls_item-obj_name ).
+
+      IF NOT ls_item-devclass IS INITIAL.
+* make sure the package is under the repo main package
+        lt_super = zcl_abapgit_sap_package=>get( iv_devclass )->list_superpackages( ).
+        READ TABLE lt_super WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          CLEAR ls_item-devclass.
+        ENDIF.
+      ENDIF.
+
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
