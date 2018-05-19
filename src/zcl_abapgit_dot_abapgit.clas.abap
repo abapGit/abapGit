@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
     ls_data-master_language = sy-langu.
-    ls_data-starting_folder = '/'.
+    ls_data-starting_folder = '/src/'.
     ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
     APPEND '/.gitignore' TO ls_data-ignore.
