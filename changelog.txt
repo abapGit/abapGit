@@ -8,6 +8,18 @@ Legend
 + : added
 - : removed
 
+2018-05-19 v1.67.0
+------------------
++ IDOC support
++ IEXT support
+* DOMA deletion downport
+* ALV popup
+* DDLS downport
+! default starting folder changed to "/src/"
+* Author regex fixed in branch overview
+! DDLS clear additional fields
+! Moving an object outside main package shows up as deletion
+
 2018-05-11 v1.66.0
 ------------------
 ! Clone without pull, user has to choose pull after creating online repo
