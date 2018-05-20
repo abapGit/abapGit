@@ -46,12 +46,28 @@ private section.
   data MV_CURRENT_CONFLICT_INDEX type SYTABIX .
   data MS_DIFF_FILE type TY_FILE_DIFF .
 
+  methods APPLY_MERGED_CONTENT
+    importing
+      !IT_POSTDATA type CNHT_POST_DATA_TAB
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_FILE_CONTENT
+    importing
+      !IV_BRANCH type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-BRANCH_NAME
+      !IV_PATH type STRING
+      !IV_FILENAME type STRING
+    returning
+      value(RV_FILE_CONTENT) type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   methods FIND_NEXT_CONFLICT .
   methods RENDER_DIFF
     importing
       !IS_DIFF type TY_FILE_DIFF
     returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   methods RENDER_DIFF_HEAD
     importing
       !IS_DIFF type TY_FILE_DIFF
@@ -85,11 +101,49 @@ private section.
   methods RESOLVE_DIFF
     raising
       ZCX_ABAPGIT_EXCEPTION .
+  methods IS_BINARY
+    importing
+      !IV_D1 type XSTRING
+      !IV_D2 type XSTRING
+    returning
+      value(RV_YES) type ABAP_BOOL .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
+
+
+  METHOD apply_merged_content.
+
+    DATA: BEGIN OF filedata,
+            merge_content TYPE string,
+          END OF filedata.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS <postdata_line> LIKE LINE OF it_postdata.
+
+    LOOP AT it_postdata ASSIGNING <postdata_line>.
+      lv_string = |{ lv_string }{ <postdata_line> }|.
+    ENDLOOP.
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
+
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_CONTENT'  it = lt_fields CHANGING cv = filedata ).
+
+    DATA: new_file_content TYPE xstring.
+    new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = filedata-merge_content ).
+
+    ms_merge-stage->add( iv_path     = ms_diff_file-path
+                         iv_filename = ms_diff_file-filename
+                         iv_data     = new_file_content ).
+
+    FIELD-SYMBOLS: <result> TYPE zif_abapgit_definitions=>ty_expanded.
+    READ TABLE ms_merge-result ASSIGNING <result> INDEX mv_current_conflict_index.
+    <result>-sha1 = zcl_abapgit_hash=>sha1( iv_type = 'MERGE' iv_data = new_file_content ).
+
+  ENDMETHOD.
 
 
   METHOD build_menu.
@@ -140,6 +194,60 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_file_content.
+
+    DATA: files TYPE zif_abapgit_definitions=>ty_files_tt.
+    FIELD-SYMBOLS: <file> TYPE zif_abapgit_definitions=>ty_file.
+
+    ms_merge-repo->set_branch_name( iv_branch ).
+    files = ms_merge-repo->get_files_remote( ).
+    READ TABLE files ASSIGNING <file> WITH KEY path = iv_path filename = iv_filename.
+    CHECK <file> IS ASSIGNED.
+
+    rv_file_content = zcl_abapgit_convert=>xstring_to_string_utf8( <file>-data ).
+
+  ENDMETHOD.
+
+
+  METHOD IS_BINARY.
+
+    DATA: lv_len TYPE i,
+          lv_idx TYPE i,
+          lv_x   TYPE x.
+
+    FIELD-SYMBOLS <lv_data> LIKE iv_d1.
+
+
+    IF iv_d1 IS NOT INITIAL. " One of them might be new and so empty
+      ASSIGN iv_d1 TO <lv_data>.
+    ELSE.
+      ASSIGN iv_d2 TO <lv_data>.
+    ENDIF.
+
+    lv_len = xstrlen( <lv_data> ).
+    IF lv_len = 0.
+      RETURN.
+    ENDIF.
+
+    IF lv_len > 100.
+      lv_len = 100.
+    ENDIF.
+
+    " Simple char range test
+    " stackoverflow.com/questions/277521/how-to-identify-the-file-content-as-ascii-or-binary
+    DO lv_len TIMES. " I'm sure there is more efficient way ...
+      lv_idx = sy-index - 1.
+      lv_x = <lv_data>+lv_idx(1).
+
+      IF NOT ( lv_x BETWEEN 9 AND 13 OR lv_x BETWEEN 32 AND 126 ).
+        rv_yes = abap_true.
+        EXIT.
+      ENDIF.
+    ENDDO.
+
+  ENDMETHOD.  " is_binary.
+
+
   METHOD render_beacon.
 
     DATA: lv_beacon  TYPE string.
@@ -168,7 +276,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   METHOD render_content.
 
     CREATE OBJECT ro_html.
-
     ro_html->add( |<div id="diff-list" data-repo-key="{ mo_repo->get_key( ) }">| ).
     ro_html->add( render_diff( ms_diff_file ) ).
     ro_html->add( '</div>' ).
@@ -187,44 +294,35 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     " Content
     IF is_diff-type <> 'binary'.
+      "Table for Div-Table and textarea
       ro_html->add( '<div class="diff_content">' ).         "#EC NOTEXT
       ro_html->add( '<table>' ).                            "#EC NOTEXT
       ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
       ro_html->add( '<tr>' ).                               "#EC NOTEXT
-      ro_html->add( '<th>Code</th>' ).
-      ro_html->add( '<th>Merge</th>' ).
+      ro_html->add( '<th>Code</th>' ).                      "#EC NOTEXT
+      ro_html->add( '<th>Merge</th>' ).                     "#EC NOTEXT
       ro_html->add( '</tr>' ).                              "#EC NOTEXT
       ro_html->add( '</thead>' ).                           "#EC NOTEXT
       ro_html->add( '<td>' ).
 
+      "Diff-Table of source and target file
       ro_html->add( '<table class="diff_tab syntax-hl">' ). "#EC NOTEXT
       ro_html->add( render_table_head( ) ).
       ro_html->add( render_lines( is_diff ) ).
       ro_html->add( '</table>' ).                           "#EC NOTEXT
 
-      DATA: target_files TYPE zif_abapgit_definitions=>ty_files_tt.
-      FIELD-SYMBOLS: <target_file> TYPE zif_abapgit_definitions=>ty_file.
-      ms_merge-repo->set_branch_name( ms_merge-target-name ).
-      target_files = ms_merge-repo->get_files_remote( ).
-      READ TABLE target_files ASSIGNING <target_file> WITH KEY path = is_diff-path filename = is_diff-filename.
-      CHECK <target_file> IS ASSIGNED.
+      DATA: target_content TYPE string.
+      target_content = get_file_content( iv_branch = ms_merge-target-name iv_path = is_diff-path iv_filename = is_diff-filename ).
 
-      Data: target type string,
-            target_code type abaptxt255_tab.
-      target = zcl_abapgit_convert=>xstring_to_string_utf8( <target_file>-data ).
-
-      ro_html->add( '</td>' ).
-      ro_html->add( '<td>' ).
+      ro_html->add( '</td>' ).                              "#EC NOTEXT
+      ro_html->add( '<td>' ).                               "#EC NOTEXT
       ro_html->add( '<div class="form-container">' ).
-    ro_html->add( '<form id="merge_form" class="aligned-form"'
-               && ' method="post" action="sapevent:apply">' ).
-
-      ro_html->add( |<textarea id="MERGE_TEXTAREA" name="MERGE_TEXTAREA" rows="40" cols="20">{ target }</textarea>| ).
-    ro_html->add( '<input type="submit" class="hidden-submit">' ).
-
-      ro_html->add( '</from>' ).                             "#EC NOTEXT
+      ro_html->add( '<form id="merge_form" class="aligned-form" accept-charset="UTF-8" method="post" action="sapevent:apply">' ).
+      ro_html->add( |<textarea id="merge_content" name="merge_content" style="width:100%; height:100%;" rows="{ lines( is_diff-o_diff->get( ) ) }">{ target_content }</textarea>| ).
+      ro_html->add( '<input type="submit" class="hidden-submit">' ).
+      ro_html->add( '</from>' ).                            "#EC NOTEXT
       ro_html->add( '</div>' ).                             "#EC NOTEXT
-      ro_html->add( '</td>' ).
+      ro_html->add( '</td>' ).                              "#EC NOTEXT
       ro_html->add( '</table>' ).                           "#EC NOTEXT
       ro_html->add( '</div>' ).                             "#EC NOTEXT
     ELSE.
@@ -258,13 +356,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
-      iv1 = is_diff-lstate
-      iv2 = is_diff-rstate ) ).
-
-    ro_html->add( |<span class="diff_changed_by">last change by: <span class="user">{
-      is_diff-changed_by }</span></span>| ).
-
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv1 = is_diff-lstate iv2 = is_diff-rstate ) ).
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.
@@ -376,11 +468,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
   METHOD resolve_diff.
 
+    DATA: lv_offs TYPE i.
+
     FIELD-SYMBOLS: <result> TYPE zif_abapgit_definitions=>ty_expanded,
                    <source> TYPE zif_abapgit_definitions=>ty_expanded,
                    <target> TYPE zif_abapgit_definitions=>ty_expanded.
+
+    "Find current conflict
     READ TABLE ms_merge-result ASSIGNING <result> INDEX mv_current_conflict_index.
     CHECK sy-subrc EQ 0.
+
+    "Find corresponding files in source and target branch
     READ TABLE ms_merge-stree ASSIGNING <source> WITH KEY path = <result>-path.
     READ TABLE ms_merge-ttree ASSIGNING <target> WITH KEY path = <result>-path.
     CHECK <source> IS ASSIGNED AND <target> IS ASSIGNED.
@@ -395,6 +493,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ms_merge-repo->set_branch_name( ms_merge-target-name ).
     target_files = ms_merge-repo->get_files_remote( ).
 
+    "Read files to get data xstring so diff view can be used
     READ TABLE source_files ASSIGNING <source_file> WITH KEY path = <result>-path filename = <result>-name.
     READ TABLE target_files ASSIGNING <target_file> WITH KEY path = <result>-path filename = <result>-name.
     CHECK <source_file> IS ASSIGNED AND <target_file> IS ASSIGNED.
@@ -402,38 +501,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ms_diff_file-path     = <result>-path.
     ms_diff_file-filename = <result>-name.
 
-    CREATE OBJECT ms_diff_file-o_diff
-      EXPORTING
-        iv_new = <source_file>-data
-        iv_old = <target_file>-data.
+    ms_diff_file-type = reverse( <target_file>-filename ).
 
-*    FIND FIRST OCCURRENCE OF '.' IN <ls_diff>-type MATCH OFFSET lv_offs.
-*    <ls_diff>-type = reverse( substring( val = <ls_diff>-type len = lv_offs ) ).
-*    IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap'.
-*      <ls_diff>-type = 'other'.
-*    ENDIF.
-*
-*    IF <ls_diff>-type = 'other'
-*       AND is_binary( iv_d1 = <ls_remote>-data iv_d2 = <ls_local>-file-data ) = abap_true.
-*      <ls_diff>-type = 'binary'.
-*    ENDIF.
-*
-*    " Diff data
-*    IF <ls_diff>-type <> 'binary'.
-*      IF <ls_diff>-fstate = c_fstate-remote. " Remote file leading changes
-*        CREATE OBJECT <ls_diff>-o_diff
-*          EXPORTING
-*            iv_new = <ls_remote>-data
-*            iv_old = <ls_local>-file-data.
-*      ELSE.             " Local leading changes or both were modified
-*        CREATE OBJECT <ls_diff>-o_diff
-*          EXPORTING
-*            iv_new = <ls_local>-file-data
-*            iv_old = <ls_remote>-data.
-*      ENDIF.
-*    ENDIF.
+    FIND FIRST OCCURRENCE OF '.' IN ms_diff_file-type MATCH OFFSET lv_offs.
+    ms_diff_file-type = reverse( substring( val = ms_diff_file-type len = lv_offs ) ).
+    IF ms_diff_file-type <> 'xml' AND ms_diff_file-type <> 'abap'.
+      ms_diff_file-type = 'other'.
+    ENDIF.
 
-  ENDMETHOD.  "append_diff
+    IF ms_diff_file-type = 'other'
+    AND is_binary( iv_d1 = <target_file>-data iv_d2 = <source_file>-data ) = abap_true.
+      ms_diff_file-type = 'binary'.
+    ENDIF.
+
+    IF ms_diff_file-type <> 'binary'.
+      CREATE OBJECT ms_diff_file-o_diff
+        EXPORTING
+          iv_new = <source_file>-data
+          iv_old = <target_file>-data.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -441,36 +529,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-apply OR c_actions-cancel.
         IF iv_action EQ c_actions-apply.
-          CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-          DATA: BEGIN OF filedata,
-                  merge_textarea TYPE string,
-                END OF filedata.
-
-          DATA: lv_string TYPE string,
-                lt_fields TYPE tihttpnvp.
-          FIELD-SYMBOLS <lv_body> TYPE string.
-          FIELD-SYMBOLS <postdata_line> LIKE LINE OF it_postdata.
-
-          LOOP AT it_postdata ASSIGNING <postdata_line>.
-            lv_string = |{ lv_string }{ <postdata_line> }|.
-          ENDLOOP.
-*          CONCATENATE LINES OF it_postdata INTO lv_string.
-*          REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
-*          REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
-          lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
-
-          zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_TEXTAREA'  it = lt_fields CHANGING cv = filedata ).
-
-          DATA: new_file_content TYPE xstring.
-          new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = filedata-merge_textarea ).
-
-          ms_merge-stage->add( iv_path     = ms_diff_file-path
-                               iv_filename = ms_diff_file-filename
-                               iv_data     = new_file_content ).
-          FIELD-SYMBOLS: <result> TYPE zif_abapgit_definitions=>ty_expanded.
-          READ TABLE ms_merge-result ASSIGNING <result> INDEX mv_current_conflict_index.
-          <result>-sha1 = zcl_abapgit_hash=>sha1( iv_type = 'MERGE' iv_data = new_file_content ).
+          apply_merged_content( it_postdata = it_postdata ).
         ENDIF.
 
         find_next_conflict( ).
@@ -480,6 +539,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
           ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
         ELSE.
 
+          FIELD-SYMBOLS: <result> TYPE zif_abapgit_definitions=>ty_expanded.
           READ TABLE ms_merge-result ASSIGNING <result> WITH KEY sha1 = space.
           IF sy-subrc NE 0.
             CLEAR ms_merge-conflict.
