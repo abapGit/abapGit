@@ -135,15 +135,18 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
           AND <ls_target>-sha1 = <ls_source>-sha1.
 * added in source and target
         <ls_result>-sha1 = <ls_source>-sha1.
+      ELSEIF lv_found_common = abap_false
+         AND <ls_target>-sha1 <> <ls_source>-sha1.
+* added in source and target, but different, merge conflict must be resolved
+        gs_merge-conflict = |{ <ls_file>-name } merge conflict|.
+        CONTINUE.
       ENDIF.
 
       IF lv_found_source = abap_false
-          OR lv_found_target = abap_false
-          OR lv_found_common = abap_false.
-        CLEAR gs_merge-result.
-        gs_merge-conflict = |{ <ls_file>-name
-          } merge conflict, not found anywhere|.
-        RETURN.
+      OR lv_found_target = abap_false
+      OR lv_found_common = abap_false.
+        gs_merge-conflict = |{ <ls_file>-name } merge conflict, not found anywhere|.
+        CONTINUE.
       ENDIF.
 
       IF <ls_target>-sha1 = <ls_source>-sha1.
@@ -158,12 +161,9 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_result>-sha1 = <ls_target>-sha1.
       ELSE.
 * changed in source and target, conflict
-        CLEAR gs_merge-result.
-        gs_merge-conflict = |{ <ls_file>-name
-          } merge conflict, changed in source and target branch|.
-        RETURN.
+* conflict must be resolved before merge
+        gs_merge-conflict = |{ <ls_file>-name } merge conflict, changed in source and target branch|.
       ENDIF.
-
     ENDLOOP.
 
   ENDMETHOD.
@@ -231,9 +231,11 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
       <ls_ancestor>-commit = lv_commit.
       <ls_ancestor>-tree = ls_commit-tree.
       <ls_ancestor>-body = ls_commit-body.
-      FIND REGEX zif_abapgit_definitions=>gc_author_regex IN ls_commit-author
-        SUBMATCHES <ls_ancestor>-time ##NO_TEXT.
-      ASSERT sy-subrc = 0.
+      <ls_ancestor>-time = ls_commit-author.
+
+      "Authorkommentar um alles entfernen, bis auf die Zeitangabe
+      REPLACE ALL OCCURRENCES OF REGEX '[a-zA-Z<>@.-]*' IN <ls_ancestor>-time WITH ''.
+      CONDENSE <ls_ancestor>-time.
     ENDLOOP.
 
     SORT rt_ancestors BY time DESCENDING.

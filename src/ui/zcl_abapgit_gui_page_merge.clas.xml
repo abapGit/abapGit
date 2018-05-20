@@ -14,6 +14,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_MERGE</CLSNAME>
+     <CMPNAME>EXIST_CONFLICTS</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Exists Conflicts?</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
