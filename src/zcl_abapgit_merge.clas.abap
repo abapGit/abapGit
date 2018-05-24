@@ -1,78 +1,78 @@
-class ZCL_ABAPGIT_MERGE definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_merge DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  methods CONSTRUCTOR
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
-      !IV_SOURCE_BRANCH type STRING
-      !IV_TARGET_BRANCH type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_CONFLICTS
-    returning
-      value(RT_CONFLICTS) type ZIF_ABAPGIT_DEFINITIONS=>TT_MERGE_CONFLICT .
-  methods GET_RESULT
-    returning
-      value(RS_MERGE) type ZIF_ABAPGIT_DEFINITIONS=>TY_MERGE .
-  methods GET_SOURCE_BRANCH
-    returning
-      value(RV_SOURCE_BRANCH) type STRING .
-  methods GET_TARGET_BRANCH
-    returning
-      value(RV_TARGET_BRANCH) type STRING .
-  methods HAS_CONFLICTS
-    returning
-      value(RV_CONFLICTS_EXISTS) type BOOLEAN .
-  methods RESOLVE_CONFLICT
-    importing
-      !IS_CONFLICT type ZIF_ABAPGIT_DEFINITIONS=>TY_MERGE_CONFLICT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RUN
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-private section.
+    METHODS constructor
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo_online
+        !iv_source_branch TYPE string
+        !iv_target_branch TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_conflicts
+      RETURNING
+        VALUE(rt_conflicts) TYPE zif_abapgit_definitions=>tt_merge_conflict .
+    METHODS get_result
+      RETURNING
+        VALUE(rs_merge) TYPE zif_abapgit_definitions=>ty_merge .
+    METHODS get_source_branch
+      RETURNING
+        VALUE(rv_source_branch) TYPE string .
+    METHODS get_target_branch
+      RETURNING
+        VALUE(rv_target_branch) TYPE string .
+    METHODS has_conflicts
+      RETURNING
+        VALUE(rv_conflicts_exists) TYPE boolean .
+    METHODS resolve_conflict
+      IMPORTING
+        !is_conflict TYPE zif_abapgit_definitions=>ty_merge_conflict
+      RAISING
+        zcx_abapgit_exception .
+    METHODS run
+      RAISING
+        zcx_abapgit_exception .
+  PRIVATE SECTION.
 
-  types:
-    ty_ancestor_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_ancestor WITH DEFAULT KEY .
+    TYPES:
+      ty_ancestor_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_ancestor WITH DEFAULT KEY .
 
-  data MO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE .
-  data MS_MERGE type ZIF_ABAPGIT_DEFINITIONS=>TY_MERGE .
-  data MT_CONFLICTS type ZIF_ABAPGIT_DEFINITIONS=>TT_MERGE_CONFLICT .
-  data MT_OBJECTS type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJECTS_TT .
-  data MV_SOURCE_BRANCH type STRING .
-  data MV_TARGET_BRANCH type STRING .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA ms_merge TYPE zif_abapgit_definitions=>ty_merge .
+    DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
+    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
+    DATA mv_source_branch TYPE string .
+    DATA mv_target_branch TYPE string .
 
-  methods ALL_FILES
-    returning
-      value(RT_FILES) type ZIF_ABAPGIT_DEFINITIONS=>TY_EXPANDED_TT .
-  methods CALCULATE_RESULT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FETCH_GIT
-    returning
-      value(RT_OBJECTS) type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJECTS_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FIND_ANCESTORS
-    importing
-      !IV_COMMIT type ZIF_ABAPGIT_DEFINITIONS=>TY_SHA1
-    returning
-      value(RT_ANCESTORS) type TY_ANCESTOR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FIND_FIRST_COMMON
-    importing
-      !IT_LIST1 type TY_ANCESTOR_TT
-      !IT_LIST2 type TY_ANCESTOR_TT
-    returning
-      value(RS_COMMON) type ZIF_ABAPGIT_DEFINITIONS=>TY_ANCESTOR
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS all_files
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_expanded_tt .
+    METHODS calculate_result
+      RAISING
+        zcx_abapgit_exception .
+    METHODS fetch_git
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS find_ancestors
+      IMPORTING
+        !iv_commit          TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rt_ancestors) TYPE ty_ancestor_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS find_first_common
+      IMPORTING
+        !it_list1        TYPE ty_ancestor_tt
+        !it_list2        TYPE ty_ancestor_tt
+      RETURNING
+        VALUE(rs_common) TYPE zif_abapgit_definitions=>ty_ancestor
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 

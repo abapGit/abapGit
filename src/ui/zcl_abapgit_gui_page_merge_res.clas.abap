@@ -1,113 +1,113 @@
-class ZCL_ABAPGIT_GUI_PAGE_MERGE_RES definition
-  public
-  inheriting from ZCL_ABAPGIT_GUI_PAGE
-  final
-  create public .
+CLASS zcl_abapgit_gui_page_merge_res DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  methods CONSTRUCTOR
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
-      !IO_MERGE_PAGE type ref to ZCL_ABAPGIT_GUI_PAGE_MERGE
-      !IO_MERGE type ref to ZCL_ABAPGIT_MERGE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS constructor
+      IMPORTING
+        !io_repo       TYPE REF TO zcl_abapgit_repo_online
+        !io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
+        !io_merge      TYPE REF TO zcl_abapgit_merge
+      RAISING
+        zcx_abapgit_exception .
 
-  methods ZIF_ABAPGIT_GUI_PAGE~ON_EVENT
-    redefinition .
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
-private section.
+  PRIVATE SECTION.
 
-  types:
-    BEGIN OF ty_file_diff,
-      path       TYPE string,
-      filename   TYPE string,
-      lstate     TYPE char1,
-      rstate     TYPE char1,
-      fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
-      o_diff     TYPE REF TO zcl_abapgit_diff,
-      changed_by TYPE xubname,
-      type       TYPE string,
-    END OF ty_file_diff .
-  types:
-    tt_file_diff TYPE STANDARD TABLE OF ty_file_diff .
+    TYPES:
+      BEGIN OF ty_file_diff,
+        path       TYPE string,
+        filename   TYPE string,
+        lstate     TYPE char1,
+        rstate     TYPE char1,
+        fstate     TYPE char1, " FILE state - Abstraction for shorter ifs
+        o_diff     TYPE REF TO zcl_abapgit_diff,
+        changed_by TYPE xubname,
+        type       TYPE string,
+      END OF ty_file_diff .
+    TYPES:
+      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff .
 
-  constants:
-    BEGIN OF c_actions,
-      toggle_mode  TYPE string VALUE 'toggle_mode' ##NO_TEXT,
-      apply_merge  TYPE string VALUE 'apply_merge' ##NO_TEXT,
-      apply_source TYPE string VALUE 'apply_source' ##NO_TEXT,
-      apply_target TYPE string VALUE 'apply_target' ##NO_TEXT,
-      cancel       TYPE string VALUE 'cancel' ##NO_TEXT,
-    END OF c_actions .
-  constants:
-    BEGIN OF c_merge_mode,
-      selection TYPE string VALUE 'selection' ##NO_TEXT,
-      merge     TYPE string VALUE 'merge' ##NO_TEXT,
-    END OF c_merge_mode .
-  data MO_MERGE type ref to ZCL_ABAPGIT_MERGE .
-  data MO_MERGE_PAGE type ref to ZCL_ABAPGIT_GUI_PAGE_MERGE .
-  data MO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE .
-  data MS_DIFF_FILE type TY_FILE_DIFF .
-  data MV_CURRENT_CONFLICT_INDEX type SYTABIX .
-  data MV_MERGE_MODE type STRING .
-  data MT_CONFLICTS type ZIF_ABAPGIT_DEFINITIONS=>TT_MERGE_CONFLICT .
+    CONSTANTS:
+      BEGIN OF c_actions,
+        toggle_mode  TYPE string VALUE 'toggle_mode' ##NO_TEXT,
+        apply_merge  TYPE string VALUE 'apply_merge' ##NO_TEXT,
+        apply_source TYPE string VALUE 'apply_source' ##NO_TEXT,
+        apply_target TYPE string VALUE 'apply_target' ##NO_TEXT,
+        cancel       TYPE string VALUE 'cancel' ##NO_TEXT,
+      END OF c_actions .
+    CONSTANTS:
+      BEGIN OF c_merge_mode,
+        selection TYPE string VALUE 'selection' ##NO_TEXT,
+        merge     TYPE string VALUE 'merge' ##NO_TEXT,
+      END OF c_merge_mode .
+    DATA mo_merge TYPE REF TO zcl_abapgit_merge .
+    DATA mo_merge_page TYPE REF TO zcl_abapgit_gui_page_merge .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA ms_diff_file TYPE ty_file_diff .
+    DATA mv_current_conflict_index TYPE sytabix .
+    DATA mv_merge_mode TYPE string .
+    DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
 
-  methods APPLY_MERGED_CONTENT
-    importing
-      !IT_POSTDATA type CNHT_POST_DATA_TAB
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods BUILD_MENU
-    importing
-      value(IV_WITH_CONFLICT) type BOOLEAN optional
-    returning
-      value(RO_MENU) type ref to ZCL_ABAPGIT_HTML_TOOLBAR .
-  methods IS_BINARY
-    importing
-      !IV_D1 type XSTRING
-      !IV_D2 type XSTRING
-    returning
-      value(RV_YES) type ABAP_BOOL .
-  methods RENDER_BEACON
-    importing
-      !IS_DIFF_LINE type ZIF_ABAPGIT_DEFINITIONS=>TY_DIFF
-      !IS_DIFF type TY_FILE_DIFF
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RENDER_DIFF
-    importing
-      !IS_DIFF type TY_FILE_DIFF
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_DIFF_HEAD
-    importing
-      !IS_DIFF type TY_FILE_DIFF
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RENDER_LINES
-    importing
-      !IS_DIFF type TY_FILE_DIFF
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RENDER_LINE_SPLIT
-    importing
-      !IS_DIFF_LINE type ZIF_ABAPGIT_DEFINITIONS=>TY_DIFF
-      !IV_FSTATE type CHAR1
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RENDER_TABLE_HEAD
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RESOLVE_DIFF
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods TOGGLE_MERGE_MODE .
+    METHODS apply_merged_content
+      IMPORTING
+        !it_postdata TYPE cnht_post_data_tab
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_menu
+      IMPORTING
+        VALUE(iv_with_conflict) TYPE boolean OPTIONAL
+      RETURNING
+        VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS is_binary
+      IMPORTING
+        !iv_d1        TYPE xstring
+        !iv_d2        TYPE xstring
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+    METHODS render_beacon
+      IMPORTING
+        !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_diff
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_diff_head
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_lines
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_line_split
+      IMPORTING
+        !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
+        !iv_fstate     TYPE char1
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_table_head
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS resolve_diff
+      RAISING
+        zcx_abapgit_exception .
+    METHODS toggle_merge_mode .
 ENDCLASS.
 
 
@@ -123,19 +123,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
             merge_content TYPE string,
           END OF filedata.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp,
+    DATA: lv_string           TYPE string,
+          lt_fields           TYPE tihttpnvp,
           lv_new_file_content TYPE xstring.
 
     FIELD-SYMBOLS: <postdata_line> LIKE LINE OF it_postdata,
-                   <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
+                   <ls_conflict>   TYPE zif_abapgit_definitions=>ty_merge_conflict.
 
     LOOP AT it_postdata ASSIGNING <postdata_line>.
       lv_string = |{ lv_string }{ <postdata_line> }|.
     ENDLOOP.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf IN lv_string WITH lc_replace.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_CONTENT'  it = lt_fields CHANGING cv = filedata ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_CONTENT'
+                                                        it = lt_fields
+                                              CHANGING cv = filedata ).
     REPLACE ALL OCCURRENCES OF lc_replace IN filedata-merge_content WITH zif_abapgit_definitions=>gc_newline.
 
     lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = filedata-merge_content ).
@@ -175,7 +177,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD IS_BINARY.
+  METHOD is_binary.
 
     DATA: lv_len TYPE i,
           lv_idx TYPE i,

@@ -1,39 +1,39 @@
-class ZCL_ABAPGIT_GUI_PAGE_MERGE definition
-  public
-  inheriting from ZCL_ABAPGIT_GUI_PAGE
-  final
-  create public .
+CLASS zcl_abapgit_gui_page_merge DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  methods CONSTRUCTOR
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
-      !IV_SOURCE type STRING
-      !IV_TARGET type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS constructor
+      IMPORTING
+        !io_repo   TYPE REF TO zcl_abapgit_repo_online
+        !iv_source TYPE string
+        !iv_target TYPE string
+      RAISING
+        zcx_abapgit_exception .
 
-  methods ZIF_ABAPGIT_GUI_PAGE~ON_EVENT
-    redefinition .
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION.
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
-private section.
+  PRIVATE SECTION.
 
-  data MO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE .
-  data MO_MERGE type ref to ZCL_ABAPGIT_MERGE .
-  constants:
-    BEGIN OF c_actions,
-      merge         TYPE string VALUE 'merge' ##NO_TEXT,
-      res_conflicts TYPE string VALUE 'res_conflicts' ##NO_TEXT,
-    END OF c_actions .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mo_merge TYPE REF TO zcl_abapgit_merge .
+    CONSTANTS:
+      BEGIN OF c_actions,
+        merge         TYPE string VALUE 'merge' ##NO_TEXT,
+        res_conflicts TYPE string VALUE 'res_conflicts' ##NO_TEXT,
+      END OF c_actions .
 
-  methods BUILD_MENU
-    importing
-      value(IV_WITH_CONFLICT) type BOOLEAN optional
-    returning
-      value(RO_MENU) type ref to ZCL_ABAPGIT_HTML_TOOLBAR .
+    METHODS build_menu
+      IMPORTING
+        VALUE(iv_with_conflict) TYPE boolean OPTIONAL
+      RETURNING
+        VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
 ENDCLASS.
 
 
@@ -97,8 +97,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
           lt_files  LIKE ls_merge-stree,
           ls_result LIKE LINE OF ls_merge-result.
 
-    FIELD-SYMBOLS:<ls_show> LIKE LINE OF lt_files,
-                  <ls_file> LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_show> LIKE LINE OF lt_files,
+                   <ls_file> LIKE LINE OF lt_files.
 
     ls_merge = mo_merge->get_result( ).
 
@@ -115,17 +115,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
 
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Source:</td>' ).
+    ro_html->add( '<td>Source</td>' ).
     ro_html->add( '<td>' ).
     ro_html->add( ls_merge-source-name ).
     ro_html->add( '</td></tr>' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Target:</td>' ).
+    ro_html->add( '<td>Target</td>' ).
     ro_html->add( '<td>' ).
     ro_html->add( ls_merge-target-name ).
     ro_html->add( '</td></tr>' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Ancestor:</td>' ).
+    ro_html->add( '<td>Ancestor</td>' ).
     ro_html->add( '<td>' ).
     ro_html->add( ls_merge-common-commit ).
     ro_html->add( '</td></tr>' ).
