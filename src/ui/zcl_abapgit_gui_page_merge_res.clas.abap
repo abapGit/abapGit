@@ -311,8 +311,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ro_html->add( '</td>' ).                            "#EC NOTEXT
         ro_html->add( '<td>' ).                             "#EC NOTEXT
         ro_html->add( '<div class="form-container">' ).
-        ro_html->add( '<form id="merge_form" class="aligned-form"  accept-charset="UTF-8" method="post" action="sapevent:apply_merge">' ).
-        ro_html->add( |<textarea id="merge_content" name="merge_content" htmlEsacpe="false" rows="{ lines( is_diff-o_diff->get( ) ) }">{ lv_target_content }</textarea>| ).
+        ro_html->add( |<form id="merge_form" class="aligned-form" accept-charset="UTF-8"| ).
+        ro_html->add( |method="post" action="sapevent:apply_merge">| ).
+        ro_html->add( |<textarea id="merge_content" name="merge_content" | ).
+        ro_html->add( |htmlEsacpe="false" rows="{ lines( is_diff-o_diff->get( ) ) }">| ).
+        ro_html->add( |{ lv_target_content }</textarea>| ).
         ro_html->add( '<input type="submit" class="hidden-submit">' ).
         ro_html->add( '</form>' ).                          "#EC NOTEXT
         ro_html->add( '</div>' ).                           "#EC NOTEXT
@@ -488,7 +491,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     CLEAR ms_diff_file.
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
-    CHECK sy-subrc EQ 0.
+    IF sy-subrc NE 0.
+      RETURN.
+    ENDIF.
 
     ms_diff_file-path     = <ls_conflict>-path.
     ms_diff_file-filename = <ls_conflict>-filename.
