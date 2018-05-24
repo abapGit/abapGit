@@ -133,11 +133,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     LOOP AT it_postdata ASSIGNING <postdata_line>.
       lv_string = |{ lv_string }{ <postdata_line> }|.
     ENDLOOP.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
+
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
     zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_CONTENT'
                                                         it = lt_fields
                                               CHANGING cv = filedata ).
+    filedata-merge_content = cl_http_utility=>unescape_url( escaped = filedata-merge_content ).
     REPLACE ALL OCCURRENCES OF lc_replace IN filedata-merge_content WITH zif_abapgit_definitions=>gc_newline.
 
     lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = filedata-merge_content ).
@@ -314,8 +317,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ro_html->add( |<form id="merge_form" class="aligned-form" accept-charset="UTF-8"| ).
         ro_html->add( |method="post" action="sapevent:apply_merge">| ).
         ro_html->add( |<textarea id="merge_content" name="merge_content" | ).
-        ro_html->add( |htmlEsacpe="false" rows="{ lines( is_diff-o_diff->get( ) ) }">| ).
-        ro_html->add( |{ lv_target_content }</textarea>| ).
+        ro_html->add( |rows="{ lines( is_diff-o_diff->get( ) ) }">{ lv_target_content }</textarea>| ).
         ro_html->add( '<input type="submit" class="hidden-submit">' ).
         ro_html->add( '</form>' ).                          "#EC NOTEXT
         ro_html->add( '</div>' ).                           "#EC NOTEXT
