@@ -43,11 +43,28 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_git_tag,
+      sha1         TYPE zif_abapgit_definitions=>ty_sha1,
+      object       TYPE zif_abapgit_definitions=>ty_sha1,
+      name         TYPE string,
+      type         TYPE ty_git_branch_type,
+      display_name TYPE string,
+      tagger_name  TYPE string,
+      tagger_email TYPE string,
+      message      TYPE string,
+      body         TYPE string,
+    END OF ty_git_tag .
+  TYPES:
+    ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
+
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
-      branch TYPE ty_git_branch_type VALUE 'HD',
-      tag    TYPE ty_git_branch_type VALUE 'TG',
-      other  TYPE ty_git_branch_type VALUE 'ZZ',
+      branch          TYPE ty_git_branch_type VALUE 'HD',
+      lightweight_tag TYPE ty_git_branch_type VALUE 'TG',
+      annotated_tag   TYPE ty_git_branch_type VALUE 'AT',
+      other           TYPE ty_git_branch_type VALUE 'ZZ',
     END OF c_git_branch_type .
   CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
 

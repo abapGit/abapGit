@@ -20,7 +20,16 @@ CLASS zcl_abapgit_git_pack DEFINITION
         author    TYPE string,
         committer TYPE string,
         body      TYPE string,
-      END OF ty_commit .
+      END OF ty_commit,
+      BEGIN OF ty_tag,
+        object       TYPE string,
+        type         TYPE string,
+        tag          TYPE string,
+        tagger_name  TYPE string,
+        tagger_email TYPE string,
+        message      TYPE string,
+        body         TYPE string,
+      END OF ty_tag .
     TYPES:
       BEGIN OF ty_adler32,
         sha1 TYPE zif_abapgit_definitions=>ty_sha1,
@@ -48,6 +57,13 @@ CLASS zcl_abapgit_git_pack DEFINITION
         VALUE(rs_commit) TYPE ty_commit
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS decode_tag
+      IMPORTING
+        !iv_data      TYPE xstring
+      RETURNING
+        VALUE(rs_tag) TYPE ty_tag
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS encode
       IMPORTING
         !it_objects    TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -62,9 +78,16 @@ CLASS zcl_abapgit_git_pack DEFINITION
         VALUE(rv_data) TYPE xstring .
     CLASS-METHODS encode_commit
       IMPORTING
-        !is_commit     TYPE ty_commit
+        is_commit      TYPE ty_commit
       RETURNING
         VALUE(rv_data) TYPE xstring .
+    CLASS-METHODS encode_tag
+      IMPORTING
+        is_tag         TYPE zcl_abapgit_git_pack=>ty_tag
+      RETURNING
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -128,7 +151,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.
@@ -334,6 +357,68 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "decode_deltas
+
+
+  METHOD decode_tag.
+
+    DATA: lv_string TYPE string,
+          lv_word   TYPE string,
+          lv_length TYPE i,
+          lv_trash  TYPE string ##NEEDED,
+          lt_string TYPE TABLE OF string.
+
+    FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
+
+
+    lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
+
+    SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_string.
+
+    LOOP AT lt_string ASSIGNING <lv_string>.
+
+      SPLIT <lv_string> AT space INTO lv_word lv_trash.
+
+      CASE lv_word.
+        WHEN 'object'.
+          rs_tag-object = lv_trash.
+        WHEN 'type'.
+          rs_tag-type = lv_trash.
+        WHEN 'tag'.
+          rs_tag-tag = lv_trash.
+        WHEN 'tagger'.
+
+          FIND FIRST OCCURRENCE OF REGEX `(.*)<(.*)>`
+                     IN lv_trash
+                     SUBMATCHES rs_tag-tagger_name
+                                rs_tag-tagger_email.
+
+          rs_tag-tagger_name = condense( rs_tag-tagger_name ).
+
+        WHEN ''.
+          " ignore blank lines
+          CONTINUE.
+        WHEN OTHERS.
+
+          " these are the non empty line which don't start with a key word
+          " the first one is the message, the rest are cumulated to the body
+
+          IF rs_tag-message IS INITIAL.
+            rs_tag-message = <lv_string>.
+          ELSE.
+
+            IF rs_tag-body IS NOT INITIAL.
+              rs_tag-body = rs_tag-body && zif_abapgit_definitions=>gc_newline.
+            ENDIF.
+
+            rs_tag-body = rs_tag-body && <lv_string>.
+
+          ENDIF.
+
+      ENDCASE.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD decode_tree.
@@ -757,6 +842,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         lv_type = 32.
       WHEN zif_abapgit_definitions=>gc_type-blob.
         lv_type = 48.
+      WHEN zif_abapgit_definitions=>gc_type-tag.
+        lv_type = 64.
       WHEN zif_abapgit_definitions=>gc_type-ref_d.
         lv_type = 112.
       WHEN OTHERS.
@@ -839,4 +926,25 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
     ENDIF.
   ENDMETHOD.
+
+  METHOD encode_tag.
+
+    DATA: lv_string TYPE string,
+          lv_tmp    TYPE string,
+          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
+
+    lv_time = zcl_abapgit_time=>get( ).
+
+    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
+             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
+             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
+             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ is_tag-message }|.
+
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+
+  ENDMETHOD.
+
 ENDCLASS.
