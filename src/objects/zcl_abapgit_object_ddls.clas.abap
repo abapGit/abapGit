@@ -254,7 +254,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
           lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
-                   <lg_field> TYPE any.
+                   <lg_field> TYPE any,
+                   <lv_comp>  LIKE LINE OF lt_clr_comps.
 
 
     CREATE DATA lr_data TYPE ('DDDDLSRCV').
@@ -281,7 +282,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
     APPEND 'ACTFLAG' TO lt_clr_comps.
     APPEND 'CHGFLAG' TO lt_clr_comps.
 
-    LOOP AT lt_clr_comps ASSIGNING field-symbol(<lv_comp>).
+    LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
       ASSIGN COMPONENT <lv_comp> OF STRUCTURE <lg_data> TO <lg_field>.
       ASSERT sy-subrc = 0.
       CLEAR <lg_field>.

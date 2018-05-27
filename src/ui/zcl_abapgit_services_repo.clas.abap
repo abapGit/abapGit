@@ -85,7 +85,8 @@ CLASS zcl_abapgit_services_repo DEFINITION
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS popup_package_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
@@ -220,7 +221,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         it_columns_to_display = lt_columns
       IMPORTING
         et_list               = lt_selected ).
-* todo, it should be possible for the user to click cancel in the popup
 
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
       READ TABLE lt_selected WITH KEY

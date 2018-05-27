@@ -127,6 +127,10 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           ELSE.
             <ls_tadir>-korrnum = '1000'.
           ENDIF.
+        WHEN 'IDOC'.
+          <ls_tadir>-korrnum = '2000'.
+        WHEN 'IEXT'.
+          <ls_tadir>-korrnum = '1500'.
         WHEN OTHERS.
           <ls_tadir>-korrnum = '1000'.
       ENDCASE.
